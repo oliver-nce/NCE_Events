@@ -1,0 +1,83 @@
+{
+  "app_name": "nce_events",
+  "app_title": "NCE Events",
+  "repo": "https://github.com/oliver-nce/NCE_Events.git",
+  "frappe_dependency": ">=15.0.0,<17.0.0",
+  "app_dependencies": ["nce_sync"],
+  "python_requires": ">=3.10",
+  "app_logo": "/assets/nce_events/images/logo.png",
+  "page_name": "hierarchy-explorer",
+  "page_title": "NCE Event Explorer",
+  "v15_v16_compliance": {
+    "js_namespacing": "frappe.provide('nce_events.hierarchy')",
+    "no_hardcoded_app_routes": true,
+    "explicit_order_by": true,
+    "version_checks_centralized": "nce_events/utils/version.py",
+    "app_logo_url_in_hooks": true,
+    "workspace_modified_bump_rule": true
+  },
+  "file_tree": {
+    "nce_events/": {
+      "nce_events/": {
+        "__init__.py": "app init",
+        "hooks.py": "app hooks — app_logo_url, page registration, etc.",
+        "modules.txt": "NCE Events",
+        "utils/": {
+          "__init__.py": "",
+          "version.py": "get_frappe_major_version(), is_v16_or_later()"
+        },
+        "api/": {
+          "__init__.py": "",
+          "hierarchy_explorer.py": "get_children() and export_rows() whitelisted APIs"
+        },
+        "nce_events/": {
+          "__init__.py": "module init (Frappe convention — module folder matches app name)",
+          "page/": {
+            "hierarchy_explorer/": {
+              "hierarchy_explorer.js": "Page entry — bootstraps layout, loads config, renders Pane 1",
+              "hierarchy_explorer.py": "Page controller (can be minimal)",
+              "hierarchy_explorer.json": "Page DocType JSON definition"
+            }
+          },
+          "workspace/": {
+            "nce_events.json": "Workspace with link to hierarchy-explorer Page"
+          }
+        },
+        "public/": {
+          "js/": {
+            "hierarchy_explorer/": {
+              "store.js": "State management — panes[], selected_path[], serializePath(), restorePath()",
+              "config.js": "Pane configuration object (doctypes, columns, filters, sorts, joins)",
+              "ui/": {
+                "Pane.js": "Composes PaneHeader + Actions + ReportLinks + PaneTable",
+                "PaneHeader.js": "Header with summary metrics, action buttons",
+                "PaneTable.js": "Table rendering with row click handlers",
+                "Actions.js": "Export CSV, Export JSON, Open Record, Open Pane in new tab",
+                "ReportLinks.js": "Optional report links per pane"
+              }
+            }
+          },
+          "css/": {
+            "hierarchy_explorer.css": "Pane layout, column widths, horizontal scroll, color rules"
+          },
+          "images/": {
+            "logo.png": "App logo (required by v16 policy)"
+          }
+        }
+      },
+      "pyproject.toml": "App metadata, frappe >=15,<17, nce_sync dependency, python >=3.10",
+      "license.txt": "License",
+      "README.md": "Project readme"
+    }
+  },
+  "notes": [
+    "Page registered as standard Frappe Page (works identically on v15 + v16)",
+    "Workspace JSON provides sidebar link to the Page",
+    "All JS namespaced via frappe.provide('nce_events.hierarchy') — no implicit globals",
+    "No hardcoded /app routes — use frappe.utils.get_form_link() or dynamic URL building",
+    "Cross-app dependency: uses DocTypes from nce_sync (Events, Registrations, Family Members, Venues, Families)",
+    "nce_sync dependency declared in pyproject.toml",
+    "Public JS modules are loaded by the Page entry JS, not bundled separately",
+    "Workspace JSON modified timestamp must be bumped on any change"
+  ]
+}

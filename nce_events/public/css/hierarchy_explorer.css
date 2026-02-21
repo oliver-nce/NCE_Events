@@ -1,0 +1,224 @@
+.hierarchy-explorer {
+	display: flex;
+	flex-direction: row;
+	height: calc(100vh - 120px);
+	overflow: hidden;
+	background: #FAFAFA;
+	border: 1px solid #D7D9DB;
+	border-radius: 6px;
+}
+
+/* ── Panes ── */
+
+.hierarchy-pane {
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 0%;
+	min-width: 200px;
+	overflow: hidden;
+	background: #FAFAFA;
+}
+
+/* ── Pane Header ── */
+
+.hierarchy-pane-header {
+	padding: 8px 12px;
+	background: #F4F5F5;
+	border-bottom: 1px solid #EAEBEC;
+	flex-shrink: 0;
+}
+
+.pane-title-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	margin-bottom: 6px;
+}
+
+.pane-label {
+	font-weight: 600;
+	font-size: 13px;
+	color: #464D53;
+	font-family: Arial, sans-serif;
+}
+
+.pane-count {
+	font-size: 11px;
+	color: #6D757E;
+	font-family: Arial, sans-serif;
+}
+
+.pane-actions {
+	display: flex;
+	gap: 4px;
+	flex-wrap: wrap;
+}
+
+.pane-actions .btn {
+	font-size: 11px;
+	padding: 2px 8px;
+	background: #E3F0FC;
+	color: #126BC4;
+	border: 1px solid #C7E0FA;
+	border-radius: 4px;
+}
+
+.pane-actions .btn:hover {
+	background: #C7E0FA;
+}
+
+.pane-actions .btn[disabled] {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+
+/* ── Pane Body (scrollable) ── */
+
+.hierarchy-pane-body {
+	flex: 1;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+/* ── Table ── */
+
+.hierarchy-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-family: Arial, sans-serif;
+	font-size: 12px;
+}
+
+.hierarchy-table th {
+	position: sticky;
+	top: 0;
+	background: #F4F5F5;
+	color: #5A6168;
+	font-weight: 600;
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.3px;
+	padding: 6px 8px;
+	border-bottom: 1px solid #D7D9DB;
+	text-align: left;
+	white-space: nowrap;
+	z-index: 1;
+}
+
+.hierarchy-table td {
+	padding: 5px 8px;
+	border-bottom: 1px solid #EAEBEC;
+	color: #464D53;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 0;
+}
+
+.hierarchy-row {
+	cursor: pointer;
+	transition: background-color 0.1s;
+}
+
+.hierarchy-row:hover {
+	background: #F1F7FE;
+}
+
+.hierarchy-row.alt {
+	background: #FAFAFA;
+}
+
+.hierarchy-row.alt:hover {
+	background: #F1F7FE;
+}
+
+.hierarchy-row.selected {
+	background: #E3F0FC;
+}
+
+.hierarchy-row.selected:hover {
+	background: #E3F0FC;
+}
+
+/* ── Load More ── */
+
+.hierarchy-load-more {
+	padding: 8px 12px;
+	text-align: center;
+}
+
+.load-more-btn {
+	font-size: 11px;
+	background: #E3F0FC;
+	color: #126BC4;
+	border: 1px solid #C7E0FA;
+}
+
+/* ── Loading ── */
+
+.hierarchy-loading {
+	padding: 24px;
+	text-align: center;
+	color: #8D949A;
+	font-size: 13px;
+}
+
+/* ── Drag Divider ── */
+
+.hierarchy-divider {
+	width: 5px;
+	flex-shrink: 0;
+	background: #D7D9DB;
+	cursor: col-resize;
+	transition: background-color 0.15s;
+	position: relative;
+}
+
+.hierarchy-divider::after {
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 3px;
+	height: 24px;
+	border-left: 1px solid #B7BABE;
+	border-right: 1px solid #B7BABE;
+}
+
+.hierarchy-divider:hover {
+	background: #73B3F2;
+}
+
+.hierarchy-divider:hover::after {
+	border-color: #fff;
+}
+
+.hierarchy-divider.active {
+	background: #4198F0;
+}
+
+.hierarchy-divider.active::after {
+	border-color: #fff;
+}
+
+body.hierarchy-resizing {
+	cursor: col-resize !important;
+	user-select: none !important;
+}
+
+body.hierarchy-resizing * {
+	cursor: col-resize !important;
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 768px) {
+	.hierarchy-explorer {
+		overflow-x: auto;
+	}
+
+	.hierarchy-pane {
+		min-width: 280px;
+	}
+}
