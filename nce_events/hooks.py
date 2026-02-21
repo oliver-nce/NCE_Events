@@ -7,3 +7,12 @@ app_license = "mit"
 app_logo_url = "/assets/nce_events/images/logo.png"
 
 required_apps = ["nce_sync"]
+
+add_to_apps_screen = [
+	{
+		"name": "nce_events",
+		"logo": "/assets/nce_events/images/logo.png",
+		"title": "NCE Events",
+		"route": "/app/hierarchy-explorer",
+	}
+]
