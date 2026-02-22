@@ -236,6 +236,8 @@ nce_events.hierarchy.Explorer = class Explorer {
 
 				var td_style = "";
 				if (col.align) td_style += "text-align:" + col.align + ";";
+				if (col.color) td_style += "color:" + col.color + ";";
+				if (col.bold) td_style += "font-weight:bold;";
 
 				if (col.style_rule) {
 					var color = col.style_rule.map[row[col.style_rule.field]];

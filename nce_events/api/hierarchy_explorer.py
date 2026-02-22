@@ -88,12 +88,19 @@ def _get_events(limit, start):
 			e.name,
 			e.first_session_date,
 			e.event_name,
+			IFNULL(rc.female_count, 0) AS female_count,
+			IFNULL(rc.male_count, 0) AS male_count,
 			IFNULL(rc.player_count, 0) AS player_count
 		FROM `tabEvents` e
 		LEFT JOIN (
-			SELECT product_id, COUNT(*) AS player_count
-			FROM `tabRegistrations`
-			GROUP BY product_id
+			SELECT
+				r.product_id,
+				SUM(CASE WHEN fm.gender = 'Female' THEN 1 ELSE 0 END) AS female_count,
+				SUM(CASE WHEN fm.gender = 'Male' THEN 1 ELSE 0 END) AS male_count,
+				COUNT(*) AS player_count
+			FROM `tabRegistrations` r
+			INNER JOIN `tabFamily Members` fm ON r.player_id = fm.name
+			GROUP BY r.product_id
 		) rc ON rc.product_id = e.name
 		WHERE e.first_session_date > DATE_SUB(CURDATE(), INTERVAL 30 DAY)
 		AND e.product_type IN ('Training', 'Tryouts', 'Camp')
