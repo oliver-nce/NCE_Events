@@ -59,7 +59,7 @@ def export_pane_data(pane, parent_name=None, format="csv"):
 
 	output = io.StringIO()
 	if pane == "players" and rows:
-		# A1=first_session_date (mm/dd/yyyy), A2=event_name, table begins at B1
+		# A1=first_session_date (mm/dd/yyyy), B1=event_name, table begins at A3
 		event_doc = frappe.db.get_value(
 			"Events", parent_name, ["first_session_date", "event_name"], as_dict=True
 		)
@@ -69,13 +69,15 @@ def export_pane_data(pane, parent_name=None, format="csv"):
 			first_session = first_session.strftime("%m/%d/%Y")
 		fieldnames = list(rows[0].keys())
 		writer = csv.writer(output)
-		# Row 1: A1=date, B1..=headers
-		writer.writerow([first_session] + fieldnames)
-		# Row 2: A2=event_name, B2..=first data row
-		writer.writerow([event_name_val] + [rows[0].get(f) for f in fieldnames])
-		# Row 3+: A=empty, B..=data
-		for row in rows[1:]:
-			writer.writerow([""] + [row.get(f) for f in fieldnames])
+		# Row 1: A1=date, B1=event_name
+		writer.writerow([first_session, event_name_val])
+		# Row 2: empty
+		writer.writerow([])
+		# Row 3: table headers
+		writer.writerow(fieldnames)
+		# Row 4+: data
+		for row in rows:
+			writer.writerow([row.get(f) for f in fieldnames])
 	elif rows:
 		writer = csv.DictWriter(output, fieldnames=rows[0].keys())
 		writer.writeheader()

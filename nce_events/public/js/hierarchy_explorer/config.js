@@ -32,7 +32,7 @@ nce_events.hierarchy.PANE_CONFIG = [
 				},
 				style_rule: {
 					field: "gender",
-					map: { Male: "#0000FF", Female: "#E165F7" },
+					map: { Male: "#0000FF", Female: "#c718e6" },
 				},
 			},
 			{ field: "yob", label: "YOB", type: "int", width: "60px", align: "right" },
@@ -45,8 +45,8 @@ nce_events.hierarchy.PANE_CONFIG = [
 		parent_link_field: "product_id",
 		header_buttons: [
 			{ label: "Send Email", icon: "mail", action: null },
-			{ label: "Send SMS", icon: "message-circle", action: null },
-			{ label: "Sheets Link", icon: "link", action: "sheets_link" },
+			{ label: "Send SMS", icon: "message-square", action: null },
+			{ label: "Sheets Link", icon: "link-url", action: "sheets_link" },
 		],
 		style_rules: [],
 	},

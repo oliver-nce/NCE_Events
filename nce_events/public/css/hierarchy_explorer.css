@@ -1,7 +1,7 @@
 .hierarchy-explorer {
 	display: flex;
 	flex-direction: row;
-	height: calc(100vh - 120px);
+	height: calc(100vh - 120px - 72pt);
 	overflow: hidden;
 	background: #FAFAFA;
 	border: 1px solid #D7D9DB;
@@ -42,6 +42,19 @@
 	font-family: Arial, sans-serif;
 }
 
+.pane-title-right {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-left: auto;
+}
+
+.pane-hint {
+	font-size: 11px;
+	color: #6D757E;
+	font-family: Arial, sans-serif;
+}
+
 .pane-count {
 	font-size: 11px;
 	color: #6D757E;
@@ -58,9 +71,6 @@
 	justify-content: center;
 }
 
-.pane-sheets-link-btn {
-	text-align: center;
-}
 
 .pane-actions .btn {
 	font-size: 11px;

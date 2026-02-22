@@ -66,12 +66,13 @@ nce_events.hierarchy.Explorer = class Explorer {
 
 	create_pane_element(index) {
 		var config = nce_events.hierarchy.PANE_CONFIG[index] || {};
+		var hint = index === 0 ? '<span class="pane-hint">Click an Event</span>' : "";
 		return $(
 			'<div class="hierarchy-pane" data-pane="' + index + '">' +
 				'<div class="hierarchy-pane-header">' +
 					'<div class="pane-title-row">' +
 						'<span class="pane-label">' + (config.label || "Pane " + (index + 1)) + "</span>" +
-						'<span class="pane-count"></span>' +
+						'<span class="pane-title-right">' + hint + '<span class="pane-count"></span></span>' +
 					"</div>" +
 					'<div class="pane-actions"></div>' +
 				"</div>" +
