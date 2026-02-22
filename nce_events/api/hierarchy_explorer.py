@@ -1,6 +1,7 @@
 import csv
 import io
 import json
+import os
 
 import frappe
 from frappe import _
@@ -57,13 +58,44 @@ def export_pane_data(pane, parent_name=None, format="csv"):
 		}
 
 	output = io.StringIO()
-	if rows:
+	if pane == "players" and rows:
+		# A1=first_session_date (mm/dd/yyyy), A2=event_name, table begins at B1
+		event_doc = frappe.db.get_value(
+			"Events", parent_name, ["first_session_date", "event_name"], as_dict=True
+		)
+		first_session = event_doc.get("first_session_date") or ""
+		event_name_val = event_doc.get("event_name") or ""
+		if first_session:
+			first_session = first_session.strftime("%m/%d/%Y")
+		fieldnames = list(rows[0].keys())
+		writer = csv.writer(output)
+		# Row 1: A1=date, B1..=headers
+		writer.writerow([first_session] + fieldnames)
+		# Row 2: A2=event_name, B2..=first data row
+		writer.writerow([event_name_val] + [rows[0].get(f) for f in fieldnames])
+		# Row 3+: A=empty, B..=data
+		for row in rows[1:]:
+			writer.writerow([""] + [row.get(f) for f in fieldnames])
+	elif rows:
 		writer = csv.DictWriter(output, fieldnames=rows[0].keys())
 		writer.writeheader()
 		writer.writerows(rows)
 
+	csv_content = output.getvalue()
+
+	# Save Players CSV to server path when exporting roster
+	if pane == "players" and parent_name:
+		sku = frappe.db.get_value("Events", parent_name, "sku") or parent_name
+		# Sanitize filename: replace chars unsafe for filesystem
+		safe_sku = "".join(c if c.isalnum() or c in "-_" else "_" for c in str(sku))
+		roster_dir = frappe.get_site_path("public", "files", "rosters", "wwe78f6q87ey97f86q9e8fqw98ef")
+		os.makedirs(roster_dir, exist_ok=True)
+		filepath = os.path.join(roster_dir, f"{safe_sku}.csv")
+		with open(filepath, "w", encoding="utf-8") as f:
+			f.write(csv_content)
+
 	return {
-		"data": output.getvalue(),
+		"data": csv_content,
 		"filename": f"{pane}_export.csv",
 		"mimetype": "text/csv",
 	}
@@ -149,9 +181,12 @@ def _get_players(event_name, limit, start):
 	"""
 	rows = frappe.db.sql(rows_query, (event_name,), as_dict=True)
 
+	parent_sku = frappe.db.get_value("Events", event_name, "sku") or event_name
+
 	return {
 		"rows": rows,
 		"total": total,
 		"start": start,
 		"limit": limit,
+		"parent_sku": parent_sku,
 	}

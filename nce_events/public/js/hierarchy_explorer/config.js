@@ -44,6 +44,7 @@ nce_events.hierarchy.PANE_CONFIG = [
 		header_buttons: [
 			{ label: "Send Email", icon: "mail", action: null },
 			{ label: "Send SMS", icon: "message-circle", action: null },
+			{ label: "Sheets Link", icon: "link", action: "sheets_link" },
 		],
 		style_rules: [],
 	},

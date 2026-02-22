@@ -17,6 +17,7 @@ nce_events.hierarchy.Store = class Store {
 			total: data.total || 0,
 			start: data.start || 0,
 			limit: data.limit || 50,
+			parent_sku: data.parent_sku || null,
 		};
 	}
 

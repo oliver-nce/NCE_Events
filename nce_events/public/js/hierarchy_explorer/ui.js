@@ -181,9 +181,10 @@ nce_events.hierarchy.Explorer = class Explorer {
 		var html = "";
 
 		(config.header_buttons || []).forEach(function (btn) {
+			var disabled = !btn.action ? ' disabled' : '';
 			html +=
 				'<button class="btn btn-xs btn-default pane-header-btn" data-action="' +
-				(btn.label || "") + '" disabled>' +
+				(btn.action || "") + '" data-label="' + (btn.label || "") + '"' + disabled + '>' +
 				frappe.utils.icon(btn.icon || "file", "xs") + " " +
 				btn.label +
 				"</button> ";
@@ -298,6 +299,30 @@ nce_events.hierarchy.Explorer = class Explorer {
 		el.find(".pane-open-btn").off("click").on("click", function () {
 			me.on_open_record(index);
 		});
+
+		el.find(".pane-header-btn[data-action='sheets_link']").off("click").on("click", function () {
+			me.on_sheets_link(index);
+		});
+	}
+
+	on_sheets_link(pane_index) {
+		var state = this.store.get_pane_state(pane_index);
+		var sku = (state && state.parent_sku) || "";
+		var formula = '=IMPORTDATA("https://manager.ncesoccer.com/files/rosters/wwe78f6q87ey97f86q9e8fqw98ef/' + encodeURIComponent(sku) + '.csv")';
+		if (navigator.clipboard && navigator.clipboard.writeText) {
+			navigator.clipboard.writeText(formula).then(function () {
+				frappe.show_alert({ message: __("Link is on the clipboard - paste it in a Google Sheets cell"), indicator: "green" });
+			});
+		} else {
+			// Fallback for older browsers
+			var ta = document.createElement("textarea");
+			ta.value = formula;
+			document.body.appendChild(ta);
+			ta.select();
+			document.execCommand("copy");
+			document.body.removeChild(ta);
+			frappe.show_alert({ message: __("Link is on the clipboard - paste it in a Google Sheets cell"), indicator: "green" });
+		}
 	}
 
 	on_row_click(pane_index, row_name) {
