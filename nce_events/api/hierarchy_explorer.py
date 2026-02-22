@@ -171,6 +171,8 @@ def _get_players(event_name, limit, start):
 			fm.gender,
 			fm.yob,
 			fm.rating,
+			fm.preferred_position,
+			fm.player_number,
 			f.email AS family_email
 		FROM `tabRegistrations` r
 		INNER JOIN `tabFamily Members` fm ON r.player_id = fm.name

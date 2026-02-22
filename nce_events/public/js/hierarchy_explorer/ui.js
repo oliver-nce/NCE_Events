@@ -182,23 +182,23 @@ nce_events.hierarchy.Explorer = class Explorer {
 
 		(config.header_buttons || []).forEach(function (btn) {
 			var disabled = !btn.action ? ' disabled' : '';
+			var extraClass = btn.action === "sheets_link" ? " pane-sheets-link-btn" : "";
 			html +=
-				'<button class="btn btn-xs btn-default pane-header-btn" data-action="' +
+				'<button class="btn btn-xs btn-default pane-header-btn' + extraClass + '" data-action="' +
 				(btn.action || "") + '" data-label="' + (btn.label || "") + '"' + disabled + '>' +
 				frappe.utils.icon(btn.icon || "file", "xs") + " " +
 				btn.label +
 				"</button> ";
 		});
 
-		html +=
-			'<button class="btn btn-xs btn-default pane-export-btn" data-format="csv">' +
-			frappe.utils.icon("file", "xs") + " CSV</button> ";
+		if (index !== 1) {
+			html +=
+				'<button class="btn btn-xs btn-default pane-export-btn" data-format="csv">' +
+				frappe.utils.icon("file", "xs") + " CSV</button> ";
+		}
 		html +=
 			'<button class="btn btn-xs btn-default pane-export-btn" data-format="json">' +
 			frappe.utils.icon("file", "xs") + " JSON</button> ";
-		html +=
-			'<button class="btn btn-xs btn-default pane-open-btn">' +
-			frappe.utils.icon("link-url", "xs") + " Open</button>";
 
 		return html;
 	}
@@ -296,33 +296,43 @@ nce_events.hierarchy.Explorer = class Explorer {
 			me.on_export(index, fmt);
 		});
 
-		el.find(".pane-open-btn").off("click").on("click", function () {
-			me.on_open_record(index);
-		});
-
 		el.find(".pane-header-btn[data-action='sheets_link']").off("click").on("click", function () {
 			me.on_sheets_link(index);
 		});
 	}
 
 	on_sheets_link(pane_index) {
-		var state = this.store.get_pane_state(pane_index);
-		var sku = (state && state.parent_sku) || "";
-		var formula = '=IMPORTDATA("https://manager.ncesoccer.com/files/rosters/wwe78f6q87ey97f86q9e8fqw98ef/' + encodeURIComponent(sku) + '.csv")';
-		if (navigator.clipboard && navigator.clipboard.writeText) {
-			navigator.clipboard.writeText(formula).then(function () {
-				frappe.show_alert({ message: __("Link is on the clipboard - paste it in a Google Sheets cell"), indicator: "green" });
-			});
-		} else {
-			// Fallback for older browsers
-			var ta = document.createElement("textarea");
-			ta.value = formula;
-			document.body.appendChild(ta);
-			ta.select();
-			document.execCommand("copy");
-			document.body.removeChild(ta);
-			frappe.show_alert({ message: __("Link is on the clipboard - paste it in a Google Sheets cell"), indicator: "green" });
-		}
+		var me = this;
+		var config = nce_events.hierarchy.PANE_CONFIG[pane_index];
+		var parent = pane_index > 0 ? me.store.get_selected(pane_index - 1) : null;
+
+		// First save file via export API, then copy formula to clipboard
+		frappe.call({
+			method: "nce_events.api.hierarchy_explorer.export_pane_data",
+			args: {
+				pane: config.api_pane,
+				parent_name: parent || null,
+				format: "csv",
+			},
+			callback: function () {
+				var state = me.store.get_pane_state(pane_index);
+				var sku = (state && state.parent_sku) || "";
+				var formula = '=IMPORTDATA("https://manager.ncesoccer.com/files/rosters/wwe78f6q87ey97f86q9e8fqw98ef/' + encodeURIComponent(sku) + '.csv")';
+				if (navigator.clipboard && navigator.clipboard.writeText) {
+					navigator.clipboard.writeText(formula).then(function () {
+						frappe.show_alert({ message: __("Link is on the clipboard - paste it in a Google Sheets cell"), indicator: "green" });
+					});
+				} else {
+					var ta = document.createElement("textarea");
+					ta.value = formula;
+					document.body.appendChild(ta);
+					ta.select();
+					document.execCommand("copy");
+					document.body.removeChild(ta);
+					frappe.show_alert({ message: __("Link is on the clipboard - paste it in a Google Sheets cell"), indicator: "green" });
+				}
+			},
+		});
 	}
 
 	on_row_click(pane_index, row_name) {
@@ -382,22 +392,4 @@ nce_events.hierarchy.Explorer = class Explorer {
 		});
 	}
 
-	on_open_record(pane_index) {
-		var selected = this.store.get_selected(pane_index);
-		if (!selected) {
-			frappe.show_alert({ message: __("Select a row first"), indicator: "orange" });
-			return;
-		}
-
-		var config = nce_events.hierarchy.PANE_CONFIG[pane_index];
-		var doctype_map = { events: "Events", players: "Family Members" };
-		var dt = doctype_map[config.api_pane];
-
-		if (dt) {
-			window.open(
-				frappe.utils.get_form_link(dt, selected),
-				"_blank"
-			);
-		}
-	}
 };

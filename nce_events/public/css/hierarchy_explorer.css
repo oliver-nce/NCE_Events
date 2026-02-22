@@ -54,6 +54,14 @@
 	flex-wrap: wrap;
 }
 
+.hierarchy-pane[data-pane="1"] .pane-actions {
+	justify-content: center;
+}
+
+.pane-sheets-link-btn {
+	text-align: center;
+}
+
 .pane-actions .btn {
 	font-size: 11px;
 	padding: 2px 8px;

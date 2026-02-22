@@ -37,6 +37,8 @@ nce_events.hierarchy.PANE_CONFIG = [
 			},
 			{ field: "yob", label: "YOB", type: "int", width: "60px", align: "right" },
 			{ field: "rating", label: "Rating", type: "int", width: "60px", align: "right" },
+			{ field: "preferred_position", label: "Position", type: "data", width: "80px" },
+			{ field: "player_number", label: "#", type: "int", width: "40px", align: "right" },
 			{ field: "family_email", label: "Email", type: "data", width: "1fr" },
 		],
 		row_id_field: "name",
