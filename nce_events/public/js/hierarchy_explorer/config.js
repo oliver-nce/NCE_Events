@@ -7,7 +7,6 @@ nce_events.hierarchy.PANE_CONFIG = [
 		api_pane: "events",
 		columns: [
 			{ field: "first_session_date", label: "First Session", type: "date", width: "110px" },
-			{ field: "sku", label: "SKU", type: "data", width: "120px" },
 			{ field: "event_name", label: "Event Name", type: "data", width: "1fr" },
 			{ field: "player_count", label: "# Players", type: "int", width: "80px", align: "right" },
 		],

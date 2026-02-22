@@ -87,7 +87,6 @@ def _get_events(limit, start):
 		SELECT
 			e.name,
 			e.first_session_date,
-			e.sku,
 			e.event_name,
 			IFNULL(rc.player_count, 0) AS player_count
 		FROM `tabEvents` e
