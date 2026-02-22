@@ -66,15 +66,28 @@ def export_pane_data(pane, parent_name=None, format="csv"):
 		first_session = event_doc.get("first_session_date") or ""
 		event_name_val = event_doc.get("event_name") or ""
 		if first_session:
-			first_session = first_session.strftime("%m/%d/%Y")
+			if hasattr(first_session, "strftime"):
+				first_session = first_session.strftime("%m/%d/%Y")
+			else:
+				from datetime import datetime
+				first_session = datetime.strptime(str(first_session), "%Y-%m-%d").strftime("%m/%d/%Y")
 		fieldnames = list(rows[0].keys())
+		meta = frappe.get_meta("Family Members")
+		label_overrides = {"family_email": "Email"}
+		labels = []
+		for f in fieldnames:
+			if f in label_overrides:
+				labels.append(label_overrides[f])
+			else:
+				df = meta.get_field(f)
+				labels.append(df.label if df else f.replace("_", " ").title())
 		writer = csv.writer(output)
 		# Row 1: A1=date, B1=event_name
 		writer.writerow([first_session, event_name_val])
 		# Row 2: empty
 		writer.writerow([])
-		# Row 3: table headers
-		writer.writerow(fieldnames)
+		# Row 3: table headers using DocType labels
+		writer.writerow(labels)
 		# Row 4+: data
 		for row in rows:
 			writer.writerow([row.get(f) for f in fieldnames])

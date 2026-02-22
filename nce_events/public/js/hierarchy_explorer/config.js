@@ -8,7 +8,7 @@ nce_events.hierarchy.PANE_CONFIG = [
 		columns: [
 			{ field: "first_session_date", label: "First Session", type: "date", width: "110px" },
 			{ field: "event_name", label: "Event Name", type: "data", width: "1fr" },
-			{ field: "female_count", label: "# Females", type: "int", width: "52px", align: "right", color: "#E165F7", bold: true },
+			{ field: "female_count", label: "# Females", type: "int", width: "52px", align: "right", color: "#c700e6", bold: true },
 			{ field: "male_count", label: "# Males", type: "int", width: "52px", align: "right", color: "#0000FF", bold: true },
 			{ field: "player_count", label: "Total", type: "int", width: "52px", align: "right", bold: true },
 		],
@@ -32,7 +32,7 @@ nce_events.hierarchy.PANE_CONFIG = [
 				},
 				style_rule: {
 					field: "gender",
-					map: { Male: "#0000FF", Female: "#c718e6" },
+					map: { Male: "#0000FF", Female: "#c700e6", male: "#0000FF", female: "#c700e6" },
 				},
 			},
 			{ field: "yob", label: "YOB", type: "int", width: "60px", align: "right" },
