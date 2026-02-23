@@ -16,11 +16,3 @@ add_to_apps_screen = [
 		"route": "/app/panel-view",
 	}
 ]
-
-doc_events = {
-	"Panel Page": {
-		"after_insert": "nce_events.api.panel_api.sync_workspace_shortcuts",
-		"on_update": "nce_events.api.panel_api.sync_workspace_shortcuts",
-		"on_trash": "nce_events.api.panel_api.sync_workspace_shortcuts",
-	}
-}
