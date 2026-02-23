@@ -6,3 +6,4 @@
 # Patches added in this section will be executed after doctypes are migrated
 nce_events.patches.v0_0_2.create_event_explorer_page
 nce_events.patches.v0_0_2.update_workspace_shortcuts
+nce_events.patches.v0_0_2.sync_panel_page_shortcuts
