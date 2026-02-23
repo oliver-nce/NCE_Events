@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\": \"hdr_pages\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Pages</b></span>\", \"col\": 12}}, {\"id\": \"explorer_shortcut\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Event Explorer\", \"col\": 4}}]",
+ "content": "[{\"id\": \"hdr_pages\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Pages</b></span>\", \"col\": 12}}, {\"id\": \"panel_view_shortcut\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Panel View\", \"col\": 4}}, {\"id\": \"explorer_shortcut\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Event Explorer (Legacy)\", \"col\": 4}}]",
  "creation": "2026-02-21 00:00:00.000000",
  "custom_blocks": [],
  "docstatus": 0,
@@ -12,7 +12,7 @@
  "is_hidden": 0,
  "label": "NCE Events",
  "links": [],
- "modified": "2026-02-22 00:00:00.000000",
+ "modified": "2026-02-22 12:00:00.000000",
  "modified_by": "Administrator",
  "module": "NCE Events",
  "name": "NCE Events",
@@ -28,7 +28,14 @@
   {
    "color": "Blue",
    "doc_view": "",
-   "label": "Event Explorer",
+   "label": "Panel View",
+   "link_to": "panel-view",
+   "type": "Page"
+  },
+  {
+   "color": "Grey",
+   "doc_view": "",
+   "label": "Event Explorer (Legacy)",
    "link_to": "hierarchy-explorer",
    "type": "Page"
   }

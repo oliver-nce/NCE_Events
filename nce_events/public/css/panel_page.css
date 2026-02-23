@@ -1,0 +1,262 @@
+/* ── Panel Explorer container ── */
+
+.panel-explorer {
+	display: flex;
+	flex-direction: row;
+	height: calc(100vh - 120px - 72pt);
+	overflow: hidden;
+	background: #FAFAFA;
+	border: 1px solid #D7D9DB;
+	border-radius: 6px;
+}
+
+/* ── Panes ── */
+
+.panel-pane {
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 0%;
+	min-width: 200px;
+	overflow: hidden;
+	background: #FAFAFA;
+}
+
+/* ── Pane Header ── */
+
+.panel-pane-header {
+	padding: 8px 12px;
+	background: #F4F5F5;
+	border-bottom: 1px solid #EAEBEC;
+	flex-shrink: 0;
+}
+
+.pane-title-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.pane-label {
+	font-weight: 600;
+	font-size: 13px;
+	color: #464D53;
+	font-family: Arial, sans-serif;
+}
+
+.pane-title-right {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	margin-left: auto;
+}
+
+.pane-count {
+	font-size: 11px;
+	color: #6D757E;
+	font-family: Arial, sans-serif;
+}
+
+/* ── Pane Body (scrollable) ── */
+
+.panel-pane-body {
+	flex: 1;
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+/* ── Table ── */
+
+.panel-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-family: Arial, sans-serif;
+	font-size: 12px;
+}
+
+.panel-table th {
+	position: sticky;
+	top: 0;
+	background: #F4F5F5;
+	color: #5A6168;
+	font-weight: 600;
+	font-size: 11px;
+	text-transform: uppercase;
+	letter-spacing: 0.3px;
+	padding: 6px 8px;
+	border-bottom: 1px solid #D7D9DB;
+	text-align: left;
+	white-space: nowrap;
+	z-index: 1;
+}
+
+.panel-table td {
+	padding: 5px 8px;
+	border-bottom: 1px solid #EAEBEC;
+	color: #464D53;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	max-width: 0;
+}
+
+.panel-row {
+	cursor: pointer;
+	transition: background-color 0.1s;
+}
+
+.panel-row:hover {
+	background: #F1F7FE;
+}
+
+.panel-row.alt {
+	background: #FAFAFA;
+}
+
+.panel-row.alt:hover {
+	background: #F1F7FE;
+}
+
+.panel-row.selected {
+	background: #E3F0FC;
+}
+
+.panel-row.selected:hover {
+	background: #E3F0FC;
+}
+
+/* ── Load More ── */
+
+.panel-load-more {
+	padding: 8px 12px;
+	text-align: center;
+}
+
+.panel-load-more .btn {
+	font-size: 11px;
+	background: #E3F0FC;
+	color: #126BC4;
+	border: 1px solid #C7E0FA;
+}
+
+/* ── Loading ── */
+
+.panel-loading {
+	padding: 24px;
+	text-align: center;
+	color: #8D949A;
+	font-size: 13px;
+}
+
+/* ── Drag Divider ── */
+
+.panel-divider {
+	width: 5px;
+	flex-shrink: 0;
+	background: #D7D9DB;
+	cursor: col-resize;
+	transition: background-color 0.15s;
+	position: relative;
+}
+
+.panel-divider::after {
+	content: "";
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	width: 3px;
+	height: 24px;
+	border-left: 1px solid #B7BABE;
+	border-right: 1px solid #B7BABE;
+}
+
+.panel-divider:hover {
+	background: #73B3F2;
+}
+
+.panel-divider:hover::after {
+	border-color: #fff;
+}
+
+.panel-divider.active {
+	background: #4198F0;
+}
+
+.panel-divider.active::after {
+	border-color: #fff;
+}
+
+body.panel-resizing {
+	cursor: col-resize !important;
+	user-select: none !important;
+}
+
+body.panel-resizing * {
+	cursor: col-resize !important;
+}
+
+/* ── Landing Page ── */
+
+.panel-landing {
+	padding: 40px 24px;
+	max-width: 800px;
+	margin: 0 auto;
+}
+
+.panel-landing-loading,
+.panel-landing-empty {
+	text-align: center;
+	color: #6D757E;
+	font-size: 14px;
+	padding: 40px;
+}
+
+.panel-landing-empty a {
+	color: #126BC4;
+}
+
+.panel-landing-grid {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+	gap: 16px;
+}
+
+.panel-landing-card {
+	display: block;
+	padding: 20px;
+	background: #fff;
+	border: 1px solid #D7D9DB;
+	border-radius: 8px;
+	text-decoration: none;
+	transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.panel-landing-card:hover {
+	border-color: #73B3F2;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+	text-decoration: none;
+}
+
+.panel-card-title {
+	font-weight: 600;
+	font-size: 15px;
+	color: #464D53;
+	margin-bottom: 4px;
+}
+
+.panel-card-name {
+	font-size: 12px;
+	color: #8D949A;
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 768px) {
+	.panel-explorer {
+		overflow-x: auto;
+	}
+
+	.panel-pane {
+		min-width: 280px;
+	}
+}

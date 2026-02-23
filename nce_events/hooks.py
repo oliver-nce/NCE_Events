@@ -1,7 +1,7 @@
 app_name = "nce_events"
 app_title = "NCE Events"
 app_publisher = "Oliver Reid"
-app_description = "NCE Events — Hierarchy Explorer for NCE event management"
+app_description = "NCE Events — Dynamic Multi-Panel Page Explorer"
 app_email = "oliver_reid@me.com"
 app_license = "mit"
 app_logo_url = "/assets/nce_events/images/logo.png"
@@ -13,6 +13,6 @@ add_to_apps_screen = [
 		"name": "nce_events",
 		"logo": "/assets/nce_events/images/logo.png",
 		"title": "NCE Events",
-		"route": "/app/hierarchy-explorer",
+		"route": "/app/panel-view",
 	}
 ]
