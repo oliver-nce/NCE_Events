@@ -104,32 +104,105 @@ def get_panel_data(page_name, panel_number, selections=None, limit=50, start=0):
 # ── Workspace sync ──
 
 
-_PANEL_LINK_PREFIX = "panel-view/"
+_PP_PAGE_PREFIX = "pp-"
+
+_PAGE_SCRIPT_TEMPLATE = """frappe.pages["{page_name}"].on_page_show = function(wrapper) {{
+	if (!wrapper._page_obj) {{
+		wrapper._page_obj = frappe.ui.make_app_page({{
+			parent: wrapper,
+			title: "{page_title}",
+			single_column: true,
+		}});
+	}}
+	var page = wrapper._page_obj;
+	if (wrapper._current === "{panel_page}" && wrapper._explorer) return;
+	wrapper._current = "{panel_page}";
+	if (wrapper._explorer) {{
+		wrapper._explorer.destroy();
+		wrapper._explorer = null;
+	}}
+	frappe.require([
+		"/assets/nce_events/js/panel_page/store.js",
+		"/assets/nce_events/js/panel_page/ui.js",
+		"/assets/nce_events/css/panel_page.css",
+	], function() {{
+		wrapper._explorer = new nce_events.panel_page.Explorer(page, "{panel_page}");
+	}});
+}};"""
 
 
 def sync_workspace_shortcuts(doc=None, method=None):
 	"""Keep workspace shortcuts in sync with active Panel Pages.
 
-	Called via doc_events on Panel Page insert/update/trash.
+	For each active Panel Page:
+	  1. Create a real Frappe Page record (so workspace shortcuts can reference it)
+	  2. Add a workspace shortcut pointing to that page
+
+	For inactive/deleted Panel Pages:
+	  1. Remove the Frappe Page record
+	  2. Remove the workspace shortcut
 	"""
+	active_pages = frappe.get_all(
+		"Panel Page", filters={"active": 1}, fields=["page_name", "page_title"]
+	)
+	active_frappe_names = {f"{_PP_PAGE_PREFIX}{pg.page_name}" for pg in active_pages}
+
+	# ── Sync Frappe Page records ──
+
+	existing_pp_pages = frappe.get_all(
+		"Page",
+		filters=[["name", "like", f"{_PP_PAGE_PREFIX}%"], ["module", "=", "NCE Events"]],
+		fields=["name"],
+		pluck="name",
+	)
+
+	# Remove pages for inactive/deleted Panel Pages
+	for page_name in existing_pp_pages:
+		if page_name not in active_frappe_names:
+			frappe.delete_doc("Page", page_name, force=True, ignore_permissions=True)
+
+	# Create/update pages for active Panel Pages
+	for pg in active_pages:
+		frappe_page_name = f"{_PP_PAGE_PREFIX}{pg.page_name}"
+		script = _PAGE_SCRIPT_TEMPLATE.format(
+			page_name=frappe_page_name,
+			page_title=pg.page_title.replace('"', '\\"'),
+			panel_page=pg.page_name.replace('"', '\\"'),
+		)
+
+		if frappe.db.exists("Page", frappe_page_name):
+			page_doc = frappe.get_doc("Page", frappe_page_name)
+			page_doc.title = pg.page_title
+			page_doc.script = script
+			page_doc.save(ignore_permissions=True)
+		else:
+			page_doc = frappe.get_doc({
+				"doctype": "Page",
+				"name": frappe_page_name,
+				"page_name": frappe_page_name,
+				"title": pg.page_title,
+				"module": "NCE Events",
+				"standard": "No",
+				"script": script,
+				"roles": [{"role": "System Manager"}],
+			})
+			page_doc.insert(ignore_permissions=True)
+
+	# ── Sync workspace shortcuts ──
+
 	if not frappe.db.exists("Workspace", "NCE Events"):
 		return
 
 	ws = frappe.get_doc("Workspace", "NCE Events")
 
-	active_pages = frappe.get_all(
-		"Panel Page", filters={"active": 1}, fields=["page_name", "page_title"]
-	)
-
-	# Remove all panel-view shortcuts (any type, any format we've used)
+	# Remove all managed shortcuts (pp- pages, panel-view, and old URL attempts)
 	ws.shortcuts = [
 		s for s in ws.shortcuts
-		if not (s.link_to or "").startswith(_PANEL_LINK_PREFIX)
-		and not (s.type == "Page" and s.link_to == "panel-view")
-		and not (s.link_to or "").startswith("/app/panel-view/")
+		if not (s.link_to or "").startswith(_PP_PAGE_PREFIX)
+		and not (s.link_to or "").startswith("panel-view")
+		and not (s.link_to or "").startswith("/app/panel-view")
 	]
 
-	# Rebuild content JSON: remove all panel-page blocks
 	try:
 		content = json.loads(ws.content or "[]")
 	except (json.JSONDecodeError, TypeError):
@@ -141,13 +214,14 @@ def sync_workspace_shortcuts(doc=None, method=None):
 		and b.get("id") != "panel_view_shortcut"
 	]
 
-	# Add a shortcut for each active Panel Page
+	# Add shortcuts for active Panel Pages
 	for pg in active_pages:
+		frappe_page_name = f"{_PP_PAGE_PREFIX}{pg.page_name}"
 		ws.append("shortcuts", {
 			"color": "Blue",
 			"doc_view": "",
 			"label": pg.page_title,
-			"link_to": f"{_PANEL_LINK_PREFIX}{pg.page_name}",
+			"link_to": frappe_page_name,
 			"type": "Page",
 		})
 		content.append({
@@ -157,8 +231,8 @@ def sync_workspace_shortcuts(doc=None, method=None):
 		})
 
 	ws.content = json.dumps(content)
-	ws.flags.ignore_links = True
 	ws.save(ignore_permissions=True)
+	frappe.db.commit()
 
 
 # ── Internal helpers ──
