@@ -1,4 +1,5 @@
 import json
+import os
 import re
 
 import frappe
@@ -220,14 +221,27 @@ def sync_workspace_shortcuts(doc=None, method=None):
 
 
 def _save_page(frappe_page_name, title, script):
-	"""Create or update a Frappe Page, temporarily enabling developer mode."""
+	"""Create or update a Frappe Page with its JS file on disk.
+
+	Frappe's load_assets() expects a page directory on disk even for
+	custom pages, so we write the JS file there. We also temporarily
+	enable developer_mode to pass Page.validate().
+	"""
+	scrubbed = frappe.scrub(frappe_page_name)
+	module_path = frappe.get_module_path("NCE Events")
+	page_dir = os.path.join(module_path, "page", scrubbed)
+	os.makedirs(page_dir, exist_ok=True)
+
+	js_path = os.path.join(page_dir, scrubbed + ".js")
+	with open(js_path, "w", encoding="utf-8") as f:
+		f.write(script)
+
 	was_dev = frappe.conf.developer_mode
 	frappe.conf.developer_mode = True
 	try:
 		if frappe.db.exists("Page", frappe_page_name):
 			page_doc = frappe.get_doc("Page", frappe_page_name)
 			page_doc.title = title
-			page_doc.script = script
 			page_doc.save(ignore_permissions=True)
 		else:
 			page_doc = frappe.get_doc({
@@ -236,8 +250,7 @@ def _save_page(frappe_page_name, title, script):
 				"page_name": frappe_page_name,
 				"title": title,
 				"module": "NCE Events",
-				"standard": "No",
-				"script": script,
+				"standard": "Yes",
 				"roles": [{"role": "System Manager"}],
 			})
 			page_doc.insert(ignore_permissions=True)
