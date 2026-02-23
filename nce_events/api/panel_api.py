@@ -170,23 +170,7 @@ def sync_workspace_shortcuts(doc=None, method=None):
 			panel_page=pg.page_name.replace('"', '\\"'),
 		)
 
-		if frappe.db.exists("Page", frappe_page_name):
-			page_doc = frappe.get_doc("Page", frappe_page_name)
-			page_doc.title = pg.page_title
-			page_doc.script = script
-			page_doc.save(ignore_permissions=True)
-		else:
-			page_doc = frappe.get_doc({
-				"doctype": "Page",
-				"name": frappe_page_name,
-				"page_name": frappe_page_name,
-				"title": pg.page_title,
-				"module": "NCE Events",
-				"standard": "No",
-				"script": script,
-				"roles": [{"role": "System Manager"}],
-			})
-			page_doc.insert(ignore_permissions=True)
+		_save_page(frappe_page_name, pg.page_title, script)
 
 	# ── Sync workspace shortcuts ──
 
@@ -233,6 +217,32 @@ def sync_workspace_shortcuts(doc=None, method=None):
 	ws.content = json.dumps(content)
 	ws.save(ignore_permissions=True)
 	frappe.db.commit()
+
+
+def _save_page(frappe_page_name, title, script):
+	"""Create or update a Frappe Page, temporarily enabling developer mode."""
+	was_dev = frappe.conf.developer_mode
+	frappe.conf.developer_mode = True
+	try:
+		if frappe.db.exists("Page", frappe_page_name):
+			page_doc = frappe.get_doc("Page", frappe_page_name)
+			page_doc.title = title
+			page_doc.script = script
+			page_doc.save(ignore_permissions=True)
+		else:
+			page_doc = frappe.get_doc({
+				"doctype": "Page",
+				"name": frappe_page_name,
+				"page_name": frappe_page_name,
+				"title": title,
+				"module": "NCE Events",
+				"standard": "No",
+				"script": script,
+				"roles": [{"role": "System Manager"}],
+			})
+			page_doc.insert(ignore_permissions=True)
+	finally:
+		frappe.conf.developer_mode = was_dev
 
 
 # ── Internal helpers ──
