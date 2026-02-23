@@ -104,7 +104,7 @@ def get_panel_data(page_name, panel_number, selections=None, limit=50, start=0):
 # ── Workspace sync ──
 
 
-_PANEL_VIEW_PREFIX = "/app/panel-view/"
+_PANEL_LINK_PREFIX = "panel-view/"
 
 
 def sync_workspace_shortcuts(doc=None, method=None):
@@ -121,23 +121,25 @@ def sync_workspace_shortcuts(doc=None, method=None):
 		"Panel Page", filters={"active": 1}, fields=["page_name", "page_title"]
 	)
 
-	# Remove existing panel-view shortcuts
+	# Remove all panel-view shortcuts (any type, any format we've used)
 	ws.shortcuts = [
 		s for s in ws.shortcuts
-		if not (s.type == "URL" and (s.link_to or "").startswith(_PANEL_VIEW_PREFIX))
+		if not (s.link_to or "").startswith(_PANEL_LINK_PREFIX)
+		and not (s.type == "Page" and s.link_to == "panel-view")
+		and not (s.link_to or "").startswith("/app/panel-view/")
 	]
 
-	# Remove panel-page shortcut blocks from content JSON
+	# Rebuild content JSON: remove all panel-page blocks
 	try:
 		content = json.loads(ws.content or "[]")
 	except (json.JSONDecodeError, TypeError):
 		content = []
 
-	content = [b for b in content if not str(b.get("id", "")).startswith("pp_shortcut_")]
-
-	# Also remove the old static "Panel View" shortcut if present
-	ws.shortcuts = [s for s in ws.shortcuts if not (s.type == "Page" and s.link_to == "panel-view")]
-	content = [b for b in content if b.get("id") != "panel_view_shortcut"]
+	content = [
+		b for b in content
+		if not str(b.get("id", "")).startswith("pp_shortcut_")
+		and b.get("id") != "panel_view_shortcut"
+	]
 
 	# Add a shortcut for each active Panel Page
 	for pg in active_pages:
@@ -145,8 +147,8 @@ def sync_workspace_shortcuts(doc=None, method=None):
 			"color": "Blue",
 			"doc_view": "",
 			"label": pg.page_title,
-			"link_to": f"{_PANEL_VIEW_PREFIX}{pg.page_name}",
-			"type": "URL",
+			"link_to": f"{_PANEL_LINK_PREFIX}{pg.page_name}",
+			"type": "Page",
 		})
 		content.append({
 			"id": f"pp_shortcut_{pg.page_name}",
@@ -155,6 +157,7 @@ def sync_workspace_shortcuts(doc=None, method=None):
 		})
 
 	ws.content = json.dumps(content)
+	ws.flags.ignore_links = True
 	ws.save(ignore_permissions=True)
 
 
