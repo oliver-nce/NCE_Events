@@ -221,11 +221,11 @@ def sync_workspace_shortcuts(doc=None, method=None):
 
 
 def _save_page(frappe_page_name, title, script):
-	"""Create or update a Frappe Page with its JS file on disk.
+	"""Create or update a Frappe Page with full disk files.
 
-	Frappe's load_assets() expects a page directory on disk even for
-	custom pages, so we write the JS file there. We also temporarily
-	enable developer_mode to pass Page.validate().
+	Frappe's load_assets() expects a page directory containing .js, .json,
+	and __init__.py. We write all three, then create/update the DB record
+	with developer_mode temporarily enabled.
 	"""
 	scrubbed = frappe.scrub(frappe_page_name)
 	module_path = frappe.get_module_path("NCE Events")
@@ -235,6 +235,25 @@ def _save_page(frappe_page_name, title, script):
 	js_path = os.path.join(page_dir, scrubbed + ".js")
 	with open(js_path, "w", encoding="utf-8") as f:
 		f.write(script)
+
+	json_path = os.path.join(page_dir, scrubbed + ".json")
+	page_json = {
+		"name": frappe_page_name,
+		"doctype": "Page",
+		"module": "NCE Events",
+		"page_name": frappe_page_name,
+		"standard": "Yes",
+		"system_page": 0,
+		"title": title,
+		"roles": [{"role": "System Manager"}],
+	}
+	with open(json_path, "w", encoding="utf-8") as f:
+		json.dump(page_json, f, indent=2)
+
+	init_path = os.path.join(page_dir, "__init__.py")
+	if not os.path.exists(init_path):
+		with open(init_path, "w", encoding="utf-8") as f:
+			f.write("")
 
 	was_dev = frappe.conf.developer_mode
 	frappe.conf.developer_mode = True
@@ -256,6 +275,8 @@ def _save_page(frappe_page_name, title, script):
 			page_doc.insert(ignore_permissions=True)
 	finally:
 		frappe.conf.developer_mode = was_dev
+
+	frappe.clear_cache()
 
 
 # ── Internal helpers ──
