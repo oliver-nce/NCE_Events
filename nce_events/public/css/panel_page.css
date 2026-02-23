@@ -34,6 +34,7 @@
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
+	gap: 8px;
 }
 
 .pane-label {
@@ -46,7 +47,7 @@
 .pane-title-right {
 	display: flex;
 	align-items: center;
-	gap: 12px;
+	gap: 6px;
 	margin-left: auto;
 }
 
@@ -54,6 +55,49 @@
 	font-size: 11px;
 	color: #6D757E;
 	font-family: Arial, sans-serif;
+	white-space: nowrap;
+}
+
+/* ── Header buttons ── */
+
+.pane-header-btn {
+	padding: 2px 6px;
+	font-size: 11px;
+	line-height: 1;
+	border-color: #D7D9DB;
+	color: #6D757E;
+}
+
+.pane-header-btn:hover {
+	color: #464D53;
+	border-color: #B7BABE;
+	background: #EAEBEC;
+}
+
+/* ── Filter row ── */
+
+.pane-filter-row {
+	display: flex;
+	gap: 6px;
+	margin-top: 6px;
+	flex-wrap: wrap;
+}
+
+.pane-filter {
+	font-size: 11px;
+	font-family: Arial, sans-serif;
+	padding: 2px 6px;
+	border: 1px solid #D7D9DB;
+	border-radius: 4px;
+	background: #fff;
+	color: #464D53;
+	max-width: 160px;
+	cursor: pointer;
+}
+
+.pane-filter:focus {
+	outline: none;
+	border-color: #73B3F2;
 }
 
 /* ── Pane Body (scrollable) ── */
@@ -62,6 +106,7 @@
 	flex: 1;
 	overflow-y: auto;
 	overflow-x: hidden;
+	position: relative;
 }
 
 /* ── Table ── */
@@ -98,6 +143,31 @@
 	text-overflow: ellipsis;
 	max-width: 0;
 }
+
+/* ── Bold fields ── */
+
+.bold-col {
+	font-weight: 700;
+}
+
+.bold-cell {
+	font-weight: 700;
+}
+
+/* ── Gender indicator ── */
+
+.gender-indicator-th {
+	width: 4px;
+	padding: 0;
+}
+
+.gender-indicator {
+	width: 4px;
+	padding: 0 !important;
+	border-bottom: none;
+}
+
+/* ── Row states ── */
 
 .panel-row {
 	cursor: pointer;
@@ -145,6 +215,72 @@
 	text-align: center;
 	color: #8D949A;
 	font-size: 13px;
+}
+
+/* ── Card popover ── */
+
+.panel-card-popover {
+	position: absolute;
+	left: 8px;
+	right: 8px;
+	z-index: 10;
+	background: #fff;
+	border: 1px solid #D7D9DB;
+	border-radius: 8px;
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+	padding: 12px;
+	max-height: 320px;
+	overflow-y: auto;
+}
+
+.card-field {
+	margin-bottom: 8px;
+}
+
+.card-field:last-child {
+	margin-bottom: 0;
+}
+
+.card-field-label {
+	font-size: 10px;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.3px;
+	color: #8D949A;
+	margin-bottom: 2px;
+	font-family: Arial, sans-serif;
+}
+
+.card-field-value {
+	font-size: 13px;
+	color: #464D53;
+	font-family: Arial, sans-serif;
+	word-wrap: break-word;
+}
+
+.card-field-value a {
+	color: #126BC4;
+}
+
+.card-html {
+	font-size: 12px;
+	line-height: 1.4;
+}
+
+.card-html table {
+	font-size: 11px;
+}
+
+.card-buttons {
+	display: flex;
+	gap: 8px;
+	margin-top: 10px;
+	padding-top: 10px;
+	border-top: 1px solid #EAEBEC;
+}
+
+.card-action-btn {
+	font-size: 12px;
 }
 
 /* ── Drag Divider ── */
