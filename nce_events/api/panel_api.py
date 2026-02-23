@@ -101,6 +101,63 @@ def get_panel_data(page_name, panel_number, selections=None, limit=50, start=0):
 	}
 
 
+# ── Workspace sync ──
+
+
+_PANEL_VIEW_PREFIX = "/app/panel-view/"
+
+
+def sync_workspace_shortcuts(doc=None, method=None):
+	"""Keep workspace shortcuts in sync with active Panel Pages.
+
+	Called via doc_events on Panel Page insert/update/trash.
+	"""
+	if not frappe.db.exists("Workspace", "NCE Events"):
+		return
+
+	ws = frappe.get_doc("Workspace", "NCE Events")
+
+	active_pages = frappe.get_all(
+		"Panel Page", filters={"active": 1}, fields=["page_name", "page_title"]
+	)
+
+	# Remove existing panel-view shortcuts
+	ws.shortcuts = [
+		s for s in ws.shortcuts
+		if not (s.type == "URL" and (s.link_to or "").startswith(_PANEL_VIEW_PREFIX))
+	]
+
+	# Remove panel-page shortcut blocks from content JSON
+	try:
+		content = json.loads(ws.content or "[]")
+	except (json.JSONDecodeError, TypeError):
+		content = []
+
+	content = [b for b in content if not str(b.get("id", "")).startswith("pp_shortcut_")]
+
+	# Also remove the old static "Panel View" shortcut if present
+	ws.shortcuts = [s for s in ws.shortcuts if not (s.type == "Page" and s.link_to == "panel-view")]
+	content = [b for b in content if b.get("id") != "panel_view_shortcut"]
+
+	# Add a shortcut for each active Panel Page
+	for pg in active_pages:
+		ws.append("shortcuts", {
+			"color": "Blue",
+			"doc_view": "",
+			"label": pg.page_title,
+			"link_to": f"{_PANEL_VIEW_PREFIX}{pg.page_name}",
+			"type": "URL",
+		})
+		content.append({
+			"id": f"pp_shortcut_{pg.page_name}",
+			"type": "shortcut",
+			"data": {"shortcut_name": pg.page_title, "col": 4},
+		})
+
+	ws.content = json.dumps(content)
+	ws.save(ignore_permissions=True)
+
+
 # ── Internal helpers ──
 
 
