@@ -21,6 +21,12 @@ frappe.pages["page-view"].on_page_show = function (wrapper) {
 			wrapper._explorer = null;
 		}
 
+		frappe.db.get_value("Page Definition", page_name, "page_title").then(function (r) {
+			if (r.message && r.message.page_title) {
+				page.set_title(r.message.page_title);
+			}
+		});
+
 		frappe.require(
 			[
 				"/assets/nce_events/js/panel_page/store.js",
