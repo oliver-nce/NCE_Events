@@ -171,15 +171,16 @@ def build_page(page_name):
 def _ensure_workspace_shortcut(page_name, page_title):
 	try:
 		workspace = frappe.get_doc("Workspace", "NCE Events")
+		page_url = f"/app/page-view/{page_name}"
 		for s in workspace.shortcuts:
-			if s.link_to == page_name:
+			if s.get("url") == page_url:
 				s.label = page_title
 				workspace.save(ignore_permissions=True)
 				return
 		workspace.append("shortcuts", {
 			"label": page_title,
-			"type": "Page",
-			"link_to": page_name,
+			"type": "URL",
+			"url": f"/app/page-view/{page_name}",
 		})
 		workspace.save(ignore_permissions=True)
 	except frappe.DoesNotExistError:
