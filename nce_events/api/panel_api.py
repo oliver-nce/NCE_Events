@@ -176,6 +176,7 @@ def _ensure_workspace_shortcut(page_name, page_title):
 			if s.get("url") == page_url:
 				s.label = page_title
 				workspace.save(ignore_permissions=True)
+				frappe.clear_cache()
 				return
 		workspace.append("shortcuts", {
 			"label": page_title,
@@ -183,6 +184,7 @@ def _ensure_workspace_shortcut(page_name, page_title):
 			"url": page_url,
 		})
 		workspace.save(ignore_permissions=True)
+		frappe.clear_cache()
 	except Exception as e:
 		frappe.log_error(frappe.get_traceback(), "build_page: workspace shortcut failed")
 		frappe.throw(_(f"Shortcut creation failed: {e}"))
