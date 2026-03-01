@@ -118,6 +118,9 @@ nce_events.panel_page.StoreV2 = class StoreV2 {
 				},
 				callback: function (r) {
 					console.timeEnd(timer_key);
+					if (r.message && r.message._timing) {
+						console.table(r.message._timing);
+					}
 					me.loading[panel_number] = false;
 					if (r.message) {
 						if (append) {

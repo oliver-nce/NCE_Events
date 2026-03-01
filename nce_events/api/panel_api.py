@@ -197,6 +197,10 @@ def get_panel_data_v2(page_name, panel_number, selections=None, limit=50, start=
 		limit:        Max rows (0 = no limit)
 		start:        Offset for pagination
 	"""
+	import time as _time
+	_t = _time.perf_counter
+
+	t0 = _t()
 	panel_number = int(panel_number)
 	limit = int(limit)
 	start = int(start)
@@ -206,6 +210,7 @@ def get_panel_data_v2(page_name, panel_number, selections=None, limit=50, start=
 	selections = selections or {}
 
 	doc = frappe.get_doc("Page Definition", page_name)
+	t1 = _t()
 
 	panel = None
 	prev_panel = None
@@ -221,6 +226,8 @@ def get_panel_data_v2(page_name, panel_number, selections=None, limit=50, start=
 	report_sql = frappe.db.get_value("Report", panel.report_name, "query")
 	if not report_sql:
 		frappe.throw(_("Report {0} not found or has no SQL query").format(panel.report_name))
+	t2 = _t()
+
 	sql = report_sql.strip().rstrip(";")
 	params = {}
 
@@ -228,29 +235,18 @@ def get_panel_data_v2(page_name, panel_number, selections=None, limit=50, start=
 	prev_sel = selections.get(str(prev_panel.panel_number)) if prev_panel else {}
 	if prev_sel:
 		if panel.where_clause:
-			# Explicit WHERE clause with {panel_N.fieldname} substitution
 			where, params = _substitute_where_clause(panel.where_clause, selections)
 			sql = f"SELECT * FROM ({sql}) _v2 WHERE {where}"
 		elif panel.root_doctype and prev_panel and prev_panel.root_doctype:
-			# Auto: find a Link field on this panel's Root DocType → previous panel's Root DocType
 			link_field = _find_link_field(panel.root_doctype, prev_panel.root_doctype)
 			if link_field and prev_sel.get("name"):
 				params["_v2_link"] = prev_sel["name"]
 				sql = f"SELECT * FROM ({sql}) _v2 WHERE `{link_field}` = %(_v2_link)s"
 
-	import time as _time
-
-	t0 = _time.perf_counter()
-
-	# Fetch limit+1 rows — if we get limit+1 back there are more pages.
-	# This avoids a separate COUNT(*) subquery which can be extremely slow
-	# on complex report SQL (full scan with no index pushdown).
 	fetch_limit = limit + 1 if limit else 0
 	data_sql = f"{sql} LIMIT {fetch_limit} OFFSET {start}" if fetch_limit else sql
 	rows = frappe.db.sql(data_sql, params, as_dict=True)
-
-	t1 = _time.perf_counter()
-	frappe.logger().debug(f"[v2] data query: {(t1-t0)*1000:.0f}ms  rows={len(rows)}")
+	t3 = _t()
 
 	has_more = limit and len(rows) > limit
 	if has_more:
@@ -259,13 +255,22 @@ def get_panel_data_v2(page_name, panel_number, selections=None, limit=50, start=
 
 	raw_keys = list(rows[0].keys()) if rows else _get_columns_from_empty(data_sql, params)
 	columns = _build_column_labels(None, raw_keys)
+	t4 = _t()
 
+	ms = lambda a, b: round((b - a) * 1000)
 	return {
 		"columns": columns,
 		"rows": rows,
 		"total": total,
 		"start": start,
 		"limit": limit,
+		"_timing": {
+			"load_page_def_ms": ms(t0, t1),
+			"load_report_sql_ms": ms(t1, t2),
+			"sql_query_ms": ms(t2, t3),
+			"build_columns_ms": ms(t3, t4),
+			"total_server_ms": ms(t0, t4),
+		},
 	}
 
 
