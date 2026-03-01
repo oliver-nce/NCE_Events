@@ -181,17 +181,15 @@ def _ensure_workspace_shortcut(page_name, page_title):
 				frappe.clear_cache()
 				return
 
-		# Add to child table and save to get the row name
-		new_row = workspace.append("shortcuts", {
+		# Add to shortcuts child table
+		workspace.append("shortcuts", {
 			"label": page_title,
 			"type": "URL",
 			"url": page_url,
 		})
-		workspace.save(ignore_permissions=True)
 
-		# Also inject a shortcut block into the content JSON — this is what
-		# Frappe actually renders on the workspace page (child table alone is
-		# not enough; the content field drives the visible layout).
+		# Also inject a shortcut block into the content JSON — the workspace
+		# page renders from content, not the child table alone.
 		try:
 			content = json.loads(workspace.content or "[]")
 		except (json.JSONDecodeError, TypeError):
@@ -205,7 +203,8 @@ def _ensure_workspace_shortcut(page_name, page_title):
 				"col": 4,
 			},
 		})
-		frappe.db.set_value("Workspace", "NCE Events", "content", json.dumps(content))
+		workspace.content = json.dumps(content)
+		workspace.save(ignore_permissions=True)
 		frappe.clear_cache()
 	except Exception as e:
 		frappe.log_error(frappe.get_traceback(), "build_page: workspace shortcut failed")
