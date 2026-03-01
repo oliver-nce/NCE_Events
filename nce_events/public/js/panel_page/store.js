@@ -11,11 +11,13 @@ nce_events.panel_page.StoreV2 = class StoreV2 {
 
 	fetch_config() {
 		var me = this;
+		console.time("[v2] fetch_config");
 		return new Promise(function (resolve, reject) {
 			frappe.call({
 				method: "nce_events.api.panel_api.get_page_config_v2",
 				args: { page_name: me.page_name },
 				callback: function (r) {
+					console.timeEnd("[v2] fetch_config");
 					if (r.message) {
 						me.config = r.message;
 						resolve(r.message);
@@ -102,6 +104,8 @@ nce_events.panel_page.StoreV2 = class StoreV2 {
 		var pane_state = me.panes[panel_number];
 		var start = append && pane_state ? pane_state.rows.length : 0;
 		me.loading[panel_number] = true;
+		var timer_key = "[v2] fetch_panel " + panel_number;
+		console.time(timer_key);
 		return new Promise(function (resolve, reject) {
 			frappe.call({
 				method: "nce_events.api.panel_api.get_panel_data_v2",
@@ -113,6 +117,7 @@ nce_events.panel_page.StoreV2 = class StoreV2 {
 					start: start,
 				},
 				callback: function (r) {
+					console.timeEnd(timer_key);
 					me.loading[panel_number] = false;
 					if (r.message) {
 						if (append) {
@@ -126,6 +131,7 @@ nce_events.panel_page.StoreV2 = class StoreV2 {
 					}
 				},
 				error: function (err) {
+					console.timeEnd(timer_key);
 					me.loading[panel_number] = false;
 					reject(err);
 				},

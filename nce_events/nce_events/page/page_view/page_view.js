@@ -27,6 +27,7 @@ frappe.pages["page-view"].on_page_show = function (wrapper) {
 			}
 		});
 
+		console.time("[v2] frappe.require assets");
 		frappe.require(
 			[
 				"/assets/nce_events/js/panel_page/store.js",
@@ -34,7 +35,10 @@ frappe.pages["page-view"].on_page_show = function (wrapper) {
 				"/assets/nce_events/css/panel_page.css",
 			],
 			function () {
+				console.timeEnd("[v2] frappe.require assets");
+				console.time("[v2] ExplorerV2 constructor+setup");
 				wrapper._explorer = new nce_events.panel_page.ExplorerV2(page, page_name);
+				console.timeEnd("[v2] ExplorerV2 constructor+setup");
 			}
 		);
 	} else {

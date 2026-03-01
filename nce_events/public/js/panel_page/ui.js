@@ -683,6 +683,7 @@ nce_events.panel_page.ExplorerV2 = class ExplorerV2 {
 			}
 		});
 
+		console.time("[v2] full page load");
 		me.store.fetch_config().then(function (config) {
 			if (me._destroyed) return;
 			me.page.set_title(config.page_title);
@@ -747,7 +748,10 @@ nce_events.panel_page.ExplorerV2 = class ExplorerV2 {
 
 		me.store.fetch_panel(panel_number, false).then(function () {
 			if (me._destroyed) return;
+			console.time("[v2] render_pane " + panel_number);
 			me.render_pane(panel_number);
+			console.timeEnd("[v2] render_pane " + panel_number);
+			console.timeEnd("[v2] full page load");
 		});
 	}
 
