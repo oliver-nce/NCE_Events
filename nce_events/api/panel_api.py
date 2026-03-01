@@ -198,9 +198,10 @@ def _ensure_workspace_shortcut(page_name, page_title):
 			content = []
 
 		content.append({
+			"id": frappe.generate_hash("", 10),
 			"type": "shortcut",
 			"data": {
-				"shortcut_name": new_row.name,
+				"shortcut_name": page_title,
 				"col": 4,
 			},
 		})
