@@ -180,11 +180,12 @@ def _ensure_workspace_shortcut(page_name, page_title):
 		workspace.append("shortcuts", {
 			"label": page_title,
 			"type": "URL",
-			"url": f"/app/page-view/{page_name}",
+			"url": page_url,
 		})
 		workspace.save(ignore_permissions=True)
-	except frappe.DoesNotExistError:
-		pass
+	except Exception as e:
+		frappe.log_error(frappe.get_traceback(), "build_page: workspace shortcut failed")
+		frappe.throw(_(f"Shortcut creation failed: {e}"))
 
 
 def _parse_csv(value):
