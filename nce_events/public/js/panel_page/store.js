@@ -114,11 +114,7 @@ nce_events.panel_page.StoreV2 = class StoreV2 {
 					console.timeEnd(timer_key);
 					me.loading[panel_number] = false;
 					if (r.message) {
-						if (append) {
-							me.append_pane_data(panel_number, r.message);
-						} else {
-							me.set_pane_data(panel_number, r.message);
-						}
+						me.set_pane_data(panel_number, r.message);
 						resolve(r.message);
 					} else {
 						reject("No data returned");
