@@ -148,6 +148,78 @@ def _get_columns_from_empty(sql, params):
 	return []
 
 
+@frappe.whitelist()
+def build_page(page_name):
+	"""Create or update the Frappe Page record for a Page Definition, and ensure
+	a shortcut exists in the NCE Events workspace."""
+	doc = frappe.get_doc("Page Definition", page_name)
+	script = _page_script(doc.page_name, doc.page_title)
+
+	if frappe.db.exists("Page", page_name):
+		page = frappe.get_doc("Page", page_name)
+		page.title = doc.page_title
+		page.script = script
+		page.save(ignore_permissions=True)
+	else:
+		page = frappe.get_doc({
+			"doctype": "Page",
+			"name": page_name,
+			"page_name": page_name,
+			"title": doc.page_title,
+			"module": "NCE Events",
+			"standard": "No",
+			"script": script,
+			"roles": [{"role": "System Manager"}],
+		})
+		page.insert(ignore_permissions=True)
+
+	_ensure_workspace_shortcut(page_name, doc.page_title)
+	frappe.db.commit()
+
+	return {"page_url": f"/app/{page_name}"}
+
+
+def _page_script(page_name, page_title):
+	return (
+		f'frappe.pages["{page_name}"].on_page_show = function(wrapper) {{\n'
+		f'\tif (!wrapper._page_obj) {{\n'
+		f'\t\twrapper._page_obj = frappe.ui.make_app_page({{\n'
+		f'\t\t\tparent: wrapper,\n'
+		f'\t\t\ttitle: "{page_title}",\n'
+		f'\t\t\tsingle_column: true,\n'
+		f'\t\t}});\n'
+		f'\t}}\n'
+		f'\tvar page = wrapper._page_obj;\n'
+		f'\tif (wrapper._explorer) return;\n'
+		f'\tfrappe.require([\n'
+		f'\t\t"/assets/nce_events/js/panel_page/store.js",\n'
+		f'\t\t"/assets/nce_events/js/panel_page/ui.js",\n'
+		f'\t\t"/assets/nce_events/css/panel_page.css",\n'
+		f'\t], function() {{\n'
+		f'\t\twrapper._explorer = new nce_events.panel_page.ExplorerV2(page, "{page_name}");\n'
+		f'\t}});\n'
+		f'}};\n'
+	)
+
+
+def _ensure_workspace_shortcut(page_name, page_title):
+	try:
+		workspace = frappe.get_doc("Workspace", "NCE Events")
+		for s in workspace.shortcuts:
+			if s.link_to == page_name:
+				s.label = page_title
+				workspace.save(ignore_permissions=True)
+				return
+		workspace.append("shortcuts", {
+			"label": page_title,
+			"type": "Page",
+			"link_to": page_name,
+		})
+		workspace.save(ignore_permissions=True)
+	except frappe.DoesNotExistError:
+		pass
+
+
 def _parse_csv(value):
 	"""Parse a comma-delimited string into a list of stripped, non-empty values."""
 	if not value:
