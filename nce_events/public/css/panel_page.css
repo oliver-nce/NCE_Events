@@ -385,6 +385,68 @@ body.panel-resizing * {
 	color: #8D949A;
 }
 
+/* ── Navicat-style filter widget (v2) ── */
+
+.pane-filter-widget {
+	padding: 6px 10px 8px;
+	border-top: 1px solid #E8EAED;
+	background: #F8F9FA;
+}
+
+.filter-condition-row {
+	display: flex;
+	align-items: center;
+	gap: 5px;
+	margin-bottom: 5px;
+}
+
+.filter-col-select,
+.filter-op-select {
+	font-size: 12px;
+	padding: 2px 4px;
+	border: 1px solid #CCC;
+	border-radius: 3px;
+	background: #FFF;
+	height: 26px;
+}
+
+.filter-col-select { flex: 2; min-width: 0; }
+.filter-op-select  { flex: 1; min-width: 0; }
+
+.filter-val-input {
+	flex: 2;
+	min-width: 0;
+	font-size: 12px;
+	padding: 2px 6px;
+	border: 1px solid #CCC;
+	border-radius: 3px;
+	height: 26px;
+}
+
+.filter-val-input:focus {
+	outline: none;
+	border-color: #73B3F2;
+}
+
+.filter-remove-btn {
+	flex-shrink: 0;
+	width: 22px;
+	height: 22px;
+	padding: 0;
+	line-height: 1;
+	font-size: 14px;
+	color: #888;
+	border: none;
+	background: transparent;
+}
+
+.filter-remove-btn:hover { color: #D00; }
+
+.filter-add-btn {
+	font-size: 11px;
+	margin-top: 2px;
+}
+
 /* ── Responsive ── */
 
 @media (max-width: 768px) {
