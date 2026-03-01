@@ -149,6 +149,187 @@ def _get_columns_from_empty(sql, params):
 
 
 @frappe.whitelist()
+def get_page_config_v2(page_name):
+	"""Fetch full Page Definition configuration for the v2 client."""
+	doc = frappe.get_doc("Page Definition", page_name)
+
+	panels = []
+	for p in sorted(doc.panels, key=lambda x: x.panel_number):
+		panels.append({
+			"panel_number": p.panel_number,
+			"header_text": p.header_text,
+			"report_name": p.report_name,
+			"root_doctype": p.root_doctype,
+			"where_clause": p.where_clause,
+			"hidden_fields": _parse_csv(p.hidden_fields),
+			"bold_fields": _parse_csv(p.bold_fields),
+			"card_fields": _parse_csv(p.card_fields),
+			"show_filter": p.show_filter,
+			"show_sheets": p.show_sheets,
+			"show_email": p.show_email,
+			"show_sms": p.show_sms,
+			"show_card_email": p.show_card_email,
+			"show_card_sms": p.show_card_sms,
+			"button_1_name": p.button_1_name,
+			"button_1_code": p.button_1_code,
+			"button_2_name": p.button_2_name,
+			"button_2_code": p.button_2_code,
+		})
+
+	return {
+		"page_name": doc.page_name,
+		"page_title": doc.page_title,
+		"male_hex": doc.male_hex,
+		"female_hex": doc.female_hex,
+		"panels": panels,
+	}
+
+
+@frappe.whitelist()
+def get_panel_data_v2(page_name, panel_number, selections=None, limit=50, start=0):
+	"""Execute the Query Report for a v2 panel with inter-panel filtering and pagination.
+
+	Args:
+		page_name:    Page Definition identifier
+		panel_number: Which panel to fetch data for
+		selections:   JSON dict mapping panel numbers to selected row dicts
+		              e.g. {"1": {"name": "EVT-001", "event_name": "Spring Camp"}}
+		limit:        Max rows (0 = no limit)
+		start:        Offset for pagination
+	"""
+	panel_number = int(panel_number)
+	limit = int(limit)
+	start = int(start)
+
+	if isinstance(selections, str):
+		selections = json.loads(selections) if selections else {}
+	selections = selections or {}
+
+	doc = frappe.get_doc("Page Definition", page_name)
+
+	panel = None
+	prev_panel = None
+	for p in sorted(doc.panels, key=lambda x: x.panel_number):
+		if p.panel_number == panel_number:
+			panel = p
+			break
+		prev_panel = p
+
+	if not panel:
+		frappe.throw(_("Panel {0} not found in page {1}").format(panel_number, page_name))
+
+	report = frappe.get_doc("Report", panel.report_name)
+	sql = report.query.strip().rstrip(";")
+	params = {}
+
+	# Apply inter-panel filter when a previous panel has a selection
+	prev_sel = selections.get(str(prev_panel.panel_number)) if prev_panel else {}
+	if prev_sel:
+		if panel.where_clause:
+			# Explicit WHERE clause with {panel_N.fieldname} substitution
+			where, params = _substitute_where_clause(panel.where_clause, selections)
+			sql = f"SELECT * FROM ({sql}) _v2 WHERE {where}"
+		elif panel.root_doctype and prev_panel and prev_panel.root_doctype:
+			# Auto: find a Link field on this panel's Root DocType → previous panel's Root DocType
+			link_field = _find_link_field(panel.root_doctype, prev_panel.root_doctype)
+			if link_field and prev_sel.get("name"):
+				params["_v2_link"] = prev_sel["name"]
+				sql = f"SELECT * FROM ({sql}) _v2 WHERE `{link_field}` = %(_v2_link)s"
+
+	count_sql = f"SELECT COUNT(*) FROM ({sql}) _v2_cnt"
+	total = frappe.db.sql(count_sql, params)[0][0]
+
+	data_sql = f"{sql} LIMIT {limit} OFFSET {start}" if limit else sql
+	rows = frappe.db.sql(data_sql, params, as_dict=True)
+
+	raw_keys = list(rows[0].keys()) if rows else _get_columns_from_empty(data_sql, params)
+	columns = _build_column_labels(report, raw_keys)
+
+	return {
+		"columns": columns,
+		"rows": rows,
+		"total": total,
+		"start": start,
+		"limit": limit,
+	}
+
+
+# ── v2 internal helpers ──
+
+
+_WHERE_REF_RE = re.compile(r"\{panel_(\d+)\.(\w+)\}")
+
+
+def _substitute_where_clause(where_clause, selections):
+	"""Replace {panel_N.fieldname} tokens in a WHERE clause with %(key)s placeholders.
+
+	Returns (processed_where, params_dict).
+	"""
+	params = {}
+
+	def _replacer(match):
+		panel_num = match.group(1)
+		field_name = match.group(2)
+		param_key = f"_v2_p{panel_num}_{field_name}"
+		panel_sel = selections.get(str(panel_num)) or {}
+		value = panel_sel.get(field_name)
+		if value is None:
+			frappe.throw(
+				_("Missing selection: panel_{0}.{1} is required but no row is selected in panel {0}").format(
+					panel_num, field_name
+				)
+			)
+		params[param_key] = value
+		return f"%({param_key})s"
+
+	processed = _WHERE_REF_RE.sub(_replacer, where_clause)
+	return processed, params
+
+
+def _find_link_field(doctype, target_doctype):
+	"""Return the first Link fieldname on doctype that points to target_doctype."""
+	try:
+		meta = frappe.get_meta(doctype)
+		for field in meta.fields:
+			if field.fieldtype == "Link" and field.options == target_doctype:
+				return field.fieldname
+	except Exception:
+		pass
+	return None
+
+
+def _build_column_labels(report, row_keys):
+	"""Build a column list [{fieldname, label}] using report column defs where available."""
+	col_map = {}
+	try:
+		defined = report.columns or []
+		if isinstance(defined, str):
+			defined = json.loads(defined)
+		for c in defined:
+			if isinstance(c, dict):
+				fn = c.get("fieldname") or c.get("field")
+				lbl = c.get("label")
+				if fn and lbl:
+					col_map[fn] = lbl
+			elif isinstance(c, str):
+				# "fieldname:Label:Type:Width" format
+				parts = c.split(":")
+				if len(parts) >= 2 and parts[0] and parts[1]:
+					col_map[parts[0]] = parts[1]
+	except Exception:
+		pass
+
+	return [
+		{"fieldname": k, "label": col_map.get(k) or _title_case(k)}
+		for k in row_keys
+	]
+
+
+def _title_case(fieldname):
+	return fieldname.replace("_", " ").title()
+
+
+@frappe.whitelist()
 def get_active_v2_pages():
 	"""Return list of active Page Definition records for the v2 landing page."""
 	return frappe.get_all(
