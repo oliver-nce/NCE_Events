@@ -1,0 +1,108 @@
+{
+ "actions": [],
+ "autoname": "field:page_name",
+ "creation": "2026-03-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "page_name",
+  "page_title",
+  "active",
+  "column_break_colors",
+  "male_hex",
+  "female_hex",
+  "section_break_panels",
+  "panels",
+  "section_break_drag_actions",
+  "drag_actions"
+ ],
+ "fields": [
+  {
+   "fieldname": "page_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Page Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "page_title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Page Title",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "active",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Active"
+  },
+  {
+   "fieldname": "column_break_colors",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "Hex color for male-gender rows (e.g. #0000FF). Leave empty for no color-coding.",
+   "fieldname": "male_hex",
+   "fieldtype": "Data",
+   "label": "Male Hex Color"
+  },
+  {
+   "description": "Hex color for female-gender rows (e.g. #c700e6). Leave empty for no color-coding.",
+   "fieldname": "female_hex",
+   "fieldtype": "Data",
+   "label": "Female Hex Color"
+  },
+  {
+   "fieldname": "section_break_panels",
+   "fieldtype": "Section Break",
+   "label": "Panels"
+  },
+  {
+   "fieldname": "panels",
+   "fieldtype": "Table",
+   "label": "Panels",
+   "options": "Page Panel",
+   "reqd": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_drag_actions",
+   "fieldtype": "Section Break",
+   "label": "Drag Actions"
+  },
+  {
+   "fieldname": "drag_actions",
+   "fieldtype": "Table",
+   "label": "Drag Actions",
+   "options": "Page Drag Action"
+  }
+ ],
+ "links": [],
+ "modified": "2026-03-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "NCE Events",
+ "name": "Page Definition",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}

@@ -1,0 +1,83 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2026-03-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "source_panel",
+  "drag_field",
+  "target_panel",
+  "target_column",
+  "column_break_code",
+  "eligibility_code",
+  "drop_code"
+ ],
+ "fields": [
+  {
+   "description": "Panel number containing the draggable field",
+   "fieldname": "source_panel",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Source Panel",
+   "reqd": 1
+  },
+  {
+   "description": "Column name in the source panel that is draggable (e.g. name)",
+   "fieldname": "drag_field",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Drag Field",
+   "reqd": 1
+  },
+  {
+   "description": "Panel number to drop onto",
+   "fieldname": "target_panel",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Target Panel",
+   "reqd": 1
+  },
+  {
+   "description": "Column name on the target panel that acts as the drop zone",
+   "fieldname": "target_column",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Target Column",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_code",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "JS that receives each target row and returns true/false to highlight eligible drop targets",
+   "fieldname": "eligibility_code",
+   "fieldtype": "Code",
+   "label": "Eligibility Code",
+   "options": "JS"
+  },
+  {
+   "description": "JS executed on drop — receives {dragged_row, target_row} context. Call frappe.call() for server actions.",
+   "fieldname": "drop_code",
+   "fieldtype": "Code",
+   "label": "Drop Code",
+   "options": "JS",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-03-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "NCE Events",
+ "name": "Page Drag Action",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "creation",
+ "sort_order": "ASC",
+ "states": [],
+ "track_changes": 0
+}

@@ -11,6 +11,11 @@ nce_events.panel_page.Store = class Store {
 
 	fetch_config() {
 		var me = this;
+		var local = (nce_events.panel_page.page_configs || {})[me.page_name];
+		if (local) {
+			me.config = local;
+			return Promise.resolve(local);
+		}
 		return new Promise(function (resolve, reject) {
 			frappe.call({
 				method: "nce_events.api.panel_api.get_page_config",
