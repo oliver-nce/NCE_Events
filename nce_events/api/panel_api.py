@@ -218,12 +218,10 @@ def get_panel_data_v2(page_name, panel_number, selections=None, limit=50, start=
 	if not panel:
 		frappe.throw(_("Panel {0} not found in page {1}").format(panel_number, page_name))
 
-	report_data = frappe.db.get_value(
-		"Report", panel.report_name, ["query", "columns"], as_dict=True
-	)
-	if not report_data or not report_data.query:
+	report_sql = frappe.db.get_value("Report", panel.report_name, "query")
+	if not report_sql:
 		frappe.throw(_("Report {0} not found or has no SQL query").format(panel.report_name))
-	sql = report_data.query.strip().rstrip(";")
+	sql = report_sql.strip().rstrip(";")
 	params = {}
 
 	# Apply inter-panel filter when a previous panel has a selection
@@ -247,7 +245,7 @@ def get_panel_data_v2(page_name, panel_number, selections=None, limit=50, start=
 	rows = frappe.db.sql(data_sql, params, as_dict=True)
 
 	raw_keys = list(rows[0].keys()) if rows else _get_columns_from_empty(data_sql, params)
-	columns = _build_column_labels(report_data.columns, raw_keys)
+	columns = _build_column_labels(None, raw_keys)
 
 	return {
 		"columns": columns,
