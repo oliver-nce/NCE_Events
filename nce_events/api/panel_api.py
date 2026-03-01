@@ -186,31 +186,19 @@ def get_page_config_v2(page_name):
 
 
 @frappe.whitelist()
-def get_panel_data_v2(page_name, panel_number, selections=None, limit=50, start=0):
-	"""Execute the Query Report for a v2 panel with inter-panel filtering and pagination.
+def get_panel_data_v2(page_name, panel_number, selections=None):
+	"""Execute the Query Report for a v2 panel using Frappe's native report runner.
 
-	Args:
-		page_name:    Page Definition identifier
-		panel_number: Which panel to fetch data for
-		selections:   JSON dict mapping panel numbers to selected row dicts
-		              e.g. {"1": {"name": "EVT-001", "event_name": "Spring Camp"}}
-		limit:        Max rows (0 = no limit)
-		start:        Offset for pagination
+	Inter-panel filtering is applied Python-side after the report runs.
+	No pagination — all matching rows are returned.
 	"""
-	import time as _time
-	_t = _time.perf_counter
-
-	t0 = _t()
 	panel_number = int(panel_number)
-	limit = int(limit)
-	start = int(start)
 
 	if isinstance(selections, str):
 		selections = json.loads(selections) if selections else {}
 	selections = selections or {}
 
 	doc = frappe.get_doc("Page Definition", page_name)
-	t1 = _t()
 
 	panel = None
 	prev_panel = None
@@ -223,74 +211,37 @@ def get_panel_data_v2(page_name, panel_number, selections=None, limit=50, start=
 	if not panel:
 		frappe.throw(_("Panel {0} not found in page {1}").format(panel_number, page_name))
 
-	report_sql = frappe.db.get_value("Report", panel.report_name, "query")
-	if not report_sql:
-		frappe.throw(_("Report {0} not found or has no SQL query").format(panel.report_name))
-	t2 = _t()
+	# Run the report natively — same path as the Frappe report UI
+	report = frappe.get_doc("Report", panel.report_name)
+	result = report.execute()
+	raw_columns = result[0]
+	raw_data = result[1]
 
-	sql = report_sql.strip().rstrip(";")
-	params = {}
+	# Parse columns into [{fieldname, label}]
+	columns = _parse_report_column_defs(raw_columns)
+	col_fieldnames = [c["fieldname"] for c in columns]
 
-	# Apply inter-panel filter when a previous panel has a selection
+	# Convert rows to dicts
+	if raw_data and isinstance(raw_data[0], (list, tuple)):
+		rows = [frappe._dict(zip(col_fieldnames, row)) for row in raw_data]
+	else:
+		rows = [frappe._dict(row) if not isinstance(row, frappe._dict) else row for row in raw_data]
+
+	# Apply inter-panel filter Python-side
 	prev_sel = selections.get(str(prev_panel.panel_number)) if prev_panel else {}
 	if prev_sel:
 		if panel.where_clause:
-			where, params = _substitute_where_clause(panel.where_clause, selections)
-			sql = f"SELECT * FROM ({sql}) _v2 WHERE {where}"
+			rows = _apply_python_filter(rows, panel.where_clause, selections)
 		elif panel.root_doctype and prev_panel and prev_panel.root_doctype:
 			link_field = _find_link_field(panel.root_doctype, prev_panel.root_doctype)
 			if link_field and prev_sel.get("name"):
-				params["_v2_link"] = prev_sel["name"]
-				sql = f"SELECT * FROM ({sql}) _v2 WHERE `{link_field}` = %(_v2_link)s"
+				filter_val = str(prev_sel["name"])
+				rows = [r for r in rows if str(r.get(link_field, "")) == filter_val]
 
-	fetch_limit = limit + 1 if limit else 0
-	data_sql = f"{sql} LIMIT {fetch_limit} OFFSET {start}" if fetch_limit else sql
-
-	# Split timing: execute vs fetchall vs dict conversion
-	ta = _t()
-	frappe.db.sql("SET SESSION wait_timeout=300", debug=False)
-	tb = _t()
-	raw_cursor = frappe.db._cursor
-	raw_cursor.execute(data_sql, params or None)
-	tc = _t()
-	raw_rows = raw_cursor.fetchall()
-	td = _t()
-	col_names = [d[0] for d in raw_cursor.description] if raw_cursor.description else []
-	rows = [frappe._dict(zip(col_names, r)) for r in raw_rows]
-	t3 = _t()
-
-	# Store sub-timings for _timing block
-	_sql_sub = {
-		"set_session_ms": round((tb - ta) * 1000),
-		"cursor_execute_ms": round((tc - tb) * 1000),
-		"fetchall_ms": round((td - tc) * 1000),
-		"dict_convert_ms": round((t3 - td) * 1000),
-	}
-
-	has_more = limit and len(rows) > limit
-	if has_more:
-		rows = rows[:limit]
-	total = start + len(rows) + (1 if has_more else 0)
-
-	raw_keys = list(rows[0].keys()) if rows else _get_columns_from_empty(data_sql, params)
-	columns = _build_column_labels(None, raw_keys)
-	t4 = _t()
-
-	ms = lambda a, b: round((b - a) * 1000)
 	return {
 		"columns": columns,
 		"rows": rows,
-		"total": total,
-		"start": start,
-		"limit": limit,
-		"_timing": {
-			"load_page_def_ms": ms(t0, t1),
-			"load_report_sql_ms": ms(t1, t2),
-			"sql_query_ms": ms(t2, t3),
-			"build_columns_ms": ms(t3, t4),
-			"total_server_ms": ms(t0, t4),
-			**_sql_sub,
-		},
+		"total": len(rows),
 	}
 
 
@@ -336,6 +287,49 @@ def _find_link_field(doctype, target_doctype):
 	except Exception:
 		pass
 	return None
+
+
+def _parse_report_column_defs(columns):
+	"""Parse Frappe report column definitions into [{fieldname, label}]."""
+	result = []
+	for c in columns:
+		if isinstance(c, dict):
+			fn = c.get("fieldname") or c.get("field") or ""
+			label = c.get("label") or _title_case(fn)
+		elif isinstance(c, str):
+			parts = c.split(":")
+			fn = parts[0].strip()
+			label = parts[1].strip() if len(parts) > 1 else _title_case(fn)
+		else:
+			fn = str(c)
+			label = _title_case(fn)
+		result.append({"fieldname": fn, "label": label})
+	return result
+
+
+def _apply_python_filter(rows, where_clause, selections):
+	"""Apply a simple {panel_N.fieldname} = value WHERE clause Python-side.
+
+	Handles basic equality patterns: `field = {panel_N.fieldname}`.
+	Complex expressions should be embedded directly in the report SQL.
+	"""
+	def _get_val(match):
+		panel_num, field = match.group(1), match.group(2)
+		return str((selections.get(str(panel_num)) or {}).get(field, ""))
+
+	def _row_matches(row):
+		clause = _WHERE_REF_RE.sub(_get_val, where_clause)
+		# Evaluate simple `field op value` patterns
+		for m in re.finditer(r'(\w+)\s*(=|!=|>|<)\s*[\'"]?([^\'"]+)[\'"]?', clause):
+			field, op, val = m.group(1), m.group(2), m.group(3).strip()
+			cell = str(row.get(field, ""))
+			if op == "=" and cell != val: return False
+			if op == "!=" and cell == val: return False
+			if op == ">" and not (float(cell or 0) > float(val or 0)): return False
+			if op == "<" and not (float(cell or 0) < float(val or 0)): return False
+		return True
+
+	return [r for r in rows if _row_matches(r)]
 
 
 def _build_column_labels(report_columns_raw, row_keys):

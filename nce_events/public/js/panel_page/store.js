@@ -94,15 +94,11 @@ nce_events.panel_page.StoreV2 = class StoreV2 {
 	}
 
 	has_more(panel_number) {
-		var pane = this.panes[panel_number];
-		if (!pane || !pane.limit) return false;
-		return pane.rows.length < pane.total;
+		return false; // no pagination in v2
 	}
 
-	fetch_panel(panel_number, append) {
+	fetch_panel(panel_number) {
 		var me = this;
-		var pane_state = me.panes[panel_number];
-		var start = append && pane_state ? pane_state.rows.length : 0;
 		me.loading[panel_number] = true;
 		var timer_key = "[v2] fetch_panel " + panel_number;
 		console.time(timer_key);
@@ -113,14 +109,9 @@ nce_events.panel_page.StoreV2 = class StoreV2 {
 					page_name: me.page_name,
 					panel_number: panel_number,
 					selections: JSON.stringify(me.selections),
-					limit: 50,
-					start: start,
 				},
 				callback: function (r) {
 					console.timeEnd(timer_key);
-					if (r.message && r.message._timing) {
-						console.table(r.message._timing);
-					}
 					me.loading[panel_number] = false;
 					if (r.message) {
 						if (append) {
