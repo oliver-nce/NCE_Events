@@ -212,10 +212,10 @@ def get_panel_data_v2(page_name, panel_number, selections=None):
 		frappe.throw(_("Panel {0} not found in page {1}").format(panel_number, page_name))
 
 	# Run the report natively — same path as the Frappe report UI
-	report = frappe.get_doc("Report", panel.report_name)
-	result = report.execute()
-	raw_columns = result[0]
-	raw_data = result[1]
+	from frappe.desk.query_report import run as _run_report
+	result = _run_report(report_name=panel.report_name, filters={}, user=frappe.session.user)
+	raw_columns = result.get("columns") or []
+	raw_data = result.get("result") or []
 
 	# Parse columns into [{fieldname, label}]
 	columns = _parse_report_column_defs(raw_columns)
