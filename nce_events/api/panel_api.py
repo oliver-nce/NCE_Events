@@ -245,8 +245,27 @@ def get_panel_data_v2(page_name, panel_number, selections=None, limit=50, start=
 
 	fetch_limit = limit + 1 if limit else 0
 	data_sql = f"{sql} LIMIT {fetch_limit} OFFSET {start}" if fetch_limit else sql
-	rows = frappe.db.sql(data_sql, params, as_dict=True)
+
+	# Split timing: execute vs fetchall vs dict conversion
+	ta = _t()
+	frappe.db.sql("SET SESSION wait_timeout=300", debug=False)
+	tb = _t()
+	raw_cursor = frappe.db._cursor
+	raw_cursor.execute(data_sql, params or None)
+	tc = _t()
+	raw_rows = raw_cursor.fetchall()
+	td = _t()
+	col_names = [d[0] for d in raw_cursor.description] if raw_cursor.description else []
+	rows = [frappe._dict(zip(col_names, r)) for r in raw_rows]
 	t3 = _t()
+
+	# Store sub-timings for _timing block
+	_sql_sub = {
+		"set_session_ms": round((tb - ta) * 1000),
+		"cursor_execute_ms": round((tc - tb) * 1000),
+		"fetchall_ms": round((td - tc) * 1000),
+		"dict_convert_ms": round((t3 - td) * 1000),
+	}
 
 	has_more = limit and len(rows) > limit
 	if has_more:
@@ -270,6 +289,7 @@ def get_panel_data_v2(page_name, panel_number, selections=None, limit=50, start=
 			"sql_query_ms": ms(t2, t3),
 			"build_columns_ms": ms(t3, t4),
 			"total_server_ms": ms(t0, t4),
+			**_sql_sub,
 		},
 	}
 
