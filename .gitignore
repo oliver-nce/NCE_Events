@@ -6,5 +6,18 @@ tags
 node_modules
 __pycache__
 template/
+
+# Non-code reference files (training data, planning docs, configs, assets)
+Docs/*.jsonl
+Docs/_manifest.json
+Docs/*.docx
+Docs/~$*
+Docs/logo.png
 Docs/ssh_connection.json
-h
+Docs/app_structure.json
+Docs/hierarchy_explorer_config.json
+Docs/nce_schema.json
+Docs/nce_theme.json
+Docs/cursor_engineering_policy_frappe_v15_v16.md
+Docs/frappe_rag_context_v15_v16.md
+Docs/Cursor-Ready Implementation Plan*
