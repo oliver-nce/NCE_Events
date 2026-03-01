@@ -238,11 +238,24 @@ def get_panel_data_v2(page_name, panel_number, selections=None, limit=50, start=
 				params["_v2_link"] = prev_sel["name"]
 				sql = f"SELECT * FROM ({sql}) _v2 WHERE `{link_field}` = %(_v2_link)s"
 
-	count_sql = f"SELECT COUNT(*) FROM ({sql}) _v2_cnt"
-	total = frappe.db.sql(count_sql, params)[0][0]
+	import time as _time
 
-	data_sql = f"{sql} LIMIT {limit} OFFSET {start}" if limit else sql
+	t0 = _time.perf_counter()
+
+	# Fetch limit+1 rows — if we get limit+1 back there are more pages.
+	# This avoids a separate COUNT(*) subquery which can be extremely slow
+	# on complex report SQL (full scan with no index pushdown).
+	fetch_limit = limit + 1 if limit else 0
+	data_sql = f"{sql} LIMIT {fetch_limit} OFFSET {start}" if fetch_limit else sql
 	rows = frappe.db.sql(data_sql, params, as_dict=True)
+
+	t1 = _time.perf_counter()
+	frappe.logger().debug(f"[v2] data query: {(t1-t0)*1000:.0f}ms  rows={len(rows)}")
+
+	has_more = limit and len(rows) > limit
+	if has_more:
+		rows = rows[:limit]
+	total = start + len(rows) + (1 if has_more else 0)
 
 	raw_keys = list(rows[0].keys()) if rows else _get_columns_from_empty(data_sql, params)
 	columns = _build_column_labels(None, raw_keys)
