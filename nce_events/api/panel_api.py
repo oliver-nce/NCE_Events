@@ -397,6 +397,11 @@ def translate_wp_query(wp_query):
 			try:
 				col_map = json.loads(col_map_raw) if isinstance(col_map_raw, str) else col_map_raw
 				for wp_col, frappe_col in col_map.items():
+					# Value may be a dict like {"fieldname": "x", ...} — extract just the fieldname
+					if isinstance(frappe_col, dict):
+						frappe_col = frappe_col.get("fieldname", "")
+					if not frappe_col:
+						continue
 					col_pattern = r'\b' + re.escape(str(wp_col)) + r'\b'
 					translated = re.sub(col_pattern, str(frappe_col), translated)
 			except Exception as exc:
