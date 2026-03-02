@@ -374,7 +374,7 @@ def translate_wp_query(wp_query):
 
 	wp_tables = frappe.get_all(
 		"WP Tables",
-		fields=["table_name", "frappe_doctype", "column_mapping"],
+		fields=["table_name", "frappe_doctype", "column_mapping", "name_field_column"],
 	)
 
 	translated = wp_query
@@ -397,7 +397,11 @@ def translate_wp_query(wp_query):
 					frappe_col = frappe_col.get("fieldname", "")
 				if frappe_col:
 					resolved[str(wp_col)] = str(frappe_col)
-			table_col_maps[tname] = resolved
+		# name_field_column always maps to Frappe's primary key "name"
+		name_col = wt.get("name_field_column")
+		if name_col:
+			resolved[str(name_col)] = "name"
+		table_col_maps[tname] = resolved
 		except Exception as exc:
 			warnings.append("Could not parse column_mapping for {0}: {1}".format(tname, str(exc)))
 
