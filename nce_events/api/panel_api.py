@@ -374,7 +374,7 @@ def translate_wp_query(wp_query):
 
 	wp_tables = frappe.get_all(
 		"WP Tables",
-		fields=["table_name", "frappe_doctype", "column_mapping", "name_field_column"],
+		fields=["table_name", "frappe_doctype", "column_mapping"],
 	)
 
 	translated = wp_query
@@ -392,16 +392,18 @@ def translate_wp_query(wp_query):
 		try:
 			col_map = json.loads(col_map_raw) if isinstance(col_map_raw, str) else col_map_raw
 			resolved = {}
-			for wp_col, frappe_col in col_map.items():
-				if isinstance(frappe_col, dict):
-					frappe_col = frappe_col.get("fieldname", "")
-				if frappe_col:
-					resolved[str(wp_col)] = str(frappe_col)
-		# name_field_column always maps to Frappe's primary key "name"
-		name_col = wt.get("name_field_column")
-		if name_col:
-			resolved[str(name_col)] = "name"
-		table_col_maps[tname] = resolved
+			for wp_col, col_info in col_map.items():
+				if isinstance(col_info, dict):
+					# is_name:true means this WP column is the PK → Frappe primary key = "name"
+					if col_info.get("is_name"):
+						resolved[str(wp_col)] = "name"
+					else:
+						frappe_col = col_info.get("fieldname", "")
+						if frappe_col:
+							resolved[str(wp_col)] = str(frappe_col)
+				elif col_info:
+					resolved[str(wp_col)] = str(col_info)
+			table_col_maps[tname] = resolved
 		except Exception as exc:
 			warnings.append("Could not parse column_mapping for {0}: {1}".format(tname, str(exc)))
 
