@@ -367,6 +367,29 @@ def _title_case(fieldname):
 
 @frappe.whitelist()
 @frappe.whitelist()
+def create_or_update_report(header_text, frappe_query, existing_report_name=None):
+	"""Create or update a Query Report from a translated Frappe SQL query."""
+	if not frappe_query:
+		frappe.throw(_("Frappe Query is empty — translate or enter SQL first."))
+
+	report_name = (existing_report_name or "").strip() or (header_text.strip() + " Report")
+
+	if frappe.db.exists("Report", report_name):
+		doc = frappe.get_doc("Report", report_name)
+		doc.query = frappe_query
+		doc.save(ignore_permissions=True)
+		return {"report_name": report_name, "action": "updated"}
+	else:
+		doc = frappe.new_doc("Report")
+		doc.report_name = report_name
+		doc.report_type = "Query Report"
+		doc.is_standard = "No"
+		doc.query = frappe_query
+		doc.insert(ignore_permissions=True)
+		return {"report_name": report_name, "action": "created"}
+
+
+@frappe.whitelist()
 def translate_wp_query(wp_query):
 	"""Translate a WordPress SQL query to its Frappe equivalent using WP Tables mappings."""
 	if not wp_query:

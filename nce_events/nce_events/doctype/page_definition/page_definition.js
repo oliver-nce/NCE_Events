@@ -219,13 +219,19 @@ function _render_report_tab(frm, cdt, cdn, grid_form) {
 		  + frappe.utils.escape_html(report_name) + ' &nbsp;↗</a>'
 		: '<span style="color:#aaa;font-size:12px;">No report selected — set one in the Basic tab first.</span>';
 
-	// Just inject the report link and Translate button — native fields show below via _show_tab
+	var has_report  = !!report_name;
+	var create_label = has_report ? __("Update Report") : __("Create Report");
+
 	var $tab = $('<div style="padding:4px 0;">'
 		+ '<div style="margin-bottom:10px;">' + report_link + '</div>'
-		+ '<button class="btn btn-sm btn-primary pp-translate-btn">Translate WP → Frappe SQL</button>'
+		+ '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'
+		+   '<button class="btn btn-sm btn-primary pp-translate-btn">Translate WP → Frappe SQL</button>'
+		+   '<button class="btn btn-sm btn-default pp-create-report-btn">' + create_label + '</button>'
+		+ '</div>'
 		+ '<div class="pp-translate-warnings" style="margin-top:6px;font-size:12px;color:#e24c4c;"></div>'
 		+ '</div>');
 
+	// ── Translate ──
 	$tab.find(".pp-translate-btn").on("click", function () {
 		var wp_query = (frappe.model.get_value(cdt, cdn, "wp_query") || "").trim();
 		if (!wp_query) { frappe.show_alert({ message: __("Enter a WP query in the WP Query field first"), indicator: "orange" }); return; }
@@ -242,9 +248,49 @@ function _render_report_tab(frm, cdt, cdn, grid_form) {
 				var translated = r.message.translated || "";
 				var w = (r.message.warnings || []);
 				$tab.find(".pp-translate-warnings").html(w.length ? "⚠ " + w.join("<br>") : "");
-				// Write result to native field and mark parent form dirty
 				frappe.model.set_value(cdt, cdn, "frappe_query", translated);
 				frm.dirty();
+			},
+		});
+	});
+
+	// ── Create / Update Report ──
+	$tab.find(".pp-create-report-btn").on("click", function () {
+		var fq = (frappe.model.get_value(cdt, cdn, "frappe_query") || "").trim();
+		if (!fq) { frappe.show_alert({ message: __("No Frappe SQL to save — translate first"), indicator: "orange" }); return; }
+
+		var row       = locals[cdt][cdn];
+		var h_text    = (row.header_text || "").trim();
+		var rpt_name  = (row.report_name  || "").trim();
+		var $btn      = $(this);
+
+		$btn.prop("disabled", true).text("Saving…");
+
+		frappe.call({
+			method: "nce_events.api.panel_api.create_or_update_report",
+			args: { header_text: h_text, frappe_query: fq, existing_report_name: rpt_name },
+			callback: function (r) {
+				$btn.prop("disabled", false);
+				if (!r.message) return;
+				var new_name = r.message.report_name;
+				var action   = r.message.action;   // "created" or "updated"
+
+				// Update report_name on the row
+				frappe.model.set_value(cdt, cdn, "report_name", new_name);
+				frm.dirty();
+
+				// Update button label and report link
+				$btn.text(__("Update Report"));
+				$tab.find("div:first-child").html(
+					'<a href="/app/query-report/' + encodeURIComponent(new_name) + '" target="_blank" '
+					+ 'style="font-size:13px;font-weight:600;">'
+					+ frappe.utils.escape_html(new_name) + ' &nbsp;↗</a>'
+				);
+
+				frappe.show_alert({
+					message: __(action === "created" ? "Report created: {0}" : "Report updated: {0}", [new_name]),
+					indicator: "green",
+				}, 5);
 			},
 		});
 	});
