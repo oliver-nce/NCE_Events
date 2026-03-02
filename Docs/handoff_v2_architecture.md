@@ -2,9 +2,8 @@
 
 ## Purpose
 
-This document provides context for a new agent to continue the design and
-implementation of the Panel Page v2 architecture. Read this alongside
-`panel_page_architecture_v2.md` for the full spec.
+This document is the single source of truth for a new agent continuing
+v2 development. Read it fully before making any changes.
 
 ---
 
@@ -24,310 +23,363 @@ event), and Panel 2 loads related data (e.g. players registered for that event).
   - `get_active_pages()` — lists active Panel Pages for the landing page
   - `get_page_config(page_name)` — returns display config for a page
   - `get_panel_data(page_name, panel_number, selections, limit, start)` — executes
-    raw SQL from the Panel Definition record, substitutes cross-panel references,
-    returns paginated results
-- An embedded config approach (`config.js`) where page display config is baked into
-  the client JS (bypasses the database for config)
-- Working features: bold fields, gender color-coding (left-border indicator using
-  `male_hex`/`female_hex`), hidden fields, column header formatting, double-click
-  drill-down, drag-resize panels, Load More pagination, card popover on single-click,
-  header buttons (Sheets/SMS/Email stubs), filter dropdowns
+    raw SQL, substitutes cross-panel references, returns paginated results
+- Working features: bold fields, gender color-coding, hidden fields, card popover,
+  double-click drill-down, drag-resize panels, filter dropdowns
 
-### Problems with v1
+### V1 coexistence rule
 
-- Raw SQL queries stored in DocType text fields — hard to test independently
-- Display config can get out of sync between the DB record and `config.js`
-- No standard way to test a panel's data query in isolation
-- Column labels require manual config or heuristic title-casing
-- Inter-panel filtering uses a custom `p{N}.fieldname` substitution syntax in SQL
-
-### V1 coexistence
-
-V1 code, pages, and DocTypes (`Panel Page`, `Panel Definition`) remain
-**untouched and running** while v2 is built alongside. The existing
-`config.js`, `get_page_config`, and `get_panel_data` APIs stay in place.
-`get_active_pages` continues to serve the landing page. V1 artifacts will be
-removed only after v2 is fully deployed and verified.
+**V1 code, pages, and DocTypes (`Panel Page`, `Panel Definition`) are untouched
+and stay running.** Do not modify them. V1 will be removed only after v2 is fully
+deployed and verified.
 
 ---
 
-## The v2 Architecture Change
+## V2 Architecture — Implemented and Working
 
 ### Core idea
 
 Replace raw SQL in the Panel Definition with a **link to a Frappe Query Report**.
-Each panel's data comes from a standard Query Report that can be independently
-created, tested, and debugged using Frappe's built-in Report UI.
+Each panel's data comes from a Query Report that can be independently tested in
+the Frappe UI.
 
-### What changes
+### How v2 pages work
 
-| Aspect | v1 | v2 |
+All v2 pages route through a **single shared Frappe Page** (`page-view`) at:
+```
+/app/page-view/{page_name}
+```
+This avoids needing a new Frappe Page record per v2 page and means no
+`bench migrate` is needed to add a new v2 page. The `page_name` parameter
+identifies which `Page Definition` record to load.
+
+A workspace shortcut (type `URL`, pointing to `/app/page-view/{page_name}`) is
+created automatically when the user clicks **Build Page** on the Page Definition
+form. The shortcut appears in the NCE Events workspace.
+
+### V2 page file structure
+
+```
+nce_events/nce_events/page/page_view/
+    page_view.js     — thin wrapper: reads route param, calls frappe.require, creates ExplorerV2
+    page_view.json   — Frappe Page metadata
+    __init__.py      — empty
+```
+
+`page_view.js` does a `frappe.require` on:
+- `/assets/nce_events/js/panel_page/store.js`
+- `/assets/nce_events/js/panel_page/ui.js`
+- `/assets/nce_events/css/panel_page.css`
+
+---
+
+## New DocTypes (v2)
+
+All three DocTypes are migrated and working.
+
+### Page Definition (parent)
+
+`nce_events/nce_events/doctype/page_definition/page_definition.json`
+
+| Field | Type | Notes |
 |---|---|---|
-| Data source | Raw SQL in Panel Definition | Frappe Query Report |
-| Config DocTypes | `Panel Page` / `Panel Definition` | `Page Definition` / `Page Panel` (new) |
-| Testing | Only testable by loading the page | Each report testable at `/app/query-report/report-name` |
-| Column labels | Title-casing heuristic / AS alias | Report column labels (AS alias still overrides) |
-| SQL storage | Text field in child table | UI-created Query Report (stored in DB, exportable as fixture) |
-| Inter-panel filter | `p{N}.fieldname` in SQL | Default: auto via Link fields. Override: WHERE clause |
-| Config source | `config.js` / DB record | `Page Definition` DocType record is the runtime config |
-| Permissions | Page-level only | Report-level permissions per panel |
-| Filter | Dropdown-based | Navicat-style dynamic filter widget |
+| page_name | Data | required, unique, autoname |
+| page_title | Data | required, shown in workspace |
+| active | Check | default 1 |
+| male_hex | Data | hex color for M-column text (e.g. `#0000FF`) |
+| female_hex | Data | hex color for F-column text (e.g. `#c700e6`) |
+| panels | Table → Page Panel | required |
+| drag_actions | Table → Page Drag Action | collapsible, future use |
+
+`male_hex` / `female_hex` are **page-level** — they apply to all panels on that page.
+They control text color of the designated male/female columns (not a side strip).
+
+### Page Panel (child table)
+
+`nce_events/nce_events/doctype/page_panel/page_panel.json`
+
+| Field | Type | Notes |
+|---|---|---|
+| panel_number | Int | display order, required |
+| header_text | Data | panel header label |
+| report_name | **Data** (free text) | Query Report name — **NOT a Link field** |
+| root_doctype | Link → DocType | for inter-panel Link-field filtering only |
+| where_clause | Small Text | optional Python-side filter override |
+| hidden_fields | Small Text | comma-delimited columns to hide in list |
+| bold_fields | Small Text | comma-delimited columns to render bold |
+| card_fields | Small Text | comma-delimited columns for card popover |
+| male_field | Small Text | column name whose values get male_hex text color + bold |
+| female_field | Small Text | column name whose values get female_hex text color + bold |
+| wp_query | Code (SQL) | raw WordPress SQL — input for translator |
+| frappe_query | Code (SQL) | translated Frappe SQL — edit before use |
+| show_filter | Check | Navicat-style filter widget toggle |
+| show_sheets | Check | Sheets button toggle |
+| show_email | Check | Email button toggle (header) |
+| show_sms | Check | SMS button toggle (header) |
+| show_card_email | Check | Email button toggle (card popover) |
+| show_card_sms | Check | SMS button toggle (card popover) |
+| button_1_name | Data | custom card action button label |
+| button_1_code | Code (JS) | JS executed on button click |
+| button_2_name | Data | |
+| button_2_code | Code (JS) | |
+
+**Important:** `report_name` is a plain `Data` field (not a Link to Report) because
+the report may not exist yet when the panel row is created.
+
+### Page Drag Action (child table)
+
+`nce_events/nce_events/doctype/page_drag_action/page_drag_action.json`
+
+Defined but **not yet implemented** in the renderer. Fields:
+
+| Field | Notes |
+|---|---|
+| source_panel (Int) | panel with the draggable row |
+| drag_field (Data) | column to grab |
+| target_panel (Int) | panel to drop onto |
+| target_column (Data) | drop zone column on target panel |
+| eligibility_code (Code/JS) | returns true/false per target row |
+| drop_code (Code/JS) | executes on successful drop |
 
 ---
 
-### New DocTypes
+## Page Panel Form UI (page_definition.js)
 
-All three DocTypes are defined on disk in the app. JSON files are at:
-- `nce_events/nce_events/doctype/page_definition/page_definition.json`
-- `nce_events/nce_events/doctype/page_panel/page_panel.json`
-- `nce_events/nce_events/doctype/page_drag_action/page_drag_action.json`
+The `Page Panel` child-row form is heavily customized with a **5-tab layout**.
+All of this is in `nce_events/nce_events/doctype/page_definition/page_definition.js`.
 
-#### Page Definition (parent)
+### Tabs
 
-The parent DocType that defines a page. Created in the Frappe UI or on disk.
-Contains child rows of `Page Panel` and `Page Drag Action`.
+| Tab | Frappe Fields Shown | Custom UI |
+|---|---|---|
+| Basic | panel_number, header_text, root_doctype, where_clause | — |
+| Display | *(none — all hidden)* | Matrix table |
+| Widgets | show_filter, show_sheets, show_email, show_sms, show_card_email, show_card_sms | — |
+| Buttons | button_1_name, button_1_code, button_2_name, button_2_code | — |
+| Report | report_name, wp_query, frappe_query | Translate + Create/Update Report buttons |
 
-**Fields:**
+### Display tab — Matrix
 
-- **Page Name** (Data) — required, unique, autoname
-- **Page Title** (Data) — required, in list view
-- **Active** (Check) — default: 1
-- **Male Hex Color** (Data) — e.g. `#0000FF`, for gender row color-coding
-- **Female Hex Color** (Data) — e.g. `#c700e6`
-- **Panels** (Table → Page Panel) — required
-- **Drag Actions** (Table → Page Drag Action) — collapsible section
+The Display tab renders an interactive matrix table. Columns come from the
+report's SQL (fetched via `get_report_columns` API). Each row is a column;
+each column in the matrix is:
 
-#### Page Panel (child table)
+- **List** (checkbox) — unchecked = column hidden in panel list
+- **Card** (checkbox) — checked = column appears in card popover
+- **Bold** (checkbox) — checked = column values bold in list
+- **Male** (radio) — one column whose values render with `male_hex` color + bold
+- **Female** (radio) — one column whose values render with `female_hex` color + bold
 
-Each row defines one panel in the page.
+On any checkbox/radio change, `_sync()` fires and writes back to
+`hidden_fields`, `bold_fields`, `card_fields`, `male_field`, `female_field`
+via `frappe.model.set_value`. Values are comma-delimited strings matching the
+SQL column aliases exactly (case-preserved from cursor.description).
 
-**Core fields:**
+### Report tab — WP → Frappe SQL translation
 
-- **Panel Number** (Int) — display order, required
-- **Header Text** (Data) — panel header label
-- **Report Name** (Link → Report) — the Query Report providing data, required
-- **Root DocType** (Link → DocType) — for inter-panel Link field filtering
-  (does not limit card content)
-- **Where Clause** (Small Text) — optional runtime filter override
+1. User pastes a WordPress SQL query into the **WP Query** field
+2. Clicks **Translate WP → Frappe SQL** → calls `translate_wp_query` API
+3. Translated SQL appears in **Frappe Query** field (editable)
+4. Clicks **Create Report** / **Update Report** → calls `create_or_update_report` API
+5. A Frappe Query Report is created/updated; `report_name` is set on the panel row
 
-**Display fields:**
-
-- **Hidden Fields** (Small Text) — comma-delimited columns to hide
-- **Bold Fields** (Small Text) — comma-delimited columns to render bold
-- **Card Fields** (Small Text) — comma-delimited columns for card popover
-
-**Header widget toggles** (Check fields, default ON):
-
-- **Show Filter** — Navicat-style filter widget
-- **Show Sheets** — Google Sheets link button
-- **Show Email** — Email action button (header-level)
-- **Show SMS** — SMS action button (header-level)
-
-**Card action toggles** (Check fields, default OFF):
-
-- **Show Card Email** — Email button in card popover (contact individual)
-- **Show Card SMS** — SMS button in card popover (contact individual)
-
-**Custom buttons:**
-
-- **Button 1 Name** / **Button 1 Code** (JS) — card action button
-- **Button 2 Name** / **Button 2 Code** (JS) — card action button
-
-Button code is JS that runs on click. For server-side work (DB writes, external
-API calls, sending messages), the JS calls a whitelisted Python function via
-`frappe.call()`. JS has access to all panel state (selections across all panels).
-
-#### Page Drag Action (child table)
-
-Defines drag-and-drop interactions between panels. Not implemented yet but
-fields are defined for future use.
-
-- **Source Panel** (Int) — panel containing the draggable field
-- **Drag Field** (Data) — column name to grab (e.g. `name`)
-- **Target Panel** (Int) — panel to drop onto
-- **Target Column** (Data) — drop zone column on target panel
-- **Eligibility Code** (Code/JS) — returns true/false per target row to
-  highlight eligible drop targets (change color, sort to top)
-- **Drop Code** (Code/JS) — executes on drop with `{dragged_row, target_row}`
-  context; calls `frappe.call()` for server actions
-
-**Visual behavior during drag:** Draggable fields show a subtle indicator
-(dashed border, grab cursor). During drag, eligible target rows highlight and
-sort to top; ineligible rows dim. After drop, both panels refresh.
+Default new report name: `{header_text} Panel`
 
 ---
 
-### Query Reports
+## Server API (panel_api.py)
 
-Reports are created in the **Frappe UI** (`/app/query-report`). Set the type to
-"Query Report", pick a Reference DocType, and write the SQL in the form. No file
-deployment needed.
+`nce_events/api/panel_api.py`
 
-Reports can JOIN multiple tables. The Reference DocType on the report is used for
-permissions; the Root DocType on the Page Panel is used for inter-panel filtering.
+### V2 endpoints
 
-Reports and Page Definition records are exported as **Frappe fixtures** so they
-travel with the app code. One designated dev site owns the fixture exports;
-production sites consume them via `bench migrate`.
+| Function | Purpose |
+|---|---|
+| `get_page_config_v2(page_name)` | Returns full page + panel config as JSON |
+| `get_panel_data_v2(page_name, panel_number, selections)` | Runs the Query Report, applies inter-panel filter, returns `{columns, rows, total}` |
+| `get_report_columns(report_name)` | Returns column names from report SQL via `LIMIT 0` cursor.description |
+| `translate_wp_query(wp_query)` | Translates WP SQL to Frappe SQL using `WP Tables` mappings |
+| `create_or_update_report(header_text, frappe_query, existing_report_name, ref_doctype)` | Creates or updates a Frappe Query Report |
+| `build_page(page_name)` | Ensures workspace shortcut exists, returns `{page_url}` |
+| `get_active_v2_pages()` | Lists active Page Definitions for the landing page |
 
-### Server API
+### V1 endpoints (untouched)
 
-A new v2 endpoint wraps Frappe's built-in report execution
-(`frappe.get_doc("Report", name).execute()`). The report produces a ready-made
-data array; our endpoint captures that output and adds:
+`get_active_pages`, `get_page_config`, `get_panel_data` — leave alone.
 
-- **Inter-panel filtering** — injects filters based on the selected row in the
-  previous panel (via Link field lookup or WHERE clause override)
-- **Pagination** — limit/offset for Load More
+### get_page_config_v2 response shape
 
-The v1 `get_panel_data` endpoint remains untouched for v1 pages.
+```json
+{
+  "page_name": "...",
+  "page_title": "...",
+  "male_hex": "#0000FF",
+  "female_hex": "#c700e6",
+  "panels": [
+    {
+      "panel_number": 1,
+      "header_text": "Events",
+      "report_name": "Events Panel",
+      "root_doctype": "Events",
+      "where_clause": "",
+      "hidden_fields": ["max_yob", "min_yob", ...],
+      "bold_fields": ["event_name"],
+      "card_fields": ["max_yob", "min_yob", ...],
+      "male_field": "M",
+      "female_field": "F",
+      "show_filter": 1,
+      ...
+    }
+  ]
+}
+```
+
+### get_panel_data_v2 mechanics
+
+1. Loads `Page Definition` record
+2. Finds the panel row
+3. Calls `frappe.desk.query_report.run(report_name, filters={})` — same code path
+   as the Frappe report UI, so permissions and performance are identical
+4. Parses columns via `_parse_report_column_defs` → `[{fieldname, label}]`
+5. Zips column names with row data → list of dicts
+6. If a previous panel has a selection, applies inter-panel filter Python-side
+7. Returns all matching rows (no pagination)
 
 ### Inter-panel filtering
 
-**Default (no Where Clause):** When a row is selected in Panel N, the system
-looks up Link fields on Panel N+1's Root DocType that reference Panel N's Root
-DocType. The selected row's `name` value is passed as the filter automatically.
+**Default (no where_clause):** Looks up Link fields on Panel N's Root DocType
+that point to Panel N-1's Root DocType. Filters rows where that link field
+equals the selected row's value.
 
-Example: `Registrations.product_id` is a Link to `Events`. Selecting an event
-automatically filters the next panel by `product_id = {selected event name}`.
+**Override (where_clause set):** Uses `{panel_N.fieldname}` token substitution
+in a Python-side filter, e.g. `r.product_id = {panel_1.name}`.
 
-**Override (Where Clause specified):** The clause is appended to the report's
-SQL at runtime. Uses `{panel_N.fieldname}` substitution syntax:
+### translate_wp_query mechanics
 
-```
-r.product_id = {panel_1.name}
-```
+Uses `WP Tables` DocType records (in `nce_sync` app). Each record has:
+- `table_name` — WP table name (e.g. `nce_events`)
+- `frappe_doctype` — Frappe DocType name (e.g. `Events`)
+- `column_mapping` — JSON dict: `{wp_col: {fieldname, is_name, is_virtual, ...}}`
+  - `is_name: true` → WP column maps to Frappe's primary key (`name`)
 
-### Column header display priority
+Three-pass translation to avoid cascading substitutions:
+1. Qualified `table.column` → `` `tabFoo`.fieldname ``
+2. Bare table names → `` `tabFoo` ``
+3. Bare column names (with `(?<!\.)` lookbehind to skip already-qualified fields)
 
-1. **Explicit `AS` alias** in the report SQL — displayed as written
-2. **Frappe Report column label** — from the report definition
-3. **Title-cased fallback** — e.g. `player_count` → "Player Count"
-
-### Card popover
-
-- Shows **all columns from the report row** (not limited to the Root DocType's
-  own fields — joined/related fields are included)
-- Fields listed in `card_fields` control which columns appear
-- HTML fields (column name contains "html") rendered as raw HTML
-- Link/URL fields rendered as clickable links
-
-**Standard card action widgets:**
-
-- **Email** — send email to the person in this row
-- **SMS** — send SMS to the person in this row
-
-**Custom card actions (future):** For actions beyond Email/SMS, write a
-whitelisted Python function on disk (e.g.
-`nce_events.api.card_actions.my_custom_action`). The client calls it via
-`frappe.call()`. Custom action code lives in version-controlled `.py` files
-in the app, not in the database.
-
-### Filter widget
-
-Navicat-style dynamic filter (see screenshot in project assets). Per-panel,
-controlled by the **Show Filter** toggle on the Page Panel record.
-
-- Column dropdown **dynamically populates** from the current result set columns
-- User picks a column, chooses an operator (=, !=, >, <, LIKE, IN), enters a value
-- Add/remove multiple filter conditions
-- No pre-configuration or default filters needed
-- Filter widget starts empty on page load
-
-### Page structure on disk
-
-Each page gets a Frappe Page directory with a thin JS wrapper:
-
-```
-nce_events/page/{page_name}/
-    {page_name}.js      — loads shared renderer, creates Explorer
-    {page_name}.json    — Frappe Page metadata
-    __init__.py         — empty
-```
-
-The shared renderer files remain at:
-- `public/js/panel_page/store.js`
-- `public/js/panel_page/ui.js`
-- `public/css/panel_page.css`
-
-### Fixtures and deployment
-
-- Add `"Page Definition"` and `"Report"` (filtered to our reports) to
-  `fixtures` in `hooks.py`
-- Page Panel child rows export automatically with the parent
-- Run `bench export-fixtures` on the dev site to save records as JSON
-- On deploy + `bench migrate`, fixtures auto-install on all sites
-- One designated dev site owns fixture exports; other sites consume them
-
-### No custom code needed to add a page
-
-1. Create Query Reports for each panel (Frappe UI)
-2. Create a Page Definition record with Page Panel child rows (Frappe UI)
-3. Create the page directory on disk (thin wrapper)
-4. Export fixtures and deploy; `bench migrate`
+**Known limitation:** Bare column names in complex subqueries with multiple JOIN
+tables can be ambiguous — the translator does a best-effort mapping.
 
 ---
 
-## All decisions (finalized)
+## Frontend (ui.js, store.js)
 
-- **New DocTypes:** `Page Definition` (parent) + `Page Panel` (child) +
-  `Page Drag Action` (child) — separate from v1's `Panel Page` / `Panel Definition`
-- **Drag-and-drop:** `Page Drag Action` child table defines cross-panel drag
-  interactions (source/target panel, eligibility logic, drop action). Fields
-  defined now; implementation is future work.
-- **V1 coexistence:** v1 code, pages, and DocTypes remain untouched and running
-- **Data source:** Frappe Query Reports, created in the UI
-- **Server API:** Frappe's report runner wrapped in a custom v2 endpoint for
-  inter-panel filtering and pagination
-- **Filter widget:** Navicat-style, dynamically built from result columns, no
-  default filters, starts empty, per-panel toggle
-- **Header widget toggles:** Filter, Sheets, Email, SMS (Check fields on Page Panel)
-- **Card popover:** Shows all report columns (including joined fields), not just
-  Root DocType fields
-- **Card action widgets:** Email and SMS built-in; custom actions via whitelisted
-  `.py` functions on disk (future)
-- **Root DocType purpose:** Inter-panel Link field lookup only; does not limit
-  card content
-- **Inter-panel filtering:** Auto via Link fields by default; WHERE clause
-  override with `{panel_N.fieldname}` syntax
-- **Column headers:** AS alias > Report column label > title-cased fallback
-- **Fixtures:** Page Definitions and Query Reports exported as Frappe fixtures;
-  one dev site owns exports
-- **Gender color-coding:** `male_hex`/`female_hex` colored left border carries forward
-- **Bold fields, hidden fields:** carry forward
+`nce_events/public/js/panel_page/`
 
-## Key files
+### Class structure
+
+| Class | File | Purpose |
+|---|---|---|
+| `nce_events.panel_page.ExplorerV1` | ui.js | V1 renderer — do not modify |
+| `nce_events.panel_page.ExplorerV2` | ui.js | V2 renderer |
+| `nce_events.panel_page.StoreV1` | store.js | V1 data/state — do not modify |
+| `nce_events.panel_page.StoreV2` | store.js | V2 data/state |
+
+### ExplorerV2 render flow
+
+1. `setup()` — builds container, calls `store.fetch_config()` then `load_panel(1)`
+2. `load_panel(N)` — calls `store.fetch_panel(N)`, then `render_pane(N)`
+3. `render_pane(N)` — builds the HTML table for panel N:
+   - `_visible_columns()` — filters out `hidden_fields`
+   - `_field_set()` — creates a lowercase-key lookup set from a field list
+   - Inline `style="font-weight:700;"` for bold fields (NOT CSS classes — inline wins)
+   - Inline `style="font-weight:700;color:{hex};"` for male/female fields
+   - Row data lookup: tries `row[col.fieldname]` then `row[col.fieldname.toLowerCase()]`
+     (handles mixed-case SQL aliases)
+4. Row click → single-click opens card popover; double-click drills down to next panel
+
+### Bold and gender color — important implementation note
+
+Bold and gender colors are applied with **inline styles** (`style="..."`)
+directly on `<th>` and `<td>` elements. This was necessary because
+`.panel-table th { font-weight:600 }` in the CSS has higher specificity than
+any class-based rule. Do not switch back to CSS classes.
+
+Gender: `male_hex` / `female_hex` normalize to `#XXXXXX` format (the `#` prefix
+is added automatically if missing). The `male_field` / `female_field` comparison
+uses `col.fieldname.toLowerCase()` vs `config.male_field.toLowerCase()` so it
+is case-insensitive.
+
+---
+
+## WP Tables DocType
+
+Lives in the `nce_sync` app at:
+`/Users/oliver2/Documents/_NCE_projects/NCE_Sync/nce_sync/nce_sync/doctype/wp_tables/`
+
+Each record maps one WP table to a Frappe DocType. The `column_mapping` field
+is a JSON Code field. Example entry:
+
+```json
+{
+  "wp_id": {"fieldname": "name", "is_name": true, "is_virtual": false, "is_auto_generated": false},
+  "name":  {"fieldname": "event_name", "is_virtual": false, "is_auto_generated": false},
+  "end_date": {"fieldname": "end_date", "is_virtual": false, "is_auto_generated": false}
+}
+```
+
+`is_name: true` means this WP column is the primary key and maps to Frappe's
+`name` field.
+
+---
+
+## Key files reference
 
 | File | Purpose |
 |---|---|
-| `nce_events/api/panel_api.py` | Server API — v1 endpoints stay, v2 endpoint added |
-| `nce_events/public/js/panel_page/ui.js` | Panel renderer (shared, v1+v2) |
-| `nce_events/public/js/panel_page/store.js` | Client state management |
-| `nce_events/public/js/panel_page/config.js` | Embedded page configs (v1 only, stays for now) |
+| `nce_events/api/panel_api.py` | All server API — v1 (untouched) + v2 endpoints |
+| `nce_events/public/js/panel_page/ui.js` | Panel renderer — ExplorerV1 (do not touch) + ExplorerV2 |
+| `nce_events/public/js/panel_page/store.js` | Client state — StoreV1 (do not touch) + StoreV2 |
 | `nce_events/public/css/panel_page.css` | Panel styling |
-| `nce_events/nce_events/page/panel_view/panel_view.js` | Landing page + router |
-| `nce_events/nce_events/page/event_explorer/` | Event Explorer page wrapper (v1) |
-| `nce_events/nce_events/doctype/panel_page/` | Panel Page DocType (v1, untouched) |
-| `nce_events/nce_events/doctype/panel_definition/` | Panel Definition child table (v1, untouched) |
-| `nce_events/nce_events/doctype/page_definition/` | Page Definition DocType (v2, new) |
-| `nce_events/nce_events/doctype/page_panel/` | Page Panel child table (v2, new) |
-| `nce_events/nce_events/doctype/page_drag_action/` | Page Drag Action child table (v2, new) |
-| `Docs/panel_page_architecture_v2.md` | Full architecture spec |
-| `Docs/panel_page_spec_rules.md` | v1 spec rules (partially superseded) |
-| `Docs/wordpress_db_tables.md` | WordPress source database table list |
+| `nce_events/nce_events/page/page_view/page_view.js` | V2 page router |
+| `nce_events/nce_events/page/panel_view/panel_view.js` | V1 landing page + router (do not touch) |
+| `nce_events/nce_events/doctype/page_definition/page_definition.js` | Page Panel form UI (tabs, matrix, report tab) |
+| `nce_events/nce_events/doctype/page_definition/page_definition.json` | Page Definition DocType schema |
+| `nce_events/nce_events/doctype/page_panel/page_panel.json` | Page Panel DocType schema |
+| `nce_events/nce_events/doctype/page_drag_action/page_drag_action.json` | Page Drag Action schema |
+| `Docs/handoff_v2_architecture.md` | **This file** |
+
+---
+
+## Deployment rules
+
+- **Do not run bench commands** — the user runs all `bench build`, `bench migrate`,
+  `bench restart` commands on the server themselves
+- Push code changes to GitHub; user pulls and builds on the server
+- The bench root on the local dev machine is `/Users/oliver2/NCE_V15` but
+  `nce_events` is NOT installed there — it runs on a remote server
+- After any `.js` or `.css` change, remind the user to `bench build` + hard refresh
+
+---
 
 ## Backlog / Known Issues
 
 | # | Issue | Notes |
 |---|---|---|
-| 1 | ~~**Workspace shortcut not appearing on workspace page after `build_page()`**~~ | **RESOLVED.** Root cause: Frappe v15 workspace page renders from the `content` JSON field, not the `shortcuts` child table alone. Fix: update both `workspace.content` (inject a `{"type":"shortcut","data":{"shortcut_name": page_title, "col":4, "id":...}}` block) AND the child table in a single `workspace.save()` call, followed by `frappe.clear_cache()`. A browser page refresh is required to see the new shortcut (expected Frappe behavior). |
+| 1 | ~~Workspace shortcut not appearing~~ | **RESOLVED** — writes both `content` JSON and `shortcuts` child table |
+| 2 | ~~Page title shows "Page View" instead of page title~~ | **RESOLVED** — `frappe.db.get_value` sets title dynamically |
+| 3 | ~~Page loading 14 seconds~~ | **RESOLVED** — use `frappe.desk.query_report.run()` instead of raw SQL; removed pagination |
+| 4 | ~~Bold/gender styles not applying~~ | **RESOLVED** — switched to inline styles; gender now colors text not strip |
+| 5 | **Drag-and-drop** | `Page Drag Action` fields defined; renderer not implemented yet |
+| 6 | **Card popover actions** | Email/SMS stubs exist; actual send logic not implemented |
+| 7 | **Fixtures** | Page Definition + Report not yet added to `hooks.py` fixtures |
 
 ---
 
 ## Database access
 
-The WordPress source database (db_ncesoccer) is accessible from the developer's
-local machine via MySQL CLI:
+The WordPress source database (`db_ncesoccer`) is accessible from the developer's
+local machine via MySQL:
 
 ```
 Host: wp-ncesoccer.chseex38tpak.us-east-1.rds.amazonaws.com
@@ -336,4 +388,13 @@ User: nce_sync
 Database: db_ncesoccer
 ```
 
-The Frappe database is on the production server (manager.ncesoccer.com).
+The Frappe production database is on `manager.ncesoccer.com`.
+
+---
+
+## Previous conversation context
+
+The main implementation conversation is available at transcript ID
+`97855a53-990e-4ada-9244-6077eb43d3c7`. It covers all v2 work from
+initial DocType creation through the matrix UI, WP→Frappe SQL translator,
+and bold/gender color fixes.
