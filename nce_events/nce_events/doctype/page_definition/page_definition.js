@@ -181,7 +181,7 @@ function _render_matrix(frm, cdt, cdn) {
 			var td  = 'style="text-align:center;padding:4px 8px;"';
 			html += '<tr' + bg + '>'
 				+ '<td style="padding:4px 8px;color:#8d949a;font-size:11px;">' + c + '</td>'
-				+ '<td style="padding:4px 8px;color:#8d949a;">' + frappe.utils.escape_html(default_header) + '</td>'
+				+ '<td style="padding:4px 8px;color:#4c5a67;">' + frappe.utils.escape_html(default_header) + '</td>'
 				+ '<td style="padding:4px 8px;"><input type="text" data-col="' + c + '" data-role="header" '
 				+   'placeholder="' + frappe.utils.escape_html(default_header) + '" '
 				+   'value="' + frappe.utils.escape_html(current_header) + '" '
@@ -220,7 +220,11 @@ function _render_matrix(frm, cdt, cdn) {
 			frappe.model.set_value(cdt, cdn, "female_field",  nf);
 			frappe.model.set_value(cdt, cdn, "header_overrides", Object.keys(ho).length ? JSON.stringify(ho) : "");
 		}
-		$matrix.on("change input", "input", _sync);
+		$matrix.on("change", "input[type=checkbox], input[type=radio]", _sync);
+		$matrix.on("blur", 'input[data-role="header"]', _sync);
+		$matrix.on("mousedown", 'input[data-role="header"]', function (e) {
+			e.stopPropagation();
+		});
 		$container.append($matrix);
 	});
 }
