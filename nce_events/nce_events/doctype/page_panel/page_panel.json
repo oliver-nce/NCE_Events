@@ -52,10 +52,9 @@
   },
   {
    "fieldname": "report_name",
-   "fieldtype": "Link",
+   "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Report Name",
-   "options": "Report",
    "reqd": 1
   },
   {
