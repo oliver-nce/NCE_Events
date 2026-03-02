@@ -367,12 +367,12 @@ def _title_case(fieldname):
 
 @frappe.whitelist()
 @frappe.whitelist()
-def create_or_update_report(header_text, frappe_query, existing_report_name=None):
+def create_or_update_report(header_text, frappe_query, existing_report_name=None, ref_doctype=None):
 	"""Create or update a Query Report from a translated Frappe SQL query."""
 	if not frappe_query:
 		frappe.throw(_("Frappe Query is empty — translate or enter SQL first."))
 
-	report_name = (existing_report_name or "").strip() or (header_text.strip() + " Report")
+	report_name = (existing_report_name or "").strip() or (header_text.strip() + " Panel")
 
 	if frappe.db.exists("Report", report_name):
 		doc = frappe.get_doc("Report", report_name)
@@ -384,6 +384,7 @@ def create_or_update_report(header_text, frappe_query, existing_report_name=None
 		doc.report_name = report_name
 		doc.report_type = "Query Report"
 		doc.is_standard = "No"
+		doc.ref_doctype = ref_doctype or "DocType"
 		doc.query = frappe_query
 		doc.insert(ignore_permissions=True)
 		return {"report_name": report_name, "action": "created"}

@@ -268,7 +268,7 @@ function _render_report_tab(frm, cdt, cdn, grid_form) {
 
 		frappe.call({
 			method: "nce_events.api.panel_api.create_or_update_report",
-			args: { header_text: h_text, frappe_query: fq, existing_report_name: rpt_name },
+			args: { header_text: h_text, frappe_query: fq, existing_report_name: rpt_name, ref_doctype: row.root_doctype || "" },
 			callback: function (r) {
 				$btn.prop("disabled", false);
 				if (!r.message) return;
