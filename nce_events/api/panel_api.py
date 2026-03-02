@@ -384,7 +384,7 @@ def translate_wp_query(wp_query):
 		if not wt.get("frappe_doctype") or not wt.get("table_name"):
 			continue
 
-		frappe_table = "tab" + wt["frappe_doctype"]
+		frappe_table = "`tab" + wt["frappe_doctype"] + "`"
 
 		# Replace WP table name with Frappe table name (whole-word, case-insensitive)
 		pattern = r'\b' + re.escape(wt["table_name"]) + r'\b'
