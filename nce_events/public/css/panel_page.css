@@ -146,12 +146,14 @@
 
 /* ── Bold fields ── */
 
-.bold-col {
+.panel-table th.bold-col {
 	font-weight: 700;
+	color: #2c3e50;
 }
 
-.bold-cell {
+.panel-table td.bold-cell {
 	font-weight: 700;
+	color: #2c3e50;
 }
 
 /* ── Gender indicator ── */
