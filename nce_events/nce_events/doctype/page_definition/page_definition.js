@@ -25,12 +25,20 @@ var TAB_GROUPS = {
 	buttons: ["section_break_buttons", "button_1_name", "button_1_code",
 	          "column_break_buttons", "button_2_name", "button_2_code"],
 };
+var TAB_ORDER  = ["basic", "display", "widgets", "buttons"];
 var TAB_LABELS = { basic: "Basic", display: "Display", widgets: "Widgets", buttons: "Buttons" };
 var ALL_PANEL_FIELDS = [].concat(
 	TAB_GROUPS.basic, TAB_GROUPS.display, TAB_GROUPS.widgets, TAB_GROUPS.buttons
 );
-// Backing fields replaced by the matrix — never show native inputs
+// Native inputs replaced by the matrix — never shown directly
 var MATRIX_FIELDS = ["hidden_fields", "bold_fields", "card_fields", "male_field", "female_field"];
+// Section-break / column-break fields Frappe still renders — always hide
+var BREAK_FIELDS = [
+	"section_break_display", "column_break_display",
+	"section_break_header_widgets", "column_break_header_widgets",
+	"section_break_card_actions",
+	"section_break_buttons", "column_break_buttons",
+];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function _get_grid_form(frm) {
@@ -39,41 +47,73 @@ function _get_grid_form(frm) {
 	return (f && f.grid && f.grid.grid_form) ? f.grid.grid_form : null;
 }
 
-function _show_tab(grid_form, tab_id) {
-	// Hide all managed fields
+function _hide_all_fields(grid_form) {
 	ALL_PANEL_FIELDS.forEach(function (fn) {
 		var fd = grid_form.fields_dict[fn];
 		if (fd && fd.$wrapper) $(fd.$wrapper).hide();
 	});
-	// Show fields for the active tab, except matrix-backed ones
+}
+
+function _show_tab(grid_form, tab_id) {
+	_hide_all_fields(grid_form);
+
+	// Always hide break fields (section/column breaks clutter the UI)
+	BREAK_FIELDS.forEach(function (fn) {
+		var fd = grid_form.fields_dict[fn];
+		if (fd && fd.$wrapper) $(fd.$wrapper).hide();
+	});
+
+	// Show fields for this tab, skipping matrix-backed and break fields
 	(TAB_GROUPS[tab_id] || []).forEach(function (fn) {
 		if (MATRIX_FIELDS.indexOf(fn) !== -1) return;
+		if (BREAK_FIELDS.indexOf(fn) !== -1) return;
 		var fd = grid_form.fields_dict[fn];
 		if (fd && fd.$wrapper) $(fd.$wrapper).show();
 	});
-	// Update tab bar active state
-	$(grid_form.wrapper).find(".pp-tab-btn").removeClass("pp-tab-active");
-	$(grid_form.wrapper).find('.pp-tab-btn[data-tab="' + tab_id + '"]').addClass("pp-tab-active");
-	// Store active tab on the wrapper so matrix render knows
-	$(grid_form.wrapper).data("pp-active-tab", tab_id);
+
+	// Show/hide matrix container
+	var $wrap = $(grid_form.wrapper);
+	$wrap.find(".pp-matrix-wrap").toggle(tab_id === "display");
+
+	// Update active tab button style
+	$wrap.find(".pp-tab-btn").css({ background: "", color: "", fontWeight: "" });
+	$wrap.find('.pp-tab-btn[data-tab="' + tab_id + '"]').css({
+		background: "#171717", color: "#fff", fontWeight: "600",
+	});
+	$wrap.data("pp-active-tab", tab_id);
 }
 
 function _ensure_tab_bar(frm, cdt, cdn, grid_form) {
 	var $wrap = $(grid_form.wrapper);
 	if ($wrap.find(".pp-tab-bar").length) return;
 
-	var $bar = $('<div class="pp-tab-bar" style="display:flex;gap:4px;padding:8px 0 10px;border-bottom:1px solid #d1d8dd;margin-bottom:8px;"></div>');
-	Object.keys(TAB_LABELS).forEach(function (tab_id) {
-		var $btn = $('<button class="btn btn-xs btn-default pp-tab-btn" data-tab="' + tab_id + '" style="padding:3px 12px;">'
-			+ TAB_LABELS[tab_id] + '</button>');
-		$btn.on("click", function () {
-			_show_tab(grid_form, tab_id);
-			if (tab_id === "display") _render_matrix(frm, cdt, cdn);
-		});
-		$bar.append($btn);
+	// Anchor: insert tab bar right before the first field (panel_number)
+	var first_fd = grid_form.fields_dict["panel_number"];
+	if (!first_fd || !first_fd.$wrapper) return;
+
+	// Tab bar
+	var tab_html = '<div class="pp-tab-bar" style="display:flex;gap:4px;padding:6px 0 10px;margin-bottom:6px;border-bottom:1px solid #d1d8dd;">';
+	TAB_ORDER.forEach(function (tab_id) {
+		tab_html += '<button class="btn btn-xs btn-default pp-tab-btn" data-tab="' + tab_id + '" '
+			+ 'style="padding:3px 14px;border-radius:4px;">'
+			+ TAB_LABELS[tab_id] + '</button>';
+	});
+	tab_html += '</div>';
+
+	// Matrix placeholder container (empty until Display tab clicked)
+	var $tab_bar    = $(tab_html);
+	var $matrix_wrap = $('<div class="pp-matrix-wrap" style="display:none;padding-bottom:8px;"></div>');
+
+	$(first_fd.$wrapper).before($tab_bar).before($matrix_wrap);
+
+	// Wire tab clicks
+	$tab_bar.on("click", ".pp-tab-btn", function () {
+		var tab_id = $(this).data("tab");
+		_show_tab(grid_form, tab_id);
+		if (tab_id === "display") _render_matrix(frm, cdt, cdn);
 	});
 
-	$wrap.prepend($bar);
+	// Start on Basic
 	_show_tab(grid_form, "basic");
 }
 
@@ -81,14 +121,13 @@ function _ensure_tab_bar(frm, cdt, cdn, grid_form) {
 function _render_matrix(frm, cdt, cdn) {
 	var row = locals[cdt][cdn];
 	if (!row || !row.report_name) return;
-
 	var grid_form = _get_grid_form(frm);
 	if (!grid_form) return;
-
-	var $wrap = $(grid_form.wrapper);
+	var $container = $(grid_form.wrapper).find(".pp-matrix-wrap");
+	if (!$container.length) return;
 
 	_get_report_columns(row.report_name, function (columns) {
-		$wrap.find(".panel-col-matrix").remove();
+		$container.empty();
 
 		function parse_csv(val) {
 			return ((val || "").split(",")).map(function (s) { return s.trim(); }).filter(Boolean);
@@ -99,40 +138,42 @@ function _render_matrix(frm, cdt, cdn) {
 		var male   = (row.male_field   || "").trim();
 		var female = (row.female_field || "").trim();
 
-		var html = '<div class="panel-col-matrix" style="margin-top:4px;overflow-x:auto;">'
-			+ '<table style="width:100%;border-collapse:collapse;font-size:12px;">'
+		var th_style = 'style="text-align:center;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;"';
+		var html = '<table style="width:100%;border-collapse:collapse;font-size:12px;">'
 			+ '<thead><tr>'
 			+ '<th style="text-align:left;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;">Field</th>'
-			+ '<th style="text-align:center;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;">List</th>'
-			+ '<th style="text-align:center;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;">Card</th>'
-			+ '<th style="text-align:center;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;">Bold</th>'
-			+ '<th style="text-align:center;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;">Male</th>'
-			+ '<th style="text-align:center;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;">Female</th>'
+			+ '<th ' + th_style + '>List</th>'
+			+ '<th ' + th_style + '>Card</th>'
+			+ '<th ' + th_style + '>Bold</th>'
+			+ '<th ' + th_style + '>Male</th>'
+			+ '<th ' + th_style + '>Female</th>'
 			+ '</tr></thead><tbody>';
 
 		columns.forEach(function (col, i) {
-			var bg = i % 2 !== 0 ? ' style="background:#f8f9fa;"' : '';
-			var c  = frappe.utils.escape_html(col);
+			var bg  = i % 2 !== 0 ? ' style="background:#f8f9fa;"' : '';
+			var c   = frappe.utils.escape_html(col);
+			var td  = 'style="text-align:center;padding:4px 8px;"';
 			html += '<tr' + bg + '>'
 				+ '<td style="padding:4px 8px;">' + c + '</td>'
-				+ '<td style="text-align:center;padding:4px 8px;"><input type="checkbox" data-col="' + c + '" data-role="list"'   + (hidden.indexOf(col) === -1 ? " checked" : "") + '></td>'
-				+ '<td style="text-align:center;padding:4px 8px;"><input type="checkbox" data-col="' + c + '" data-role="card"'   + (card.indexOf(col)   !== -1 ? " checked" : "") + '></td>'
-				+ '<td style="text-align:center;padding:4px 8px;"><input type="checkbox" data-col="' + c + '" data-role="bold"'   + (bold.indexOf(col)   !== -1 ? " checked" : "") + '></td>'
-				+ '<td style="text-align:center;padding:4px 8px;"><input type="radio"    data-col="' + c + '" name="male_'   + cdn + '"' + (male   === col ? " checked" : "") + '></td>'
-				+ '<td style="text-align:center;padding:4px 8px;"><input type="radio"    data-col="' + c + '" name="female_' + cdn + '"' + (female === col ? " checked" : "") + '></td>'
+				+ '<td ' + td + '><input type="checkbox" data-col="' + c + '" data-role="list"'   + (hidden.indexOf(col) === -1 ? " checked" : "") + '></td>'
+				+ '<td ' + td + '><input type="checkbox" data-col="' + c + '" data-role="card"'   + (card.indexOf(col)   !== -1 ? " checked" : "") + '></td>'
+				+ '<td ' + td + '><input type="checkbox" data-col="' + c + '" data-role="bold"'   + (bold.indexOf(col)   !== -1 ? " checked" : "") + '></td>'
+				+ '<td ' + td + '><input type="radio"    data-col="' + c + '" name="male_'   + cdn + '"' + (male   === col ? " checked" : "") + '></td>'
+				+ '<td ' + td + '><input type="radio"    data-col="' + c + '" name="female_' + cdn + '"' + (female === col ? " checked" : "") + '></td>'
 				+ '</tr>';
 		});
-		html += '</tbody></table></div>';
+		html += '</tbody></table>';
 
 		var $matrix = $(html);
 
 		function _sync() {
 			var nh = [], nc = [], nb = [], nm = "", nf = "";
 			columns.forEach(function (col) {
-				var $inputs = $matrix.find('input[data-col="' + frappe.utils.escape_html(col) + '"]');
-				if (!$inputs.filter('[data-role="list"]').prop("checked")) nh.push(col);
-				if ($inputs.filter('[data-role="card"]').prop("checked"))  nc.push(col);
-				if ($inputs.filter('[data-role="bold"]').prop("checked"))  nb.push(col);
+				var esc = frappe.utils.escape_html(col);
+				var $r = $matrix.find('input[data-col="' + esc + '"]');
+				if (!$r.filter('[data-role="list"]').prop("checked")) nh.push(col);
+				if ($r.filter('[data-role="card"]').prop("checked"))  nc.push(col);
+				if ($r.filter('[data-role="bold"]').prop("checked"))  nb.push(col);
 			});
 			var $mr = $matrix.find('input[name="male_'   + cdn + '"]:checked');
 			var $fr = $matrix.find('input[name="female_' + cdn + '"]:checked');
@@ -145,10 +186,7 @@ function _render_matrix(frm, cdt, cdn) {
 			frappe.model.set_value(cdt, cdn, "female_field",  nf);
 		}
 		$matrix.on("change", "input", _sync);
-
-		// Insert after the tab bar
-		var $bar = $wrap.find(".pp-tab-bar");
-		if ($bar.length) $bar.after($matrix); else $wrap.append($matrix);
+		$container.append($matrix);
 	});
 }
 
@@ -192,7 +230,8 @@ frappe.ui.form.on("Page Panel", {
 		delete _rpt_col_cache[row.report_name];
 		var grid_form = _get_grid_form(frm);
 		if (!grid_form) return;
-		var active = $(grid_form.wrapper).data("pp-active-tab");
-		if (active === "display") _render_matrix(frm, cdt, cdn);
+		if ($(grid_form.wrapper).data("pp-active-tab") === "display") {
+			_render_matrix(frm, cdt, cdn);
+		}
 	},
 });
