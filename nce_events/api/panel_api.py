@@ -35,6 +35,8 @@ def get_page_config(page_name):
 			"button_2_code": p.button_2_code,
 			"header_overrides": _parse_json(p.header_overrides),
 			"column_order": _parse_csv(p.column_order),
+			"gender_column": (p.gender_column or "").strip(),
+			"gender_color_fields": _parse_csv(p.gender_color_fields),
 		})
 
 	return {

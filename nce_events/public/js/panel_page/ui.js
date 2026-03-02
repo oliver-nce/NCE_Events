@@ -150,6 +150,14 @@ nce_events.panel_page.Explorer = class Explorer {
 		return typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value);
 	}
 
+	_looks_male(val) {
+		return /^(m|male|boy|man|men|boys)$/.test(val);
+	}
+
+	_looks_female(val) {
+		return /^(f|female|girl|woman|women|girls)$/.test(val);
+	}
+
 	// ── Panel loading ──
 
 	load_panel(panel_number) {
@@ -411,6 +419,9 @@ nce_events.panel_page.Explorer = class Explorer {
 		var male_field  = (config.male_field  || "").trim().toLowerCase();
 		var female_field = (config.female_field || "").trim().toLowerCase();
 
+		var gender_col = (config.gender_column || "").trim();
+		var gender_tint_set = me._field_set(config.gender_color_fields);
+
 		var id_col = state.columns.length ? state.columns[0].fieldname : null;
 		var selected_row = me.store.get_selected(panel_number);
 
@@ -452,6 +463,13 @@ nce_events.panel_page.Explorer = class Explorer {
 					style = ' style="font-weight:700;color:' + male_hex + ';"';
 				} else if (female_field && fn === female_field && female_hex) {
 					style = ' style="font-weight:700;color:' + female_hex + ';"';
+				} else if (gender_col && gender_tint_set[fn]) {
+					var gv = String(row[gender_col] || row[gender_col.toLowerCase()] || "").trim().toLowerCase();
+					if (me._looks_male(gv) && male_hex) {
+						style = ' style="font-weight:700;color:' + male_hex + ';"';
+					} else if (me._looks_female(gv) && female_hex) {
+						style = ' style="font-weight:700;color:' + female_hex + ';"';
+					}
 				} else if (bold_set[fn]) {
 					style = ' style="font-weight:700;"';
 				}

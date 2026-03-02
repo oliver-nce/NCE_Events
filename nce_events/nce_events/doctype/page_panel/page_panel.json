@@ -19,6 +19,8 @@
   "female_field",
   "header_overrides",
   "column_order",
+  "gender_column",
+  "gender_color_fields",
   "section_break_queries",
   "wp_query",
   "frappe_query",
@@ -124,6 +126,20 @@
    "fieldtype": "Small Text",
    "hidden": 1,
    "label": "Column Order"
+  },
+  {
+   "description": "Column that holds the gender indicator for each row (e.g. M/F, Male/Female)",
+   "fieldname": "gender_column",
+   "fieldtype": "Small Text",
+   "hidden": 1,
+   "label": "Gender Column"
+  },
+  {
+   "description": "Comma-delimited columns to color based on the row's gender value",
+   "fieldname": "gender_color_fields",
+   "fieldtype": "Small Text",
+   "hidden": 1,
+   "label": "Gender Color Fields"
   },
   {
    "fieldname": "section_break_queries",

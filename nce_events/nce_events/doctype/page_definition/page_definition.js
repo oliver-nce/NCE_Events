@@ -18,7 +18,8 @@ function _get_report_columns(report_name, callback) {
 var TAB_GROUPS = {
 	basic:   ["panel_number", "header_text", "root_doctype", "where_clause"],
 	display: ["section_break_display", "hidden_fields", "bold_fields", "male_field",
-	          "column_break_display", "card_fields", "female_field", "header_overrides", "column_order"],
+	          "column_break_display", "card_fields", "female_field", "header_overrides", "column_order",
+	          "gender_column", "gender_color_fields"],
 	widgets: ["section_break_header_widgets", "show_filter", "show_sheets",
 	          "column_break_header_widgets", "show_email", "show_sms",
 	          "section_break_card_actions", "show_card_email", "show_card_sms"],
@@ -32,7 +33,7 @@ var ALL_PANEL_FIELDS = [].concat(
 	TAB_GROUPS.basic, TAB_GROUPS.display, TAB_GROUPS.widgets, TAB_GROUPS.buttons
 );
 // Native inputs replaced by the matrix — never shown directly
-var MATRIX_FIELDS = ["hidden_fields", "bold_fields", "card_fields", "male_field", "female_field", "header_overrides", "column_order"];
+var MATRIX_FIELDS = ["hidden_fields", "bold_fields", "card_fields", "male_field", "female_field", "header_overrides", "column_order", "gender_column", "gender_color_fields"];
 // Section-break / column-break fields Frappe still renders — always hide
 var BREAK_FIELDS = [
 	"section_break_display", "column_break_display",
@@ -165,6 +166,8 @@ function _render_matrix(frm, cdt, cdn) {
 		var card   = parse_csv(row.card_fields);
 		var male   = (row.male_field   || "").trim();
 		var female = (row.female_field || "").trim();
+		var gender_col   = (row.gender_column || "").trim();
+		var gender_tint  = parse_csv(row.gender_color_fields);
 
 		var overrides = {};
 		try { overrides = JSON.parse(row.header_overrides || "{}"); } catch (e) { /* ignore */ }
@@ -190,6 +193,8 @@ function _render_matrix(frm, cdt, cdn) {
 			+ '<th ' + th_style + '>Bold</th>'
 			+ '<th ' + th_style + '>Male</th>'
 			+ '<th ' + th_style + '>Female</th>'
+			+ '<th ' + th_style + '>Gender</th>'
+			+ '<th ' + th_style + '>Tint</th>'
 			+ '</tr></thead><tbody>';
 
 		columns.forEach(function (col, i) {
@@ -212,6 +217,8 @@ function _render_matrix(frm, cdt, cdn) {
 				+ '<td ' + td + '><input type="checkbox" data-col="' + c + '" data-role="bold"'   + (bold.indexOf(col)   !== -1 ? " checked" : "") + '></td>'
 				+ '<td ' + td + '><input type="radio"    data-col="' + c + '" name="male_'   + cdn + '"' + (male   === col ? " checked" : "") + '></td>'
 				+ '<td ' + td + '><input type="radio"    data-col="' + c + '" name="female_' + cdn + '"' + (female === col ? " checked" : "") + '></td>'
+				+ '<td ' + td + '><input type="radio"    data-col="' + c + '" name="gender_col_' + cdn + '"' + (gender_col === col ? " checked" : "") + '></td>'
+				+ '<td ' + td + '><input type="checkbox" data-col="' + c + '" data-role="tint"' + (gender_tint.indexOf(col) !== -1 ? " checked" : "") + '></td>'
 				+ '</tr>';
 		});
 		html += '</tbody></table>';
@@ -266,7 +273,7 @@ function _render_matrix(frm, cdt, cdn) {
 		}
 
 		function _sync() {
-			var nh = [], nc = [], nb = [], nm = "", nf = "";
+			var nh = [], nc = [], nb = [], nt = [], nm = "", nf = "", ngc = "";
 			var ho = {};
 			var order = _get_row_order();
 			order.forEach(function (col) {
@@ -275,13 +282,16 @@ function _render_matrix(frm, cdt, cdn) {
 				if (!$r.filter('[data-role="list"]').prop("checked")) nh.push(col);
 				if ($r.filter('[data-role="card"]').prop("checked"))  nc.push(col);
 				if ($r.filter('[data-role="bold"]').prop("checked"))  nb.push(col);
+				if ($r.filter('[data-role="tint"]').prop("checked"))  nt.push(col);
 				var hval = ($r.filter('[data-role="header"]').val() || "").trim();
 				if (hval) ho[col] = hval;
 			});
 			var $mr = $matrix.find('input[name="male_'   + cdn + '"]:checked');
 			var $fr = $matrix.find('input[name="female_' + cdn + '"]:checked');
+			var $gc = $matrix.find('input[name="gender_col_' + cdn + '"]:checked');
 			if ($mr.length) nm = $mr.data("col");
 			if ($fr.length) nf = $fr.data("col");
+			if ($gc.length) ngc = $gc.data("col");
 			frappe.model.set_value(cdt, cdn, "hidden_fields", nh.join(", "));
 			frappe.model.set_value(cdt, cdn, "bold_fields",   nb.join(", "));
 			frappe.model.set_value(cdt, cdn, "card_fields",   nc.join(", "));
@@ -289,6 +299,8 @@ function _render_matrix(frm, cdt, cdn) {
 			frappe.model.set_value(cdt, cdn, "female_field",  nf);
 			frappe.model.set_value(cdt, cdn, "header_overrides", Object.keys(ho).length ? JSON.stringify(ho) : "");
 			frappe.model.set_value(cdt, cdn, "column_order", order.join(", "));
+			frappe.model.set_value(cdt, cdn, "gender_column", ngc);
+			frappe.model.set_value(cdt, cdn, "gender_color_fields", nt.join(", "));
 		}
 		$matrix.on("change", "input[type=checkbox], input[type=radio]", _sync);
 		$matrix.on("blur", 'input[data-role="header"]', _sync);
