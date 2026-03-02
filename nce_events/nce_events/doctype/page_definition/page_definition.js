@@ -16,7 +16,7 @@ function _get_report_columns(report_name, callback) {
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 var TAB_GROUPS = {
-	basic:   ["panel_number", "header_text", "report_name", "root_doctype", "where_clause"],
+	basic:   ["panel_number", "header_text", "root_doctype", "where_clause"],
 	display: ["section_break_display", "hidden_fields", "bold_fields", "male_field",
 	          "column_break_display", "card_fields", "female_field"],
 	widgets: ["section_break_header_widgets", "show_filter", "show_sheets",
@@ -24,7 +24,7 @@ var TAB_GROUPS = {
 	          "section_break_card_actions", "show_card_email", "show_card_sms"],
 	buttons: ["section_break_buttons", "button_1_name", "button_1_code",
 	          "column_break_buttons", "button_2_name", "button_2_code"],
-	report:  ["section_break_queries", "wp_query", "frappe_query"],
+	report:  ["report_name", "section_break_queries", "wp_query", "frappe_query"],
 };
 var TAB_ORDER  = ["basic", "display", "widgets", "buttons", "report"];
 var TAB_LABELS = { basic: "Basic", display: "Display", widgets: "Widgets", buttons: "Buttons", report: "Report" };
