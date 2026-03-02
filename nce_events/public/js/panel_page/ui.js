@@ -14,6 +14,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		this._resize = null;
 		this._col_resize = null;
 		this._col_widths = {};
+		this._col_width_save_timers = {};
 		this._destroyed = false;
 		this.setup();
 	}
@@ -83,6 +84,48 @@ nce_events.panel_page.Explorer = class Explorer {
 			if (map[c.fieldname]) ordered.push(c);
 		});
 		return ordered;
+	}
+
+	_col_width_storage_key(panel_number) {
+		return "nce_panel_col_widths:" + this.page_name + ":" + panel_number;
+	}
+
+	_get_col_widths(panel_number) {
+		if (this._col_widths[panel_number]) return this._col_widths[panel_number];
+		var widths = {};
+		try {
+			var raw = window.localStorage.getItem(this._col_width_storage_key(panel_number));
+			if (raw) {
+				var parsed = JSON.parse(raw);
+				if (parsed && typeof parsed === "object") {
+					Object.keys(parsed).forEach(function (k) {
+						var v = Number(parsed[k]);
+						if (isFinite(v) && v > 0 && v <= 1) widths[k] = v;
+					});
+				}
+			}
+		} catch (e) {
+			// Ignore storage/parse failures; fall back to defaults.
+		}
+		this._col_widths[panel_number] = widths;
+		return widths;
+	}
+
+	_persist_col_widths_async(panel_number) {
+		var me = this;
+		if (me._col_width_save_timers[panel_number]) {
+			clearTimeout(me._col_width_save_timers[panel_number]);
+		}
+		me._col_width_save_timers[panel_number] = setTimeout(function () {
+			try {
+				window.localStorage.setItem(
+					me._col_width_storage_key(panel_number),
+					JSON.stringify(me._col_widths[panel_number] || {})
+				);
+			} catch (e) {
+				// Ignore storage failures (e.g. privacy mode/quota).
+			}
+		}, 0);
 	}
 
 	_field_set(field_list) {
@@ -371,12 +414,12 @@ nce_events.panel_page.Explorer = class Explorer {
 		var id_col = state.columns.length ? state.columns[0].fieldname : null;
 		var selected_row = me.store.get_selected(panel_number);
 
-		var col_widths = me._col_widths[panel_number] || {};
+		var col_widths = me._get_col_widths(panel_number);
 
 		var html = '<table class="panel-table"><colgroup>';
 		visible_cols.forEach(function (col) {
 			var w = col_widths[col.fieldname];
-			html += w ? '<col style="width:' + w + 'px;">' : "<col>";
+			html += w ? '<col style="width:' + (w * 100).toFixed(4) + '%;">' : "<col>";
 		});
 		html += "</colgroup><thead><tr>";
 		visible_cols.forEach(function (col) {
@@ -623,9 +666,24 @@ nce_events.panel_page.Explorer = class Explorer {
 			function on_up() {
 				$("body").removeClass("col-resizing");
 				$(document).off("mousemove.col_resize mouseup.col_resize");
-				var final_w = $th.outerWidth();
-				if (!me._col_widths[panel_number]) me._col_widths[panel_number] = {};
-				me._col_widths[panel_number][fieldname] = final_w;
+				var ratio_map = {};
+				var widths = [];
+				var total_w = 0;
+				$table.find("thead th").each(function () {
+					var $header = $(this);
+					var field = $header.find(".col-resize-handle").data("field");
+					var w = $header.outerWidth();
+					if (!field || !w) return;
+					widths.push({ field: field, width: w });
+					total_w += w;
+				});
+				if (total_w > 0) {
+					widths.forEach(function (item) {
+						ratio_map[item.field] = item.width / total_w;
+					});
+					me._col_widths[panel_number] = ratio_map;
+				}
+				me._persist_col_widths_async(panel_number);
 			}
 
 			$(document).on("mousemove.col_resize", on_move);
