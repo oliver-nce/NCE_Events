@@ -442,7 +442,8 @@ def translate_wp_query(wp_query):
 
 	if all_col_map:
 		sorted_keys = sorted(all_col_map.keys(), key=len, reverse=True)
-		combined = r'\b(' + '|'.join(re.escape(k) for k in sorted_keys) + r')\b'
+		# (?<!\.) skips already-qualified Frappe fields like `tabEvents`.name
+		combined = r'(?<!\.)\b(' + '|'.join(re.escape(k) for k in sorted_keys) + r')\b'
 		translated = re.sub(combined, lambda m: all_col_map.get(m.group(1), m.group(1)), translated)
 
 	return {"translated": translated, "warnings": warnings}
