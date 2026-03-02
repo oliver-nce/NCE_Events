@@ -24,27 +24,42 @@ var MATRIX_BACKED_FIELDS = [
 function _hide_backed_fields(grid_form) {
 	MATRIX_BACKED_FIELDS.forEach(function (fn) {
 		var fd = grid_form.fields_dict[fn];
-		if (fd) fd.df.hidden = 1, fd.refresh();
+		if (fd && fd.$wrapper) $(fd.$wrapper).hide();
 	});
+}
+
+function _get_grid_form(frm) {
+	// frm.cur_grid is reliable in most cases; fall back to the panels grid
+	if (frm.cur_grid && frm.cur_grid.grid_form) return frm.cur_grid.grid_form;
+	var panels_field = frm.fields_dict && frm.fields_dict["panels"];
+	if (panels_field && panels_field.grid && panels_field.grid.grid_form) {
+		return panels_field.grid.grid_form;
+	}
+	return null;
 }
 
 function _render_matrix(frm, cdt, cdn) {
 	var row = locals[cdt][cdn];
 	if (!row || !row.report_name) return;
 
-	var grid_form = frm.cur_grid && frm.cur_grid.grid_form;
-	if (!grid_form) return;
+	// Defer slightly so Frappe finishes painting the child form
+	setTimeout(function () {
+		var grid_form = _get_grid_form(frm);
+		if (!grid_form) return;
 
-	_hide_backed_fields(grid_form);
+		_hide_backed_fields(grid_form);
 
-	_get_report_columns(row.report_name, function (columns) {
-		// Find a good anchor — put matrix after the Display Configuration section break
-		var anchor_fd = grid_form.fields_dict["section_break_display"];
-		if (!anchor_fd) return;
-		var $anchor = anchor_fd.$wrapper;
+		_get_report_columns(row.report_name, function (columns) {
+			// Anchor: the section break wrapper's inner .section-body, or the form wrapper
+			var anchor_fd = grid_form.fields_dict["section_break_display"];
+			var $anchor = anchor_fd
+				? (anchor_fd.$wrapper.find(".section-body").first().length
+					? anchor_fd.$wrapper.find(".section-body").first()
+					: anchor_fd.$wrapper)
+				: $(grid_form.wrapper);
 
-		// Remove existing matrix
-		$anchor.find(".panel-col-matrix").remove();
+			// Remove existing matrix
+			$anchor.find(".panel-col-matrix").remove();
 
 		// Parse current values
 		function parse_csv(val) {
@@ -114,6 +129,7 @@ function _render_matrix(frm, cdt, cdn) {
 
 		$anchor.append($matrix);
 	});
+	}, 50);
 }
 
 // ── Page Definition form ──────────────────────────────────────────────────────
