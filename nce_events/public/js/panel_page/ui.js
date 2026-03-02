@@ -991,49 +991,50 @@ nce_events.panel_page.ExplorerV2 = class ExplorerV2 {
 		var visible_cols = me._visible_columns(state.columns, config.hidden_fields);
 		var bold_set = me._field_set(config.bold_fields);
 
-		var male_hex = me.store.config.male_hex;
-		var female_hex = me.store.config.female_hex;
-		var male_field = config.male_field || null;
-		var female_field = config.female_field || null;
-		var use_gender = !!((male_field || female_field) && (male_hex || female_hex));
+		var male_hex = (me.store.config.male_hex || "").trim();
+		var female_hex = (me.store.config.female_hex || "").trim();
+		if (male_hex && male_hex[0] !== "#") male_hex = "#" + male_hex;
+		if (female_hex && female_hex[0] !== "#") female_hex = "#" + female_hex;
+		var male_field  = (config.male_field  || "").trim().toLowerCase();
+		var female_field = (config.female_field || "").trim().toLowerCase();
 
 		var id_col = state.columns.length ? state.columns[0].fieldname : null;
 		var selected_row = me.store.get_selected(panel_number);
 
 		var html = '<table class="panel-table"><thead><tr>';
-		if (use_gender) html += '<th class="gender-indicator-th"></th>';
 		visible_cols.forEach(function (col) {
-			var cls = bold_set[col.fieldname.toLowerCase()] ? ' class="bold-col"' : "";
-			html += "<th" + cls + ">" + frappe.utils.escape_html(col.label) + "</th>";
+			var fn = col.fieldname.toLowerCase();
+			var extra = bold_set[fn] ? ' style="font-weight:700;"' : "";
+			html += "<th" + extra + ">" + frappe.utils.escape_html(col.label) + "</th>";
 		});
 		html += "</tr></thead><tbody>";
 
 		rows.forEach(function (row, row_idx) {
 			var is_selected = selected_row && id_col && row[id_col] === selected_row[id_col];
-			var gender_color = "";
-			if (use_gender) {
-				if (male_field && row[male_field] && male_hex) gender_color = male_hex;
-				else if (female_field && row[female_field] && female_hex) gender_color = female_hex;
-			}
 
 			html += '<tr class="panel-row' +
 				(is_selected ? " selected" : "") +
 				(row_idx % 2 === 1 ? " alt" : "") +
 				'" data-row-idx="' + row_idx + '">';
 
-			if (use_gender) {
-				html += '<td class="gender-indicator"' +
-					(gender_color ? ' style="background:' + gender_color + '"' : "") +
-					"></td>";
-			}
-
 			visible_cols.forEach(function (col) {
+				var fn = col.fieldname.toLowerCase();
+				// Row keys may be original-case — try both
 				var value = row[col.fieldname];
+				if (value === null || value === undefined) value = row[fn];
 				if (value === null || value === undefined) value = "";
-				var is_bold = bold_set[col.fieldname.toLowerCase()];
 				if (me._looks_like_date(value)) value = frappe.datetime.str_to_user(value);
 
-				html += "<td" + (is_bold ? ' class="bold-cell"' : "") + ">";
+				var style = "";
+				if (male_field && fn === male_field && male_hex) {
+					style = ' style="font-weight:700;color:' + male_hex + ';"';
+				} else if (female_field && fn === female_field && female_hex) {
+					style = ' style="font-weight:700;color:' + female_hex + ';"';
+				} else if (bold_set[fn]) {
+					style = ' style="font-weight:700;"';
+				}
+
+				html += "<td" + style + ">";
 				html += frappe.utils.escape_html(String(value));
 				html += "</td>";
 			});
