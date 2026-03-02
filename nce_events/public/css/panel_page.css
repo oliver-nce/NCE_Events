@@ -74,32 +74,6 @@
 	background: #EAEBEC;
 }
 
-/* ── Filter row ── */
-
-.pane-filter-row {
-	display: flex;
-	gap: 6px;
-	margin-top: 6px;
-	flex-wrap: wrap;
-}
-
-.pane-filter {
-	font-size: 11px;
-	font-family: Arial, sans-serif;
-	padding: 2px 6px;
-	border: 1px solid #D7D9DB;
-	border-radius: 4px;
-	background: #fff;
-	color: #464D53;
-	max-width: 160px;
-	cursor: pointer;
-}
-
-.pane-filter:focus {
-	outline: none;
-	border-color: #73B3F2;
-}
-
 /* ── Pane Body (scrollable) ── */
 
 .panel-pane-body {
@@ -142,31 +116,6 @@
 	overflow: hidden;
 	text-overflow: ellipsis;
 	max-width: 0;
-}
-
-/* ── Bold fields ── */
-
-.panel-table th.bold-col {
-	font-weight: 700;
-	color: #2c3e50;
-}
-
-.panel-table td.bold-cell {
-	font-weight: 700;
-	color: #2c3e50;
-}
-
-/* ── Gender indicator ── */
-
-.gender-indicator-th {
-	width: 4px;
-	padding: 0;
-}
-
-.gender-indicator {
-	width: 4px;
-	padding: 0 !important;
-	border-bottom: none;
 }
 
 /* ── Row states ── */

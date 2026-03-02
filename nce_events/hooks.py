@@ -13,6 +13,6 @@ add_to_apps_screen = [
 		"name": "nce_events",
 		"logo": "/assets/nce_events/images/logo.png",
 		"title": "NCE Events",
-		"route": "/app/panel-view",
+		"route": "/app/page-view",
 	}
 ]

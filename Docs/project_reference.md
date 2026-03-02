@@ -12,19 +12,11 @@ A multi-panel data explorer for NCE soccer operations. Users see a split-view pa
 
 ---
 
-## 2. V1 / V2 Coexistence
+## 2. Architecture
 
-Two generations exist side-by-side. **V1 code is frozen — do not modify it.** V1 will be deleted once v2 is fully running. All new work targets v2.
+There is one generation of code — all V1 code has been removed.
 
-| | V1 | V2 |
-|---|---|---|
-| DocTypes | `Panel Page` + `Panel Definition` | `Page Definition` + `Page Panel` + `Page Drag Action` |
-| Data source | Raw SQL in Panel Definition | Frappe Query Report linked from Page Panel |
-| Page route | `/app/panel-view/{page_name}` | `/app/page-view/{page_name}` |
-| API | `get_active_pages`, `get_page_config`, `get_panel_data` | `get_active_v2_pages`, `get_page_config_v2`, `get_panel_data_v2` |
-| JS classes | `Explorer`, `Store` | `ExplorerV2`, `StoreV2` |
-
-There is also a separate **hierarchy_explorer** (legacy event explorer at `/app/hierarchy-explorer`). It has its own API, JS, and CSS. Not part of v2 work.
+There is also a separate **hierarchy_explorer** (legacy event explorer at `/app/hierarchy-explorer`). It has its own API, JS, and CSS. Not part of the main explorer.
 
 ---
 
@@ -34,30 +26,25 @@ There is also a separate **hierarchy_explorer** (legacy event explorer at `/app/
 nce_events/
 ├── api/
 │   ├── hierarchy_explorer.py        # Legacy event explorer API (do not touch)
-│   └── panel_api.py                 # All panel API — v1 + v2 endpoints
+│   └── panel_api.py                 # All panel API endpoints
 ├── hooks.py
 ├── nce_events/
 │   ├── doctype/
-│   │   ├── page_definition/         # V2 parent DocType + form JS
-│   │   ├── page_panel/              # V2 child table
-│   │   ├── page_drag_action/        # V2 child table (drag-drop, not yet implemented)
-│   │   ├── panel_page/              # V1 parent DocType (frozen)
-│   │   └── panel_definition/        # V1 child table (frozen)
+│   │   ├── page_definition/         # Parent DocType + form JS
+│   │   ├── page_panel/              # Child table
+│   │   └── page_drag_action/        # Child table (drag-drop, not yet implemented)
 │   ├── page/
-│   │   ├── page_view/               # V2 router — single shared page for all v2 pages
-│   │   ├── panel_view/              # V1 router (frozen)
-│   │   ├── event_explorer/          # Legacy page using panel_page renderer
+│   │   ├── page_view/               # Router — single shared page for all pages
 │   │   └── hierarchy_explorer/      # Legacy hierarchy explorer (frozen)
 │   └── workspace/nce_events/        # Workspace with shortcuts
 ├── public/
 │   ├── css/
-│   │   ├── panel_page.css           # Panel page styles (v1 + v2)
+│   │   ├── panel_page.css           # Panel page styles
 │   │   └── hierarchy_explorer.css   # Legacy styles
 │   └── js/
 │       ├── panel_page/
-│       │   ├── ui.js                # Explorer (v1) + ExplorerV2 (v2) renderers
-│       │   ├── store.js             # Store (v1) + StoreV2 (v2) state management
-│       │   └── config.js            # V1 hardcoded page configs
+│       │   ├── ui.js                # ExplorerV2 renderer
+│       │   └── store.js             # StoreV2 state management
 │       └── hierarchy_explorer/      # Legacy JS (frozen)
 ├── patches/v0_0_2/                  # Migration patches
 └── utils/version.py
@@ -65,7 +52,7 @@ nce_events/
 
 ---
 
-## 4. V2 DocTypes
+## 4. DocTypes
 
 ### Page Definition (parent)
 
@@ -131,17 +118,17 @@ Defined but **not yet implemented** in the renderer.
 
 ---
 
-## 5. V2 Page Routing
+## 5. Page Routing
 
-All v2 pages route through a **single shared Frappe Page** (`page-view`) at:
+All pages route through a **single shared Frappe Page** (`page-view`) at:
 
 ```
 /app/page-view/{page_name}
 ```
 
-`page_view.js` reads the route param, does `frappe.require` on `store.js`, `ui.js`, and `panel_page.css`, then creates an `ExplorerV2(page, page_name)`. If no `page_name`, it shows a landing page listing active v2 pages via `get_active_v2_pages`.
+`page_view.js` reads the route param, does `frappe.require` on `store.js`, `ui.js`, and `panel_page.css`, then creates an `ExplorerV2(page, page_name)`. If no `page_name`, it shows a landing page listing active pages via `get_active_v2_pages`.
 
-A workspace shortcut is created automatically when the user clicks **Build Page** on the Page Definition form. No `bench migrate` is needed to add a new v2 page.
+A workspace shortcut is created automatically when the user clicks **Build Page** on the Page Definition form. No `bench migrate` is needed to add a new page.
 
 ---
 
@@ -149,7 +136,7 @@ A workspace shortcut is created automatically when the user clicks **Build Page*
 
 `nce_events/api/panel_api.py`
 
-### V2 Endpoints
+### Endpoints
 
 | Function | Params | Purpose |
 |---|---|---|
@@ -160,10 +147,6 @@ A workspace shortcut is created automatically when the user clicks **Build Page*
 | `create_or_update_report` | `header_text, frappe_query, existing_report_name, ref_doctype` | Creates or updates a Frappe Query Report |
 | `build_page` | `page_name` | Ensures workspace shortcut exists, returns `{page_url}` |
 | `get_active_v2_pages` | (none) | Lists active Page Definitions for the landing page |
-
-### V1 Endpoints (frozen)
-
-`get_active_pages`, `get_page_config`, `get_panel_data` — do not modify.
 
 ### get_page_config_v2 Response
 
@@ -300,12 +283,10 @@ Default new report name: `{header_text} Panel`
 
 ### Classes
 
-| Class | Namespace | Version |
-|---|---|---|
-| `Explorer` | `nce_events.panel_page.Explorer` | V1 (frozen) |
-| `ExplorerV2` | `nce_events.panel_page.ExplorerV2` | V2 |
-| `Store` | `nce_events.panel_page.Store` | V1 (frozen) |
-| `StoreV2` | `nce_events.panel_page.StoreV2` | V2 |
+| Class | Namespace |
+|---|---|
+| `ExplorerV2` | `nce_events.panel_page.ExplorerV2` |
+| `StoreV2` | `nce_events.panel_page.StoreV2` |
 
 ### ExplorerV2 Render Flow
 
@@ -378,7 +359,7 @@ app_logo_url = "/assets/nce_events/images/logo.png"
 required_apps = ["nce_sync"]
 add_to_apps_screen = [
     {"name": "nce_events", "logo": "/assets/nce_events/images/logo.png",
-     "title": "NCE Events", "route": "/app/panel-view"}
+     "title": "NCE Events", "route": "/app/page-view"}
 ]
 ```
 
