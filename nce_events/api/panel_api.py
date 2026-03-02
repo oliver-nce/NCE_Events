@@ -282,16 +282,14 @@ def translate_wp_query(wp_query):
 
 @frappe.whitelist()
 def get_report_columns(report_name):
-	"""Return the column names for a Query Report by running its SQL with LIMIT 0."""
-	sql = frappe.db.get_value("Report", report_name, "query")
-	if not sql:
-		return []
-	sql = sql.strip().rstrip(";")
+	"""Return the column fieldnames for a Query Report, using the same parsing
+	path as get_panel_data so names are guaranteed to match at runtime."""
 	try:
-		frappe.db.sql(f"SELECT * FROM ({sql}) _cols LIMIT 0")
-		cursor = frappe.db._cursor
-		if cursor and cursor.description:
-			return [d[0] for d in cursor.description]
+		from frappe.desk.query_report import run as _run_report
+		result = _run_report(report_name=report_name, filters={}, user=frappe.session.user)
+		raw_columns = result.get("columns") or []
+		columns = _parse_report_column_defs(raw_columns)
+		return [c["fieldname"] for c in columns]
 	except Exception as e:
 		frappe.log_error(str(e), "get_report_columns")
 	return []
