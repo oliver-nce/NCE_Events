@@ -25,8 +25,8 @@ var TAB_GROUPS = {
 	buttons: ["section_break_buttons", "button_1_name", "button_1_code",
 	          "column_break_buttons", "button_2_name", "button_2_code"],
 };
-var TAB_ORDER  = ["basic", "display", "widgets", "buttons"];
-var TAB_LABELS = { basic: "Basic", display: "Display", widgets: "Widgets", buttons: "Buttons" };
+var TAB_ORDER  = ["basic", "display", "widgets", "buttons", "report"];
+var TAB_LABELS = { basic: "Basic", display: "Display", widgets: "Widgets", buttons: "Buttons", report: "Report" };
 var ALL_PANEL_FIELDS = [].concat(
 	TAB_GROUPS.basic, TAB_GROUPS.display, TAB_GROUPS.widgets, TAB_GROUPS.buttons
 );
@@ -71,9 +71,10 @@ function _show_tab(grid_form, tab_id) {
 		if (fd && fd.$wrapper) $(fd.$wrapper).show();
 	});
 
-	// Show/hide matrix container
+	// Show/hide custom tab panels
 	var $wrap = $(grid_form.wrapper);
 	$wrap.find(".pp-matrix-wrap").toggle(tab_id === "display");
+	$wrap.find(".pp-report-tab").toggle(tab_id === "report");
 
 	// Update active tab button style
 	$wrap.find(".pp-tab-btn").css({ background: "", color: "", fontWeight: "" });
@@ -106,11 +107,16 @@ function _ensure_tab_bar(frm, cdt, cdn, grid_form) {
 
 	$(first_fd.$wrapper).before($tab_bar).before($matrix_wrap);
 
+	// Report tab placeholder (populated on first click)
+	var $report_tab = $('<div class="pp-report-tab" style="display:none;padding-bottom:8px;"></div>');
+	$(first_fd.$wrapper).before($report_tab);
+
 	// Wire tab clicks
 	$tab_bar.on("click", ".pp-tab-btn", function () {
 		var tab_id = $(this).data("tab");
 		_show_tab(grid_form, tab_id);
 		if (tab_id === "display") _render_matrix(frm, cdt, cdn);
+		if (tab_id === "report")  _render_report_tab(frm, cdt, cdn, grid_form);
 	});
 
 	// Hide all Frappe section headings — we use our own tabs instead
@@ -191,6 +197,63 @@ function _render_matrix(frm, cdt, cdn) {
 		$matrix.on("change", "input", _sync);
 		$container.append($matrix);
 	});
+}
+
+// ── Report tab renderer ───────────────────────────────────────────────────────
+function _render_report_tab(frm, cdt, cdn, grid_form) {
+	var $container = $(grid_form.wrapper).find(".pp-report-tab");
+	if (!$container.length) return;
+	$container.empty();
+
+	var row = locals[cdt][cdn];
+	var report_name = (row && row.report_name) || "";
+
+	var report_link = report_name
+		? '<a href="/app/query-report/' + encodeURIComponent(report_name) + '" target="_blank" '
+		  + 'style="font-size:13px;font-weight:600;">'
+		  + frappe.utils.escape_html(report_name) + ' &nbsp;↗</a>'
+		: '<span style="color:#aaa;font-size:12px;">No report selected — set one in the Basic tab first.</span>';
+
+	var mono = 'font-family:monospace;font-size:12px;padding:8px;border:1px solid #d1d8dd;border-radius:4px;width:100%;box-sizing:border-box;';
+
+	var html = '<div style="padding:4px 0;">'
+		+ '<div style="margin-bottom:12px;">' + report_link + '</div>'
+		+ '<div style="font-weight:600;font-size:12px;color:#6c7680;margin-bottom:4px;">Paste WordPress SQL Query</div>'
+		+ '<textarea class="pp-wp-query" style="height:110px;' + mono + '" placeholder="SELECT ID, post_title FROM wp_posts WHERE ..."></textarea>'
+		+ '<button class="btn btn-sm btn-primary pp-translate-btn" style="margin-top:8px;">Translate to Frappe SQL</button>'
+		+ '<div class="pp-result-wrap" style="display:none;margin-top:14px;">'
+		+   '<div style="font-weight:600;font-size:12px;color:#6c7680;margin-bottom:4px;">Translated Frappe SQL</div>'
+		+   '<textarea class="pp-frappe-query" style="height:110px;' + mono + '" readonly></textarea>'
+		+   '<div class="pp-translate-warnings" style="margin-top:6px;font-size:12px;color:#e24c4c;"></div>'
+		+ '</div>'
+		+ '</div>';
+
+	var $tab = $(html);
+
+	$tab.find(".pp-translate-btn").on("click", function () {
+		var wp_query = $tab.find(".pp-wp-query").val().trim();
+		if (!wp_query) { frappe.show_alert({ message: __("Paste a WP query first"), indicator: "orange" }); return; }
+
+		$(this).prop("disabled", true).text("Translating…");
+		var $btn = $(this);
+
+		frappe.call({
+			method: "nce_events.api.panel_api.translate_wp_query",
+			args: { wp_query: wp_query },
+			callback: function (r) {
+				$btn.prop("disabled", false).text("Translate to Frappe SQL");
+				if (!r.message) return;
+				$tab.find(".pp-frappe-query").val(r.message.translated || "");
+				$tab.find(".pp-result-wrap").show();
+				var w = (r.message.warnings || []);
+				$tab.find(".pp-translate-warnings").html(
+					w.length ? "⚠ " + w.join("<br>") : ""
+				);
+			},
+		});
+	});
+
+	$container.append($tab);
 }
 
 // ── Page Definition form ──────────────────────────────────────────────────────

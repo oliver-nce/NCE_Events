@@ -367,6 +367,47 @@ def _title_case(fieldname):
 
 @frappe.whitelist()
 @frappe.whitelist()
+def translate_wp_query(wp_query):
+	"""Translate a WordPress SQL query to its Frappe equivalent using WP Tables mappings."""
+	if not wp_query:
+		return {"translated": "", "warnings": []}
+
+	wp_tables = frappe.get_all(
+		"WP Tables",
+		fields=["table_name", "frappe_doctype", "column_mapping"],
+	)
+
+	translated = wp_query
+	warnings = []
+
+	for wt in wp_tables:
+		if not wt.get("frappe_doctype") or not wt.get("table_name"):
+			continue
+
+		frappe_table = "tab" + wt["frappe_doctype"]
+
+		# Replace WP table name with Frappe table name (whole-word, case-insensitive)
+		pattern = r'\b' + re.escape(wt["table_name"]) + r'\b'
+		if re.search(pattern, translated, re.IGNORECASE):
+			translated = re.sub(pattern, frappe_table, translated, flags=re.IGNORECASE)
+
+		# Replace column names using the stored column_mapping JSON
+		col_map_raw = wt.get("column_mapping")
+		if col_map_raw:
+			try:
+				col_map = json.loads(col_map_raw) if isinstance(col_map_raw, str) else col_map_raw
+				for wp_col, frappe_col in col_map.items():
+					col_pattern = r'\b' + re.escape(str(wp_col)) + r'\b'
+					translated = re.sub(col_pattern, str(frappe_col), translated)
+			except Exception as exc:
+				warnings.append("Could not parse column_mapping for {0}: {1}".format(
+					wt["table_name"], str(exc)
+				))
+
+	return {"translated": translated, "warnings": warnings}
+
+
+@frappe.whitelist()
 def get_report_columns(report_name):
 	"""Return the column names for a Query Report by running its SQL with LIMIT 0."""
 	sql = frappe.db.get_value("Report", report_name, "query")
