@@ -245,7 +245,10 @@ nce_events.panel_page.Explorer = class Explorer {
 			});
 			val_inp.on("input", function () {
 				conditions[i].value = $(this).val();
-				me.render_pane(panel_number);
+				if (me._filter_debounce) clearTimeout(me._filter_debounce);
+				me._filter_debounce = setTimeout(function () {
+					me.render_pane(panel_number, { skip_header: true });
+				}, 500);
 			});
 
 			row.append(col_sel, op_sel, val_inp, rm_btn);
@@ -338,7 +341,7 @@ nce_events.panel_page.Explorer = class Explorer {
 
 	// ── Table rendering ──
 
-	render_pane(panel_number) {
+	render_pane(panel_number, opts) {
 		var me = this;
 		var idx = me._pane_index(panel_number);
 		if (idx < 0) return;
@@ -347,8 +350,10 @@ nce_events.panel_page.Explorer = class Explorer {
 		var state = me.store.get_pane_state(panel_number);
 		if (!config || !state) return;
 
+		var skip_header = opts && opts.skip_header;
+
 		me._hide_card();
-		me._render_header(panel_number);
+		if (!skip_header) me._render_header(panel_number);
 
 		var el = me.pane_elements[idx].el;
 		var rows = me._get_filtered_rows(panel_number);
@@ -427,10 +432,18 @@ nce_events.panel_page.Explorer = class Explorer {
 		el.find(".panel-pane-body").html(html);
 		me._bind_pane_events(panel_number, el);
 
-		// Re-render filter widget if it was open (re-render_pane closes it)
-		if (config.show_filter && (me.filters[panel_number] || []).length > 0) {
-			var header_el = me.pane_elements[idx].el.find(".panel-pane-header");
-			me._render_filter_widget(panel_number, header_el);
+		if (!skip_header) {
+			if (config.show_filter && (me.filters[panel_number] || []).length > 0) {
+				var header_el = me.pane_elements[idx].el.find(".panel-pane-header");
+				me._render_filter_widget(panel_number, header_el);
+			}
+		} else {
+			// Update record count without rebuilding header
+			var filtered_rows = me._get_filtered_rows(panel_number);
+			var count_text = filtered_rows.length !== state.total
+				? filtered_rows.length + " / " + state.total
+				: String(state.total);
+			el.find(".pane-count").text(count_text + " records");
 		}
 	}
 
