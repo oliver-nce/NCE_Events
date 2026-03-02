@@ -6,8 +6,9 @@
 	height: calc(100vh - 120px - 72pt);
 	overflow: hidden;
 	background: #FAFAFA;
-	border: 1px solid #D7D9DB;
+	border: 1px solid #A2CCF6;
 	border-radius: 6px;
+	box-shadow: 0 1px 4px rgba(65, 152, 240, 0.10);
 }
 
 /* ── Panes ── */
@@ -25,8 +26,8 @@
 
 .panel-pane-header {
 	padding: 8px 12px;
-	background: #F4F5F5;
-	border-bottom: 1px solid #EAEBEC;
+	background: #126BC4;
+	border-bottom: 1px solid #105EAD;
 	flex-shrink: 0;
 }
 
@@ -40,7 +41,7 @@
 .pane-label {
 	font-weight: 600;
 	font-size: 13px;
-	color: #464D53;
+	color: #fff;
 	font-family: Arial, sans-serif;
 }
 
@@ -53,7 +54,7 @@
 
 .pane-count {
 	font-size: 11px;
-	color: #6D757E;
+	color: rgba(255, 255, 255, 0.75);
 	font-family: Arial, sans-serif;
 	white-space: nowrap;
 }
@@ -64,14 +65,15 @@
 	padding: 2px 6px;
 	font-size: 11px;
 	line-height: 1;
-	border-color: #D7D9DB;
-	color: #6D757E;
+	border-color: rgba(255, 255, 255, 0.3);
+	color: rgba(255, 255, 255, 0.85);
+	background: transparent;
 }
 
 .pane-header-btn:hover {
-	color: #464D53;
-	border-color: #B7BABE;
-	background: #EAEBEC;
+	color: #fff;
+	border-color: rgba(255, 255, 255, 0.5);
+	background: rgba(255, 255, 255, 0.15);
 }
 
 /* ── Pane Body (scrollable) ── */
@@ -96,14 +98,14 @@
 .panel-table th {
 	position: sticky;
 	top: 0;
-	background: #F4F5F5;
-	color: #5A6168;
+	background: #E3F0FC;
+	color: #105EAD;
 	font-weight: 600;
 	font-size: 11px;
 	text-transform: uppercase;
 	letter-spacing: 0.3px;
 	padding: 6px 8px;
-	border-bottom: 1px solid #D7D9DB;
+	border-bottom: 2px solid #A2CCF6;
 	text-align: left;
 	white-space: nowrap;
 	z-index: 1;
@@ -123,7 +125,7 @@
 /* ── Column resize handle ── */
 
 .panel-table th {
-	border-right: 1px solid #C0C5CA;
+	border-right: 1px solid #C7E0FA;
 }
 
 .panel-table th:last-child {
@@ -142,7 +144,7 @@
 }
 
 .col-resize-handle:hover {
-	background: #73B3F2;
+	background: #4198F0;
 }
 
 body.col-resizing {
@@ -162,7 +164,7 @@ body.col-resizing * {
 }
 
 .panel-row:hover {
-	background: #F1F7FE;
+	background: #E3F0FC;
 }
 
 .panel-row.alt {
@@ -170,15 +172,15 @@ body.col-resizing * {
 }
 
 .panel-row.alt:hover {
-	background: #F1F7FE;
+	background: #E3F0FC;
 }
 
 .panel-row.selected {
-	background: #E3F0FC;
+	background: #C7E0FA;
 }
 
 .panel-row.selected:hover {
-	background: #E3F0FC;
+	background: #C7E0FA;
 }
 
 /* ── Load More ── */
@@ -192,7 +194,11 @@ body.col-resizing * {
 	font-size: 11px;
 	background: #E3F0FC;
 	color: #126BC4;
-	border: 1px solid #C7E0FA;
+	border: 1px solid #A2CCF6;
+}
+
+.panel-load-more .btn:hover {
+	background: #C7E0FA;
 }
 
 /* ── Loading ── */
@@ -200,7 +206,7 @@ body.col-resizing * {
 .panel-loading {
 	padding: 24px;
 	text-align: center;
-	color: #8D949A;
+	color: #4198F0;
 	font-size: 13px;
 }
 
@@ -212,9 +218,10 @@ body.col-resizing * {
 	right: 8px;
 	z-index: 10;
 	background: #fff;
-	border: 1px solid #D7D9DB;
+	border: 1px solid #C7E0FA;
+	border-top: 3px solid #4198F0;
 	border-radius: 8px;
-	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+	box-shadow: 0 4px 16px rgba(18, 107, 196, 0.15);
 	padding: 12px;
 	max-height: 320px;
 	overflow-y: auto;
@@ -233,7 +240,7 @@ body.col-resizing * {
 	font-weight: 600;
 	text-transform: uppercase;
 	letter-spacing: 0.3px;
-	color: #8D949A;
+	color: #126BC4;
 	margin-bottom: 2px;
 	font-family: Arial, sans-serif;
 }
@@ -246,7 +253,7 @@ body.col-resizing * {
 }
 
 .card-field-value a {
-	color: #126BC4;
+	color: #1680E9;
 }
 
 .card-html {
@@ -263,7 +270,7 @@ body.col-resizing * {
 	gap: 8px;
 	margin-top: 10px;
 	padding-top: 10px;
-	border-top: 1px solid #EAEBEC;
+	border-top: 1px solid #E3F0FC;
 }
 
 .card-action-btn {
@@ -275,7 +282,7 @@ body.col-resizing * {
 .panel-divider {
 	width: 5px;
 	flex-shrink: 0;
-	background: #D7D9DB;
+	background: #73B3F2;
 	cursor: col-resize;
 	transition: background-color 0.15s;
 	position: relative;
@@ -289,12 +296,12 @@ body.col-resizing * {
 	transform: translate(-50%, -50%);
 	width: 3px;
 	height: 24px;
-	border-left: 1px solid #B7BABE;
-	border-right: 1px solid #B7BABE;
+	border-left: 1px solid rgba(255, 255, 255, 0.5);
+	border-right: 1px solid rgba(255, 255, 255, 0.5);
 }
 
 .panel-divider:hover {
-	background: #73B3F2;
+	background: #4198F0;
 }
 
 .panel-divider:hover::after {
@@ -302,7 +309,7 @@ body.col-resizing * {
 }
 
 .panel-divider.active {
-	background: #4198F0;
+	background: #1680E9;
 }
 
 .panel-divider.active::after {
@@ -335,7 +342,7 @@ body.panel-resizing * {
 }
 
 .panel-landing-empty a {
-	color: #126BC4;
+	color: #1680E9;
 }
 
 .panel-landing-grid {
@@ -347,37 +354,38 @@ body.panel-resizing * {
 .panel-landing-card {
 	display: block;
 	padding: 20px;
-	background: #fff;
-	border: 1px solid #D7D9DB;
+	background: #F1F7FE;
+	border: 1px solid #C7E0FA;
 	border-radius: 8px;
 	text-decoration: none;
-	transition: border-color 0.15s, box-shadow 0.15s;
+	transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
 }
 
 .panel-landing-card:hover {
-	border-color: #73B3F2;
-	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+	border-color: #4198F0;
+	background: #E3F0FC;
+	box-shadow: 0 2px 8px rgba(65, 152, 240, 0.15);
 	text-decoration: none;
 }
 
 .panel-card-title {
 	font-weight: 600;
 	font-size: 15px;
-	color: #464D53;
+	color: #105EAD;
 	margin-bottom: 4px;
 }
 
 .panel-card-name {
 	font-size: 12px;
-	color: #8D949A;
+	color: #4198F0;
 }
 
-/* ── Navicat-style filter widget (v2) ── */
+/* ── Navicat-style filter widget ── */
 
 .pane-filter-widget {
 	padding: 6px 10px 8px;
-	border-top: 1px solid #E8EAED;
-	background: #F8F9FA;
+	border-top: 1px solid #105EAD;
+	background: #F1F7FE;
 }
 
 .filter-condition-row {
@@ -391,7 +399,7 @@ body.panel-resizing * {
 .filter-op-select {
 	font-size: 12px;
 	padding: 2px 4px;
-	border: 1px solid #CCC;
+	border: 1px solid #C7E0FA;
 	border-radius: 3px;
 	background: #FFF;
 	height: 26px;
@@ -405,14 +413,15 @@ body.panel-resizing * {
 	min-width: 0;
 	font-size: 12px;
 	padding: 2px 6px;
-	border: 1px solid #CCC;
+	border: 1px solid #C7E0FA;
 	border-radius: 3px;
 	height: 26px;
 }
 
 .filter-val-input:focus {
 	outline: none;
-	border-color: #73B3F2;
+	border-color: #4198F0;
+	box-shadow: 0 0 0 2px rgba(65, 152, 240, 0.2);
 }
 
 .filter-remove-btn {
@@ -432,6 +441,7 @@ body.panel-resizing * {
 .filter-add-btn {
 	font-size: 11px;
 	margin-top: 2px;
+	color: #126BC4;
 }
 
 /* ── Responsive ── */
