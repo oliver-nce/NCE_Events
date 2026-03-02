@@ -50,16 +50,17 @@ function _render_matrix(frm, cdt, cdn) {
 		_hide_backed_fields(grid_form);
 
 		_get_report_columns(row.report_name, function (columns) {
-			// Anchor: the section break wrapper's inner .section-body, or the form wrapper
+			// Anchor: try section break body, otherwise fall back to the form wrapper
+			var $form_wrap = $(grid_form.wrapper);
 			var anchor_fd = grid_form.fields_dict["section_break_display"];
-			var $anchor = anchor_fd
-				? (anchor_fd.$wrapper.find(".section-body").first().length
-					? anchor_fd.$wrapper.find(".section-body").first()
-					: anchor_fd.$wrapper)
-				: $(grid_form.wrapper);
+			var $anchor = $form_wrap;
+			if (anchor_fd && anchor_fd.$wrapper) {
+				var $sb = anchor_fd.$wrapper.find(".section-body").first();
+				$anchor = $sb.length ? $sb : anchor_fd.$wrapper;
+			}
 
-			// Remove existing matrix
-			$anchor.find(".panel-col-matrix").remove();
+			// Remove any existing matrix (always search from form root)
+			$form_wrap.find(".panel-col-matrix").remove();
 
 		// Parse current values
 		function parse_csv(val) {
