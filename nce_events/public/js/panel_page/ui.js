@@ -12,6 +12,8 @@ nce_events.panel_page.Explorer = class Explorer {
 		this._click_timer = null;
 		this._card_el = null;
 		this._resize = null;
+		this._col_resize = null;
+		this._col_widths = {};
 		this._destroyed = false;
 		this.setup();
 	}
@@ -349,11 +351,20 @@ nce_events.panel_page.Explorer = class Explorer {
 		var id_col = state.columns.length ? state.columns[0].fieldname : null;
 		var selected_row = me.store.get_selected(panel_number);
 
-		var html = '<table class="panel-table"><thead><tr>';
+		var col_widths = me._col_widths[panel_number] || {};
+
+		var html = '<table class="panel-table"><colgroup>';
+		visible_cols.forEach(function (col) {
+			var w = col_widths[col.fieldname];
+			html += w ? '<col style="width:' + w + 'px;">' : "<col>";
+		});
+		html += "</colgroup><thead><tr>";
 		visible_cols.forEach(function (col) {
 			var fn = col.fieldname.toLowerCase();
 			var extra = bold_set[fn] ? ' style="font-weight:700;"' : "";
-			html += "<th" + extra + ">" + frappe.utils.escape_html(col.label) + "</th>";
+			html += "<th" + extra + ">" + frappe.utils.escape_html(col.label)
+				+ '<div class="col-resize-handle" data-field="' + frappe.utils.escape_html(col.fieldname) + '"></div>'
+				+ "</th>";
 		});
 		html += "</tr></thead><tbody>";
 
@@ -560,6 +571,37 @@ nce_events.panel_page.Explorer = class Explorer {
 				if (me._destroyed) return;
 				me.render_pane(panel_number);
 			});
+		});
+
+		el.find(".col-resize-handle").on("mousedown", function (e) {
+			e.preventDefault();
+			e.stopPropagation();
+			var $handle = $(this);
+			var fieldname = $handle.data("field");
+			var $th = $handle.closest("th");
+			var start_x = e.pageX;
+			var start_w = $th.outerWidth();
+			var $table = $th.closest("table");
+			var col_index = $th.index();
+			var $col = $table.find("colgroup col").eq(col_index);
+
+			$("body").addClass("col-resizing");
+
+			function on_move(ev) {
+				var new_w = Math.max(40, start_w + (ev.pageX - start_x));
+				$col.css("width", new_w + "px");
+			}
+
+			function on_up() {
+				$("body").removeClass("col-resizing");
+				$(document).off("mousemove.col_resize mouseup.col_resize");
+				var final_w = $th.outerWidth();
+				if (!me._col_widths[panel_number]) me._col_widths[panel_number] = {};
+				me._col_widths[panel_number][fieldname] = final_w;
+			}
+
+			$(document).on("mousemove.col_resize", on_move);
+			$(document).on("mouseup.col_resize", on_up);
 		});
 	}
 

@@ -79,7 +79,7 @@
 .panel-pane-body {
 	flex: 1;
 	overflow-y: auto;
-	overflow-x: hidden;
+	overflow-x: auto;
 	position: relative;
 }
 
@@ -90,6 +90,7 @@
 	border-collapse: collapse;
 	font-family: Arial, sans-serif;
 	font-size: 12px;
+	table-layout: fixed;
 }
 
 .panel-table th {
@@ -106,6 +107,8 @@
 	text-align: left;
 	white-space: nowrap;
 	z-index: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
 .panel-table td {
@@ -115,7 +118,31 @@
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	max-width: 0;
+}
+
+/* ── Column resize handle ── */
+
+.col-resize-handle {
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 5px;
+	height: 100%;
+	cursor: col-resize;
+	z-index: 2;
+}
+
+.col-resize-handle:hover {
+	background: #73B3F2;
+}
+
+body.col-resizing {
+	cursor: col-resize !important;
+	user-select: none !important;
+}
+
+body.col-resizing * {
+	cursor: col-resize !important;
 }
 
 /* ── Row states ── */
