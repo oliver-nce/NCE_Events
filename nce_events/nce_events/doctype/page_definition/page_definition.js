@@ -18,7 +18,7 @@ function _get_report_columns(report_name, callback) {
 var TAB_GROUPS = {
 	basic:   ["panel_number", "header_text", "root_doctype", "where_clause"],
 	display: ["section_break_display", "hidden_fields", "bold_fields", "male_field",
-	          "column_break_display", "card_fields", "female_field"],
+	          "column_break_display", "card_fields", "female_field", "header_overrides"],
 	widgets: ["section_break_header_widgets", "show_filter", "show_sheets",
 	          "column_break_header_widgets", "show_email", "show_sms",
 	          "section_break_card_actions", "show_card_email", "show_card_sms"],
@@ -32,7 +32,7 @@ var ALL_PANEL_FIELDS = [].concat(
 	TAB_GROUPS.basic, TAB_GROUPS.display, TAB_GROUPS.widgets, TAB_GROUPS.buttons
 );
 // Native inputs replaced by the matrix — never shown directly
-var MATRIX_FIELDS = ["hidden_fields", "bold_fields", "card_fields", "male_field", "female_field"];
+var MATRIX_FIELDS = ["hidden_fields", "bold_fields", "card_fields", "male_field", "female_field", "header_overrides"];
 // Section-break / column-break fields Frappe still renders — always hide
 var BREAK_FIELDS = [
 	"section_break_display", "column_break_display",
@@ -152,6 +152,9 @@ function _render_matrix(frm, cdt, cdn) {
 		var male   = (row.male_field   || "").trim();
 		var female = (row.female_field || "").trim();
 
+		var overrides = {};
+		try { overrides = JSON.parse(row.header_overrides || "{}"); } catch (e) { /* ignore */ }
+
 		function _title_case(name) {
 			return name.replace(/_/g, " ").replace(/\b\w/g, function (c) { return c.toUpperCase(); });
 		}
@@ -162,6 +165,7 @@ function _render_matrix(frm, cdt, cdn) {
 			+ '<thead><tr>'
 			+ '<th ' + th_left + '>Field</th>'
 			+ '<th ' + th_left + '>Default Header</th>'
+			+ '<th ' + th_left + '>Header</th>'
 			+ '<th ' + th_style + '>List</th>'
 			+ '<th ' + th_style + '>Card</th>'
 			+ '<th ' + th_style + '>Bold</th>'
@@ -172,11 +176,16 @@ function _render_matrix(frm, cdt, cdn) {
 		columns.forEach(function (col, i) {
 			var bg  = i % 2 !== 0 ? ' style="background:#f8f9fa;"' : '';
 			var c   = frappe.utils.escape_html(col);
-			var header = frappe.utils.escape_html(_title_case(col));
+			var default_header = _title_case(col);
+			var current_header = overrides[col] || "";
 			var td  = 'style="text-align:center;padding:4px 8px;"';
 			html += '<tr' + bg + '>'
 				+ '<td style="padding:4px 8px;color:#8d949a;font-size:11px;">' + c + '</td>'
-				+ '<td style="padding:4px 8px;font-weight:500;">' + header + '</td>'
+				+ '<td style="padding:4px 8px;color:#8d949a;">' + frappe.utils.escape_html(default_header) + '</td>'
+				+ '<td style="padding:4px 8px;"><input type="text" data-col="' + c + '" data-role="header" '
+				+   'placeholder="' + frappe.utils.escape_html(default_header) + '" '
+				+   'value="' + frappe.utils.escape_html(current_header) + '" '
+				+   'style="width:100%;border:1px solid #d1d8dd;border-radius:3px;padding:2px 6px;font-size:12px;"></td>'
 				+ '<td ' + td + '><input type="checkbox" data-col="' + c + '" data-role="list"'   + (hidden.indexOf(col) === -1 ? " checked" : "") + '></td>'
 				+ '<td ' + td + '><input type="checkbox" data-col="' + c + '" data-role="card"'   + (card.indexOf(col)   !== -1 ? " checked" : "") + '></td>'
 				+ '<td ' + td + '><input type="checkbox" data-col="' + c + '" data-role="bold"'   + (bold.indexOf(col)   !== -1 ? " checked" : "") + '></td>'
@@ -190,12 +199,15 @@ function _render_matrix(frm, cdt, cdn) {
 
 		function _sync() {
 			var nh = [], nc = [], nb = [], nm = "", nf = "";
+			var ho = {};
 			columns.forEach(function (col) {
 				var esc = frappe.utils.escape_html(col);
 				var $r = $matrix.find('input[data-col="' + esc + '"]');
 				if (!$r.filter('[data-role="list"]').prop("checked")) nh.push(col);
 				if ($r.filter('[data-role="card"]').prop("checked"))  nc.push(col);
 				if ($r.filter('[data-role="bold"]').prop("checked"))  nb.push(col);
+				var hval = ($r.filter('[data-role="header"]').val() || "").trim();
+				if (hval) ho[col] = hval;
 			});
 			var $mr = $matrix.find('input[name="male_'   + cdn + '"]:checked');
 			var $fr = $matrix.find('input[name="female_' + cdn + '"]:checked');
@@ -206,8 +218,9 @@ function _render_matrix(frm, cdt, cdn) {
 			frappe.model.set_value(cdt, cdn, "card_fields",   nc.join(", "));
 			frappe.model.set_value(cdt, cdn, "male_field",    nm);
 			frappe.model.set_value(cdt, cdn, "female_field",  nf);
+			frappe.model.set_value(cdt, cdn, "header_overrides", Object.keys(ho).length ? JSON.stringify(ho) : "");
 		}
-		$matrix.on("change", "input", _sync);
+		$matrix.on("change input", "input", _sync);
 		$container.append($matrix);
 	});
 }

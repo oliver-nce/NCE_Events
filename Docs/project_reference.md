@@ -86,6 +86,7 @@ nce_events/
 | card_fields | Small Text | comma-delimited columns for card popover |
 | male_field | Small Text | column rendered with `male_hex` + bold |
 | female_field | Small Text | column rendered with `female_hex` + bold |
+| header_overrides | Small Text | JSON map of custom column headers, e.g. `{"F": "Girls"}` |
 | wp_query | Code (SQL) | raw WordPress SQL — input for translator |
 | frappe_query | Code (SQL) | translated Frappe SQL |
 | show_filter | Check | filter widget toggle |
@@ -176,6 +177,7 @@ A workspace shortcut is created automatically when the user clicks **Build Page*
       "show_card_sms": 0,
       "button_1_name": "",
       "button_1_code": "",
+      "header_overrides": {"M": "Boys", "F": "Girls"},
       "button_2_name": "",
       "button_2_code": ""
     }
@@ -257,13 +259,16 @@ The Page Panel child-row form has a custom **5-tab layout** built in `page_defin
 
 Columns come from the report's SQL (fetched via `get_report_columns`). Each row is a report column; matrix columns are:
 
+- **Field** (read-only) — the SQL column alias
+- **Default Header** (read-only) — title-cased version of the field name
+- **Header** (editable text) — custom display header; placeholder shows the default; blank = use default
 - **List** (checkbox) — unchecked = column hidden in panel list
 - **Card** (checkbox) — checked = column appears in card popover
 - **Bold** (checkbox) — checked = column values bold in list
 - **Male** (radio) — one column whose values render with `male_hex` color + bold
 - **Female** (radio) — one column whose values render with `female_hex` color + bold
 
-On any change, `_sync()` writes back to `hidden_fields`, `bold_fields`, `card_fields`, `male_field`, `female_field` via `frappe.model.set_value`. Values are comma-delimited strings matching SQL column aliases exactly (case-preserved).
+On any change, `_sync()` writes back to `hidden_fields`, `bold_fields`, `card_fields`, `male_field`, `female_field`, and `header_overrides` via `frappe.model.set_value`. Checkbox/radio values are comma-delimited strings matching SQL column aliases exactly (case-preserved). `header_overrides` is a JSON object mapping fieldnames to custom header strings (only non-empty overrides are stored).
 
 ### Report Tab
 

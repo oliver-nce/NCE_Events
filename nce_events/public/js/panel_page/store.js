@@ -58,8 +58,18 @@ nce_events.panel_page.Store = class Store {
 
 	// columns: [{fieldname, label}]
 	set_pane_data(panel_number, data) {
+		var cols = data.columns || [];
+		var cfg = this.get_panel_config(panel_number);
+		var ho = (cfg && cfg.header_overrides) || {};
+		if (Object.keys(ho).length) {
+			cols = cols.map(function (col) {
+				return ho[col.fieldname]
+					? Object.assign({}, col, { label: ho[col.fieldname] })
+					: col;
+			});
+		}
 		this.panes[panel_number] = {
-			columns: data.columns || [],
+			columns: cols,
 			rows: data.rows || [],
 			total: data.total || 0,
 			start: data.start || 0,

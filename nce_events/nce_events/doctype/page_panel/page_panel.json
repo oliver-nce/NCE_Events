@@ -17,6 +17,7 @@
   "column_break_display",
   "card_fields",
   "female_field",
+  "header_overrides",
   "section_break_queries",
   "wp_query",
   "frappe_query",
@@ -108,6 +109,13 @@
    "fieldname": "female_field",
    "fieldtype": "Small Text",
    "label": "Female Field"
+  },
+  {
+   "description": "JSON map of custom column headers, e.g. {\"F\": \"Girls\", \"M\": \"Boys\"}",
+   "fieldname": "header_overrides",
+   "fieldtype": "Small Text",
+   "hidden": 1,
+   "label": "Header Overrides"
   },
   {
    "fieldname": "section_break_queries",

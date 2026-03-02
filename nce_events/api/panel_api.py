@@ -33,6 +33,7 @@ def get_page_config(page_name):
 			"button_1_code": p.button_1_code,
 			"button_2_name": p.button_2_name,
 			"button_2_code": p.button_2_code,
+			"header_overrides": _parse_json(p.header_overrides),
 		})
 
 	return {
@@ -361,3 +362,13 @@ def _parse_csv(value):
 	if not value:
 		return []
 	return [v.strip() for v in value.split(",") if v.strip()]
+
+
+def _parse_json(value):
+	"""Parse a JSON string into a dict, returning {} on failure."""
+	if not value:
+		return {}
+	try:
+		return json.loads(value)
+	except (json.JSONDecodeError, TypeError):
+		return {}
