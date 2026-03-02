@@ -116,14 +116,14 @@
    "label": "Queries"
   },
   {
-   "description": "Original WordPress SQL query (source for translation)",
+   "description": "For best results, avoid complex subselects",
    "fieldname": "wp_query",
    "fieldtype": "Code",
    "label": "WP Query",
    "options": "SQL"
   },
   {
-   "description": "Translated Frappe SQL query (auto-generated from WP Query)",
+   "description": "Auto-generated from WP Query — edit as needed before use",
    "fieldname": "frappe_query",
    "fieldtype": "Code",
    "label": "Frappe Query",
