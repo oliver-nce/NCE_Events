@@ -113,6 +113,9 @@ function _ensure_tab_bar(frm, cdt, cdn, grid_form) {
 		if (tab_id === "display") _render_matrix(frm, cdt, cdn);
 	});
 
+	// Hide all Frappe section headings — we use our own tabs instead
+	$(grid_form.wrapper).find(".section-head").hide();
+
 	// Start on Basic
 	_show_tab(grid_form, "basic");
 }
