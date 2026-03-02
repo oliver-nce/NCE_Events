@@ -152,10 +152,16 @@ function _render_matrix(frm, cdt, cdn) {
 		var male   = (row.male_field   || "").trim();
 		var female = (row.female_field || "").trim();
 
+		function _title_case(name) {
+			return name.replace(/_/g, " ").replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+		}
+
 		var th_style = 'style="text-align:center;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;"';
+		var th_left  = 'style="text-align:left;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;"';
 		var html = '<table style="width:100%;border-collapse:collapse;font-size:12px;">'
 			+ '<thead><tr>'
-			+ '<th style="text-align:left;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;">Field</th>'
+			+ '<th ' + th_left + '>Field</th>'
+			+ '<th ' + th_left + '>Header</th>'
 			+ '<th ' + th_style + '>List</th>'
 			+ '<th ' + th_style + '>Card</th>'
 			+ '<th ' + th_style + '>Bold</th>'
@@ -166,9 +172,11 @@ function _render_matrix(frm, cdt, cdn) {
 		columns.forEach(function (col, i) {
 			var bg  = i % 2 !== 0 ? ' style="background:#f8f9fa;"' : '';
 			var c   = frappe.utils.escape_html(col);
+			var header = frappe.utils.escape_html(_title_case(col));
 			var td  = 'style="text-align:center;padding:4px 8px;"';
 			html += '<tr' + bg + '>'
-				+ '<td style="padding:4px 8px;">' + c + '</td>'
+				+ '<td style="padding:4px 8px;color:#8d949a;font-size:11px;">' + c + '</td>'
+				+ '<td style="padding:4px 8px;font-weight:500;">' + header + '</td>'
 				+ '<td ' + td + '><input type="checkbox" data-col="' + c + '" data-role="list"'   + (hidden.indexOf(col) === -1 ? " checked" : "") + '></td>'
 				+ '<td ' + td + '><input type="checkbox" data-col="' + c + '" data-role="card"'   + (card.indexOf(col)   !== -1 ? " checked" : "") + '></td>'
 				+ '<td ' + td + '><input type="checkbox" data-col="' + c + '" data-role="bold"'   + (bold.indexOf(col)   !== -1 ? " checked" : "") + '></td>'
