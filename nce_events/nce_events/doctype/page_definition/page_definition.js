@@ -161,7 +161,7 @@ function _render_matrix(frm, cdt, cdn) {
 		var html = '<table style="width:100%;border-collapse:collapse;font-size:12px;">'
 			+ '<thead><tr>'
 			+ '<th ' + th_left + '>Field</th>'
-			+ '<th style="text-align:left;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;white-space:nowrap;">Default&nbsp;Header</th>'
+			+ '<th ' + th_left + '>Default Header</th>'
 			+ '<th ' + th_style + '>List</th>'
 			+ '<th ' + th_style + '>Card</th>'
 			+ '<th ' + th_style + '>Bold</th>'
