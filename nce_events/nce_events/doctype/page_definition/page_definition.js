@@ -46,11 +46,11 @@ function _render_checkboxes(frm, cdt, cdn) {
 				.map(function (s) { return s.trim(); })
 				.filter(Boolean);
 
-			var $group = $('<div class="col-checkbox-group" style="display:flex;flex-wrap:wrap;gap:6px 14px;padding:6px 0;"></div>');
+			var $group = $('<div class="col-checkbox-group" style="display:flex;flex-direction:column;gap:5px;padding:6px 0;"></div>');
 
 			columns.forEach(function (col) {
 				var checked = current.indexOf(col) !== -1 ? "checked" : "";
-				var $lbl = $('<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;white-space:nowrap;">'
+				var $lbl = $('<label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-size:12px;">'
 					+ '<input type="checkbox" ' + checked + ' style="cursor:pointer;"> '
 					+ frappe.utils.escape_html(col)
 					+ '</label>');
