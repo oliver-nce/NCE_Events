@@ -24,6 +24,7 @@ var TAB_GROUPS = {
 	          "section_break_card_actions", "show_card_email", "show_card_sms"],
 	buttons: ["section_break_buttons", "button_1_name", "button_1_code",
 	          "column_break_buttons", "button_2_name", "button_2_code"],
+	report:  ["section_break_queries", "wp_query", "frappe_query"],
 };
 var TAB_ORDER  = ["basic", "display", "widgets", "buttons", "report"];
 var TAB_LABELS = { basic: "Basic", display: "Display", widgets: "Widgets", buttons: "Buttons", report: "Report" };
@@ -38,7 +39,10 @@ var BREAK_FIELDS = [
 	"section_break_header_widgets", "column_break_header_widgets",
 	"section_break_card_actions",
 	"section_break_buttons", "column_break_buttons",
+	"section_break_queries",
 ];
+// wp_query / frappe_query are managed by the Report tab UI, not shown as native fields
+var REPORT_BACKING_FIELDS = ["wp_query", "frappe_query"];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function _get_grid_form(frm) {
@@ -63,10 +67,11 @@ function _show_tab(grid_form, tab_id) {
 		if (fd && fd.$wrapper) $(fd.$wrapper).hide();
 	});
 
-	// Show fields for this tab, skipping matrix-backed and break fields
+	// Show fields for this tab, skipping matrix-backed, break, and report-backing fields
 	(TAB_GROUPS[tab_id] || []).forEach(function (fn) {
 		if (MATRIX_FIELDS.indexOf(fn) !== -1) return;
 		if (BREAK_FIELDS.indexOf(fn) !== -1) return;
+		if (REPORT_BACKING_FIELDS.indexOf(fn) !== -1) return;
 		var fd = grid_form.fields_dict[fn];
 		if (fd && fd.$wrapper) $(fd.$wrapper).show();
 	});
@@ -215,15 +220,17 @@ function _render_report_tab(frm, cdt, cdn, grid_form) {
 		: '<span style="color:#aaa;font-size:12px;">No report selected — set one in the Basic tab first.</span>';
 
 	var mono = 'font-family:monospace;font-size:12px;padding:8px;border:1px solid #d1d8dd;border-radius:4px;width:100%;box-sizing:border-box;';
+	var saved_wp     = (row && row.wp_query)    || "";
+	var saved_frappe = (row && row.frappe_query) || "";
 
 	var html = '<div style="padding:4px 0;">'
 		+ '<div style="margin-bottom:12px;">' + report_link + '</div>'
-		+ '<div style="font-weight:600;font-size:12px;color:#6c7680;margin-bottom:4px;">Paste WordPress SQL Query</div>'
-		+ '<textarea class="pp-wp-query" style="height:110px;' + mono + '" placeholder="SELECT ID, post_title FROM wp_posts WHERE ..."></textarea>'
+		+ '<div style="font-weight:600;font-size:12px;color:#6c7680;margin-bottom:4px;">WordPress SQL Query</div>'
+		+ '<textarea class="pp-wp-query" style="height:110px;' + mono + '" placeholder="SELECT ... FROM wp_posts ...">' + frappe.utils.escape_html(saved_wp) + '</textarea>'
 		+ '<button class="btn btn-sm btn-primary pp-translate-btn" style="margin-top:8px;">Translate to Frappe SQL</button>'
-		+ '<div class="pp-result-wrap" style="display:none;margin-top:14px;">'
+		+ '<div class="pp-result-wrap" style="margin-top:14px;' + (saved_frappe ? '' : 'display:none;') + '">'
 		+   '<div style="font-weight:600;font-size:12px;color:#6c7680;margin-bottom:4px;">Translated Frappe SQL</div>'
-		+   '<textarea class="pp-frappe-query" style="height:110px;' + mono + '" readonly></textarea>'
+		+   '<textarea class="pp-frappe-query" style="height:110px;' + mono + '" readonly>' + frappe.utils.escape_html(saved_frappe) + '</textarea>'
 		+   '<div class="pp-translate-warnings" style="margin-top:6px;font-size:12px;color:#e24c4c;"></div>'
 		+ '</div>'
 		+ '</div>';
@@ -243,12 +250,14 @@ function _render_report_tab(frm, cdt, cdn, grid_form) {
 			callback: function (r) {
 				$btn.prop("disabled", false).text("Translate to Frappe SQL");
 				if (!r.message) return;
-				$tab.find(".pp-frappe-query").val(r.message.translated || "");
+				var translated = r.message.translated || "";
+				$tab.find(".pp-frappe-query").val(translated);
 				$tab.find(".pp-result-wrap").show();
 				var w = (r.message.warnings || []);
-				$tab.find(".pp-translate-warnings").html(
-					w.length ? "⚠ " + w.join("<br>") : ""
-				);
+				$tab.find(".pp-translate-warnings").html(w.length ? "⚠ " + w.join("<br>") : "");
+				// Persist both queries on the child row
+				frappe.model.set_value(cdt, cdn, "wp_query",     wp_query);
+				frappe.model.set_value(cdt, cdn, "frappe_query", translated);
 			},
 		});
 	});

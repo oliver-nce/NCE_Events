@@ -17,6 +17,9 @@
   "column_break_display",
   "card_fields",
   "female_field",
+  "section_break_queries",
+  "wp_query",
+  "frappe_query",
   "section_break_header_widgets",
   "show_filter",
   "show_sheets",
@@ -106,6 +109,25 @@
    "fieldname": "female_field",
    "fieldtype": "Small Text",
    "label": "Female Field"
+  },
+  {
+   "fieldname": "section_break_queries",
+   "fieldtype": "Section Break",
+   "label": "Queries"
+  },
+  {
+   "description": "Original WordPress SQL query (source for translation)",
+   "fieldname": "wp_query",
+   "fieldtype": "Code",
+   "label": "WP Query",
+   "options": "SQL"
+  },
+  {
+   "description": "Translated Frappe SQL query (auto-generated from WP Query)",
+   "fieldname": "frappe_query",
+   "fieldtype": "Code",
+   "label": "Frappe Query",
+   "options": "SQL"
   },
   {
    "fieldname": "section_break_header_widgets",
