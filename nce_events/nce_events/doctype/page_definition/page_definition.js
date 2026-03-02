@@ -1,4 +1,3 @@
-// Column cache: report_name -> [col, col, ...]
 var _rpt_col_cache = {};
 
 function _get_report_columns(report_name, callback) {
@@ -17,64 +16,63 @@ function _get_report_columns(report_name, callback) {
 	});
 }
 
-function _open_field_picker(report_name, cdt, cdn, fieldname, label, frm) {
-	_get_report_columns(report_name, function (columns) {
-		if (!columns.length) {
-			frappe.show_alert({ message: __("No columns found for report: {0}", [report_name]), indicator: "orange" });
-			return;
-		}
-		var row = locals[cdt][cdn];
-		var current = ((row[fieldname] || "").split(",")).map(function (s) { return s.trim(); }).filter(Boolean);
-		var prompt_fields = columns.map(function (col) {
-			return {
-				fieldname: "col__" + col,
-				fieldtype: "Check",
-				label: col,
-				default: current.indexOf(col) !== -1 ? 1 : 0,
-			};
-		});
-		frappe.prompt(
-			prompt_fields,
-			function (values) {
-				var selected = columns.filter(function (col) { return values["col__" + col]; });
-				frappe.model.set_value(cdt, cdn, fieldname, selected.join(", "));
-				frm.refresh_field("panels");
-			},
-			__("Select columns — {0}", [label]),
-			__("Apply")
-		);
-	});
-}
+var PICKER_FIELDS = [
+	{ fieldname: "hidden_fields", label: "Hidden Fields" },
+	{ fieldname: "bold_fields",   label: "Bold Fields"   },
+	{ fieldname: "card_fields",   label: "Card Fields"   },
+];
 
-function _add_pick_buttons(frm, cdt, cdn) {
+function _render_checkboxes(frm, cdt, cdn) {
 	var row = locals[cdt][cdn];
 	if (!row || !row.report_name) return;
 
 	var grid_form = frm.cur_grid && frm.cur_grid.grid_form;
 	if (!grid_form) return;
 
-	var pick_cfg = [
-		{ fieldname: "hidden_fields", label: "Hidden Fields" },
-		{ fieldname: "bold_fields",   label: "Bold Fields"   },
-		{ fieldname: "card_fields",   label: "Card Fields"   },
-	];
+	_get_report_columns(row.report_name, function (columns) {
+		PICKER_FIELDS.forEach(function (cfg) {
+			var fd = grid_form.fields_dict[cfg.fieldname];
+			if (!fd) return;
 
-	pick_cfg.forEach(function (cfg) {
-		var fd = grid_form.fields_dict[cfg.fieldname];
-		if (!fd) return;
-		var $wrap = fd.$wrapper;
-		if ($wrap.find(".pick-col-btn").length) return;   // already added
+			var $wrap = fd.$wrapper;
 
-		var $btn = $('<button class="btn btn-xs btn-default pick-col-btn" style="margin-top:4px;">'
-			+ '<i class="fa fa-list-ul" style="margin-right:4px;"></i>' + __("Pick Columns") + '</button>');
-		$btn.on("click", function () {
-			_open_field_picker(row.report_name, cdt, cdn, cfg.fieldname, cfg.label, frm);
+			// Hide the native textarea
+			$wrap.find(".control-input-wrapper, .control-value").hide();
+
+			// Remove any previously rendered checkbox group
+			$wrap.find(".col-checkbox-group").remove();
+
+			var current = ((row[cfg.fieldname] || "").split(","))
+				.map(function (s) { return s.trim(); })
+				.filter(Boolean);
+
+			var $group = $('<div class="col-checkbox-group" style="display:flex;flex-wrap:wrap;gap:6px 14px;padding:6px 0;"></div>');
+
+			columns.forEach(function (col) {
+				var checked = current.indexOf(col) !== -1 ? "checked" : "";
+				var $lbl = $('<label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:12px;white-space:nowrap;">'
+					+ '<input type="checkbox" ' + checked + ' style="cursor:pointer;"> '
+					+ frappe.utils.escape_html(col)
+					+ '</label>');
+
+				$lbl.find("input").on("change", function () {
+					// Re-read all checked boxes in this group
+					var selected = [];
+					$group.find("input[type=checkbox]").each(function () {
+						if (this.checked) selected.push($(this).closest("label").text().trim());
+					});
+					frappe.model.set_value(cdt, cdn, cfg.fieldname, selected.join(", "));
+				});
+
+				$group.append($lbl);
+			});
+
+			$wrap.append($group);
 		});
-		$wrap.append($btn);
 	});
 }
 
-// ── Page Definition form events ──────────────────────────────────────────────
+// ── Page Definition form ──────────────────────────────────────────────────────
 frappe.ui.form.on("Page Definition", {
 	refresh(frm) {
 		if (!frm.is_new()) {
@@ -99,17 +97,18 @@ frappe.ui.form.on("Page Definition", {
 	},
 });
 
-// ── Page Panel child-table events ────────────────────────────────────────────
+// ── Page Panel child-table events ─────────────────────────────────────────────
 frappe.ui.form.on("Page Panel", {
+	form_render: function (frm, cdt, cdn) {
+		_render_checkboxes(frm, cdt, cdn);
+	},
+
 	report_name: function (frm, cdt, cdn) {
 		var row = locals[cdt][cdn];
 		if (row.report_name) {
-			// Pre-warm the cache so pick buttons are instant
-			_get_report_columns(row.report_name, function () {});
+			// Invalidate cache so fresh columns are fetched, then re-render
+			delete _rpt_col_cache[row.report_name];
+			_render_checkboxes(frm, cdt, cdn);
 		}
-	},
-
-	form_render: function (frm, cdt, cdn) {
-		_add_pick_buttons(frm, cdt, cdn);
 	},
 });
