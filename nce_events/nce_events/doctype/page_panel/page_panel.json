@@ -18,6 +18,7 @@
   "card_fields",
   "female_field",
   "header_overrides",
+  "column_order",
   "section_break_queries",
   "wp_query",
   "frappe_query",
@@ -116,6 +117,13 @@
    "fieldtype": "Small Text",
    "hidden": 1,
    "label": "Header Overrides"
+  },
+  {
+   "description": "Comma-delimited column display order, e.g. event_name, sku, start",
+   "fieldname": "column_order",
+   "fieldtype": "Small Text",
+   "hidden": 1,
+   "label": "Column Order"
   },
   {
    "fieldname": "section_break_queries",

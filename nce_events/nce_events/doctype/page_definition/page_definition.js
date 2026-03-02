@@ -18,7 +18,7 @@ function _get_report_columns(report_name, callback) {
 var TAB_GROUPS = {
 	basic:   ["panel_number", "header_text", "root_doctype", "where_clause"],
 	display: ["section_break_display", "hidden_fields", "bold_fields", "male_field",
-	          "column_break_display", "card_fields", "female_field", "header_overrides"],
+	          "column_break_display", "card_fields", "female_field", "header_overrides", "column_order"],
 	widgets: ["section_break_header_widgets", "show_filter", "show_sheets",
 	          "column_break_header_widgets", "show_email", "show_sms",
 	          "section_break_card_actions", "show_card_email", "show_card_sms"],
@@ -32,7 +32,7 @@ var ALL_PANEL_FIELDS = [].concat(
 	TAB_GROUPS.basic, TAB_GROUPS.display, TAB_GROUPS.widgets, TAB_GROUPS.buttons
 );
 // Native inputs replaced by the matrix — never shown directly
-var MATRIX_FIELDS = ["hidden_fields", "bold_fields", "card_fields", "male_field", "female_field", "header_overrides"];
+var MATRIX_FIELDS = ["hidden_fields", "bold_fields", "card_fields", "male_field", "female_field", "header_overrides", "column_order"];
 // Section-break / column-break fields Frappe still renders — always hide
 var BREAK_FIELDS = [
 	"section_break_display", "column_break_display",
@@ -131,6 +131,20 @@ function _ensure_tab_bar(frm, cdt, cdn, grid_form) {
 	_show_tab(grid_form, "basic");
 }
 
+function _apply_column_order(columns, saved_order) {
+	if (!saved_order || !saved_order.length) return columns.slice();
+	var set = {};
+	columns.forEach(function (c) { set[c] = true; });
+	var ordered = [];
+	saved_order.forEach(function (c) {
+		if (set[c]) { ordered.push(c); delete set[c]; }
+	});
+	columns.forEach(function (c) {
+		if (set[c]) ordered.push(c);
+	});
+	return ordered;
+}
+
 // ── Matrix renderer ───────────────────────────────────────────────────────────
 function _render_matrix(frm, cdt, cdn) {
 	var row = locals[cdt][cdn];
@@ -140,7 +154,7 @@ function _render_matrix(frm, cdt, cdn) {
 	var $container = $(grid_form.wrapper).find(".pp-matrix-wrap");
 	if (!$container.length) return;
 
-	_get_report_columns(row.report_name, function (columns) {
+	_get_report_columns(row.report_name, function (raw_columns) {
 		$container.empty();
 
 		function parse_csv(val) {
@@ -155,14 +169,19 @@ function _render_matrix(frm, cdt, cdn) {
 		var overrides = {};
 		try { overrides = JSON.parse(row.header_overrides || "{}"); } catch (e) { /* ignore */ }
 
+		var saved_order = parse_csv(row.column_order);
+		var columns = _apply_column_order(raw_columns, saved_order);
+
 		function _title_case(name) {
 			return name.replace(/_/g, " ").replace(/\b\w/g, function (c) { return c.toUpperCase(); });
 		}
 
 		var th_style = 'style="text-align:center;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;"';
 		var th_left  = 'style="text-align:left;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;"';
+		var th_grip  = 'style="width:24px;padding:4px;border-bottom:2px solid #d1d8dd;"';
 		var html = '<table style="width:100%;border-collapse:collapse;font-size:12px;">'
 			+ '<thead><tr>'
+			+ '<th ' + th_grip + '></th>'
 			+ '<th ' + th_left + '>Field</th>'
 			+ '<th ' + th_left + '>Default Header</th>'
 			+ '<th ' + th_left + '>Header</th>'
@@ -179,7 +198,9 @@ function _render_matrix(frm, cdt, cdn) {
 			var default_header = _title_case(col);
 			var current_header = overrides[col] || "";
 			var td  = 'style="text-align:center;padding:4px 8px;"';
-			html += '<tr' + bg + '>'
+			html += '<tr draggable="true" data-col="' + c + '"' + bg + '>'
+				+ '<td style="padding:4px;text-align:center;cursor:grab;">'
+				+   '<span class="matrix-drag-handle" style="color:#b7babe;font-size:14px;">&#x2630;</span></td>'
 				+ '<td style="padding:4px 8px;color:#8d949a;font-size:11px;">' + c + '</td>'
 				+ '<td style="padding:4px 8px;color:#4c5a67;">' + frappe.utils.escape_html(default_header) + '</td>'
 				+ '<td style="padding:4px 8px;"><input type="text" data-col="' + c + '" data-role="header" '
@@ -197,10 +218,58 @@ function _render_matrix(frm, cdt, cdn) {
 
 		var $matrix = $(html);
 
+		// ── Drag-and-drop reordering ──
+		var drag_src = null;
+		$matrix.find("tbody tr").on("dragstart", function (e) {
+			drag_src = this;
+			$(this).css("opacity", "0.4");
+			e.originalEvent.dataTransfer.effectAllowed = "move";
+			e.originalEvent.dataTransfer.setData("text/plain", "");
+		}).on("dragend", function () {
+			$(this).css("opacity", "");
+			$matrix.find("tbody tr").removeClass("matrix-drag-over");
+		}).on("dragover", function (e) {
+			e.preventDefault();
+			e.originalEvent.dataTransfer.dropEffect = "move";
+			$matrix.find("tbody tr").removeClass("matrix-drag-over");
+			$(this).addClass("matrix-drag-over");
+		}).on("drop", function (e) {
+			e.preventDefault();
+			if (drag_src === this) return;
+			var $tbody = $matrix.find("tbody");
+			var $target = $(this);
+			var $src = $(drag_src);
+			var src_idx = $src.index();
+			var tgt_idx = $target.index();
+			if (src_idx < tgt_idx) {
+				$target.after($src);
+			} else {
+				$target.before($src);
+			}
+			$matrix.find("tbody tr").removeClass("matrix-drag-over");
+			_restripe();
+			_sync();
+		});
+
+		function _restripe() {
+			$matrix.find("tbody tr").each(function (i) {
+				$(this).css("background", i % 2 !== 0 ? "#f8f9fa" : "");
+			});
+		}
+
+		function _get_row_order() {
+			var order = [];
+			$matrix.find("tbody tr").each(function () {
+				order.push($(this).data("col"));
+			});
+			return order;
+		}
+
 		function _sync() {
 			var nh = [], nc = [], nb = [], nm = "", nf = "";
 			var ho = {};
-			columns.forEach(function (col) {
+			var order = _get_row_order();
+			order.forEach(function (col) {
 				var esc = frappe.utils.escape_html(col);
 				var $r = $matrix.find('input[data-col="' + esc + '"]');
 				if (!$r.filter('[data-role="list"]').prop("checked")) nh.push(col);
@@ -219,12 +288,24 @@ function _render_matrix(frm, cdt, cdn) {
 			frappe.model.set_value(cdt, cdn, "male_field",    nm);
 			frappe.model.set_value(cdt, cdn, "female_field",  nf);
 			frappe.model.set_value(cdt, cdn, "header_overrides", Object.keys(ho).length ? JSON.stringify(ho) : "");
+			frappe.model.set_value(cdt, cdn, "column_order", order.join(", "));
 		}
 		$matrix.on("change", "input[type=checkbox], input[type=radio]", _sync);
 		$matrix.on("blur", 'input[data-role="header"]', _sync);
 		$matrix.on("mousedown", 'input[data-role="header"]', function (e) {
 			e.stopPropagation();
 		});
+
+		if (!document.getElementById("pp-matrix-drag-css")) {
+			$("head").append(
+				'<style id="pp-matrix-drag-css">'
+				+ '.matrix-drag-over { border-top: 2px solid #4198F0 !important; }'
+				+ '.matrix-drag-handle:hover { color: #464D53 !important; cursor: grab; }'
+				+ 'tr[draggable="true"]:active .matrix-drag-handle { cursor: grabbing; }'
+				+ '</style>'
+			);
+		}
+
 		$container.append($matrix);
 	});
 }

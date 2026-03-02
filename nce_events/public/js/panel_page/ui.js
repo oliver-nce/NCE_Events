@@ -71,6 +71,20 @@ nce_events.panel_page.Explorer = class Explorer {
 		});
 	}
 
+	_apply_column_order(cols, order) {
+		if (!order || !order.length) return cols;
+		var map = {};
+		cols.forEach(function (c) { map[c.fieldname] = c; });
+		var ordered = [];
+		order.forEach(function (fn) {
+			if (map[fn]) { ordered.push(map[fn]); delete map[fn]; }
+		});
+		cols.forEach(function (c) {
+			if (map[c.fieldname]) ordered.push(c);
+		});
+		return ordered;
+	}
+
 	_field_set(field_list) {
 		var set = {};
 		if (!field_list || !field_list.length) return set;
@@ -339,6 +353,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		var el = me.pane_elements[idx].el;
 		var rows = me._get_filtered_rows(panel_number);
 		var visible_cols = me._visible_columns(state.columns, config.hidden_fields);
+		visible_cols = me._apply_column_order(visible_cols, config.column_order);
 		var bold_set = me._field_set(config.bold_fields);
 
 		var male_hex = (me.store.config.male_hex || "").trim();
