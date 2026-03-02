@@ -13,8 +13,10 @@
   "section_break_display",
   "hidden_fields",
   "bold_fields",
+  "male_field",
   "column_break_display",
   "card_fields",
+  "female_field",
   "section_break_header_widgets",
   "show_filter",
   "show_sheets",
@@ -88,10 +90,22 @@
    "fieldtype": "Column Break"
   },
   {
+   "description": "Column whose value is a male count — used for gender colour strip",
+   "fieldname": "male_field",
+   "fieldtype": "Small Text",
+   "label": "Male Field"
+  },
+  {
    "description": "Comma-delimited list of fields shown in card popover on row click",
    "fieldname": "card_fields",
    "fieldtype": "Small Text",
    "label": "Card Fields"
+  },
+  {
+   "description": "Column whose value is a female count — used for gender colour strip",
+   "fieldname": "female_field",
+   "fieldtype": "Small Text",
+   "label": "Female Field"
   },
   {
    "fieldname": "section_break_header_widgets",

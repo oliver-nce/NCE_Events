@@ -312,14 +312,13 @@ nce_events.panel_page.Explorer = class Explorer {
 		var visible_cols = me._visible_columns(state.columns, config.hidden_fields);
 		var bold_set = me._field_set(config.bold_fields);
 
-		var gender_col = state.columns.find(function (c) {
-			return c.toLowerCase() === "gender";
-		});
 		var male_hex = me.store.config.male_hex;
 		var female_hex = me.store.config.female_hex;
-		var use_gender = !!(gender_col && (male_hex || female_hex));
+		var male_field = config.male_field || null;
+		var female_field = config.female_field || null;
+		var use_gender = !!((male_field || female_field) && (male_hex || female_hex));
 
-		var html = me._build_table(panel_number, visible_cols, rows, state, bold_set, gender_col, male_hex, female_hex, use_gender);
+		var html = me._build_table(panel_number, visible_cols, rows, state, bold_set, male_field, female_field, male_hex, female_hex, use_gender);
 
 		if (me.store.has_more(panel_number)) {
 			html +=
@@ -332,7 +331,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		me._bind_pane_events(panel_number, el);
 	}
 
-	_build_table(panel_number, visible_cols, rows, state, bold_set, gender_col, male_hex, female_hex, use_gender) {
+	_build_table(panel_number, visible_cols, rows, state, bold_set, male_field, female_field, male_hex, female_hex, use_gender) {
 		var me = this;
 		var id_col = state.columns[0];
 		var selected_row = me.store.get_selected(panel_number);
@@ -350,10 +349,9 @@ nce_events.panel_page.Explorer = class Explorer {
 		rows.forEach(function (row, row_idx) {
 			var is_selected = selected_row && row[id_col] === selected_row[id_col];
 			var gender_color = "";
-			if (use_gender && gender_col) {
-				var g = (row[gender_col] || "").toString().toLowerCase();
-				if (g === "male" && male_hex) gender_color = male_hex;
-				else if (g === "female" && female_hex) gender_color = female_hex;
+			if (use_gender) {
+				if (male_field && row[male_field] && male_hex) gender_color = male_hex;
+				else if (female_field && row[female_field] && female_hex) gender_color = female_hex;
 			}
 
 			html +=
@@ -993,13 +991,11 @@ nce_events.panel_page.ExplorerV2 = class ExplorerV2 {
 		var visible_cols = me._visible_columns(state.columns, config.hidden_fields);
 		var bold_set = me._field_set(config.bold_fields);
 
-		var gender_col = null;
-		state.columns.forEach(function (col) {
-			if (col.fieldname.toLowerCase() === "gender") gender_col = col.fieldname;
-		});
 		var male_hex = me.store.config.male_hex;
 		var female_hex = me.store.config.female_hex;
-		var use_gender = !!(gender_col && (male_hex || female_hex));
+		var male_field = config.male_field || null;
+		var female_field = config.female_field || null;
+		var use_gender = !!((male_field || female_field) && (male_hex || female_hex));
 
 		var id_col = state.columns.length ? state.columns[0].fieldname : null;
 		var selected_row = me.store.get_selected(panel_number);
@@ -1015,10 +1011,9 @@ nce_events.panel_page.ExplorerV2 = class ExplorerV2 {
 		rows.forEach(function (row, row_idx) {
 			var is_selected = selected_row && id_col && row[id_col] === selected_row[id_col];
 			var gender_color = "";
-			if (use_gender && gender_col) {
-				var g = (row[gender_col] || "").toString().toLowerCase();
-				if (g === "male" && male_hex) gender_color = male_hex;
-				else if (g === "female" && female_hex) gender_color = female_hex;
+			if (use_gender) {
+				if (male_field && row[male_field] && male_hex) gender_color = male_hex;
+				else if (female_field && row[female_field] && female_hex) gender_color = female_hex;
 			}
 
 			html += '<tr class="panel-row' +

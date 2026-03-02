@@ -164,6 +164,8 @@ def get_page_config_v2(page_name):
 			"hidden_fields": _parse_csv(p.hidden_fields),
 			"bold_fields": _parse_csv(p.bold_fields),
 			"card_fields": _parse_csv(p.card_fields),
+			"male_field": (p.male_field or "").strip(),
+			"female_field": (p.female_field or "").strip(),
 			"show_filter": p.show_filter,
 			"show_sheets": p.show_sheets,
 			"show_email": p.show_email,
