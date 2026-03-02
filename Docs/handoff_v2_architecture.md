@@ -316,6 +316,14 @@ The shared renderer files remain at:
 | `Docs/panel_page_spec_rules.md` | v1 spec rules (partially superseded) |
 | `Docs/wordpress_db_tables.md` | WordPress source database table list |
 
+## Backlog / Known Issues
+
+| # | Issue | Notes |
+|---|---|---|
+| 1 | ~~**Workspace shortcut not appearing on workspace page after `build_page()`**~~ | **RESOLVED.** Root cause: Frappe v15 workspace page renders from the `content` JSON field, not the `shortcuts` child table alone. Fix: update both `workspace.content` (inject a `{"type":"shortcut","data":{"shortcut_name": page_title, "col":4, "id":...}}` block) AND the child table in a single `workspace.save()` call, followed by `frappe.clear_cache()`. A browser page refresh is required to see the new shortcut (expected Frappe behavior). |
+
+---
+
 ## Database access
 
 The WordPress source database (db_ncesoccer) is accessible from the developer's

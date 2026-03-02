@@ -364,6 +364,24 @@ def _title_case(fieldname):
 
 
 @frappe.whitelist()
+@frappe.whitelist()
+def get_report_columns(report_name):
+	"""Return the column names for a Query Report by running its SQL with LIMIT 0."""
+	sql = frappe.db.get_value("Report", report_name, "query")
+	if not sql:
+		return []
+	sql = sql.strip().rstrip(";")
+	try:
+		frappe.db.sql(f"SELECT * FROM ({sql}) _cols LIMIT 0")
+		cursor = frappe.db._cursor
+		if cursor and cursor.description:
+			return [d[0] for d in cursor.description]
+	except Exception as e:
+		frappe.log_error(str(e), "get_report_columns")
+	return []
+
+
+@frappe.whitelist()
 def get_active_v2_pages():
 	"""Return list of active Page Definition records for the v2 landing page."""
 	return frappe.get_all(
