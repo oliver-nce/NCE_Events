@@ -1,10 +1,10 @@
 frappe.provide("nce_events.panel_page");
 
-nce_events.panel_page.ExplorerV2 = class ExplorerV2 {
+nce_events.panel_page.Explorer = class Explorer {
 	constructor(page, page_name) {
 		this.page = page;
 		this.page_name = page_name;
-		this.store = new nce_events.panel_page.StoreV2(page_name);
+		this.store = new nce_events.panel_page.Store(page_name);
 		this.pane_elements = [];
 		this.divider_elements = [];
 		// filters[panel_number] = [{field, op, value}, ...]
@@ -27,7 +27,7 @@ nce_events.panel_page.ExplorerV2 = class ExplorerV2 {
 		me.container = $('<div class="panel-explorer"></div>');
 		$(me.page.body).empty().append(me.container);
 
-		$(document).on("mousedown.panel_card_v2", function (e) {
+		$(document).on("mousedown.panel_card", function (e) {
 			if (
 				me._card_el &&
 				!$(e.target).closest(".panel-card-popover").length &&
@@ -51,7 +51,7 @@ nce_events.panel_page.ExplorerV2 = class ExplorerV2 {
 		this._destroyed = true;
 		this._hide_card();
 		if (this._click_timer) clearTimeout(this._click_timer);
-		$(document).off("mousedown.panel_card_v2");
+		$(document).off("mousedown.panel_card");
 		if (this.container) this.container.remove();
 	}
 
@@ -215,7 +215,7 @@ nce_events.panel_page.ExplorerV2 = class ExplorerV2 {
 			var rm_btn = $('<button class="btn btn-xs filter-remove-btn" title="Remove">&times;</button>');
 			rm_btn.on("click", function () {
 				conditions.splice(i, 1);
-				me._re_render_filter(panel_number, header_el);
+				me._render_filter_widget(panel_number, header_el);
 				me.render_pane(panel_number);
 			});
 
@@ -239,16 +239,12 @@ nce_events.panel_page.ExplorerV2 = class ExplorerV2 {
 		var add_btn = $('<button class="btn btn-xs btn-default filter-add-btn">+ Add Filter</button>');
 		add_btn.on("click", function () {
 			conditions.push({ field: "", op: "=", value: "" });
-			me._re_render_filter(panel_number, header_el);
+			me._render_filter_widget(panel_number, header_el);
 		});
 		widget.append(add_btn);
 
 		header_el.find(".pane-filter-widget").remove();
 		header_el.append(widget);
-	}
-
-	_re_render_filter(panel_number, header_el) {
-		this._render_filter_widget(panel_number, header_el);
 	}
 
 	// ── Header rendering ──
@@ -567,7 +563,7 @@ nce_events.panel_page.ExplorerV2 = class ExplorerV2 {
 		});
 	}
 
-	// ── Drag-resize (identical to v1) ──
+	// ── Drag-resize ──
 
 	_create_divider(index) {
 		var me = this;
@@ -601,12 +597,12 @@ nce_events.panel_page.ExplorerV2 = class ExplorerV2 {
 		var on_up = function () {
 			me.divider_elements[divider_index].removeClass("active");
 			$("body").removeClass("panel-resizing");
-			$(document).off("mousemove.presize2 touchmove.presize2");
-			$(document).off("mouseup.presize2 touchend.presize2");
+			$(document).off("mousemove.presize touchmove.presize");
+			$(document).off("mouseup.presize touchend.presize");
 			me._resize = null;
 		};
-		$(document).on("mousemove.presize2 touchmove.presize2", on_move);
-		$(document).on("mouseup.presize2 touchend.presize2", on_up);
+		$(document).on("mousemove.presize touchmove.presize", on_move);
+		$(document).on("mouseup.presize touchend.presize", on_up);
 	}
 
 	_do_resize(client_x) {

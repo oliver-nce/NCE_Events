@@ -6,8 +6,8 @@ from frappe import _
 
 
 @frappe.whitelist()
-def get_page_config_v2(page_name):
-	"""Fetch full Page Definition configuration for the v2 client."""
+def get_page_config(page_name):
+	"""Fetch full Page Definition configuration for the client."""
 	doc = frappe.get_doc("Page Definition", page_name)
 
 	panels = []
@@ -45,8 +45,8 @@ def get_page_config_v2(page_name):
 
 
 @frappe.whitelist()
-def get_panel_data_v2(page_name, panel_number, selections=None):
-	"""Execute the Query Report for a v2 panel using Frappe's native report runner.
+def get_panel_data(page_name, panel_number, selections=None):
+	"""Execute the Query Report for a panel using Frappe's native report runner.
 
 	Inter-panel filtering is applied Python-side after the report runs.
 	No pagination — all matching rows are returned.
@@ -104,7 +104,7 @@ def get_panel_data_v2(page_name, panel_number, selections=None):
 	}
 
 
-# ── v2 internal helpers ──
+# ── Internal helpers ──
 
 
 _WHERE_REF_RE = re.compile(r"\{panel_(\d+)\.(\w+)\}")
@@ -294,8 +294,8 @@ def get_report_columns(report_name):
 
 
 @frappe.whitelist()
-def get_active_v2_pages():
-	"""Return list of active Page Definition records for the v2 landing page."""
+def get_active_pages():
+	"""Return list of active Page Definition records for the landing page."""
 	return frappe.get_all(
 		"Page Definition",
 		filters={"active": 1},

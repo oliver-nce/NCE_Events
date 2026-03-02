@@ -34,7 +34,7 @@ frappe.pages["page-view"].on_page_show = function (wrapper) {
 				"/assets/nce_events/css/panel_page.css",
 			],
 			function () {
-				wrapper._explorer = new nce_events.panel_page.ExplorerV2(page, page_name);
+				wrapper._explorer = new nce_events.panel_page.Explorer(page, page_name);
 			}
 		);
 	} else {
@@ -54,7 +54,7 @@ function _show_landing(page) {
 	container.html('<div class="panel-landing-loading">Loading\u2026</div>');
 
 	frappe.call({
-		method: "nce_events.api.panel_api.get_active_v2_pages",
+		method: "nce_events.api.panel_api.get_active_pages",
 		callback: function (r) {
 			container.empty();
 			var pages = r.message || [];

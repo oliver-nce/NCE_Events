@@ -43,8 +43,8 @@ nce_events/
 │   │   └── hierarchy_explorer.css   # Legacy styles
 │   └── js/
 │       ├── panel_page/
-│       │   ├── ui.js                # ExplorerV2 renderer
-│       │   └── store.js             # StoreV2 state management
+│       │   ├── ui.js                # Explorer renderer
+│       │   └── store.js             # Store state management
 │       └── hierarchy_explorer/      # Legacy JS (frozen)
 ├── patches/v0_0_2/                  # Migration patches
 └── utils/version.py
@@ -126,7 +126,7 @@ All pages route through a **single shared Frappe Page** (`page-view`) at:
 /app/page-view/{page_name}
 ```
 
-`page_view.js` reads the route param, does `frappe.require` on `store.js`, `ui.js`, and `panel_page.css`, then creates an `ExplorerV2(page, page_name)`. If no `page_name`, it shows a landing page listing active pages via `get_active_v2_pages`.
+`page_view.js` reads the route param, does `frappe.require` on `store.js`, `ui.js`, and `panel_page.css`, then creates an `Explorer(page, page_name)`. If no `page_name`, it shows a landing page listing active pages via `get_active_pages`.
 
 A workspace shortcut is created automatically when the user clicks **Build Page** on the Page Definition form. No `bench migrate` is needed to add a new page.
 
@@ -140,15 +140,15 @@ A workspace shortcut is created automatically when the user clicks **Build Page*
 
 | Function | Params | Purpose |
 |---|---|---|
-| `get_page_config_v2` | `page_name` | Returns full page + panel config as JSON |
-| `get_panel_data_v2` | `page_name, panel_number, selections` | Runs the Query Report, applies inter-panel filter, returns `{columns, rows, total}` |
+| `get_page_config` | `page_name` | Returns full page + panel config as JSON |
+| `get_panel_data` | `page_name, panel_number, selections` | Runs the Query Report, applies inter-panel filter, returns `{columns, rows, total}` |
 | `get_report_columns` | `report_name` | Returns column names via `LIMIT 0` on report SQL |
 | `translate_wp_query` | `wp_query` | Translates WP SQL to Frappe SQL using WP Tables mappings |
 | `create_or_update_report` | `header_text, frappe_query, existing_report_name, ref_doctype` | Creates or updates a Frappe Query Report |
 | `build_page` | `page_name` | Ensures workspace shortcut exists, returns `{page_url}` |
-| `get_active_v2_pages` | (none) | Lists active Page Definitions for the landing page |
+| `get_active_pages` | (none) | Lists active Page Definitions for the landing page |
 
-### get_page_config_v2 Response
+### get_page_config Response
 
 ```json
 {
@@ -183,7 +183,7 @@ A workspace shortcut is created automatically when the user clicks **Build Page*
 }
 ```
 
-### get_panel_data_v2 Response
+### get_panel_data Response
 
 ```json
 {
@@ -193,7 +193,7 @@ A workspace shortcut is created automatically when the user clicks **Build Page*
 }
 ```
 
-### get_panel_data_v2 Mechanics
+### get_panel_data Mechanics
 
 1. Loads Page Definition record, finds the panel row
 2. Calls `frappe.desk.query_report.run(report_name, filters={})` — same code path as Frappe report UI
@@ -285,10 +285,10 @@ Default new report name: `{header_text} Panel`
 
 | Class | Namespace |
 |---|---|
-| `ExplorerV2` | `nce_events.panel_page.ExplorerV2` |
-| `StoreV2` | `nce_events.panel_page.StoreV2` |
+| `Explorer` | `nce_events.panel_page.Explorer` |
+| `Store` | `nce_events.panel_page.Store` |
 
-### ExplorerV2 Render Flow
+### Explorer Render Flow
 
 1. `setup()` — builds container, calls `store.fetch_config()` then `load_panel(1)`
 2. `load_panel(N)` — calls `store.fetch_panel(N)`, then `render_pane(N)`
@@ -306,12 +306,12 @@ Bold and gender colors use **inline styles** on `<th>` and `<td>`. This is neces
 
 Gender hex values normalize to `#XXXXXX` (the `#` is added if missing). Field comparison is case-insensitive (`col.fieldname.toLowerCase()` vs `config.male_field.toLowerCase()`).
 
-### StoreV2 Key Methods
+### Store Key Methods
 
 | Method | Purpose |
 |---|---|
-| `fetch_config()` | Calls `get_page_config_v2` |
-| `fetch_panel(N)` | Calls `get_panel_data_v2` (no pagination) |
+| `fetch_config()` | Calls `get_page_config` |
+| `fetch_panel(N)` | Calls `get_panel_data` (no pagination) |
 | `select_row(N, row)` | Updates selections, clears downstream panes |
 | `has_more(N)` | Always `false` |
 
