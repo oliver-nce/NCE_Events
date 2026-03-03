@@ -123,59 +123,58 @@ function _load_fields(frm) {
 		return;
 	}
 
-	frappe.call({
-		method: "frappe.client.get_list",
-		args: {
-			doctype: "DocField",
-			filters: {
-				parent: dt,
-				fieldtype: ["not in", [
-					"Section Break", "Column Break", "Tab Break",
-					"HTML", "Fold", "Heading",
-				]],
-			},
-			fields: ["fieldname", "label", "fieldtype"],
-			order_by: "idx asc",
-			limit_page_length: 0,
-		},
-		callback: function (r) {
-			if (!r.message || !r.message.length) {
-				frappe.msgprint(__("No fields found for {0}", [dt]));
-				return;
+	var skip_types = {
+		"Section Break": 1, "Column Break": 1, "Tab Break": 1,
+		"HTML": 1, "Fold": 1, "Heading": 1,
+	};
+
+	frappe.model.with_doctype(dt, function () {
+		var meta = frappe.get_meta(dt);
+		if (!meta || !meta.fields || !meta.fields.length) {
+			frappe.msgprint(__("No fields found for {0}", [dt]));
+			return;
+		}
+
+		var data_fields = meta.fields.filter(function (f) {
+			return !skip_types[f.fieldtype];
+		});
+
+		if (!data_fields.length) {
+			frappe.msgprint(__("No data fields found for {0}", [dt]));
+			return;
+		}
+
+		var existing = _get_fields(frm);
+		var existing_map = {};
+		existing.forEach(function (f) { existing_map[f.field_name] = f; });
+
+		var fields = [];
+		data_fields.forEach(function (f) {
+			if (existing_map[f.fieldname]) {
+				fields.push(existing_map[f.fieldname]);
+				delete existing_map[f.fieldname];
+			} else {
+				fields.push({
+					field_name: f.fieldname,
+					male_value: "",
+					female_value: "",
+					synthetic: false,
+				});
 			}
+		});
 
-			var existing = _get_fields(frm);
-			var existing_map = {};
-			existing.forEach(function (f) { existing_map[f.field_name] = f; });
+		Object.keys(existing_map).forEach(function (key) {
+			var row = existing_map[key];
+			if (row.synthetic) fields.push(row);
+		});
 
-			var fields = [];
-			r.message.forEach(function (f) {
-				if (existing_map[f.fieldname]) {
-					fields.push(existing_map[f.fieldname]);
-					delete existing_map[f.fieldname];
-				} else {
-					fields.push({
-						field_name: f.fieldname,
-						male_value: "",
-						female_value: "",
-						synthetic: false,
-					});
-				}
-			});
+		_save_fields(frm, fields);
+		_render_table(frm);
 
-			Object.keys(existing_map).forEach(function (key) {
-				var row = existing_map[key];
-				if (row.synthetic) fields.push(row);
-			});
-
-			_save_fields(frm, fields);
-			_render_table(frm);
-
-			frappe.show_alert({
-				message: __("{0} fields loaded", [r.message.length]),
-				indicator: "green",
-			});
-		},
+		frappe.show_alert({
+			message: __("{0} fields loaded", [data_fields.length]),
+			indicator: "green",
+		});
 	});
 }
 
