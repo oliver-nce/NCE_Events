@@ -1,4 +1,7 @@
+import csv
+import io
 import json
+import os
 import re
 
 import frappe
@@ -55,6 +58,57 @@ def get_panel_data(page_name, panel_number, selections=None):
 	Inter-panel filtering is applied Python-side after the report runs.
 	No pagination — all matching rows are returned.
 	"""
+	columns, rows = _run_panel_report(page_name, int(panel_number), selections)
+	return {
+		"columns": columns,
+		"rows": rows,
+		"total": len(rows),
+	}
+
+
+_ROSTER_HASH = "wwe78f6q87ey97f86q9e8fqw98ef"
+
+
+@frappe.whitelist()
+def export_panel_data(page_name, panel_number, selections=None):
+	"""Export a panel's current data as CSV to a public path and return its URL."""
+	panel_number = int(panel_number)
+	columns, rows = _run_panel_report(page_name, panel_number, selections)
+
+	col_fieldnames = [c["fieldname"] for c in columns]
+	labels = [c["label"] for c in columns]
+
+	output = io.StringIO()
+	writer = csv.writer(output)
+	writer.writerow(labels)
+	for row in rows:
+		writer.writerow([row.get(fn, "") for fn in col_fieldnames])
+	csv_content = output.getvalue()
+
+	safe_page = _safe_filename(page_name)
+	filename = f"{safe_page}_{panel_number}.csv"
+
+	roster_dir = frappe.get_site_path("public", "files", "panels", _ROSTER_HASH)
+	os.makedirs(roster_dir, exist_ok=True)
+	filepath = os.path.join(roster_dir, filename)
+	with open(filepath, "w", encoding="utf-8") as f:
+		f.write(csv_content)
+
+	public_url = f"/files/panels/{_ROSTER_HASH}/{filename}"
+
+	return {
+		"filename": filename,
+		"url": public_url,
+		"rows_exported": len(rows),
+	}
+
+
+def _run_panel_report(page_name, panel_number, selections=None):
+	"""Shared logic: run a panel's report and apply inter-panel filtering.
+
+	Returns (columns, rows) where columns is [{fieldname, label}] and
+	rows is a list of frappe._dict.
+	"""
 	panel_number = int(panel_number)
 
 	if isinstance(selections, str):
@@ -74,23 +128,19 @@ def get_panel_data(page_name, panel_number, selections=None):
 	if not panel:
 		frappe.throw(_("Panel {0} not found in page {1}").format(panel_number, page_name))
 
-	# Run the report natively — same path as the Frappe report UI
 	from frappe.desk.query_report import run as _run_report
 	result = _run_report(report_name=panel.report_name, filters={}, user=frappe.session.user)
 	raw_columns = result.get("columns") or []
 	raw_data = result.get("result") or []
 
-	# Parse columns into [{fieldname, label}]
 	columns = _parse_report_column_defs(raw_columns)
 	col_fieldnames = [c["fieldname"] for c in columns]
 
-	# Convert rows to dicts
 	if raw_data and isinstance(raw_data[0], (list, tuple)):
 		rows = [frappe._dict(zip(col_fieldnames, row)) for row in raw_data]
 	else:
 		rows = [frappe._dict(row) if not isinstance(row, frappe._dict) else row for row in raw_data]
 
-	# Apply inter-panel filter Python-side
 	prev_sel = selections.get(str(prev_panel.panel_number)) if prev_panel else {}
 	if prev_sel:
 		if panel.where_clause:
@@ -101,11 +151,7 @@ def get_panel_data(page_name, panel_number, selections=None):
 				filter_val = str(prev_sel["name"])
 				rows = [r for r in rows if str(r.get(link_field, "")) == filter_val]
 
-	return {
-		"columns": columns,
-		"rows": rows,
-		"total": len(rows),
-	}
+	return columns, rows
 
 
 # ── Internal helpers ──
@@ -171,6 +217,11 @@ def _apply_python_filter(rows, where_clause, selections):
 
 def _title_case(fieldname):
 	return fieldname.replace("_", " ").title()
+
+
+def _safe_filename(value):
+	"""Sanitize a string for use as a filesystem filename component."""
+	return "".join(c if c.isalnum() or c in "-_" else "_" for c in str(value))
 
 
 @frappe.whitelist()

@@ -380,13 +380,49 @@ nce_events.panel_page.Explorer = class Explorer {
 		}
 
 		header_el.find(".pane-sheets-btn").on("click", function () {
-			frappe.show_alert({ message: __("Sheets export \u2014 coming soon"), indicator: "blue" });
+			me._on_sheets_link(panel_number);
 		});
 		header_el.find(".pane-email-btn").on("click", function () {
 			frappe.show_alert({ message: __("Email \u2014 coming soon"), indicator: "blue" });
 		});
 		header_el.find(".pane-sms-btn").on("click", function () {
 			frappe.show_alert({ message: __("SMS \u2014 coming soon"), indicator: "blue" });
+		});
+	}
+
+	_on_sheets_link(panel_number) {
+		var me = this;
+		frappe.call({
+			method: "nce_events.api.panel_api.export_panel_data",
+			args: {
+				page_name: me.page_name,
+				panel_number: panel_number,
+				selections: JSON.stringify(me.store.selections),
+			},
+			callback: function (r) {
+				if (!r.message) return;
+				var url = window.location.origin + r.message.url;
+				var formula = '=IMPORTDATA("' + url + '")';
+				if (navigator.clipboard && navigator.clipboard.writeText) {
+					navigator.clipboard.writeText(formula).then(function () {
+						frappe.show_alert({
+							message: __("Link is on the clipboard \u2014 paste it in a Google Sheets cell"),
+							indicator: "green",
+						});
+					});
+				} else {
+					var ta = document.createElement("textarea");
+					ta.value = formula;
+					document.body.appendChild(ta);
+					ta.select();
+					document.execCommand("copy");
+					document.body.removeChild(ta);
+					frappe.show_alert({
+						message: __("Link is on the clipboard \u2014 paste it in a Google Sheets cell"),
+						indicator: "green",
+					});
+				}
+			},
 		});
 	}
 
