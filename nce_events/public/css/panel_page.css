@@ -277,52 +277,57 @@ body.col-resizing * {
 	font-size: 12px;
 }
 
-/* ── Drag Divider ── */
+/* ── Floating panels ── */
 
-.panel-divider {
-	width: 5px;
-	flex-shrink: 0;
-	background: #73B3F2;
-	cursor: col-resize;
-	transition: background-color 0.15s;
-	position: relative;
+.panel-float {
+	position: fixed;
+	display: flex;
+	flex-direction: column;
+	width: 60vw;
+	height: 50vh;
+	min-width: 320px;
+	min-height: 220px;
+	background: #FAFAFA;
+	border: 1px solid #A2CCF6;
+	border-radius: 6px;
+	box-shadow: 0 8px 32px rgba(18, 107, 196, 0.25), 0 2px 8px rgba(0, 0, 0, 0.10);
+	overflow: hidden;
+	resize: both;
 }
 
-.panel-divider::after {
-	content: "";
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
-	width: 3px;
-	height: 24px;
-	border-left: 1px solid rgba(255, 255, 255, 0.5);
-	border-right: 1px solid rgba(255, 255, 255, 0.5);
+.panel-float .panel-pane {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
+	overflow: hidden;
 }
 
-.panel-divider:hover {
-	background: #4198F0;
+.panel-float .panel-pane-header {
+	cursor: move;
 }
 
-.panel-divider:hover::after {
-	border-color: #fff;
+.panel-float-close {
+	background: transparent;
+	border: none;
+	color: rgba(255, 255, 255, 0.7);
+	font-size: 20px;
+	line-height: 1;
+	padding: 0 2px;
+	cursor: pointer;
+	margin-left: 4px;
 }
 
-.panel-divider.active {
-	background: #1680E9;
+.panel-float-close:hover {
+	color: #fff;
 }
 
-.panel-divider.active::after {
-	border-color: #fff;
-}
-
-body.panel-resizing {
-	cursor: col-resize !important;
+body.panel-float-dragging {
 	user-select: none !important;
 }
 
-body.panel-resizing * {
-	cursor: col-resize !important;
+body.panel-float-dragging * {
+	user-select: none !important;
 }
 
 /* ── Landing Page ── */
