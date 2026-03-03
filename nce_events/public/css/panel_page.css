@@ -1,14 +1,7 @@
 /* ── Panel Explorer container ── */
 
 .panel-explorer {
-	display: flex;
-	flex-direction: row;
-	height: calc(100vh - 120px - 72pt);
-	overflow: hidden;
-	background: #FAFAFA;
-	border: 1px solid #A2CCF6;
-	border-radius: 6px;
-	box-shadow: 0 1px 4px rgba(65, 152, 240, 0.10);
+	display: none;
 }
 
 /* ── Panes ── */
@@ -285,8 +278,8 @@ body.col-resizing * {
 	flex-direction: column;
 	width: 60vw;
 	height: 50vh;
-	min-width: 320px;
-	min-height: 220px;
+	min-width: 180px;
+	min-height: 80px;
 	background: #FAFAFA;
 	border: 1px solid #A2CCF6;
 	border-radius: 6px;

@@ -163,18 +163,9 @@ nce_events.panel_page.Explorer = class Explorer {
 
 	// ── Panel loading ──
 
-	_is_root_panel(panel_number) {
-		var ordered = this.store.get_ordered_panels();
-		return ordered.length && ordered[0].panel_number === panel_number;
-	}
-
 	load_panel(panel_number) {
 		var me = this;
-		if (me._is_root_panel(panel_number)) {
-			me._ensure_root_pane(panel_number);
-		} else {
-			me._ensure_float(panel_number);
-		}
+		me._ensure_float(panel_number);
 		me.show_pane_loading(panel_number);
 		me.filters[panel_number] = [];
 
@@ -182,20 +173,6 @@ nce_events.panel_page.Explorer = class Explorer {
 			if (me._destroyed) return;
 			me.render_pane(panel_number);
 		});
-	}
-
-	// ── Pane DOM ──
-
-	_ensure_root_pane(panel_number) {
-		if (this._pane_index(panel_number) >= 0) return;
-		var el = $(
-			'<div class="panel-pane" data-panel="' + panel_number + '">' +
-				'<div class="panel-pane-header"></div>' +
-				'<div class="panel-pane-body"></div>' +
-			"</div>"
-		);
-		this.container.append(el);
-		this.pane_elements.push({ panel_number: panel_number, el: el });
 	}
 
 	_pane_index(panel_number) {
@@ -218,17 +195,31 @@ nce_events.panel_page.Explorer = class Explorer {
 	_ensure_float(panel_number) {
 		if (this._pane_index(panel_number) >= 0) return;
 
-		var config = this.store.get_panel_config(panel_number);
+		var ordered = this.store.get_ordered_panels();
+		var is_first = ordered.length && ordered[0].panel_number === panel_number;
+
 		this._float_z += 1;
-		this._float_offset += 30;
-		if (this._float_offset > 150) this._float_offset = 30;
+		if (!is_first) {
+			this._float_offset += 30;
+			if (this._float_offset > 150) this._float_offset = 30;
+		}
 
 		var float_el = $('<div class="panel-float" data-panel="' + panel_number + '"></div>');
-		float_el.css({
-			top: (100 + this._float_offset) + "px",
-			left: (180 + this._float_offset) + "px",
-			zIndex: this._float_z,
-		});
+		if (is_first) {
+			float_el.css({
+				top: "60px",
+				left: "20px",
+				width: "calc(100vw - 40px)",
+				height: "calc(100vh - 120px)",
+				zIndex: this._float_z,
+			});
+		} else {
+			float_el.css({
+				top: (100 + this._float_offset) + "px",
+				left: (180 + this._float_offset) + "px",
+				zIndex: this._float_z,
+			});
+		}
 
 		var pane_el = $(
 			'<div class="panel-pane" data-panel="' + panel_number + '">' +
@@ -263,6 +254,7 @@ nce_events.panel_page.Explorer = class Explorer {
 	_check_float_validity() {
 		var me = this;
 		var ordered = me.store.get_ordered_panels();
+		var root_pn = ordered.length ? ordered[0].panel_number : null;
 		var prev_map = {};
 		for (var i = 1; i < ordered.length; i++) {
 			prev_map[ordered[i].panel_number] = ordered[i - 1].panel_number;
@@ -273,6 +265,7 @@ nce_events.panel_page.Explorer = class Explorer {
 			for (var j = me.pane_elements.length - 1; j >= 0; j--) {
 				var info = me.pane_elements[j];
 				if (!info.float_el) continue;
+				if (info.panel_number === root_pn) continue;
 				var parent_pn = prev_map[info.panel_number];
 				if (parent_pn === undefined || !me.store.get_selected(parent_pn)) {
 					me._close_float(info.panel_number);
@@ -482,9 +475,14 @@ nce_events.panel_page.Explorer = class Explorer {
 			frappe.show_alert({ message: __("SMS \u2014 coming soon"), indicator: "blue" });
 		});
 		if (is_float) {
+			var is_root = me.store.get_ordered_panels()[0].panel_number === panel_number;
 			header_el.find(".panel-float-close").on("click", function () {
-				me._close_float(panel_number);
-				me._check_float_validity();
+				if (is_root) {
+					frappe.set_route("page-view");
+				} else {
+					me._close_float(panel_number);
+					me._check_float_validity();
+				}
 			});
 			var footer = pane_info.float_el.find(".panel-float-footer");
 			footer.text(label);
