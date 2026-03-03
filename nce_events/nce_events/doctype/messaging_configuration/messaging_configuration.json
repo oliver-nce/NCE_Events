@@ -7,7 +7,8 @@
   "root_doctype",
   "gender_field",
   "section_break_fields",
-  "fields_table",
+  "fields_html",
+  "fields_json",
   "section_break_tags",
   "tag_list"
  ],
@@ -32,11 +33,15 @@
    "label": "Field Definitions"
   },
   {
-   "description": "Columns from the Root DocType and synthetic substitution rows",
-   "fieldname": "fields_table",
-   "fieldtype": "Table",
-   "label": "Fields",
-   "options": "Messaging Field"
+   "fieldname": "fields_html",
+   "fieldtype": "HTML"
+  },
+  {
+   "fieldname": "fields_json",
+   "fieldtype": "Code",
+   "hidden": 1,
+   "label": "Fields JSON",
+   "options": "JSON"
   },
   {
    "fieldname": "section_break_tags",
@@ -54,7 +59,7 @@
  "index_web_pages_for_search": 0,
  "issingle": 1,
  "links": [],
- "modified": "2026-03-02 00:00:00.000000",
+ "modified": "2026-03-03 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "NCE Events",
  "name": "Messaging Configuration",
