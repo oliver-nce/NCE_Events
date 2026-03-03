@@ -307,6 +307,23 @@ body.col-resizing * {
 	cursor: move;
 }
 
+.panel-float-footer {
+	height: 24px;
+	line-height: 24px;
+	padding: 0 12px;
+	background: #126BC4;
+	color: rgba(255, 255, 255, 0.75);
+	font-size: 11px;
+	font-weight: 600;
+	font-family: Arial, sans-serif;
+	cursor: move;
+	flex-shrink: 0;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	border-top: 1px solid #105EAD;
+}
+
 .panel-float-close {
 	background: transparent;
 	border: none;

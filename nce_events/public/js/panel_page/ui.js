@@ -236,7 +236,8 @@ nce_events.panel_page.Explorer = class Explorer {
 				'<div class="panel-pane-body"></div>' +
 			"</div>"
 		);
-		float_el.append(pane_el);
+		var footer_el = $('<div class="panel-float-footer"></div>');
+		float_el.append(pane_el, footer_el);
 		$(document.body).append(float_el);
 
 		this.pane_elements.push({ panel_number: panel_number, el: pane_el, float_el: float_el });
@@ -283,7 +284,7 @@ nce_events.panel_page.Explorer = class Explorer {
 	}
 
 	_make_float_draggable(float_el) {
-		float_el.find(".panel-pane-header").on("mousedown.float_drag", function (e) {
+		function start_drag(e) {
 			if ($(e.target).closest(".pane-header-btn, .panel-float-close, .pane-filter-widget").length) return;
 			e.preventDefault();
 			var start_x = e.clientX, start_y = e.clientY;
@@ -291,16 +292,19 @@ nce_events.panel_page.Explorer = class Explorer {
 			var start_top = parseInt(float_el.css("top"), 10) || 0;
 			$("body").addClass("panel-float-dragging");
 			$(document).on("mousemove.float_drag", function (ev) {
-				float_el.css({
-					left: (start_left + ev.clientX - start_x) + "px",
-					top: (start_top + ev.clientY - start_y) + "px",
-				});
+				var new_left = start_left + ev.clientX - start_x;
+				var new_top = start_top + ev.clientY - start_y;
+				var max_top = window.innerHeight - 40;
+				if (new_top > max_top) new_top = max_top;
+				float_el.css({ left: new_left + "px", top: new_top + "px" });
 			});
 			$(document).on("mouseup.float_drag", function () {
 				$("body").removeClass("panel-float-dragging");
 				$(document).off("mousemove.float_drag mouseup.float_drag");
 			});
-		});
+		}
+		float_el.find(".panel-pane-header").on("mousedown.float_drag", start_drag);
+		float_el.find(".panel-float-footer").on("mousedown.float_drag", start_drag);
 	}
 
 	// ── Filter (Navicat-style) ──
@@ -482,6 +486,8 @@ nce_events.panel_page.Explorer = class Explorer {
 				me._close_float(panel_number);
 				me._check_float_validity();
 			});
+			var footer = pane_info.float_el.find(".panel-float-footer");
+			footer.text(label);
 		}
 	}
 
