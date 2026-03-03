@@ -4,245 +4,51 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "panel_number",
-  "header_text",
-  "report_name",
   "root_doctype",
-  "where_clause",
-  "section_break_display",
-  "hidden_fields",
-  "bold_fields",
-  "male_field",
-  "column_break_display",
-  "card_fields",
-  "female_field",
-  "header_overrides",
-  "column_order",
-  "gender_column",
-  "gender_color_fields",
-  "section_break_queries",
-  "wp_query",
-  "frappe_query",
-  "section_break_header_widgets",
-  "show_filter",
-  "show_sheets",
-  "column_break_header_widgets",
-  "show_email",
-  "show_sms",
-  "section_break_card_actions",
-  "show_card_email",
-  "show_card_sms",
-  "section_break_buttons",
-  "button_1_name",
-  "button_1_code",
-  "column_break_buttons",
-  "button_2_name",
-  "button_2_code"
+  "gender_field",
+  "section_break_fields",
+  "fields_table",
+  "section_break_tags",
+  "tag_list"
  ],
  "fields": [
   {
-   "fieldname": "panel_number",
-   "fieldtype": "Int",
-   "in_list_view": 1,
-   "label": "Panel Number",
-   "reqd": 1
-  },
-  {
-   "fieldname": "header_text",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Header Text"
-  },
-  {
-   "fieldname": "report_name",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Report Name",
-   "reqd": 1
-  },
-  {
-   "description": "Primary DocType for this panel \u2014 used for inter-panel Link field filtering",
+   "description": "The DocType whose records will be used for messaging",
    "fieldname": "root_doctype",
    "fieldtype": "Link",
    "label": "Root DocType",
-   "options": "DocType"
+   "options": "DocType",
+   "reqd": 1
   },
   {
-   "description": "Optional WHERE clause override for inter-panel filtering. Use {panel_N.fieldname} syntax.",
-   "fieldname": "where_clause",
-   "fieldtype": "Small Text",
-   "label": "Where Clause"
-  },
-  {
-   "fieldname": "section_break_display",
-   "fieldtype": "Section Break",
-   "label": "Display Configuration"
-  },
-  {
-   "description": "Comma-delimited list of column names/aliases to hide from display",
-   "fieldname": "hidden_fields",
-   "fieldtype": "Small Text",
-   "label": "Hidden Fields"
-  },
-  {
-   "description": "Comma-delimited list of column names/aliases to render bold",
-   "fieldname": "bold_fields",
-   "fieldtype": "Small Text",
-   "label": "Bold Fields"
-  },
-  {
-   "fieldname": "column_break_display",
-   "fieldtype": "Column Break"
-  },
-  {
-   "description": "Column whose value is a male count \u2014 used for gender colour strip",
-   "fieldname": "male_field",
-   "fieldtype": "Small Text",
-   "label": "Male Field"
-  },
-  {
-   "description": "Comma-delimited list of fields shown in card popover on row click",
-   "fieldname": "card_fields",
-   "fieldtype": "Small Text",
-   "label": "Card Fields"
-  },
-  {
-   "description": "Column whose value is a female count \u2014 used for gender colour strip",
-   "fieldname": "female_field",
-   "fieldtype": "Small Text",
-   "label": "Female Field"
-  },
-  {
-   "description": "JSON map of custom column headers, e.g. {\"F\": \"Girls\", \"M\": \"Boys\"}",
-   "fieldname": "header_overrides",
-   "fieldtype": "Small Text",
-   "hidden": 1,
-   "label": "Header Overrides"
-  },
-  {
-   "description": "Comma-delimited column display order, e.g. event_name, sku, start",
-   "fieldname": "column_order",
-   "fieldtype": "Small Text",
-   "hidden": 1,
-   "label": "Column Order"
-  },
-  {
-   "description": "Column that holds the gender indicator for each row (e.g. M/F, Male/Female)",
-   "fieldname": "gender_column",
-   "fieldtype": "Small Text",
-   "hidden": 1,
-   "label": "Gender Column"
-  },
-  {
-   "description": "Comma-delimited columns to color based on the row's gender value",
-   "fieldname": "gender_color_fields",
-   "fieldtype": "Small Text",
-   "hidden": 1,
-   "label": "Gender Color Fields"
-  },
-  {
-   "fieldname": "section_break_queries",
-   "fieldtype": "Section Break",
-   "label": "Queries"
-  },
-  {
-   "description": "For best results, avoid complex subselects",
-   "fieldname": "wp_query",
-   "fieldtype": "Code",
-   "label": "WP Query",
-   "options": "SQL"
-  },
-  {
-   "description": "Auto-generated from WP Query \u2014 edit as needed before use",
-   "fieldname": "frappe_query",
-   "fieldtype": "Code",
-   "label": "Frappe Query",
-   "options": "SQL"
-  },
-  {
-   "fieldname": "section_break_header_widgets",
-   "fieldtype": "Section Break",
-   "label": "Header Widgets"
-  },
-  {
-   "default": "1",
-   "fieldname": "show_filter",
-   "fieldtype": "Check",
-   "label": "Show Filter"
-  },
-  {
-   "default": "1",
-   "fieldname": "show_sheets",
-   "fieldtype": "Check",
-   "label": "Show Sheets"
-  },
-  {
-   "fieldname": "column_break_header_widgets",
-   "fieldtype": "Column Break"
-  },
-  {
-   "default": "1",
-   "fieldname": "show_email",
-   "fieldtype": "Check",
-   "label": "Show Email"
-  },
-  {
-   "default": "1",
-   "fieldname": "show_sms",
-   "fieldtype": "Check",
-   "label": "Show SMS"
-  },
-  {
-   "fieldname": "section_break_card_actions",
-   "fieldtype": "Section Break",
-   "label": "Card Actions"
-  },
-  {
-   "default": "0",
-   "description": "Show Email button in card popover to contact the individual in this row",
-   "fieldname": "show_card_email",
-   "fieldtype": "Check",
-   "label": "Show Card Email"
-  },
-  {
-   "default": "0",
-   "description": "Show SMS button in card popover to contact the individual in this row",
-   "fieldname": "show_card_sms",
-   "fieldtype": "Check",
-   "label": "Show Card SMS"
-  },
-  {
-   "fieldname": "section_break_buttons",
-   "fieldtype": "Section Break",
-   "label": "Custom Buttons"
-  },
-  {
-   "fieldname": "button_1_name",
+   "description": "Field in the Root DocType that holds the gender value (e.g. gender, sex)",
+   "fieldname": "gender_field",
    "fieldtype": "Data",
-   "label": "Button 1 Name"
+   "label": "Gender Field"
   },
   {
-   "depends_on": "button_1_name",
-   "fieldname": "button_1_code",
+   "fieldname": "section_break_fields",
+   "fieldtype": "Section Break",
+   "label": "Field Definitions"
+  },
+  {
+   "description": "Columns from the Root DocType and synthetic substitution rows",
+   "fieldname": "fields_table",
+   "fieldtype": "Table",
+   "label": "Fields",
+   "options": "Messaging Field"
+  },
+  {
+   "fieldname": "section_break_tags",
+   "fieldtype": "Section Break",
+   "label": "Tag Mapping"
+  },
+  {
+   "description": "JSON array of {\"field\": \"tag\"} pairs generated from the fields table",
+   "fieldname": "tag_list",
    "fieldtype": "Code",
-   "label": "Button 1 Code",
-   "options": "JS"
-  },
-  {
-   "fieldname": "column_break_buttons",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "button_2_name",
-   "fieldtype": "Data",
-   "label": "Button 2 Name"
-  },
-  {
-   "depends_on": "button_2_name",
-   "fieldname": "button_2_code",
-   "fieldtype": "Code",
-   "label": "Button 2 Code",
-   "options": "JS"
+   "label": "Tag List",
+   "options": "JSON"
   }
  ],
  "index_web_pages_for_search": 0,
