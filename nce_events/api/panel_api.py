@@ -514,15 +514,28 @@ def _send_sms(phone, message):
 
 @frappe.whitelist()
 def get_report_columns(report_name):
-	"""Return column definitions from a Query Report."""
+	"""Return column definitions from a Query Report with proper labels."""
 	report = frappe.get_doc("Report", report_name)
 	if report.report_type != "Query Report":
 		frappe.throw(_("{0} is not a Query Report").format(report_name))
 
 	result = frappe.desk.query_report.run(report_name, filters={})
 	raw_columns = result.get("columns", [])
-	columns = _parse_report_column_defs(raw_columns)
-	return columns
+
+	out = []
+	for c in raw_columns:
+		if isinstance(c, dict):
+			fn = c.get("fieldname") or c.get("field") or ""
+			label = c.get("label") or _title_case(fn)
+		elif isinstance(c, str):
+			parts = c.split(":")
+			label = parts[0].strip()
+			fn = label.lower().replace(" ", "_")
+		else:
+			fn = str(c)
+			label = _title_case(fn)
+		out.append({"fieldname": fn, "label": label})
+	return out
 
 
 def _parse_csv(value):
