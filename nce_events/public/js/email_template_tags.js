@@ -1,16 +1,6 @@
 frappe.ui.form.on("Email Template", {
 	refresh: function (frm) {
-		if (frm._tag_btn_added) return;
-		frm._tag_btn_added = true;
-
-		var $response = frm.fields_dict.response;
-		if (!$response || !$response.$wrapper) return;
-
-		var $btn = $('<button class="btn btn-xs btn-primary" style="margin:6px 0;">' +
-			'<i class="fa fa-tags"></i> Insert Tag</button>');
-		$response.$wrapper.find(".ql-toolbar, .like-disabled-input").first().before($btn);
-
-		$btn.on("click", function () {
+		frm.add_custom_button(__("Insert Tag"), function () {
 			_toggle_tag_picker(frm);
 		});
 	},
@@ -25,20 +15,30 @@ function _toggle_tag_picker(frm) {
 		return;
 	}
 
-	frappe.model.with_doc("Messaging Configuration", "Messaging Configuration", function () {
-		var doc = frappe.get_doc("Messaging Configuration", "Messaging Configuration");
-		var val = doc && doc.tag_list;
-		var tags;
-		try {
-			tags = JSON.parse(val || "[]");
-		} catch (e) {
-			tags = [];
-		}
-		if (!tags.length) {
-			frappe.msgprint(__("No tags configured. Open Messaging Configuration and click Build Tag List."));
-			return;
-		}
-		_show_tag_picker(frm, tags);
+	frappe.call({
+		method: "frappe.client.get",
+		args: { doctype: "Messaging Configuration" },
+		callback: function (r) {
+			if (!r || !r.message) {
+				frappe.msgprint(__("Could not load Messaging Configuration."));
+				return;
+			}
+			var val = r.message.tag_list;
+			var tags;
+			try {
+				tags = JSON.parse(val || "[]");
+			} catch (e) {
+				tags = [];
+			}
+			if (!tags.length) {
+				frappe.msgprint(__("No tags configured. Open Messaging Configuration and click Build Tag List."));
+				return;
+			}
+			_show_tag_picker(frm, tags);
+		},
+		error: function () {
+			frappe.msgprint(__("Error loading Messaging Configuration. Check permissions."));
+		},
 	});
 }
 
@@ -75,11 +75,9 @@ function _show_tag_picker(frm, tags) {
 	$(document.body).append($float);
 	_tag_picker_el = $float;
 
-	var $response = frm.fields_dict.response.$wrapper;
-	var offset = $response.offset();
 	$float.css({
-		top: Math.max(60, (offset ? offset.top : 200) - 20) + "px",
-		left: Math.max(20, (offset ? offset.left + $response.outerWidth() + 12 : 600)) + "px",
+		top: "120px",
+		right: "40px",
 	});
 
 	$header.find(".tag-picker-close").on("click", function () {
@@ -97,6 +95,11 @@ function _make_tag_picker_draggable($float, $header) {
 		var start_x = e.clientX, start_y = e.clientY;
 		var start_left = parseInt($float.css("left"), 10) || 0;
 		var start_top = parseInt($float.css("top"), 10) || 0;
+
+		if ($float.css("right") !== "auto") {
+			$float.css({ left: $float.offset().left + "px", right: "auto" });
+			start_left = parseInt($float.css("left"), 10);
+		}
 
 		$(document).on("mousemove.tagpicker", function (ev) {
 			$float.css({
