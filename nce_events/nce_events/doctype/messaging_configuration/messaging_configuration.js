@@ -60,7 +60,8 @@ function _render_table(frm) {
 	var html = '<table class="table table-bordered msg-fields-table">';
 	html += "<thead><tr>";
 	html += '<th style="width:30px">#</th>';
-	html += '<th style="min-width:140px">Field</th>';
+	html += '<th style="min-width:120px">Field</th>';
+	html += '<th style="min-width:120px">Label</th>';
 	html += '<th style="min-width:100px">Male</th>';
 	html += '<th style="min-width:100px">Female</th>';
 	html += '<th style="min-width:200px">Jinja2 Tag</th>';
@@ -74,6 +75,7 @@ function _render_table(frm) {
 		html += "<tr data-idx=\"" + idx + "\"" + is_synthetic + ">";
 		html += "<td>" + (idx + 1) + "</td>";
 		html += "<td>" + frappe.utils.escape_html(f.field_name) + "</td>";
+		html += "<td>" + frappe.utils.escape_html(f.label || "") + "</td>";
 		html += '<td><input type="text" class="form-control input-sm msg-male" value="' +
 			frappe.utils.escape_html(f.male_value || "") + '"></td>';
 		html += '<td><input type="text" class="form-control input-sm msg-female" value="' +
@@ -151,11 +153,13 @@ function _load_fields(frm) {
 		var fields = [];
 		data_fields.forEach(function (f) {
 			if (existing_map[f.fieldname]) {
+				existing_map[f.fieldname].label = f.label || "";
 				fields.push(existing_map[f.fieldname]);
 				delete existing_map[f.fieldname];
 			} else {
 				fields.push({
 					field_name: f.fieldname,
+					label: f.label || "",
 					male_value: "",
 					female_value: "",
 					synthetic: false,
@@ -221,7 +225,7 @@ function _build_tag_list(frm) {
 
 	fields.forEach(function (f) {
 		var jinja = _compute_jinja(f.field_name, f.male_value, f.female_value, gender_field);
-		tags.push({ field: f.field_name, tag: jinja });
+		tags.push({ field: f.field_name, label: f.label || "", tag: jinja });
 	});
 
 	frm.set_value("tag_list", JSON.stringify(tags, null, 2));
