@@ -5,6 +5,7 @@
  "engine": "InnoDB",
  "field_order": [
   "root_doctype",
+  "report_name",
   "gender_field",
   "section_break_fields",
   "fields_html",
@@ -14,12 +15,18 @@
  ],
  "fields": [
   {
-   "description": "The DocType whose records will be used for messaging",
+   "description": "The DocType whose field definitions are used for the tag table",
    "fieldname": "root_doctype",
    "fieldtype": "Link",
    "label": "Root DocType",
-   "options": "DocType",
-   "reqd": 1
+   "options": "DocType"
+  },
+  {
+   "description": "Query Report that provides the row data and columns for messaging",
+   "fieldname": "report_name",
+   "fieldtype": "Link",
+   "label": "Report Name",
+   "options": "Report"
   },
   {
    "description": "Field in the Root DocType that holds the gender value (e.g. gender, sex)",
