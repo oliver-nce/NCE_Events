@@ -1,6 +1,8 @@
 frappe.ui.form.on("Email Template", {
 	refresh: function (frm) {
+		console.log("[TAG PICKER] refresh fired, adding button");
 		frm.add_custom_button(__("Insert Tag"), function () {
+			console.log("[TAG PICKER] button clicked");
 			_toggle_tag_picker(frm);
 		});
 	},
@@ -9,34 +11,41 @@ frappe.ui.form.on("Email Template", {
 var _tag_picker_el = null;
 
 function _toggle_tag_picker(frm) {
+	console.log("[TAG PICKER] _toggle_tag_picker called, existing:", !!_tag_picker_el);
 	if (_tag_picker_el) {
 		_tag_picker_el.remove();
 		_tag_picker_el = null;
 		return;
 	}
 
+	console.log("[TAG PICKER] calling frappe.client.get...");
 	frappe.call({
 		method: "frappe.client.get",
 		args: { doctype: "Messaging Configuration" },
 		callback: function (r) {
+			console.log("[TAG PICKER] callback received:", r);
 			if (!r || !r.message) {
 				frappe.msgprint(__("Could not load Messaging Configuration."));
 				return;
 			}
 			var val = r.message.tag_list;
+			console.log("[TAG PICKER] tag_list value:", val);
 			var tags;
 			try {
 				tags = JSON.parse(val || "[]");
 			} catch (e) {
+				console.log("[TAG PICKER] JSON parse error:", e);
 				tags = [];
 			}
 			if (!tags.length) {
 				frappe.msgprint(__("No tags configured. Open Messaging Configuration and click Build Tag List."));
 				return;
 			}
+			console.log("[TAG PICKER] showing picker with", tags.length, "tags");
 			_show_tag_picker(frm, tags);
 		},
-		error: function () {
+		error: function (err) {
+			console.log("[TAG PICKER] API error:", err);
 			frappe.msgprint(__("Error loading Messaging Configuration. Check permissions."));
 		},
 	});
