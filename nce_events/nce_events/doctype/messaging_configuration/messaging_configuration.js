@@ -33,7 +33,9 @@ function _get_fields(frm) {
 }
 
 function _save_fields(frm, fields) {
-	frm.set_value("fields_json", JSON.stringify(fields, null, 2));
+	var json_str = JSON.stringify(fields, null, 2);
+	frm.doc.fields_json = json_str;
+	frm.set_value("fields_json", json_str);
 	frm.dirty();
 }
 
