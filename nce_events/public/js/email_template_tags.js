@@ -51,7 +51,34 @@ function _toggle_tag_picker(frm) {
 	});
 }
 
+function _inject_tag_picker_css() {
+	if (document.getElementById("tag-picker-style")) return;
+	var css =
+		".tag-picker-float{position:fixed;z-index:1050;width:380px;max-height:70vh;" +
+		"background:#fff;border:1px solid #A2CCF6;border-radius:8px;" +
+		"box-shadow:0 8px 32px rgba(18,107,196,.22),0 2px 8px rgba(0,0,0,.08);" +
+		"display:flex;flex-direction:column;overflow:hidden}" +
+		".tag-picker-header{display:flex;align-items:center;justify-content:space-between;" +
+		"padding:8px 12px;background:#126BC4;color:#fff;cursor:move;flex-shrink:0}" +
+		".tag-picker-title{font-weight:600;font-size:13px}" +
+		".tag-picker-close{background:none;border:none;color:#fff;font-size:18px;" +
+		"line-height:1;cursor:pointer;padding:0 4px;opacity:.8}" +
+		".tag-picker-close:hover{opacity:1}" +
+		".tag-picker-grid{display:grid;grid-template-columns:repeat(3,1fr);" +
+		"gap:8px;padding:12px;overflow-y:auto}" +
+		".tag-picker-tile{padding:8px 6px;background:#F1F7FE;border:1px solid #A2CCF6;" +
+		"border-radius:6px;text-align:center;font-size:12px;font-weight:500;" +
+		"color:#126BC4;cursor:pointer;word-break:break-word;" +
+		"transition:background .15s,box-shadow .15s}" +
+		".tag-picker-tile:hover{background:#E3F0FC;box-shadow:0 2px 6px rgba(18,107,196,.18)}" +
+		".tag-picker-tile:active{background:#C7E1F9}";
+	var $style = $('<style id="tag-picker-style"></style>').text(css);
+	$("head").append($style);
+}
+
 function _show_tag_picker(frm, tags) {
+	_inject_tag_picker_css();
+
 	if (_tag_picker_el) {
 		_tag_picker_el.remove();
 		_tag_picker_el = null;
