@@ -60,8 +60,7 @@ function _render_table(frm) {
 	var html = '<table class="table table-bordered msg-fields-table">';
 	html += "<thead><tr>";
 	html += '<th style="width:30px">#</th>';
-	html += '<th style="min-width:120px">Field</th>';
-	html += '<th style="min-width:120px">Label</th>';
+	html += '<th style="min-width:140px">Label</th>';
 	html += '<th style="min-width:100px">Male</th>';
 	html += '<th style="min-width:100px">Female</th>';
 	html += '<th style="min-width:200px">Jinja2 Tag</th>';
@@ -74,8 +73,7 @@ function _render_table(frm) {
 
 		html += "<tr data-idx=\"" + idx + "\"" + is_synthetic + ">";
 		html += "<td>" + (idx + 1) + "</td>";
-		html += "<td>" + frappe.utils.escape_html(f.field_name) + "</td>";
-		html += "<td>" + frappe.utils.escape_html(f.label || "") + "</td>";
+		html += "<td>" + frappe.utils.escape_html(f.label || f.field_name) + "</td>";
 		html += '<td><input type="text" class="form-control input-sm msg-male" value="' +
 			frappe.utils.escape_html(f.male_value || "") + '"></td>';
 		html += '<td><input type="text" class="form-control input-sm msg-female" value="' +
