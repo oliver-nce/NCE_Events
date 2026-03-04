@@ -73,7 +73,8 @@ function _render_table(frm) {
 
 		html += "<tr data-idx=\"" + idx + "\"" + is_synthetic + ">";
 		html += "<td>" + (idx + 1) + "</td>";
-		html += "<td>" + frappe.utils.escape_html(f.label || f.field_name) + "</td>";
+		var display_label = f.label || f.field_name.replace(/_/g, " ").replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+		html += "<td>" + frappe.utils.escape_html(display_label) + "</td>";
 		html += '<td><input type="text" class="form-control input-sm msg-male" value="' +
 			frappe.utils.escape_html(f.male_value || "") + '"></td>';
 		html += '<td><input type="text" class="form-control input-sm msg-female" value="' +

@@ -8,6 +8,14 @@ app_logo_url = "/assets/nce_events/images/logo.png"
 
 required_apps = ["nce_sync"]
 
+doctype_js = {
+	"Email Template": "public/js/email_template_tags.js",
+}
+
+doctype_css = {
+	"Email Template": "public/css/email_template_tags.css",
+}
+
 add_to_apps_screen = [
 	{
 		"name": "nce_events",
