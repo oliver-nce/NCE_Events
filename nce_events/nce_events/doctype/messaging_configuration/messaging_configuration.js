@@ -147,36 +147,34 @@ function _load_fields(frm) {
 		}
 
 		var existing = _get_fields(frm);
-		var existing_map = {};
-		existing.forEach(function (f) { existing_map[f.field_name] = f; });
+		var known = {};
+		existing.forEach(function (f) { known[f.field_name] = true; });
 
-		var fields = [];
+		var added = 0;
 		data_fields.forEach(function (f) {
-			if (existing_map[f.fieldname]) {
-				existing_map[f.fieldname].label = f.label || "";
-				fields.push(existing_map[f.fieldname]);
-				delete existing_map[f.fieldname];
-			} else {
-				fields.push({
-					field_name: f.fieldname,
-					label: f.label || "",
-					male_value: "",
-					female_value: "",
-					synthetic: false,
+			if (known[f.fieldname]) {
+				existing.forEach(function (row) {
+					if (row.field_name === f.fieldname) row.label = f.label || "";
 				});
+				return;
 			}
+			existing.push({
+				field_name: f.fieldname,
+				label: f.label || "",
+				male_value: "",
+				female_value: "",
+				synthetic: false,
+			});
+			added++;
 		});
 
-		Object.keys(existing_map).forEach(function (key) {
-			var row = existing_map[key];
-			if (row.synthetic) fields.push(row);
-		});
-
-		_save_fields(frm, fields);
+		_save_fields(frm, existing);
 		_render_table(frm);
 
 		frappe.show_alert({
-			message: __("{0} fields loaded", [data_fields.length]),
+			message: added
+				? __("{0} new fields added ({1} total)", [added, existing.length])
+				: __("All fields already present ({0} total)", [existing.length]),
 			indicator: "green",
 		});
 	});
