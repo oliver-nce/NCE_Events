@@ -14,7 +14,12 @@ frappe.ui.form.on("Messaging Configuration", {
 
 	root_doctype: function (frm) {
 		if (frm.doc.root_doctype) {
-			_load_fields(frm);
+			frm.set_value("report_name", "");
+		}
+	},
+	report_name: function (frm) {
+		if (frm.doc.report_name) {
+			frm.set_value("root_doctype", "");
 		}
 	},
 });
@@ -51,7 +56,7 @@ function _render_table(frm) {
 
 	var fields = _get_fields(frm);
 	if (!fields.length) {
-		wrapper.html('<p class="text-muted">No fields loaded. Set a Root DocType and click <b>Load Fields</b>.</p>');
+		wrapper.html('<p class="text-muted">No fields loaded. Set a Root DocType or Report Name, then click <b>Load Fields</b>.</p>');
 		return;
 	}
 
@@ -118,12 +123,33 @@ function _render_table(frm) {
 }
 
 function _load_fields(frm) {
-	var dt = frm.doc.root_doctype;
-	if (!dt) {
-		frappe.msgprint(__("Please set a Root DocType first."));
-		return;
+	if (frm.doc.report_name) {
+		_load_fields_from_report(frm);
+	} else if (frm.doc.root_doctype) {
+		_load_fields_from_doctype(frm);
+	} else {
+		frappe.msgprint(__("Please set a Root DocType or Report Name first."));
 	}
+}
 
+function _load_fields_from_report(frm) {
+	frappe.call({
+		method: "nce_events.api.panel_api.get_report_columns",
+		args: { report_name: frm.doc.report_name },
+		callback: function (r) {
+			if (!r.message || !r.message.length) {
+				frappe.msgprint(__("No columns found in report {0}", [frm.doc.report_name]));
+				return;
+			}
+			_merge_fields(frm, r.message.map(function (c) {
+				return { fieldname: c.fieldname, label: c.label };
+			}));
+		},
+	});
+}
+
+function _load_fields_from_doctype(frm) {
+	var dt = frm.doc.root_doctype;
 	var skip_types = {
 		"Section Break": 1, "Column Break": 1, "Tab Break": 1,
 		"HTML": 1, "Fold": 1, "Heading": 1,
@@ -138,44 +164,49 @@ function _load_fields(frm) {
 
 		var data_fields = meta.fields.filter(function (f) {
 			return !skip_types[f.fieldtype];
+		}).map(function (f) {
+			return { fieldname: f.fieldname, label: f.label || "" };
 		});
 
 		if (!data_fields.length) {
 			frappe.msgprint(__("No data fields found for {0}", [dt]));
 			return;
 		}
+		_merge_fields(frm, data_fields);
+	});
+}
 
-		var existing = _get_fields(frm);
-		var known = {};
-		existing.forEach(function (f) { known[f.field_name] = true; });
+function _merge_fields(frm, new_fields) {
+	var existing = _get_fields(frm);
+	var known = {};
+	existing.forEach(function (f) { known[f.field_name] = true; });
 
-		var added = 0;
-		data_fields.forEach(function (f) {
-			if (known[f.fieldname]) {
-				existing.forEach(function (row) {
-					if (row.field_name === f.fieldname) row.label = f.label || "";
-				});
-				return;
-			}
-			existing.push({
-				field_name: f.fieldname,
-				label: f.label || "",
-				male_value: "",
-				female_value: "",
-				synthetic: false,
+	var added = 0;
+	new_fields.forEach(function (f) {
+		if (known[f.fieldname]) {
+			existing.forEach(function (row) {
+				if (row.field_name === f.fieldname) row.label = f.label || "";
 			});
-			added++;
+			return;
+		}
+		existing.push({
+			field_name: f.fieldname,
+			label: f.label || "",
+			male_value: "",
+			female_value: "",
+			synthetic: false,
 		});
+		added++;
+	});
 
-		_save_fields(frm, existing);
-		_render_table(frm);
+	_save_fields(frm, existing);
+	_render_table(frm);
 
-		frappe.show_alert({
-			message: added
-				? __("{0} new fields added ({1} total)", [added, existing.length])
-				: __("All fields already present ({0} total)", [existing.length]),
-			indicator: "green",
-		});
+	frappe.show_alert({
+		message: added
+			? __("{0} new fields added ({1} total)", [added, existing.length])
+			: __("All fields already present ({0} total)", [existing.length]),
+		indicator: "green",
 	});
 }
 

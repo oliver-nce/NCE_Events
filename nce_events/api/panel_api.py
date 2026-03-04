@@ -512,6 +512,19 @@ def _send_sms(phone, message):
 		frappe.throw(_(f"Twilio error {resp.status_code}: {resp.text}"))
 
 
+@frappe.whitelist()
+def get_report_columns(report_name):
+	"""Return column definitions from a Query Report."""
+	report = frappe.get_doc("Report", report_name)
+	if report.report_type != "Query Report":
+		frappe.throw(_("{0} is not a Query Report").format(report_name))
+
+	result = frappe.desk.query_report.run(report_name, filters={})
+	raw_columns = result.get("columns", [])
+	columns = _parse_report_column_defs(raw_columns)
+	return columns
+
+
 def _parse_csv(value):
 	"""Parse a comma-delimited string into a list of stripped, non-empty values."""
 	if not value:
