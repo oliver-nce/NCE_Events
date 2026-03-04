@@ -25,18 +25,26 @@ function _toggle_tag_picker(frm) {
 		return;
 	}
 
-	frappe.db.get_single_value("Messaging Configuration", "tag_list").then(function (val) {
-		var tags;
-		try {
-			tags = JSON.parse(val || "[]");
-		} catch (e) {
-			tags = [];
-		}
-		if (!tags.length) {
-			frappe.msgprint(__("No tags configured. Open Messaging Configuration and click Build Tag List."));
-			return;
-		}
-		_show_tag_picker(frm, tags);
+	frappe.call({
+		method: "frappe.client.get_value",
+		args: {
+			doctype: "Messaging Configuration",
+			fieldname: "tag_list",
+		},
+		callback: function (r) {
+			var val = r && r.message && r.message.tag_list;
+			var tags;
+			try {
+				tags = JSON.parse(val || "[]");
+			} catch (e) {
+				tags = [];
+			}
+			if (!tags.length) {
+				frappe.msgprint(__("No tags configured. Open Messaging Configuration and click Build Tag List."));
+				return;
+			}
+			_show_tag_picker(frm, tags);
+		},
 	});
 }
 
