@@ -478,10 +478,10 @@ nce_events.panel_page.Explorer = class Explorer {
 			me._on_sheets_link(panel_number);
 		});
 		header_el.find(".pane-email-btn").on("click", function () {
-			frappe.show_alert({ message: __("Email \u2014 coming soon"), indicator: "blue" });
+			me._open_send_dialog(panel_number, "email");
 		});
 		header_el.find(".pane-sms-btn").on("click", function () {
-			frappe.show_alert({ message: __("SMS \u2014 coming soon"), indicator: "blue" });
+			me._open_send_dialog(panel_number, "sms");
 		});
 		if (is_float) {
 			var is_root = me.store.get_ordered_panels()[0].panel_number === panel_number;
@@ -530,6 +530,146 @@ nce_events.panel_page.Explorer = class Explorer {
 						indicator: "green",
 					});
 				}
+			},
+		});
+	}
+
+	// ── Send dialog ──
+
+	_open_send_dialog(panel_number, mode) {
+		var me = this;
+		var config = me.store.get_panel_config(panel_number);
+		var state = me.store.get_pane_state(panel_number);
+		if (!config || !state) return;
+
+		var all_rows = state.rows || [];
+		var recipient_field = mode === "sms" ? config.sms_field : config.email_field;
+		var is_sms = mode === "sms";
+		var title = is_sms ? __("Send SMS") : __("Send Email");
+		var send_also_email = is_sms;
+
+		if (!recipient_field) {
+			frappe.msgprint(__(
+				"No {0} field configured for this panel. Set it in the Page Panel settings.",
+				[is_sms ? "SMS" : "Email"]
+			));
+			return;
+		}
+
+		var count = all_rows.length;
+		if (!count) {
+			frappe.msgprint(__("No rows to send to."));
+			return;
+		}
+
+		var d = new frappe.ui.Dialog({
+			title: title + " (" + count + " recipients)",
+			fields: [
+				{
+					fieldname: "source",
+					fieldtype: "Select",
+					label: __("Message Source"),
+					options: "Type a message\nUse Email Template",
+					default: "Type a message",
+					onchange: function () {
+						var val = d.get_value("source");
+						d.fields_dict.message.$wrapper.toggle(val === "Type a message");
+						d.fields_dict.template.$wrapper.toggle(val === "Use Email Template");
+					},
+				},
+				{
+					fieldname: "message",
+					fieldtype: "Small Text",
+					label: __("Message"),
+					description: __("Use Jinja2 tags like {{ first_name }}. Sent to all {0} rows.", [count]),
+				},
+				{
+					fieldname: "template",
+					fieldtype: "Link",
+					label: __("Email Template"),
+					options: "Email Template",
+					hidden: 1,
+				},
+				{
+					fieldname: "subject",
+					fieldtype: "Data",
+					label: __("Email Subject"),
+					description: __("Required for email. Jinja2 tags supported."),
+					depends_on: 'eval:doc.source==="Use Email Template" || !' + is_sms,
+				},
+				{
+					fieldname: "send_email_copy",
+					fieldtype: "Check",
+					label: __("Also send email copy"),
+					default: send_also_email ? 1 : 0,
+				},
+			],
+			primary_action_label: __("Send"),
+			primary_action: function (values) {
+				var msg_body = "";
+				var subject = values.subject || "";
+
+				if (values.source === "Use Email Template" && values.template) {
+					d.disable_primary_action();
+					frappe.call({
+						method: "frappe.client.get",
+						args: { doctype: "Email Template", name: values.template },
+						callback: function (r) {
+							if (!r.message) {
+								d.enable_primary_action();
+								frappe.msgprint(__("Could not load template."));
+								return;
+							}
+							msg_body = r.message.response || "";
+							subject = subject || r.message.subject || "";
+							me._do_send(panel_number, mode, recipient_field, msg_body, subject, values.send_email_copy, config.email_field, d);
+						},
+					});
+					return;
+				}
+
+				msg_body = values.message || "";
+				if (!msg_body.trim()) {
+					frappe.msgprint(__("Please enter a message or select a template."));
+					return;
+				}
+				me._do_send(panel_number, mode, recipient_field, msg_body, subject, values.send_email_copy, config.email_field, d);
+			},
+		});
+
+		d.fields_dict.template.$wrapper.hide();
+		d.show();
+	}
+
+	_do_send(panel_number, mode, recipient_field, body, subject, send_email_copy, email_field, dialog) {
+		var me = this;
+		dialog.disable_primary_action();
+
+		frappe.call({
+			method: "nce_events.api.panel_api.send_panel_message",
+			args: {
+				page_name: me.page_name,
+				panel_number: panel_number,
+				selections: JSON.stringify(me.store.selections),
+				mode: mode,
+				recipient_field: recipient_field,
+				body: body,
+				subject: subject,
+				send_email_copy: send_email_copy ? 1 : 0,
+				email_field: email_field || "",
+			},
+			callback: function (r) {
+				dialog.enable_primary_action();
+				if (r.message) {
+					frappe.show_alert({
+						message: __("{0} messages sent", [r.message.sent || 0]),
+						indicator: "green",
+					});
+					dialog.hide();
+				}
+			},
+			error: function () {
+				dialog.enable_primary_action();
 			},
 		});
 	}

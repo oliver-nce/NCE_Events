@@ -30,6 +30,8 @@ def get_page_config(page_name):
 			"show_sheets": p.show_sheets,
 			"show_email": p.show_email,
 			"show_sms": p.show_sms,
+			"email_field": (p.email_field or "").strip(),
+			"sms_field": (p.sms_field or "").strip(),
 			"show_card_email": p.show_card_email,
 			"show_card_sms": p.show_card_sms,
 			"button_1_name": p.button_1_name,
@@ -407,6 +409,107 @@ def _ensure_workspace_shortcut(page_name, page_title):
 	except Exception as e:
 		frappe.log_error(frappe.get_traceback(), "build_page: workspace shortcut failed")
 		frappe.throw(_(f"Shortcut creation failed: {e}"))
+
+
+@frappe.whitelist()
+def send_panel_message(
+	page_name, panel_number, selections=None, mode="sms",
+	recipient_field="", body="", subject="",
+	send_email_copy=0, email_field=""
+):
+	"""Send bulk SMS and/or email to all rows in a panel."""
+	from jinja2 import Template as Jinja2Template
+
+	panel_number = int(panel_number)
+	send_email_copy = int(send_email_copy)
+	columns, rows = _run_panel_report(page_name, panel_number, selections)
+	col_fieldnames = [c["fieldname"] for c in columns]
+
+	sent = 0
+	errors = []
+
+	for row in rows:
+		context = {fn: row.get(fn, "") for fn in col_fieldnames}
+		recipient = str(context.get(recipient_field, "")).strip()
+		if not recipient:
+			continue
+
+		try:
+			rendered_body = Jinja2Template(body).render(context)
+		except Exception:
+			rendered_body = body
+
+		try:
+			rendered_subject = Jinja2Template(subject).render(context) if subject else ""
+		except Exception:
+			rendered_subject = subject
+
+		if mode == "sms":
+			try:
+				_send_sms(recipient, rendered_body)
+				sent += 1
+			except Exception as e:
+				errors.append(f"SMS to {recipient}: {e}")
+
+			if send_email_copy and email_field:
+				email_addr = str(context.get(email_field, "")).strip()
+				if email_addr:
+					try:
+						frappe.sendmail(
+							recipients=[email_addr],
+							subject=rendered_subject or "SMS Copy",
+							message=rendered_body,
+							now=True,
+						)
+					except Exception as e:
+						errors.append(f"Email to {email_addr}: {e}")
+
+		elif mode == "email":
+			email_addr = recipient
+			if email_addr:
+				try:
+					frappe.sendmail(
+						recipients=[email_addr],
+						subject=rendered_subject or "(No Subject)",
+						message=rendered_body,
+						now=True,
+					)
+					sent += 1
+				except Exception as e:
+					errors.append(f"Email to {email_addr}: {e}")
+
+	if errors:
+		frappe.log_error(
+			"\n".join(errors),
+			f"send_panel_message errors ({page_name} panel {panel_number})"
+		)
+
+	return {"sent": sent, "total": len(rows), "errors": len(errors)}
+
+
+def _send_sms(phone, message):
+	"""Send an SMS via Twilio using credentials from API Connector."""
+	import requests
+
+	connector = frappe.get_doc("API Connector", "Twilio")
+	account_sid = connector.username
+	auth_token = connector.get_password("password")
+
+	url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
+
+	from_number = frappe.db.get_single_value("SMS Settings", "sms_sender_name") or ""
+	if not from_number:
+		frappe.throw(_("No sender number configured. Set SMS Sender Name in SMS Settings."))
+
+	resp = requests.post(
+		url,
+		data={"To": phone, "From": from_number, "Body": message},
+		auth=(account_sid, auth_token),
+		timeout=15,
+	)
+
+	if resp.status_code not in (200, 201):
+		frappe.throw(_(f"Twilio error {resp.status_code}: {resp.text}"))
 
 
 def _parse_csv(value):

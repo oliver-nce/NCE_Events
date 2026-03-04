@@ -30,6 +30,8 @@
   "column_break_header_widgets",
   "show_email",
   "show_sms",
+  "email_field",
+  "sms_field",
   "section_break_card_actions",
   "show_card_email",
   "show_card_sms",
@@ -192,6 +194,18 @@
    "fieldname": "show_sms",
    "fieldtype": "Check",
    "label": "Show SMS"
+  },
+  {
+   "description": "Column name/alias containing the email address for recipients",
+   "fieldname": "email_field",
+   "fieldtype": "Data",
+   "label": "Email Field"
+  },
+  {
+   "description": "Column name/alias containing the phone number for SMS recipients",
+   "fieldname": "sms_field",
+   "fieldtype": "Data",
+   "label": "SMS Field"
   },
   {
    "fieldname": "section_break_card_actions",
