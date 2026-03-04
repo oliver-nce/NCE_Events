@@ -176,6 +176,10 @@ function _load_fields_from_doctype(frm) {
 	});
 }
 
+function _title_case(s) {
+	return s.replace(/_/g, " ").replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+}
+
 function _merge_fields(frm, new_fields) {
 	var existing = _get_fields(frm);
 	var old_map = {};
@@ -183,14 +187,15 @@ function _merge_fields(frm, new_fields) {
 
 	var result = [];
 	new_fields.forEach(function (f) {
+		var friendly = f.label || _title_case(f.fieldname);
 		var prev = old_map[f.fieldname];
 		if (prev) {
-			prev.label = f.label || prev.label;
+			prev.label = friendly;
 			result.push(prev);
 		} else {
 			result.push({
 				field_name: f.fieldname,
-				label: f.label || "",
+				label: friendly,
 				male_value: "",
 				female_value: "",
 				synthetic: false,
