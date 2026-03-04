@@ -178,34 +178,35 @@ function _load_fields_from_doctype(frm) {
 
 function _merge_fields(frm, new_fields) {
 	var existing = _get_fields(frm);
-	var known = {};
-	existing.forEach(function (f) { known[f.field_name] = true; });
+	var old_map = {};
+	existing.forEach(function (f) { old_map[f.field_name] = f; });
 
-	var added = 0;
+	var result = [];
 	new_fields.forEach(function (f) {
-		if (known[f.fieldname]) {
-			existing.forEach(function (row) {
-				if (row.field_name === f.fieldname) row.label = f.label || "";
+		var prev = old_map[f.fieldname];
+		if (prev) {
+			prev.label = f.label || prev.label;
+			result.push(prev);
+		} else {
+			result.push({
+				field_name: f.fieldname,
+				label: f.label || "",
+				male_value: "",
+				female_value: "",
+				synthetic: false,
 			});
-			return;
 		}
-		existing.push({
-			field_name: f.fieldname,
-			label: f.label || "",
-			male_value: "",
-			female_value: "",
-			synthetic: false,
-		});
-		added++;
 	});
 
-	_save_fields(frm, existing);
+	existing.forEach(function (f) {
+		if (f.synthetic) result.push(f);
+	});
+
+	_save_fields(frm, result);
 	_render_table(frm);
 
 	frappe.show_alert({
-		message: added
-			? __("{0} new fields added ({1} total)", [added, existing.length])
-			: __("All fields already present ({0} total)", [existing.length]),
+		message: __("{0} fields loaded, synthetic rows preserved", [new_fields.length]),
 		indicator: "green",
 	});
 }
