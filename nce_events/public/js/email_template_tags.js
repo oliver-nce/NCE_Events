@@ -23,15 +23,21 @@ function _toggle_tag_picker(frm) {
 				frappe.msgprint(__("Could not load Messaging Configuration."));
 				return;
 			}
-			var val = r.message.tag_list;
-			var tags;
-			try {
-				tags = JSON.parse(val || "[]");
-			} catch (e) {
-				tags = [];
-			}
+			var rows = r.message.field_tags || [];
+			var seen = {};
+			var tags = [];
+			rows.forEach(function (row) {
+				if (!row.expose) return;
+				if (seen[row.field_name]) return;
+				seen[row.field_name] = true;
+				tags.push({
+					field: row.field_name,
+					label: row.label || row.field_name,
+					tag: row.jinja_tag || ("{{ " + row.field_name + " }}"),
+				});
+			});
 			if (!tags.length) {
-				frappe.msgprint(__("No tags configured. Open Messaging Configuration and click Build Tag List."));
+				frappe.msgprint(__("No tags configured. Open Messaging Configuration and click Rebuild Tags."));
 				return;
 			}
 			_show_tag_picker(frm, tags);

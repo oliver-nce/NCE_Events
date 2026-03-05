@@ -4,14 +4,7 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "root_doctype",
-  "report_name",
   "gender_field",
-  "section_break_fields",
-  "fields_html",
-  "fields_json",
-  "section_break_tags",
-  "tag_list",
   "section_break_neutral",
   "neutral_tags",
   "section_break_field_tags",
@@ -19,52 +12,10 @@
  ],
  "fields": [
   {
-   "description": "The DocType whose field definitions are used for the tag table",
-   "fieldname": "root_doctype",
-   "fieldtype": "Link",
-   "label": "Root DocType",
-   "options": "DocType"
-  },
-  {
-   "description": "Query Report that provides the row data and columns for messaging",
-   "fieldname": "report_name",
-   "fieldtype": "Link",
-   "label": "Report Name",
-   "options": "Report"
-  },
-  {
-   "description": "Field in the Root DocType that holds the gender value (e.g. gender, sex)",
+   "description": "Field that holds the gender value (e.g. gender, sex) — used for conditional Jinja2 tags",
    "fieldname": "gender_field",
    "fieldtype": "Data",
    "label": "Gender Field"
-  },
-  {
-   "fieldname": "section_break_fields",
-   "fieldtype": "Section Break",
-   "label": "Field Definitions"
-  },
-  {
-   "fieldname": "fields_html",
-   "fieldtype": "HTML"
-  },
-  {
-   "fieldname": "fields_json",
-   "fieldtype": "Code",
-   "hidden": 1,
-   "label": "Fields JSON",
-   "options": "JSON"
-  },
-  {
-   "fieldname": "section_break_tags",
-   "fieldtype": "Section Break",
-   "label": "Tag Mapping"
-  },
-  {
-   "description": "JSON array of {\"field\": \"tag\"} pairs generated from the fields table",
-   "fieldname": "tag_list",
-   "fieldtype": "Code",
-   "label": "Tag List",
-   "options": "JSON"
   },
   {
    "fieldname": "section_break_neutral",
@@ -92,7 +43,7 @@
  "index_web_pages_for_search": 0,
  "issingle": 1,
  "links": [],
- "modified": "2026-03-03 00:00:00.000000",
+ "modified": "2026-03-05 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "NCE Events",
  "name": "Messaging Configuration",
