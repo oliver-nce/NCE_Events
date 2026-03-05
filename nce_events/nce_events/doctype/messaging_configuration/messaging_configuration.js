@@ -23,19 +23,21 @@ function _compute_jinja(field_name, male, female, gender_field) {
 }
 
 function _rebuild_tags(frm) {
-	frappe.call({
-		method: "nce_events.api.panel_api.rebuild_field_tags",
-		freeze: true,
-		freeze_message: __("Scanning custom DocTypes\u2026"),
-		callback: function (r) {
-			if (r.message) {
-				frappe.show_alert({
-					message: __("{0} field tags rebuilt", [r.message.total]),
-					indicator: "green",
-				});
-				frm.reload_doc();
-			}
-		},
+	frm.save().then(function () {
+		frappe.call({
+			method: "nce_events.api.panel_api.rebuild_field_tags",
+			freeze: true,
+			freeze_message: __("Scanning custom DocTypes\u2026"),
+			callback: function (r) {
+				if (r.message) {
+					frappe.show_alert({
+						message: __("{0} field tags rebuilt", [r.message.total]),
+						indicator: "green",
+					});
+					frm.reload_doc();
+				}
+			},
+		});
 	});
 }
 
