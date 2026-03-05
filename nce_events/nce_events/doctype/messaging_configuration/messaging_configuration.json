@@ -11,7 +11,11 @@
   "fields_html",
   "fields_json",
   "section_break_tags",
-  "tag_list"
+  "tag_list",
+  "section_break_neutral",
+  "neutral_tags",
+  "section_break_field_tags",
+  "field_tags"
  ],
  "fields": [
   {
@@ -61,6 +65,28 @@
    "fieldtype": "Code",
    "label": "Tag List",
    "options": "JSON"
+  },
+  {
+   "fieldname": "section_break_neutral",
+   "fieldtype": "Section Break",
+   "label": "Neutral Tags (Dedup List)"
+  },
+  {
+   "fieldname": "neutral_tags",
+   "fieldtype": "Table",
+   "label": "Neutral Tags",
+   "options": "Neutral Tag"
+  },
+  {
+   "fieldname": "section_break_field_tags",
+   "fieldtype": "Section Break",
+   "label": "Field Tag Registry"
+  },
+  {
+   "fieldname": "field_tags",
+   "fieldtype": "Table",
+   "label": "Field Tags",
+   "options": "Field Tag"
   }
  ],
  "index_web_pages_for_search": 0,
