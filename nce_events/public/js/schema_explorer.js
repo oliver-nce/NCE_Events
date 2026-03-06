@@ -433,62 +433,103 @@
 		return parts.join(" \u2192 ");
 	}
 
-	/* ── Tag Dialog ─────────────────────────────────────── */
+	/* ── Tag Panel (non-modal, draggable, multiple allowed) ── */
+
+	var _tag_panel_count = 0;
+
+	function _apply_default_filter(tag, fallback) {
+		if (!fallback) return tag;
+		var safe = fallback.replace(/'/g, "\\'");
+		return tag.replace(
+			/\{\{([^}]+)\}\}/g,
+			function (m, inner) { return "{{ " + inner.trim() + " | default('" + safe + "') }}"; }
+		);
+	}
 
 	function _show_tag_dialog(col_idx, field) {
-		var tag = _build_tag(col_idx, field);
+		var base_tag = _build_tag(col_idx, field);
 		var path = _build_path_string(col_idx, field);
 
-		var d = new frappe.ui.Dialog({
-			title: __("Jinja2 Tag"),
-			fields: [{
-				fieldname: "info",
-				fieldtype: "HTML",
-				options:
-					'<div class="se-tag-lbl">Field</div>' +
-					'<div class="se-tag-val">' +
-					frappe.utils.escape_html(field.label) +
-					' <span style="color:#8D949A;">(' +
-					frappe.utils.escape_html(field.fieldname) + ')</span></div>' +
-					'<div class="se-tag-lbl">Path</div>' +
-					'<div class="se-tag-val">' +
-					frappe.utils.escape_html(path) + '</div>' +
-					'<div class="se-tag-lbl">Tag</div>' +
-					'<pre class="se-tag-pre">' +
-					frappe.utils.escape_html(tag) + '</pre>',
-			}],
-			size: "large",
-			primary_action_label: __("Copy to Clipboard"),
-			primary_action: function () {
-				if (navigator.clipboard) {
-					navigator.clipboard.writeText(tag).then(function () {
-						frappe.show_alert({
-							message: __("Tag copied to clipboard"),
-							indicator: "green",
-						});
-						d.hide();
-					});
-				} else {
-					_fallback_copy(tag);
-					d.hide();
-				}
-			},
+		_tag_panel_count++;
+		var cascade = (_tag_panel_count - 1) * 24;
+		var top = Math.min(100 + cascade, window.innerHeight - 200);
+		var left = Math.min(160 + cascade, window.innerWidth - 420);
+
+		var $panel = $(
+			'<div class="se-tag-panel">' +
+			'<div class="se-tag-panel-header">' +
+			'<span class="se-title">' + frappe.utils.escape_html(field.label) + '</span>' +
+			'<button class="se-close">&times;</button>' +
+			'</div>' +
+			'<div class="se-tag-panel-body">' +
+			'<div class="se-tag-lbl">Field</div>' +
+			'<div class="se-tag-val">' +
+			frappe.utils.escape_html(field.label) +
+			' <span style="color:#8D949A;">(' +
+			frappe.utils.escape_html(field.fieldname) + ')</span></div>' +
+			'<div class="se-tag-lbl">Path</div>' +
+			'<div class="se-tag-val" style="font-size:12px;">' +
+			frappe.utils.escape_html(path) + '</div>' +
+			'<div class="se-tag-lbl">Fallback Value</div>' +
+			'<div class="se-tag-val">' +
+			'<input type="text" class="se-fallback-input" placeholder="e.g. Student (leave empty for none)">' +
+			'</div>' +
+			'<div class="se-tag-lbl">Tag</div>' +
+			'<pre class="se-tag-pre">' +
+			frappe.utils.escape_html(base_tag) + '</pre>' +
+			'<div style="margin-top:10px;text-align:right;">' +
+			'<button class="btn btn-primary btn-sm se-copy-btn">Copy to Clipboard</button>' +
+			'</div>' +
+			'</div>' +
+			'</div>'
+		);
+
+		$panel.css({ top: top + "px", left: left + "px" });
+		$(document.body).append($panel);
+
+		$panel.on("mousedown", function () {
+			$(".se-tag-panel").css("z-index", 1070);
+			$panel.css("z-index", 1080);
+		});
+		$panel.trigger("mousedown");
+
+		var $header = $panel.find(".se-tag-panel-header");
+		var $pre = $panel.find(".se-tag-pre");
+		var $input = $panel.find(".se-fallback-input");
+
+		$input.on("input", function () {
+			var fb = $(this).val().trim();
+			var rendered = _apply_default_filter(base_tag, fb);
+			$pre.text(rendered);
 		});
 
-		d.$wrapper.addClass("se-tag-dialog");
-		d.$wrapper.css("z-index", 1080);
-		d.show();
-
-		d.$wrapper.find(".se-tag-pre").on("click", function () {
+		$pre.on("click", function () {
 			var range = document.createRange();
 			range.selectNodeContents(this);
 			var sel = window.getSelection();
 			sel.removeAllRanges();
 			sel.addRange(range);
 		});
+
+		$panel.find(".se-copy-btn").on("click", function () {
+			var current_tag = $pre.text();
+			if (navigator.clipboard) {
+				navigator.clipboard.writeText(current_tag).then(function () {
+					frappe.show_alert({ message: __("Tag copied"), indicator: "green" });
+				});
+			} else {
+				_clipboard_fallback(current_tag);
+			}
+		});
+
+		$header.find(".se-close").on("click", function () {
+			$panel.remove();
+		});
+
+		_make_draggable($panel, $header);
 	}
 
-	function _fallback_copy(text) {
+	function _clipboard_fallback(text) {
 		var ta = document.createElement("textarea");
 		ta.value = text;
 		ta.style.position = "fixed";
@@ -497,10 +538,7 @@
 		ta.select();
 		document.execCommand("copy");
 		document.body.removeChild(ta);
-		frappe.show_alert({
-			message: __("Tag copied to clipboard"),
-			indicator: "green",
-		});
+		frappe.show_alert({ message: __("Tag copied"), indicator: "green" });
 	}
 
 	/* ── CSS Injection ──────────────────────────────────── */
@@ -574,22 +612,23 @@
 			"padding:1px 6px;border-radius:3px;font-family:Arial,sans-serif;" +
 			"white-space:nowrap;flex-shrink:0}" +
 
-			".se-tag-dialog .modal-dialog{z-index:1080}" +
-			".se-tag-dialog .modal-header{background:#126BC4;border-bottom:none;" +
-			"padding:10px 16px}" +
-			".se-tag-dialog .modal-header .modal-title{color:#fff;font-family:Arial,sans-serif;" +
-			"font-weight:600;font-size:14px}" +
-			".se-tag-dialog .modal-header .btn-modal-close," +
-			".se-tag-dialog .modal-header .close{color:#fff;opacity:.8;text-shadow:none}" +
-			".se-tag-dialog .modal-header .btn-modal-close:hover," +
-			".se-tag-dialog .modal-header .close:hover{opacity:1}" +
-			".se-tag-dialog .modal-content{border:1px solid #A2CCF6;border-radius:8px;" +
-			"overflow:hidden;box-shadow:0 8px 32px rgba(18,107,196,.22)}" +
-			".se-tag-dialog .modal-body{font-family:Arial,sans-serif;font-size:13px;" +
-			"color:#464D53;padding:16px}" +
-			".se-tag-dialog .se-tag-lbl{font-weight:600;color:#105EAD;font-size:12px;" +
+			".se-tag-panel{position:fixed;z-index:1080;width:420px;" +
+			"background:#fff;border:1px solid #A2CCF6;border-radius:8px;" +
+			"box-shadow:0 8px 32px rgba(18,107,196,.22),0 2px 8px rgba(0,0,0,.08);" +
+			"display:flex;flex-direction:column;overflow:hidden;resize:both;" +
+			"min-width:280px;min-height:180px}" +
+			".se-tag-panel-header{display:flex;align-items:center;justify-content:space-between;" +
+			"padding:8px 12px;background:#126BC4;color:#fff;cursor:move;flex-shrink:0}" +
+			".se-tag-panel-body{padding:14px 16px;font-family:Arial,sans-serif;" +
+			"font-size:13px;color:#464D53;overflow-y:auto;flex:1}" +
+			".se-tag-lbl{font-weight:600;color:#105EAD;font-size:12px;" +
 			"text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px}" +
-			".se-tag-dialog .se-tag-val{margin-bottom:12px;font-size:13px}" +
+			".se-tag-val{margin-bottom:10px;font-size:13px}" +
+			".se-fallback-input{width:100%;padding:5px 8px;font-size:13px;" +
+			"border:1px solid #C7E0FA;border-radius:4px;font-family:Arial,sans-serif;" +
+			"color:#464D53;outline:none}" +
+			".se-fallback-input:focus{border-color:#4198F0;" +
+			"box-shadow:0 0 0 2px rgba(65,152,240,.2)}" +
 			".se-tag-pre{background:#F1F7FE;border:1px solid #C7E0FA;" +
 			"border-radius:6px;padding:12px 14px;margin:0;font-size:13px;" +
 			"white-space:pre-wrap;word-break:break-all;user-select:all;" +
