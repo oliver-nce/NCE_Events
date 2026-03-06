@@ -8,6 +8,8 @@ app_logo_url = "/assets/nce_events/images/logo.png"
 
 required_apps = ["nce_sync"]
 
+app_include_js = "/assets/nce_events/js/schema_explorer.js"
+
 doctype_js = {
 	"Email Template": "public/js/email_template_tags.js",
 }
