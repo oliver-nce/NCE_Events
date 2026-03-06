@@ -445,19 +445,17 @@
 				fieldname: "info",
 				fieldtype: "HTML",
 				options:
-					'<div style="font-family:Arial,sans-serif;">' +
-					'<div style="margin-bottom:10px;">' +
-					'<span style="font-weight:600;color:#105EAD;">Field:</span> ' +
+					'<div class="se-tag-lbl">Field</div>' +
+					'<div class="se-tag-val">' +
 					frappe.utils.escape_html(field.label) +
 					' <span style="color:#8D949A;">(' +
 					frappe.utils.escape_html(field.fieldname) + ')</span></div>' +
-					'<div style="margin-bottom:10px;">' +
-					'<span style="font-weight:600;color:#105EAD;">Path:</span> ' +
+					'<div class="se-tag-lbl">Path</div>' +
+					'<div class="se-tag-val">' +
 					frappe.utils.escape_html(path) + '</div>' +
-					'<div style="font-weight:600;color:#105EAD;margin-bottom:4px;">Tag:</div>' +
+					'<div class="se-tag-lbl">Tag</div>' +
 					'<pre class="se-tag-pre">' +
-					frappe.utils.escape_html(tag) + '</pre>' +
-					'</div>',
+					frappe.utils.escape_html(tag) + '</pre>',
 			}],
 			size: "large",
 			primary_action_label: __("Copy to Clipboard"),
@@ -476,7 +474,11 @@
 				}
 			},
 		});
+
+		d.$wrapper.addClass("se-tag-dialog");
+		d.$wrapper.css("z-index", 1080);
 		d.show();
+
 		d.$wrapper.find(".se-tag-pre").on("click", function () {
 			var range = document.createRange();
 			range.selectNodeContents(this);
@@ -515,7 +517,7 @@
 
 			".se-header{display:flex;align-items:center;justify-content:space-between;" +
 			"padding:8px 12px;background:#126BC4;color:#fff;cursor:move;flex-shrink:0}" +
-			".se-title{font-weight:600;font-size:13px;font-family:Arial,sans-serif}" +
+			".se-title{font-weight:600;font-size:14px;font-family:Arial,sans-serif}" +
 			".se-close{background:none;border:none;color:#fff;font-size:18px;" +
 			"line-height:1;cursor:pointer;padding:0 4px;opacity:.8}" +
 			".se-close:hover{opacity:1}" +
@@ -528,11 +530,11 @@
 
 			".se-body{flex:1;display:flex;overflow-x:auto;overflow-y:hidden;min-height:0}" +
 
-			".se-column{min-width:220px;max-width:300px;display:flex;flex-direction:column;" +
-			"border-right:1px solid #EAEBEC;flex-shrink:0}" +
+			".se-column{min-width:230px;max-width:320px;display:flex;flex-direction:column;" +
+			"border-right:1px solid #A2CCF6;flex-shrink:0}" +
 
-			".se-col-header{padding:6px 10px;background:#E3F0FC;color:#105EAD;" +
-			"font-weight:600;font-size:12px;font-family:Arial,sans-serif;" +
+			".se-col-header{padding:8px 10px;background:#E3F0FC;color:#105EAD;" +
+			"font-weight:600;font-size:13px;font-family:Arial,sans-serif;" +
 			"border-bottom:2px solid #A2CCF6;white-space:nowrap;overflow:hidden;" +
 			"text-overflow:ellipsis;flex-shrink:0;display:flex;align-items:center;" +
 			"justify-content:space-between;gap:6px}" +
@@ -540,37 +542,56 @@
 
 			".se-tiles{flex:1;overflow-y:auto;padding:4px}" +
 
-			".se-tile{padding:6px 8px;margin-bottom:2px;border-radius:4px;" +
-			"cursor:pointer;transition:background .12s;border-left:3px solid transparent}" +
+			".se-tile{padding:7px 10px;margin-bottom:3px;border-radius:5px;" +
+			"cursor:pointer;transition:background .12s;" +
+			"border:1px solid #A2CCF6;border-left:3px solid transparent}" +
 			".se-tile:hover{background:#F1F7FE}" +
 
 			".se-tile-link{border-left-color:#4198F0;background:#F1F7FE}" +
 			".se-tile-link:hover{background:#E3F0FC}" +
 
-			".se-tile-table{border-left-color:#F2B90D;background:#FEFBF0}" +
+			".se-tile-table{border-left-color:#F2B90D;background:#FEFBF0;" +
+			"border-color:#F2B90D}" +
 			".se-tile-table:hover{background:#FDF3D7}" +
 
 			".se-tile-circular{border-left-color:#D7D9DB;background:#F4F5F5;" +
-			"opacity:.45;cursor:not-allowed}" +
+			"border-color:#D7D9DB;opacity:.45;cursor:not-allowed}" +
 
-			".se-tile-active{background:#C7E0FA!important;border-left-color:#126BC4}" +
+			".se-tile-active{background:#C7E0FA!important;border-left-color:#126BC4;" +
+			"border-color:#126BC4}" +
 
 			".se-tile-top{display:flex;align-items:center;justify-content:space-between}" +
-			".se-tile-label{font-size:12px;font-weight:500;color:#464D53;" +
+			".se-tile-label{font-size:14px;font-weight:500;color:#464D53;" +
 			"font-family:Arial,sans-serif;flex:1;min-width:0;" +
 			"overflow:hidden;text-overflow:ellipsis;white-space:nowrap}" +
-			".se-tile-arrow{font-size:8px;color:#4198F0;margin-left:4px;flex-shrink:0}" +
+			".se-tile-arrow{font-size:9px;color:#4198F0;margin-left:4px;flex-shrink:0}" +
 
 			".se-tile-meta{display:flex;justify-content:space-between;" +
-			"align-items:center;margin-top:1px;gap:4px}" +
-			".se-tile-fieldname{font-size:10px;color:#8D949A;font-family:monospace;" +
+			"align-items:center;margin-top:2px;gap:4px}" +
+			".se-tile-fieldname{font-size:11px;color:#8D949A;font-family:monospace;" +
 			"overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}" +
-			".se-tile-badge{font-size:9px;color:#6D757E;background:#EAEBEC;" +
-			"padding:1px 5px;border-radius:3px;font-family:Arial,sans-serif;" +
+			".se-tile-badge{font-size:10px;color:#6D757E;background:#EAEBEC;" +
+			"padding:1px 6px;border-radius:3px;font-family:Arial,sans-serif;" +
 			"white-space:nowrap;flex-shrink:0}" +
 
+			".se-tag-dialog .modal-dialog{z-index:1080}" +
+			".se-tag-dialog .modal-header{background:#126BC4;border-bottom:none;" +
+			"padding:10px 16px}" +
+			".se-tag-dialog .modal-header .modal-title{color:#fff;font-family:Arial,sans-serif;" +
+			"font-weight:600;font-size:14px}" +
+			".se-tag-dialog .modal-header .btn-modal-close," +
+			".se-tag-dialog .modal-header .close{color:#fff;opacity:.8;text-shadow:none}" +
+			".se-tag-dialog .modal-header .btn-modal-close:hover," +
+			".se-tag-dialog .modal-header .close:hover{opacity:1}" +
+			".se-tag-dialog .modal-content{border:1px solid #A2CCF6;border-radius:8px;" +
+			"overflow:hidden;box-shadow:0 8px 32px rgba(18,107,196,.22)}" +
+			".se-tag-dialog .modal-body{font-family:Arial,sans-serif;font-size:13px;" +
+			"color:#464D53;padding:16px}" +
+			".se-tag-dialog .se-tag-lbl{font-weight:600;color:#105EAD;font-size:12px;" +
+			"text-transform:uppercase;letter-spacing:.3px;margin-bottom:2px}" +
+			".se-tag-dialog .se-tag-val{margin-bottom:12px;font-size:13px}" +
 			".se-tag-pre{background:#F1F7FE;border:1px solid #C7E0FA;" +
-			"border-radius:6px;padding:10px 12px;margin:0;font-size:13px;" +
+			"border-radius:6px;padding:12px 14px;margin:0;font-size:13px;" +
 			"white-space:pre-wrap;word-break:break-all;user-select:all;" +
 			"cursor:text;color:#105EAD;font-family:monospace;line-height:1.5}" +
 
