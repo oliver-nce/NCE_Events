@@ -6,9 +6,11 @@ Single source of truth for the `nce_events` Frappe v15 app. Read fully before ma
 
 ## 1. What This App Does
 
-A multi-panel data explorer for NCE soccer operations. Users see a split-view page: select a row in Panel 1 (e.g. an event) and Panel 2 loads related data (e.g. registered players). Panels support filtering, card popovers, gender color-coding, bold fields, and export.
+A multi-panel data explorer for NCE soccer operations. Users see floating windows: select a row in Panel 1 (e.g. an event) and Panel 2 opens as a floating window with related data (e.g. registered players). Any number of panel levels are supported. Panels support filtering, card popovers, gender color-coding, bold fields, column reordering/resizing, CSV export (Sheets widget), and bulk SMS/email.
 
-**Dependency:** requires the [nce_sync](https://github.com/oliver-nce/NCE_Sync) app (provides DocTypes and WordPress data sync).
+A **Messaging Configuration** DocType provides a tag registry for Jinja2 template tags, used by the Email Template tag picker.
+
+**Dependency:** requires the [nce_sync](https://github.com/oliver-nce/NCE_Sync) app (provides DocTypes, WP Tables mappings, and WordPress data sync).
 
 ---
 
@@ -26,25 +28,29 @@ There is also a separate **hierarchy_explorer** (legacy event explorer at `/app/
 nce_events/
 ├── api/
 │   ├── hierarchy_explorer.py        # Legacy event explorer API (do not touch)
-│   └── panel_api.py                 # All panel API endpoints
+│   └── panel_api.py                 # All panel API endpoints + rebuild_field_tags
 ├── hooks.py
 ├── nce_events/
 │   ├── doctype/
-│   │   ├── page_definition/         # Parent DocType + form JS
-│   │   ├── page_panel/              # Child table
-│   │   └── page_drag_action/        # Child table (drag-drop, not yet implemented)
+│   │   ├── page_definition/         # Parent DocType + form JS (5-tab layout)
+│   │   ├── page_panel/              # Child table (panel config)
+│   │   ├── page_drag_action/        # Child table (drag-drop, not yet implemented)
+│   │   ├── messaging_configuration/ # Single DocType — tag registry config
+│   │   ├── field_tag/               # Child table of Messaging Configuration
+│   │   └── neutral_tag/             # Child table of Messaging Configuration
 │   ├── page/
 │   │   ├── page_view/               # Router — single shared page for all pages
 │   │   └── hierarchy_explorer/      # Legacy hierarchy explorer (frozen)
 │   └── workspace/nce_events/        # Workspace with shortcuts
 ├── public/
 │   ├── css/
-│   │   ├── panel_page.css           # Panel page styles
+│   │   ├── panel_page.css           # Panel page styles (floating windows)
 │   │   └── hierarchy_explorer.css   # Legacy styles
 │   └── js/
 │       ├── panel_page/
-│       │   ├── ui.js                # Explorer renderer
+│       │   ├── ui.js                # Explorer renderer (floating windows, sheets, SMS/email)
 │       │   └── store.js             # Store state management
+│       ├── email_template_tags.js   # Tag picker for Email Template form
 │       └── hierarchy_explorer/      # Legacy JS (frozen)
 ├── patches/v0_0_2/                  # Migration patches
 └── utils/version.py
@@ -68,7 +74,7 @@ nce_events/
 | panels | Table → Page Panel | child table |
 | drag_actions | Table → Page Drag Action | child table (future use) |
 
-`male_hex` / `female_hex` are page-level — they apply to all panels on that page. They color the text of the designated male/female columns (not a side strip).
+`male_hex` / `female_hex` are page-level — they apply to all panels on that page.
 
 ### Page Panel (child table)
 
@@ -87,6 +93,11 @@ nce_events/
 | male_field | Small Text | column rendered with `male_hex` + bold |
 | female_field | Small Text | column rendered with `female_hex` + bold |
 | header_overrides | Small Text | JSON map of custom column headers, e.g. `{"F": "Girls"}` |
+| column_order | Small Text | comma-delimited column display order |
+| gender_column | Small Text | column designating row gender for tint coloring |
+| gender_color_fields | Small Text | comma-delimited columns tinted by row gender |
+| email_field | Data | column containing email address for recipients |
+| sms_field | Data | column containing phone number for SMS recipients |
 | wp_query | Code (SQL) | raw WordPress SQL — input for translator |
 | frappe_query | Code (SQL) | translated Frappe SQL |
 | show_filter | Check | filter widget toggle |
@@ -99,8 +110,6 @@ nce_events/
 | button_1_code | Code (JS) | JS executed on button click |
 | button_2_name | Data | second button label |
 | button_2_code | Code (JS) | second button JS |
-
-`report_name` is plain Data (not a Link to Report) because the report may not exist when the row is first created.
 
 ### Page Drag Action (child table)
 
@@ -117,6 +126,50 @@ Defined but **not yet implemented** in the renderer.
 | eligibility_code | Code (JS) | returns true/false per target row |
 | drop_code | Code (JS) | executes on successful drop |
 
+### Messaging Configuration (Single DocType)
+
+`nce_events/nce_events/doctype/messaging_configuration/`
+
+Manages the field tag registry for Jinja2 template tags used in email/SMS messaging.
+
+| Field | Type | Notes |
+|---|---|---|
+| gender_field | Data | field holding gender value (default "gender") |
+| neutral_tags | Table → Neutral Tag | user-managed dedup list |
+| field_tags | Table → Field Tag | auto-populated tag registry |
+
+Buttons on form:
+- **Rebuild Tags** — scans all DocTypes listed in WP Tables, populates `field_tags`. Saves form first to preserve neutral tags and user edits. Deduplicates fields in the neutral list into single table-neutral rows. Default synthetic pronoun rows (He/She, Him/Her, His/Her) are always ensured.
+- **Add Synthetic Tag** — prompts for field_name, label, male/female values; adds a row with `synthetic=1`.
+
+### Field Tag (child table, editable_grid)
+
+`nce_events/nce_events/doctype/field_tag/`
+
+| Field | Type | Notes |
+|---|---|---|
+| field_name | Data, required | database column name |
+| label | Data | friendly display label |
+| male_value | Data | male substitution text |
+| female_value | Data | female substitution text |
+| jinja_tag | Data, read-only | auto-computed `{{ field_name }}` or gender-conditional |
+| source_table | Data, read-only | SQL table name (empty for neutral/synthetic) |
+| source_doctype | Data, read-only | DocType display name (empty for neutral/synthetic) |
+| expose | Check, default 1 | controls tag picker visibility |
+| synthetic | Check, read-only | 1 for manually added tags |
+
+One row per table+fieldname combination. Same fieldname from different tables = separate rows (full reference). Fields in the Neutral Tag list are deduplicated to one row with no source table.
+
+### Neutral Tag (child table, editable_grid)
+
+`nce_events/nce_events/doctype/neutral_tag/`
+
+| Field | Type | Notes |
+|---|---|---|
+| field_name | Data, required | fieldname to treat as table-neutral |
+
+User adds fieldnames here that appear in multiple tables with the same meaning (e.g. `gender`, `dob`). On rebuild, these produce one row instead of one per table.
+
 ---
 
 ## 5. Page Routing
@@ -129,7 +182,7 @@ All pages route through a **single shared Frappe Page** (`page-view`) at:
 
 `page_view.js` reads the route param, does `frappe.require` on `store.js`, `ui.js`, and `panel_page.css`, then creates an `Explorer(page, page_name)`. If no `page_name`, it shows a landing page listing active pages via `get_active_pages`.
 
-A workspace shortcut is created automatically when the user clicks **Build Page** on the Page Definition form. No `bench migrate` is needed to add a new page.
+A workspace shortcut is created automatically when the user clicks **Build Page** on the Page Definition form.
 
 ---
 
@@ -142,67 +195,32 @@ A workspace shortcut is created automatically when the user clicks **Build Page*
 | Function | Params | Purpose |
 |---|---|---|
 | `get_page_config` | `page_name` | Returns full page + panel config as JSON |
-| `get_panel_data` | `page_name, panel_number, selections` | Runs the Query Report, applies inter-panel filter, returns `{columns, rows, total}` |
-| `get_report_columns` | `report_name` | Returns column names via `LIMIT 0` on report SQL |
+| `get_panel_data` | `page_name, panel_number, selections` | Runs Query Report, applies inter-panel filter, returns `{columns, rows, total}` |
+| `export_panel_data` | `page_name, panel_number, selections` | Saves panel data as CSV to public path, returns URL for Google Sheets `IMPORTDATA` |
+| `send_panel_message` | `page_name, panel_number, selections, mode, recipient_field, body, subject, send_email_copy, email_field` | Bulk SMS (via Twilio) and/or email to all panel rows |
+| `rebuild_field_tags` | (none) | Scans WP Tables DocTypes, rebuilds Field Tag child table on Messaging Configuration |
+| `get_report_columns` | `report_name` | Returns column definitions from a Query Report |
 | `translate_wp_query` | `wp_query` | Translates WP SQL to Frappe SQL using WP Tables mappings |
 | `create_or_update_report` | `header_text, frappe_query, existing_report_name, ref_doctype` | Creates or updates a Frappe Query Report |
 | `build_page` | `page_name` | Ensures workspace shortcut exists, returns `{page_url}` |
 | `get_active_pages` | (none) | Lists active Page Definitions for the landing page |
 
-### get_page_config Response
+### rebuild_field_tags Logic
 
-```json
-{
-  "page_name": "...",
-  "page_title": "...",
-  "male_hex": "#0000FF",
-  "female_hex": "#c700e6",
-  "panels": [
-    {
-      "panel_number": 1,
-      "header_text": "Events",
-      "report_name": "Events Panel",
-      "root_doctype": "Events",
-      "where_clause": "",
-      "hidden_fields": ["max_yob", "min_yob"],
-      "bold_fields": ["event_name"],
-      "card_fields": ["max_yob", "min_yob"],
-      "male_field": "M",
-      "female_field": "F",
-      "show_filter": 1,
-      "show_sheets": 1,
-      "show_email": 0,
-      "show_sms": 0,
-      "show_card_email": 0,
-      "show_card_sms": 0,
-      "button_1_name": "",
-      "button_1_code": "",
-      "header_overrides": {"M": "Boys", "F": "Girls"},
-      "button_2_name": "",
-      "button_2_code": ""
-    }
-  ]
-}
-```
+1. Loads Messaging Configuration, reads `neutral_tags` → builds dedup set
+2. Snapshots existing `field_tags` to preserve `expose`, `male_value`, `female_value`
+3. Queries `WP Tables` for all DocTypes with a `frappe_doctype` set (only mapped tables are scanned)
+4. For each DocType field: if in neutral set, emits one row (no source table); otherwise one row per table+fieldname
+5. Ensures default synthetic pronoun rows (He/She lower, He/She cap, Him/Her, His/Her)
+6. Sorts by label, saves
 
-### get_panel_data Response
+### export_panel_data
 
-```json
-{
-  "columns": [{"fieldname": "event_name", "label": "Event Name"}, ...],
-  "rows": [{"event_name": "Spring Camp", ...}, ...],
-  "total": 42
-}
-```
+Reuses `_run_panel_report` to get columns/rows, writes CSV to `sites/{site}/public/files/panels/{hash}/{filename}.csv`. Returns `{filename, url, rows_exported}`. The URL is used with Google Sheets `=IMPORTDATA("url")`.
 
-### get_panel_data Mechanics
+### send_panel_message
 
-1. Loads Page Definition record, finds the panel row
-2. Calls `frappe.desk.query_report.run(report_name, filters={})` — same code path as Frappe report UI
-3. Parses columns via `_parse_report_column_defs` → `[{fieldname, label}]`
-4. Zips column names with row data → list of dicts
-5. If a previous panel has a selection, applies inter-panel filter Python-side
-6. Returns all matching rows (no pagination)
+Renders body and subject as Jinja2 templates with each row's data as context. SMS sent via Twilio (credentials from `API Connector` DocType). Email sent via `frappe.sendmail` (SendGrid). Supports sending an email copy alongside SMS.
 
 ---
 
@@ -212,8 +230,6 @@ A workspace shortcut is created automatically when the user clicks **Build Page*
 
 Looks up Link fields on Panel N's `root_doctype` that point to Panel N-1's `root_doctype`. Filters rows where that link field equals the selected row's value.
 
-Example: `Registrations.product_id` is a Link to `Events.name`. Selecting an event in Panel 1 filters Panel 2 by `product_id = {selected event name}`.
-
 ### Override (where_clause set)
 
 Uses `{panel_N.fieldname}` token substitution in a Python-side filter:
@@ -222,19 +238,11 @@ Uses `{panel_N.fieldname}` token substitution in a Python-side filter:
 r.product_id = {panel_1.name}
 ```
 
-The server substitutes these with actual values from the selected row.
-
 ---
 
 ## 8. WP → Frappe SQL Translator
 
-`translate_wp_query` uses `WP Tables` DocType records (in the `nce_sync` app). Each record maps a WP table to a Frappe DocType with:
-- `table_name` — WP table name (e.g. `nce_events`)
-- `frappe_doctype` — Frappe DocType name (e.g. `Events`)
-- `column_mapping` — JSON dict: `{wp_col: {fieldname, is_name, is_virtual, ...}}`
-  - `is_name: true` → WP column maps to Frappe's primary key (`name`)
-
-Three-pass translation to avoid cascading substitutions:
+`translate_wp_query` uses `WP Tables` DocType records (in the `nce_sync` app). Three-pass translation:
 1. Qualified `table.column` → `` `tabFoo`.fieldname ``
 2. Bare table names → `` `tabFoo` ``
 3. Bare column names (with `(?<!\.)` lookbehind to skip already-qualified ones)
@@ -260,25 +268,19 @@ The Page Panel child-row form has a custom **5-tab layout** built in `page_defin
 Columns come from the report's SQL (fetched via `get_report_columns`). Each row is a report column; matrix columns are:
 
 - **Field** (read-only) — the SQL column alias
-- **Default Header** (read-only) — title-cased version of the field name
+- **Default Header** (read-only, dark grey text) — title-cased version of the field name
 - **Header** (editable text) — custom display header; placeholder shows the default; blank = use default
 - **List** (checkbox) — unchecked = column hidden in panel list
 - **Card** (checkbox) — checked = column appears in card popover
 - **Bold** (checkbox) — checked = column values bold in list
 - **Male** (radio) — one column whose values render with `male_hex` color + bold
 - **Female** (radio) — one column whose values render with `female_hex` color + bold
+- **Gender** (radio) — designates the column that holds row-level gender for tint coloring
+- **Tint** (checkbox) — columns whose values are tinted based on the row's gender
 
-On any change, `_sync()` writes back to `hidden_fields`, `bold_fields`, `card_fields`, `male_field`, `female_field`, and `header_overrides` via `frappe.model.set_value`. Checkbox/radio values are comma-delimited strings matching SQL column aliases exactly (case-preserved). `header_overrides` is a JSON object mapping fieldnames to custom header strings (only non-empty overrides are stored).
+Rows are **drag-reorderable** (HTML5 drag-and-drop with grab handle). The order is persisted in `column_order`.
 
-### Report Tab
-
-1. User pastes WordPress SQL into **WP Query** field
-2. Clicks **Translate WP → Frappe SQL** → calls `translate_wp_query`
-3. Result appears in **Frappe Query** field (editable)
-4. Clicks **Create Report** / **Update Report** → calls `create_or_update_report`
-5. Query Report is created/updated; `report_name` is set on the panel row
-
-Default new report name: `{header_text} Panel`
+On any change, `_sync()` writes back to `hidden_fields`, `bold_fields`, `card_fields`, `male_field`, `female_field`, `header_overrides`, `column_order`, `gender_column`, and `gender_color_fields`.
 
 ---
 
@@ -293,40 +295,58 @@ Default new report name: `{header_text} Panel`
 | `Explorer` | `nce_events.panel_page.Explorer` |
 | `Store` | `nce_events.panel_page.Store` |
 
+### Floating Windows
+
+All panels (including Panel 1) render as **floating windows** — draggable, resizable `position:fixed` elements. Panel 1 opens at `top:60px, left:40px, width:70vw`. Child panels cascade with offset.
+
+Each float has a header (draggable, with close button) and a footer (draggable, repeats panel title — ensures recovery if header is pushed off-screen). Vertical position is clamped so the footer stays visible.
+
+**Self-healing closure:** when any action occurs, all floats check if their parent panel still has an active row. Orphaned floats close recursively. Closing the root panel navigates back to the landing page.
+
+**Double-click a parent row:** opens the child panel's float and brings it to the front (z-index management).
+
+### Column Features
+
+- **Drag-resizable columns** with dividers (primary-700 color). Widths persist as relative percentages via async autosave to `localStorage`.
+- **Column order** follows `column_order` from panel config.
+- **Sticky headers** on panel tables.
+
+### Filter Widget
+
+Filter input has a **500ms debounce**. When filters change, only the table body re-renders (header is preserved to keep focus on the input).
+
+### Sheets Widget
+
+Clicking the sheets button calls `export_panel_data`, constructs an `=IMPORTDATA("url")` formula, and copies it to the clipboard with a toast notification.
+
+### SMS/Email Dialog
+
+Clicking SMS or Email opens a dialog to choose between typing a message or selecting an Email Template. Sends bulk to all rows via `send_panel_message`. SMS includes optional email copy (checked by default).
+
 ### Explorer Render Flow
 
 1. `setup()` — builds container, calls `store.fetch_config()` then `load_panel(1)`
-2. `load_panel(N)` — calls `store.fetch_panel(N)`, then `render_pane(N)`
-3. `render_pane(N)` — builds HTML table:
-   - `_visible_columns()` filters out `hidden_fields`
-   - `_field_set()` creates a lowercase-key lookup set
-   - Inline `style="font-weight:700;"` for bold fields
-   - Inline `style="font-weight:700;color:{hex};"` for male/female fields
-   - Row data lookup: tries `row[col.fieldname]` then `row[col.fieldname.toLowerCase()]`
+2. `load_panel(N)` — calls `store.fetch_panel(N)`, then `render_pane(N)` inside a floating window
+3. `render_pane(N)` — builds HTML table with inline styles for bold/gender colors
 4. Row click → single-click opens card popover; double-click drills to next panel
 
-### Bold and Gender Color — Important
+### Bold and Gender Color
 
 Bold and gender colors use **inline styles** on `<th>` and `<td>`. This is necessary because `.panel-table th { font-weight:600 }` in CSS has higher specificity than class-based rules. Do not switch to CSS classes.
 
-Gender hex values normalize to `#XXXXXX` (the `#` is added if missing). Field comparison is case-insensitive (`col.fieldname.toLowerCase()` vs `config.male_field.toLowerCase()`).
+---
 
-### Store Key Methods
+## 11. Email Template Tag Picker
 
-| Method | Purpose |
-|---|---|
-| `fetch_config()` | Calls `get_page_config` |
-| `fetch_panel(N)` | Calls `get_panel_data` (no pagination) |
-| `select_row(N, row)` | Updates selections, clears downstream panes |
-| `has_more(N)` | Always `false` |
+`nce_events/public/js/email_template_tags.js` — loaded via `doctype_js` hook on `Email Template`.
 
-### Field Reference Convention
+Adds an **"Insert Tag"** button to the Email Template form. Clicking it opens a floating, draggable, resizable window with a grid of tag tiles. Tags are read from the `field_tags` child table on Messaging Configuration (filtered by `expose=1`, deduplicated by `field_name`). Clicking a tile inserts the Jinja2 tag at the cursor position in the Quill editor, Ace editor, or textarea.
 
-All field references in `hidden_fields`, `bold_fields`, `card_fields` use the **SQL result column name** as it appears in report output. If the SQL uses `AS alias`, the alias is the reference. Table prefixes (e.g. `fm.gender`) are stripped when matching.
+CSS is injected inline (via `<style>` tag) because `doctype_css` is not a working Frappe hook.
 
 ---
 
-## 11. Deployment
+## 12. Deployment
 
 - **Do not run bench commands** — the user runs `bench build`, `bench migrate`, `bench restart` on the server
 - Push code to GitHub; user pulls and builds on the server
@@ -335,7 +355,7 @@ All field references in `hidden_fields`, `bold_fields`, `card_fields` use the **
 
 ---
 
-## 12. Database Access
+## 13. Database Access
 
 **WordPress source DB (db_nce_custom):**
 ```
@@ -351,7 +371,7 @@ All source tables begin with `nce_` (e.g. `nce_events`, `nce_registrations`). Th
 
 ---
 
-## 13. hooks.py
+## 14. hooks.py
 
 ```python
 app_name = "nce_events"
@@ -362,27 +382,50 @@ app_email = "oliver_reid@me.com"
 app_license = "mit"
 app_logo_url = "/assets/nce_events/images/logo.png"
 required_apps = ["nce_sync"]
+
+doctype_js = {
+    "Email Template": "public/js/email_template_tags.js",
+}
+
 add_to_apps_screen = [
     {"name": "nce_events", "logo": "/assets/nce_events/images/logo.png",
      "title": "NCE Events", "route": "/app/page-view"}
 ]
 ```
 
-No `doc_events`, `scheduler_events`, or `fixtures` are defined.
+---
+
+## 15. NCE Theme Tokens
+
+Key color tokens from `Docs/nce_theme.json`:
+
+| Role | Token | Hex |
+|---|---|---|
+| Primary (brand) | primary-500 | `#4198F0` |
+| Primary light | primary-50 | `#F1F7FE` |
+| Primary dark | primary-700 | `#126BC4` |
+| Page background | neutral-100 | `#F4F5F5` |
+| Panel background | neutral-50 | `#FAFAFA` |
+| Borders | neutral-300 | `#D7D9DB` |
+| Muted text | neutral-500 | `#8D949A` |
+| Body text | neutral-900 | `#464D53` |
+| Column dividers | primary-700 | `#126BC4` |
+| Row hover | primary-50 | `#F1F7FE` |
+| Row selected | primary-100 | `#E3F0FC` |
 
 ---
 
-## 14. Open Backlog
+## 16. Open Backlog
 
 | # | Item | Status |
 |---|---|---|
-| 1 | Drag-and-drop | `Page Drag Action` fields defined; renderer not implemented |
-| 2 | Card popover actions | Email/SMS stubs exist; actual send logic not implemented |
-| 3 | Fixtures | Page Definition + Report not yet added to `hooks.py` fixtures |
+| 1 | Drag-and-drop actions | `Page Drag Action` fields defined; renderer not implemented |
+| 2 | Fixtures | Page Definition + Report not yet added to `hooks.py` fixtures |
+| 3 | Update tag picker to use Field Tag registry | Done — reads from `field_tags` child table |
 
 ---
 
-## 15. Installation
+## 17. Installation
 
 ```bash
 cd $PATH_TO_YOUR_BENCH
