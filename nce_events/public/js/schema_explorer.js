@@ -7,6 +7,28 @@
 	var _float_el = null;
 	var _columns = [];
 	var _visited = {};
+	var _last_editable = null;
+	var _last_sel_start = 0;
+	var _last_sel_end = 0;
+
+	$(document).on("focusin.se_track", function (e) {
+		var el = e.target;
+		if ($(el).closest(".se-float, .se-tag-panel").length) return;
+		var tag = (el.tagName || "").toLowerCase();
+		if (tag === "textarea" || (tag === "input" && el.type === "text") ||
+			el.contentEditable === "true") {
+			_last_editable = el;
+			_last_sel_start = el.selectionStart || 0;
+			_last_sel_end = el.selectionEnd || 0;
+		}
+	});
+
+	$(document).on("mouseup.se_track keyup.se_track", function (e) {
+		if (_last_editable && _last_editable === e.target) {
+			_last_sel_start = _last_editable.selectionStart || 0;
+			_last_sel_end = _last_editable.selectionEnd || 0;
+		}
+	});
 
 	var SKIP_FIELDTYPES = {
 		"Section Break": 1, "Column Break": 1, "Tab Break": 1,
@@ -488,7 +510,8 @@
 			'<div class="se-tag-lbl">Tag</div>' +
 			'<pre class="se-tag-pre">' +
 			frappe.utils.escape_html(base_tag) + '</pre>' +
-			'<div style="margin-top:10px;text-align:right;">' +
+			'<div style="margin-top:10px;display:flex;justify-content:flex-end;gap:6px;">' +
+			'<button class="btn btn-default btn-sm se-insert-btn">Insert at Cursor</button>' +
 			'<button class="btn btn-primary btn-sm se-copy-btn">Copy to Clipboard</button>' +
 			'</div>' +
 			'</div>' +
@@ -522,6 +545,16 @@
 			sel.addRange(range);
 		});
 
+		$panel.find(".se-insert-btn").on("click", function () {
+			var current_tag = $pre.text();
+			if (!_last_editable) {
+				frappe.show_alert({ message: __("Click into a text field first"), indicator: "orange" });
+				return;
+			}
+			_insert_at_cursor(_last_editable, current_tag);
+			frappe.show_alert({ message: __("Tag inserted"), indicator: "green" });
+		});
+
 		$panel.find(".se-copy-btn").on("click", function () {
 			var current_tag = $pre.text();
 			if (navigator.clipboard) {
@@ -538,6 +571,26 @@
 		});
 
 		_make_draggable($panel, $header);
+	}
+
+	function _insert_at_cursor(el, text) {
+		var tag = (el.tagName || "").toLowerCase();
+		if (tag === "textarea" || tag === "input") {
+			var start = _last_sel_start;
+			var end = _last_sel_end;
+			var val = el.value || "";
+			el.value = val.substring(0, start) + text + val.substring(end);
+			var new_pos = start + text.length;
+			el.selectionStart = new_pos;
+			el.selectionEnd = new_pos;
+			el.focus();
+			$(el).trigger("change").trigger("input");
+			_last_sel_start = new_pos;
+			_last_sel_end = new_pos;
+		} else if (el.contentEditable === "true") {
+			el.focus();
+			document.execCommand("insertText", false, text);
+		}
 	}
 
 	function _clipboard_fallback(text) {
