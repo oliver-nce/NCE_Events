@@ -542,12 +542,7 @@ def send_panel_message(
 				email_addr = str(context.get(email_field, "")).strip()
 				if email_addr:
 					try:
-						frappe.sendmail(
-							recipients=[email_addr],
-							subject=rendered_subject or "SMS Copy",
-							message=rendered_body,
-							now=True,
-						)
+						_send_email(email_addr, rendered_subject or "SMS Copy", rendered_body)
 					except Exception as e:
 						errors.append(f"Email to {email_addr}: {e}")
 
@@ -555,12 +550,7 @@ def send_panel_message(
 			email_addr = recipient
 			if email_addr:
 				try:
-					frappe.sendmail(
-						recipients=[email_addr],
-						subject=rendered_subject or "(No Subject)",
-						message=rendered_body,
-						now=True,
-					)
+					_send_email(email_addr, rendered_subject or "(No Subject)", rendered_body)
 					sent += 1
 				except Exception as e:
 					errors.append(f"Email to {email_addr}: {e}")
@@ -597,6 +587,36 @@ def _send_sms(phone, message):
 
 	if resp.status_code not in (200, 201):
 		frappe.throw(_(f"Twilio error {resp.status_code}: {resp.text}"))
+
+
+def _send_email(to_email, subject, body):
+	"""Send an email via SendGrid using credentials from API Connector."""
+	import requests
+
+	connector = frappe.get_doc("API Connector", "SendGrid")
+	api_key = connector.get_password("password")
+	from_email = (connector.username or "").strip()
+
+	if not from_email:
+		frappe.throw(_("No from-email configured. Set the username on the SendGrid API Connector."))
+
+	resp = requests.post(
+		"https://api.sendgrid.com/v3/mail/send",
+		headers={
+			"Authorization": f"Bearer {api_key}",
+			"Content-Type": "application/json",
+		},
+		json={
+			"personalizations": [{"to": [{"email": to_email}]}],
+			"from": {"email": from_email},
+			"subject": subject,
+			"content": [{"type": "text/html", "value": body}],
+		},
+		timeout=15,
+	)
+
+	if resp.status_code not in (200, 201, 202):
+		frappe.throw(_(f"SendGrid error {resp.status_code}: {resp.text}"))
 
 
 # ── Field tag rebuild (Messaging Configuration) ──
