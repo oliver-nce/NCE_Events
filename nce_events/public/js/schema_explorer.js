@@ -74,7 +74,7 @@
 					reqd: 1,
 				}], function (values) {
 					_open_explorer(values.doctype);
-				}, __("Schema Explorer"), __("Open"));
+				}, __("Tag Finder"), __("Open"));
 			},
 		});
 	}
@@ -100,7 +100,7 @@
 
 		var $header = $(
 			'<div class="se-header">' +
-			'<span class="se-title">Schema Explorer: ' +
+			'<span class="se-title">Tag Finder: ' +
 			frappe.utils.escape_html(doctype) + '</span>' +
 			'<button class="se-close">&times;</button>' +
 			'</div>'
@@ -111,7 +111,7 @@
 		$float.append($body);
 
 		var $footer = $(
-			'<div class="se-footer">Schema Explorer: ' +
+			'<div class="se-footer">Tag Finder: ' +
 			frappe.utils.escape_html(doctype) + '</div>'
 		);
 		$float.append($footer);

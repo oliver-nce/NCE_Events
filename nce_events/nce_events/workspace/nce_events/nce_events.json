@@ -1,6 +1,6 @@
 {
  "charts": [],
- "content": "[{\"id\": \"hdr_pages\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Pages</b></span>\", \"col\": 12}}, {\"id\": \"panel_view_shortcut\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Panel View\", \"col\": 4}}, {\"id\": \"explorer_shortcut\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Event Explorer (Legacy)\", \"col\": 4}}, {\"id\": \"hdr_tools\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Tools</b></span>\", \"col\": 12}}, {\"id\": \"schema_explorer_shortcut\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Schema Explorer\", \"col\": 4}}, {\"id\": \"hdr_config\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Configuration</b></span>\", \"col\": 12}}, {\"id\": \"page_definition_shortcut\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Page Definition\", \"col\": 4}}]",
+ "content": "[{\"id\": \"hdr_pages\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Pages</b></span>\", \"col\": 12}}, {\"id\": \"panel_view_shortcut\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Panel View\", \"col\": 4}}, {\"id\": \"explorer_shortcut\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Event Explorer (Legacy)\", \"col\": 4}}, {\"id\": \"hdr_tools\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Tools</b></span>\", \"col\": 12}}, {\"id\": \"schema_explorer_shortcut\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Tag Finder\", \"col\": 4}}, {\"id\": \"hdr_config\", \"type\": \"header\", \"data\": {\"text\": \"<span class=\\\"h4\\\"><b>Configuration</b></span>\", \"col\": 12}}, {\"id\": \"page_definition_shortcut\", \"type\": \"shortcut\", \"data\": {\"shortcut_name\": \"Page Definition\", \"col\": 4}}]",
  "creation": "2026-02-21 00:00:00.000000",
  "custom_blocks": [],
  "docstatus": 0,
@@ -42,7 +42,7 @@
   {
    "color": "Orange",
    "doc_view": "",
-   "label": "Schema Explorer",
+   "label": "Tag Finder",
    "link_to": "schema-explorer",
    "type": "Page"
   },

@@ -10,7 +10,7 @@ A multi-panel data explorer for NCE soccer operations. Users see floating window
 
 A **Messaging Configuration** DocType provides a tag registry for Jinja2 template tags, used by the Email Template tag picker.
 
-A **Schema Explorer** is a floating Miller columns tool that displays any DocType's fields as tiles, drills into Link/Table relationships, and generates paste-ready Jinja2 tags with hop-aware syntax (`doc.field`, `get_value`, nested hops, `for` loops). Tag panels are non-modal, draggable, and support a fallback value input (`| default('...')`).
+A **Tag Finder** (formerly Schema Explorer) is a floating Miller columns tool that displays any DocType's fields as tiles, drills into Link/Table relationships, and generates paste-ready Jinja2 tags with hop-aware syntax (`doc.field`, `get_value`, nested hops, `for` loops). Tag panels are non-modal, draggable, and support a fallback value input (`| default('...')`).
 
 **Dependency:** requires the [nce_sync](https://github.com/oliver-nce/NCE_Sync) app (provides DocTypes, WP Tables mappings, and WordPress data sync).
 
@@ -42,7 +42,7 @@ nce_events/
 │   │   └── neutral_tag/             # Child table of Messaging Configuration
 │   ├── page/
 │   │   ├── page_view/               # Router — single shared page for all pages
-│   │   ├── schema_explorer/         # Launcher page for Schema Explorer tool
+│   │   ├── schema_explorer/         # Launcher page for Tag Finder tool
 │   │   └── hierarchy_explorer/      # Legacy hierarchy explorer (frozen)
 │   └── workspace/nce_events/        # Workspace with shortcuts
 ├── public/
@@ -54,7 +54,7 @@ nce_events/
 │       │   ├── ui.js                # Explorer renderer (floating windows, sheets, SMS/email)
 │       │   └── store.js             # Store state management
 │       ├── email_template_tags.js   # Tag picker for Email Template form
-│       ├── schema_explorer.js      # Schema Explorer — Miller columns tag generator
+│       ├── schema_explorer.js      # Tag Finder — Miller columns tag generator
 │       └── hierarchy_explorer/      # Legacy JS (frozen)
 ├── patches/v0_0_2/                  # Migration patches
 └── utils/version.py
@@ -340,7 +340,7 @@ Bold and gender colors use **inline styles** on `<th>` and `<td>`. This is neces
 
 ---
 
-## 11. Schema Explorer
+## 11. Tag Finder
 
 `nce_events/public/js/schema_explorer.js` — loaded globally via `app_include_js`.
 
@@ -463,8 +463,8 @@ Key color tokens from `Docs/nce_theme.json`:
 | 1 | Drag-and-drop actions | `Page Drag Action` fields defined; renderer not implemented |
 | 2 | Fixtures | Page Definition + Report not yet added to `hooks.py` fixtures |
 | 3 | Update tag picker to use Field Tag registry | Done — reads from `field_tags` child table |
-| 4 | Schema Explorer v1 | Done — Miller columns, tag generation, fallback values, workspace shortcut |
-| 5 | Schema Explorer: clipboard/cursor insert | Future — copy to clipboard on click, insert at cursor in Email Template/SMS editors |
+| 4 | Tag Finder v1 | Done — Miller columns, tag generation, fallback values, workspace shortcut |
+| 5 | Tag Finder: clipboard/cursor insert | Future — copy to clipboard on click, insert at cursor in Email Template/SMS editors |
 
 ---
 
