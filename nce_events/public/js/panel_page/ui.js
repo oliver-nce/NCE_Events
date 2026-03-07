@@ -533,6 +533,11 @@ nce_events.panel_page.Explorer = class Explorer {
 					var v = d.get_value("source");
 					d.fields_dict.message.$wrapper.toggle(v === "Type a message");
 					d.fields_dict.template.$wrapper.toggle(v === "Use Email Template");
+					if (v === "Type a message") {
+						nce_events.schema_explorer.open(doctype);
+					} else {
+						nce_events.schema_explorer.close();
+					}
 				  }},
 				{ fieldname: "message", fieldtype: "Small Text", label: __("Message"),
 				  description: __("Jinja2 tags supported. Sent to all {0} rows.", [count]) },
@@ -563,9 +568,13 @@ nce_events.panel_page.Explorer = class Explorer {
 				if (!body.trim()) { frappe.msgprint(__("Enter a message or select a template.")); return; }
 				me._do_send(doctype, mode, recipient_field, body, subject, vals.send_email_copy, config.email_field, d);
 			},
+			on_hide: function () {
+				nce_events.schema_explorer.close();
+			},
 		});
 		d.fields_dict.template.$wrapper.hide();
 		d.show();
+		nce_events.schema_explorer.open(doctype);
 	}
 
 	_do_send(doctype, mode, recipient_field, body, subject, send_email_copy, email_field, dialog) {

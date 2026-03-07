@@ -29,6 +29,16 @@
 		}
 	};
 
+	nce_events.schema_explorer.close = function () {
+		if (_float_el) {
+			_float_el.remove();
+			_float_el = null;
+			_columns = [];
+			_visited = {};
+		}
+		$(".se-tag-panel").remove();
+	};
+
 	/* ── DocType Picker (limited to WP Tables) ──────────── */
 
 	function _prompt_doctype() {
