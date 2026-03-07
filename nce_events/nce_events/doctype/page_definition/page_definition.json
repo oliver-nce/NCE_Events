@@ -12,9 +12,7 @@
   "male_hex",
   "female_hex",
   "section_break_panels",
-  "panels",
-  "section_break_drag_actions",
-  "drag_actions"
+  "panels"
  ],
  "fields": [
   {
@@ -66,22 +64,10 @@
    "label": "Panels",
    "options": "Page Panel",
    "reqd": 1
-  },
-  {
-   "collapsible": 1,
-   "fieldname": "section_break_drag_actions",
-   "fieldtype": "Section Break",
-   "label": "Drag Actions"
-  },
-  {
-   "fieldname": "drag_actions",
-   "fieldtype": "Table",
-   "label": "Drag Actions",
-   "options": "Page Drag Action"
   }
  ],
  "links": [],
- "modified": "2026-03-01 00:00:00.000000",
+ "modified": "2026-03-07 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "NCE Events",
  "name": "Page Definition",

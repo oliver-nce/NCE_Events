@@ -18,14 +18,11 @@ def get_page_config(page_name):
 		panels.append({
 			"panel_number": p.panel_number,
 			"header_text": p.header_text,
-			"report_name": p.report_name,
 			"root_doctype": p.root_doctype,
-			"where_clause": p.where_clause,
-			"hidden_fields": _parse_csv(p.hidden_fields),
+			"column_order": _parse_csv(p.column_order),
 			"bold_fields": _parse_csv(p.bold_fields),
-			"card_fields": _parse_csv(p.card_fields),
-			"male_field": (p.male_field or "").strip(),
-			"female_field": (p.female_field or "").strip(),
+			"gender_column": (p.gender_column or "").strip(),
+			"gender_color_fields": _parse_csv(p.gender_color_fields),
 			"show_filter": p.show_filter,
 			"show_sheets": p.show_sheets,
 			"show_email": p.show_email,
@@ -34,14 +31,6 @@ def get_page_config(page_name):
 			"sms_field": (p.sms_field or "").strip(),
 			"show_card_email": p.show_card_email,
 			"show_card_sms": p.show_card_sms,
-			"button_1_name": p.button_1_name,
-			"button_1_code": p.button_1_code,
-			"button_2_name": p.button_2_name,
-			"button_2_code": p.button_2_code,
-			"header_overrides": _parse_json(p.header_overrides),
-			"column_order": _parse_csv(p.column_order),
-			"gender_column": (p.gender_column or "").strip(),
-			"gender_color_fields": _parse_csv(p.gender_color_fields),
 		})
 
 	return {
@@ -55,12 +44,54 @@ def get_page_config(page_name):
 
 @frappe.whitelist()
 def get_panel_data(page_name, panel_number, selections=None):
-	"""Execute the Query Report for a panel using Frappe's native report runner.
+	"""Fetch rows from a panel's DocType with automatic Link-based inter-panel filtering."""
+	panel_number = int(panel_number)
 
-	Inter-panel filtering is applied Python-side after the report runs.
-	No pagination — all matching rows are returned.
-	"""
-	columns, rows = _run_panel_report(page_name, int(panel_number), selections)
+	if isinstance(selections, str):
+		selections = json.loads(selections) if selections else {}
+	selections = selections or {}
+
+	doc = frappe.get_doc("Page Definition", page_name)
+
+	panel = None
+	prev_panel = None
+	for p in sorted(doc.panels, key=lambda x: x.panel_number):
+		if p.panel_number == panel_number:
+			panel = p
+			break
+		prev_panel = p
+
+	if not panel:
+		frappe.throw(_("Panel {0} not found in page {1}").format(panel_number, page_name))
+
+	if not panel.root_doctype:
+		frappe.throw(_("Panel {0} has no DocType configured").format(panel_number))
+
+	fields = _parse_csv(panel.column_order)
+	if not fields:
+		fields = ["name"]
+	elif "name" not in fields:
+		fields = ["name"] + fields
+
+	filters = {}
+	prev_sel = selections.get(str(prev_panel.panel_number)) if prev_panel else {}
+	if prev_sel and prev_panel and prev_panel.root_doctype:
+		link_field = _find_link_field(panel.root_doctype, prev_panel.root_doctype)
+		if link_field and prev_sel.get("name"):
+			filters[link_field] = prev_sel["name"]
+
+	rows = frappe.get_all(
+		panel.root_doctype,
+		fields=fields,
+		filters=filters,
+		order_by="name asc",
+		limit_page_length=0,
+	)
+
+	columns = []
+	for fn in fields:
+		columns.append({"fieldname": fn, "label": _title_case(fn)})
+
 	return {
 		"columns": columns,
 		"rows": rows,
@@ -74,8 +105,9 @@ _ROSTER_HASH = "wwe78f6q87ey97f86q9e8fqw98ef"
 @frappe.whitelist()
 def export_panel_data(page_name, panel_number, selections=None):
 	"""Export a panel's current data as CSV to a public path and return its URL."""
-	panel_number = int(panel_number)
-	columns, rows = _run_panel_report(page_name, panel_number, selections)
+	result = get_panel_data(page_name, int(panel_number), selections)
+	columns = result["columns"]
+	rows = result["rows"]
 
 	col_fieldnames = [c["fieldname"] for c in columns]
 	labels = [c["label"] for c in columns]
@@ -105,61 +137,7 @@ def export_panel_data(page_name, panel_number, selections=None):
 	}
 
 
-def _run_panel_report(page_name, panel_number, selections=None):
-	"""Shared logic: run a panel's report and apply inter-panel filtering.
-
-	Returns (columns, rows) where columns is [{fieldname, label}] and
-	rows is a list of frappe._dict.
-	"""
-	panel_number = int(panel_number)
-
-	if isinstance(selections, str):
-		selections = json.loads(selections) if selections else {}
-	selections = selections or {}
-
-	doc = frappe.get_doc("Page Definition", page_name)
-
-	panel = None
-	prev_panel = None
-	for p in sorted(doc.panels, key=lambda x: x.panel_number):
-		if p.panel_number == panel_number:
-			panel = p
-			break
-		prev_panel = p
-
-	if not panel:
-		frappe.throw(_("Panel {0} not found in page {1}").format(panel_number, page_name))
-
-	from frappe.desk.query_report import run as _run_report
-	result = _run_report(report_name=panel.report_name, filters={}, user=frappe.session.user)
-	raw_columns = result.get("columns") or []
-	raw_data = result.get("result") or []
-
-	columns = _parse_report_column_defs(raw_columns)
-	col_fieldnames = [c["fieldname"] for c in columns]
-
-	if raw_data and isinstance(raw_data[0], (list, tuple)):
-		rows = [frappe._dict(zip(col_fieldnames, row)) for row in raw_data]
-	else:
-		rows = [frappe._dict(row) if not isinstance(row, frappe._dict) else row for row in raw_data]
-
-	prev_sel = selections.get(str(prev_panel.panel_number)) if prev_panel else {}
-	if prev_sel:
-		if panel.where_clause:
-			rows = _apply_python_filter(rows, panel.where_clause, selections)
-		elif panel.root_doctype and prev_panel and prev_panel.root_doctype:
-			link_field = _find_link_field(panel.root_doctype, prev_panel.root_doctype)
-			if link_field and prev_sel.get("name"):
-				filter_val = str(prev_sel["name"])
-				rows = [r for r in rows if str(r.get(link_field, "")) == filter_val]
-
-	return columns, rows
-
-
 # ── Internal helpers ──
-
-
-_WHERE_REF_RE = re.compile(r"\{panel_(\d+)\.(\w+)\}")
 
 
 def _find_link_field(doctype, target_doctype):
@@ -174,49 +152,6 @@ def _find_link_field(doctype, target_doctype):
 	return None
 
 
-def _parse_report_column_defs(columns):
-	"""Parse Frappe report column definitions into [{fieldname, label}]."""
-	result = []
-	for c in columns:
-		if isinstance(c, dict):
-			fn = c.get("fieldname") or c.get("field") or ""
-			label = c.get("label") or _title_case(fn)
-		elif isinstance(c, str):
-			parts = c.split(":")
-			fn = parts[0].strip()
-			label = parts[1].strip() if len(parts) > 1 else _title_case(fn)
-		else:
-			fn = str(c)
-			label = _title_case(fn)
-		result.append({"fieldname": fn, "label": label})
-	return result
-
-
-def _apply_python_filter(rows, where_clause, selections):
-	"""Apply a simple {panel_N.fieldname} = value WHERE clause Python-side.
-
-	Handles basic equality patterns: `field = {panel_N.fieldname}`.
-	Complex expressions should be embedded directly in the report SQL.
-	"""
-	def _get_val(match):
-		panel_num, field = match.group(1), match.group(2)
-		return str((selections.get(str(panel_num)) or {}).get(field, ""))
-
-	def _row_matches(row):
-		clause = _WHERE_REF_RE.sub(_get_val, where_clause)
-		# Evaluate simple `field op value` patterns
-		for m in re.finditer(r'(\w+)\s*(=|!=|>|<)\s*[\'"]?([^\'"]+)[\'"]?', clause):
-			field, op, val = m.group(1), m.group(2), m.group(3).strip()
-			cell = str(row.get(field, ""))
-			if op == "=" and cell != val: return False
-			if op == "!=" and cell == val: return False
-			if op == ">" and not (float(cell or 0) > float(val or 0)): return False
-			if op == "<" and not (float(cell or 0) < float(val or 0)): return False
-		return True
-
-	return [r for r in rows if _row_matches(r)]
-
-
 def _title_case(fieldname):
 	return fieldname.replace("_", " ").title()
 
@@ -224,6 +159,9 @@ def _title_case(fieldname):
 def _safe_filename(value):
 	"""Sanitize a string for use as a filesystem filename component."""
 	return "".join(c if c.isalnum() or c in "-_" else "_" for c in str(value))
+
+
+# ── Report / translator utilities (used elsewhere) ──
 
 
 @frappe.whitelist()
@@ -264,8 +202,7 @@ def translate_wp_query(wp_query):
 	translated = wp_query
 	warnings = []
 
-	# Pre-build per-table column maps
-	table_col_maps = {}   # wp_table_name -> {wp_col: frappe_field}
+	table_col_maps = {}
 	for wt in wp_tables:
 		tname = wt.get("table_name")
 		if not tname or not wt.get("frappe_doctype"):
@@ -278,7 +215,6 @@ def translate_wp_query(wp_query):
 			resolved = {}
 			for wp_col, col_info in col_map.items():
 				if isinstance(col_info, dict):
-					# is_name:true means this WP column is the PK → Frappe primary key = "name"
 					if col_info.get("is_name"):
 						resolved[str(wp_col)] = "name"
 					else:
@@ -291,7 +227,7 @@ def translate_wp_query(wp_query):
 		except Exception as exc:
 			warnings.append("Could not parse column_mapping for {0}: {1}".format(tname, str(exc)))
 
-	# ── Pass 1: qualified table.column → `tabFrappe`.frappe_field  (no cascade risk) ──
+	# Pass 1: qualified table.column
 	qualified_map = {}
 	for wt in wp_tables:
 		tname = wt.get("table_name")
@@ -308,7 +244,7 @@ def translate_wp_query(wp_query):
 		q_pattern = '|'.join(re.escape(k) for k in sorted_q)
 		translated = re.sub(q_pattern, lambda m: qualified_map.get(m.group(0), m.group(0)), translated, flags=re.IGNORECASE)
 
-	# ── Pass 2: bare WP table names ──
+	# Pass 2: bare WP table names
 	for wt in wp_tables:
 		tname = wt.get("table_name")
 		frappe_doctype = wt.get("frappe_doctype")
@@ -317,7 +253,7 @@ def translate_wp_query(wp_query):
 		frappe_table = "`tab" + frappe_doctype + "`"
 		translated = re.sub(r'\b' + re.escape(tname) + r'\b', frappe_table, translated, flags=re.IGNORECASE)
 
-	# ── Pass 3: remaining bare column names — single pass, longest key first ──
+	# Pass 3: remaining bare column names
 	all_col_map = {}
 	for col_map in table_col_maps.values():
 		for wp_col, frappe_col in col_map.items():
@@ -326,7 +262,6 @@ def translate_wp_query(wp_query):
 
 	if all_col_map:
 		sorted_keys = sorted(all_col_map.keys(), key=len, reverse=True)
-		# (?<!\.) skips already-qualified Frappe fields like `tabEvents`.name
 		combined = r'(?<!\.)\b(' + '|'.join(re.escape(k) for k in sorted_keys) + r')\b'
 		translated = re.sub(combined, lambda m: all_col_map.get(m.group(1), m.group(1)), translated)
 
@@ -335,17 +270,31 @@ def translate_wp_query(wp_query):
 
 @frappe.whitelist()
 def get_report_columns(report_name):
-	"""Return the column fieldnames for a Query Report, using the same parsing
-	path as get_panel_data so names are guaranteed to match at runtime."""
-	try:
-		from frappe.desk.query_report import run as _run_report
-		result = _run_report(report_name=report_name, filters={}, user=frappe.session.user)
-		raw_columns = result.get("columns") or []
-		columns = _parse_report_column_defs(raw_columns)
-		return [c["fieldname"] for c in columns]
-	except Exception as e:
-		frappe.log_error(str(e), "get_report_columns")
-	return []
+	"""Return column definitions from a Query Report with proper labels."""
+	report = frappe.get_doc("Report", report_name)
+	if report.report_type != "Query Report":
+		frappe.throw(_("{0} is not a Query Report").format(report_name))
+
+	result = frappe.desk.query_report.run(report_name, filters={})
+	raw_columns = result.get("columns", [])
+
+	out = []
+	for c in raw_columns:
+		if isinstance(c, dict):
+			fn = c.get("fieldname") or c.get("field") or ""
+			label = c.get("label") or _title_case(fn)
+		elif isinstance(c, str):
+			parts = c.split(":")
+			label = parts[0].strip()
+			fn = label.lower().replace(" ", "_")
+		else:
+			fn = str(c)
+			label = _title_case(fn)
+		out.append({"fieldname": fn, "label": label})
+	return out
+
+
+# ── Page / workspace utilities ──
 
 
 @frappe.whitelist()
@@ -373,7 +322,6 @@ def _ensure_workspace_shortcut(page_name, page_title):
 		workspace = frappe.get_doc("Workspace", "NCE Events")
 		page_url = f"/app/page-view/{page_name}"
 
-		# Update existing shortcut if already present
 		for s in workspace.shortcuts:
 			if s.get("url") == page_url:
 				s.label = page_title
@@ -381,15 +329,12 @@ def _ensure_workspace_shortcut(page_name, page_title):
 				frappe.clear_cache()
 				return
 
-		# Add to shortcuts child table
 		workspace.append("shortcuts", {
 			"label": page_title,
 			"type": "URL",
 			"url": page_url,
 		})
 
-		# Also inject a shortcut block into the content JSON — the workspace
-		# page renders from content, not the child table alone.
 		try:
 			content = json.loads(workspace.content or "[]")
 		except (json.JSONDecodeError, TypeError):
@@ -411,6 +356,9 @@ def _ensure_workspace_shortcut(page_name, page_title):
 		frappe.throw(_(f"Shortcut creation failed: {e}"))
 
 
+# ── Messaging ──
+
+
 @frappe.whitelist()
 def send_panel_message(
 	page_name, panel_number, selections=None, mode="sms",
@@ -422,7 +370,9 @@ def send_panel_message(
 
 	panel_number = int(panel_number)
 	send_email_copy = int(send_email_copy)
-	columns, rows = _run_panel_report(page_name, panel_number, selections)
+	result = get_panel_data(page_name, panel_number, selections)
+	columns = result["columns"]
+	rows = result["rows"]
 	col_fieldnames = [c["fieldname"] for c in columns]
 
 	sent = 0
@@ -512,6 +462,9 @@ def _send_sms(phone, message):
 		frappe.throw(_(f"Twilio error {resp.status_code}: {resp.text}"))
 
 
+# ── Field tag rebuild (Messaging Configuration) ──
+
+
 _DEFAULT_SYNTHETICS = [
 	{"field_name": "he_she", "label": "He/She (lower)", "male_value": "he", "female_value": "she"},
 	{"field_name": "he_she_cap", "label": "He/She", "male_value": "He", "female_value": "She"},
@@ -528,7 +481,6 @@ _SKIP_FIELDNAMES = frozenset({
 	"name", "owner", "creation", "modified", "modified_by",
 	"docstatus", "idx", "parent", "parentfield", "parenttype",
 })
-
 
 
 @frappe.whitelist()
@@ -670,32 +622,6 @@ def _compute_jinja_tag(field_name, male_value, female_value, gender_field):
 			+ "{{% endif %}}"
 		)
 	return "{{ " + field_name + " }}"
-
-
-@frappe.whitelist()
-def get_report_columns(report_name):
-	"""Return column definitions from a Query Report with proper labels."""
-	report = frappe.get_doc("Report", report_name)
-	if report.report_type != "Query Report":
-		frappe.throw(_("{0} is not a Query Report").format(report_name))
-
-	result = frappe.desk.query_report.run(report_name, filters={})
-	raw_columns = result.get("columns", [])
-
-	out = []
-	for c in raw_columns:
-		if isinstance(c, dict):
-			fn = c.get("fieldname") or c.get("field") or ""
-			label = c.get("label") or _title_case(fn)
-		elif isinstance(c, str):
-			parts = c.split(":")
-			label = parts[0].strip()
-			fn = label.lower().replace(" ", "_")
-		else:
-			fn = str(c)
-			label = _title_case(fn)
-		out.append({"fieldname": fn, "label": label})
-	return out
 
 
 def _parse_csv(value):

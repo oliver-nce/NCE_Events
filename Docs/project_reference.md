@@ -10,6 +10,8 @@ A multi-panel data explorer for NCE soccer operations. Users see floating window
 
 A **Messaging Configuration** DocType provides a tag registry for Jinja2 template tags, used by the Email Template tag picker.
 
+A **Schema Explorer** is a floating Miller columns tool that displays any DocType's fields as tiles, drills into Link/Table relationships, and generates paste-ready Jinja2 tags with hop-aware syntax (`doc.field`, `get_value`, nested hops, `for` loops). Tag panels are non-modal, draggable, and support a fallback value input (`| default('...')`).
+
 **Dependency:** requires the [nce_sync](https://github.com/oliver-nce/NCE_Sync) app (provides DocTypes, WP Tables mappings, and WordPress data sync).
 
 ---
@@ -40,6 +42,7 @@ nce_events/
 │   │   └── neutral_tag/             # Child table of Messaging Configuration
 │   ├── page/
 │   │   ├── page_view/               # Router — single shared page for all pages
+│   │   ├── schema_explorer/         # Launcher page for Schema Explorer tool
 │   │   └── hierarchy_explorer/      # Legacy hierarchy explorer (frozen)
 │   └── workspace/nce_events/        # Workspace with shortcuts
 ├── public/
@@ -51,6 +54,7 @@ nce_events/
 │       │   ├── ui.js                # Explorer renderer (floating windows, sheets, SMS/email)
 │       │   └── store.js             # Store state management
 │       ├── email_template_tags.js   # Tag picker for Email Template form
+│       ├── schema_explorer.js      # Schema Explorer — Miller columns tag generator
 │       └── hierarchy_explorer/      # Legacy JS (frozen)
 ├── patches/v0_0_2/                  # Migration patches
 └── utils/version.py
@@ -336,7 +340,42 @@ Bold and gender colors use **inline styles** on `<th>` and `<td>`. This is neces
 
 ---
 
-## 11. Email Template Tag Picker
+## 11. Schema Explorer
+
+`nce_events/public/js/schema_explorer.js` — loaded globally via `app_include_js`.
+
+A floating Miller columns tool for exploring DocType schemas and generating Jinja2 tags. Workspace shortcut at `/app/schema-explorer`, or invoke from JS: `nce_events.schema_explorer.open("Registrations")` / `nce_events.schema_explorer.open()` (prompts from WP Tables list).
+
+### Miller Columns
+
+Each column shows a DocType's fields as tiles. Link fields (blue left border) and Table fields (amber left border) are drillable — clicking opens the target DocType as a new column to the right. Circular references (DocType already in the path) are greyed out and disabled. Columns scroll horizontally.
+
+### Tag Generation
+
+Clicking any non-link/non-table tile opens a **floating, draggable, non-modal tag panel** showing the field label, the full relationship path, and the generated Jinja2 tag. Multiple panels can be open simultaneously (cascade positioning, z-index management).
+
+Tag syntax is hop-aware:
+
+| Depth | Syntax |
+|---|---|
+| Direct field (depth 0) | `{{ doc.field_name }}` |
+| One-hop Link | `{{ frappe.db.get_value('LinkedDT', doc.link_field, 'target') }}` |
+| Two-hop Link | `{{ frappe.db.get_value('DT2', frappe.db.get_value('DT1', doc.link, 'link2'), 'field') }}` |
+| Three+ hops | `{% set %}` variable chain |
+| Table (child rows) | `{% for row in doc.table_field %}{{ row.field }}{% endfor %}` |
+| Link inside Table | `{% for row in doc.table %}{{ frappe.db.get_value(...) }}{% endfor %}` |
+
+### Fallback Value
+
+Each tag panel has a "Fallback Value" text input. Typing a value live-updates the tag with Jinja's `| default('value')` filter, e.g. `{{ doc.first_name | default('Student') }}`.
+
+### Styling
+
+Uses NCE theme tokens. Tiles have 1px blue borders, column dividers are blue (#A2CCF6). Tag panels match the explorer's visual style (blue header, same fonts). CSS is injected inline via `<style>` tag.
+
+---
+
+## 12. Email Template Tag Picker
 
 `nce_events/public/js/email_template_tags.js` — loaded via `doctype_js` hook on `Email Template`.
 
@@ -346,7 +385,7 @@ CSS is injected inline (via `<style>` tag) because `doctype_css` is not a workin
 
 ---
 
-## 12. Deployment
+## 13. Deployment
 
 - **Do not run bench commands** — the user runs `bench build`, `bench migrate`, `bench restart` on the server
 - Push code to GitHub; user pulls and builds on the server
@@ -355,7 +394,7 @@ CSS is injected inline (via `<style>` tag) because `doctype_css` is not a workin
 
 ---
 
-## 13. Database Access
+## 14. Database Access
 
 **WordPress source DB (db_nce_custom):**
 ```
@@ -371,7 +410,7 @@ All source tables begin with `nce_` (e.g. `nce_events`, `nce_registrations`). Th
 
 ---
 
-## 14. hooks.py
+## 15. hooks.py
 
 ```python
 app_name = "nce_events"
@@ -382,6 +421,8 @@ app_email = "oliver_reid@me.com"
 app_license = "mit"
 app_logo_url = "/assets/nce_events/images/logo.png"
 required_apps = ["nce_sync"]
+
+app_include_js = "/assets/nce_events/js/schema_explorer.js"
 
 doctype_js = {
     "Email Template": "public/js/email_template_tags.js",
@@ -395,7 +436,7 @@ add_to_apps_screen = [
 
 ---
 
-## 15. NCE Theme Tokens
+## 16. NCE Theme Tokens
 
 Key color tokens from `Docs/nce_theme.json`:
 
@@ -415,17 +456,19 @@ Key color tokens from `Docs/nce_theme.json`:
 
 ---
 
-## 16. Open Backlog
+## 17. Open Backlog
 
 | # | Item | Status |
 |---|---|---|
 | 1 | Drag-and-drop actions | `Page Drag Action` fields defined; renderer not implemented |
 | 2 | Fixtures | Page Definition + Report not yet added to `hooks.py` fixtures |
 | 3 | Update tag picker to use Field Tag registry | Done — reads from `field_tags` child table |
+| 4 | Schema Explorer v1 | Done — Miller columns, tag generation, fallback values, workspace shortcut |
+| 5 | Schema Explorer: clipboard/cursor insert | Future — copy to clipboard on click, insert at cursor in Email Template/SMS editors |
 
 ---
 
-## 17. Installation
+## 18. Installation
 
 ```bash
 cd $PATH_TO_YOUR_BENCH

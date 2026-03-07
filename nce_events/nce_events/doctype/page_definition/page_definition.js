@@ -1,49 +1,44 @@
-// ── Column cache ──────────────────────────────────────────────────────────────
-var _rpt_col_cache = {};
+// ── DocType field cache ───────────────────────────────────────────────────────
+var _dt_field_cache = {};
 
-function _get_report_columns(report_name, callback) {
-	if (_rpt_col_cache[report_name]) { callback(_rpt_col_cache[report_name]); return; }
+function _get_doctype_fields(doctype, callback) {
+	if (_dt_field_cache[doctype]) { callback(_dt_field_cache[doctype]); return; }
 	frappe.call({
-		method: "nce_events.api.panel_api.get_report_columns",
-		args: { report_name: report_name },
+		method: "frappe.client.get_list",
+		args: {
+			doctype: "DocField",
+			filters: { parent: doctype, fieldtype: ["not in", ["Section Break", "Column Break", "Tab Break", "HTML", "Fold", "Heading", "Button", "Table", "Table MultiSelect"]] },
+			fields: ["fieldname", "label", "fieldtype"],
+			order_by: "idx asc",
+			limit_page_length: 0,
+		},
 		callback: function (r) {
-			var cols = (r && r.message) ? r.message : [];
-			_rpt_col_cache[report_name] = cols;
-			callback(cols);
+			var fields = (r && r.message) || [];
+			var skip = { name: 1, owner: 1, creation: 1, modified: 1, modified_by: 1, docstatus: 1, idx: 1, parent: 1, parentfield: 1, parenttype: 1 };
+			fields = fields.filter(function (f) { return !skip[f.fieldname]; });
+			_dt_field_cache[doctype] = fields;
+			callback(fields);
 		},
 	});
 }
 
 // ── Tab definitions ───────────────────────────────────────────────────────────
 var TAB_GROUPS = {
-	basic:   ["panel_number", "header_text", "root_doctype", "where_clause"],
-	display: ["section_break_display", "hidden_fields", "bold_fields", "male_field",
-	          "column_break_display", "card_fields", "female_field", "header_overrides", "column_order",
-	          "gender_column", "gender_color_fields"],
-	widgets: ["section_break_header_widgets", "show_filter", "show_sheets",
-	          "column_break_header_widgets", "show_email", "show_sms",
-	          "section_break_card_actions", "show_card_email", "show_card_sms"],
-	buttons: ["section_break_buttons", "button_1_name", "button_1_code",
-	          "column_break_buttons", "button_2_name", "button_2_code"],
-	report:  ["report_name", "section_break_queries", "wp_query", "frappe_query"],
+	config: [
+		"panel_number", "header_text", "root_doctype",
+		"section_break_widgets", "show_filter", "show_sheets",
+		"column_break_widgets", "show_email", "show_sms",
+		"email_field", "sms_field",
+		"section_break_tile_actions", "show_card_email", "show_card_sms",
+	],
+	display: [],
 };
-var TAB_ORDER  = ["basic", "display", "widgets", "buttons", "report"];
-var TAB_LABELS = { basic: "Basic", display: "Display", widgets: "Widgets", buttons: "Buttons", report: "Report" };
-var ALL_PANEL_FIELDS = [].concat(
-	TAB_GROUPS.basic, TAB_GROUPS.display, TAB_GROUPS.widgets, TAB_GROUPS.buttons
-);
-// Native inputs replaced by the matrix — never shown directly
-var MATRIX_FIELDS = ["hidden_fields", "bold_fields", "card_fields", "male_field", "female_field", "header_overrides", "column_order", "gender_column", "gender_color_fields"];
-// Section-break / column-break fields Frappe still renders — always hide
-var BREAK_FIELDS = [
-	"section_break_display", "column_break_display",
-	"section_break_header_widgets", "column_break_header_widgets",
-	"section_break_card_actions",
-	"section_break_buttons", "column_break_buttons",
-	"section_break_queries",
-];
-// No report backing fields — wp_query and frappe_query show as native fields in the Report tab
-var REPORT_BACKING_FIELDS = [];
+var TAB_ORDER  = ["config", "display"];
+var TAB_LABELS = { config: "Config", display: "Display" };
+
+var ALL_PANEL_FIELDS = TAB_GROUPS.config.slice();
+var MATRIX_FIELDS = ["column_order", "bold_fields", "gender_column", "gender_color_fields"];
+var BREAK_FIELDS = ["section_break_widgets", "column_break_widgets", "section_break_tile_actions"];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function _get_grid_form(frm) {
@@ -53,7 +48,7 @@ function _get_grid_form(frm) {
 }
 
 function _hide_all_fields(grid_form) {
-	ALL_PANEL_FIELDS.forEach(function (fn) {
+	ALL_PANEL_FIELDS.concat(MATRIX_FIELDS).forEach(function (fn) {
 		var fd = grid_form.fields_dict[fn];
 		if (fd && fd.$wrapper) $(fd.$wrapper).hide();
 	});
@@ -62,27 +57,20 @@ function _hide_all_fields(grid_form) {
 function _show_tab(grid_form, tab_id) {
 	_hide_all_fields(grid_form);
 
-	// Always hide break fields (section/column breaks clutter the UI)
 	BREAK_FIELDS.forEach(function (fn) {
 		var fd = grid_form.fields_dict[fn];
 		if (fd && fd.$wrapper) $(fd.$wrapper).hide();
 	});
 
-	// Show fields for this tab, skipping matrix-backed, break, and report-backing fields
 	(TAB_GROUPS[tab_id] || []).forEach(function (fn) {
-		if (MATRIX_FIELDS.indexOf(fn) !== -1) return;
 		if (BREAK_FIELDS.indexOf(fn) !== -1) return;
-		if (REPORT_BACKING_FIELDS.indexOf(fn) !== -1) return;
 		var fd = grid_form.fields_dict[fn];
 		if (fd && fd.$wrapper) $(fd.$wrapper).show();
 	});
 
-	// Show/hide custom tab panels
 	var $wrap = $(grid_form.wrapper);
 	$wrap.find(".pp-matrix-wrap").toggle(tab_id === "display");
-	$wrap.find(".pp-report-tab").toggle(tab_id === "report");
 
-	// Update active tab button style
 	$wrap.find(".pp-tab-btn").css({ background: "", color: "", fontWeight: "" });
 	$wrap.find('.pp-tab-btn[data-tab="' + tab_id + '"]').css({
 		background: "#171717", color: "#fff", fontWeight: "600",
@@ -94,11 +82,9 @@ function _ensure_tab_bar(frm, cdt, cdn, grid_form) {
 	var $wrap = $(grid_form.wrapper);
 	if ($wrap.find(".pp-tab-bar").length) return;
 
-	// Anchor: insert tab bar right before the first field (panel_number)
 	var first_fd = grid_form.fields_dict["panel_number"];
 	if (!first_fd || !first_fd.$wrapper) return;
 
-	// Tab bar
 	var tab_html = '<div class="pp-tab-bar" style="display:flex;gap:4px;padding:6px 0 10px;margin-bottom:6px;border-bottom:1px solid #d1d8dd;">';
 	TAB_ORDER.forEach(function (tab_id) {
 		tab_html += '<button class="btn btn-xs btn-default pp-tab-btn" data-tab="' + tab_id + '" '
@@ -107,41 +93,31 @@ function _ensure_tab_bar(frm, cdt, cdn, grid_form) {
 	});
 	tab_html += '</div>';
 
-	// Matrix placeholder container (empty until Display tab clicked)
-	var $tab_bar    = $(tab_html);
+	var $tab_bar = $(tab_html);
 	var $matrix_wrap = $('<div class="pp-matrix-wrap" style="display:none;padding-bottom:8px;"></div>');
 
 	$(first_fd.$wrapper).before($tab_bar).before($matrix_wrap);
 
-	// Report tab placeholder (populated on first click)
-	var $report_tab = $('<div class="pp-report-tab" style="display:none;padding-bottom:8px;"></div>');
-	$(first_fd.$wrapper).before($report_tab);
-
-	// Wire tab clicks
 	$tab_bar.on("click", ".pp-tab-btn", function () {
 		var tab_id = $(this).data("tab");
 		_show_tab(grid_form, tab_id);
 		if (tab_id === "display") _render_matrix(frm, cdt, cdn);
-		if (tab_id === "report")  _render_report_tab(frm, cdt, cdn, grid_form);
 	});
 
-	// Hide all Frappe section headings — we use our own tabs instead
 	$(grid_form.wrapper).find(".section-head").hide();
-
-	// Start on Basic
-	_show_tab(grid_form, "basic");
+	_show_tab(grid_form, "config");
 }
 
-function _apply_column_order(columns, saved_order) {
-	if (!saved_order || !saved_order.length) return columns.slice();
+function _apply_column_order(fields, saved_order) {
+	if (!saved_order || !saved_order.length) return fields.slice();
 	var set = {};
-	columns.forEach(function (c) { set[c] = true; });
+	fields.forEach(function (f) { set[f.fieldname] = f; });
 	var ordered = [];
-	saved_order.forEach(function (c) {
-		if (set[c]) { ordered.push(c); delete set[c]; }
+	saved_order.forEach(function (fn) {
+		if (set[fn]) { ordered.push(set[fn]); delete set[fn]; }
 	});
-	columns.forEach(function (c) {
-		if (set[c]) ordered.push(c);
+	fields.forEach(function (f) {
+		if (set[f.fieldname]) ordered.push(f);
 	});
 	return ordered;
 }
@@ -149,76 +125,69 @@ function _apply_column_order(columns, saved_order) {
 // ── Matrix renderer ───────────────────────────────────────────────────────────
 function _render_matrix(frm, cdt, cdn) {
 	var row = locals[cdt][cdn];
-	if (!row || !row.report_name) return;
+	if (!row || !row.root_doctype) {
+		var grid_form = _get_grid_form(frm);
+		if (grid_form) {
+			$(grid_form.wrapper).find(".pp-matrix-wrap")
+				.html('<p style="color:#8d949a;font-size:12px;padding:8px 0;">Select a DocType in the Config tab first.</p>');
+		}
+		return;
+	}
 	var grid_form = _get_grid_form(frm);
 	if (!grid_form) return;
 	var $container = $(grid_form.wrapper).find(".pp-matrix-wrap");
 	if (!$container.length) return;
 
-	_get_report_columns(row.report_name, function (raw_columns) {
+	_get_doctype_fields(row.root_doctype, function (dt_fields) {
 		$container.empty();
 
 		function parse_csv(val) {
 			return ((val || "").split(",")).map(function (s) { return s.trim(); }).filter(Boolean);
 		}
-		var hidden = parse_csv(row.hidden_fields);
-		var bold   = parse_csv(row.bold_fields);
-		var card   = parse_csv(row.card_fields);
-		var male   = (row.male_field   || "").trim();
-		var female = (row.female_field || "").trim();
-		var gender_col   = (row.gender_column || "").trim();
-		var gender_tint  = parse_csv(row.gender_color_fields);
-
-		var overrides = {};
-		try { overrides = JSON.parse(row.header_overrides || "{}"); } catch (e) { /* ignore */ }
 
 		var saved_order = parse_csv(row.column_order);
-		var columns = _apply_column_order(raw_columns, saved_order);
+		var bold = parse_csv(row.bold_fields);
+		var gender_col = (row.gender_column || "").trim();
+		var gender_tint = parse_csv(row.gender_color_fields);
 
-		function _title_case(name) {
-			return name.replace(/_/g, " ").replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+		var fields = _apply_column_order(dt_fields, saved_order);
+
+		var shown_set = {};
+		if (saved_order.length) {
+			saved_order.forEach(function (fn) { shown_set[fn] = true; });
+		} else {
+			fields.forEach(function (f) { shown_set[f.fieldname] = true; });
 		}
 
 		var th_style = 'style="text-align:center;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;"';
-		var th_left  = 'style="text-align:left;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;"';
-		var th_grip  = 'style="width:24px;padding:4px;border-bottom:2px solid #d1d8dd;"';
+		var th_left = 'style="text-align:left;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;"';
+		var th_grip = 'style="width:24px;padding:4px;border-bottom:2px solid #d1d8dd;"';
 		var html = '<table style="width:100%;border-collapse:collapse;font-size:12px;">'
 			+ '<thead><tr>'
 			+ '<th ' + th_grip + '></th>'
 			+ '<th ' + th_left + '>Field</th>'
-			+ '<th ' + th_left + '>Default Header</th>'
-			+ '<th ' + th_left + '>Header</th>'
-			+ '<th ' + th_style + '>List</th>'
-			+ '<th ' + th_style + '>Card</th>'
+			+ '<th ' + th_left + '>Label</th>'
+			+ '<th ' + th_style + '>Show</th>'
 			+ '<th ' + th_style + '>Bold</th>'
-			+ '<th ' + th_style + '>Male</th>'
-			+ '<th ' + th_style + '>Female</th>'
 			+ '<th ' + th_style + '>Gender</th>'
 			+ '<th ' + th_style + '>Tint</th>'
 			+ '</tr></thead><tbody>';
 
-		columns.forEach(function (col, i) {
-			var bg  = i % 2 !== 0 ? ' style="background:#f8f9fa;"' : '';
-			var c   = frappe.utils.escape_html(col);
-			var default_header = _title_case(col);
-			var current_header = overrides[col] || "";
-			var td  = 'style="text-align:center;padding:4px 8px;"';
-			html += '<tr draggable="true" data-col="' + c + '"' + bg + '>'
+		fields.forEach(function (f, i) {
+			var fn = f.fieldname;
+			var label = f.label || fn.replace(/_/g, " ").replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+			var bg = i % 2 !== 0 ? ' style="background:#f8f9fa;"' : '';
+			var esc = frappe.utils.escape_html(fn);
+			var td = 'style="text-align:center;padding:4px 8px;"';
+			html += '<tr draggable="true" data-col="' + esc + '"' + bg + '>'
 				+ '<td style="padding:4px;text-align:center;cursor:grab;">'
-				+   '<span class="matrix-drag-handle" style="color:#b7babe;font-size:14px;">&#x2630;</span></td>'
-				+ '<td style="padding:4px 8px;color:#8d949a;font-size:11px;">' + c + '</td>'
-				+ '<td style="padding:4px 8px;color:#4c5a67;">' + frappe.utils.escape_html(default_header) + '</td>'
-				+ '<td style="padding:4px 8px;"><input type="text" data-col="' + c + '" data-role="header" '
-				+   'placeholder="' + frappe.utils.escape_html(default_header) + '" '
-				+   'value="' + frappe.utils.escape_html(current_header) + '" '
-				+   'style="width:100%;border:1px solid #d1d8dd;border-radius:3px;padding:2px 6px;font-size:12px;"></td>'
-				+ '<td ' + td + '><input type="checkbox" data-col="' + c + '" data-role="list"'   + (hidden.indexOf(col) === -1 ? " checked" : "") + '></td>'
-				+ '<td ' + td + '><input type="checkbox" data-col="' + c + '" data-role="card"'   + (card.indexOf(col)   !== -1 ? " checked" : "") + '></td>'
-				+ '<td ' + td + '><input type="checkbox" data-col="' + c + '" data-role="bold"'   + (bold.indexOf(col)   !== -1 ? " checked" : "") + '></td>'
-				+ '<td ' + td + '><input type="radio"    data-col="' + c + '" name="male_'   + cdn + '"' + (male   === col ? " checked" : "") + '></td>'
-				+ '<td ' + td + '><input type="radio"    data-col="' + c + '" name="female_' + cdn + '"' + (female === col ? " checked" : "") + '></td>'
-				+ '<td ' + td + '><input type="radio"    data-col="' + c + '" name="gender_col_' + cdn + '"' + (gender_col === col ? " checked" : "") + '></td>'
-				+ '<td ' + td + '><input type="checkbox" data-col="' + c + '" data-role="tint"' + (gender_tint.indexOf(col) !== -1 ? " checked" : "") + '></td>'
+				+ '<span class="matrix-drag-handle" style="color:#b7babe;font-size:14px;">&#x2630;</span></td>'
+				+ '<td style="padding:4px 8px;color:#8d949a;font-size:11px;">' + esc + '</td>'
+				+ '<td style="padding:4px 8px;color:#4c5a67;">' + frappe.utils.escape_html(label) + '</td>'
+				+ '<td ' + td + '><input type="checkbox" data-col="' + esc + '" data-role="show"' + (shown_set[fn] ? " checked" : "") + '></td>'
+				+ '<td ' + td + '><input type="checkbox" data-col="' + esc + '" data-role="bold"' + (bold.indexOf(fn) !== -1 ? " checked" : "") + '></td>'
+				+ '<td ' + td + '><input type="radio"    data-col="' + esc + '" name="gender_col_' + cdn + '"' + (gender_col === fn ? " checked" : "") + '></td>'
+				+ '<td ' + td + '><input type="checkbox" data-col="' + esc + '" data-role="tint"' + (gender_tint.indexOf(fn) !== -1 ? " checked" : "") + '></td>'
 				+ '</tr>';
 		});
 		html += '</tbody></table>';
@@ -243,12 +212,9 @@ function _render_matrix(frm, cdt, cdn) {
 		}).on("drop", function (e) {
 			e.preventDefault();
 			if (drag_src === this) return;
-			var $tbody = $matrix.find("tbody");
 			var $target = $(this);
 			var $src = $(drag_src);
-			var src_idx = $src.index();
-			var tgt_idx = $target.index();
-			if (src_idx < tgt_idx) {
+			if ($src.index() < $target.index()) {
 				$target.after($src);
 			} else {
 				$target.before($src);
@@ -264,49 +230,25 @@ function _render_matrix(frm, cdt, cdn) {
 			});
 		}
 
-		function _get_row_order() {
-			var order = [];
-			$matrix.find("tbody tr").each(function () {
-				order.push($(this).data("col"));
-			});
-			return order;
-		}
-
 		function _sync() {
-			var nh = [], nc = [], nb = [], nt = [], nm = "", nf = "", ngc = "";
-			var ho = {};
-			var order = _get_row_order();
-			order.forEach(function (col) {
+			var col_order = [], nb = [], nt = [], ngc = "";
+			$matrix.find("tbody tr").each(function () {
+				var col = $(this).data("col");
 				var esc = frappe.utils.escape_html(col);
 				var $r = $matrix.find('input[data-col="' + esc + '"]');
-				if (!$r.filter('[data-role="list"]').prop("checked")) nh.push(col);
-				if ($r.filter('[data-role="card"]').prop("checked"))  nc.push(col);
-				if ($r.filter('[data-role="bold"]').prop("checked"))  nb.push(col);
-				if ($r.filter('[data-role="tint"]').prop("checked"))  nt.push(col);
-				var hval = ($r.filter('[data-role="header"]').val() || "").trim();
-				if (hval) ho[col] = hval;
+				if ($r.filter('[data-role="show"]').prop("checked")) col_order.push(col);
+				if ($r.filter('[data-role="bold"]').prop("checked")) nb.push(col);
+				if ($r.filter('[data-role="tint"]').prop("checked")) nt.push(col);
 			});
-			var $mr = $matrix.find('input[name="male_'   + cdn + '"]:checked');
-			var $fr = $matrix.find('input[name="female_' + cdn + '"]:checked');
 			var $gc = $matrix.find('input[name="gender_col_' + cdn + '"]:checked');
-			if ($mr.length) nm = $mr.data("col");
-			if ($fr.length) nf = $fr.data("col");
 			if ($gc.length) ngc = $gc.data("col");
-			frappe.model.set_value(cdt, cdn, "hidden_fields", nh.join(", "));
-			frappe.model.set_value(cdt, cdn, "bold_fields",   nb.join(", "));
-			frappe.model.set_value(cdt, cdn, "card_fields",   nc.join(", "));
-			frappe.model.set_value(cdt, cdn, "male_field",    nm);
-			frappe.model.set_value(cdt, cdn, "female_field",  nf);
-			frappe.model.set_value(cdt, cdn, "header_overrides", Object.keys(ho).length ? JSON.stringify(ho) : "");
-			frappe.model.set_value(cdt, cdn, "column_order", order.join(", "));
+			frappe.model.set_value(cdt, cdn, "column_order", col_order.join(", "));
+			frappe.model.set_value(cdt, cdn, "bold_fields", nb.join(", "));
 			frappe.model.set_value(cdt, cdn, "gender_column", ngc);
 			frappe.model.set_value(cdt, cdn, "gender_color_fields", nt.join(", "));
 		}
+
 		$matrix.on("change", "input[type=checkbox], input[type=radio]", _sync);
-		$matrix.on("blur", 'input[data-role="header"]', _sync);
-		$matrix.on("mousedown", 'input[data-role="header"]', function (e) {
-			e.stopPropagation();
-		});
 
 		if (!document.getElementById("pp-matrix-drag-css")) {
 			$("head").append(
@@ -320,100 +262,6 @@ function _render_matrix(frm, cdt, cdn) {
 
 		$container.append($matrix);
 	});
-}
-
-// ── Report tab renderer ───────────────────────────────────────────────────────
-function _render_report_tab(frm, cdt, cdn, grid_form) {
-	var $container = $(grid_form.wrapper).find(".pp-report-tab");
-	if (!$container.length) return;
-	$container.empty();
-
-	var row = locals[cdt][cdn];
-	var report_name = (row && row.report_name) || "";
-
-	var report_link = report_name
-		? '<a href="/app/query-report/' + encodeURIComponent(report_name) + '" target="_blank" '
-		  + 'style="font-size:13px;font-weight:600;">'
-		  + frappe.utils.escape_html(report_name) + ' &nbsp;↗</a>'
-		: '<span style="color:#aaa;font-size:12px;">No report selected — set one in the Basic tab first.</span>';
-
-	var has_report  = !!report_name;
-	var create_label = has_report ? __("Update Report") : __("Create Report");
-
-	var $tab = $('<div style="padding:4px 0;">'
-		+ '<div style="margin-bottom:10px;">' + report_link + '</div>'
-		+ '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">'
-		+   '<button class="btn btn-sm btn-primary pp-translate-btn">Translate WP → Frappe SQL</button>'
-		+   '<button class="btn btn-sm btn-default pp-create-report-btn">' + create_label + '</button>'
-		+ '</div>'
-		+ '<div class="pp-translate-warnings" style="margin-top:6px;font-size:12px;color:#e24c4c;"></div>'
-		+ '</div>');
-
-	// ── Translate ──
-	$tab.find(".pp-translate-btn").on("click", function () {
-		var wp_query = (frappe.model.get_value(cdt, cdn, "wp_query") || "").trim();
-		if (!wp_query) { frappe.show_alert({ message: __("Enter a WP query in the WP Query field first"), indicator: "orange" }); return; }
-
-		$(this).prop("disabled", true).text("Translating…");
-		var $btn = $(this);
-
-		frappe.call({
-			method: "nce_events.api.panel_api.translate_wp_query",
-			args: { wp_query: wp_query },
-			callback: function (r) {
-				$btn.prop("disabled", false).text("Translate WP → Frappe SQL");
-				if (!r.message) return;
-				var translated = r.message.translated || "";
-				var w = (r.message.warnings || []);
-				$tab.find(".pp-translate-warnings").html(w.length ? "⚠ " + w.join("<br>") : "");
-				frappe.model.set_value(cdt, cdn, "frappe_query", translated);
-				frm.dirty();
-			},
-		});
-	});
-
-	// ── Create / Update Report ──
-	$tab.find(".pp-create-report-btn").on("click", function () {
-		var fq = (frappe.model.get_value(cdt, cdn, "frappe_query") || "").trim();
-		if (!fq) { frappe.show_alert({ message: __("No Frappe SQL to save — translate first"), indicator: "orange" }); return; }
-
-		var row       = locals[cdt][cdn];
-		var h_text    = (row.header_text || "").trim();
-		var rpt_name  = (row.report_name  || "").trim();
-		var $btn      = $(this);
-
-		$btn.prop("disabled", true).text("Saving…");
-
-		frappe.call({
-			method: "nce_events.api.panel_api.create_or_update_report",
-			args: { header_text: h_text, frappe_query: fq, existing_report_name: rpt_name, ref_doctype: row.root_doctype || "" },
-			callback: function (r) {
-				$btn.prop("disabled", false);
-				if (!r.message) return;
-				var new_name = r.message.report_name;
-				var action   = r.message.action;   // "created" or "updated"
-
-				// Update report_name on the row
-				frappe.model.set_value(cdt, cdn, "report_name", new_name);
-				frm.dirty();
-
-				// Update button label and report link
-				$btn.text(__("Update Report"));
-				$tab.find("div:first-child").html(
-					'<a href="/app/query-report/' + encodeURIComponent(new_name) + '" target="_blank" '
-					+ 'style="font-size:13px;font-weight:600;">'
-					+ frappe.utils.escape_html(new_name) + ' &nbsp;↗</a>'
-				);
-
-				frappe.show_alert({
-					message: __(action === "created" ? "Report created: {0}" : "Report updated: {0}", [new_name]),
-					indicator: "green",
-				}, 5);
-			},
-		});
-	});
-
-	$container.append($tab);
 }
 
 // ── Page Definition form ──────────────────────────────────────────────────────
@@ -450,10 +298,15 @@ frappe.ui.form.on("Page Panel", {
 		}, 50);
 	},
 
-	report_name: function (frm, cdt, cdn) {
+	root_doctype: function (frm, cdt, cdn) {
 		var row = locals[cdt][cdn];
-		if (!row.report_name) return;
-		delete _rpt_col_cache[row.report_name];
+		if (row.root_doctype) {
+			delete _dt_field_cache[row.root_doctype];
+		}
+		frappe.model.set_value(cdt, cdn, "column_order", "");
+		frappe.model.set_value(cdt, cdn, "bold_fields", "");
+		frappe.model.set_value(cdt, cdn, "gender_column", "");
+		frappe.model.set_value(cdt, cdn, "gender_color_fields", "");
 		var grid_form = _get_grid_form(frm);
 		if (!grid_form) return;
 		if ($(grid_form.wrapper).data("pp-active-tab") === "display") {
