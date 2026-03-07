@@ -8,89 +8,80 @@ import frappe
 from frappe import _
 
 
+MALE_HEX = "#0000FF"
+FEMALE_HEX = "#c700e6"
+
+
 @frappe.whitelist()
-def get_page_config(page_name):
-	"""Fetch full Page Definition configuration for the client."""
-	doc = frappe.get_doc("Page Definition", page_name)
+def get_panel_config(root_doctype):
+	"""Fetch display configuration for a single Page Panel."""
+	if not frappe.db.exists("Page Panel", root_doctype):
+		return {
+			"root_doctype": root_doctype,
+			"header_text": root_doctype,
+			"column_order": [],
+			"bold_fields": [],
+			"gender_column": "",
+			"gender_color_fields": [],
+			"show_filter": 1,
+			"show_sheets": 1,
+			"show_email": 1,
+			"show_sms": 1,
+			"email_field": "",
+			"sms_field": "",
+			"show_card_email": 0,
+			"show_card_sms": 0,
+			"male_hex": MALE_HEX,
+			"female_hex": FEMALE_HEX,
+		}
 
-	panels = []
-	for p in sorted(doc.panels, key=lambda x: x.panel_number):
-		panels.append({
-			"panel_number": p.panel_number,
-			"header_text": p.header_text,
-			"root_doctype": p.root_doctype,
-			"column_order": _parse_csv(p.column_order),
-			"bold_fields": _parse_csv(p.bold_fields),
-			"gender_column": (p.gender_column or "").strip(),
-			"gender_color_fields": _parse_csv(p.gender_color_fields),
-			"show_filter": p.show_filter,
-			"show_sheets": p.show_sheets,
-			"show_email": p.show_email,
-			"show_sms": p.show_sms,
-			"email_field": (p.email_field or "").strip(),
-			"sms_field": (p.sms_field or "").strip(),
-			"show_card_email": p.show_card_email,
-			"show_card_sms": p.show_card_sms,
-		})
-
+	doc = frappe.get_doc("Page Panel", root_doctype)
 	return {
-		"page_name": doc.page_name,
-		"page_title": doc.page_title,
-		"male_hex": doc.male_hex,
-		"female_hex": doc.female_hex,
-		"panels": panels,
+		"root_doctype": doc.root_doctype,
+		"header_text": doc.header_text or doc.root_doctype,
+		"column_order": _parse_csv(doc.column_order),
+		"bold_fields": _parse_csv(doc.bold_fields),
+		"gender_column": (doc.gender_column or "").strip(),
+		"gender_color_fields": _parse_csv(doc.gender_color_fields),
+		"show_filter": doc.show_filter,
+		"show_sheets": doc.show_sheets,
+		"show_email": doc.show_email,
+		"show_sms": doc.show_sms,
+		"email_field": (doc.email_field or "").strip(),
+		"sms_field": (doc.sms_field or "").strip(),
+		"show_card_email": doc.show_card_email,
+		"show_card_sms": doc.show_card_sms,
+		"male_hex": MALE_HEX,
+		"female_hex": FEMALE_HEX,
 	}
 
 
 @frappe.whitelist()
-def get_panel_data(page_name, panel_number, selections=None):
-	"""Fetch rows from a panel's DocType with automatic Link-based inter-panel filtering."""
-	panel_number = int(panel_number)
+def get_panel_data(root_doctype, filters=None):
+	"""Fetch rows from a DocType, optionally filtered.
 
-	if isinstance(selections, str):
-		selections = json.loads(selections) if selections else {}
-	selections = selections or {}
+	filters is a JSON dict of {fieldname: value} applied to frappe.get_all.
+	"""
+	if isinstance(filters, str):
+		filters = json.loads(filters) if filters else {}
+	filters = filters or {}
 
-	doc = frappe.get_doc("Page Definition", page_name)
-
-	panel = None
-	prev_panel = None
-	for p in sorted(doc.panels, key=lambda x: x.panel_number):
-		if p.panel_number == panel_number:
-			panel = p
-			break
-		prev_panel = p
-
-	if not panel:
-		frappe.throw(_("Panel {0} not found in page {1}").format(panel_number, page_name))
-
-	if not panel.root_doctype:
-		frappe.throw(_("Panel {0} has no DocType configured").format(panel_number))
-
-	fields = _parse_csv(panel.column_order)
+	config = get_panel_config(root_doctype)
+	fields = config["column_order"]
 	if not fields:
 		fields = ["name"]
 	elif "name" not in fields:
 		fields = ["name"] + fields
 
-	filters = {}
-	prev_sel = selections.get(str(prev_panel.panel_number)) if prev_panel else {}
-	if prev_sel and prev_panel and prev_panel.root_doctype:
-		link_field = _find_link_field(panel.root_doctype, prev_panel.root_doctype)
-		if link_field and prev_sel.get("name"):
-			filters[link_field] = prev_sel["name"]
-
 	rows = frappe.get_all(
-		panel.root_doctype,
+		root_doctype,
 		fields=fields,
 		filters=filters,
 		order_by="name asc",
 		limit_page_length=0,
 	)
 
-	columns = []
-	for fn in fields:
-		columns.append({"fieldname": fn, "label": _title_case(fn)})
+	columns = [{"fieldname": fn, "label": _title_case(fn)} for fn in fields]
 
 	return {
 		"columns": columns,
@@ -103,9 +94,9 @@ _ROSTER_HASH = "wwe78f6q87ey97f86q9e8fqw98ef"
 
 
 @frappe.whitelist()
-def export_panel_data(page_name, panel_number, selections=None):
+def export_panel_data(root_doctype, filters=None):
 	"""Export a panel's current data as CSV to a public path and return its URL."""
-	result = get_panel_data(page_name, int(panel_number), selections)
+	result = get_panel_data(root_doctype, filters)
 	columns = result["columns"]
 	rows = result["rows"]
 
@@ -119,8 +110,8 @@ def export_panel_data(page_name, panel_number, selections=None):
 		writer.writerow([row.get(fn, "") for fn in col_fieldnames])
 	csv_content = output.getvalue()
 
-	safe_page = _safe_filename(page_name)
-	filename = f"{safe_page}_{panel_number}.csv"
+	safe_dt = _safe_filename(root_doctype)
+	filename = f"{safe_dt}.csv"
 
 	roster_dir = frappe.get_site_path("public", "files", "panels", _ROSTER_HASH)
 	os.makedirs(roster_dir, exist_ok=True)
@@ -294,83 +285,20 @@ def get_report_columns(report_name):
 	return out
 
 
-# ── Page / workspace utilities ──
-
-
-@frappe.whitelist()
-def get_active_pages():
-	"""Return list of active Page Definition records for the landing page."""
-	return frappe.get_all(
-		"Page Definition",
-		filters={"active": 1},
-		fields=["page_name", "page_title"],
-		order_by="page_title asc",
-	)
-
-
-@frappe.whitelist()
-def build_page(page_name):
-	"""Ensure a workspace shortcut exists for a Page Definition and return its URL."""
-	doc = frappe.get_doc("Page Definition", page_name)
-	_ensure_workspace_shortcut(page_name, doc.page_title)
-	frappe.db.commit()
-	return {"page_url": f"/app/page-view/{page_name}"}
-
-
-def _ensure_workspace_shortcut(page_name, page_title):
-	try:
-		workspace = frappe.get_doc("Workspace", "NCE Events")
-		page_url = f"/app/page-view/{page_name}"
-
-		for s in workspace.shortcuts:
-			if s.get("url") == page_url:
-				s.label = page_title
-				workspace.save(ignore_permissions=True)
-				frappe.clear_cache()
-				return
-
-		workspace.append("shortcuts", {
-			"label": page_title,
-			"type": "URL",
-			"url": page_url,
-		})
-
-		try:
-			content = json.loads(workspace.content or "[]")
-		except (json.JSONDecodeError, TypeError):
-			content = []
-
-		content.append({
-			"id": frappe.generate_hash("", 10),
-			"type": "shortcut",
-			"data": {
-				"shortcut_name": page_title,
-				"col": 4,
-			},
-		})
-		workspace.content = json.dumps(content)
-		workspace.save(ignore_permissions=True)
-		frappe.clear_cache()
-	except Exception as e:
-		frappe.log_error(frappe.get_traceback(), "build_page: workspace shortcut failed")
-		frappe.throw(_(f"Shortcut creation failed: {e}"))
-
-
 # ── Messaging ──
 
 
 @frappe.whitelist()
 def send_panel_message(
-	page_name, panel_number, selections=None, mode="sms",
+	root_doctype, filters=None, mode="sms",
 	recipient_field="", body="", subject="",
 	send_email_copy=0, email_field=""
 ):
 	"""Send bulk SMS and/or email to all rows in a panel."""
 	from jinja2 import Template as Jinja2Template
 
-	panel_number = int(panel_number)
 	send_email_copy = int(send_email_copy)
-	result = get_panel_data(page_name, panel_number, selections)
+	result = get_panel_data(root_doctype, filters)
 	columns = result["columns"]
 	rows = result["rows"]
 	col_fieldnames = [c["fieldname"] for c in columns]
@@ -431,7 +359,7 @@ def send_panel_message(
 	if errors:
 		frappe.log_error(
 			"\n".join(errors),
-			f"send_panel_message errors ({page_name} panel {panel_number})"
+			f"send_panel_message errors ({root_doctype})"
 		)
 
 	return {"sent": sent, "total": len(rows), "errors": len(errors)}
@@ -629,13 +557,3 @@ def _parse_csv(value):
 	if not value:
 		return []
 	return [v.strip() for v in value.split(",") if v.strip()]
-
-
-def _parse_json(value):
-	"""Parse a JSON string into a dict, returning {} on failure."""
-	if not value:
-		return {}
-	try:
-		return json.loads(value)
-	except (json.JSONDecodeError, TypeError):
-		return {}

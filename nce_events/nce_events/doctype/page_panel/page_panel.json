@@ -1,13 +1,12 @@
 {
  "actions": [],
- "allow_rename": 0,
+ "autoname": "field:root_doctype",
  "creation": "2026-03-01 00:00:00.000000",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "panel_number",
-  "header_text",
   "root_doctype",
+  "header_text",
   "column_order",
   "bold_fields",
   "gender_column",
@@ -26,26 +25,20 @@
  ],
  "fields": [
   {
-   "fieldname": "panel_number",
-   "fieldtype": "Int",
+   "description": "The DocType this panel displays (one panel per DocType)",
+   "fieldname": "root_doctype",
+   "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "Panel Number",
-   "reqd": 1
+   "label": "DocType",
+   "options": "DocType",
+   "reqd": 1,
+   "unique": 1
   },
   {
    "fieldname": "header_text",
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Header Text"
-  },
-  {
-   "description": "The DocType this panel displays",
-   "fieldname": "root_doctype",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "DocType",
-   "options": "DocType",
-   "reqd": 1
   },
   {
    "description": "Comma-delimited visible fields in display order (managed by Display tab)",
@@ -141,17 +134,30 @@
   }
  ],
  "index_web_pages_for_search": 0,
- "istable": 1,
+ "istable": 0,
  "links": [],
  "modified": "2026-03-07 00:00:00.000000",
  "modified_by": "Administrator",
  "module": "NCE Events",
  "name": "Page Panel",
- "naming_rule": "Random",
+ "naming_rule": "By fieldname",
  "owner": "Administrator",
- "permissions": [],
- "sort_field": "panel_number",
- "sort_order": "ASC",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
  "states": [],
- "track_changes": 0
+ "track_changes": 1
 }
