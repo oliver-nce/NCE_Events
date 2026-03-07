@@ -16,6 +16,7 @@ FEMALE_HEX = "#c700e6"
 def get_panel_config(root_doctype):
 	"""Fetch display configuration for a single Page Panel."""
 	if not frappe.db.exists("Page Panel", root_doctype):
+		auto_email, auto_sms = _auto_detect_contact_fields(root_doctype)
 		return {
 			"root_doctype": root_doctype,
 			"header_text": root_doctype,
@@ -27,8 +28,8 @@ def get_panel_config(root_doctype):
 			"show_sheets": 1,
 			"show_email": 1,
 			"show_sms": 1,
-			"email_field": "",
-			"sms_field": "",
+			"email_field": auto_email,
+			"sms_field": auto_sms,
 			"show_card_email": 0,
 			"show_card_sms": 0,
 			"male_hex": MALE_HEX,
@@ -36,10 +37,21 @@ def get_panel_config(root_doctype):
 		}
 
 	doc = frappe.get_doc("Page Panel", root_doctype)
+	column_order = _parse_csv(doc.column_order)
+	email_field = (doc.email_field or "").strip()
+	sms_field = (doc.sms_field or "").strip()
+
+	if not email_field or not sms_field:
+		auto_email, auto_sms = _auto_detect_contact_fields(doc.root_doctype)
+		if not email_field:
+			email_field = auto_email
+		if not sms_field:
+			sms_field = auto_sms
+
 	return {
 		"root_doctype": doc.root_doctype,
 		"header_text": doc.header_text or doc.root_doctype,
-		"column_order": _parse_csv(doc.column_order),
+		"column_order": column_order,
 		"bold_fields": _parse_csv(doc.bold_fields),
 		"gender_column": (doc.gender_column or "").strip(),
 		"gender_color_fields": _parse_csv(doc.gender_color_fields),
@@ -47,8 +59,8 @@ def get_panel_config(root_doctype):
 		"show_sheets": doc.show_sheets,
 		"show_email": doc.show_email,
 		"show_sms": doc.show_sms,
-		"email_field": (doc.email_field or "").strip(),
-		"sms_field": (doc.sms_field or "").strip(),
+		"email_field": email_field,
+		"sms_field": sms_field,
 		"show_card_email": doc.show_card_email,
 		"show_card_sms": doc.show_card_sms,
 		"male_hex": MALE_HEX,
@@ -191,6 +203,37 @@ def export_panel_data(root_doctype, filters=None):
 
 
 # ── Internal helpers ──
+
+
+_EMAIL_NAMES = {"email", "email_address", "email_id"}
+_PHONE_NAMES = {"phone", "mobile", "mobile_no", "phone_number", "cell", "contact_number"}
+
+
+def _auto_detect_contact_fields(doctype):
+	"""Auto-detect email and phone/SMS fields directly on a DocType.
+
+	Matches by fieldtype (Email/Phone) or common fieldnames.
+	Returns (email_field, sms_field) — either may be empty string.
+	"""
+	email_field = ""
+	sms_field = ""
+
+	try:
+		meta = frappe.get_meta(doctype)
+	except Exception:
+		return email_field, sms_field
+
+	for f in meta.fields:
+		fn = f.fieldname.lower()
+		ft = (f.fieldtype or "").strip()
+		if not email_field and (ft == "Email" or fn in _EMAIL_NAMES):
+			email_field = f.fieldname
+		if not sms_field and (ft == "Phone" or fn in _PHONE_NAMES):
+			sms_field = f.fieldname
+		if email_field and sms_field:
+			break
+
+	return email_field, sms_field
 
 
 def _find_link_field(doctype, target_doctype):
