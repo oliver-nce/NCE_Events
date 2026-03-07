@@ -154,7 +154,10 @@ def _safe_filename(value):
 
 @frappe.whitelist()
 def get_doctype_fields(root_doctype):
-	"""Return data-bearing fields for a DocType (excludes layout and system fields)."""
+	"""Return data-bearing fields for a DocType (excludes layout and system fields).
+
+	Link fields include an 'options' key with the target DocType name.
+	"""
 	meta = frappe.get_meta(root_doctype)
 	skip_types = {
 		"Section Break", "Column Break", "Tab Break", "HTML",
@@ -168,11 +171,14 @@ def get_doctype_fields(root_doctype):
 	for f in meta.fields:
 		if f.fieldtype in skip_types or f.fieldname in skip_names:
 			continue
-		result.append({
+		entry = {
 			"fieldname": f.fieldname,
 			"label": f.label or _title_case(f.fieldname),
 			"fieldtype": f.fieldtype,
-		})
+		}
+		if f.fieldtype == "Link" and f.options:
+			entry["options"] = f.options
+		result.append(entry)
 	return result
 
 
