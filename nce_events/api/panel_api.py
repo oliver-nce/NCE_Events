@@ -152,6 +152,30 @@ def _safe_filename(value):
 	return "".join(c if c.isalnum() or c in "-_" else "_" for c in str(value))
 
 
+@frappe.whitelist()
+def get_doctype_fields(root_doctype):
+	"""Return data-bearing fields for a DocType (excludes layout and system fields)."""
+	meta = frappe.get_meta(root_doctype)
+	skip_types = {
+		"Section Break", "Column Break", "Tab Break", "HTML",
+		"Fold", "Heading", "Button", "Table", "Table MultiSelect",
+	}
+	skip_names = {
+		"name", "owner", "creation", "modified", "modified_by",
+		"docstatus", "idx", "parent", "parentfield", "parenttype",
+	}
+	result = []
+	for f in meta.fields:
+		if f.fieldtype in skip_types or f.fieldname in skip_names:
+			continue
+		result.append({
+			"fieldname": f.fieldname,
+			"label": f.label or _title_case(f.fieldname),
+			"fieldtype": f.fieldtype,
+		})
+	return result
+
+
 # ── Report / translator utilities (used elsewhere) ──
 
 

@@ -4,18 +4,10 @@ var _dt_field_cache = {};
 function _get_doctype_fields(doctype, callback) {
 	if (_dt_field_cache[doctype]) { callback(_dt_field_cache[doctype]); return; }
 	frappe.call({
-		method: "frappe.client.get_list",
-		args: {
-			doctype: "DocField",
-			filters: { parent: doctype, fieldtype: ["not in", ["Section Break", "Column Break", "Tab Break", "HTML", "Fold", "Heading", "Button", "Table", "Table MultiSelect"]] },
-			fields: ["fieldname", "label", "fieldtype"],
-			order_by: "idx asc",
-			limit_page_length: 0,
-		},
+		method: "nce_events.api.panel_api.get_doctype_fields",
+		args: { root_doctype: doctype },
 		callback: function (r) {
 			var fields = (r && r.message) || [];
-			var skip = { name: 1, owner: 1, creation: 1, modified: 1, modified_by: 1, docstatus: 1, idx: 1, parent: 1, parentfield: 1, parenttype: 1 };
-			fields = fields.filter(function (f) { return !skip[f.fieldname]; });
 			_dt_field_cache[doctype] = fields;
 			callback(fields);
 		},
