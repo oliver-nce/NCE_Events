@@ -79,6 +79,12 @@ def get_panel_data(root_doctype, filters=None):
 	simple_fields = [fn for fn in all_fields if "." not in fn]
 	linked_fields = [fn for fn in all_fields if "." in fn]
 
+	# Ensure base link fields are fetched so dot-notation can resolve
+	link_bases = {fn.split(".", 1)[0] for fn in linked_fields}
+	for lf in link_bases:
+		if lf not in simple_fields:
+			simple_fields.append(lf)
+
 	rows = frappe.get_all(
 		root_doctype,
 		fields=simple_fields,
