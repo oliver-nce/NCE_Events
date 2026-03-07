@@ -75,32 +75,46 @@ def get_panel_data(root_doctype, filters=None):
 	elif "name" not in all_fields:
 		all_fields = ["name"] + all_fields
 
-	# frappe.get_all supports "link_field.fieldname as alias" natively
-	api_fields = []
-	alias_map = {}
-	for fn in all_fields:
-		if "." in fn:
-			alias = fn.replace(".", "__")
-			api_fields.append(f"`tab{root_doctype}`.`{'`.`'.join(fn.split('.', 1))}` as `{alias}`")
-			alias_map[fn] = alias
-		else:
-			api_fields.append(fn)
+	# Split into simple fields and dot-notation (linked) fields
+	simple_fields = [fn for fn in all_fields if "." not in fn]
+	linked_fields = [fn for fn in all_fields if "." in fn]
 
 	rows = frappe.get_all(
 		root_doctype,
-		fields=api_fields,
+		fields=simple_fields,
 		filters=filters,
 		order_by="name asc",
 		limit_page_length=0,
 	)
 
-	# Remap aliased keys back to dot-notation for the frontend
-	if alias_map:
-		reverse = {v: k for k, v in alias_map.items()}
+	# Resolve dot-notation fields via frappe.get_value lookups
+	if linked_fields and rows:
+		grouped = {}
+		for fn in linked_fields:
+			link_field, child_field = fn.split(".", 1)
+			grouped.setdefault(link_field, []).append(child_field)
+
+		meta = frappe.get_meta(root_doctype)
+		link_targets = {}
+		for field in meta.fields:
+			if field.fieldtype == "Link" and field.fieldname in grouped:
+				link_targets[field.fieldname] = field.options
+
 		for row in rows:
-			for alias, original in reverse.items():
-				if alias in row:
-					row[original] = row.pop(alias)
+			for link_field, child_fields in grouped.items():
+				target_dt = link_targets.get(link_field)
+				linked_name = row.get(link_field)
+				if target_dt and linked_name:
+					try:
+						linked_values = frappe.db.get_value(
+							target_dt, linked_name, child_fields, as_dict=True
+						) or {}
+					except Exception:
+						linked_values = {}
+				else:
+					linked_values = {}
+				for cf in child_fields:
+					row[link_field + "." + cf] = linked_values.get(cf, "")
 
 	columns = []
 	for fn in all_fields:
