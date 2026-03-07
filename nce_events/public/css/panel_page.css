@@ -85,7 +85,6 @@
 	border-collapse: collapse;
 	font-family: Arial, sans-serif;
 	font-size: 12px;
-	table-layout: fixed;
 }
 
 .panel-table th {
@@ -462,16 +461,19 @@ body.panel-float-dragging * {
 /* ── Drill-down buttons ── */
 
 .drill-col {
-	width: 1%;
+	width: 200px;
+	min-width: 200px;
 	white-space: nowrap;
 	text-align: right;
 	padding-right: 8px !important;
+	overflow: visible !important;
 }
 
 .drill-cell {
 	white-space: nowrap;
 	text-align: right;
 	padding: 2px 6px !important;
+	overflow: visible !important;
 }
 
 .drill-btn {
