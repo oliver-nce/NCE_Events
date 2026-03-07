@@ -459,6 +459,38 @@ body.panel-float-dragging * {
 	color: #126BC4;
 }
 
+/* ── Drill-down buttons ── */
+
+.drill-col {
+	width: 1%;
+	white-space: nowrap;
+	text-align: right;
+	padding-right: 8px !important;
+}
+
+.drill-cell {
+	white-space: nowrap;
+	text-align: right;
+	padding: 2px 6px !important;
+}
+
+.drill-btn {
+	font-size: 10px;
+	padding: 1px 6px;
+	margin-left: 3px;
+	background: #E3F0FC;
+	color: #126BC4;
+	border: 1px solid #A2CCF6;
+	border-radius: 3px;
+	cursor: pointer;
+	line-height: 1.4;
+}
+
+.drill-btn:hover {
+	background: #C7E0FA;
+	border-color: #4198F0;
+}
+
 /* ── Responsive ── */
 
 @media (max-width: 768px) {

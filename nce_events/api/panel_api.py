@@ -61,27 +61,51 @@ def get_panel_data(root_doctype, filters=None):
 	"""Fetch rows from a DocType, optionally filtered.
 
 	filters is a JSON dict of {fieldname: value} applied to frappe.get_all.
+	Supports dot-notation fields (e.g. "link_field.child_field") which are
+	resolved via frappe.get_all's native dot-field support.
 	"""
 	if isinstance(filters, str):
 		filters = json.loads(filters) if filters else {}
 	filters = filters or {}
 
 	config = get_panel_config(root_doctype)
-	fields = config["column_order"]
-	if not fields:
-		fields = ["name"]
-	elif "name" not in fields:
-		fields = ["name"] + fields
+	all_fields = config["column_order"]
+	if not all_fields:
+		all_fields = ["name"]
+	elif "name" not in all_fields:
+		all_fields = ["name"] + all_fields
+
+	# frappe.get_all supports "link_field.fieldname as alias" natively
+	api_fields = []
+	alias_map = {}
+	for fn in all_fields:
+		if "." in fn:
+			alias = fn.replace(".", "__")
+			api_fields.append(f"`tab{root_doctype}`.`{'`.`'.join(fn.split('.', 1))}` as `{alias}`")
+			alias_map[fn] = alias
+		else:
+			api_fields.append(fn)
 
 	rows = frappe.get_all(
 		root_doctype,
-		fields=fields,
+		fields=api_fields,
 		filters=filters,
 		order_by="name asc",
 		limit_page_length=0,
 	)
 
-	columns = [{"fieldname": fn, "label": _title_case(fn)} for fn in fields]
+	# Remap aliased keys back to dot-notation for the frontend
+	if alias_map:
+		reverse = {v: k for k, v in alias_map.items()}
+		for row in rows:
+			for alias, original in reverse.items():
+				if alias in row:
+					row[original] = row.pop(alias)
+
+	columns = []
+	for fn in all_fields:
+		label = fn.split(".")[-1] if "." in fn else fn
+		columns.append({"fieldname": fn, "label": _title_case(label)})
 
 	return {
 		"columns": columns,
@@ -150,6 +174,40 @@ def _title_case(fieldname):
 def _safe_filename(value):
 	"""Sanitize a string for use as a filesystem filename component."""
 	return "".join(c if c.isalnum() or c in "-_" else "_" for c in str(value))
+
+
+@frappe.whitelist()
+def get_child_doctypes(root_doctype):
+	"""Return DocTypes that have a Link field pointing to root_doctype.
+
+	Only DocTypes that appear in WP Tables are included.
+	Returns [{doctype, link_field, label}].
+	"""
+	wp_doctypes = frappe.get_all(
+		"WP Tables",
+		filters={"frappe_doctype": ["is", "set"]},
+		pluck="frappe_doctype",
+	)
+	wp_doctypes = list(set(wp_doctypes))
+
+	result = []
+	for dt in wp_doctypes:
+		if dt == root_doctype:
+			continue
+		try:
+			meta = frappe.get_meta(dt)
+		except Exception:
+			continue
+		for field in meta.fields:
+			if field.fieldtype == "Link" and field.options == root_doctype:
+				result.append({
+					"doctype": dt,
+					"link_field": field.fieldname,
+					"label": dt,
+				})
+				break
+	result.sort(key=lambda r: r["label"])
+	return result
 
 
 @frappe.whitelist()
