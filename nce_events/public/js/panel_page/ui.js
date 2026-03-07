@@ -241,11 +241,15 @@ nce_events.panel_page.Explorer = class Explorer {
 			if (has_drills) {
 				html += '<td class="drill-cell">';
 				child_doctypes.forEach(function (child) {
-					html += '<button class="btn btn-xs drill-btn" data-child-dt="' +
-						frappe.utils.escape_html(child.doctype) +
+					var count_key = "_count_" + child.doctype;
+					var cnt = row[count_key];
+					var is_zero = (cnt === 0 || cnt === "0");
+					html += '<button class="btn btn-xs drill-btn' + (is_zero ? " disabled" : "") +
+						'" data-child-dt="' + frappe.utils.escape_html(child.doctype) +
 						'" data-link-field="' + frappe.utils.escape_html(child.link_field) +
 						'" data-row-name="' + frappe.utils.escape_html(row.name) +
 						'">' + frappe.utils.escape_html(child.label) +
+						' <span class="drill-count">(' + (cnt == null ? "?" : cnt) + ')</span>' +
 						' <i class="fa fa-chevron-right" style="font-size:9px;"></i></button>';
 				});
 				html += "</td>";
@@ -370,6 +374,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		});
 
 		float_el.find(".drill-btn").on("click", function () {
+			if ($(this).hasClass("disabled")) return;
 			var child_dt = $(this).data("child-dt");
 			var link_field = $(this).data("link-field");
 			var row_name = $(this).data("row-name");

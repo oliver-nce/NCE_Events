@@ -127,11 +127,28 @@ def get_panel_data(root_doctype, filters=None):
 		label = fn.split(".")[-1] if "." in fn else fn
 		columns.append({"fieldname": fn, "label": _title_case(label)})
 
+	child_doctypes = get_child_doctypes(root_doctype)
+
+	# Compute child record counts per row for each child doctype
+	if child_doctypes and rows:
+		row_names = [row["name"] for row in rows]
+		for child in child_doctypes:
+			count_data = frappe.get_all(
+				child["doctype"],
+				filters={child["link_field"]: ["in", row_names]},
+				fields=[child["link_field"], "count(name) as cnt"],
+				group_by=child["link_field"],
+			)
+			count_map = {r[child["link_field"]]: r["cnt"] for r in count_data}
+			count_key = "_count_" + child["doctype"]
+			for row in rows:
+				row[count_key] = count_map.get(row["name"], 0)
+
 	return {
 		"columns": columns,
 		"rows": rows,
 		"total": len(rows),
-		"child_doctypes": get_child_doctypes(root_doctype),
+		"child_doctypes": child_doctypes,
 	}
 
 

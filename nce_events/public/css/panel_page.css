@@ -493,6 +493,23 @@ body.panel-float-dragging * {
 	border-color: #4198F0;
 }
 
+.drill-btn.disabled {
+	background: #F0F0F0;
+	color: #B0B0B0;
+	border-color: #D8D8D8;
+	cursor: default;
+}
+
+.drill-btn.disabled:hover {
+	background: #F0F0F0;
+	border-color: #D8D8D8;
+}
+
+.drill-count {
+	font-size: 9px;
+	opacity: 0.8;
+}
+
 /* ── Responsive ── */
 
 @media (max-width: 768px) {
