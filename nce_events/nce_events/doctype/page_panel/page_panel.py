@@ -3,4 +3,6 @@ from frappe.model.document import Document
 
 
 class PagePanel(Document):
-	pass
+	def before_save(self):
+		if not self.header_text:
+			self.header_text = self.root_doctype

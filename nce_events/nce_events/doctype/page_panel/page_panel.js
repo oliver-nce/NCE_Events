@@ -127,9 +127,13 @@ function _render_matrix(frm) {
 		var shown_set = {};
 		if (saved_order.length) {
 			saved_order.forEach(function (fn) { shown_set[fn] = true; });
-		} else {
-			fields.forEach(function (f) { shown_set[f.fieldname] = true; });
 		}
+
+		var $toolbar = $('<div style="display:flex;gap:6px;padding:0 0 8px;">'
+			+ '<button class="btn btn-xs btn-default pp-select-all">Select All</button>'
+			+ '<button class="btn btn-xs btn-default pp-select-none">Select None</button>'
+			+ '</div>');
+		$container.append($toolbar);
 
 		var th_style = 'style="text-align:center;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;"';
 		var th_left = 'style="text-align:left;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;"';
@@ -222,6 +226,15 @@ function _render_matrix(frm) {
 		}
 
 		$matrix.on("change", "input[type=checkbox], input[type=radio]", _sync);
+
+		$toolbar.find(".pp-select-all").on("click", function () {
+			$matrix.find('input[data-role="show"]').prop("checked", true);
+			_sync();
+		});
+		$toolbar.find(".pp-select-none").on("click", function () {
+			$matrix.find('input[data-role="show"]').prop("checked", false);
+			_sync();
+		});
 
 		if (!document.getElementById("pp-matrix-drag-css")) {
 			$("head").append(
