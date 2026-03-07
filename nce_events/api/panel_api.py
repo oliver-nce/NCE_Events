@@ -125,6 +125,7 @@ def get_panel_data(root_doctype, filters=None):
 		"columns": columns,
 		"rows": rows,
 		"total": len(rows),
+		"child_doctypes": get_child_doctypes(root_doctype),
 	}
 
 
