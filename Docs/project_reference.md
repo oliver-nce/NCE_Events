@@ -198,16 +198,17 @@ A workspace shortcut is created automatically when the user clicks **Build Page*
 
 | Function | Params | Purpose |
 |---|---|---|
-| `get_page_config` | `page_name` | Returns full page + panel config as JSON |
-| `get_panel_data` | `page_name, panel_number, selections` | Runs Query Report, applies inter-panel filter, returns `{columns, rows, total}` |
-| `export_panel_data` | `page_name, panel_number, selections` | Saves panel data as CSV to public path, returns URL for Google Sheets `IMPORTDATA` |
-| `send_panel_message` | `page_name, panel_number, selections, mode, recipient_field, body, subject, send_email_copy, email_field` | Bulk SMS (via Twilio) and/or email to all panel rows |
+| `get_panel_config` | `root_doctype` | Returns display config for a Page Panel (column_order, bold, gender, show flags, auto-detected email/sms fields) |
+| `get_panel_data` | `root_doctype, filters` | Fetches rows with dot-notation resolution, child record counts, and child_doctypes list |
+| `export_panel_data` | `root_doctype, filters` | Saves panel data as CSV to public path, returns URL for Google Sheets `IMPORTDATA` |
+| `send_panel_message` | `root_doctype, filters, mode, recipient_field, body, subject, send_email_copy, email_field` | Bulk SMS (Twilio) and/or email (SendGrid) to all panel rows |
+| `get_child_doctypes` | `root_doctype` | Returns DocTypes with Link fields pointing to root_doctype (for drill buttons) |
+| `get_doctype_fields` | `root_doctype` | Returns data-bearing fields for a DocType (Link fields include options) |
+| `debug_child_lookup` | `root_doctype` | Diagnostic: shows what get_child_doctypes sees |
 | `rebuild_field_tags` | (none) | Scans WP Tables DocTypes, rebuilds Field Tag child table on Messaging Configuration |
 | `get_report_columns` | `report_name` | Returns column definitions from a Query Report |
 | `translate_wp_query` | `wp_query` | Translates WP SQL to Frappe SQL using WP Tables mappings |
 | `create_or_update_report` | `header_text, frappe_query, existing_report_name, ref_doctype` | Creates or updates a Frappe Query Report |
-| `build_page` | `page_name` | Ensures workspace shortcut exists, returns `{page_url}` |
-| `get_active_pages` | (none) | Lists active Page Definitions for the landing page |
 
 ### rebuild_field_tags Logic
 
@@ -222,9 +223,25 @@ A workspace shortcut is created automatically when the user clicks **Build Page*
 
 Reuses `_run_panel_report` to get columns/rows, writes CSV to `sites/{site}/public/files/panels/{hash}/{filename}.csv`. Returns `{filename, url, rows_exported}`. The URL is used with Google Sheets `=IMPORTDATA("url")`.
 
+### get_panel_data
+
+Fetches rows from a DocType with optional filters. Supports dot-notation fields (e.g. `player_id.first_name`) configured in `column_order`. Base link fields are automatically included in the query so dot-notation resolution works. Returns `{columns, rows, total, child_doctypes}`.
+
+**Dot-notation resolution:** Splits columns into simple fields and linked fields. Link base fields (the part before the dot) are added to the query automatically. After fetching rows, resolves dot-notation via `frappe.db.get_value` lookups on the linked DocType.
+
+**Child record counts:** For each child DocType returned by `get_child_doctypes()`, runs a single `GROUP BY` count query. Each row gets a `_count_{ChildDocType}` key with the count of related records.
+
+### get_child_doctypes
+
+Scans all WP Tables DocTypes for Link fields pointing to the given `root_doctype`. Returns `[{doctype, link_field, label}]`. This makes drill buttons relationship-specific — each panel only shows buttons for DocTypes that link TO it.
+
 ### send_panel_message
 
-Renders body and subject as Jinja2 templates with each row's data as context. SMS sent via Twilio (credentials from `API Connector` DocType). Email sent via `frappe.sendmail` (SendGrid). Supports sending an email copy alongside SMS.
+Renders body and subject as Jinja2 templates with each row's data as context. SMS sent via Twilio REST API (credentials from `API Connector` "Twilio": username=Account SID, password=Auth Token). Email sent via SendGrid v3 API (credentials from `API Connector` "SendGrid": username=from email, password=API key/bearer token). Supports sending an email copy alongside SMS.
+
+### Auto-detect email/phone fields
+
+`_auto_detect_contact_fields(doctype)` scans the root DocType's own fields by fieldtype (`Email`/`Phone`) or common names (`email`, `phone`, `mobile`, `mobile_no`, etc.). Used as fallback when Page Panel doesn't have `email_field` or `sms_field` explicitly set. Does NOT traverse into linked DocTypes.
 
 ---
 
@@ -323,9 +340,22 @@ Filter input has a **500ms debounce**. When filters change, only the table body 
 
 Clicking the sheets button calls `export_panel_data`, constructs an `=IMPORTDATA("url")` formula, and copies it to the clipboard with a toast notification.
 
+### Drill Buttons
+
+Each row in a non-WP panel shows drill-down buttons for related child DocTypes. Buttons come from the `child_doctypes` key in `get_panel_data`, which calls `get_child_doctypes(root_doctype)` — scans WP Tables DocTypes for Link fields pointing to the current panel's DocType. Buttons are relationship-specific per panel (e.g. Events shows Enrollments + Event Sessions, but Enrollments only shows DocTypes that link TO Enrollments).
+
+Each button shows a count badge `(N)` with the number of related records. Buttons with 0 related records are grayed out (`.drill-btn.disabled` CSS class) and unclickable.
+
 ### SMS/Email Dialog
 
-Clicking SMS or Email opens a dialog to choose between typing a message or selecting an Email Template. Sends bulk to all rows via `send_panel_message`. SMS includes optional email copy (checked by default).
+Clicking SMS or Email opens a blue-themed dialog (`.panel-send-dialog` CSS class matching the panel header blue). Two modes via Source dropdown:
+
+- **Type a message** — shows message textarea + opens the Tag Finder floated to the right (280px, right-aligned) with the current DocType as root. Tag Finder closes when switching to template mode or when dialog hides.
+- **Use Email Template** — shows a Link field to pick an Email Template. Tag Finder closes.
+
+Dialog has Send + Cancel buttons. `on_hide` closes the Tag Finder. Email/phone recipient fields are auto-detected from the DocType if not configured on the Page Panel.
+
+Email goes through SendGrid v3 API, SMS through Twilio REST API — both using credentials from API Connector DocType.
 
 ### Explorer Render Flow
 
@@ -344,7 +374,9 @@ Bold and gender colors use **inline styles** on `<th>` and `<td>`. This is neces
 
 `nce_events/public/js/schema_explorer.js` — loaded globally via `app_include_js`.
 
-A floating Miller columns tool for exploring DocType schemas and generating Jinja2 tags. Workspace shortcut at `/app/schema-explorer`, or invoke from JS: `nce_events.schema_explorer.open("Registrations")` / `nce_events.schema_explorer.open()` (prompts from WP Tables list).
+A floating Miller columns tool for exploring DocType schemas and generating Jinja2 tags. Workspace shortcut at `/app/schema-explorer`, or invoke from JS: `nce_events.schema_explorer.open("Registrations")` / `nce_events.schema_explorer.open()` (prompts from WP Tables list). Also has `nce_events.schema_explorer.close()` for programmatic teardown.
+
+Opens at 280px width (single column) anchored to `right: 20px`. CSS is re-injected on every open (removes stale `#se-style` tag). Inline styles set width and position to avoid cached CSS issues.
 
 ### Miller Columns
 
@@ -369,6 +401,13 @@ Tag syntax is hop-aware:
 
 Each tag panel has a "Fallback Value" text input. Typing a value live-updates the tag with Jinja's `| default('value')` filter, e.g. `{{ doc.first_name | default('Student') }}`.
 
+### Insert at Cursor
+
+Each tag panel has two action buttons:
+
+- **Insert at Cursor** — inserts the tag at the cursor position of the last-focused text field (textarea, text input, or contenteditable). Tracks the last editable element via `focusin`, `mouseup`, `keyup` listeners (ignoring focus events inside the Tag Finder itself). Triggers `change` + `input` events so Frappe picks up the new value. Shows "Click into a text field first" warning if no field was focused.
+- **Copy to Clipboard** — copies the tag text to clipboard.
+
 ### Styling
 
 Uses NCE theme tokens. Tiles have 1px blue borders, column dividers are blue (#A2CCF6). Tag panels match the explorer's visual style (blue header, same fonts). CSS is injected inline via `<style>` tag.
@@ -379,9 +418,9 @@ Uses NCE theme tokens. Tiles have 1px blue borders, column dividers are blue (#A
 
 `nce_events/public/js/email_template_tags.js` — loaded via `doctype_js` hook on `Email Template`.
 
-Adds an **"Insert Tag"** button to the Email Template form. Clicking it opens a floating, draggable, resizable window with a grid of tag tiles. Tags are read from the `field_tags` child table on Messaging Configuration (filtered by `expose=1`, deduplicated by `field_name`). Clicking a tile inserts the Jinja2 tag at the cursor position in the Quill editor, Ace editor, or textarea.
+Adds an **"Insert Tag"** button to the Email Template form. Clicking it opens the **Tag Finder** (`nce_events.schema_explorer.open()`) with no root DocType, prompting the user to pick one from WP Tables. Users can then navigate to any field and use "Insert at Cursor" to insert tags directly into the template editor (Quill, Ace, or textarea).
 
-CSS is injected inline (via `<style>` tag) because `doctype_css` is not a working Frappe hook.
+The old flat tag picker grid (from Messaging Configuration) has been replaced by the Tag Finder for richer navigation and tag generation.
 
 ---
 
@@ -464,7 +503,13 @@ Key color tokens from `Docs/nce_theme.json`:
 | 2 | Fixtures | Page Definition + Report not yet added to `hooks.py` fixtures |
 | 3 | Update tag picker to use Field Tag registry | Done — reads from `field_tags` child table |
 | 4 | Tag Finder v1 | Done — Miller columns, tag generation, fallback values, workspace shortcut |
-| 5 | Tag Finder: clipboard/cursor insert | Future — copy to clipboard on click, insert at cursor in Email Template/SMS editors |
+| 5 | Tag Finder: Insert at Cursor + Copy to Clipboard | Done — tracks last focused field, inserts at cursor position |
+| 6 | Email Template Insert Tag → Tag Finder | Done — button opens Tag Finder instead of flat grid |
+| 7 | Dot-notation field resolution | Done — base link fields auto-included in query |
+| 8 | Relationship-specific drill buttons with counts | Done — per-panel child DocTypes, count badges, grayed-out when 0 |
+| 9 | Auto-detect email/phone fields | Done — scans DocType fields by type/name as fallback |
+| 10 | SendGrid + Twilio API wiring | Done — email via SendGrid v3 API, SMS via Twilio REST API |
+| 11 | Blue-themed send dialog + Tag Finder integration | Done — auto-opens Tag Finder in "Type a message" mode |
 
 ---
 
