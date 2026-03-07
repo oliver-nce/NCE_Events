@@ -14,11 +14,12 @@ frappe.pages["page-view"].on_page_show = function (wrapper) {
 		wrapper._explorer = null;
 	}
 
+	var _cb = "?v=" + Date.now();
 	frappe.require(
 		[
-			"/assets/nce_events/js/panel_page/store.js",
-			"/assets/nce_events/js/panel_page/ui.js",
-			"/assets/nce_events/css/panel_page.css",
+			"/assets/nce_events/js/panel_page/store.js" + _cb,
+			"/assets/nce_events/js/panel_page/ui.js" + _cb,
+			"/assets/nce_events/css/panel_page.css" + _cb,
 		],
 		function () {
 			wrapper._explorer = new nce_events.panel_page.Explorer(page);
