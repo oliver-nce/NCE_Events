@@ -50,7 +50,7 @@ nce_events.panel_page.Explorer = class Explorer {
 	_open_wp_tables() {
 		var me = this;
 		me.store.open_panel(me.WP_DOCTYPE, null, {});
-		me._create_float(me.WP_DOCTYPE, true);
+		me._create_float(me.WP_DOCTYPE, true, null);
 		me._show_loading(me.WP_DOCTYPE);
 
 		me.store.fetch_config(me.WP_DOCTYPE).then(function () {
@@ -66,7 +66,7 @@ nce_events.panel_page.Explorer = class Explorer {
 	_open_doctype_panel(doctype, parent_doctype, parent_filter) {
 		var me = this;
 		me.store.open_panel(doctype, parent_doctype, parent_filter);
-		me._create_float(doctype, false);
+		me._create_float(doctype, false, parent_doctype);
 		me._show_loading(doctype);
 
 		me.store.fetch_config(doctype).then(function () {
@@ -81,31 +81,29 @@ nce_events.panel_page.Explorer = class Explorer {
 
 	/* ── Float management ── */
 
-	_create_float(doctype, is_root) {
+	_create_float(doctype, is_root, parent_doctype) {
 		if (this.floats[doctype]) {
 			this._bring_to_front(doctype);
 			return;
 		}
 		this._float_z += 1;
-		if (!is_root) {
-			this._float_offset += 30;
-			if (this._float_offset > 150) this._float_offset = 30;
+
+		var top = 60, left = 40;
+		if (!is_root && parent_doctype && this.floats[parent_doctype]) {
+			var parent_el = this.floats[parent_doctype];
+			top = (parseInt(parent_el.css("top"), 10) || 60) + 100;
+			left = (parseInt(parent_el.css("left"), 10) || 40) + 100;
+		} else if (!is_root) {
+			top = 160;
+			left = 140;
 		}
 
 		var float_el = $('<div class="panel-float" data-doctype="' + frappe.utils.escape_html(doctype) + '"></div>');
-		if (is_root) {
-			float_el.css({
-				top: "60px", left: "40px",
-				width: "70vw", height: "calc(100vh - 140px)",
-				zIndex: this._float_z,
-			});
-		} else {
-			float_el.css({
-				top: (100 + this._float_offset) + "px",
-				left: (180 + this._float_offset) + "px",
-				zIndex: this._float_z,
-			});
-		}
+		float_el.css({
+			top: top + "px", left: left + "px",
+			width: "900px", height: "600px",
+			zIndex: this._float_z,
+		});
 
 		var pane_el = $(
 			'<div class="panel-pane" data-doctype="' + frappe.utils.escape_html(doctype) + '">' +
@@ -310,9 +308,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		html += (filtered_rows.length !== total) ? (filtered_rows.length + " / " + total) : String(total);
 		html += ' records</span>';
 
-		if (!is_wp) {
-			html += '<button class="panel-float-close" title="Close">&times;</button>';
-		}
+		html += '<button class="panel-float-close" title="Close">&times;</button>';
 		html += '</span></div>';
 
 		var header_el = float_el.find(".panel-pane-header");
@@ -358,18 +354,18 @@ nce_events.panel_page.Explorer = class Explorer {
 
 			if (is_wp) {
 				var target_dt = row.frappe_doctype;
-				if (!target_dt) {
-					frappe.show_alert({ message: __("No frappe_doctype on this WP Tables row"), indicator: "orange" });
-					return;
+				if (target_dt) {
+					me._wp_open_target(target_dt);
+				} else {
+					frappe.db.get_value("WP Tables", row.name, "frappe_doctype").then(function (r) {
+						var dt = r && r.message && r.message.frappe_doctype;
+						if (!dt) {
+							frappe.show_alert({ message: __("No frappe_doctype on this WP Tables row"), indicator: "orange" });
+							return;
+						}
+						me._wp_open_target(dt);
+					});
 				}
-				me.store.close_all_except(me.WP_DOCTYPE);
-				Object.keys(me.floats).forEach(function (dt) {
-					if (dt !== me.WP_DOCTYPE) {
-						me.floats[dt].remove();
-						delete me.floats[dt];
-					}
-				});
-				me._open_doctype_panel(target_dt, me.WP_DOCTYPE, {});
 			}
 		});
 
@@ -383,6 +379,18 @@ nce_events.panel_page.Explorer = class Explorer {
 			parent_filter[link_field] = row_name;
 			me._open_doctype_panel(child_dt, doctype, parent_filter);
 		});
+	}
+
+	_wp_open_target(target_dt) {
+		var me = this;
+		me.store.close_all_except(me.WP_DOCTYPE);
+		Object.keys(me.floats).forEach(function (dt) {
+			if (dt !== me.WP_DOCTYPE) {
+				me.floats[dt].remove();
+				delete me.floats[dt];
+			}
+		});
+		me._open_doctype_panel(target_dt, me.WP_DOCTYPE, {});
 	}
 
 	/* ── Client-side user filter ── */
