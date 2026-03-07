@@ -122,8 +122,9 @@
 		var vw = window.innerWidth;
 		var vh = window.innerHeight;
 		$float.css({
-			top: Math.max(60, Math.round(vh * 0.1)) + "px",
-			left: Math.max(40, Math.round((vw - 700) / 2)) + "px",
+			top: Math.max(60, Math.round(vh * 0.08)) + "px",
+			right: "20px",
+			left: "auto",
 		});
 
 		$header.find(".se-close").on("click", function () {
@@ -557,8 +558,8 @@
 		if (document.getElementById("se-style")) return;
 
 		var css =
-			".se-float{position:fixed;z-index:1060;width:700px;height:60vh;" +
-			"min-width:320px;min-height:220px;" +
+			".se-float{position:fixed;z-index:1060;width:280px;height:60vh;" +
+			"min-width:260px;min-height:220px;" +
 			"background:#FAFAFA;border:1px solid #A2CCF6;border-radius:8px;" +
 			"box-shadow:0 8px 32px rgba(18,107,196,.22),0 2px 8px rgba(0,0,0,.08);" +
 			"display:flex;flex-direction:column;overflow:hidden;resize:both}" +

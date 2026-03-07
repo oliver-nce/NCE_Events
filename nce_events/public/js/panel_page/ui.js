@@ -524,6 +524,17 @@ nce_events.panel_page.Explorer = class Explorer {
 		var count = (panel.data.rows || []).length;
 		if (!count) { frappe.msgprint(__("No rows.")); return; }
 
+		function _close_schema() {
+			if (nce_events.schema_explorer && nce_events.schema_explorer.close) {
+				nce_events.schema_explorer.close();
+			}
+		}
+		function _open_schema() {
+			if (nce_events.schema_explorer && nce_events.schema_explorer.open) {
+				nce_events.schema_explorer.open(doctype);
+			}
+		}
+
 		var d = new frappe.ui.Dialog({
 			title: (mode === "sms" ? __("Send SMS") : __("Send Email")) + " (" + count + " recipients)",
 			fields: [
@@ -534,20 +545,24 @@ nce_events.panel_page.Explorer = class Explorer {
 					d.fields_dict.message.$wrapper.toggle(v === "Type a message");
 					d.fields_dict.template.$wrapper.toggle(v === "Use Email Template");
 					if (v === "Type a message") {
-						nce_events.schema_explorer.open(doctype);
+						_open_schema();
 					} else {
-						nce_events.schema_explorer.close();
+						_close_schema();
 					}
 				  }},
 				{ fieldname: "message", fieldtype: "Small Text", label: __("Message"),
 				  description: __("Jinja2 tags supported. Sent to all {0} rows.", [count]) },
 				{ fieldname: "template", fieldtype: "Link", label: __("Email Template"),
-				  options: "Email Template", hidden: 1 },
+				  options: "Email Template" },
 				{ fieldname: "subject", fieldtype: "Data", label: __("Subject") },
 				{ fieldname: "send_email_copy", fieldtype: "Check", label: __("Also send email copy"),
 				  default: mode === "sms" ? 1 : 0 },
 			],
 			primary_action_label: __("Send"),
+			secondary_action_label: __("Cancel"),
+			secondary_action: function () {
+				d.hide();
+			},
 			primary_action: function (vals) {
 				var body = vals.message || "";
 				var subject = vals.subject || "";
@@ -569,12 +584,13 @@ nce_events.panel_page.Explorer = class Explorer {
 				me._do_send(doctype, mode, recipient_field, body, subject, vals.send_email_copy, config.email_field, d);
 			},
 			on_hide: function () {
-				nce_events.schema_explorer.close();
+				_close_schema();
 			},
 		});
+		d.$wrapper.addClass("panel-send-dialog");
 		d.fields_dict.template.$wrapper.hide();
 		d.show();
-		nce_events.schema_explorer.open(doctype);
+		_open_schema();
 	}
 
 	_do_send(doctype, mode, recipient_field, body, subject, send_email_copy, email_field, dialog) {

@@ -510,6 +510,65 @@ body.panel-float-dragging * {
 	opacity: 0.8;
 }
 
+/* ── Send dialog (blue theme) ── */
+
+.panel-send-dialog .modal-header {
+	background: #126BC4;
+	border-bottom: 1px solid #105EAD;
+	border-radius: 8px 8px 0 0;
+}
+
+.panel-send-dialog .modal-header .modal-title {
+	color: #fff;
+	font-weight: 600;
+	font-family: Arial, sans-serif;
+}
+
+.panel-send-dialog .modal-header .btn-modal-close,
+.panel-send-dialog .modal-header .close {
+	color: rgba(255, 255, 255, 0.7);
+	text-shadow: none;
+	opacity: 1;
+}
+
+.panel-send-dialog .modal-header .btn-modal-close:hover,
+.panel-send-dialog .modal-header .close:hover {
+	color: #fff;
+}
+
+.panel-send-dialog .modal-content {
+	border: 1px solid #A2CCF6;
+	border-radius: 8px;
+	box-shadow: 0 8px 32px rgba(18, 107, 196, 0.22), 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.panel-send-dialog .modal-body {
+	font-family: Arial, sans-serif;
+	font-size: 13px;
+}
+
+.panel-send-dialog .btn-primary {
+	background: #126BC4;
+	border-color: #105EAD;
+}
+
+.panel-send-dialog .btn-primary:hover {
+	background: #105EAD;
+	border-color: #0D4F8C;
+}
+
+.panel-send-dialog .btn-secondary,
+.panel-send-dialog .btn-default {
+	color: #126BC4;
+	border-color: #A2CCF6;
+}
+
+.panel-send-dialog .btn-secondary:hover,
+.panel-send-dialog .btn-default:hover {
+	background: #E3F0FC;
+	border-color: #4198F0;
+}
+
 /* ── Responsive ── */
 
 @media (max-width: 768px) {
