@@ -72,16 +72,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		me.store.fetch_config(doctype).then(function () {
 			return me.store.fetch_data(doctype);
 		}).then(function () {
-			if (me._destroyed) return;
-			return me.store.fetch_child_doctypes(doctype);
-		}).then(function (children) {
-			if (me._destroyed) return;
-			if (children && children.length) {
-				console.log("Drill-down targets for " + doctype + ":", children);
-			} else {
-				console.log("No drill-down targets found for " + doctype);
-			}
-			me._render_panel(doctype);
+			if (!me._destroyed) me._render_panel(doctype);
 		}).catch(function (err) {
 			console.error("Error loading panel " + doctype + ":", err);
 			if (!me._destroyed) me._render_panel(doctype);
@@ -205,8 +196,8 @@ nce_events.panel_page.Explorer = class Explorer {
 		var gender_tint_set = me._field_set(config.gender_color_fields);
 
 		var is_wp = (doctype === me.WP_DOCTYPE);
-		var child_doctypes = (data.child_doctypes || me.store._child_cache[doctype] || []);
-		var has_drills = !is_wp;
+		var child_doctypes = data.child_doctypes || [];
+		var has_drills = !is_wp && child_doctypes.length > 0;
 
 		var html = '<table class="panel-table"><thead><tr>';
 		columns.forEach(function (col) {
@@ -249,23 +240,14 @@ nce_events.panel_page.Explorer = class Explorer {
 
 			if (has_drills) {
 				html += '<td class="drill-cell">';
-				if (child_doctypes.length > 0) {
-					child_doctypes.forEach(function (child) {
-						html += '<button class="btn btn-xs drill-btn" data-child-dt="' +
-							frappe.utils.escape_html(child.doctype) +
-							'" data-link-field="' + frappe.utils.escape_html(child.link_field) +
-							'" data-row-name="' + frappe.utils.escape_html(row.name) +
-							'">' + frappe.utils.escape_html(child.label) +
-							' <i class="fa fa-chevron-right" style="font-size:9px;"></i></button>';
-					});
-				} else {
-					html += '<button class="btn btn-xs drill-btn" data-child-dt="Enrollments"' +
-						' data-link-field="product_id" data-row-name="' + frappe.utils.escape_html(row.name) +
-						'">Enrollments <i class="fa fa-chevron-right" style="font-size:9px;"></i></button>';
-					html += '<button class="btn btn-xs drill-btn" data-child-dt="Event Sessions"' +
-						' data-link-field="product_id" data-row-name="' + frappe.utils.escape_html(row.name) +
-						'">Sessions <i class="fa fa-chevron-right" style="font-size:9px;"></i></button>';
-				}
+				child_doctypes.forEach(function (child) {
+					html += '<button class="btn btn-xs drill-btn" data-child-dt="' +
+						frappe.utils.escape_html(child.doctype) +
+						'" data-link-field="' + frappe.utils.escape_html(child.link_field) +
+						'" data-row-name="' + frappe.utils.escape_html(row.name) +
+						'">' + frappe.utils.escape_html(child.label) +
+						' <i class="fa fa-chevron-right" style="font-size:9px;"></i></button>';
+				});
 				html += "</td>";
 			}
 
