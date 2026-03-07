@@ -128,7 +128,7 @@ nce_events.panel_page.Store = class Store {
 		if (me._child_cache[doctype]) {
 			return Promise.resolve(me._child_cache[doctype]);
 		}
-		return new Promise(function (resolve, reject) {
+		return new Promise(function (resolve) {
 			frappe.call({
 				method: "nce_events.api.panel_api.get_child_doctypes",
 				args: { root_doctype: doctype },
@@ -137,7 +137,11 @@ nce_events.panel_page.Store = class Store {
 					me._child_cache[doctype] = children;
 					resolve(children);
 				},
-				error: reject,
+				error: function (err) {
+					console.error("fetch_child_doctypes failed for " + doctype + ":", err);
+					me._child_cache[doctype] = [];
+					resolve([]);
+				},
 			});
 		});
 	}

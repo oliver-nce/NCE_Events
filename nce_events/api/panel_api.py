@@ -180,32 +180,28 @@ def _safe_filename(value):
 def get_child_doctypes(root_doctype):
 	"""Return DocTypes that have a Link field pointing to root_doctype.
 
-	Only DocTypes that appear in WP Tables are included.
+	Uses the same relationship data as NCE_sync's Table Links grid.
 	Returns [{doctype, link_field, label}].
 	"""
-	wp_doctypes = frappe.get_all(
-		"WP Tables",
-		filters={"frappe_doctype": ["is", "set"]},
-		pluck="frappe_doctype",
-	)
-	wp_doctypes = list(set(wp_doctypes))
+	from nce_sync.api import get_table_links_grid_data
 
+	data = get_table_links_grid_data()
+	label_map = {t["doctype"]: t["label"] for t in (data.get("tables") or [])}
+	all_links = data.get("links") or {}
+
+	targets = all_links.get(root_doctype) or {}
 	result = []
-	for dt in wp_doctypes:
-		if dt == root_doctype:
-			continue
-		try:
-			meta = frappe.get_meta(dt)
-		except Exception:
-			continue
-		for field in meta.fields:
-			if field.fieldtype == "Link" and field.options == root_doctype:
+	seen = set()
+	for _target_dt, link_list in targets.items():
+		for link in link_list:
+			child_dt = link.get("many_doctype")
+			if child_dt and child_dt != root_doctype and child_dt not in seen:
+				seen.add(child_dt)
 				result.append({
-					"doctype": dt,
-					"link_field": field.fieldname,
-					"label": dt,
+					"doctype": child_dt,
+					"link_field": link["field"],
+					"label": label_map.get(child_dt, child_dt),
 				})
-				break
 	result.sort(key=lambda r: r["label"])
 	return result
 

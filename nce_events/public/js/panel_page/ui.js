@@ -73,9 +73,18 @@ nce_events.panel_page.Explorer = class Explorer {
 			return me.store.fetch_data(doctype);
 		}).then(function () {
 			if (me._destroyed) return;
-			me.store.fetch_child_doctypes(doctype).then(function () {
-				me._render_panel(doctype);
-			});
+			return me.store.fetch_child_doctypes(doctype);
+		}).then(function (children) {
+			if (me._destroyed) return;
+			if (children && children.length) {
+				console.log("Drill-down targets for " + doctype + ":", children);
+			} else {
+				console.log("No drill-down targets found for " + doctype);
+			}
+			me._render_panel(doctype);
+		}).catch(function (err) {
+			console.error("Error loading panel " + doctype + ":", err);
+			if (!me._destroyed) me._render_panel(doctype);
 		});
 	}
 
