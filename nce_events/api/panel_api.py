@@ -180,30 +180,74 @@ def _safe_filename(value):
 def get_child_doctypes(root_doctype):
 	"""Return DocTypes that have a Link field pointing to root_doctype.
 
-	Uses the same relationship data as NCE_sync's Table Links grid.
+	Scans all WP Tables DocTypes for Link fields targeting root_doctype.
 	Returns [{doctype, link_field, label}].
 	"""
-	from nce_sync.api import get_table_links_grid_data
+	wp_rows = frappe.get_all(
+		"WP Tables",
+		filters={"frappe_doctype": ["is", "set"]},
+		fields=["frappe_doctype", "nce_name", "table_name"],
+	)
 
-	data = get_table_links_grid_data()
-	label_map = {t["doctype"]: t["label"] for t in (data.get("tables") or [])}
-	all_links = data.get("links") or {}
+	label_map = {}
+	wp_doctypes = set()
+	for row in wp_rows:
+		dt = row.get("frappe_doctype")
+		if dt:
+			wp_doctypes.add(dt)
+			label_map[dt] = row.get("nce_name") or row.get("table_name") or dt
 
-	targets = all_links.get(root_doctype) or {}
 	result = []
-	seen = set()
-	for _target_dt, link_list in targets.items():
-		for link in link_list:
-			child_dt = link.get("many_doctype")
-			if child_dt and child_dt != root_doctype and child_dt not in seen:
-				seen.add(child_dt)
+	for dt in wp_doctypes:
+		if dt == root_doctype:
+			continue
+		try:
+			meta = frappe.get_meta(dt)
+		except Exception:
+			continue
+		for field in meta.fields:
+			if field.fieldtype == "Link" and field.options == root_doctype:
 				result.append({
-					"doctype": child_dt,
-					"link_field": link["field"],
-					"label": label_map.get(child_dt, child_dt),
+					"doctype": dt,
+					"link_field": field.fieldname,
+					"label": label_map.get(dt, dt),
 				})
+				break
+
 	result.sort(key=lambda r: r["label"])
+	frappe.logger().info(
+		f"get_child_doctypes({root_doctype}): wp_doctypes={wp_doctypes}, result={result}"
+	)
 	return result
+
+
+@frappe.whitelist()
+def debug_child_lookup(root_doctype):
+	"""Diagnostic: show what get_child_doctypes sees."""
+	wp_rows = frappe.get_all(
+		"WP Tables",
+		filters={"frappe_doctype": ["is", "set"]},
+		fields=["name", "frappe_doctype", "nce_name", "table_name", "mirror_status"],
+	)
+	info = {"root_doctype": root_doctype, "wp_tables": wp_rows, "link_fields_found": []}
+
+	for row in wp_rows:
+		dt = row.get("frappe_doctype")
+		if not dt or dt == root_doctype:
+			continue
+		try:
+			meta = frappe.get_meta(dt)
+			for field in meta.fields:
+				if field.fieldtype == "Link" and field.options == root_doctype:
+					info["link_fields_found"].append({
+						"doctype": dt,
+						"fieldname": field.fieldname,
+						"options": field.options,
+					})
+		except Exception as e:
+			info["link_fields_found"].append({"doctype": dt, "error": str(e)})
+
+	return info
 
 
 @frappe.whitelist()
