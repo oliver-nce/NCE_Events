@@ -119,12 +119,12 @@
 		$(document.body).append($float);
 		_float_el = $float;
 
-		var vw = window.innerWidth;
 		var vh = window.innerHeight;
 		$float.css({
 			top: Math.max(60, Math.round(vh * 0.08)) + "px",
 			right: "20px",
 			left: "auto",
+			width: "280px",
 		});
 
 		$header.find(".se-close").on("click", function () {
@@ -555,7 +555,8 @@
 	/* ── CSS Injection ──────────────────────────────────── */
 
 	function _inject_css() {
-		if (document.getElementById("se-style")) return;
+		var existing = document.getElementById("se-style");
+		if (existing) existing.remove();
 
 		var css =
 			".se-float{position:fixed;z-index:1060;width:280px;height:60vh;" +
