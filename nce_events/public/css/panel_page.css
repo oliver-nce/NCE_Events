@@ -296,7 +296,7 @@ body.col-resizing * {
 	position: fixed;
 	display: flex;
 	flex-direction: column;
-	width: 900px;
+	width: 1200px;
 	height: 600px;
 	min-width: 300px;
 	min-height: 200px;
@@ -479,91 +479,10 @@ body.panel-float-dragging * {
 	color: #126BC4;
 }
 
-/* ── Core filter widget ── */
-
-.pane-core-filter-toggle-btn.btn-primary-light {
-	background: rgba(255, 255, 255, 0.25);
-	border-color: rgba(255, 255, 255, 0.5);
-	color: #fff;
-}
-
-.pane-core-filter-widget {
-	display: flex;
-	flex-direction: column;
-	gap: 4px;
-	padding: 5px 10px;
-	border-top: 1px solid #105EAD;
-	background: #0D5BAA;
-}
-
-.core-filter-row {
-	display: flex;
-	align-items: center;
-	gap: 6px;
-}
-
-.core-filter-btn-row {
-	justify-content: flex-end;
-}
-
-.core-filter-label {
-	font-size: 11px;
-	font-weight: 700;
-	color: rgba(255, 255, 255, 0.7);
-	font-family: monospace;
-	flex-shrink: 0;
-}
-
-.core-filter-input {
-	flex: 1;
-	min-width: 0;
-	font-size: 12px;
-	font-family: monospace;
-	padding: 3px 6px;
-	border: 1px solid rgba(255, 255, 255, 0.3);
-	border-radius: 3px;
-	background: rgba(255, 255, 255, 0.12);
-	color: #fff;
-	height: 26px;
-}
-
-.core-filter-input::placeholder {
-	color: rgba(255, 255, 255, 0.4);
-}
-
-.core-filter-input:focus {
-	outline: none;
-	border-color: rgba(255, 255, 255, 0.6);
-	background: rgba(255, 255, 255, 0.18);
-}
-
-.core-filter-apply-btn {
-	flex-shrink: 0;
-	font-size: 11px;
-	padding: 2px 10px;
-	height: 26px;
-}
-
-.core-filter-clear-btn {
-	flex-shrink: 0;
-	font-size: 11px;
-	padding: 2px 8px;
-	height: 26px;
-	color: rgba(255, 255, 255, 0.7);
-	border-color: rgba(255, 255, 255, 0.3);
-	background: transparent;
-}
-
-.core-filter-clear-btn:hover {
-	color: #fff;
-	border-color: rgba(255, 255, 255, 0.5);
-	background: rgba(255, 255, 255, 0.1);
-}
-
 /* ── Drill-down buttons ── */
 
 .drill-col {
-	width: 220px;
+	width: 320px;
 	white-space: nowrap;
 	text-align: right;
 	padding-right: 8px !important;

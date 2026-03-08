@@ -62,9 +62,8 @@ nce_events.panel_page.Explorer = class Explorer {
 				var sel = ".panel-float, .panel-float .panel-table td, .panel-float .panel-table th, " +
 					".panel-float .pane-label, .panel-float .pane-count, .panel-float .drill-btn, " +
 					".panel-float .panel-float-footer, .panel-float .pane-filter-widget, " +
-					".panel-float .pane-core-filter-widget, .panel-float .filter-col-select, " +
-					".panel-float .filter-op-select, .panel-float .filter-val-input, " +
-					".panel-float .core-filter-input";
+					".panel-float .filter-col-select, " +
+					".panel-float .filter-op-select, .panel-float .filter-val-input";
 
 				var css = sel + " {\n" +
 					"  font-family: " + font + " !important;\n" +
@@ -344,13 +343,6 @@ nce_events.panel_page.Explorer = class Explorer {
 		html += '<span class="pane-label">' + frappe.utils.escape_html(label) + '</span>';
 		html += '<span class="pane-title-right">';
 
-		if (!is_wp) {
-			var cf_active = !!(config.core_filter || config.order_by);
-			html += '<button class="btn btn-xs pane-header-btn pane-core-filter-toggle-btn' +
-				(cf_active ? " btn-primary-light" : " btn-default") +
-				'" title="Core Filter (SQL WHERE)">' +
-				'<i class="fa fa-database"></i></button>';
-		}
 		if (config.show_filter) {
 			html += '<button class="btn btn-xs btn-default pane-header-btn pane-filter-toggle-btn" title="Filter">' +
 				'<i class="fa fa-filter"></i></button>';
@@ -378,14 +370,6 @@ nce_events.panel_page.Explorer = class Explorer {
 		var header_el = float_el.find(".panel-pane-header");
 		header_el.html(html);
 
-		header_el.find(".pane-core-filter-toggle-btn").on("click", function () {
-			var widget = float_el.find(".pane-core-filter-widget");
-			if (widget.length) {
-				widget.remove();
-			} else {
-				me._render_core_filter_widget(doctype);
-			}
-		});
 		if (config.show_filter) {
 			header_el.find(".pane-filter-toggle-btn").on("click", function () {
 				var widget = float_el.find(".pane-filter-widget");
@@ -464,62 +448,6 @@ nce_events.panel_page.Explorer = class Explorer {
 			}
 		});
 		me._open_doctype_panel(target_dt, me.WP_DOCTYPE, {});
-	}
-
-	/* ── Core filter widget ── */
-
-	_render_core_filter_widget(doctype) {
-		var me = this;
-		var float_el = me.floats[doctype];
-		if (!float_el) return;
-		var panel = me.store.get_panel(doctype);
-		if (!panel || !panel.config) return;
-
-		var cur_filter = panel.config.core_filter || "";
-		var cur_order = panel.config.order_by || "";
-
-		var widget = $('<div class="pane-core-filter-widget"></div>');
-
-		var where_row = $('<div class="core-filter-row"></div>');
-		var where_inp = $('<input class="core-filter-input" type="text" placeholder="e.g. end_date > CURRENT_DATE() - INTERVAL 10 DAY">');
-		where_inp.val(cur_filter);
-		where_row.append($('<span class="core-filter-label">WHERE</span>'), where_inp);
-
-		var order_row = $('<div class="core-filter-row"></div>');
-		var order_inp = $('<input class="core-filter-input" type="text" placeholder="e.g. end_date DESC">');
-		order_inp.val(cur_order);
-		order_row.append($('<span class="core-filter-label">ORDER BY</span>'), order_inp);
-
-		var btn_row = $('<div class="core-filter-row core-filter-btn-row"></div>');
-		var apply_btn = $('<button class="btn btn-xs btn-primary core-filter-apply-btn">Apply</button>');
-		var clear_btn = $('<button class="btn btn-xs btn-default core-filter-clear-btn">Clear</button>');
-
-		function do_save(filter_val, order_val) {
-			frappe.call({
-				method: "nce_events.api.panel_api.save_panel_sql",
-				args: { root_doctype: doctype, core_filter: filter_val, order_by: order_val },
-				callback: function () {
-					panel.config.core_filter = filter_val;
-					panel.config.order_by = order_val;
-					me._show_loading(doctype);
-					me.store.fetch_data(doctype).then(function () {
-						if (!me._destroyed) me._render_panel(doctype);
-					});
-				},
-			});
-		}
-
-		apply_btn.on("click", function () { do_save(where_inp.val().trim(), order_inp.val().trim()); });
-		clear_btn.on("click", function () { where_inp.val(""); order_inp.val(""); do_save("", ""); });
-		where_inp.on("keydown", function (e) { if (e.key === "Enter") apply_btn.click(); });
-		order_inp.on("keydown", function (e) { if (e.key === "Enter") apply_btn.click(); });
-
-		btn_row.append(apply_btn, clear_btn);
-		widget.append(where_row, order_row, btn_row);
-
-		float_el.find(".pane-core-filter-widget").remove();
-		float_el.find(".panel-pane-header").append(widget);
-		where_inp.focus();
 	}
 
 	/* ── Client-side user filter ── */
