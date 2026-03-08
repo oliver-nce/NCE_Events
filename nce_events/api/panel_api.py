@@ -573,6 +573,7 @@ def preview_panel_message(root_doctype, filters=None, body="", subject=""):
 	row = random.choice(rows)
 	col_fieldnames = [c["fieldname"] for c in columns]
 	context = {fn: row.get(fn, "") for fn in col_fieldnames}
+	context["doc"] = frappe._dict(context)
 
 	try:
 		rendered_body = frappe.render_template(body, context)
@@ -609,6 +610,7 @@ def send_panel_message(
 
 	for row in rows:
 		context = {fn: row.get(fn, "") for fn in col_fieldnames}
+		context["doc"] = frappe._dict(context)
 		recipient = str(context.get(recipient_field, "")).strip()
 		if not recipient:
 			continue
