@@ -578,6 +578,35 @@ def _enrich_row_context(root_doctype, row):
 
 
 @frappe.whitelist()
+def send_test_email(root_doctype, filters=None, body="", subject="", test_email=""):
+	"""Render the template against the first row and send to a test address."""
+	if not test_email or not test_email.strip():
+		return {"error": "No test email address provided."}
+	test_email = test_email.strip()
+
+	result = get_panel_data(root_doctype, filters)
+	rows = result.get("rows") or []
+	if not rows:
+		return {"error": "No rows to preview."}
+
+	row = rows[0]
+	context = _enrich_row_context(root_doctype, row)
+
+	try:
+		rendered_body = frappe.render_template(body, context)
+	except Exception:
+		rendered_body = body
+
+	try:
+		rendered_subject = frappe.render_template(subject, context) if subject else "(Test Email)"
+	except Exception:
+		rendered_subject = subject or "(Test Email)"
+
+	_send_email(test_email, rendered_subject, rendered_body)
+	return {"sent": 1, "to": test_email}
+
+
+@frappe.whitelist()
 def preview_panel_message(root_doctype, filters=None, body="", subject=""):
 	"""Render a message template against the first row for preview."""
 	result = get_panel_data(root_doctype, filters)

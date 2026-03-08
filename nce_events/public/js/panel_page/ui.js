@@ -632,9 +632,12 @@ nce_events.panel_page.Explorer = class Explorer {
 						'<span class="send-preview-title">Preview</span>' +
 						'<button class="send-preview-close" title="Close preview">&times;</button>' +
 					'</div>' +
-					'<div class="send-preview-recipient"></div>' +
 					'<div class="send-preview-subject"></div>' +
 					'<div class="send-preview-body"></div>' +
+					'<div class="send-test-row">' +
+						'<input class="send-field send-test-email-input" type="text" placeholder="Test email address...">' +
+						'<button class="btn btn-xs btn-default send-test-btn"><i class="fa fa-paper-plane"></i> Send Test</button>' +
+					'</div>' +
 				'</div>' +
 			'</div>'
 		);
@@ -682,12 +685,16 @@ nce_events.panel_page.Explorer = class Explorer {
 		el.find(".send-cancel-btn").on("click", function () { me._close_send_panel(); });
 		el.find(".send-preview-close").on("click", function () { el.find(".send-panel-preview").hide(); });
 
-		el.find(".send-preview-btn").on("click", function () {
+		el.on("click", ".send-preview-btn", function () {
 			me._do_preview(doctype);
 		});
 
-		el.find(".send-send-btn").on("click", function () {
+		el.on("click", ".send-send-btn", function () {
 			me._do_send_from_panel(doctype, mode, recipient_field, config);
+		});
+
+		el.on("click", ".send-test-btn", function () {
+			me._do_send_test(doctype);
 		});
 
 		_open_tags();
@@ -750,9 +757,6 @@ nce_events.panel_page.Explorer = class Explorer {
 					if (!r.message) return;
 					if (r.message.error) { frappe.msgprint(r.message.error); return; }
 					var preview_el = el.find(".send-panel-preview");
-					var ctx = r.message.context || {};
-					var recipient_info = Object.keys(ctx).slice(0, 3).map(function (k) { return k + ": " + ctx[k]; }).join(" | ");
-					preview_el.find(".send-preview-recipient").text(recipient_info);
 					preview_el.find(".send-preview-subject").text(r.message.rendered_subject || "(No subject)");
 					preview_el.find(".send-preview-body").html(r.message.rendered_body || "");
 					preview_el.show();
@@ -829,6 +833,68 @@ nce_events.panel_page.Explorer = class Explorer {
 		}
 		if (!body.trim()) { frappe.msgprint(__("Enter a message or select a template.")); return; }
 		do_send(body, subject);
+	}
+
+	_do_send_test(doctype) {
+		var me = this;
+		var el = me._send_panel_el;
+		if (!el) return;
+		var panel = me.store.get_panel(doctype);
+		if (!panel) return;
+		var filters = panel.parent_filter || {};
+
+		var test_email = el.find(".send-test-email-input").val().trim();
+		if (!test_email) {
+			frappe.msgprint(__("Enter a test email address."));
+			return;
+		}
+
+		var source = el.find(".send-source-select").val();
+		var subject = el.find(".send-subject-input").val() || "";
+		var test_btn = el.find(".send-test-btn");
+
+		function do_test(body_text, subject_text) {
+			test_btn.prop("disabled", true).text("Sending...");
+			frappe.call({
+				method: "nce_events.api.panel_api.send_test_email",
+				args: {
+					root_doctype: doctype,
+					filters: JSON.stringify(filters),
+					body: body_text,
+					subject: subject_text,
+					test_email: test_email,
+				},
+				callback: function (r) {
+					test_btn.prop("disabled", false).html('<i class="fa fa-paper-plane"></i> Send Test');
+					if (r.message && r.message.sent) {
+						frappe.show_alert({ message: __("Test email sent to {0}", [r.message.to]), indicator: "green" });
+					} else if (r.message && r.message.error) {
+						frappe.msgprint(r.message.error);
+					}
+				},
+				error: function () {
+					test_btn.prop("disabled", false).html('<i class="fa fa-paper-plane"></i> Send Test');
+				},
+			});
+		}
+
+		if (source === "template") {
+			var tpl_name = el.find(".send-template-input").val().trim();
+			if (!tpl_name) { frappe.msgprint(__("Select a template first.")); return; }
+			frappe.call({
+				method: "frappe.client.get",
+				args: { doctype: "Email Template", name: tpl_name },
+				callback: function (r) {
+					if (!r.message) return;
+					do_test(r.message.response || "", subject || r.message.subject || "");
+				}
+			});
+			return;
+		}
+
+		var body = el.find(".send-message-input").val() || "";
+		if (!body.trim()) { frappe.msgprint(__("Enter a message first.")); return; }
+		do_test(body, subject);
 	}
 
 	_close_send_panel() {

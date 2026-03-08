@@ -746,15 +746,32 @@ body.panel-float-dragging * {
 
 .send-preview-close:hover { color: #333; }
 
-.send-preview-recipient {
-	padding: 6px 12px;
-	font-size: 10px;
-	color: #6C7680;
+.send-test-row {
+	display: flex;
+	gap: 6px;
+	padding: 8px 12px;
+	border-top: 1px solid #e0e5ea;
 	background: #f0f4f8;
-	border-bottom: 1px solid #e0e5ea;
+	flex-shrink: 0;
+	align-items: center;
+}
+
+.send-test-email-input {
+	flex: 1;
+	font-size: 12px !important;
+	padding: 4px 8px !important;
+	min-width: 0;
+}
+
+.send-test-btn {
+	flex-shrink: 0;
 	white-space: nowrap;
-	overflow: hidden;
-	text-overflow: ellipsis;
+	color: #126BC4 !important;
+	border-color: #A2CCF6 !important;
+}
+
+.send-test-btn:hover {
+	background: #E3F0FC !important;
 }
 
 .send-preview-subject {

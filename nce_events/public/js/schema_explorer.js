@@ -575,6 +575,7 @@
 			}
 			_insert_at_cursor(_last_editable, current_tag);
 			frappe.show_alert({ message: __("Tag inserted"), indicator: "green" });
+			$panel.remove();
 		});
 
 		$panel.find(".se-copy-btn").on("click", function () {
@@ -582,9 +583,11 @@
 			if (navigator.clipboard) {
 				navigator.clipboard.writeText(current_tag).then(function () {
 					frappe.show_alert({ message: __("Tag copied"), indicator: "green" });
+					$panel.remove();
 				});
 			} else {
 				_clipboard_fallback(current_tag);
+				$panel.remove();
 			}
 		});
 
