@@ -63,14 +63,17 @@ nce_events.panel_page.Explorer = class Explorer {
 					".panel-float .pane-label, .panel-float .pane-count, .panel-float .drill-btn, " +
 					".panel-float .panel-float-footer, .panel-float .pane-filter-widget, " +
 					".panel-float .filter-col-select, " +
-					".panel-float .filter-op-select, .panel-float .filter-val-input, " +
-					".send-panel, .send-panel .send-field, .send-panel .send-field-label, " +
-					".send-panel-preview, .send-preview-body, .send-preview-subject";
+					".panel-float .filter-op-select, .panel-float .filter-val-input";
 
 				var css = sel + " {\n" +
 					"  font-family: " + font + " !important;\n" +
 					"  font-weight: " + weight + " !important;\n" +
 					"  font-size: " + size + " !important;\n" +
+					"}\n" +
+					".send-panel, .send-panel .send-field, .send-panel .send-field-label, " +
+					".send-panel .send-panel-title, .send-preview-body, .send-preview-subject, " +
+					".send-preview-recipient {\n" +
+					"  font-family: " + font + " !important;\n" +
 					"}\n" +
 					".panel-float .panel-table td {\n" +
 					"  color: " + color + " !important;\n" +
@@ -596,16 +599,16 @@ nce_events.panel_page.Explorer = class Explorer {
 						'<option value="type">Type a message</option>' +
 						'<option value="template">Use Email Template</option>' +
 					'</select>' +
+					'<label class="send-field-label">Subject</label>' +
+					'<input class="send-field send-subject-input" type="text">' +
 					'<div class="send-message-section">' +
 						'<label class="send-field-label">Message</label>' +
-						'<textarea class="send-field send-message-input" rows="8" placeholder="Jinja2 tags supported. Sent to all ' + count + ' rows."></textarea>' +
+						'<textarea class="send-field send-message-input" placeholder="Jinja2 tags supported. Sent to all ' + count + ' rows."></textarea>' +
 					'</div>' +
 					'<div class="send-template-section" style="display:none;">' +
 						'<label class="send-field-label">Email Template</label>' +
 						'<input class="send-field send-template-input" type="text" placeholder="Template name...">' +
 					'</div>' +
-					'<label class="send-field-label">Subject</label>' +
-					'<input class="send-field send-subject-input" type="text">' +
 					'<label class="send-check-label"><input type="checkbox" class="send-copy-check"' +
 						(mode === "sms" ? ' checked' : '') + '> Also send email copy</label>' +
 					'<div class="send-panel-actions">' +
@@ -642,11 +645,24 @@ nce_events.panel_page.Explorer = class Explorer {
 		var tpl_section = el.find(".send-template-section");
 		var tpl_input = el.find(".send-template-input");
 
+		function _open_tags() {
+			if (nce_events.schema_explorer && nce_events.schema_explorer.open) {
+				nce_events.schema_explorer.open(doctype);
+			}
+		}
+		function _close_tags() {
+			if (nce_events.schema_explorer && nce_events.schema_explorer.close) {
+				nce_events.schema_explorer.close();
+			}
+		}
+
 		source_sel.on("change", function () {
 			if (source_sel.val() === "type") {
 				msg_section.show(); tpl_section.hide();
+				_open_tags();
 			} else {
 				msg_section.hide(); tpl_section.show();
+				_close_tags();
 			}
 		});
 
@@ -665,6 +681,8 @@ nce_events.panel_page.Explorer = class Explorer {
 		el.find(".send-send-btn").on("click", function () {
 			me._do_send_from_panel(doctype, mode, recipient_field, config);
 		});
+
+		_open_tags();
 	}
 
 	_setup_template_autocomplete(input_el) {
@@ -809,6 +827,9 @@ nce_events.panel_page.Explorer = class Explorer {
 		if (this._send_panel_el) {
 			this._send_panel_el.remove();
 			this._send_panel_el = null;
+		}
+		if (nce_events.schema_explorer && nce_events.schema_explorer.close) {
+			nce_events.schema_explorer.close();
 		}
 	}
 
