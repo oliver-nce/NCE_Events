@@ -54,6 +54,7 @@ nce_events.panel_page.Explorer = class Explorer {
 				if (!r || !r.message) return;
 				var doc = r.message;
 				var font = FONT_MAP[doc.font_family] || "'Inter', sans-serif";
+				var weight = parseInt(doc.font_weight) || 400;
 				var size = doc.font_size || "13px";
 				var color = doc.text_color || "#333333";
 				var muted = doc.muted_text_color || "#555555";
@@ -67,6 +68,7 @@ nce_events.panel_page.Explorer = class Explorer {
 
 				var css = sel + " {\n" +
 					"  font-family: " + font + " !important;\n" +
+					"  font-weight: " + weight + " !important;\n" +
 					"  font-size: " + size + " !important;\n" +
 					"}\n" +
 					".panel-float .panel-table td {\n" +

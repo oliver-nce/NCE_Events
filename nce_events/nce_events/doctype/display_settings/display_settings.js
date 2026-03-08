@@ -1,9 +1,16 @@
+var _WEIGHT_OPTIONS = {
+	"Inter":          ["100 Thin","200 Extra Light","300 Light","400 Regular","500 Medium","600 Semi Bold","700 Bold","800 Extra Bold","900 Black"],
+	"Source Sans 3":  ["200 Extra Light","300 Light","400 Regular","500 Medium","600 Semi Bold","700 Bold","800 Extra Bold","900 Black"],
+	"Arial":          ["400 Regular","700 Bold"],
+	"Helvetica":      ["300 Light","400 Regular","700 Bold"],
+	"Georgia":        ["400 Regular","700 Bold"],
+	"Verdana":        ["400 Regular","700 Bold"],
+	"Tahoma":         ["400 Regular","700 Bold"],
+	"System Default": ["100 Thin","200 Extra Light","300 Light","400 Regular","500 Medium","600 Semi Bold","700 Bold","800 Extra Bold","900 Black"]
+};
+
 frappe.ui.form.on("Display Settings", {
 	refresh: function (frm) {
-		frm.add_custom_button(__("Preview"), function () {
-			_inject_preview(frm);
-		}).addClass("btn-default");
-
 		frm.add_custom_button(__("Apply & Save"), function () {
 			frm.save().then(function () {
 				frappe.show_alert({
@@ -13,14 +20,70 @@ frappe.ui.form.on("Display Settings", {
 			});
 		}).addClass("btn-primary-dark");
 
-		frm.add_custom_button(__("Remove Preview"), function () {
-			$("#display-settings-preview").remove();
-			frappe.show_alert({ message: __("Preview removed"), indicator: "blue" });
-		}).addClass("btn-default");
-
 		_attach_color_pickers(frm);
+		_sync_weight_options(frm);
+		_render_sample(frm);
 	},
+
+	font_family: function (frm) {
+		_sync_weight_options(frm);
+		_render_sample(frm);
+	},
+
+	font_weight: function (frm) {
+		_render_sample(frm);
+	},
+
+	font_size: function (frm) {
+		_render_sample(frm);
+	},
+
+	text_color: function (frm) {
+		_render_sample(frm);
+	},
+
+	muted_text_color: function (frm) {
+		_render_sample(frm);
+	}
 });
+
+function _sync_weight_options(frm) {
+	var family = frm.doc.font_family || "Inter";
+	var opts = _WEIGHT_OPTIONS[family] || ["400 Regular","700 Bold"];
+	var current = frm.doc.font_weight || "400 Regular";
+
+	frm.set_df_property("font_weight", "options", opts.join("\n"));
+
+	if (opts.indexOf(current) === -1) {
+		var best = "400 Regular";
+		if (opts.indexOf(best) === -1) best = opts[0];
+		frm.set_value("font_weight", best);
+	}
+
+	frm.refresh_field("font_weight");
+}
+
+function _render_sample(frm) {
+	var field = frm.fields_dict.preview_html;
+	if (!field || !field.$wrapper) return;
+
+	var font = _FONT_MAP[frm.doc.font_family] || "'Inter', sans-serif";
+	var weight = parseInt(frm.doc.font_weight) || 400;
+	var size = frm.doc.font_size || "13px";
+	var color = frm.doc.text_color || "#333333";
+	var muted = frm.doc.muted_text_color || "#555555";
+
+	field.$wrapper.html(
+		'<div style="padding:16px 20px;border:1px solid #e0e0e0;border-radius:8px;background:#fff;">' +
+		'<div style="font-family:' + font + ';font-weight:' + weight + ';font-size:' + size + ';color:' + color + ';line-height:1.6;margin-bottom:8px;">' +
+		'Frappe + AI is an awesome development platform' +
+		'</div>' +
+		'<div style="font-family:' + font + ';font-weight:' + weight + ';font-size:' + size + ';color:' + muted + ';line-height:1.6;">' +
+		'Muted: secondary text, headers, counts' +
+		'</div>' +
+		'</div>'
+	);
+}
 
 /* ── Color Picker (Apple-style grid + HSV sliders) ── */
 
@@ -245,34 +308,3 @@ var _FONT_MAP = {
 	"System Default": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
 };
 
-function _inject_preview(frm) {
-	$("#display-settings-preview").remove();
-
-	var font = _FONT_MAP[frm.doc.font_family] || "'Inter', sans-serif";
-	var size = frm.doc.font_size || "13px";
-	var color = frm.doc.text_color || "#333333";
-	var muted = frm.doc.muted_text_color || "#555555";
-
-	var sel = ".panel-float, .panel-float .panel-table td, .panel-float .panel-table th, " +
-		".panel-float .pane-label, .panel-float .pane-count, .panel-float .drill-btn, " +
-		".panel-float .panel-float-footer, .panel-float .pane-filter-widget, " +
-		".panel-float .pane-core-filter-widget, .panel-float .filter-col-select, " +
-		".panel-float .filter-op-select, .panel-float .filter-val-input, " +
-		".panel-float .core-filter-input";
-
-	var css = sel + " {\n" +
-		"  font-family: " + font + " !important;\n" +
-		"  font-size: " + size + " !important;\n" +
-		"}\n" +
-		".panel-float .panel-table td {\n" +
-		"  color: " + color + " !important;\n" +
-		"}\n" +
-		".panel-float .panel-table th,\n" +
-		".panel-float .pane-count,\n" +
-		".panel-float .drill-btn.disabled {\n" +
-		"  color: " + muted + " !important;\n" +
-		"}\n";
-
-	$("<style>").attr("id", "display-settings-preview").text(css).appendTo("head");
-	frappe.show_alert({ message: __("Preview applied — save to make permanent"), indicator: "orange" });
-}
