@@ -255,8 +255,8 @@ function _inject_preview(frm) {
 		".panel-float .core-filter-input";
 
 	var css = sel + " {\n" +
-		"  font-family: " + font + ";\n" +
-		"  font-size: " + size + ";\n" +
+		"  font-family: " + font + " !important;\n" +
+		"  font-size: " + size + " !important;\n" +
 		"}\n" +
 		".panel-float .panel-table td {\n" +
 		"  color: " + color + ";\n" +
