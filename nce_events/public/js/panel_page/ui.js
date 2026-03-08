@@ -162,10 +162,12 @@ nce_events.panel_page.Explorer = class Explorer {
 			left = 140;
 		}
 
+		var float_width = is_root ? 900 : 1400;
+
 		var float_el = $('<div class="panel-float" data-doctype="' + frappe.utils.escape_html(doctype) + '"></div>');
 		float_el.css({
 			top: top + "px", left: left + "px",
-			width: "900px", height: "600px",
+			width: float_width + "px", height: "600px",
 			zIndex: this._float_z,
 		});
 
@@ -263,11 +265,18 @@ nce_events.panel_page.Explorer = class Explorer {
 		var child_doctypes = data.child_doctypes || [];
 		var has_drills = !is_wp && child_doctypes.length > 0;
 
+		var float_w = float_el.width() || (is_wp ? 900 : 1400);
+		var col_widths = me._calc_col_widths(columns, rows, has_drills, float_w);
+
 		var html = '<table class="panel-table"><thead><tr>';
-		columns.forEach(function (col) {
+		columns.forEach(function (col, ci) {
 			var fn = col.fieldname.toLowerCase();
-			var extra = bold_set[fn] ? ' style="font-weight:700;"' : "";
-			html += "<th" + extra + ">" + frappe.utils.escape_html(col.label) + "</th>";
+			var w = col_widths[ci] || 100;
+			var style = "width:" + w + "px;min-width:" + w + "px;";
+			if (bold_set[fn]) style += "font-weight:700;";
+			html += '<th style="' + style + 'position:relative;">' +
+				frappe.utils.escape_html(col.label) +
+				'<div class="col-resize-handle" data-col="' + ci + '"></div></th>';
 		});
 		if (has_drills) {
 			html += '<th class="drill-col"></th>';
@@ -280,26 +289,27 @@ nce_events.panel_page.Explorer = class Explorer {
 			html += '<tr class="panel-row' + (is_sel ? " selected" : "") + (ri % 2 === 1 ? " alt" : "") +
 				'" data-row-idx="' + ri + '">';
 
-			columns.forEach(function (col) {
+			columns.forEach(function (col, ci) {
 				var fn = col.fieldname.toLowerCase();
 				var value = row[col.fieldname];
 				if (value === null || value === undefined) value = row[fn];
 				if (value === null || value === undefined) value = "";
 				if (me._looks_like_date(value)) value = frappe.datetime.str_to_user(value);
 
-				var style = "";
+				var w = col_widths[ci] || 100;
+				var parts = ["width:" + w + "px", "min-width:" + w + "px"];
 				if (gender_col && gender_tint_set[fn]) {
 					var gv = String(row[gender_col] || row[gender_col.toLowerCase()] || "").trim().toLowerCase();
 					if (me._looks_male(gv) && male_hex) {
-						style = ' style="font-weight:700;color:' + male_hex + ';"';
+						parts.push("font-weight:700", "color:" + male_hex);
 					} else if (me._looks_female(gv) && female_hex) {
-						style = ' style="font-weight:700;color:' + female_hex + ';"';
+						parts.push("font-weight:700", "color:" + female_hex);
 					}
 				} else if (bold_set[fn]) {
-					style = ' style="font-weight:700;"';
+					parts.push("font-weight:700");
 				}
 
-				html += "<td" + style + ">" + frappe.utils.escape_html(String(value)) + "</td>";
+				html += '<td style="' + parts.join(";") + ';">' + frappe.utils.escape_html(String(value)) + "</td>";
 			});
 
 			if (has_drills) {
@@ -326,6 +336,7 @@ nce_events.panel_page.Explorer = class Explorer {
 
 		float_el.find(".panel-pane-body").html(html);
 		me._bind_events(doctype);
+		me._bind_col_resize(doctype);
 
 		if (!skip_header && config.show_filter) {
 			var uf = me.store.get_user_filters(doctype);
@@ -947,6 +958,76 @@ nce_events.panel_page.Explorer = class Explorer {
 
 	_hide_card() {
 		$(".panel-card-popover").remove();
+	}
+
+	/* ── Column auto-sizing ── */
+
+	_calc_col_widths(columns, rows, has_drills, float_w) {
+		var sample = rows.slice(0, 20);
+		var MIN_COL = 50;
+		var MAX_COL = 500;
+		var avg_chars = [];
+
+		columns.forEach(function (col) {
+			var total = 0;
+			var count = 0;
+			sample.forEach(function (row) {
+				var v = row[col.fieldname];
+				if (v === null || v === undefined) v = row[col.fieldname.toLowerCase()];
+				var s = String(v || "");
+				total += s.length;
+				count++;
+			});
+			var header_len = (col.label || col.fieldname).length;
+			var avg = count > 0 ? total / count : header_len;
+			avg = Math.max(avg, header_len);
+			avg_chars.push(Math.max(avg, 2));
+		});
+
+		var total_chars = 0;
+		avg_chars.forEach(function (c) { total_chars += c; });
+
+		var available = float_w - 40;
+		if (has_drills) available -= 320;
+
+		var widths = [];
+		avg_chars.forEach(function (c) {
+			var w = Math.round((c / total_chars) * available);
+			widths.push(Math.min(MAX_COL, Math.max(MIN_COL, w)));
+		});
+
+		return widths;
+	}
+
+	/* ── Column drag resize ── */
+
+	_bind_col_resize(doctype) {
+		var me = this;
+		var float_el = me.floats[doctype];
+		if (!float_el) return;
+
+		float_el.find(".col-resize-handle").on("mousedown", function (e) {
+			e.preventDefault();
+			e.stopPropagation();
+			var $handle = $(this);
+			var $th = $handle.closest("th");
+			var start_x = e.clientX;
+			var start_w = $th.outerWidth();
+			var col_idx = parseInt($handle.attr("data-col"), 10);
+
+			$("body").addClass("col-resizing");
+			$(document).on("mousemove.col_resize", function (ev) {
+				var new_w = Math.max(40, start_w + ev.clientX - start_x);
+				$th.css({ width: new_w + "px", minWidth: new_w + "px" });
+				float_el.find(".panel-table tbody tr").each(function () {
+					$(this).children("td").eq(col_idx).css({ width: new_w + "px", minWidth: new_w + "px" });
+				});
+			});
+			$(document).on("mouseup.col_resize", function () {
+				$("body").removeClass("col-resizing");
+				$(document).off("mousemove.col_resize mouseup.col_resize");
+			});
+		});
 	}
 
 	/* ── Utilities ── */
