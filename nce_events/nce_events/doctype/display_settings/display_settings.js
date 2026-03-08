@@ -12,8 +12,55 @@ frappe.ui.form.on("Display Settings", {
 			$("#display-settings-preview").remove();
 			frappe.show_alert({ message: __("Preview removed"), indicator: "blue" });
 		}).addClass("btn-default");
+
+		_attach_color_pickers(frm);
 	},
 });
+
+function _attach_color_pickers(frm) {
+	["text_color", "muted_text_color"].forEach(function (fieldname) {
+		var field = frm.fields_dict[fieldname];
+		if (!field || !field.$wrapper) return;
+		if (field.$wrapper.find(".ds-color-picker").length) return;
+
+		var current = frm.doc[fieldname] || "#333333";
+
+		var picker = $('<input type="color" class="ds-color-picker">')
+			.val(current)
+			.css({
+				width: "36px",
+				height: "36px",
+				padding: "2px",
+				border: "1px solid #ccc",
+				borderRadius: "4px",
+				cursor: "pointer",
+				verticalAlign: "middle",
+				marginLeft: "8px",
+			});
+
+		var swatch = $('<span class="ds-color-swatch"></span>')
+			.css({
+				display: "inline-block",
+				width: "60px",
+				height: "20px",
+				borderRadius: "3px",
+				border: "1px solid #ccc",
+				verticalAlign: "middle",
+				marginLeft: "8px",
+				background: current,
+			});
+
+		picker.on("input", function () {
+			var val = $(this).val();
+			swatch.css("background", val);
+			frm.set_value(fieldname, val);
+		});
+
+		field.$wrapper.find(".control-input-wrapper, .control-input").first()
+			.append(picker)
+			.append(swatch);
+	});
+}
 
 var _FONT_MAP = {
 	"Inter": "'Inter', sans-serif",
