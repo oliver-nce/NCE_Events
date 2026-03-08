@@ -5,7 +5,12 @@ frappe.ui.form.on("Display Settings", {
 		}).addClass("btn-default");
 
 		frm.add_custom_button(__("Apply & Save"), function () {
-			frm.save();
+			frm.save().then(function () {
+				frappe.show_alert({
+					message: __("Saved — reload the panel page to see changes"),
+					indicator: "green"
+				});
+			});
 		}).addClass("btn-primary-dark");
 
 		frm.add_custom_button(__("Remove Preview"), function () {
@@ -259,10 +264,12 @@ function _inject_preview(frm) {
 		"  font-size: " + size + " !important;\n" +
 		"}\n" +
 		".panel-float .panel-table td {\n" +
-		"  color: " + color + ";\n" +
+		"  color: " + color + " !important;\n" +
 		"}\n" +
-		".panel-float .panel-table th, .panel-float .pane-count, .panel-float .drill-btn.disabled {\n" +
-		"  color: " + muted + ";\n" +
+		".panel-float .panel-table th,\n" +
+		".panel-float .pane-count,\n" +
+		".panel-float .drill-btn.disabled {\n" +
+		"  color: " + muted + " !important;\n" +
 		"}\n";
 
 	$("<style>").attr("id", "display-settings-preview").text(css).appendTo("head");

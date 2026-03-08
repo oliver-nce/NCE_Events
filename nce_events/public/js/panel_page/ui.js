@@ -30,7 +30,57 @@ nce_events.panel_page.Explorer = class Explorer {
 			}
 		});
 
+		me._inject_display_settings();
 		me._open_wp_tables();
+	}
+
+	_inject_display_settings() {
+		var FONT_MAP = {
+			"Inter": "'Inter', sans-serif",
+			"Arial": "Arial, sans-serif",
+			"Helvetica": "Helvetica, Arial, sans-serif",
+			"Georgia": "Georgia, serif",
+			"Verdana": "Verdana, sans-serif",
+			"Tahoma": "Tahoma, sans-serif",
+			"System Default": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+		};
+
+		frappe.call({
+			method: "frappe.client.get",
+			args: { doctype: "Display Settings", name: "Display Settings" },
+			async: false,
+			callback: function (r) {
+				if (!r || !r.message) return;
+				var doc = r.message;
+				var font = FONT_MAP[doc.font_family] || "'Inter', sans-serif";
+				var size = doc.font_size || "13px";
+				var color = doc.text_color || "#333333";
+				var muted = doc.muted_text_color || "#555555";
+
+				var sel = ".panel-float, .panel-float .panel-table td, .panel-float .panel-table th, " +
+					".panel-float .pane-label, .panel-float .pane-count, .panel-float .drill-btn, " +
+					".panel-float .panel-float-footer, .panel-float .pane-filter-widget, " +
+					".panel-float .pane-core-filter-widget, .panel-float .filter-col-select, " +
+					".panel-float .filter-op-select, .panel-float .filter-val-input, " +
+					".panel-float .core-filter-input";
+
+				var css = sel + " {\n" +
+					"  font-family: " + font + " !important;\n" +
+					"  font-size: " + size + " !important;\n" +
+					"}\n" +
+					".panel-float .panel-table td {\n" +
+					"  color: " + color + " !important;\n" +
+					"}\n" +
+					".panel-float .panel-table th,\n" +
+					".panel-float .pane-count,\n" +
+					".panel-float .drill-btn.disabled {\n" +
+					"  color: " + muted + " !important;\n" +
+					"}\n";
+
+				$("#display-settings-runtime").remove();
+				$("<style>").attr("id", "display-settings-runtime").text(css).appendTo("head");
+			}
+		});
 	}
 
 	destroy() {
