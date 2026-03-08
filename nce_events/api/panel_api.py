@@ -72,6 +72,7 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 			sms_field = auto_sms
 	bold_fields = _parse_csv(doc.bold_fields)
 	gender_color_fields = _parse_csv(doc.gender_color_fields)
+
 	for cc in computed_columns:
 		fn = cc["field_name"]
 		if fn not in column_order:

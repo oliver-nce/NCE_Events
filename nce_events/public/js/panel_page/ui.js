@@ -256,7 +256,7 @@ nce_events.panel_page.Explorer = class Explorer {
 			const fn = col.fieldname.toLowerCase();
 			const w = col_widths[ci] || 100;
 			let style = `width:${w}px;min-width:30px;`;
-			if (row_ctx.bold_set[fn]) style += "font-weight:700;";
+			if (row_ctx.bold_set[fn]) style += "font-weight:700 !important;";
 			html += `<th style="${style}">${frappe.utils.escape_html(col.label)}<div class="col-resize-handle" data-col="${ci}"></div></th>`;
 		});
 		if (has_drills) {
@@ -758,19 +758,19 @@ nce_events.panel_page.Explorer = class Explorer {
 				let gv;
 				const colGender = ctx.tint_by_gender[fn];
 				if (colGender === "Male" && ctx.male_hex) {
-					parts.push("font-weight:700", `color:${ctx.male_hex}`);
+					parts.push("font-weight:700 !important", `color:${ctx.male_hex} !important`);
 				} else if (colGender === "Female" && ctx.female_hex) {
-					parts.push("font-weight:700", `color:${ctx.female_hex}`);
+					parts.push("font-weight:700 !important", `color:${ctx.female_hex} !important`);
 				} else if (ctx.gender_col) {
 					gv = String(row[ctx.gender_col] || row[ctx.gender_col.toLowerCase()] || "").trim().toLowerCase();
 					if (me._looks_male(gv) && ctx.male_hex) {
-						parts.push("font-weight:700", `color:${ctx.male_hex}`);
+						parts.push("font-weight:700 !important", `color:${ctx.male_hex} !important`);
 					} else if (me._looks_female(gv) && ctx.female_hex) {
-						parts.push("font-weight:700", `color:${ctx.female_hex}`);
+						parts.push("font-weight:700 !important", `color:${ctx.female_hex} !important`);
 					}
 				}
 			} else if (ctx.bold_set[fn]) {
-				parts.push("font-weight:700");
+				parts.push("font-weight:700 !important");
 			}
 
 			html += `<td style="${parts.join(";")};">${frappe.utils.escape_html(String(value))}</td>`;
