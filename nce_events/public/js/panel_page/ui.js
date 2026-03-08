@@ -12,6 +12,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		this._destroyed = false;
 
 		this.WP_DOCTYPE = "WP Tables";
+		this._PAGE_SIZE = 50;
 		this.setup();
 	}
 
@@ -115,15 +116,17 @@ nce_events.panel_page.Explorer = class Explorer {
 
 	_open_wp_tables() {
 		var me = this;
+		var PAGE = me._PAGE_SIZE;
 		me.store.open_panel(me.WP_DOCTYPE, null, {});
 		me._create_float(me.WP_DOCTYPE, true, null);
 		me._show_loading(me.WP_DOCTYPE);
 
 		me.store.fetch_config(me.WP_DOCTYPE).then(function () {
-			return me.store.fetch_data(me.WP_DOCTYPE);
+			return me.store.fetch_data(me.WP_DOCTYPE, PAGE);
 		}).then(function () {
 			if (me._destroyed) return;
 			me._render_panel(me.WP_DOCTYPE);
+			me._fetch_remaining(me.WP_DOCTYPE);
 		});
 	}
 
@@ -131,14 +134,17 @@ nce_events.panel_page.Explorer = class Explorer {
 
 	_open_doctype_panel(doctype, parent_doctype, parent_filter) {
 		var me = this;
+		var PAGE = me._PAGE_SIZE;
 		me.store.open_panel(doctype, parent_doctype, parent_filter);
 		me._create_float(doctype, false, parent_doctype);
 		me._show_loading(doctype);
 
 		me.store.fetch_config(doctype).then(function () {
-			return me.store.fetch_data(doctype);
+			return me.store.fetch_data(doctype, PAGE);
 		}).then(function () {
-			if (!me._destroyed) me._render_panel(doctype);
+			if (me._destroyed) return;
+			me._render_panel(doctype);
+			me._fetch_remaining(doctype);
 		}).catch(function (err) {
 			console.error("Error loading panel " + doctype + ":", err);
 			if (!me._destroyed) me._render_panel(doctype);
@@ -421,8 +427,9 @@ nce_events.panel_page.Explorer = class Explorer {
 		var float_el = me.floats[doctype];
 		if (!float_el) return;
 		var is_wp = (doctype === me.WP_DOCTYPE);
+		var body = float_el.find(".panel-pane-body");
 
-		float_el.find(".panel-row").on("click", function (e) {
+		body.on("click", ".panel-row", function (e) {
 			if ($(e.target).closest(".drill-btn").length) return;
 
 			var ri = parseInt($(this).data("row-idx"), 10);
@@ -451,7 +458,7 @@ nce_events.panel_page.Explorer = class Explorer {
 			}
 		});
 
-		float_el.find(".drill-btn").on("click", function () {
+		body.on("click", ".drill-btn", function () {
 			if ($(this).hasClass("disabled")) return;
 			var child_dt = $(this).data("child-dt");
 			var link_field = $(this).data("link-field");
@@ -1057,6 +1064,145 @@ nce_events.panel_page.Explorer = class Explorer {
 				$(document).off("mousemove.col_resize mouseup.col_resize");
 			});
 		});
+	}
+
+	/* ── Progressive background loading ── */
+
+	_fetch_remaining(doctype) {
+		var me = this;
+		var panel = me.store.get_panel(doctype);
+		if (!panel || !panel.data) return;
+
+		var loaded = panel.data.rows.length;
+		var total = panel.data.total;
+		if (loaded >= total) {
+			me._update_count(doctype);
+			return;
+		}
+
+		var PAGE = me._PAGE_SIZE;
+		me.store.fetch_data_page(doctype, loaded, PAGE).then(function (page_data) {
+			if (me._destroyed) return;
+			panel = me.store.get_panel(doctype);
+			if (!panel || !panel.data) return;
+
+			var new_rows = page_data.rows || [];
+			if (!new_rows.length) return;
+
+			panel.data.rows = panel.data.rows.concat(new_rows);
+			me._append_rows(doctype, new_rows);
+			me._update_count(doctype);
+
+			if (panel.data.rows.length < total) {
+				me._fetch_remaining(doctype);
+			}
+		}).catch(function (err) {
+			console.error("Background fetch error for " + doctype + ":", err);
+		});
+	}
+
+	_append_rows(doctype, new_rows) {
+		var me = this;
+		var float_el = me.floats[doctype];
+		if (!float_el) return;
+
+		var panel = me.store.get_panel(doctype);
+		if (!panel || !panel.config || !panel.data) return;
+
+		var tbody = float_el.find(".panel-table tbody");
+		if (!tbody.length) return;
+
+		var existing_count = tbody.find("tr").length;
+		var config = panel.config;
+		var data = panel.data;
+		var columns = data.columns || [];
+		var is_wp = (doctype === me.WP_DOCTYPE);
+		var child_doctypes = data.child_doctypes || [];
+		var has_drills = !is_wp && child_doctypes.length > 0;
+
+		var bold_set = me._field_set(config.bold_fields);
+		var male_hex = (config.male_hex || "").trim();
+		var female_hex = (config.female_hex || "").trim();
+		var gender_col = (config.gender_column || "").trim();
+		var gender_tint_set = me._field_set(config.gender_color_fields);
+
+		var col_widths = [];
+		float_el.find(".panel-table thead th").not(".drill-col").each(function () {
+			col_widths.push(parseInt($(this).css("width"), 10) || 100);
+		});
+
+		var html = "";
+		new_rows.forEach(function (row, bi) {
+			var ri = existing_count + bi;
+			html += '<tr class="panel-row' + (ri % 2 === 1 ? " alt" : "") +
+				'" data-row-idx="' + ri + '">';
+
+			columns.forEach(function (col, ci) {
+				var fn = col.fieldname.toLowerCase();
+				var value = row[col.fieldname];
+				if (value === null || value === undefined) value = row[fn];
+				if (value === null || value === undefined) value = "";
+				if (me._looks_like_date(value)) value = frappe.datetime.str_to_user(value);
+
+				var w = col_widths[ci] || 100;
+				var parts = ["width:" + w + "px", "min-width:30px"];
+				if (gender_col && gender_tint_set[fn]) {
+					var gv = String(row[gender_col] || row[gender_col.toLowerCase()] || "").trim().toLowerCase();
+					if (me._looks_male(gv) && male_hex) {
+						parts.push("font-weight:700", "color:" + male_hex);
+					} else if (me._looks_female(gv) && female_hex) {
+						parts.push("font-weight:700", "color:" + female_hex);
+					}
+				} else if (bold_set[fn]) {
+					parts.push("font-weight:700");
+				}
+
+				html += '<td style="' + parts.join(";") + ';">' + frappe.utils.escape_html(String(value)) + "</td>";
+			});
+
+			if (has_drills) {
+				html += '<td class="drill-cell">';
+				child_doctypes.forEach(function (child) {
+					var count_key = "_count_" + child.doctype;
+					var cnt = row[count_key];
+					var is_zero = (cnt === 0 || cnt === "0");
+					html += '<button class="btn btn-xs drill-btn' + (is_zero ? " disabled" : "") +
+						'" data-child-dt="' + frappe.utils.escape_html(child.doctype) +
+						'" data-link-field="' + frappe.utils.escape_html(child.link_field) +
+						'" data-row-name="' + frappe.utils.escape_html(row.name) +
+						'">' + frappe.utils.escape_html(child.label) +
+						' <span class="drill-count">(' + (cnt == null ? "?" : cnt) + ')</span>' +
+						' <i class="fa fa-chevron-right" style="font-size:9px;"></i></button>';
+				});
+				html += "</td>";
+			}
+
+			html += "</tr>";
+		});
+
+		tbody.append(html);
+	}
+
+	_update_count(doctype) {
+		var me = this;
+		var float_el = me.floats[doctype];
+		if (!float_el) return;
+
+		var panel = me.store.get_panel(doctype);
+		if (!panel || !panel.data) return;
+
+		var filtered = me._get_filtered_rows(doctype);
+		var total = panel.data.total || 0;
+		var loaded = panel.data.rows.length;
+		var text;
+		if (loaded < total) {
+			text = filtered.length + " / " + total + " records (loading\u2026)";
+		} else if (filtered.length !== total) {
+			text = filtered.length + " / " + total + " records";
+		} else {
+			text = String(total) + " records";
+		}
+		float_el.find(".pane-count").text(text);
 	}
 
 	/* ── Utilities ── */

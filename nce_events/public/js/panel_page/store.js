@@ -96,7 +96,39 @@ nce_events.panel_page.Store = class Store {
 		});
 	}
 
-	fetch_data(doctype) {
+	fetch_data(doctype, limit) {
+		var me = this;
+		var panel = me.panels[doctype];
+		if (!panel) return Promise.reject("Panel not open: " + doctype);
+
+		var filters = Object.assign({}, panel.parent_filter || {});
+		var args = {
+			root_doctype: doctype,
+			filters: JSON.stringify(filters),
+		};
+		if (limit) {
+			args.limit = limit;
+			args.start = 0;
+		}
+
+		return new Promise(function (resolve, reject) {
+			frappe.call({
+				method: "nce_events.api.panel_api.get_panel_data",
+				args: args,
+				callback: function (r) {
+					if (r.message && me.panels[doctype]) {
+						me.panels[doctype].data = r.message;
+						resolve(r.message);
+					} else {
+						reject("No data for " + doctype);
+					}
+				},
+				error: reject,
+			});
+		});
+	}
+
+	fetch_data_page(doctype, start, limit) {
 		var me = this;
 		var panel = me.panels[doctype];
 		if (!panel) return Promise.reject("Panel not open: " + doctype);
@@ -109,10 +141,11 @@ nce_events.panel_page.Store = class Store {
 				args: {
 					root_doctype: doctype,
 					filters: JSON.stringify(filters),
+					limit: limit,
+					start: start,
 				},
 				callback: function (r) {
-					if (r.message && me.panels[doctype]) {
-						me.panels[doctype].data = r.message;
+					if (r.message) {
 						resolve(r.message);
 					} else {
 						reject("No data for " + doctype);

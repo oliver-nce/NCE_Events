@@ -6,6 +6,7 @@ import re
 
 import frappe
 from frappe import _
+from frappe.utils import cint
 
 
 MALE_HEX = "#0000FF"
@@ -73,16 +74,20 @@ def get_panel_config(root_doctype):
 
 
 @frappe.whitelist()
-def get_panel_data(root_doctype, filters=None):
-	"""Fetch rows from a DocType, optionally filtered.
+def get_panel_data(root_doctype, filters=None, limit=0, start=0):
+	"""Fetch rows from a DocType, optionally filtered and paginated.
 
 	filters is a JSON dict of {fieldname: value} applied to frappe.get_all.
 	Supports dot-notation fields (e.g. "link_field.child_field") which are
 	resolved via frappe.get_all's native dot-field support.
+
+	limit/start enable pagination.  limit=0 (default) fetches all rows.
 	"""
 	if isinstance(filters, str):
 		filters = json.loads(filters) if filters else {}
 	filters = filters or {}
+	limit = cint(limit)
+	start = cint(start)
 
 	config = get_panel_config(root_doctype)
 	all_fields = config["column_order"]
@@ -105,15 +110,23 @@ def get_panel_data(root_doctype, filters=None):
 	order_by = (config.get("order_by") or "").strip() or "name ASC"
 
 	if core_filter:
-		rows = _query_with_core_filter(root_doctype, simple_fields, filters, core_filter, order_by)
-	else:
-		rows = frappe.get_all(
-			root_doctype,
-			fields=simple_fields,
-			filters=filters,
-			order_by=order_by,
-			limit_page_length=0,
+		total_count = _count_with_core_filter(root_doctype, filters, core_filter)
+		rows = _query_with_core_filter(
+			root_doctype, simple_fields, filters, core_filter, order_by,
+			limit=limit, start=start,
 		)
+	else:
+		total_count = frappe.db.count(root_doctype, filters=filters)
+		get_all_kw = dict(
+			doctype=root_doctype, fields=simple_fields, filters=filters,
+			order_by=order_by,
+		)
+		if limit:
+			get_all_kw["limit_page_length"] = limit
+			get_all_kw["limit_start"] = start
+		else:
+			get_all_kw["limit_page_length"] = 0
+		rows = frappe.get_all(**get_all_kw)
 
 	# Resolve dot-notation fields via frappe.get_value lookups
 	if linked_fields and rows:
@@ -169,7 +182,7 @@ def get_panel_data(root_doctype, filters=None):
 	return {
 		"columns": columns,
 		"rows": rows,
-		"total": len(rows),
+		"total": total_count,
 		"child_doctypes": child_doctypes,
 	}
 
@@ -237,14 +250,10 @@ def save_panel_sql(root_doctype, core_filter="", order_by=""):
 	return {"ok": True}
 
 
-def _query_with_core_filter(root_doctype, fields, filters, core_filter, order_by="name ASC"):
-	"""Run a panel query using frappe.db.sql so we can inject a raw WHERE clause."""
-	table = f"`tab{root_doctype}`"
-	fields_sql = ", ".join(f"`{f}`" for f in fields)
-
+def _build_core_filter_where(root_doctype, filters, core_filter):
+	"""Build WHERE clause and params for queries with a raw core_filter."""
 	where_parts = [f"({core_filter})"]
 	params = []
-
 	for key, val in (filters or {}).items():
 		if isinstance(val, list) and len(val) == 2:
 			op, operand = val
@@ -258,9 +267,25 @@ def _query_with_core_filter(root_doctype, fields, filters, core_filter, order_by
 		else:
 			where_parts.append(f"`{key}` = %s")
 			params.append(val)
+	return " AND ".join(where_parts), params
 
-	where_sql = " AND ".join(where_parts)
+
+def _count_with_core_filter(root_doctype, filters, core_filter):
+	table = f"`tab{root_doctype}`"
+	where_sql, params = _build_core_filter_where(root_doctype, filters, core_filter)
+	result = frappe.db.sql(f"SELECT COUNT(*) FROM {table} WHERE {where_sql}", params)
+	return result[0][0] if result else 0
+
+
+def _query_with_core_filter(root_doctype, fields, filters, core_filter, order_by="name ASC", limit=0, start=0):
+	"""Run a panel query using frappe.db.sql so we can inject a raw WHERE clause."""
+	table = f"`tab{root_doctype}`"
+	fields_sql = ", ".join(f"`{f}`" for f in fields)
+	where_sql, params = _build_core_filter_where(root_doctype, filters, core_filter)
+
 	query = f"SELECT {fields_sql} FROM {table} WHERE {where_sql} ORDER BY {order_by}"
+	if limit:
+		query += f" LIMIT {int(limit)} OFFSET {int(start)}"
 	return frappe.db.sql(query, params, as_dict=True)
 
 
