@@ -560,6 +560,39 @@ def get_report_columns(report_name):
 
 
 @frappe.whitelist()
+def preview_panel_message(root_doctype, filters=None, body="", subject=""):
+	"""Render a message template against a random row for preview."""
+	import random
+	from jinja2 import Template as Jinja2Template
+
+	result = get_panel_data(root_doctype, filters)
+	rows = result.get("rows") or []
+	columns = result.get("columns") or []
+	if not rows:
+		return {"error": "No rows to preview."}
+
+	row = random.choice(rows)
+	col_fieldnames = [c["fieldname"] for c in columns]
+	context = {fn: row.get(fn, "") for fn in col_fieldnames}
+
+	try:
+		rendered_body = Jinja2Template(body).render(context)
+	except Exception:
+		rendered_body = body
+
+	try:
+		rendered_subject = Jinja2Template(subject).render(context) if subject else ""
+	except Exception:
+		rendered_subject = subject
+
+	return {
+		"rendered_body": rendered_body,
+		"rendered_subject": rendered_subject,
+		"context": context,
+	}
+
+
+@frappe.whitelist()
 def send_panel_message(
 	root_doctype, filters=None, mode="sms",
 	recipient_field="", body="", subject="",

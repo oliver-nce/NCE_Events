@@ -63,7 +63,9 @@ nce_events.panel_page.Explorer = class Explorer {
 					".panel-float .pane-label, .panel-float .pane-count, .panel-float .drill-btn, " +
 					".panel-float .panel-float-footer, .panel-float .pane-filter-widget, " +
 					".panel-float .filter-col-select, " +
-					".panel-float .filter-op-select, .panel-float .filter-val-input";
+					".panel-float .filter-op-select, .panel-float .filter-val-input, " +
+					".send-panel, .send-panel .send-field, .send-panel .send-field-label, " +
+					".send-panel-preview, .send-preview-body, .send-preview-subject";
 
 				var css = sel + " {\n" +
 					"  font-family: " + font + " !important;\n" +
@@ -559,7 +561,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		});
 	}
 
-	/* ── Send dialog ── */
+	/* ── Send dialog (custom floating panel) ── */
 
 	_open_send_dialog(doctype, mode) {
 		var me = this;
@@ -573,99 +575,277 @@ nce_events.panel_page.Explorer = class Explorer {
 			return;
 		}
 
-		var count = (panel.data.rows || []).length;
+		var rows = panel.data.rows || [];
+		var count = rows.length;
 		if (!count) { frappe.msgprint(__("No rows.")); return; }
 
-		function _close_schema() {
-			if (nce_events.schema_explorer && nce_events.schema_explorer.close) {
-				nce_events.schema_explorer.close();
+		if (me._send_panel_el) { me._close_send_panel(); }
+
+		var title = (mode === "sms" ? "Send SMS" : "Send Email") + " (" + count + " recipients)";
+
+		var el = $('<div class="send-panel"></div>');
+		el.html(
+			'<div class="send-panel-header">' +
+				'<span class="send-panel-title">' + frappe.utils.escape_html(title) + '</span>' +
+				'<button class="send-panel-close" title="Close">&times;</button>' +
+			'</div>' +
+			'<div class="send-panel-body">' +
+				'<div class="send-panel-form">' +
+					'<label class="send-field-label">Source</label>' +
+					'<select class="send-field send-source-select">' +
+						'<option value="type">Type a message</option>' +
+						'<option value="template">Use Email Template</option>' +
+					'</select>' +
+					'<div class="send-message-section">' +
+						'<label class="send-field-label">Message</label>' +
+						'<textarea class="send-field send-message-input" rows="8" placeholder="Jinja2 tags supported. Sent to all ' + count + ' rows."></textarea>' +
+					'</div>' +
+					'<div class="send-template-section" style="display:none;">' +
+						'<label class="send-field-label">Email Template</label>' +
+						'<input class="send-field send-template-input" type="text" placeholder="Template name...">' +
+					'</div>' +
+					'<label class="send-field-label">Subject</label>' +
+					'<input class="send-field send-subject-input" type="text">' +
+					'<label class="send-check-label"><input type="checkbox" class="send-copy-check"' +
+						(mode === "sms" ? ' checked' : '') + '> Also send email copy</label>' +
+					'<div class="send-panel-actions">' +
+						'<button class="btn btn-xs btn-default send-preview-btn"><i class="fa fa-eye"></i> Preview</button>' +
+						'<span class="send-actions-right">' +
+							'<button class="btn btn-xs btn-default send-cancel-btn">Cancel</button>' +
+							'<button class="btn btn-xs btn-primary send-send-btn">Send</button>' +
+						'</span>' +
+					'</div>' +
+				'</div>' +
+				'<div class="send-panel-preview" style="display:none;">' +
+					'<div class="send-preview-header">' +
+						'<span class="send-preview-title">Preview</span>' +
+						'<button class="send-preview-close" title="Close preview">&times;</button>' +
+					'</div>' +
+					'<div class="send-preview-recipient"></div>' +
+					'<div class="send-preview-subject"></div>' +
+					'<div class="send-preview-body"></div>' +
+				'</div>' +
+			'</div>'
+		);
+
+		el.css({ top: "80px", left: "60px", zIndex: me._float_z + 10 });
+		$(document.body).append(el);
+		me._send_panel_el = el;
+		me._send_panel_mode = mode;
+		me._send_panel_doctype = doctype;
+
+		me._make_send_panel_draggable(el);
+		me._make_send_panel_resizable(el);
+
+		var source_sel = el.find(".send-source-select");
+		var msg_section = el.find(".send-message-section");
+		var tpl_section = el.find(".send-template-section");
+		var tpl_input = el.find(".send-template-input");
+
+		source_sel.on("change", function () {
+			if (source_sel.val() === "type") {
+				msg_section.show(); tpl_section.hide();
+			} else {
+				msg_section.hide(); tpl_section.show();
 			}
-		}
-		function _open_schema() {
-			if (nce_events.schema_explorer && nce_events.schema_explorer.open) {
-				nce_events.schema_explorer.open(doctype);
-			}
+		});
+
+		if (tpl_input.length) {
+			me._setup_template_autocomplete(tpl_input);
 		}
 
-		var d = new frappe.ui.Dialog({
-			title: (mode === "sms" ? __("Send SMS") : __("Send Email")) + " (" + count + " recipients)",
-			fields: [
-				{ fieldname: "source", fieldtype: "Select", label: __("Source"),
-				  options: "Type a message\nUse Email Template", default: "Type a message",
-				  onchange: function () {
-					var v = d.get_value("source");
-					d.fields_dict.message.$wrapper.toggle(v === "Type a message");
-					d.fields_dict.template.$wrapper.toggle(v === "Use Email Template");
-					if (v === "Type a message") {
-						_open_schema();
-					} else {
-						_close_schema();
-					}
-				  }},
-				{ fieldname: "message", fieldtype: "Small Text", label: __("Message"),
-				  description: __("Jinja2 tags supported. Sent to all {0} rows.", [count]) },
-				{ fieldname: "template", fieldtype: "Link", label: __("Email Template"),
-				  options: "Email Template" },
-				{ fieldname: "subject", fieldtype: "Data", label: __("Subject") },
-				{ fieldname: "send_email_copy", fieldtype: "Check", label: __("Also send email copy"),
-				  default: mode === "sms" ? 1 : 0 },
-			],
-			primary_action_label: __("Send"),
-			secondary_action_label: __("Cancel"),
-			secondary_action: function () {
-				d.hide();
-			},
-			primary_action: function (vals) {
-				var body = vals.message || "";
-				var subject = vals.subject || "";
-				if (vals.source === "Use Email Template" && vals.template) {
-					d.disable_primary_action();
-					frappe.call({
-						method: "frappe.client.get",
-						args: { doctype: "Email Template", name: vals.template },
-						callback: function (r) {
-							if (!r.message) { d.enable_primary_action(); return; }
-							body = r.message.response || "";
-							subject = subject || r.message.subject || "";
-							me._do_send(doctype, mode, recipient_field, body, subject, vals.send_email_copy, config.email_field, d);
-						},
-					});
-					return;
-				}
-				if (!body.trim()) { frappe.msgprint(__("Enter a message or select a template.")); return; }
-				me._do_send(doctype, mode, recipient_field, body, subject, vals.send_email_copy, config.email_field, d);
-			},
-			on_hide: function () {
-				_close_schema();
-			},
+		el.find(".send-panel-close").on("click", function () { me._close_send_panel(); });
+		el.find(".send-cancel-btn").on("click", function () { me._close_send_panel(); });
+		el.find(".send-preview-close").on("click", function () { el.find(".send-panel-preview").hide(); });
+
+		el.find(".send-preview-btn").on("click", function () {
+			me._do_preview(doctype);
 		});
-		d.$wrapper.addClass("panel-send-dialog");
-		d.fields_dict.template.$wrapper.hide();
-		d.show();
-		_open_schema();
+
+		el.find(".send-send-btn").on("click", function () {
+			me._do_send_from_panel(doctype, mode, recipient_field, config);
+		});
 	}
 
-	_do_send(doctype, mode, recipient_field, body, subject, send_email_copy, email_field, dialog) {
-		var panel = this.store.get_panel(doctype);
-		var filters = panel ? panel.parent_filter : {};
-		dialog.disable_primary_action();
-		frappe.call({
-			method: "nce_events.api.panel_api.send_panel_message",
-			args: {
-				root_doctype: doctype, filters: JSON.stringify(filters),
-				mode: mode, recipient_field: recipient_field,
-				body: body, subject: subject,
-				send_email_copy: send_email_copy ? 1 : 0,
-				email_field: email_field || "",
-			},
-			callback: function (r) {
-				dialog.enable_primary_action();
-				if (r.message) {
-					frappe.show_alert({ message: __("{0} messages sent", [r.message.sent || 0]), indicator: "green" });
-					dialog.hide();
+	_setup_template_autocomplete(input_el) {
+		var list_el = $('<div class="send-template-list"></div>').insertAfter(input_el);
+		var debounce;
+		input_el.on("input", function () {
+			clearTimeout(debounce);
+			debounce = setTimeout(function () {
+				var q = input_el.val().trim();
+				if (!q) { list_el.empty().hide(); return; }
+				frappe.call({
+					method: "frappe.client.get_list",
+					args: { doctype: "Email Template", filters: { name: ["like", "%" + q + "%"] }, fields: ["name"], limit_page_length: 8 },
+					callback: function (r) {
+						list_el.empty();
+						(r.message || []).forEach(function (t) {
+							var item = $('<div class="send-template-item"></div>').text(t.name);
+							item.on("click", function () {
+								input_el.val(t.name);
+								list_el.empty().hide();
+							});
+							list_el.append(item);
+						});
+						list_el.toggle(!!(r.message && r.message.length));
+					}
+				});
+			}, 200);
+		});
+		input_el.on("blur", function () {
+			setTimeout(function () { list_el.hide(); }, 200);
+		});
+	}
+
+	_do_preview(doctype) {
+		var me = this;
+		var el = me._send_panel_el;
+		if (!el) return;
+		var panel = me.store.get_panel(doctype);
+		if (!panel) return;
+		var filters = panel.parent_filter || {};
+
+		var body = "", subject = el.find(".send-subject-input").val() || "";
+		var source = el.find(".send-source-select").val();
+
+		function render_preview(body_text, subject_text) {
+			el.find(".send-preview-btn").prop("disabled", true);
+			frappe.call({
+				method: "nce_events.api.panel_api.preview_panel_message",
+				args: {
+					root_doctype: doctype,
+					filters: JSON.stringify(filters),
+					body: body_text,
+					subject: subject_text,
+				},
+				callback: function (r) {
+					el.find(".send-preview-btn").prop("disabled", false);
+					if (!r.message) return;
+					if (r.message.error) { frappe.msgprint(r.message.error); return; }
+					var preview_el = el.find(".send-panel-preview");
+					var ctx = r.message.context || {};
+					var recipient_info = Object.keys(ctx).slice(0, 3).map(function (k) { return k + ": " + ctx[k]; }).join(" | ");
+					preview_el.find(".send-preview-recipient").text(recipient_info);
+					preview_el.find(".send-preview-subject").text(r.message.rendered_subject || "(No subject)");
+					preview_el.find(".send-preview-body").html(r.message.rendered_body || "");
+					preview_el.show();
+				},
+				error: function () { el.find(".send-preview-btn").prop("disabled", false); },
+			});
+		}
+
+		if (source === "template") {
+			var tpl_name = el.find(".send-template-input").val().trim();
+			if (!tpl_name) { frappe.msgprint(__("Select a template first.")); return; }
+			frappe.call({
+				method: "frappe.client.get",
+				args: { doctype: "Email Template", name: tpl_name },
+				callback: function (r) {
+					if (!r.message) return;
+					render_preview(r.message.response || "", subject || r.message.subject || "");
 				}
-			},
-			error: function () { dialog.enable_primary_action(); },
+			});
+		} else {
+			body = el.find(".send-message-input").val() || "";
+			if (!body.trim()) { frappe.msgprint(__("Enter a message first.")); return; }
+			render_preview(body, subject);
+		}
+	}
+
+	_do_send_from_panel(doctype, mode, recipient_field, config) {
+		var me = this;
+		var el = me._send_panel_el;
+		if (!el) return;
+		var panel = me.store.get_panel(doctype);
+		var filters = panel ? panel.parent_filter : {};
+
+		var source = el.find(".send-source-select").val();
+		var body = el.find(".send-message-input").val() || "";
+		var subject = el.find(".send-subject-input").val() || "";
+		var send_copy = el.find(".send-copy-check").is(":checked") ? 1 : 0;
+		var send_btn = el.find(".send-send-btn");
+
+		function do_send(final_body, final_subject) {
+			send_btn.prop("disabled", true).text("Sending...");
+			frappe.call({
+				method: "nce_events.api.panel_api.send_panel_message",
+				args: {
+					root_doctype: doctype, filters: JSON.stringify(filters),
+					mode: mode, recipient_field: recipient_field,
+					body: final_body, subject: final_subject,
+					send_email_copy: send_copy,
+					email_field: config.email_field || "",
+				},
+				callback: function (r) {
+					send_btn.prop("disabled", false).text("Send");
+					if (r.message) {
+						frappe.show_alert({ message: __("{0} messages sent", [r.message.sent || 0]), indicator: "green" });
+						me._close_send_panel();
+					}
+				},
+				error: function () { send_btn.prop("disabled", false).text("Send"); },
+			});
+		}
+
+		if (source === "template") {
+			var tpl_name = el.find(".send-template-input").val().trim();
+			if (!tpl_name) { frappe.msgprint(__("Select a template.")); return; }
+			frappe.call({
+				method: "frappe.client.get",
+				args: { doctype: "Email Template", name: tpl_name },
+				callback: function (r) {
+					if (!r.message) return;
+					do_send(r.message.response || "", subject || r.message.subject || "");
+				}
+			});
+			return;
+		}
+		if (!body.trim()) { frappe.msgprint(__("Enter a message or select a template.")); return; }
+		do_send(body, subject);
+	}
+
+	_close_send_panel() {
+		if (this._send_panel_el) {
+			this._send_panel_el.remove();
+			this._send_panel_el = null;
+		}
+	}
+
+	_make_send_panel_draggable(el) {
+		function start_drag(e) {
+			if ($(e.target).closest("button, input, textarea, select, .send-template-list").length) return;
+			e.preventDefault();
+			var sx = e.clientX, sy = e.clientY;
+			var sl = parseInt(el.css("left"), 10) || 0;
+			var st = parseInt(el.css("top"), 10) || 0;
+			$("body").addClass("panel-float-dragging");
+			$(document).on("mousemove.send_drag", function (ev) {
+				el.css({ left: (sl + ev.clientX - sx) + "px", top: Math.min(st + ev.clientY - sy, window.innerHeight - 40) + "px" });
+			});
+			$(document).on("mouseup.send_drag", function () {
+				$("body").removeClass("panel-float-dragging");
+				$(document).off("mousemove.send_drag mouseup.send_drag");
+			});
+		}
+		el.find(".send-panel-header").on("mousedown.send_drag", start_drag);
+	}
+
+	_make_send_panel_resizable(el) {
+		var handle = $('<div class="send-panel-resize-handle"></div>');
+		el.append(handle);
+		handle.on("mousedown", function (e) {
+			e.preventDefault(); e.stopPropagation();
+			var sw = el.width(), sh = el.height();
+			var sx = e.clientX, sy = e.clientY;
+			$("body").addClass("panel-float-dragging");
+			$(document).on("mousemove.send_resize", function (ev) {
+				el.css({ width: Math.max(500, sw + ev.clientX - sx) + "px", height: Math.max(300, sh + ev.clientY - sy) + "px" });
+			});
+			$(document).on("mouseup.send_resize", function () {
+				$("body").removeClass("panel-float-dragging");
+				$(document).off("mousemove.send_resize mouseup.send_resize");
+			});
 		});
 	}
 
