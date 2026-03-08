@@ -46,10 +46,10 @@ def _compute_jinja_tag(field_name: str, male_value: str, female_value: str, gend
 	female = (female_value or "").strip()
 	if male or female:
 		return (
-			"{{% if (gender|lower) == 'male' %}}"
+			"{% if (gender|lower) == 'male' %}"
 			+ (male or field_name)
-			+ "{{% else %}}"
+			+ "{% else %}"
 			+ (female or field_name)
-			+ "{{% endif %}}"
+			+ "{% endif %}"
 		)
 	return "{{ " + field_name + " }}"

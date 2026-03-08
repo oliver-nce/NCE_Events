@@ -96,6 +96,7 @@ class TestComputeJinjaTag(unittest.TestCase):
 	def test_male_only(self):
 		result = _compute_jinja_tag("salutation", "Mr", "", "gender")
 		self.assertIn("{% if (gender|lower) == 'male' %}", result)
+		self.assertNotIn("{{%", result)
 		self.assertIn("Mr", result)
 		self.assertIn("salutation", result)
 		self.assertIn("{% endif %}", result)
