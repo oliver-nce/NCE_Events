@@ -563,7 +563,6 @@ def get_report_columns(report_name):
 def preview_panel_message(root_doctype, filters=None, body="", subject=""):
 	"""Render a message template against a random row for preview."""
 	import random
-	from jinja2 import Template as Jinja2Template
 
 	result = get_panel_data(root_doctype, filters)
 	rows = result.get("rows") or []
@@ -576,12 +575,12 @@ def preview_panel_message(root_doctype, filters=None, body="", subject=""):
 	context = {fn: row.get(fn, "") for fn in col_fieldnames}
 
 	try:
-		rendered_body = Jinja2Template(body).render(context)
+		rendered_body = frappe.render_template(body, context)
 	except Exception:
 		rendered_body = body
 
 	try:
-		rendered_subject = Jinja2Template(subject).render(context) if subject else ""
+		rendered_subject = frappe.render_template(subject, context) if subject else ""
 	except Exception:
 		rendered_subject = subject
 
@@ -599,8 +598,6 @@ def send_panel_message(
 	send_email_copy=0, email_field=""
 ):
 	"""Send bulk SMS and/or email to all rows in a panel."""
-	from jinja2 import Template as Jinja2Template
-
 	send_email_copy = int(send_email_copy)
 	result = get_panel_data(root_doctype, filters)
 	columns = result["columns"]
@@ -617,12 +614,12 @@ def send_panel_message(
 			continue
 
 		try:
-			rendered_body = Jinja2Template(body).render(context)
+			rendered_body = frappe.render_template(body, context)
 		except Exception:
 			rendered_body = body
 
 		try:
-			rendered_subject = Jinja2Template(subject).render(context) if subject else ""
+			rendered_subject = frappe.render_template(subject, context) if subject else ""
 		except Exception:
 			rendered_subject = subject
 
