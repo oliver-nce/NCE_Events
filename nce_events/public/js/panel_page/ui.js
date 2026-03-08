@@ -976,23 +976,23 @@ nce_events.panel_page.Explorer = class Explorer {
 	/* ── Drill-column width calc ── */
 
 	_calc_drill_col_width(child_doctypes) {
-		var font_size = this._display_font_size || 13;
-		var char_w = font_size * 0.65;
-		var btn_pad = 18;
-		var btn_border = 2;
-		var btn_margin = 6;
-		var icon_w = 16;
-		var count_extra = 8;
+		var measurer = $('<div style="position:absolute;top:-9999px;left:-9999px;white-space:nowrap;visibility:hidden;"></div>');
+		$(document.body).append(measurer);
 
 		var total = 0;
-		var _dbg2 = "Drill calc: display_font=" + font_size + " char_w=" + char_w.toFixed(1) + "\n";
+		var _dbg2 = "Drill calc (DOM measured):\n";
 		child_doctypes.forEach(function (child) {
-			var label_len = (child.label || child.doctype || "").length;
-			var btn_w = Math.ceil((label_len + count_extra) * char_w) + btn_pad + btn_border + icon_w + btn_margin;
-			_dbg2 += "'" + child.label + "' (" + label_len + "ch): " + Math.ceil(btn_w) + "px\n";
-			total += btn_w;
+			var btn = $('<button class="btn btn-xs drill-btn">' +
+				frappe.utils.escape_html(child.label) +
+				' <span class="drill-count">(999)</span>' +
+				' <i class="fa fa-chevron-right" style="font-size:9px;"></i></button>');
+			measurer.append(btn);
+			var w = btn[0].offsetWidth + 6;
+			_dbg2 += "'" + child.label + "': " + w + "px\n";
+			total += w;
 		});
 
+		measurer.remove();
 		var result = Math.ceil(total + 16);
 		_dbg2 += "TOTAL: " + result + "px";
 		alert(_dbg2);
