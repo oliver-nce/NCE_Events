@@ -70,19 +70,25 @@ nce_events.panel_page.Explorer = class Explorer {
 					".send-panel .send-panel-actions .btn, " +
 					".send-preview-body, .send-preview-subject, .send-preview-recipient";
 
-				var css = sel + ", " + send_sel + " {\n" +
+				var tag_sel = ".se-tag-panel-body, .se-tag-val, .se-tag-lbl, .se-tag-pre, " +
+					".se-fallback-input, .se-html-check-label, " +
+					".se-tag-panel .btn";
+
+				var css = sel + ", " + send_sel + ", " + tag_sel + " {\n" +
 					"  font-family: " + font + " !important;\n" +
 					"  font-weight: " + weight + " !important;\n" +
 					"  font-size: " + size + " !important;\n" +
 					"}\n" +
 					".panel-float .panel-table td, .send-panel .send-field, " +
-					".send-preview-body, .send-preview-subject {\n" +
+					".send-preview-body, .send-preview-subject, " +
+					".se-tag-val, .se-tag-pre {\n" +
 					"  color: " + color + " !important;\n" +
 					"}\n" +
 					".panel-float .panel-table th,\n" +
 					".panel-float .pane-count,\n" +
 					".panel-float .drill-btn.disabled,\n" +
-					".send-panel .send-field-label, .send-preview-recipient {\n" +
+					".send-panel .send-field-label, .send-preview-recipient,\n" +
+					".se-tag-lbl {\n" +
 					"  color: " + muted + " !important;\n" +
 					"}\n";
 

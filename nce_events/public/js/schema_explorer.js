@@ -470,13 +470,28 @@
 
 	var _tag_panel_count = 0;
 
-	function _apply_default_filter(tag, fallback) {
-		if (!fallback) return tag;
-		var safe = fallback.replace(/'/g, "\\'");
-		return tag.replace(
-			/\{\{([^}]+)\}\}/g,
-			function (m, inner) { return "{{ " + inner.trim() + " | default('" + safe + "') }}"; }
-		);
+	function _apply_filters(tag, fallback, is_html) {
+		var result = tag;
+		if (fallback) {
+			var safe = fallback.replace(/'/g, "\\'");
+			result = result.replace(
+				/\{\{([^}]+)\}\}/g,
+				function (m, inner) { return "{{ " + inner.trim() + " | default('" + safe + "') }}"; }
+			);
+		}
+		if (is_html) {
+			result = result.replace(
+				/\{\{([^}]+)\}\}/g,
+				function (m, inner) {
+					var trimmed = inner.trim();
+					if (trimmed.indexOf("| safe") === -1) {
+						return "{{ " + trimmed + " | safe }}";
+					}
+					return m;
+				}
+			);
+		}
+		return result;
 	}
 
 	function _show_tag_dialog(col_idx, field) {
@@ -507,6 +522,9 @@
 			'<div class="se-tag-val">' +
 			'<input type="text" class="se-fallback-input" placeholder="e.g. Student (leave empty for none)">' +
 			'</div>' +
+			'<div class="se-tag-val">' +
+			'<label class="se-html-check-label"><input type="checkbox" class="se-html-check"> Is this HTML?</label>' +
+			'</div>' +
 			'<div class="se-tag-lbl">Tag</div>' +
 			'<pre class="se-tag-pre">' +
 			frappe.utils.escape_html(base_tag) + '</pre>' +
@@ -530,12 +548,16 @@
 		var $header = $panel.find(".se-tag-panel-header");
 		var $pre = $panel.find(".se-tag-pre");
 		var $input = $panel.find(".se-fallback-input");
+		var $html_check = $panel.find(".se-html-check");
 
-		$input.on("input", function () {
-			var fb = $(this).val().trim();
-			var rendered = _apply_default_filter(base_tag, fb);
-			$pre.text(rendered);
-		});
+		function _update_tag() {
+			var fb = $input.val().trim();
+			var is_html = $html_check.is(":checked");
+			$pre.text(_apply_filters(base_tag, fb, is_html));
+		}
+
+		$input.on("input", _update_tag);
+		$html_check.on("change", _update_tag);
 
 		$pre.on("click", function () {
 			var range = document.createRange();
@@ -566,7 +588,7 @@
 			}
 		});
 
-		$header.find(".se-close").on("click", function () {
+		$panel.find(".se-close").on("click", function () {
 			$panel.remove();
 		});
 
@@ -698,6 +720,9 @@
 			"border-radius:6px;padding:12px 14px;margin:0;font-size:13px;" +
 			"white-space:pre-wrap;word-break:break-all;user-select:all;" +
 			"cursor:text;color:#105EAD;font-family:monospace;line-height:1.5}" +
+
+			".se-html-check-label{font-size:12px;color:#464D53;display:flex;" +
+			"align-items:center;gap:6px;cursor:pointer;margin:0}" +
 
 			"body.se-dragging,body.se-dragging *{user-select:none!important}";
 
