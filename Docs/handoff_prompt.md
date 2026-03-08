@@ -48,6 +48,8 @@ The app depends on `nce_sync` (provides DocTypes, WP Tables mappings, WordPress 
 | `nce_events/public/css/panel_page.css` | All panel styles including drill buttons, send dialog, filter widget |
 | `nce_events/public/js/schema_explorer.js` | Tag Finder — Miller columns, tag generation, insert at cursor |
 | `nce_events/public/js/email_template_tags.js` | Email Template form hook — Insert Tag button |
+| `nce_events/nce_events/doctype/display_settings/` | Single DocType — site-wide font/color theme, generates `custom_theme.css` on save |
+| `nce_events/public/css/custom_theme.css` | Auto-generated CSS from Display Settings (included via `app_include_css`) |
 | `Docs/project_reference.md` | Full project reference (READ THIS FIRST) |
 
 ---

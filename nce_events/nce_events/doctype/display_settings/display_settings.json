@@ -1,0 +1,88 @@
+{
+ "actions": [],
+ "creation": "2026-03-08 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_fonts",
+  "font_family",
+  "font_size",
+  "column_break_colors",
+  "text_color",
+  "muted_text_color",
+  "section_actions",
+  "apply_html"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_fonts",
+   "fieldtype": "Section Break",
+   "label": "Typography"
+  },
+  {
+   "default": "Inter",
+   "fieldname": "font_family",
+   "fieldtype": "Select",
+   "label": "Font Family",
+   "options": "Inter\nArial\nHelvetica\nGeorgia\nVerdana\nTahoma\nSystem Default"
+  },
+  {
+   "default": "13px",
+   "fieldname": "font_size",
+   "fieldtype": "Select",
+   "label": "Font Size",
+   "options": "11px\n12px\n13px\n14px\n15px\n16px"
+  },
+  {
+   "fieldname": "column_break_colors",
+   "fieldtype": "Column Break",
+   "label": "Colors"
+  },
+  {
+   "default": "#333333",
+   "fieldname": "text_color",
+   "fieldtype": "Color",
+   "label": "Text Color"
+  },
+  {
+   "default": "#555555",
+   "fieldname": "muted_text_color",
+   "fieldtype": "Color",
+   "label": "Muted Text Color"
+  },
+  {
+   "fieldname": "section_actions",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "apply_html",
+   "fieldtype": "HTML",
+   "label": "Apply",
+   "options": "<p class=\"text-muted\">Click <b>Apply</b> to generate and save the site CSS. Click <b>Preview</b> to see changes before saving.</p>"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-03-08 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "NCE Events",
+ "name": "Display Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
