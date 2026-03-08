@@ -34,7 +34,7 @@
    "fieldname": "font_weight",
    "fieldtype": "Select",
    "label": "Font Weight",
-   "options": "400 Regular\n700 Bold"
+   "options": "100 Thin\n200 Extra Light\n300 Light\n400 Regular\n500 Medium\n600 Semi Bold\n700 Bold\n800 Extra Bold\n900 Black"
   },
   {
    "default": "13px",
