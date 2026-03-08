@@ -277,7 +277,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		_dbg += "Panel: " + doctype + "\n";
 		_dbg += "float_w: " + float_w + "\n";
 		_dbg += "drill_col_w: " + drill_col_w + "\n";
-		_dbg += "avail: " + (float_w - 20 - drill_col_w) + " (panel - 20 - drill)\n\n";
+		_dbg += "avail: " + (float_w - 160 - drill_col_w) + " (panel - 160 - drill)\n\n";
 		_dbg += "COLUMNS:\n";
 		columns.forEach(function (col, ci) {
 			var lbl = (col.label + "                    ").slice(0, 22);
@@ -286,7 +286,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		});
 		_dbg += "  ----------------------\n";
 		_dbg += "  SUM:                  " + col_total + "px\n\n";
-		_dbg += "TOTAL: " + col_total + " + " + drill_col_w + " + 20 = " + (col_total + drill_col_w + 20) + "  (panel=" + float_w + ")";
+		_dbg += "TOTAL: " + col_total + " + " + drill_col_w + " + 160 = " + (col_total + drill_col_w + 160) + "  (panel=" + float_w + ")";
 		_dbg += "</pre>";
 		frappe.msgprint({ title: "Panel Sizing Debug", message: _dbg, wide: true });
 
@@ -985,15 +985,14 @@ nce_events.panel_page.Explorer = class Explorer {
 	/* ── Drill-column width calc ── */
 
 	_calc_drill_col_width(child_doctypes) {
-		var ds_font = (this._display_font_size || 13) + "px";
 		var measurer = $('<div style="position:absolute;top:-9999px;left:-9999px;white-space:nowrap;visibility:hidden;"></div>');
 		$(document.body).append(measurer);
 
 		var total = 0;
 		var _dbg2 = "<pre style='font-size:13px;line-height:1.6;'>";
-		_dbg2 += "Drill calc (DOM, font=" + ds_font + "):\n\n";
+		_dbg2 += "Drill calc (DOM measured):\n\n";
 		child_doctypes.forEach(function (child) {
-			var btn = $('<button class="btn btn-xs drill-btn" style="font-size:' + ds_font + ' !important;">' +
+			var btn = $('<button class="btn btn-xs drill-btn">' +
 				frappe.utils.escape_html(child.label) +
 				' <span class="drill-count">(999)</span>' +
 				' <i class="fa fa-chevron-right" style="font-size:9px;"></i></button>');
@@ -1040,7 +1039,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		var total_chars = 0;
 		avg_chars.forEach(function (c) { total_chars += c; });
 
-		var available = float_w - 20 - drill_col_w;
+		var available = float_w - 160 - drill_col_w;
 
 		var widths = [];
 		avg_chars.forEach(function (c) {
