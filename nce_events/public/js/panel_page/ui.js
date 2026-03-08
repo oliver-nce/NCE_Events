@@ -1047,6 +1047,13 @@ nce_events.panel_page.Explorer = class Explorer {
 			widths.push(Math.min(MAX_COL, Math.max(MIN_COL, w)));
 		});
 
+		var w_sum = 0;
+		widths.forEach(function (w) { w_sum += w; });
+		if (w_sum > available && w_sum > 0) {
+			var scale = available / w_sum;
+			widths = widths.map(function (w) { return Math.floor(w * scale); });
+		}
+
 		return widths;
 	}
 
