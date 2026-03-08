@@ -522,15 +522,15 @@
 			'<div class="se-tag-val">' +
 			'<input type="text" class="se-fallback-input" placeholder="e.g. Student (leave empty for none)">' +
 			'</div>' +
-			'<div class="se-tag-val">' +
-			'<label class="se-html-check-label"><input type="checkbox" class="se-html-check"> Is this HTML?</label>' +
-			'</div>' +
 			'<div class="se-tag-lbl">Tag</div>' +
 			'<pre class="se-tag-pre">' +
 			frappe.utils.escape_html(base_tag) + '</pre>' +
-			'<div style="margin-top:10px;display:flex;justify-content:flex-end;gap:6px;">' +
+			'<div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;gap:6px;">' +
+			'<label class="se-html-check-label"><input type="checkbox" class="se-html-check"> Is this HTML?</label>' +
+			'<span style="display:flex;gap:6px;">' +
 			'<button class="btn btn-default btn-sm se-insert-btn">Insert at Cursor</button>' +
 			'<button class="btn btn-primary btn-sm se-copy-btn">Copy to Clipboard</button>' +
+			'</span>' +
 			'</div>' +
 			'</div>' +
 			'</div>'
@@ -569,13 +569,18 @@
 
 		$panel.find(".se-insert-btn").on("click", function () {
 			var current_tag = $pre.text();
-			if (!_last_editable) {
-				frappe.show_alert({ message: __("Click into a text field first"), indicator: "orange" });
+			if (!_last_editable || !_last_editable.parentNode) {
+				frappe.show_alert({ message: __("Click into the message box first, then click Insert"), indicator: "orange" });
 				return;
 			}
+			var before = _last_editable.value;
 			_insert_at_cursor(_last_editable, current_tag);
-			frappe.show_alert({ message: __("Tag inserted"), indicator: "green" });
-			$panel.remove();
+			if (_last_editable.value !== before) {
+				frappe.show_alert({ message: __("Tag inserted"), indicator: "green" });
+				$panel.remove();
+			} else {
+				frappe.show_alert({ message: __("Click into the message box first, then click Insert"), indicator: "orange" });
+			}
 		});
 
 		$panel.find(".se-copy-btn").on("click", function () {
@@ -601,14 +606,22 @@
 	function _insert_at_cursor(el, text) {
 		var tag = (el.tagName || "").toLowerCase();
 		if (tag === "textarea" || tag === "input") {
-			var start = _last_sel_start;
-			var end = _last_sel_end;
+			el.focus();
+			var start = _last_sel_start || 0;
+			var end = _last_sel_end || 0;
 			var val = el.value || "";
-			el.value = val.substring(0, start) + text + val.substring(end);
+			if (start > val.length) start = val.length;
+			if (end > val.length) end = val.length;
+			el.selectionStart = start;
+			el.selectionEnd = end;
+			if (document.execCommand) {
+				document.execCommand("insertText", false, text);
+			} else {
+				el.value = val.substring(0, start) + text + val.substring(end);
+			}
 			var new_pos = start + text.length;
 			el.selectionStart = new_pos;
 			el.selectionEnd = new_pos;
-			el.focus();
 			$(el).trigger("change").trigger("input");
 			_last_sel_start = new_pos;
 			_last_sel_end = new_pos;
