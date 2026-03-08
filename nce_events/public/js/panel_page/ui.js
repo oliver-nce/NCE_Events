@@ -985,7 +985,7 @@ nce_events.panel_page.Explorer = class Explorer {
 	/* ── Drill-column width calc ── */
 
 	_calc_drill_col_width(child_doctypes) {
-		var measurer = $('<div style="position:absolute;top:-9999px;left:-9999px;white-space:nowrap;visibility:hidden;"></div>');
+		var measurer = $('<div class="panel-float" style="position:absolute;top:-9999px;left:-9999px;white-space:nowrap;visibility:hidden;width:auto;height:auto;border:none;box-shadow:none;"></div>');
 		$(document.body).append(measurer);
 
 		var total = 0;
