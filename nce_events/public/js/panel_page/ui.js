@@ -65,22 +65,24 @@ nce_events.panel_page.Explorer = class Explorer {
 					".panel-float .filter-col-select, " +
 					".panel-float .filter-op-select, .panel-float .filter-val-input";
 
-				var css = sel + " {\n" +
+				var send_sel = ".send-panel, .send-panel .send-field, .send-panel .send-field-label, " +
+					".send-panel .send-panel-title, .send-panel .send-check-label, " +
+					".send-panel .send-panel-actions .btn, " +
+					".send-preview-body, .send-preview-subject, .send-preview-recipient";
+
+				var css = sel + ", " + send_sel + " {\n" +
 					"  font-family: " + font + " !important;\n" +
 					"  font-weight: " + weight + " !important;\n" +
 					"  font-size: " + size + " !important;\n" +
 					"}\n" +
-					".send-panel, .send-panel .send-field, .send-panel .send-field-label, " +
-					".send-panel .send-panel-title, .send-preview-body, .send-preview-subject, " +
-					".send-preview-recipient {\n" +
-					"  font-family: " + font + " !important;\n" +
-					"}\n" +
-					".panel-float .panel-table td {\n" +
+					".panel-float .panel-table td, .send-panel .send-field, " +
+					".send-preview-body, .send-preview-subject {\n" +
 					"  color: " + color + " !important;\n" +
 					"}\n" +
 					".panel-float .panel-table th,\n" +
 					".panel-float .pane-count,\n" +
-					".panel-float .drill-btn.disabled {\n" +
+					".panel-float .drill-btn.disabled,\n" +
+					".send-panel .send-field-label, .send-preview-recipient {\n" +
 					"  color: " + muted + " !important;\n" +
 					"}\n";
 
