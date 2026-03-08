@@ -272,13 +272,14 @@ nce_events.panel_page.Explorer = class Explorer {
 		var drill_col_w = has_drills ? me._calc_drill_col_width(child_doctypes) : 0;
 		var col_widths = me._calc_col_widths(columns, rows, drill_col_w, float_w);
 
-		var _dbg = "Panel: " + doctype + "\nfloat_w: " + float_w + " | drill_col_w: " + drill_col_w + " | avail: " + (float_w - 40 - drill_col_w) + "\n";
+		var col_total = 0;
+		var _dbg = "Panel: " + doctype + "\nfloat_w: " + float_w + "\ndrill_col_w: " + drill_col_w + "\navail: " + (float_w - 40 - drill_col_w) + "\n\nCOLUMNS:\n";
 		columns.forEach(function (col, ci) {
-			_dbg += col.label + ": " + col_widths[ci] + "px\n";
+			_dbg += "  " + col.label + ": " + col_widths[ci] + "px\n";
+			col_total += col_widths[ci];
 		});
-		if (has_drills) {
-			child_doctypes.forEach(function (child) { _dbg += "btn: " + child.label + "\n"; });
-		}
+		_dbg += "  SUM: " + col_total + "px\n";
+		_dbg += "\nTOTAL used: " + col_total + " + " + drill_col_w + " + 40 = " + (col_total + drill_col_w + 40) + "px (of " + float_w + ")";
 		alert(_dbg);
 
 		var html = '<table class="panel-table"><thead><tr>';
