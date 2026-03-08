@@ -7,9 +7,6 @@
   "field_name",
   "label",
   "sql_expression",
-  "column_break_display",
-  "tint",
-  "bold",
   "section_break_advanced",
   "format",
   "notes"
@@ -37,26 +34,6 @@
    "in_list_view": 1,
    "label": "SQL Expression",
    "reqd": 1
-  },
-  {
-   "fieldname": "column_break_display",
-   "fieldtype": "Column Break"
-  },
-  {
-   "default": "0",
-   "description": "Color result based on row gender (when root DocType has gender field)",
-   "fieldname": "tint",
-   "fieldtype": "Check",
-   "in_list_view": 1,
-   "label": "Tint by Gender"
-  },
-  {
-   "default": "0",
-   "description": "Render result in bold",
-   "fieldname": "bold",
-   "fieldtype": "Check",
-   "in_list_view": 1,
-   "label": "Bold"
   },
   {
    "fieldname": "section_break_advanced",

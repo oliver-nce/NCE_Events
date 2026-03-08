@@ -134,13 +134,33 @@ function _render_display(frm) {
 	});
 }
 
+function _get_computed_fields(frm) {
+	const rows = frm.doc.unstored_calculation_fields || [];
+	return rows.map(function (r) {
+		return {
+			fieldname: (r.field_name || "").trim(),
+			label: (r.label || "").trim() || _title_case(r.field_name || ""),
+			_computed: true,
+		};
+	}).filter(function (f) { return f.fieldname; });
+}
+
 function _build_display_tabs(frm, $container, root_fields, link_fields, linked_data) {
+	const computed_fields = _get_computed_fields(frm);
+	const root_with_computed = root_fields.concat(computed_fields);
+
 	const saved = {
 		column_order: _parse_csv(frm.doc.column_order),
 		bold: _parse_csv(frm.doc.bold_fields),
 		gender_col: (frm.doc.gender_column || "").trim(),
 		gender_tint: _parse_csv(frm.doc.gender_color_fields),
 	};
+
+	// Merge computed column field_names into column_order so new ones appear in Display
+	computed_fields.forEach(function (cf) {
+		const fn = cf.fieldname;
+		if (saved.column_order.indexOf(fn) === -1) saved.column_order.push(fn);
+	});
 
 	const shown_set = {};
 	saved.column_order.forEach(function (k) { shown_set[k] = true; });
@@ -180,7 +200,7 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 	// Build a field matrix for each sub-tab (except Order)
 	sub_tabs.forEach(function (st) {
 		if (st.id === "_order") return;
-		const fields = (st.id === "_root") ? root_fields : linked_data[st.id].fields;
+		const fields = (st.id === "_root") ? root_with_computed : linked_data[st.id].fields;
 		const prefix = st.prefix;
 		matrices[st.id] = _build_field_matrix(fields, prefix, uid, saved, shown_set);
 	});
@@ -222,6 +242,7 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		frm.set_value("bold_fields", nb.join(", "));
 		frm.set_value("gender_column", ngc);
 		frm.set_value("gender_color_fields", nt.join(", "));
+
 	}
 
 	// Wire change events on all matrices
@@ -306,11 +327,12 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set) {
 	fields.forEach(function (f, i) {
 		const key = prefix + f.fieldname;
 		const label = f.label || _title_case(f.fieldname);
+		const fn_display = frappe.utils.escape_html(f.fieldname) + (f._computed ? " <span style='color:#8d949a;font-size:10px;'>(computed)</span>" : "");
 		const bg = i % 2 !== 0 ? ' style="background:#f8f9fa;"' : '';
 		const esc_key = frappe.utils.escape_html(key);
 		const td = 'style="text-align:center;padding:4px 8px;"';
 		html += `<tr data-key="${esc_key}"${bg}>
-			<td style="padding:4px 8px;color:#8d949a;font-size:11px;">${frappe.utils.escape_html(f.fieldname)}</td>
+			<td style="padding:4px 8px;color:#8d949a;font-size:11px;">${fn_display}</td>
 			<td style="padding:4px 8px;color:#4c5a67;">${frappe.utils.escape_html(label)}</td>
 			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="show"${shown_set[key] ? " checked" : ""}></td>
 			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="bold"${saved.bold.indexOf(key) !== -1 ? " checked" : ""}></td>

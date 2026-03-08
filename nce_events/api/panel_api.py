@@ -70,10 +70,6 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 	gender_color_fields = _parse_csv(doc.gender_color_fields)
 	for cc in computed_columns:
 		column_order.append(cc["field_name"])
-		if cc.get("bold"):
-			bold_fields.append(cc["field_name"])
-		if cc.get("tint"):
-			gender_color_fields.append(cc["field_name"])
 
 	return {
 		"root_doctype": doc.root_doctype,
@@ -513,8 +509,6 @@ def _get_computed_columns(doc: Any) -> list[dict[str, Any]]:
 			"field_name": (row.field_name or "").strip(),
 			"label": (row.label or "").strip() or _title_case(row.field_name or ""),
 			"sql_expression": expr,
-			"tint": bool(row.tint),
-			"bold": bool(row.bold),
 		})
 	return result
 
