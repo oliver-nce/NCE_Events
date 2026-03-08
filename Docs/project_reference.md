@@ -8,9 +8,7 @@ Single source of truth for the `nce_events` Frappe v15 app. Read fully before ma
 
 A multi-panel data explorer for NCE soccer operations. Users see floating windows: select a row in Panel 1 (e.g. an event) and Panel 2 opens with related data (e.g. registered players). Any number of panel levels are supported. Panels support filtering, gender color-coding, bold fields, column reordering/resizing, CSV export (Sheets widget), and bulk SMS/email.
 
-A **Messaging Configuration** DocType provides a tag registry for Jinja2 template tags.
-
-A **Tag Finder** is a floating Miller columns tool that drills into Link/Table relationships and generates paste-ready Jinja2 tags with hop-aware syntax. Tag panels are non-modal, draggable, and support fallback values (`| default('...')`).
+A **Tag Finder** is a floating Miller columns tool that drills into Link/Table relationships and generates paste-ready Jinja2 tags with hop-aware syntax. Tag panels are non-modal, draggable, and support fallback values (`| default('...')`). When the root DocType has a `gender` field, pronoun tags (He/She, his/her, etc.) appear at the top of the first column.
 
 **Dependency:** requires [nce_sync](https://github.com/oliver-nce/NCE_Sync) (provides DocTypes, WP Tables mappings, and WordPress data sync).
 
@@ -25,7 +23,7 @@ nce_events/
 │   ├── panel_api.py                 # Core panel endpoints (config, data, export, SQL)
 │   ├── messaging.py                 # Bulk SMS/email: send, preview, test
 │   ├── translator.py                # WP → Frappe SQL translator
-│   ├── tags.py                      # rebuild_field_tags + _compute_jinja_tag
+│   ├── tags.py                      # get_pronoun_tags_for_doctype + _compute_jinja_tag
 │   ├── reports.py                   # create_or_update_report, get_report_columns
 │   └── tests/
 │       └── test_core_functions.py   # Unit tests for pure helpers
@@ -35,9 +33,6 @@ nce_events/
 │   │   ├── page_definition/         # Parent DocType + form JS (5-tab layout)
 │   │   ├── page_panel/              # Child table (panel config)
 │   │   ├── page_drag_action/        # Child table (drag-drop, not yet implemented)
-│   │   ├── messaging_configuration/ # Single DocType — tag registry config
-│   │   ├── field_tag/               # Child table of Messaging Configuration
-│   │   ├── neutral_tag/             # Child table of Messaging Configuration
 │   │   └── display_settings/        # Single DocType — site-wide font/color theme
 │   ├── page/
 │   │   ├── page_view/               # Router — single shared page for all pages
@@ -55,7 +50,7 @@ nce_events/
 │       │   ├── ui.js                # Explorer renderer (floating windows, sheets)
 │       │   ├── store.js             # Store state management
 │       │   └── send_dialog.js       # SendDialog class (bulk SMS/email UI)
-│       ├── email_template_tags.js   # Tag picker for Email Template form
+│       ├── email_template_tags.js   # Insert Tag button (opens Tag Finder) on Email Template
 │       ├── schema_explorer.js       # Tag Finder — Miller columns tag generator
 │       └── hierarchy_explorer/      # Legacy JS (frozen)
 ├── patches/v0_0_2/                  # Migration patches
@@ -130,40 +125,6 @@ Defined but **not yet implemented** in the renderer.
 | eligibility_code | Code (JS) | returns true/false per target row |
 | drop_code | Code (JS) | executes on successful drop |
 
-### Messaging Configuration (Single DocType)
-
-Manages the field tag registry for Jinja2 template tags used in email/SMS messaging.
-
-| Field | Type | Notes |
-|---|---|---|
-| gender_field | Data | field holding gender value (default "gender") |
-| neutral_tags | Table → Neutral Tag | user-managed dedup list |
-| field_tags | Table → Field Tag | auto-populated tag registry |
-
-Buttons: **Rebuild Tags** (scans WP Tables DocTypes, rebuilds `field_tags`, deduplicates neutral list, ensures synthetic pronoun rows). **Add Synthetic Tag** (adds a row with `synthetic=1`).
-
-### Field Tag (child table, editable_grid)
-
-| Field | Type | Notes |
-|---|---|---|
-| field_name | Data, required | database column name |
-| label | Data | friendly display label |
-| male_value | Data | male substitution text |
-| female_value | Data | female substitution text |
-| jinja_tag | Data, read-only | auto-computed `{{ field_name }}` or gender-conditional |
-| source_table | Data, read-only | SQL table name (empty for neutral/synthetic) |
-| source_doctype | Data, read-only | DocType display name (empty for neutral/synthetic) |
-| expose | Check, default 1 | controls tag picker visibility |
-| synthetic | Check, read-only | 1 for manually added tags |
-
-One row per table+fieldname combination. Fields in the Neutral Tag list are deduplicated to one row with no source table.
-
-### Neutral Tag (child table, editable_grid)
-
-| Field | Type | Notes |
-|---|---|---|
-| field_name | Data, required | fieldname to treat as table-neutral |
-
 ### Display Settings (Single DocType)
 
 Site-wide font and color theme. On save, generates `public/css/custom_theme.css`.
@@ -222,11 +183,11 @@ Credentials from `API Connector` DocType: "Twilio" (Account SID / Auth Token), "
 |---|---|---|
 | `translate_wp_query` | `wp_query` | Three-pass translation using WP Tables mappings: qualified `table.column` → bare table → bare column |
 
-### tags.py — Field tag registry
+### tags.py — Pronoun tags for Tag Finder
 
 | Function | Params | Purpose |
 |---|---|---|
-| `rebuild_field_tags` | (none) | Scan WP Tables DocTypes, rebuild Field Tag child table |
+| `get_pronoun_tags_for_doctype` | `doctype` | Return built-in pronoun tags (He/She, his/her, etc.) when DocType has `gender` field |
 
 ### reports.py — Query Report management
 
@@ -315,6 +276,8 @@ JS API: `nce_events.schema_explorer.open(doctype)` / `.open()` (prompts) / `.clo
 ### Miller Columns
 
 Each column = one DocType's fields as tiles. Link (blue border) and Table (amber) tiles drill into the target DocType. Circular references greyed out. Horizontal scroll.
+
+**Pronoun tags:** When the root DocType has a `gender` field, built-in pronoun tags (he/she, He/She, him/her, His/Her, his/her) appear at the top of the first column (purple tiles). They evaluate `gender` case-insensitively (male/female).
 
 ### Tag Generation
 

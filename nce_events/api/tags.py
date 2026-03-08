@@ -1,145 +1,40 @@
 from __future__ import annotations
 
-from typing import Any
-
 import frappe
-
-from nce_events.api.panel_api import _SKIP_FIELDNAMES, _SKIP_FIELDTYPES, _title_case
 
 
 _DEFAULT_SYNTHETICS: list[dict[str, str]] = [
-	{"field_name": "he_she", "label": "He/She (lower)", "male_value": "he", "female_value": "she"},
+	{"field_name": "he_she", "label": "he/she", "male_value": "he", "female_value": "she"},
 	{"field_name": "he_she_cap", "label": "He/She", "male_value": "He", "female_value": "She"},
-	{"field_name": "him_her", "label": "Him/Her", "male_value": "him", "female_value": "her"},
-	{"field_name": "his_her", "label": "His/Her", "male_value": "his", "female_value": "her"},
+	{"field_name": "him_her", "label": "him/her", "male_value": "him", "female_value": "her"},
+	{"field_name": "his_her", "label": "His/Her", "male_value": "His", "female_value": "Her"},
+	{"field_name": "his_her_lower", "label": "his/her", "male_value": "his", "female_value": "her"},
 ]
 
 
 @frappe.whitelist()
-def rebuild_field_tags() -> dict[str, int]:
-	"""Scan all custom DocTypes and rebuild the Field Tag child table."""
-	doc = frappe.get_doc("Messaging Configuration")
-	gender_field: str = doc.gender_field or "gender"
-
-	neutral_fieldnames: set[str] = {
-		row.field_name.strip()
-		for row in (doc.neutral_tags or [])
-		if row.field_name
-	}
-
-	existing: dict[str, dict[str, Any]] = {}
-	for row in (doc.field_tags or []):
-		key = (row.field_name or "") + ":" + (row.source_table or "")
-		existing[key] = {
-			"expose": row.expose,
-			"male_value": row.male_value or "",
-			"female_value": row.female_value or "",
-			"synthetic": row.synthetic,
-		}
-
-	synthetic_by_fn: dict[str, dict[str, Any]] = {}
-	for row in (doc.field_tags or []):
-		if row.synthetic:
-			synthetic_by_fn[row.field_name] = {
-				"field_name": row.field_name,
-				"label": row.label,
-				"male_value": row.male_value or "",
-				"female_value": row.female_value or "",
-				"expose": row.expose,
-			}
-
+def get_pronoun_tags_for_doctype(doctype: str) -> list[dict[str, str]]:
+	"""Return pronoun tags for Tag Finder when the DocType has a gender field."""
+	if not doctype or not doctype.strip():
+		return []
+	doctype = doctype.strip()
+	try:
+		meta = frappe.get_meta(doctype)
+	except Exception:
+		return []
+	if not meta.get_field("gender"):
+		return []
+	pronoun_tags: list[dict[str, str]] = []
 	for ds in _DEFAULT_SYNTHETICS:
-		if ds["field_name"] not in synthetic_by_fn:
-			prev = existing.get(ds["field_name"] + ":", {})
-			synthetic_by_fn[ds["field_name"]] = {
-				"field_name": ds["field_name"],
-				"label": ds["label"],
-				"male_value": prev.get("male_value") or ds["male_value"],
-				"female_value": prev.get("female_value") or ds["female_value"],
-				"expose": prev.get("expose", 1),
-			}
-
-	custom_dts = frappe.get_all(
-		"WP Tables",
-		filters={"frappe_doctype": ["is", "set"]},
-		pluck="frappe_doctype",
-	)
-	custom_dts = list(set(custom_dts))
-
-	new_rows: list[dict[str, Any]] = []
-	seen_neutral: set[str] = set()
-
-	for dt_name in sorted(custom_dts):
-		try:
-			meta = frappe.get_meta(dt_name)
-		except Exception:
-			continue
-
-		source_table = "tab" + dt_name
-
-		for field in meta.fields:
-			if field.fieldtype in _SKIP_FIELDTYPES:
-				continue
-			if field.fieldname in _SKIP_FIELDNAMES:
-				continue
-
-			fn = field.fieldname
-			label = field.label or _title_case(fn)
-
-			if fn in neutral_fieldnames:
-				if fn in seen_neutral:
-					continue
-				seen_neutral.add(fn)
-				prev = existing.get(fn + ":", {})
-				new_rows.append({
-					"field_name": fn,
-					"label": label,
-					"male_value": prev.get("male_value", ""),
-					"female_value": prev.get("female_value", ""),
-					"jinja_tag": _compute_jinja_tag(fn, prev.get("male_value", ""), prev.get("female_value", ""), gender_field),
-					"source_table": "",
-					"source_doctype": "",
-					"expose": prev.get("expose", 1),
-					"synthetic": 0,
-				})
-			else:
-				key = fn + ":" + source_table
-				prev = existing.get(key, {})
-				new_rows.append({
-					"field_name": fn,
-					"label": label,
-					"male_value": prev.get("male_value", ""),
-					"female_value": prev.get("female_value", ""),
-					"jinja_tag": _compute_jinja_tag(fn, prev.get("male_value", ""), prev.get("female_value", ""), gender_field),
-					"source_table": source_table,
-					"source_doctype": dt_name,
-					"expose": prev.get("expose", 1),
-					"synthetic": 0,
-				})
-
-	new_rows.sort(key=lambda r: (r.get("label") or "").lower())
-
-	all_synthetics = sorted(
-		synthetic_by_fn.values(),
-		key=lambda r: (r.get("label") or "").lower(),
-	)
-	for s in all_synthetics:
-		s["jinja_tag"] = _compute_jinja_tag(
-			s["field_name"], s.get("male_value", ""),
-			s.get("female_value", ""), gender_field,
+		jinja = _compute_jinja_tag(
+			ds["field_name"], ds["male_value"], ds["female_value"], "gender"
 		)
-		s["source_table"] = ""
-		s["source_doctype"] = ""
-		s["synthetic"] = 1
-
-	doc.field_tags = []
-	for row_data in new_rows + all_synthetics:
-		doc.append("field_tags", row_data)
-
-	doc.save(ignore_permissions=True)
-	frappe.db.commit()
-
-	return {"total": len(doc.field_tags)}
+		pronoun_tags.append({
+			"field_name": ds["field_name"],
+			"label": ds["label"],
+			"jinja_tag": jinja,
+		})
+	return pronoun_tags
 
 
 def _compute_jinja_tag(field_name: str, male_value: str, female_value: str, gender_field: str) -> str:
@@ -147,7 +42,7 @@ def _compute_jinja_tag(field_name: str, male_value: str, female_value: str, gend
 	female = (female_value or "").strip()
 	if male or female:
 		return (
-			"{{% if " + gender_field + " == 'Male' %}}"
+			"{{% if (gender|lower) == 'male' %}}"
 			+ (male or field_name)
 			+ "{{% else %}}"
 			+ (female or field_name)

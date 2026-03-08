@@ -95,14 +95,14 @@ class TestComputeJinjaTag(unittest.TestCase):
 
 	def test_male_only(self):
 		result = _compute_jinja_tag("salutation", "Mr", "", "gender")
-		self.assertIn("{% if gender == 'Male' %}", result)
+		self.assertIn("{% if (gender|lower) == 'male' %}", result)
 		self.assertIn("Mr", result)
 		self.assertIn("salutation", result)
 		self.assertIn("{% endif %}", result)
 
 	def test_female_only(self):
 		result = _compute_jinja_tag("salutation", "", "Ms", "gender")
-		self.assertIn("{% if gender == 'Male' %}", result)
+		self.assertIn("{% if (gender|lower) == 'male' %}", result)
 		self.assertIn("salutation", result)
 		self.assertIn("Ms", result)
 
@@ -110,19 +110,20 @@ class TestComputeJinjaTag(unittest.TestCase):
 		result = _compute_jinja_tag("salutation", "Mr", "Ms", "gender")
 		self.assertEqual(
 			result,
-			"{% if gender == 'Male' %}Mr{% else %}Ms{% endif %}",
+			"{% if (gender|lower) == 'male' %}Mr{% else %}Ms{% endif %}",
 		)
 
 	def test_whitespace_stripped(self):
 		result = _compute_jinja_tag("x", "  Mr  ", "  Ms  ", "gender")
 		self.assertEqual(
 			result,
-			"{% if gender == 'Male' %}Mr{% else %}Ms{% endif %}",
+			"{% if (gender|lower) == 'male' %}Mr{% else %}Ms{% endif %}",
 		)
 
-	def test_custom_gender_field(self):
+	def test_always_uses_gender(self):
+		"""Pronoun tags always use 'gender' field (case-insensitive male/female)."""
 		result = _compute_jinja_tag("title", "Sir", "Madam", "sex")
-		self.assertIn("{% if sex == 'Male' %}", result)
+		self.assertIn("(gender|lower)", result)
 
 
 # ──────────────────────────────────────────────────────────

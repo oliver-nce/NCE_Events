@@ -245,7 +245,28 @@
 			});
 
 			col.fields = fields;
-			_render_column(col, col_idx);
+
+			if (col_idx === 0) {
+				frappe.call({
+					method: "nce_events.api.tags.get_pronoun_tags_for_doctype",
+					args: { doctype: doctype },
+					callback: function (r) {
+						const tags = r.message || [];
+						const pronoun_fields = tags.map(function (t) {
+							return {
+								fieldname: t.field_name,
+								label: t.label || t.field_name,
+								jinja_tag: t.jinja_tag || "",
+								is_pronoun: true,
+							};
+						});
+						col.fields = pronoun_fields.concat(col.fields);
+						_render_column(col, col_idx);
+					},
+				});
+			} else {
+				_render_column(col, col_idx);
+			}
 		});
 	}
 
@@ -262,7 +283,9 @@
 			let cls = "se-tile";
 			let is_circular = false;
 
-			if (f.is_link) {
+			if (f.is_pronoun) {
+				cls += " se-tile-pronoun";
+			} else if (f.is_link) {
 				if (f.options && _visited[f.options]) {
 					cls += " se-tile-circular";
 					is_circular = true;
@@ -278,7 +301,7 @@
 				}
 			}
 
-			let badge_text = f.fieldtype;
+			let badge_text = f.is_pronoun ? "pronoun" : f.fieldtype;
 			if ((f.is_link || f.is_table) && f.options) {
 				badge_text += ` \u2192 ${f.options}`;
 			}
@@ -302,7 +325,9 @@
 			$tile.on("click", function () {
 				if (is_circular) return;
 
-				if (f.is_link || f.is_table) {
+				if (f.is_pronoun && f.jinja_tag) {
+					_show_tag_dialog(col_idx, f, f.jinja_tag);
+				} else if (f.is_link || f.is_table) {
 					col.active_field = f.fieldname;
 					$tiles.find(".se-tile").removeClass("se-tile-active");
 					$tile.addClass("se-tile-active");
@@ -473,9 +498,11 @@
 		return result;
 	}
 
-	function _show_tag_dialog(col_idx, field) {
-		const base_tag = _build_tag(col_idx, field);
-		const path = _build_path_string(col_idx, field);
+	function _show_tag_dialog(col_idx, field, precomputed_tag) {
+		const base_tag = precomputed_tag || _build_tag(col_idx, field);
+		const path = field.is_pronoun
+			? `${_columns[0] ? _columns[0].doctype : ""} \u2192 ${field.fieldname} (pronoun)`
+			: _build_path_string(col_idx, field);
 
 		_tag_panel_count++;
 		const cascade = (_tag_panel_count - 1) * 24;

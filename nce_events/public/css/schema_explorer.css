@@ -158,6 +158,16 @@
 	background: #FDF3D7;
 }
 
+.se-tile-pronoun {
+	border-left-color: #8B5CF6;
+	background: #F5F3FF;
+	border-color: #C4B5FD;
+}
+
+.se-tile-pronoun:hover {
+	background: #EDE9FE;
+}
+
 .se-tile-circular {
 	border-left-color: #D7D9DB;
 	background: #F4F5F5;
