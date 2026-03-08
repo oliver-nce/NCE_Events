@@ -4,7 +4,6 @@ nce_events.panel_page.Store = class Store {
 	constructor() {
 		this.panels = {};
 		this.open_stack = [];
-		this._child_cache = {};
 	}
 
 	/* ── Panel state helpers ── */
@@ -152,29 +151,6 @@ nce_events.panel_page.Store = class Store {
 					}
 				},
 				error: reject,
-			});
-		});
-	}
-
-	fetch_child_doctypes(doctype) {
-		const me = this;
-		if (me._child_cache[doctype]) {
-			return Promise.resolve(me._child_cache[doctype]);
-		}
-		return new Promise(function (resolve) {
-			frappe.call({
-				method: "nce_events.api.panel_api.get_child_doctypes",
-				args: { root_doctype: doctype },
-				callback: function (r) {
-					const children = r.message || [];
-					me._child_cache[doctype] = children;
-					resolve(children);
-				},
-				error: function (err) {
-					console.error("fetch_child_doctypes failed for " + doctype + ":", err);
-					me._child_cache[doctype] = [];
-					resolve([]);
-				},
 			});
 		});
 	}

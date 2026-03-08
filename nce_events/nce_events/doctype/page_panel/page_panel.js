@@ -49,7 +49,7 @@ function _show_tab(frm, tab_id) {
 	$wrap.find(".pp-matrix-wrap").toggle(tab_id === "display");
 
 	$(frm.layout.wrapper).find(".pp-tab-btn").css({ background: "", color: "", fontWeight: "" });
-	$(frm.layout.wrapper).find('.pp-tab-btn[data-tab="' + tab_id + '"]').css({
+	$(frm.layout.wrapper).find(`.pp-tab-btn[data-tab="${tab_id}"]`).css({
 		background: "#171717", color: "#fff", fontWeight: "600",
 	});
 	$(frm.layout.wrapper).data("pp-active-tab", tab_id);
@@ -62,13 +62,11 @@ function _ensure_tab_bar(frm) {
 	const first_fd = frm.fields_dict["root_doctype"];
 	if (!first_fd || !first_fd.$wrapper) return;
 
-	let tab_html = '<div class="pp-tab-bar" style="display:flex;gap:4px;padding:6px 0 10px;margin-bottom:6px;border-bottom:1px solid #d1d8dd;">';
+	let tab_html = `<div class="pp-tab-bar" style="display:flex;gap:4px;padding:6px 0 10px;margin-bottom:6px;border-bottom:1px solid #d1d8dd;">`;
 	TAB_ORDER.forEach(function (tab_id) {
-		tab_html += '<button class="btn btn-xs btn-default pp-tab-btn" data-tab="' + tab_id + '" '
-			+ 'style="padding:3px 14px;border-radius:4px;">'
-			+ TAB_LABELS[tab_id] + '</button>';
+		tab_html += `<button class="btn btn-xs btn-default pp-tab-btn" data-tab="${tab_id}" style="padding:3px 14px;border-radius:4px;">${TAB_LABELS[tab_id]}</button>`;
 	});
-	tab_html += '</div>';
+	tab_html += `</div>`;
 
 	const $tab_bar = $(tab_html);
 	const $matrix_wrap = $('<div class="pp-matrix-wrap" style="display:none;padding-bottom:8px;"></div>');
@@ -166,9 +164,7 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 	const $sub_bar = $('<div style="display:flex;gap:4px;padding:0 0 8px;flex-wrap:wrap;"></div>');
 	sub_tabs.forEach(function (st) {
 		$sub_bar.append(
-			'<button class="btn btn-xs btn-default pp-sub-btn" data-sub="' + st.id + '" '
-			+ 'style="padding:2px 12px;border-radius:4px;font-size:11px;">'
-			+ frappe.utils.escape_html(st.label) + '</button>'
+			`<button class="btn btn-xs btn-default pp-sub-btn" data-sub="${st.id}" style="padding:2px 12px;border-radius:4px;font-size:11px;">${frappe.utils.escape_html(st.label)}</button>`
 		);
 	});
 	$container.append($sub_bar);
@@ -197,13 +193,13 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 			if (!m || !m.$matrix) return;
 			m.$matrix.find("tbody tr").each(function () {
 				const key = $(this).data("key");
-				const $r = m.$matrix.find('input[data-key="' + key + '"]');
+				const $r = m.$matrix.find(`input[data-key="${key}"]`);
 				if ($r.filter('[data-role="show"]').prop("checked")) col_order.push(key);
 				if ($r.filter('[data-role="bold"]').prop("checked")) nb.push(key);
 				if ($r.filter('[data-role="tint"]').prop("checked")) nt.push(key);
 			});
 		});
-		const $all_gc = $container.find('input[name="gender_col_' + uid + '"]:checked');
+		const $all_gc = $container.find(`input[name="gender_col_${uid}"]:checked`);
 		if ($all_gc.length) ngc = $all_gc.data("key") || "";
 
 		// Reorder col_order by Order tab if it exists
@@ -239,7 +235,7 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 	function _show_sub(sub_id) {
 		$sub_content.children().detach();
 		$sub_bar.find(".pp-sub-btn").css({ background: "", color: "", fontWeight: "" });
-		$sub_bar.find('.pp-sub-btn[data-sub="' + sub_id + '"]').css({
+		$sub_bar.find(`.pp-sub-btn[data-sub="${sub_id}"]`).css({
 			background: "#4198F0", color: "#fff", fontWeight: "600",
 		});
 
@@ -254,11 +250,11 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		const $panel = $('<div></div>');
 
 		// Select all/none links
-		const $toolbar = $('<div style="display:flex;gap:6px;padding:4px 0 8px;">'
-			+ '<a class="pp-select-all" href="#" style="font-size:12px;color:#4198F0;">Select All</a>'
-			+ '<span style="color:#d1d8dd;">|</span>'
-			+ '<a class="pp-select-none" href="#" style="font-size:12px;color:#4198F0;">Select None</a>'
-			+ '</div>');
+		const $toolbar = $(`<div style="display:flex;gap:6px;padding:4px 0 8px;">
+			<a class="pp-select-all" href="#" style="font-size:12px;color:#4198F0;">Select All</a>
+			<span style="color:#d1d8dd;">|</span>
+			<a class="pp-select-none" href="#" style="font-size:12px;color:#4198F0;">Select None</a>
+		</div>`);
 		$toolbar.find(".pp-select-all").on("click", function (e) {
 			e.preventDefault();
 			m.$matrix.find('input[data-role="show"]').prop("checked", true);
@@ -281,13 +277,11 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 
 	// Inject CSS once
 	if (!document.getElementById("pp-matrix-drag-css")) {
-		$("head").append(
-			'<style id="pp-matrix-drag-css">'
-			+ '.matrix-drag-over { border-top: 2px solid #4198F0 !important; }'
-			+ '.matrix-drag-handle:hover { color: #464D53 !important; cursor: grab; }'
-			+ 'tr[draggable="true"]:active .matrix-drag-handle { cursor: grabbing; }'
-			+ '</style>'
-		);
+		$("head").append(`<style id="pp-matrix-drag-css">
+.matrix-drag-over { border-top: 2px solid #4198F0 !important; }
+.matrix-drag-handle:hover { color: #464D53 !important; cursor: grab; }
+tr[draggable="true"]:active .matrix-drag-handle { cursor: grabbing; }
+</style>`);
 	}
 
 	// Start on root sub-tab
@@ -298,15 +292,15 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 function _build_field_matrix(fields, prefix, uid, saved, shown_set) {
 	const th_style = 'style="text-align:center;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;"';
 	const th_left = 'style="text-align:left;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;"';
-	let html = '<table style="width:100%;border-collapse:collapse;font-size:12px;">'
-		+ '<thead><tr>'
-		+ '<th ' + th_left + '>Field</th>'
-		+ '<th ' + th_left + '>Label</th>'
-		+ '<th ' + th_style + '>Show</th>'
-		+ '<th ' + th_style + '>Bold</th>'
-		+ '<th ' + th_style + '>Gender</th>'
-		+ '<th ' + th_style + '>Tint</th>'
-		+ '</tr></thead><tbody>';
+	let html = `<table style="width:100%;border-collapse:collapse;font-size:12px;">
+		<thead><tr>
+			<th ${th_left}>Field</th>
+			<th ${th_left}>Label</th>
+			<th ${th_style}>Show</th>
+			<th ${th_style}>Bold</th>
+			<th ${th_style}>Gender</th>
+			<th ${th_style}>Tint</th>
+		</tr></thead><tbody>`;
 
 	fields.forEach(function (f, i) {
 		const key = prefix + f.fieldname;
@@ -314,14 +308,14 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set) {
 		const bg = i % 2 !== 0 ? ' style="background:#f8f9fa;"' : '';
 		const esc_key = frappe.utils.escape_html(key);
 		const td = 'style="text-align:center;padding:4px 8px;"';
-		html += '<tr data-key="' + esc_key + '"' + bg + '>'
-			+ '<td style="padding:4px 8px;color:#8d949a;font-size:11px;">' + frappe.utils.escape_html(f.fieldname) + '</td>'
-			+ '<td style="padding:4px 8px;color:#4c5a67;">' + frappe.utils.escape_html(label) + '</td>'
-			+ '<td ' + td + '><input type="checkbox" data-key="' + esc_key + '" data-role="show"' + (shown_set[key] ? " checked" : "") + '></td>'
-			+ '<td ' + td + '><input type="checkbox" data-key="' + esc_key + '" data-role="bold"' + (saved.bold.indexOf(key) !== -1 ? " checked" : "") + '></td>'
-			+ '<td ' + td + '><input type="radio"    data-key="' + esc_key + '" name="gender_col_' + uid + '"' + (saved.gender_col === key ? " checked" : "") + '></td>'
-			+ '<td ' + td + '><input type="checkbox" data-key="' + esc_key + '" data-role="tint"' + (saved.gender_tint.indexOf(key) !== -1 ? " checked" : "") + '></td>'
-			+ '</tr>';
+		html += `<tr data-key="${esc_key}"${bg}>
+			<td style="padding:4px 8px;color:#8d949a;font-size:11px;">${frappe.utils.escape_html(f.fieldname)}</td>
+			<td style="padding:4px 8px;color:#4c5a67;">${frappe.utils.escape_html(label)}</td>
+			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="show"${shown_set[key] ? " checked" : ""}></td>
+			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="bold"${saved.bold.indexOf(key) !== -1 ? " checked" : ""}></td>
+			<td ${td}><input type="radio"    data-key="${esc_key}" name="gender_col_${uid}"${saved.gender_col === key ? " checked" : ""}></td>
+			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="tint"${saved.gender_tint.indexOf(key) !== -1 ? " checked" : ""}></td>
+		</tr>`;
 	});
 	html += '</tbody></table>';
 
@@ -363,24 +357,24 @@ function _render_order_tab($sub_content, uid, sub_tabs, matrices, saved, _sync_a
 
 	const th_left = 'style="text-align:left;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;"';
 	const th_grip = 'style="width:24px;padding:4px;border-bottom:2px solid #d1d8dd;"';
-	let html = '<table class="pp-order-matrix" style="width:100%;border-collapse:collapse;font-size:12px;">'
-		+ '<thead><tr>'
-		+ '<th ' + th_grip + '></th>'
-		+ '<th ' + th_left + '>Field</th>'
-		+ '<th ' + th_left + '>Label</th>'
-		+ '<th ' + th_left + '>Source</th>'
-		+ '</tr></thead><tbody>';
+	let html = `<table class="pp-order-matrix" style="width:100%;border-collapse:collapse;font-size:12px;">
+		<thead><tr>
+			<th ${th_grip}></th>
+			<th ${th_left}>Field</th>
+			<th ${th_left}>Label</th>
+			<th ${th_left}>Source</th>
+		</tr></thead><tbody>`;
 
 	selected.forEach(function (s, i) {
 		const bg = i % 2 !== 0 ? ' style="background:#f8f9fa;"' : '';
 		const esc = frappe.utils.escape_html(s.key);
-		html += '<tr draggable="true" data-key="' + esc + '"' + bg + '>'
-			+ '<td style="padding:4px;text-align:center;cursor:grab;">'
-			+ '<span class="matrix-drag-handle" style="color:#b7babe;font-size:14px;">&#x2630;</span></td>'
-			+ '<td style="padding:4px 8px;color:#8d949a;font-size:11px;">' + esc + '</td>'
-			+ '<td style="padding:4px 8px;color:#4c5a67;">' + frappe.utils.escape_html(s.label) + '</td>'
-			+ '<td style="padding:4px 8px;color:#8d949a;font-size:11px;">' + frappe.utils.escape_html(s.source) + '</td>'
-			+ '</tr>';
+		html += `<tr draggable="true" data-key="${esc}"${bg}>
+			<td style="padding:4px;text-align:center;cursor:grab;">
+				<span class="matrix-drag-handle" style="color:#b7babe;font-size:14px;">&#x2630;</span></td>
+			<td style="padding:4px 8px;color:#8d949a;font-size:11px;">${esc}</td>
+			<td style="padding:4px 8px;color:#4c5a67;">${frappe.utils.escape_html(s.label)}</td>
+			<td style="padding:4px 8px;color:#8d949a;font-size:11px;">${frappe.utils.escape_html(s.source)}</td>
+		</tr>`;
 	});
 	html += '</tbody></table>';
 

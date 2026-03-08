@@ -21,55 +21,54 @@ nce_events.panel_page.SendDialog = class SendDialog {
 		const me = this;
 		const count = me.row_count;
 		const mode = me.mode;
-		const title = (mode === "sms" ? "Send SMS" : "Send Email") + " (" + count + " recipients)";
+		const title = `${mode === "sms" ? "Send SMS" : "Send Email"} (${count} recipients)`;
 
 		const el = $('<div class="send-panel"></div>');
-		el.html(
-			'<div class="send-panel-header">' +
-				'<span class="send-panel-title">' + frappe.utils.escape_html(title) + '</span>' +
-				'<button class="send-panel-close" title="Close">&times;</button>' +
-			'</div>' +
-			'<div class="send-panel-body">' +
-				'<div class="send-panel-form">' +
-					'<label class="send-field-label">Source</label>' +
-					'<select class="send-field send-source-select">' +
-						'<option value="type">Type a message</option>' +
-						'<option value="template">Use Email Template</option>' +
-					'</select>' +
-					'<label class="send-field-label">Subject</label>' +
-					'<input class="send-field send-subject-input" type="text">' +
-					'<div class="send-message-section">' +
-						'<label class="send-field-label">Message</label>' +
-						'<textarea class="send-field send-message-input" placeholder="Jinja2 tags supported. Sent to all ' + count + ' rows."></textarea>' +
-					'</div>' +
-					'<div class="send-template-section" style="display:none;">' +
-						'<label class="send-field-label">Email Template</label>' +
-						'<input class="send-field send-template-input" type="text" placeholder="Template name...">' +
-					'</div>' +
-					'<label class="send-check-label"><input type="checkbox" class="send-copy-check"' +
-						(mode === "sms" ? ' checked' : '') + '> Also send email copy</label>' +
-					'<div class="send-panel-actions">' +
-						'<button class="btn btn-xs btn-default send-preview-btn"><i class="fa fa-eye"></i> Preview</button>' +
-						'<span class="send-actions-right">' +
-							'<button class="btn btn-xs btn-default send-cancel-btn">Cancel</button>' +
-							'<button class="btn btn-xs btn-primary send-send-btn">Send</button>' +
-						'</span>' +
-					'</div>' +
-				'</div>' +
-				'<div class="send-panel-preview" style="display:none;">' +
-					'<div class="send-preview-header">' +
-						'<span class="send-preview-title">Preview</span>' +
-						'<button class="send-preview-close" title="Close preview">&times;</button>' +
-					'</div>' +
-					'<div class="send-preview-subject"></div>' +
-					'<div class="send-preview-body"></div>' +
-					'<div class="send-test-row">' +
-						'<input class="send-field send-test-email-input" type="text" placeholder="Test email address...">' +
-						'<button class="btn btn-xs btn-default send-test-btn"><i class="fa fa-paper-plane"></i> Send Test</button>' +
-					'</div>' +
-				'</div>' +
-			'</div>'
-		);
+		el.html(`
+			<div class="send-panel-header">
+				<span class="send-panel-title">${frappe.utils.escape_html(title)}</span>
+				<button class="send-panel-close" title="Close">&times;</button>
+			</div>
+			<div class="send-panel-body">
+				<div class="send-panel-form">
+					<label class="send-field-label">Source</label>
+					<select class="send-field send-source-select">
+						<option value="type">Type a message</option>
+						<option value="template">Use Email Template</option>
+					</select>
+					<label class="send-field-label">Subject</label>
+					<input class="send-field send-subject-input" type="text">
+					<div class="send-message-section">
+						<label class="send-field-label">Message</label>
+						<textarea class="send-field send-message-input" placeholder="Jinja2 tags supported. Sent to all ${count} rows."></textarea>
+					</div>
+					<div class="send-template-section" style="display:none;">
+						<label class="send-field-label">Email Template</label>
+						<input class="send-field send-template-input" type="text" placeholder="Template name...">
+					</div>
+					<label class="send-check-label"><input type="checkbox" class="send-copy-check"${mode === "sms" ? " checked" : ""}> Also send email copy</label>
+					<div class="send-panel-actions">
+						<button class="btn btn-xs btn-default send-preview-btn"><i class="fa fa-eye"></i> Preview</button>
+						<span class="send-actions-right">
+							<button class="btn btn-xs btn-default send-cancel-btn">Cancel</button>
+							<button class="btn btn-xs btn-primary send-send-btn">Send</button>
+						</span>
+					</div>
+				</div>
+				<div class="send-panel-preview" style="display:none;">
+					<div class="send-preview-header">
+						<span class="send-preview-title">Preview</span>
+						<button class="send-preview-close" title="Close preview">&times;</button>
+					</div>
+					<div class="send-preview-subject"></div>
+					<div class="send-preview-body"></div>
+					<div class="send-test-row">
+						<input class="send-field send-test-email-input" type="text" placeholder="Test email address...">
+						<button class="btn btn-xs btn-default send-test-btn"><i class="fa fa-paper-plane"></i> Send Test</button>
+					</div>
+				</div>
+			</div>
+		`);
 
 		el.css({ top: "80px", left: "60px", zIndex: me.z_index });
 		$(document.body).append(el);
@@ -166,7 +165,7 @@ nce_events.panel_page.SendDialog = class SendDialog {
 				if (!q) { list_el.empty().hide(); return; }
 				frappe.call({
 					method: "frappe.client.get_list",
-					args: { doctype: "Email Template", filters: { name: ["like", "%" + q + "%"] }, fields: ["name"], limit_page_length: 8 },
+					args: { doctype: "Email Template", filters: { name: ["like", `%${q}%`] }, fields: ["name"], limit_page_length: 8 },
 					callback: function (r) {
 						list_el.empty();
 						(r.message || []).forEach(function (t) {
@@ -315,18 +314,18 @@ nce_events.panel_page.SendDialog = class SendDialog {
 			const sl = parseInt(el.css("left"), 10) || 0;
 			const st = parseInt(el.css("top"), 10) || 0;
 			$("body").addClass("panel-float-dragging");
-			$(document).on("mousemove." + ns, function (ev) {
+			$(document).on(`mousemove.${ns}`, function (ev) {
 				el.css({
-					left: (sl + ev.clientX - sx) + "px",
-					top: Math.min(st + ev.clientY - sy, window.innerHeight - 40) + "px",
+					left: `${sl + ev.clientX - sx}px`,
+					top: `${Math.min(st + ev.clientY - sy, window.innerHeight - 40)}px`,
 				});
 			});
-			$(document).on("mouseup." + ns, function () {
+			$(document).on(`mouseup.${ns}`, function () {
 				$("body").removeClass("panel-float-dragging");
-				$(document).off("mousemove." + ns + " mouseup." + ns);
+				$(document).off(`mousemove.${ns} mouseup.${ns}`);
 			});
 		}
-		el.find(".send-panel-header").on("mousedown." + ns, start_drag);
+		el.find(".send-panel-header").on(`mousedown.${ns}`, start_drag);
 	}
 
 	/* ── Resizable ── */
@@ -340,7 +339,7 @@ nce_events.panel_page.SendDialog = class SendDialog {
 			const sx = e.clientX, sy = e.clientY;
 			$("body").addClass("panel-float-dragging");
 			$(document).on("mousemove.send_resize", function (ev) {
-				el.css({ width: Math.max(500, sw + ev.clientX - sx) + "px", height: Math.max(300, sh + ev.clientY - sy) + "px" });
+				el.css({ width: `${Math.max(500, sw + ev.clientX - sx)}px`, height: `${Math.max(300, sh + ev.clientY - sy)}px` });
 			});
 			$(document).on("mouseup.send_resize", function () {
 				$("body").removeClass("panel-float-dragging");

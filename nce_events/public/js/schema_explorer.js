@@ -121,11 +121,10 @@
 		const $float = $('<div class="se-float"></div>');
 
 		const $header = $(
-			'<div class="se-header">' +
-			'<span class="se-title">Tag Finder: ' +
-			frappe.utils.escape_html(doctype) + '</span>' +
-			'<button class="se-close">&times;</button>' +
-			'</div>'
+			`<div class="se-header">
+			<span class="se-title">Tag Finder: ${frappe.utils.escape_html(doctype)}</span>
+			<button class="se-close">&times;</button>
+			</div>`
 		);
 		$float.append($header);
 
@@ -133,8 +132,7 @@
 		$float.append($body);
 
 		const $footer = $(
-			'<div class="se-footer">Tag Finder: ' +
-			frappe.utils.escape_html(doctype) + '</div>'
+			`<div class="se-footer">Tag Finder: ${frappe.utils.escape_html(doctype)}</div>`
 		);
 		$float.append($footer);
 
@@ -152,8 +150,8 @@
 			left_pos = window.innerWidth - 280;
 		}
 		$float.css({
-			top: Math.max(60, Math.round(vh * 0.08)) + "px",
-			left: left_pos + "px",
+			top: `${Math.max(60, Math.round(vh * 0.08))}px`,
+			left: `${left_pos}px`,
 			right: "auto",
 		});
 
@@ -177,7 +175,7 @@
 			const st = parseInt($float.css("top"), 10) || 0;
 
 			if ($float.css("right") !== "auto") {
-				$float.css({ left: $float.offset().left + "px", right: "auto" });
+				$float.css({ left: `${$float.offset().left}px`, right: "auto" });
 				sl = parseInt($float.css("left"), 10);
 			}
 
@@ -186,8 +184,8 @@
 				let newTop = st + ev.clientY - sy;
 				newTop = Math.max(0, Math.min(newTop, window.innerHeight - 40));
 				$float.css({
-					left: (sl + ev.clientX - sx) + "px",
-					top: newTop + "px",
+					left: `${sl + ev.clientX - sx}px`,
+					top: `${newTop}px`,
 				});
 			});
 			$(document).on("mouseup.se", function () {
@@ -254,10 +252,7 @@
 	function _render_column(col, col_idx) {
 		const $col = $('<div class="se-column"></div>');
 		const $ch = $(
-			'<div class="se-col-header">' +
-			frappe.utils.escape_html(col.doctype) +
-			'<span class="se-col-count">' + col.fields.length + ' fields</span>' +
-			'</div>'
+			`<div class="se-col-header">${frappe.utils.escape_html(col.doctype)}<span class="se-col-count">${col.fields.length} fields</span></div>`
 		);
 		$col.append($ch);
 
@@ -285,25 +280,23 @@
 
 			let badge_text = f.fieldtype;
 			if ((f.is_link || f.is_table) && f.options) {
-				badge_text += " \u2192 " + f.options;
+				badge_text += ` \u2192 ${f.options}`;
 			}
 
-			const $tile = $(
-				'<div class="' + cls + '">' +
-				'<div class="se-tile-top">' +
-				'<span class="se-tile-label">' + frappe.utils.escape_html(f.label) + '</span>' +
-				((f.is_link || f.is_table) && !is_circular
-					? '<span class="se-tile-arrow">\u25B6</span>' : '') +
-				'</div>' +
-				'<div class="se-tile-meta">' +
-				'<span class="se-tile-fieldname">' + frappe.utils.escape_html(f.fieldname) + '</span>' +
-				'<span class="se-tile-badge">' + frappe.utils.escape_html(badge_text) + '</span>' +
-				'</div>' +
-				'</div>'
-			);
+			const $tile = $(`<div class="${cls}">
+				<div class="se-tile-top">
+					<span class="se-tile-label">${frappe.utils.escape_html(f.label)}</span>${
+						(f.is_link || f.is_table) && !is_circular
+							? '<span class="se-tile-arrow">\u25B6</span>' : ''}
+				</div>
+				<div class="se-tile-meta">
+					<span class="se-tile-fieldname">${frappe.utils.escape_html(f.fieldname)}</span>
+					<span class="se-tile-badge">${frappe.utils.escape_html(badge_text)}</span>
+				</div>
+			</div>`);
 
 			if (is_circular) {
-				$tile.attr("title", "Circular: " + f.options + " already in path");
+				$tile.attr("title", `Circular: ${f.options} already in path`);
 			}
 
 			$tile.on("click", function () {
@@ -364,30 +357,21 @@
 		const depth = hops.length - 1;
 
 		if (depth === 0) {
-			return "{{ doc." + field.fieldname + " }}";
+			return `{{ doc.${field.fieldname} }}`;
 		}
 		if (depth === 1) {
-			return "{{ frappe.db.get_value('" + hops[1].doctype +
-				"', doc." + hops[1].via_field +
-				", '" + field.fieldname + "') }}";
+			return `{{ frappe.db.get_value('${hops[1].doctype}', doc.${hops[1].via_field}, '${field.fieldname}') }}`;
 		}
 		if (depth === 2) {
-			return "{{ frappe.db.get_value('" + hops[2].doctype + "', " +
-				"frappe.db.get_value('" + hops[1].doctype +
-				"', doc." + hops[1].via_field +
-				", '" + hops[2].via_field + "'), " +
-				"'" + field.fieldname + "') }}";
+			return `{{ frappe.db.get_value('${hops[2].doctype}', frappe.db.get_value('${hops[1].doctype}', doc.${hops[1].via_field}, '${hops[2].via_field}'), '${field.fieldname}') }}`;
 		}
 
 		const lines = [];
-		lines.push("{% set hop1 = frappe.get_doc('" +
-			hops[1].doctype + "', doc." + hops[1].via_field + ") %}");
+		lines.push(`{% set hop1 = frappe.get_doc('${hops[1].doctype}', doc.${hops[1].via_field}) %}`);
 		for (let k = 2; k < hops.length; k++) {
-			lines.push("{% set hop" + k + " = frappe.get_doc('" +
-				hops[k].doctype + "', hop" + (k - 1) + "." +
-				hops[k].via_field + ") %}");
+			lines.push(`{% set hop${k} = frappe.get_doc('${hops[k].doctype}', hop${k - 1}.${hops[k].via_field}) %}`);
 		}
-		lines.push("{{ hop" + (hops.length - 1) + "." + field.fieldname + " }}");
+		lines.push(`{{ hop${hops.length - 1}.${field.fieldname} }}`);
 		return lines.join("\n");
 	}
 
@@ -409,51 +393,38 @@
 		let table_accessor;
 
 		if (pre_depth === 0) {
-			table_accessor = "doc." + table_field;
+			table_accessor = `doc.${table_field}`;
 		} else if (pre_depth === 1) {
-			lines.push("{% set parent_doc = frappe.get_doc('" +
-				pre[1].doctype + "', doc." + pre[1].via_field + ") %}");
-			table_accessor = "parent_doc." + table_field;
+			lines.push(`{% set parent_doc = frappe.get_doc('${pre[1].doctype}', doc.${pre[1].via_field}) %}`);
+			table_accessor = `parent_doc.${table_field}`;
 		} else {
-			lines.push("{% set hop1 = frappe.get_doc('" +
-				pre[1].doctype + "', doc." + pre[1].via_field + ") %}");
+			lines.push(`{% set hop1 = frappe.get_doc('${pre[1].doctype}', doc.${pre[1].via_field}) %}`);
 			for (let p = 2; p < pre.length; p++) {
-				lines.push("{% set hop" + p + " = frappe.get_doc('" +
-					pre[p].doctype + "', hop" + (p - 1) + "." +
-					pre[p].via_field + ") %}");
+				lines.push(`{% set hop${p} = frappe.get_doc('${pre[p].doctype}', hop${p - 1}.${pre[p].via_field}) %}`);
 			}
-			table_accessor = "hop" + (pre.length - 1) + "." + table_field;
+			table_accessor = `hop${pre.length - 1}.${table_field}`;
 		}
 
 		const post_depth = post.length - 1;
 		let inner;
 
 		if (post_depth === 0) {
-			inner = "{{ row." + field.fieldname + " }}";
+			inner = `{{ row.${field.fieldname} }}`;
 		} else if (post_depth === 1) {
-			inner = "{{ frappe.db.get_value('" + post[1].doctype +
-				"', row." + post[1].via_field +
-				", '" + field.fieldname + "') }}";
+			inner = `{{ frappe.db.get_value('${post[1].doctype}', row.${post[1].via_field}, '${field.fieldname}') }}`;
 		} else if (post_depth === 2) {
-			inner = "{{ frappe.db.get_value('" + post[2].doctype + "', " +
-				"frappe.db.get_value('" + post[1].doctype +
-				"', row." + post[1].via_field +
-				", '" + post[2].via_field + "'), " +
-				"'" + field.fieldname + "') }}";
+			inner = `{{ frappe.db.get_value('${post[2].doctype}', frappe.db.get_value('${post[1].doctype}', row.${post[1].via_field}, '${post[2].via_field}'), '${field.fieldname}') }}`;
 		} else {
 			const il = [];
-			il.push("{% set rh1 = frappe.get_doc('" +
-				post[1].doctype + "', row." + post[1].via_field + ") %}");
+			il.push(`{% set rh1 = frappe.get_doc('${post[1].doctype}', row.${post[1].via_field}) %}`);
 			for (let r = 2; r < post.length; r++) {
-				il.push("{% set rh" + r + " = frappe.get_doc('" +
-					post[r].doctype + "', rh" + (r - 1) + "." +
-					post[r].via_field + ") %}");
+				il.push(`{% set rh${r} = frappe.get_doc('${post[r].doctype}', rh${r - 1}.${post[r].via_field}) %}`);
 			}
-			il.push("{{ rh" + (post.length - 1) + "." + field.fieldname + " }}");
+			il.push(`{{ rh${post.length - 1}.${field.fieldname} }}`);
 			inner = il.join("\n");
 		}
 
-		lines.push("{% for row in " + table_accessor + " %}");
+		lines.push(`{% for row in ${table_accessor} %}`);
 		lines.push(inner);
 		lines.push("{% endfor %}");
 		return lines.join("\n");
@@ -466,7 +437,7 @@
 			if (i === 0) {
 				parts.push(c.doctype);
 			} else {
-				parts.push(c.via_field + " (" + c.via_type + ")");
+				parts.push(`${c.via_field} (${c.via_type})`);
 				parts.push(c.doctype);
 			}
 		}
@@ -484,7 +455,7 @@
 			const safe = fallback.replace(/'/g, "\\'");
 			result = result.replace(
 				/\{\{([^}]+)\}\}/g,
-				function (m, inner) { return "{{ " + inner.trim() + " | default('" + safe + "') }}"; }
+				function (m, inner) { return `{{ ${inner.trim()} | default('${safe}') }}`; }
 			);
 		}
 		if (is_html) {
@@ -493,7 +464,7 @@
 				function (m, inner) {
 					const trimmed = inner.trim();
 					if (trimmed.indexOf("| safe") === -1) {
-						return "{{ " + trimmed + " | safe }}";
+						return `{{ ${trimmed} | safe }}`;
 					}
 					return m;
 				}
@@ -511,40 +482,33 @@
 		const top = Math.min(100 + cascade, window.innerHeight - 200);
 		const left = Math.min(160 + cascade, window.innerWidth - 420);
 
-		const $panel = $(
-			'<div class="se-tag-panel">' +
-			'<div class="se-tag-panel-header">' +
-			'<span class="se-title">' + frappe.utils.escape_html(field.label) + '</span>' +
-			'<button class="se-close">&times;</button>' +
-			'</div>' +
-			'<div class="se-tag-panel-body">' +
-			'<div class="se-tag-lbl">Field</div>' +
-			'<div class="se-tag-val">' +
-			frappe.utils.escape_html(field.label) +
-			' <span style="color:#8D949A;">(' +
-			frappe.utils.escape_html(field.fieldname) + ')</span></div>' +
-			'<div class="se-tag-lbl">Path</div>' +
-			'<div class="se-tag-val" style="font-size:12px;">' +
-			frappe.utils.escape_html(path) + '</div>' +
-			'<div class="se-tag-lbl">Fallback Value</div>' +
-			'<div class="se-tag-val">' +
-			'<input type="text" class="se-fallback-input" placeholder="e.g. Student (leave empty for none)">' +
-			'</div>' +
-			'<div class="se-tag-lbl">Tag</div>' +
-			'<pre class="se-tag-pre">' +
-			frappe.utils.escape_html(base_tag) + '</pre>' +
-			'<div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;gap:6px;">' +
-			'<label class="se-html-check-label"><input type="checkbox" class="se-html-check"> Is this HTML?</label>' +
-			'<span style="display:flex;gap:6px;">' +
-			'<button class="btn btn-default btn-sm se-insert-btn">Insert at Cursor</button>' +
-			'<button class="btn btn-primary btn-sm se-copy-btn">Copy to Clipboard</button>' +
-			'</span>' +
-			'</div>' +
-			'</div>' +
-			'</div>'
-		);
+		const $panel = $(`<div class="se-tag-panel">
+			<div class="se-tag-panel-header">
+				<span class="se-title">${frappe.utils.escape_html(field.label)}</span>
+				<button class="se-close">&times;</button>
+			</div>
+			<div class="se-tag-panel-body">
+				<div class="se-tag-lbl">Field</div>
+				<div class="se-tag-val">${frappe.utils.escape_html(field.label)} <span style="color:#8D949A;">(${frappe.utils.escape_html(field.fieldname)})</span></div>
+				<div class="se-tag-lbl">Path</div>
+				<div class="se-tag-val" style="font-size:12px;">${frappe.utils.escape_html(path)}</div>
+				<div class="se-tag-lbl">Fallback Value</div>
+				<div class="se-tag-val">
+					<input type="text" class="se-fallback-input" placeholder="e.g. Student (leave empty for none)">
+				</div>
+				<div class="se-tag-lbl">Tag</div>
+				<pre class="se-tag-pre">${frappe.utils.escape_html(base_tag)}</pre>
+				<div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;gap:6px;">
+					<label class="se-html-check-label"><input type="checkbox" class="se-html-check"> Is this HTML?</label>
+					<span style="display:flex;gap:6px;">
+						<button class="btn btn-default btn-sm se-insert-btn">Insert at Cursor</button>
+						<button class="btn btn-primary btn-sm se-copy-btn">Copy to Clipboard</button>
+					</span>
+				</div>
+			</div>
+		</div>`);
 
-		$panel.css({ top: top + "px", left: left + "px" });
+		$panel.css({ top: `${top}px`, left: `${left}px` });
 		$(document.body).append($panel);
 
 		$panel.on("mousedown", function () {
@@ -625,7 +589,7 @@
 			if (document.execCommand) {
 				document.execCommand("insertText", false, text);
 			} else {
-				el.value = val.substring(0, start) + text + val.substring(end);
+				el.value = `${val.substring(0, start)}${text}${val.substring(end)}`;
 			}
 			const new_pos = start + text.length;
 			el.selectionStart = new_pos;

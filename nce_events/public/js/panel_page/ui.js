@@ -77,22 +77,21 @@ nce_events.panel_page.Explorer = class Explorer {
 					".se-fallback-input, .se-html-check-label, " +
 					".se-tag-panel .btn";
 
-				const css = sel + ", " + send_sel + ", " + tag_sel + " {\n" +
-					"  font-family: " + font + " !important;\n" +
-					"  font-weight: " + weight + " !important;\n" +
-					"  font-size: " + size + " !important;\n" +
-					"}\n" +
-					".panel-float .panel-table td, .send-panel .send-field, " +
-					".send-preview-body, .send-preview-subject, " +
-					".se-tag-val, .se-tag-pre {\n" +
-					"  color: " + color + " !important;\n" +
-					"}\n" +
-					".panel-float .panel-table th,\n" +
-					".panel-float .drill-btn.disabled,\n" +
-					".send-panel .send-field-label, .send-preview-recipient,\n" +
-					".se-tag-lbl {\n" +
-					"  color: " + muted + " !important;\n" +
-					"}\n";
+				const css = `${sel}, ${send_sel}, ${tag_sel} {
+  font-family: ${font} !important;
+  font-weight: ${weight} !important;
+  font-size: ${size} !important;
+}
+.panel-float .panel-table td, .send-panel .send-field, .send-preview-body, .send-preview-subject, .se-tag-val, .se-tag-pre {
+  color: ${color} !important;
+}
+.panel-float .panel-table th,
+.panel-float .drill-btn.disabled,
+.send-panel .send-field-label, .send-preview-recipient,
+.se-tag-lbl {
+  color: ${muted} !important;
+}
+`;
 
 				$("#display-settings-runtime").remove();
 				$("<style>").attr("id", "display-settings-runtime").text(css).appendTo("head");
@@ -146,7 +145,7 @@ nce_events.panel_page.Explorer = class Explorer {
 			me._render_panel(doctype);
 			me._fetch_remaining(doctype);
 		}).catch(function (err) {
-			console.error("Error loading panel " + doctype + ":", err);
+			console.error(`Error loading panel ${doctype}:`, err);
 			if (!me._destroyed) me._render_panel(doctype);
 		});
 	}
@@ -172,20 +171,15 @@ nce_events.panel_page.Explorer = class Explorer {
 
 		const float_width = is_root ? 900 : 1400;
 
-		const float_el = $('<div class="panel-float" data-doctype="' + frappe.utils.escape_html(doctype) + '"></div>');
+		const float_el = $(`<div class="panel-float" data-doctype="${frappe.utils.escape_html(doctype)}"></div>`);
 		float_el.css({
-			top: top + "px", left: left + "px",
-			width: float_width + "px", height: "600px",
+			top: `${top}px`, left: `${left}px`,
+			width: `${float_width}px`, height: "600px",
 			zIndex: this._float_z,
 		});
 
-		const pane_el = $(
-			'<div class="panel-pane" data-doctype="' + frappe.utils.escape_html(doctype) + '">' +
-			'<div class="panel-pane-header"></div>' +
-			'<div class="panel-pane-body"></div>' +
-			'</div>'
-		);
-		const footer_el = $('<div class="panel-float-footer">' + frappe.utils.escape_html(doctype) + '</div>');
+		const pane_el = $(`<div class="panel-pane" data-doctype="${frappe.utils.escape_html(doctype)}"><div class="panel-pane-header"></div><div class="panel-pane-body"></div></div>`);
+		const footer_el = $(`<div class="panel-float-footer">${frappe.utils.escape_html(doctype)}</div>`);
 		float_el.append(pane_el, footer_el);
 		$(document.body).append(float_el);
 		this.floats[doctype] = float_el;
@@ -218,7 +212,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		const float_el = this.floats[doctype];
 		if (!float_el) return;
 		float_el.find(".panel-pane-body").html(
-			'<div class="panel-loading">' + __("Loading\u2026") + '</div>'
+			`<div class="panel-loading">${__("Loading\u2026")}</div>`
 		);
 	}
 
@@ -261,14 +255,12 @@ nce_events.panel_page.Explorer = class Explorer {
 		columns.forEach(function (col, ci) {
 			const fn = col.fieldname.toLowerCase();
 			const w = col_widths[ci] || 100;
-			let style = "width:" + w + "px;min-width:30px;";
+			let style = `width:${w}px;min-width:30px;`;
 			if (row_ctx.bold_set[fn]) style += "font-weight:700;";
-			html += '<th style="' + style + '">' +
-				frappe.utils.escape_html(col.label) +
-				'<div class="col-resize-handle" data-col="' + ci + '"></div></th>';
+			html += `<th style="${style}">${frappe.utils.escape_html(col.label)}<div class="col-resize-handle" data-col="${ci}"></div></th>`;
 		});
 		if (has_drills) {
-			html += '<th class="drill-col" style="width:' + drill_col_w + 'px;min-width:' + drill_col_w + 'px;"></th>';
+			html += `<th class="drill-col" style="width:${drill_col_w}px;min-width:${drill_col_w}px;"></th>`;
 		}
 		html += "</tr></thead><tbody>";
 
@@ -307,28 +299,24 @@ nce_events.panel_page.Explorer = class Explorer {
 		const is_wp = (doctype === me.WP_DOCTYPE);
 
 		let html = '<div class="pane-title-row">';
-		html += '<span class="pane-label">' + frappe.utils.escape_html(label) + '</span>';
+		html += `<span class="pane-label">${frappe.utils.escape_html(label)}</span>`;
 		html += '<span class="pane-title-right">';
 
 		if (config.show_filter) {
-			html += '<button class="btn btn-xs btn-default pane-header-btn pane-filter-toggle-btn" title="Filter">' +
-				'<i class="fa fa-filter"></i></button>';
+			html += `<button class="btn btn-xs btn-default pane-header-btn pane-filter-toggle-btn" title="Filter"><i class="fa fa-filter"></i></button>`;
 		}
 		if (config.show_sheets) {
-			html += '<button class="btn btn-xs btn-default pane-header-btn pane-sheets-btn" title="Export">' +
-				'<i class="fa fa-table"></i></button>';
+			html += `<button class="btn btn-xs btn-default pane-header-btn pane-sheets-btn" title="Export"><i class="fa fa-table"></i></button>`;
 		}
 		if (config.show_email) {
-			html += '<button class="btn btn-xs btn-default pane-header-btn pane-email-btn" title="Email">' +
-				'<i class="fa fa-envelope"></i></button>';
+			html += `<button class="btn btn-xs btn-default pane-header-btn pane-email-btn" title="Email"><i class="fa fa-envelope"></i></button>`;
 		}
 		if (config.show_sms) {
-			html += '<button class="btn btn-xs btn-default pane-header-btn pane-sms-btn" title="SMS">' +
-				'<i class="fa fa-comment"></i></button>';
+			html += `<button class="btn btn-xs btn-default pane-header-btn pane-sms-btn" title="SMS"><i class="fa fa-comment"></i></button>`;
 		}
 
 		html += '<span class="pane-count">';
-		html += (filtered_rows.length !== total) ? (filtered_rows.length + " / " + total) : String(total);
+		html += (filtered_rows.length !== total) ? `${filtered_rows.length} / ${total}` : String(total);
 		html += ' records</span>';
 
 		html += '<button class="panel-float-close" title="Close">&times;</button>';
@@ -515,7 +503,7 @@ nce_events.panel_page.Explorer = class Explorer {
 			callback: function (r) {
 				if (!r.message) return;
 				const url = window.location.origin + r.message.url;
-				const formula = '=IMPORTDATA("' + url + '")';
+				const formula = `=IMPORTDATA("${url}")`;
 				if (navigator.clipboard && navigator.clipboard.writeText) {
 					navigator.clipboard.writeText(formula).then(function () {
 						frappe.show_alert({ message: __("Link copied — paste in Google Sheets"), indicator: "green" });
@@ -578,10 +566,7 @@ nce_events.panel_page.Explorer = class Explorer {
 
 		let total = 0;
 		child_doctypes.forEach(function (child) {
-			const btn = $('<button class="btn btn-xs drill-btn">' +
-				frappe.utils.escape_html(child.label) +
-				' <span class="drill-count">(999)</span>' +
-				' <i class="fa fa-chevron-right" style="font-size:9px;"></i></button>');
+			const btn = $(`<button class="btn btn-xs drill-btn">${frappe.utils.escape_html(child.label)} <span class="drill-count">(999)</span> <i class="fa fa-chevron-right" style="font-size:9px;"></i></button>`);
 			measurer.append(btn);
 			total += btn[0].offsetWidth + 6;
 		});
@@ -697,7 +682,7 @@ nce_events.panel_page.Explorer = class Explorer {
 				me._fetch_remaining(doctype);
 			}
 		}).catch(function (err) {
-			console.error("Background fetch error for " + doctype + ":", err);
+			console.error(`Background fetch error for ${doctype}:`, err);
 		});
 	}
 
@@ -743,11 +728,11 @@ nce_events.panel_page.Explorer = class Explorer {
 		const loaded = panel.data.rows.length;
 		let text;
 		if (loaded < total) {
-			text = filtered.length + " / " + total + " records (loading\u2026)";
+			text = `${filtered.length} / ${total} records (loading\u2026)`;
 		} else if (filtered.length !== total) {
-			text = filtered.length + " / " + total + " records";
+			text = `${filtered.length} / ${total} records`;
 		} else {
-			text = String(total) + " records";
+			text = `${total} records`;
 		}
 		float_el.find(".pane-count").text(text);
 	}
@@ -757,8 +742,7 @@ nce_events.panel_page.Explorer = class Explorer {
 	_build_row_html(row, ri, ctx) {
 		const me = this;
 		const is_sel = ctx.selected_row && row.name === ctx.selected_row.name;
-		let html = '<tr class="panel-row' + (is_sel ? " selected" : "") + (ri % 2 === 1 ? " alt" : "") +
-			'" data-row-idx="' + ri + '">';
+		let html = `<tr class="panel-row${is_sel ? " selected" : ""}${ri % 2 === 1 ? " alt" : ""}" data-row-idx="${ri}">`;
 
 		ctx.columns.forEach(function (col, ci) {
 			const fn = col.fieldname.toLowerCase();
@@ -768,34 +752,28 @@ nce_events.panel_page.Explorer = class Explorer {
 			if (me._looks_like_date(value)) value = frappe.datetime.str_to_user(value);
 
 			const w = ctx.col_widths[ci] || 100;
-			const parts = ["width:" + w + "px", "min-width:30px"];
+			const parts = [`width:${w}px`, "min-width:30px"];
 			if (ctx.gender_col && ctx.gender_tint_set[fn]) {
 				const gv = String(row[ctx.gender_col] || row[ctx.gender_col.toLowerCase()] || "").trim().toLowerCase();
 				if (me._looks_male(gv) && ctx.male_hex) {
-					parts.push("font-weight:700", "color:" + ctx.male_hex);
+					parts.push("font-weight:700", `color:${ctx.male_hex}`);
 				} else if (me._looks_female(gv) && ctx.female_hex) {
-					parts.push("font-weight:700", "color:" + ctx.female_hex);
+					parts.push("font-weight:700", `color:${ctx.female_hex}`);
 				}
 			} else if (ctx.bold_set[fn]) {
 				parts.push("font-weight:700");
 			}
 
-			html += '<td style="' + parts.join(";") + ';">' + frappe.utils.escape_html(String(value)) + "</td>";
+			html += `<td style="${parts.join(";")};">${frappe.utils.escape_html(String(value))}</td>`;
 		});
 
 		if (ctx.has_drills) {
 			html += '<td class="drill-cell">';
 			ctx.child_doctypes.forEach(function (child) {
-				const count_key = "_count_" + child.doctype;
+				const count_key = `_count_${child.doctype}`;
 				const cnt = row[count_key];
 				const is_zero = (cnt === 0 || cnt === "0");
-				html += '<button class="btn btn-xs drill-btn' + (is_zero ? " disabled" : "") +
-					'" data-child-dt="' + frappe.utils.escape_html(child.doctype) +
-					'" data-link-field="' + frappe.utils.escape_html(child.link_field) +
-					'" data-row-name="' + frappe.utils.escape_html(row.name) +
-					'">' + frappe.utils.escape_html(child.label) +
-					' <span class="drill-count">(' + (cnt == null ? "?" : cnt) + ')</span>' +
-					' <i class="fa fa-chevron-right" style="font-size:9px;"></i></button>';
+				html += `<button class="btn btn-xs drill-btn${is_zero ? " disabled" : ""}" data-child-dt="${frappe.utils.escape_html(child.doctype)}" data-link-field="${frappe.utils.escape_html(child.link_field)}" data-row-name="${frappe.utils.escape_html(row.name)}">${frappe.utils.escape_html(child.label)} <span class="drill-count">(${cnt == null ? "?" : cnt})</span> <i class="fa fa-chevron-right" style="font-size:9px;"></i></button>`;
 			});
 			html += "</td>";
 		}
@@ -829,19 +807,19 @@ nce_events.panel_page.Explorer = class Explorer {
 			const sl = parseInt(el.css("left"), 10) || 0;
 			const st = parseInt(el.css("top"), 10) || 0;
 			$("body").addClass("panel-float-dragging");
-			$(document).on("mousemove." + ns, function (ev) {
+			$(document).on(`mousemove.${ns}`, function (ev) {
 				el.css({
-					left: (sl + ev.clientX - sx) + "px",
-					top: Math.min(st + ev.clientY - sy, window.innerHeight - 40) + "px",
+					left: `${sl + ev.clientX - sx}px`,
+					top: `${Math.min(st + ev.clientY - sy, window.innerHeight - 40)}px`,
 				});
 			});
-			$(document).on("mouseup." + ns, function () {
+			$(document).on(`mouseup.${ns}`, function () {
 				$("body").removeClass("panel-float-dragging");
-				$(document).off("mousemove." + ns + " mouseup." + ns);
+				$(document).off(`mousemove.${ns} mouseup.${ns}`);
 			});
 		}
 		handle_selectors.forEach(function (sel) {
-			el.find(sel).on("mousedown." + ns, start_drag);
+			el.find(sel).on(`mousedown.${ns}`, start_drag);
 		});
 	}
 
