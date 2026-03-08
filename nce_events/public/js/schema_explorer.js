@@ -142,11 +142,19 @@
 		_float_el = $float;
 
 		var vh = window.innerHeight;
+		var left_pos = window.innerWidth - 300;
+		var $send = $(".send-panel");
+		if ($send.length) {
+			var sr = $send[0].getBoundingClientRect();
+			left_pos = sr.right + 400;
+		}
+		if (left_pos + 260 > window.innerWidth) {
+			left_pos = window.innerWidth - 280;
+		}
 		$float.css({
 			top: Math.max(60, Math.round(vh * 0.08)) + "px",
-			right: "20px",
-			left: "auto",
-			width: "280px",
+			left: left_pos + "px",
+			right: "auto",
 		});
 
 		$header.find(".se-close").on("click", function () {
@@ -650,7 +658,7 @@
 		if (existing) existing.remove();
 
 		var css =
-			".se-float{position:fixed;z-index:1060;width:280px;height:60vh;" +
+			".se-float{position:fixed;z-index:1060;height:60vh;" +
 			"min-width:260px;min-height:220px;" +
 			"background:#FAFAFA;border:1px solid #A2CCF6;border-radius:8px;" +
 			"box-shadow:0 8px 32px rgba(18,107,196,.22),0 2px 8px rgba(0,0,0,.08);" +

@@ -60,8 +60,8 @@ nce_events.panel_page.Explorer = class Explorer {
 				var muted = doc.muted_text_color || "#555555";
 
 				var sel = ".panel-float, .panel-float .panel-table td, .panel-float .panel-table th, " +
-					".panel-float .pane-label, .panel-float .pane-count, .panel-float .drill-btn, " +
-					".panel-float .panel-float-footer, .panel-float .pane-filter-widget, " +
+					".panel-float .drill-btn, " +
+					".panel-float .pane-filter-widget, " +
 					".panel-float .filter-col-select, " +
 					".panel-float .filter-op-select, .panel-float .filter-val-input";
 
@@ -85,7 +85,6 @@ nce_events.panel_page.Explorer = class Explorer {
 					"  color: " + color + " !important;\n" +
 					"}\n" +
 					".panel-float .panel-table th,\n" +
-					".panel-float .pane-count,\n" +
 					".panel-float .drill-btn.disabled,\n" +
 					".send-panel .send-field-label, .send-preview-recipient,\n" +
 					".se-tag-lbl {\n" +
