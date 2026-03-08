@@ -128,7 +128,8 @@ def get_panel_data(
 	elif "name" not in all_fields:
 		all_fields = ["name"] + all_fields
 
-	simple_fields = [fn for fn in all_fields if "." not in fn]
+	computed_names = {cc["field_name"] for cc in (config.get("computed_columns") or [])}
+	simple_fields = [fn for fn in all_fields if "." not in fn and fn not in computed_names]
 	linked_fields = [fn for fn in all_fields if "." in fn]
 
 	link_bases = {fn.split(".", 1)[0] for fn in linked_fields}
