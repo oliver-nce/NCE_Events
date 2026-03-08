@@ -561,16 +561,14 @@ def get_report_columns(report_name):
 
 @frappe.whitelist()
 def preview_panel_message(root_doctype, filters=None, body="", subject=""):
-	"""Render a message template against a random row for preview."""
-	import random
-
+	"""Render a message template against the first row for preview."""
 	result = get_panel_data(root_doctype, filters)
 	rows = result.get("rows") or []
 	columns = result.get("columns") or []
 	if not rows:
 		return {"error": "No rows to preview."}
 
-	row = random.choice(rows)
+	row = rows[0]
 	context = {k: (v if v is not None else "") for k, v in row.items()}
 	context["doc"] = frappe._dict(context)
 
@@ -583,6 +581,9 @@ def preview_panel_message(root_doctype, filters=None, body="", subject=""):
 		rendered_subject = frappe.render_template(subject, context) if subject else ""
 	except Exception:
 		rendered_subject = subject
+
+	if "<" not in rendered_body:
+		rendered_body = rendered_body.replace("\n", "<br>")
 
 	return {
 		"rendered_body": rendered_body,
