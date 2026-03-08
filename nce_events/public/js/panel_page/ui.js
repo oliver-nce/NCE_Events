@@ -292,7 +292,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		html += '<span class="pane-title-right">';
 
 		if (!is_wp) {
-			var cf_active = !!(config.core_filter);
+			var cf_active = !!(config.core_filter || config.order_by);
 			html += '<button class="btn btn-xs pane-header-btn pane-core-filter-toggle-btn' +
 				(cf_active ? " btn-primary-light" : " btn-default") +
 				'" title="Core Filter (SQL WHERE)">' +
@@ -422,21 +422,32 @@ nce_events.panel_page.Explorer = class Explorer {
 		var panel = me.store.get_panel(doctype);
 		if (!panel || !panel.config) return;
 
-		var current = panel.config.core_filter || "";
+		var cur_filter = panel.config.core_filter || "";
+		var cur_order = panel.config.order_by || "";
 
 		var widget = $('<div class="pane-core-filter-widget"></div>');
-		var inp = $('<input class="core-filter-input" type="text" placeholder="SQL WHERE clause, e.g. end_date > CURRENT_DATE() - INTERVAL 10 DAY">');
-		inp.val(current);
 
+		var where_row = $('<div class="core-filter-row"></div>');
+		var where_inp = $('<input class="core-filter-input" type="text" placeholder="e.g. end_date > CURRENT_DATE() - INTERVAL 10 DAY">');
+		where_inp.val(cur_filter);
+		where_row.append($('<span class="core-filter-label">WHERE</span>'), where_inp);
+
+		var order_row = $('<div class="core-filter-row"></div>');
+		var order_inp = $('<input class="core-filter-input" type="text" placeholder="e.g. end_date DESC">');
+		order_inp.val(cur_order);
+		order_row.append($('<span class="core-filter-label">ORDER BY</span>'), order_inp);
+
+		var btn_row = $('<div class="core-filter-row core-filter-btn-row"></div>');
 		var apply_btn = $('<button class="btn btn-xs btn-primary core-filter-apply-btn">Apply</button>');
 		var clear_btn = $('<button class="btn btn-xs btn-default core-filter-clear-btn">Clear</button>');
 
-		function do_save(val) {
+		function do_save(filter_val, order_val) {
 			frappe.call({
-				method: "nce_events.api.panel_api.save_core_filter",
-				args: { root_doctype: doctype, core_filter: val },
+				method: "nce_events.api.panel_api.save_panel_sql",
+				args: { root_doctype: doctype, core_filter: filter_val, order_by: order_val },
 				callback: function () {
-					panel.config.core_filter = val;
+					panel.config.core_filter = filter_val;
+					panel.config.order_by = order_val;
 					me._show_loading(doctype);
 					me.store.fetch_data(doctype).then(function () {
 						if (!me._destroyed) me._render_panel(doctype);
@@ -445,18 +456,17 @@ nce_events.panel_page.Explorer = class Explorer {
 			});
 		}
 
-		apply_btn.on("click", function () { do_save(inp.val().trim()); });
-		clear_btn.on("click", function () { inp.val(""); do_save(""); });
-		inp.on("keydown", function (e) { if (e.key === "Enter") do_save(inp.val().trim()); });
+		apply_btn.on("click", function () { do_save(where_inp.val().trim(), order_inp.val().trim()); });
+		clear_btn.on("click", function () { where_inp.val(""); order_inp.val(""); do_save("", ""); });
+		where_inp.on("keydown", function (e) { if (e.key === "Enter") apply_btn.click(); });
+		order_inp.on("keydown", function (e) { if (e.key === "Enter") apply_btn.click(); });
 
-		widget.append(
-			$('<span class="core-filter-label">WHERE</span>'),
-			inp, apply_btn, clear_btn
-		);
+		btn_row.append(apply_btn, clear_btn);
+		widget.append(where_row, order_row, btn_row);
 
 		float_el.find(".pane-core-filter-widget").remove();
 		float_el.find(".panel-pane-header").append(widget);
-		inp.focus();
+		where_inp.focus();
 	}
 
 	/* ── Client-side user filter ── */

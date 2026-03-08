@@ -469,11 +469,21 @@ body.panel-float-dragging * {
 
 .pane-core-filter-widget {
 	display: flex;
-	align-items: center;
-	gap: 6px;
+	flex-direction: column;
+	gap: 4px;
 	padding: 5px 10px;
 	border-top: 1px solid #105EAD;
 	background: #0D5BAA;
+}
+
+.core-filter-row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+.core-filter-btn-row {
+	justify-content: flex-end;
 }
 
 .core-filter-label {

@@ -8,6 +8,7 @@
   "root_doctype",
   "header_text",
   "core_filter",
+  "order_by",
   "column_order",
   "bold_fields",
   "gender_column",
@@ -46,6 +47,12 @@
    "fieldname": "core_filter",
    "fieldtype": "Small Text",
    "label": "Core Filter"
+  },
+  {
+   "description": "SQL ORDER BY clause, e.g. end_date DESC",
+   "fieldname": "order_by",
+   "fieldtype": "Small Text",
+   "label": "Order By"
   },
   {
    "description": "Comma-delimited visible fields in display order (managed by Display tab)",

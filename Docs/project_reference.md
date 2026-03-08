@@ -89,6 +89,7 @@ nce_events/
 | panel_number | Int | display order |
 | header_text | Data | panel header label |
 | core_filter | Small Text | raw SQL WHERE clause applied server-side before user filters, e.g. `end_date > CURRENT_DATE() - INTERVAL 10 DAY` |
+| order_by | Small Text | raw SQL ORDER BY clause, e.g. `end_date DESC`. Defaults to `name ASC` when blank. |
 | report_name | Data (free text) | Query Report name — NOT a Link field |
 | root_doctype | Link → DocType | for inter-panel filtering only |
 | where_clause | Small Text | optional Python-side filter override |
@@ -201,7 +202,7 @@ A workspace shortcut is created automatically when the user clicks **Build Page*
 |---|---|---|
 | `get_panel_config` | `root_doctype` | Returns display config for a Page Panel (column_order, bold, gender, show flags, core_filter, auto-detected email/sms fields) |
 | `get_panel_data` | `root_doctype, filters` | Fetches rows with dot-notation resolution, child record counts, and child_doctypes list. Applies core_filter (if set) as raw SQL WHERE before other filters. |
-| `save_core_filter` | `root_doctype, core_filter` | Persists a SQL WHERE clause fragment on the Page Panel record |
+| `save_panel_sql` | `root_doctype, core_filter, order_by` | Persists SQL WHERE and ORDER BY on the Page Panel record |
 | `export_panel_data` | `root_doctype, filters` | Saves panel data as CSV to public path, returns URL for Google Sheets `IMPORTDATA` |
 | `send_panel_message` | `root_doctype, filters, mode, recipient_field, body, subject, send_email_copy, email_field` | Bulk SMS (Twilio) and/or email (SendGrid) to all panel rows |
 | `get_child_doctypes` | `root_doctype` | Returns DocTypes with Link fields pointing to root_doctype (for drill buttons) |
@@ -263,13 +264,12 @@ r.product_id = {panel_1.name}
 
 ### Core Filter
 
-Each panel supports an optional `core_filter` — a raw SQL WHERE clause fragment stored on the Page Panel record. When set, `get_panel_data` uses `frappe.db.sql` instead of `frappe.get_all`, injecting the core filter into the WHERE clause. The core filter is applied server-side before parent filters and user filters.
+Each panel supports optional SQL overrides stored on the Page Panel record:
 
-**Example:** `end_date > CURRENT_DATE() - INTERVAL 10 DAY`
+- **`core_filter`** — raw SQL WHERE clause fragment. When set, `get_panel_data` uses `frappe.db.sql` instead of `frappe.get_all`, injecting the core filter into the WHERE clause before parent and user filters. Example: `end_date > CURRENT_DATE() - INTERVAL 10 DAY`
+- **`order_by`** — raw SQL ORDER BY clause. Applied in both `frappe.get_all` and `frappe.db.sql` paths. Defaults to `name ASC` when blank. Example: `end_date DESC`
 
-Users can view and edit the core filter from the panel's floating window header via the database icon button. Changes are persisted via the `save_core_filter` API endpoint and take effect immediately on re-fetch. The core filter persists until the user explicitly changes or clears it.
-
-When no core filter is set, the original `frappe.get_all` code path is used (no change in behavior).
+Users can view and edit both from the panel's floating window header via the database icon button (two-row widget: WHERE + ORDER BY). Changes are persisted via the `save_panel_sql` API endpoint and take effect immediately on re-fetch. Both persist until the user explicitly changes or clears them.
 
 ---
 
@@ -522,7 +522,7 @@ Key color tokens from `Docs/nce_theme.json`:
 | 9 | Auto-detect email/phone fields | Done — scans DocType fields by type/name as fallback |
 | 10 | SendGrid + Twilio API wiring | Done — email via SendGrid v3 API, SMS via Twilio REST API |
 | 11 | Blue-themed send dialog + Tag Finder integration | Done — auto-opens Tag Finder in "Type a message" mode |
-| 12 | Core filter (SQL WHERE) | Done — raw SQL WHERE clause per panel, server-side via `frappe.db.sql`, editable from panel header, persisted to Page Panel |
+| 12 | Core filter + order_by (SQL WHERE / ORDER BY) | Done — raw SQL WHERE and ORDER BY per panel, server-side, editable from panel header, persisted to Page Panel |
 
 ---
 
