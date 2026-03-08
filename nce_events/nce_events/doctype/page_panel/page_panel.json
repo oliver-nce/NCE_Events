@@ -7,6 +7,7 @@
  "field_order": [
   "root_doctype",
   "header_text",
+  "core_filter",
   "column_order",
   "bold_fields",
   "gender_column",
@@ -39,6 +40,12 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Header Text"
+  },
+  {
+   "description": "SQL WHERE clause fragment applied before user filters, e.g. end_date > CURRENT_DATE() - INTERVAL 10 DAY",
+   "fieldname": "core_filter",
+   "fieldtype": "Small Text",
+   "label": "Core Filter"
   },
   {
    "description": "Comma-delimited visible fields in display order (managed by Display tab)",

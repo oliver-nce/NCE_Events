@@ -291,6 +291,13 @@ nce_events.panel_page.Explorer = class Explorer {
 		html += '<span class="pane-label">' + frappe.utils.escape_html(label) + '</span>';
 		html += '<span class="pane-title-right">';
 
+		if (!is_wp) {
+			var cf_active = !!(config.core_filter);
+			html += '<button class="btn btn-xs pane-header-btn pane-core-filter-toggle-btn' +
+				(cf_active ? " btn-primary-light" : " btn-default") +
+				'" title="Core Filter (SQL WHERE)">' +
+				'<i class="fa fa-database"></i></button>';
+		}
 		if (config.show_filter) {
 			html += '<button class="btn btn-xs btn-default pane-header-btn pane-filter-toggle-btn" title="Filter">' +
 				'<i class="fa fa-filter"></i></button>';
@@ -318,6 +325,14 @@ nce_events.panel_page.Explorer = class Explorer {
 		var header_el = float_el.find(".panel-pane-header");
 		header_el.html(html);
 
+		header_el.find(".pane-core-filter-toggle-btn").on("click", function () {
+			var widget = float_el.find(".pane-core-filter-widget");
+			if (widget.length) {
+				widget.remove();
+			} else {
+				me._render_core_filter_widget(doctype);
+			}
+		});
 		if (config.show_filter) {
 			header_el.find(".pane-filter-toggle-btn").on("click", function () {
 				var widget = float_el.find(".pane-filter-widget");
@@ -396,6 +411,52 @@ nce_events.panel_page.Explorer = class Explorer {
 			}
 		});
 		me._open_doctype_panel(target_dt, me.WP_DOCTYPE, {});
+	}
+
+	/* ── Core filter widget ── */
+
+	_render_core_filter_widget(doctype) {
+		var me = this;
+		var float_el = me.floats[doctype];
+		if (!float_el) return;
+		var panel = me.store.get_panel(doctype);
+		if (!panel || !panel.config) return;
+
+		var current = panel.config.core_filter || "";
+
+		var widget = $('<div class="pane-core-filter-widget"></div>');
+		var inp = $('<input class="core-filter-input" type="text" placeholder="SQL WHERE clause, e.g. end_date > CURRENT_DATE() - INTERVAL 10 DAY">');
+		inp.val(current);
+
+		var apply_btn = $('<button class="btn btn-xs btn-primary core-filter-apply-btn">Apply</button>');
+		var clear_btn = $('<button class="btn btn-xs btn-default core-filter-clear-btn">Clear</button>');
+
+		function do_save(val) {
+			frappe.call({
+				method: "nce_events.api.panel_api.save_core_filter",
+				args: { root_doctype: doctype, core_filter: val },
+				callback: function () {
+					panel.config.core_filter = val;
+					me._show_loading(doctype);
+					me.store.fetch_data(doctype).then(function () {
+						if (!me._destroyed) me._render_panel(doctype);
+					});
+				},
+			});
+		}
+
+		apply_btn.on("click", function () { do_save(inp.val().trim()); });
+		clear_btn.on("click", function () { inp.val(""); do_save(""); });
+		inp.on("keydown", function (e) { if (e.key === "Enter") do_save(inp.val().trim()); });
+
+		widget.append(
+			$('<span class="core-filter-label">WHERE</span>'),
+			inp, apply_btn, clear_btn
+		);
+
+		float_el.find(".pane-core-filter-widget").remove();
+		float_el.find(".panel-pane-header").append(widget);
+		inp.focus();
 	}
 
 	/* ── Client-side user filter ── */

@@ -20,6 +20,7 @@ The app depends on `nce_sync` (provides DocTypes, WP Tables mappings, WordPress 
 - **Drill buttons** — Each panel row shows buttons for child DocTypes (DocTypes that have a Link field pointing TO the current DocType). Buttons display a count badge `(N)` and are grayed out when count is 0. Counts are computed server-side via `GROUP BY` queries.
 - **Dot-notation fields** — `column_order` supports `link_field.child_field` syntax (e.g. `player_id.first_name`). Base link fields are auto-included in the query. Resolution happens via `frappe.db.get_value` lookups.
 - **Auto-detect email/phone** — If Page Panel doesn't have `email_field` or `sms_field` set, the system scans the root DocType's fields by fieldtype (`Email`/`Phone`) or common names (`email`, `phone`, `mobile`, etc.).
+- **Core filter** — Each panel supports a `core_filter` field (raw SQL WHERE clause, e.g. `end_date > CURRENT_DATE() - INTERVAL 10 DAY`). Applied server-side before parent and user filters. Editable from the panel header via database icon button. Persisted to Page Panel until user changes/clears it. When set, `get_panel_data` uses `frappe.db.sql` instead of `frappe.get_all`.
 
 ### Messaging
 

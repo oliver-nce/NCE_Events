@@ -20,6 +20,7 @@ def get_panel_config(root_doctype):
 		return {
 			"root_doctype": root_doctype,
 			"header_text": root_doctype,
+			"core_filter": "",
 			"column_order": [],
 			"bold_fields": [],
 			"gender_column": "",
@@ -51,6 +52,7 @@ def get_panel_config(root_doctype):
 	return {
 		"root_doctype": doc.root_doctype,
 		"header_text": doc.header_text or doc.root_doctype,
+		"core_filter": (doc.core_filter or "").strip(),
 		"column_order": column_order,
 		"bold_fields": _parse_csv(doc.bold_fields),
 		"gender_column": (doc.gender_column or "").strip(),
@@ -97,13 +99,18 @@ def get_panel_data(root_doctype, filters=None):
 		if lf not in simple_fields:
 			simple_fields.append(lf)
 
-	rows = frappe.get_all(
-		root_doctype,
-		fields=simple_fields,
-		filters=filters,
-		order_by="name asc",
-		limit_page_length=0,
-	)
+	core_filter = (config.get("core_filter") or "").strip()
+
+	if core_filter:
+		rows = _query_with_core_filter(root_doctype, simple_fields, filters, core_filter)
+	else:
+		rows = frappe.get_all(
+			root_doctype,
+			fields=simple_fields,
+			filters=filters,
+			order_by="name asc",
+			limit_page_length=0,
+		)
 
 	# Resolve dot-notation fields via frappe.get_value lookups
 	if linked_fields and rows:
@@ -200,6 +207,53 @@ def export_panel_data(root_doctype, filters=None):
 		"url": public_url,
 		"rows_exported": len(rows),
 	}
+
+
+# ── Core filter ──
+
+
+@frappe.whitelist()
+def save_core_filter(root_doctype, core_filter=""):
+	"""Persist the core filter SQL string on a Page Panel record."""
+	core_filter = (core_filter or "").strip()
+
+	if not frappe.db.exists("Page Panel", root_doctype):
+		doc = frappe.new_doc("Page Panel")
+		doc.root_doctype = root_doctype
+		doc.core_filter = core_filter
+		doc.insert(ignore_permissions=True)
+	else:
+		frappe.db.set_value("Page Panel", root_doctype, "core_filter", core_filter)
+
+	frappe.db.commit()
+	return {"ok": True}
+
+
+def _query_with_core_filter(root_doctype, fields, filters, core_filter):
+	"""Run a panel query using frappe.db.sql so we can inject a raw WHERE clause."""
+	table = f"`tab{root_doctype}`"
+	fields_sql = ", ".join(f"`{f}`" for f in fields)
+
+	where_parts = [f"({core_filter})"]
+	params = []
+
+	for key, val in (filters or {}).items():
+		if isinstance(val, list) and len(val) == 2:
+			op, operand = val
+			if op.lower() == "in" and isinstance(operand, (list, tuple)):
+				placeholders = ", ".join(["%s"] * len(operand))
+				where_parts.append(f"`{key}` IN ({placeholders})")
+				params.extend(operand)
+			else:
+				where_parts.append(f"`{key}` {op} %s")
+				params.append(operand)
+		else:
+			where_parts.append(f"`{key}` = %s")
+			params.append(val)
+
+	where_sql = " AND ".join(where_parts)
+	query = f"SELECT {fields_sql} FROM {table} WHERE {where_sql} ORDER BY `name` ASC"
+	return frappe.db.sql(query, params, as_dict=True)
 
 
 # ── Internal helpers ──

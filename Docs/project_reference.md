@@ -88,6 +88,7 @@ nce_events/
 |---|---|---|
 | panel_number | Int | display order |
 | header_text | Data | panel header label |
+| core_filter | Small Text | raw SQL WHERE clause applied server-side before user filters, e.g. `end_date > CURRENT_DATE() - INTERVAL 10 DAY` |
 | report_name | Data (free text) | Query Report name — NOT a Link field |
 | root_doctype | Link → DocType | for inter-panel filtering only |
 | where_clause | Small Text | optional Python-side filter override |
@@ -198,8 +199,9 @@ A workspace shortcut is created automatically when the user clicks **Build Page*
 
 | Function | Params | Purpose |
 |---|---|---|
-| `get_panel_config` | `root_doctype` | Returns display config for a Page Panel (column_order, bold, gender, show flags, auto-detected email/sms fields) |
-| `get_panel_data` | `root_doctype, filters` | Fetches rows with dot-notation resolution, child record counts, and child_doctypes list |
+| `get_panel_config` | `root_doctype` | Returns display config for a Page Panel (column_order, bold, gender, show flags, core_filter, auto-detected email/sms fields) |
+| `get_panel_data` | `root_doctype, filters` | Fetches rows with dot-notation resolution, child record counts, and child_doctypes list. Applies core_filter (if set) as raw SQL WHERE before other filters. |
+| `save_core_filter` | `root_doctype, core_filter` | Persists a SQL WHERE clause fragment on the Page Panel record |
 | `export_panel_data` | `root_doctype, filters` | Saves panel data as CSV to public path, returns URL for Google Sheets `IMPORTDATA` |
 | `send_panel_message` | `root_doctype, filters, mode, recipient_field, body, subject, send_email_copy, email_field` | Bulk SMS (Twilio) and/or email (SendGrid) to all panel rows |
 | `get_child_doctypes` | `root_doctype` | Returns DocTypes with Link fields pointing to root_doctype (for drill buttons) |
@@ -258,6 +260,16 @@ Uses `{panel_N.fieldname}` token substitution in a Python-side filter:
 ```
 r.product_id = {panel_1.name}
 ```
+
+### Core Filter
+
+Each panel supports an optional `core_filter` — a raw SQL WHERE clause fragment stored on the Page Panel record. When set, `get_panel_data` uses `frappe.db.sql` instead of `frappe.get_all`, injecting the core filter into the WHERE clause. The core filter is applied server-side before parent filters and user filters.
+
+**Example:** `end_date > CURRENT_DATE() - INTERVAL 10 DAY`
+
+Users can view and edit the core filter from the panel's floating window header via the database icon button. Changes are persisted via the `save_core_filter` API endpoint and take effect immediately on re-fetch. The core filter persists until the user explicitly changes or clears it.
+
+When no core filter is set, the original `frappe.get_all` code path is used (no change in behavior).
 
 ---
 
@@ -510,6 +522,7 @@ Key color tokens from `Docs/nce_theme.json`:
 | 9 | Auto-detect email/phone fields | Done — scans DocType fields by type/name as fallback |
 | 10 | SendGrid + Twilio API wiring | Done — email via SendGrid v3 API, SMS via Twilio REST API |
 | 11 | Blue-themed send dialog + Tag Finder integration | Done — auto-opens Tag Finder in "Type a message" mode |
+| 12 | Core filter (SQL WHERE) | Done — raw SQL WHERE clause per panel, server-side via `frappe.db.sql`, editable from panel header, persisted to Page Panel |
 
 ---
 
