@@ -63,7 +63,7 @@ nce_events.panel_page.SendDialog = class SendDialog {
 					<div class="send-preview-subject"></div>
 					<div class="send-preview-body"></div>
 					<div class="send-test-row">
-						<input class="send-field send-test-email-input" type="text" placeholder="Test email address...">
+						<input class="send-field send-test-input" type="text" placeholder="${mode === "sms" ? "Test phone number..." : "Test email address..."}">
 						<button class="btn btn-xs btn-default send-test-btn"><i class="fa fa-paper-plane"></i> Send Test</button>
 					</div>
 				</div>
@@ -253,14 +253,16 @@ nce_events.panel_page.SendDialog = class SendDialog {
 		});
 	}
 
-	/* ── Send test email ── */
+	/* ── Send test (email or SMS) ── */
 
 	_do_send_test() {
 		const me = this;
 		const el = me.el;
-		const test_email = el.find(".send-test-email-input").val().trim();
-		if (!test_email) {
-			frappe.msgprint(__("Enter a test email address."));
+		const test_value = el.find(".send-test-input").val().trim();
+		const is_sms = me.mode === "sms";
+
+		if (!test_value) {
+			frappe.msgprint(is_sms ? __("Enter a test phone number.") : __("Enter a test email address."));
 			return;
 		}
 
@@ -268,19 +270,13 @@ nce_events.panel_page.SendDialog = class SendDialog {
 
 		me._resolve_body(function (body_text, subject_text) {
 			test_btn.prop("disabled", true).text("Sending...");
-			frappe.call({
-				method: "nce_events.api.messaging.send_test_email",
-				args: {
-					root_doctype: me.doctype,
-					filters: JSON.stringify(me.filters),
-					body: body_text,
-					subject: subject_text,
-					test_email: test_email,
-				},
+
+			const call_opts = {
 				callback: function (r) {
 					test_btn.prop("disabled", false).html('<i class="fa fa-paper-plane"></i> Send Test');
 					if (r.message && r.message.sent) {
-						frappe.show_alert({ message: __("Test email sent to {0}", [r.message.to]), indicator: "green" });
+						const msg = is_sms ? __("Test SMS sent to {0}", [r.message.to]) : __("Test email sent to {0}", [r.message.to]);
+						frappe.show_alert({ message: msg, indicator: "green" });
 					} else if (r.message && r.message.error) {
 						frappe.msgprint(r.message.error);
 					}
@@ -288,7 +284,28 @@ nce_events.panel_page.SendDialog = class SendDialog {
 				error: function () {
 					test_btn.prop("disabled", false).html('<i class="fa fa-paper-plane"></i> Send Test');
 				},
-			});
+			};
+
+			if (is_sms) {
+				call_opts.method = "nce_events.api.messaging.send_test_sms";
+				call_opts.args = {
+					root_doctype: me.doctype,
+					filters: JSON.stringify(me.filters),
+					body: body_text,
+					test_phone: test_value,
+				};
+			} else {
+				call_opts.method = "nce_events.api.messaging.send_test_email";
+				call_opts.args = {
+					root_doctype: me.doctype,
+					filters: JSON.stringify(me.filters),
+					body: body_text,
+					subject: subject_text,
+					test_email: test_value,
+				};
+			}
+
+			frappe.call(call_opts);
 		});
 	}
 

@@ -756,7 +756,7 @@ body.panel-float-dragging * {
 	align-items: center;
 }
 
-.send-test-email-input {
+.send-test-input {
 	flex: 1;
 	font-size: 12px !important;
 	padding: 4px 8px !important;

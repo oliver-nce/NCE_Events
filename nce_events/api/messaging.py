@@ -68,6 +68,35 @@ def send_test_email(
 
 
 @frappe.whitelist()
+def send_test_sms(
+	root_doctype: str,
+	filters: str | dict | None = None,
+	body: str = "",
+	test_phone: str = "",
+) -> dict[str, Any]:
+	"""Render the template against the first row and send SMS to a test phone number."""
+	if not test_phone or not test_phone.strip():
+		return {"error": "No test phone number provided."}
+	test_phone = test_phone.strip()
+
+	result = get_panel_data(root_doctype, filters)
+	rows = result.get("rows") or []
+	if not rows:
+		return {"error": "No rows to preview."}
+
+	row = rows[0]
+	context = _enrich_row_context(root_doctype, row)
+
+	try:
+		rendered_body = frappe.render_template(body, context)
+	except Exception:
+		rendered_body = body
+
+	_send_sms(test_phone, rendered_body)
+	return {"sent": 1, "to": test_phone}
+
+
+@frappe.whitelist()
 def preview_panel_message(
 	root_doctype: str,
 	filters: str | dict | None = None,
