@@ -25,7 +25,7 @@ function _compute_jinja(field_name, male, female, gender_field) {
 function _rebuild_tags(frm) {
 	frm.save().then(function () {
 		frappe.call({
-			method: "nce_events.api.panel_api.rebuild_field_tags",
+			method: "nce_events.api.tags.rebuild_field_tags",
 			freeze: true,
 			freeze_message: __("Scanning custom DocTypes\u2026"),
 			callback: function (r) {

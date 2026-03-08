@@ -198,7 +198,7 @@ nce_events.panel_page.SendDialog = class SendDialog {
 		me._resolve_body(function (body_text, subject_text) {
 			el.find(".send-preview-btn").prop("disabled", true);
 			frappe.call({
-				method: "nce_events.api.panel_api.preview_panel_message",
+				method: "nce_events.api.messaging.preview_panel_message",
 				args: {
 					root_doctype: doctype,
 					filters: JSON.stringify(filters),
@@ -231,7 +231,7 @@ nce_events.panel_page.SendDialog = class SendDialog {
 		me._resolve_body(function (final_body, final_subject) {
 			send_btn.prop("disabled", true).text("Sending...");
 			frappe.call({
-				method: "nce_events.api.panel_api.send_panel_message",
+				method: "nce_events.api.messaging.send_panel_message",
 				args: {
 					root_doctype: me.doctype,
 					filters: JSON.stringify(me.filters),
@@ -270,7 +270,7 @@ nce_events.panel_page.SendDialog = class SendDialog {
 		me._resolve_body(function (body_text, subject_text) {
 			test_btn.prop("disabled", true).text("Sending...");
 			frappe.call({
-				method: "nce_events.api.panel_api.send_test_email",
+				method: "nce_events.api.messaging.send_test_email",
 				args: {
 					root_doctype: me.doctype,
 					filters: JSON.stringify(me.filters),
