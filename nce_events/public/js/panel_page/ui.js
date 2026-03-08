@@ -273,14 +273,22 @@ nce_events.panel_page.Explorer = class Explorer {
 		var col_widths = me._calc_col_widths(columns, rows, drill_col_w, float_w);
 
 		var col_total = 0;
-		var _dbg = "Panel: " + doctype + "\nfloat_w: " + float_w + "\ndrill_col_w: " + drill_col_w + "\navail: " + (float_w - 40 - drill_col_w) + "\n\nCOLUMNS:\n";
+		var _dbg = "<pre style='font-size:13px;line-height:1.6;'>";
+		_dbg += "Panel: " + doctype + "\n";
+		_dbg += "float_w: " + float_w + "\n";
+		_dbg += "drill_col_w: " + drill_col_w + "\n";
+		_dbg += "avail: " + (float_w - 40 - drill_col_w) + "\n\n";
+		_dbg += "COLUMNS:\n";
 		columns.forEach(function (col, ci) {
-			_dbg += "  " + col.label + ": " + col_widths[ci] + "px\n";
+			var lbl = (col.label + "                    ").slice(0, 22);
+			_dbg += "  " + lbl + col_widths[ci] + "px\n";
 			col_total += col_widths[ci];
 		});
-		_dbg += "  SUM: " + col_total + "px\n";
-		_dbg += "\nTOTAL used: " + col_total + " + " + drill_col_w + " + 40 = " + (col_total + drill_col_w + 40) + "px (of " + float_w + ")";
-		alert(_dbg);
+		_dbg += "  ----------------------\n";
+		_dbg += "  SUM:                  " + col_total + "px\n\n";
+		_dbg += "TOTAL: " + col_total + " + " + drill_col_w + " + 40 = " + (col_total + drill_col_w + 40) + "  (panel=" + float_w + ")";
+		_dbg += "</pre>";
+		frappe.msgprint({ title: "Panel Sizing Debug", message: _dbg, wide: true });
 
 		var html = '<table class="panel-table"><thead><tr>';
 		columns.forEach(function (col, ci) {
@@ -981,7 +989,8 @@ nce_events.panel_page.Explorer = class Explorer {
 		$(document.body).append(measurer);
 
 		var total = 0;
-		var _dbg2 = "Drill calc (DOM measured):\n";
+		var _dbg2 = "<pre style='font-size:13px;line-height:1.6;'>";
+		_dbg2 += "Drill calc (DOM measured):\n\n";
 		child_doctypes.forEach(function (child) {
 			var btn = $('<button class="btn btn-xs drill-btn">' +
 				frappe.utils.escape_html(child.label) +
@@ -989,14 +998,17 @@ nce_events.panel_page.Explorer = class Explorer {
 				' <i class="fa fa-chevron-right" style="font-size:9px;"></i></button>');
 			measurer.append(btn);
 			var w = btn[0].offsetWidth + 6;
-			_dbg2 += "'" + child.label + "': " + w + "px\n";
+			var lbl = ("'" + child.label + "'                ").slice(0, 22);
+			_dbg2 += "  " + lbl + w + "px\n";
 			total += w;
 		});
 
 		measurer.remove();
 		var result = Math.ceil(total + 16);
-		_dbg2 += "TOTAL: " + result + "px";
-		alert(_dbg2);
+		_dbg2 += "  ----------------------\n";
+		_dbg2 += "  TOTAL:                " + result + "px\n";
+		_dbg2 += "</pre>";
+		frappe.msgprint({ title: "Drill Button Sizing", message: _dbg2, wide: true });
 		return result;
 	}
 
