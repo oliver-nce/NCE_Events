@@ -22,7 +22,11 @@ def get_pronoun_tags_for_doctype(doctype: str) -> list[dict[str, str]]:
 		meta = frappe.get_meta(doctype)
 	except Exception:
 		return []
-	if not meta.get_field("gender"):
+	has_gender = any(
+		f.fieldname and f.fieldname.lower() == "gender"
+		for f in (meta.fields or [])
+	)
+	if not has_gender:
 		return []
 	pronoun_tags: list[dict[str, str]] = []
 	for ds in _DEFAULT_SYNTHETICS:
