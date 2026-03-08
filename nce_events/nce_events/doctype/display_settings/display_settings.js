@@ -247,14 +247,22 @@ function _inject_preview(frm) {
 	var color = frm.doc.text_color || "#333333";
 	var muted = frm.doc.muted_text_color || "#555555";
 
-	var css =
-		"body, .frappe-list, .list-row, .form-group, .frappe-control, .modal-body, .page-container {\n" +
-		"  font-family: " + font + " !important;\n" +
-		"  font-size: " + size + " !important;\n" +
-		"  color: " + color + " !important;\n" +
+	var sel = ".panel-float, .panel-float .panel-table td, .panel-float .panel-table th, " +
+		".panel-float .pane-label, .panel-float .pane-count, .panel-float .drill-btn, " +
+		".panel-float .panel-float-footer, .panel-float .pane-filter-widget, " +
+		".panel-float .pane-core-filter-widget, .panel-float .filter-col-select, " +
+		".panel-float .filter-op-select, .panel-float .filter-val-input, " +
+		".panel-float .core-filter-input";
+
+	var css = sel + " {\n" +
+		"  font-family: " + font + ";\n" +
+		"  font-size: " + size + ";\n" +
 		"}\n" +
-		".text-muted, .text-secondary, .indicator-pill, .help-text {\n" +
-		"  color: " + muted + " !important;\n" +
+		".panel-float .panel-table td {\n" +
+		"  color: " + color + ";\n" +
+		"}\n" +
+		".panel-float .panel-table th, .panel-float .pane-count, .panel-float .drill-btn.disabled {\n" +
+		"  color: " + muted + ";\n" +
 		"}\n";
 
 	$("<style>").attr("id", "display-settings-preview").text(css).appendTo("head");
