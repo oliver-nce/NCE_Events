@@ -277,7 +277,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		_dbg += "Panel: " + doctype + "\n";
 		_dbg += "float_w: " + float_w + "\n";
 		_dbg += "drill_col_w: " + drill_col_w + "\n";
-		_dbg += "avail: " + (float_w - 160 - drill_col_w) + " (panel - 160 - drill)\n\n";
+		_dbg += "avail: " + (float_w - 20 - drill_col_w) + " (panel - 20 - drill)\n\n";
 		_dbg += "COLUMNS:\n";
 		columns.forEach(function (col, ci) {
 			var lbl = (col.label + "                    ").slice(0, 22);
@@ -286,7 +286,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		});
 		_dbg += "  ----------------------\n";
 		_dbg += "  SUM:                  " + col_total + "px\n\n";
-		_dbg += "TOTAL: " + col_total + " + " + drill_col_w + " + 160 = " + (col_total + drill_col_w + 160) + "  (panel=" + float_w + ")";
+		_dbg += "TOTAL: " + col_total + " + " + drill_col_w + " + 20 = " + (col_total + drill_col_w + 20) + "  (panel=" + float_w + ")";
 		_dbg += "</pre>";
 		frappe.msgprint({ title: "Panel Sizing Debug", message: _dbg, wide: true });
 
@@ -1039,7 +1039,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		var total_chars = 0;
 		avg_chars.forEach(function (c) { total_chars += c; });
 
-		var available = float_w - 160 - drill_col_w;
+		var available = float_w - 20 - drill_col_w;
 
 		var widths = [];
 		avg_chars.forEach(function (c) {
