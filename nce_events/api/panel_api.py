@@ -40,7 +40,7 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 			"bold_fields": [],
 			"gender_column": "",
 			"gender_color_fields": [],
-			"tint_by_value_fields": [],
+			"tint_by_gender": {},
 			"computed_columns": [],
 			"show_filter": 1,
 			"show_sheets": 1,
@@ -55,6 +55,11 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 		}
 
 	doc = frappe.get_doc("Page Panel", root_doctype)
+	if (doc.root_doctype or "").strip() != root_doctype:
+		computed_columns = []
+	else:
+		computed_columns = _get_computed_columns(doc)
+
 	column_order = _parse_csv(doc.column_order)
 	email_field = (doc.email_field or "").strip()
 	sms_field = (doc.sms_field or "").strip()
@@ -65,17 +70,18 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 			email_field = auto_email
 		if not sms_field:
 			sms_field = auto_sms
-
-	computed_columns = _get_computed_columns(doc)
 	bold_fields = _parse_csv(doc.bold_fields)
 	gender_color_fields = _parse_csv(doc.gender_color_fields)
 	for cc in computed_columns:
-		column_order.append(cc["field_name"])
+		fn = cc["field_name"]
+		if fn not in column_order:
+			column_order.append(fn)
 
-	tint_by_value_fields = [
-		cc["field_name"] for cc in computed_columns
-		if cc.get("gender") in ("Male", "Female")
-	]
+	tint_by_gender: dict[str, str] = {}
+	for cc in computed_columns:
+		g = cc.get("gender")
+		if g in ("Male", "Female"):
+			tint_by_gender[cc["field_name"].lower()] = g
 	return {
 		"root_doctype": doc.root_doctype,
 		"header_text": doc.header_text or doc.root_doctype,
@@ -85,7 +91,7 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 		"bold_fields": bold_fields,
 		"gender_column": (doc.gender_column or "").strip(),
 		"gender_color_fields": gender_color_fields,
-		"tint_by_value_fields": tint_by_value_fields,
+		"tint_by_gender": tint_by_gender,
 		"computed_columns": computed_columns,
 		"show_filter": doc.show_filter,
 		"show_sheets": doc.show_sheets,
@@ -191,8 +197,12 @@ def get_panel_data(
 		cc["field_name"]: (cc.get("label") or _title_case(cc["field_name"]))
 		for cc in (config.get("computed_columns") or [])
 	}
+	seen: set[str] = set()
 	columns: list[dict[str, str]] = []
 	for fn in all_fields:
+		if fn in seen:
+			continue
+		seen.add(fn)
 		if fn in computed_label_map:
 			label = computed_label_map[fn]
 		else:

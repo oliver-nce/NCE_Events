@@ -37,7 +37,7 @@
    "reqd": 1
   },
   {
-   "description": "Tint color for this column. Male=blue, Female=pink. Blank=no tint.",
+   "description": "Tint color for this column (e.g. female count=46 gets pink). Male=blue, Female=pink. Blank=no tint.",
    "fieldname": "gender",
    "fieldtype": "Select",
    "in_list_view": 1,

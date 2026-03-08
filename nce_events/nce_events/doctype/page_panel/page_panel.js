@@ -146,7 +146,11 @@ function _get_computed_fields(frm) {
 }
 
 function _build_display_tabs(frm, $container, root_fields, link_fields, linked_data) {
-	const computed_fields = _get_computed_fields(frm);
+	const root_names = {};
+	root_fields.forEach(function (f) { root_names[f.fieldname] = true; });
+	const computed_fields = _get_computed_fields(frm).filter(function (cf) {
+		return !root_names[cf.fieldname];
+	});
 	const root_with_computed = root_fields.concat(computed_fields);
 
 	const saved = {
