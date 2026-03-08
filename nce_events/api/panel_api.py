@@ -12,6 +12,16 @@ from frappe.utils import cint
 MALE_HEX = "#0000FF"
 FEMALE_HEX = "#c700e6"
 
+_SKIP_FIELDTYPES = frozenset({
+	"Section Break", "Column Break", "Tab Break", "HTML",
+	"Fold", "Heading", "Button", "Table", "Table MultiSelect",
+})
+
+_SKIP_FIELDNAMES = frozenset({
+	"name", "owner", "creation", "modified", "modified_by",
+	"docstatus", "idx", "parent", "parentfield", "parenttype",
+})
+
 
 @frappe.whitelist()
 def get_panel_config(root_doctype):
@@ -425,17 +435,9 @@ def get_doctype_fields(root_doctype):
 	Link fields include an 'options' key with the target DocType name.
 	"""
 	meta = frappe.get_meta(root_doctype)
-	skip_types = {
-		"Section Break", "Column Break", "Tab Break", "HTML",
-		"Fold", "Heading", "Button", "Table", "Table MultiSelect",
-	}
-	skip_names = {
-		"name", "owner", "creation", "modified", "modified_by",
-		"docstatus", "idx", "parent", "parentfield", "parenttype",
-	}
 	result = []
 	for f in meta.fields:
-		if f.fieldtype in skip_types or f.fieldname in skip_names:
+		if f.fieldtype in _SKIP_FIELDTYPES or f.fieldname in _SKIP_FIELDNAMES:
 			continue
 		entry = {
 			"fieldname": f.fieldname,
@@ -790,16 +792,6 @@ _DEFAULT_SYNTHETICS = [
 	{"field_name": "him_her", "label": "Him/Her", "male_value": "him", "female_value": "her"},
 	{"field_name": "his_her", "label": "His/Her", "male_value": "his", "female_value": "her"},
 ]
-
-_SKIP_FIELDTYPES = frozenset({
-	"Section Break", "Column Break", "Tab Break", "HTML",
-	"Fold", "Heading", "Button", "Table", "Table MultiSelect",
-})
-
-_SKIP_FIELDNAMES = frozenset({
-	"name", "owner", "creation", "modified", "modified_by",
-	"docstatus", "idx", "parent", "parentfield", "parenttype",
-})
 
 
 @frappe.whitelist()

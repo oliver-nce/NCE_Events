@@ -223,26 +223,10 @@ nce_events.panel_page.Explorer = class Explorer {
 	}
 
 	_make_draggable(float_el) {
-		function start_drag(e) {
-			if ($(e.target).closest(".pane-header-btn, .panel-float-close, .pane-filter-widget, .drill-btn").length) return;
-			e.preventDefault();
-			var sx = e.clientX, sy = e.clientY;
-			var sl = parseInt(float_el.css("left"), 10) || 0;
-			var st = parseInt(float_el.css("top"), 10) || 0;
-			$("body").addClass("panel-float-dragging");
-			$(document).on("mousemove.float_drag", function (ev) {
-				float_el.css({
-					left: (sl + ev.clientX - sx) + "px",
-					top: Math.min(st + ev.clientY - sy, window.innerHeight - 40) + "px",
-				});
-			});
-			$(document).on("mouseup.float_drag", function () {
-				$("body").removeClass("panel-float-dragging");
-				$(document).off("mousemove.float_drag mouseup.float_drag");
-			});
-		}
-		float_el.find(".panel-pane-header").on("mousedown.float_drag", start_drag);
-		float_el.find(".panel-float-footer").on("mousedown.float_drag", start_drag);
+		this._make_float_draggable(float_el,
+			[".panel-pane-header", ".panel-float-footer"],
+			".pane-header-btn, .panel-float-close, .pane-filter-widget, .drill-btn",
+			"float_drag");
 	}
 
 	/* ── Panel rendering ── */
@@ -263,12 +247,6 @@ nce_events.panel_page.Explorer = class Explorer {
 		var rows = me._get_filtered_rows(doctype);
 		var columns = data.columns || [];
 
-		var bold_set = me._field_set(config.bold_fields);
-		var male_hex = (config.male_hex || "").trim();
-		var female_hex = (config.female_hex || "").trim();
-		var gender_col = (config.gender_column || "").trim();
-		var gender_tint_set = me._field_set(config.gender_color_fields);
-
 		var is_wp = (doctype === me.WP_DOCTYPE);
 		var child_doctypes = data.child_doctypes || [];
 		var has_drills = !is_wp && child_doctypes.length > 0;
@@ -277,12 +255,14 @@ nce_events.panel_page.Explorer = class Explorer {
 		var drill_col_w = has_drills ? me._calc_drill_col_width(child_doctypes) : 0;
 		var col_widths = me._calc_col_widths(columns, rows, drill_col_w, float_w);
 
+		var row_ctx = me._build_row_ctx(config, data, col_widths, is_wp, panel.selected_row);
+
 		var html = '<table class="panel-table"><thead><tr>';
 		columns.forEach(function (col, ci) {
 			var fn = col.fieldname.toLowerCase();
 			var w = col_widths[ci] || 100;
 			var style = "width:" + w + "px;min-width:30px;";
-			if (bold_set[fn]) style += "font-weight:700;";
+			if (row_ctx.bold_set[fn]) style += "font-weight:700;";
 			html += '<th style="' + style + '">' +
 				frappe.utils.escape_html(col.label) +
 				'<div class="col-resize-handle" data-col="' + ci + '"></div></th>';
@@ -293,52 +273,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		html += "</tr></thead><tbody>";
 
 		rows.forEach(function (row, ri) {
-			var sel = panel.selected_row;
-			var is_sel = sel && row.name === sel.name;
-			html += '<tr class="panel-row' + (is_sel ? " selected" : "") + (ri % 2 === 1 ? " alt" : "") +
-				'" data-row-idx="' + ri + '">';
-
-			columns.forEach(function (col, ci) {
-				var fn = col.fieldname.toLowerCase();
-				var value = row[col.fieldname];
-				if (value === null || value === undefined) value = row[fn];
-				if (value === null || value === undefined) value = "";
-				if (me._looks_like_date(value)) value = frappe.datetime.str_to_user(value);
-
-				var w = col_widths[ci] || 100;
-				var parts = ["width:" + w + "px", "min-width:30px"];
-				if (gender_col && gender_tint_set[fn]) {
-					var gv = String(row[gender_col] || row[gender_col.toLowerCase()] || "").trim().toLowerCase();
-					if (me._looks_male(gv) && male_hex) {
-						parts.push("font-weight:700", "color:" + male_hex);
-					} else if (me._looks_female(gv) && female_hex) {
-						parts.push("font-weight:700", "color:" + female_hex);
-					}
-				} else if (bold_set[fn]) {
-					parts.push("font-weight:700");
-				}
-
-				html += '<td style="' + parts.join(";") + ';">' + frappe.utils.escape_html(String(value)) + "</td>";
-			});
-
-			if (has_drills) {
-				html += '<td class="drill-cell">';
-				child_doctypes.forEach(function (child) {
-					var count_key = "_count_" + child.doctype;
-					var cnt = row[count_key];
-					var is_zero = (cnt === 0 || cnt === "0");
-					html += '<button class="btn btn-xs drill-btn' + (is_zero ? " disabled" : "") +
-						'" data-child-dt="' + frappe.utils.escape_html(child.doctype) +
-						'" data-link-field="' + frappe.utils.escape_html(child.link_field) +
-						'" data-row-name="' + frappe.utils.escape_html(row.name) +
-						'">' + frappe.utils.escape_html(child.label) +
-						' <span class="drill-count">(' + (cnt == null ? "?" : cnt) + ')</span>' +
-						' <i class="fa fa-chevron-right" style="font-size:9px;"></i></button>';
-				});
-				html += "</td>";
-			}
-
-			html += "</tr>";
+			html += me._build_row_html(row, ri, row_ctx);
 		});
 
 		html += "</tbody></table>";
@@ -928,22 +863,10 @@ nce_events.panel_page.Explorer = class Explorer {
 	}
 
 	_make_send_panel_draggable(el) {
-		function start_drag(e) {
-			if ($(e.target).closest("button, input, textarea, select, .send-template-list").length) return;
-			e.preventDefault();
-			var sx = e.clientX, sy = e.clientY;
-			var sl = parseInt(el.css("left"), 10) || 0;
-			var st = parseInt(el.css("top"), 10) || 0;
-			$("body").addClass("panel-float-dragging");
-			$(document).on("mousemove.send_drag", function (ev) {
-				el.css({ left: (sl + ev.clientX - sx) + "px", top: Math.min(st + ev.clientY - sy, window.innerHeight - 40) + "px" });
-			});
-			$(document).on("mouseup.send_drag", function () {
-				$("body").removeClass("panel-float-dragging");
-				$(document).off("mousemove.send_drag mouseup.send_drag");
-			});
-		}
-		el.find(".send-panel-header").on("mousedown.send_drag", start_drag);
+		this._make_float_draggable(el,
+			[".send-panel-header"],
+			"button, input, textarea, select, .send-template-list",
+			"send_drag");
 	}
 
 	_make_send_panel_resizable(el) {
@@ -1113,71 +1036,18 @@ nce_events.panel_page.Explorer = class Explorer {
 		if (!tbody.length) return;
 
 		var existing_count = tbody.find("tr").length;
-		var config = panel.config;
-		var data = panel.data;
-		var columns = data.columns || [];
 		var is_wp = (doctype === me.WP_DOCTYPE);
-		var child_doctypes = data.child_doctypes || [];
-		var has_drills = !is_wp && child_doctypes.length > 0;
-
-		var bold_set = me._field_set(config.bold_fields);
-		var male_hex = (config.male_hex || "").trim();
-		var female_hex = (config.female_hex || "").trim();
-		var gender_col = (config.gender_column || "").trim();
-		var gender_tint_set = me._field_set(config.gender_color_fields);
 
 		var col_widths = [];
 		float_el.find(".panel-table thead th").not(".drill-col").each(function () {
 			col_widths.push(parseInt($(this).css("width"), 10) || 100);
 		});
 
+		var row_ctx = me._build_row_ctx(panel.config, panel.data, col_widths, is_wp, null);
+
 		var html = "";
 		new_rows.forEach(function (row, bi) {
-			var ri = existing_count + bi;
-			html += '<tr class="panel-row' + (ri % 2 === 1 ? " alt" : "") +
-				'" data-row-idx="' + ri + '">';
-
-			columns.forEach(function (col, ci) {
-				var fn = col.fieldname.toLowerCase();
-				var value = row[col.fieldname];
-				if (value === null || value === undefined) value = row[fn];
-				if (value === null || value === undefined) value = "";
-				if (me._looks_like_date(value)) value = frappe.datetime.str_to_user(value);
-
-				var w = col_widths[ci] || 100;
-				var parts = ["width:" + w + "px", "min-width:30px"];
-				if (gender_col && gender_tint_set[fn]) {
-					var gv = String(row[gender_col] || row[gender_col.toLowerCase()] || "").trim().toLowerCase();
-					if (me._looks_male(gv) && male_hex) {
-						parts.push("font-weight:700", "color:" + male_hex);
-					} else if (me._looks_female(gv) && female_hex) {
-						parts.push("font-weight:700", "color:" + female_hex);
-					}
-				} else if (bold_set[fn]) {
-					parts.push("font-weight:700");
-				}
-
-				html += '<td style="' + parts.join(";") + ';">' + frappe.utils.escape_html(String(value)) + "</td>";
-			});
-
-			if (has_drills) {
-				html += '<td class="drill-cell">';
-				child_doctypes.forEach(function (child) {
-					var count_key = "_count_" + child.doctype;
-					var cnt = row[count_key];
-					var is_zero = (cnt === 0 || cnt === "0");
-					html += '<button class="btn btn-xs drill-btn' + (is_zero ? " disabled" : "") +
-						'" data-child-dt="' + frappe.utils.escape_html(child.doctype) +
-						'" data-link-field="' + frappe.utils.escape_html(child.link_field) +
-						'" data-row-name="' + frappe.utils.escape_html(row.name) +
-						'">' + frappe.utils.escape_html(child.label) +
-						' <span class="drill-count">(' + (cnt == null ? "?" : cnt) + ')</span>' +
-						' <i class="fa fa-chevron-right" style="font-size:9px;"></i></button>';
-				});
-				html += "</td>";
-			}
-
-			html += "</tr>";
+			html += me._build_row_html(row, existing_count + bi, row_ctx);
 		});
 
 		tbody.append(html);
@@ -1203,6 +1073,99 @@ nce_events.panel_page.Explorer = class Explorer {
 			text = String(total) + " records";
 		}
 		float_el.find(".pane-count").text(text);
+	}
+
+	/* ── Row HTML builder (shared by _render_panel and _append_rows) ── */
+
+	_build_row_html(row, ri, ctx) {
+		var me = this;
+		var is_sel = ctx.selected_row && row.name === ctx.selected_row.name;
+		var html = '<tr class="panel-row' + (is_sel ? " selected" : "") + (ri % 2 === 1 ? " alt" : "") +
+			'" data-row-idx="' + ri + '">';
+
+		ctx.columns.forEach(function (col, ci) {
+			var fn = col.fieldname.toLowerCase();
+			var value = row[col.fieldname];
+			if (value === null || value === undefined) value = row[fn];
+			if (value === null || value === undefined) value = "";
+			if (me._looks_like_date(value)) value = frappe.datetime.str_to_user(value);
+
+			var w = ctx.col_widths[ci] || 100;
+			var parts = ["width:" + w + "px", "min-width:30px"];
+			if (ctx.gender_col && ctx.gender_tint_set[fn]) {
+				var gv = String(row[ctx.gender_col] || row[ctx.gender_col.toLowerCase()] || "").trim().toLowerCase();
+				if (me._looks_male(gv) && ctx.male_hex) {
+					parts.push("font-weight:700", "color:" + ctx.male_hex);
+				} else if (me._looks_female(gv) && ctx.female_hex) {
+					parts.push("font-weight:700", "color:" + ctx.female_hex);
+				}
+			} else if (ctx.bold_set[fn]) {
+				parts.push("font-weight:700");
+			}
+
+			html += '<td style="' + parts.join(";") + ';">' + frappe.utils.escape_html(String(value)) + "</td>";
+		});
+
+		if (ctx.has_drills) {
+			html += '<td class="drill-cell">';
+			ctx.child_doctypes.forEach(function (child) {
+				var count_key = "_count_" + child.doctype;
+				var cnt = row[count_key];
+				var is_zero = (cnt === 0 || cnt === "0");
+				html += '<button class="btn btn-xs drill-btn' + (is_zero ? " disabled" : "") +
+					'" data-child-dt="' + frappe.utils.escape_html(child.doctype) +
+					'" data-link-field="' + frappe.utils.escape_html(child.link_field) +
+					'" data-row-name="' + frappe.utils.escape_html(row.name) +
+					'">' + frappe.utils.escape_html(child.label) +
+					' <span class="drill-count">(' + (cnt == null ? "?" : cnt) + ')</span>' +
+					' <i class="fa fa-chevron-right" style="font-size:9px;"></i></button>';
+			});
+			html += "</td>";
+		}
+
+		html += "</tr>";
+		return html;
+	}
+
+	_build_row_ctx(config, data, col_widths, is_wp, selected_row) {
+		return {
+			columns: data.columns || [],
+			col_widths: col_widths,
+			bold_set: this._field_set(config.bold_fields),
+			male_hex: (config.male_hex || "").trim(),
+			female_hex: (config.female_hex || "").trim(),
+			gender_col: (config.gender_column || "").trim(),
+			gender_tint_set: this._field_set(config.gender_color_fields),
+			child_doctypes: data.child_doctypes || [],
+			has_drills: !is_wp && (data.child_doctypes || []).length > 0,
+			selected_row: selected_row || null,
+		};
+	}
+
+	/* ── Shared draggable ── */
+
+	_make_float_draggable(el, handle_selectors, ignore_selector, ns) {
+		function start_drag(e) {
+			if (ignore_selector && $(e.target).closest(ignore_selector).length) return;
+			e.preventDefault();
+			var sx = e.clientX, sy = e.clientY;
+			var sl = parseInt(el.css("left"), 10) || 0;
+			var st = parseInt(el.css("top"), 10) || 0;
+			$("body").addClass("panel-float-dragging");
+			$(document).on("mousemove." + ns, function (ev) {
+				el.css({
+					left: (sl + ev.clientX - sx) + "px",
+					top: Math.min(st + ev.clientY - sy, window.innerHeight - 40) + "px",
+				});
+			});
+			$(document).on("mouseup." + ns, function () {
+				$("body").removeClass("panel-float-dragging");
+				$(document).off("mousemove." + ns + " mouseup." + ns);
+			});
+		}
+		handle_selectors.forEach(function (sel) {
+			el.find(sel).on("mousedown." + ns, start_drag);
+		});
 	}
 
 	/* ── Utilities ── */
