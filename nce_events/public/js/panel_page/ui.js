@@ -269,6 +269,17 @@ nce_events.panel_page.Explorer = class Explorer {
 		var drill_col_w = has_drills ? me._calc_drill_col_width(child_doctypes, config) : 0;
 		var col_widths = me._calc_col_widths(columns, rows, drill_col_w, float_w);
 
+		console.log("── Panel sizing: " + doctype + " ──");
+		console.log("  float_w:", float_w, "| drill_col_w:", drill_col_w, "| available for data:", float_w - 40 - drill_col_w);
+		columns.forEach(function (col, ci) {
+			console.log("  col[" + ci + "] " + col.label + ": " + col_widths[ci] + "px");
+		});
+		if (has_drills) {
+			child_doctypes.forEach(function (child) {
+				console.log("  drill btn: " + child.label);
+			});
+		}
+
 		var html = '<table class="panel-table"><thead><tr>';
 		columns.forEach(function (col, ci) {
 			var fn = col.fieldname.toLowerCase();
@@ -973,13 +984,17 @@ nce_events.panel_page.Explorer = class Explorer {
 		var count_extra = 8;
 
 		var total = 0;
+		console.log("── Drill btn calc: font_size=" + font_size + " btn_font=" + btn_font + " char_w=" + char_w.toFixed(1) + " ──");
 		child_doctypes.forEach(function (child) {
 			var label_len = (child.label || child.doctype || "").length;
 			var btn_w = Math.ceil(label_len * char_w) + count_extra * char_w + btn_pad + icon_w + btn_margin;
+			console.log("  btn '" + child.label + "' (" + label_len + " chars): " + Math.ceil(btn_w) + "px");
 			total += btn_w;
 		});
 
-		return Math.ceil(total + 12);
+		var result = Math.ceil(total + 12);
+		console.log("  drill col total: " + result + "px");
+		return result;
 	}
 
 	/* ── Column auto-sizing ── */
