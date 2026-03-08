@@ -749,6 +749,7 @@ nce_events.panel_page.Explorer = class Explorer {
 			let value = row[col.fieldname];
 			if (value === null || value === undefined) value = row[fn];
 			if (value === null || value === undefined) value = "";
+			if (typeof value === "object") value = JSON.stringify(value);
 			if (me._looks_like_date(value)) value = frappe.datetime.str_to_user(value);
 
 			const w = ctx.col_widths[ci] || 100;

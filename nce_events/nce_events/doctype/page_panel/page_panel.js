@@ -18,6 +18,7 @@ function _get_doctype_fields(doctype, callback) {
 const TAB_GROUPS = {
 	config: [
 		"root_doctype", "header_text",
+		"section_break_computed", "unstored_calculation_fields",
 		"section_break_widgets", "show_filter", "show_sheets",
 		"column_break_widgets", "show_email", "show_sms",
 		"email_field", "sms_field",

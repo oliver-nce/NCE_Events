@@ -11,7 +11,7 @@ import json
 import unittest
 from unittest.mock import patch
 
-from nce_events.api.panel_api import _build_core_filter_where
+from nce_events.api.panel_api import _build_core_filter_where, _ensure_tab_prefix
 from nce_events.api.tags import _compute_jinja_tag
 
 
@@ -77,6 +77,32 @@ class TestBuildCoreFilterWhere(unittest.TestCase):
 		)
 		self.assertEqual(where, "(1=1) AND `name` like %s")
 		self.assertEqual(params, ["%test%"])
+
+
+# ──────────────────────────────────────────────────────────
+# _ensure_tab_prefix (computed column SQL)
+# ──────────────────────────────────────────────────────────
+
+class TestEnsureTabPrefix(unittest.TestCase):
+
+	def test_bare_from(self):
+		sql = "SELECT name FROM Event WHERE name = %s"
+		self.assertIn("FROM tabEvent", _ensure_tab_prefix(sql))
+
+	def test_bare_join(self):
+		sql = "SELECT a.name FROM Event a JOIN Registration r ON r.event = a.name"
+		result = _ensure_tab_prefix(sql)
+		self.assertIn("FROM tabEvent", result)
+		self.assertIn("JOIN tabRegistration", result)
+
+	def test_already_prefixed(self):
+		sql = "SELECT name FROM tabEvent WHERE name = %s"
+		self.assertEqual(_ensure_tab_prefix(sql), sql)
+
+	def test_backticked_with_space(self):
+		sql = "SELECT name FROM `Event Registration` WHERE 1=1"
+		result = _ensure_tab_prefix(sql)
+		self.assertIn("`tabEvent Registration`", result)
 
 
 # ──────────────────────────────────────────────────────────

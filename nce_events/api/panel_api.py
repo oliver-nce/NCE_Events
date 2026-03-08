@@ -4,6 +4,7 @@ import csv
 import io
 import json
 import os
+import re
 from typing import Any
 
 import frappe
@@ -39,6 +40,7 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 			"bold_fields": [],
 			"gender_column": "",
 			"gender_color_fields": [],
+			"computed_columns": [],
 			"show_filter": 1,
 			"show_sheets": 1,
 			"show_email": 1,
@@ -63,15 +65,26 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 		if not sms_field:
 			sms_field = auto_sms
 
+	computed_columns = _get_computed_columns(doc)
+	bold_fields = _parse_csv(doc.bold_fields)
+	gender_color_fields = _parse_csv(doc.gender_color_fields)
+	for cc in computed_columns:
+		column_order.append(cc["field_name"])
+		if cc.get("bold"):
+			bold_fields.append(cc["field_name"])
+		if cc.get("tint"):
+			gender_color_fields.append(cc["field_name"])
+
 	return {
 		"root_doctype": doc.root_doctype,
 		"header_text": doc.header_text or doc.root_doctype,
 		"core_filter": (doc.core_filter or "").strip(),
 		"order_by": (doc.order_by or "").strip(),
 		"column_order": column_order,
-		"bold_fields": _parse_csv(doc.bold_fields),
+		"bold_fields": bold_fields,
 		"gender_column": (doc.gender_column or "").strip(),
-		"gender_color_fields": _parse_csv(doc.gender_color_fields),
+		"gender_color_fields": gender_color_fields,
+		"computed_columns": computed_columns,
 		"show_filter": doc.show_filter,
 		"show_sheets": doc.show_sheets,
 		"show_email": doc.show_email,
@@ -171,10 +184,18 @@ def get_panel_data(
 				for cf in child_fields:
 					row[link_field + "." + cf] = linked_values.get(cf, "")
 
+	computed_label_map = {
+		cc["field_name"]: (cc.get("label") or _title_case(cc["field_name"]))
+		for cc in (config.get("computed_columns") or [])
+	}
 	columns: list[dict[str, str]] = []
 	for fn in all_fields:
-		label = fn.split(".")[-1] if "." in fn else fn
-		columns.append({"fieldname": fn, "label": _title_case(label)})
+		if fn in computed_label_map:
+			label = computed_label_map[fn]
+		else:
+			label = fn.split(".")[-1] if "." in fn else fn
+			label = _title_case(label)
+		columns.append({"fieldname": fn, "label": label})
 
 	child_doctypes = get_child_doctypes(root_doctype)
 
@@ -191,6 +212,10 @@ def get_panel_data(
 			count_key = "_count_" + child["doctype"]
 			for row in rows:
 				row[count_key] = count_map.get(row["name"], 0)
+
+	computed_columns = config.get("computed_columns") or []
+	if computed_columns and rows:
+		_evaluate_computed_columns(root_doctype, rows, computed_columns)
 
 	return {
 		"columns": columns,
@@ -213,11 +238,18 @@ def export_panel_data(root_doctype: str, filters: str | dict | None = None) -> d
 	col_fieldnames = [c["fieldname"] for c in columns]
 	labels = [c["label"] for c in columns]
 
+	def _cell_str(val: Any) -> str:
+		if val is None:
+			return ""
+		if isinstance(val, (dict, list)):
+			return json.dumps(val)
+		return str(val)
+
 	output = io.StringIO()
 	writer = csv.writer(output)
 	writer.writerow(labels)
 	for row in rows:
-		writer.writerow([row.get(fn, "") for fn in col_fieldnames])
+		writer.writerow([_cell_str(row.get(fn)) for fn in col_fieldnames])
 	csv_content = output.getvalue()
 
 	safe_dt = _safe_filename(root_doctype)
@@ -468,3 +500,87 @@ def _parse_csv(value: str | None) -> list[str]:
 	if not value:
 		return []
 	return [v.strip() for v in value.split(",") if v.strip()]
+
+
+def _get_computed_columns(doc: Any) -> list[dict[str, Any]]:
+	"""Extract unstored calculation fields from Page Panel as config list."""
+	result: list[dict[str, Any]] = []
+	for row in (doc.unstored_calculation_fields or []):
+		expr = (row.sql_expression or "").strip()
+		if not expr:
+			continue
+		result.append({
+			"field_name": (row.field_name or "").strip(),
+			"label": (row.label or "").strip() or _title_case(row.field_name or ""),
+			"sql_expression": expr,
+			"tint": bool(row.tint),
+			"bold": bool(row.bold),
+		})
+	return result
+
+
+def _evaluate_computed_columns(
+	root_doctype: str,
+	rows: list[dict[str, Any]],
+	computed_columns: list[dict[str, Any]],
+) -> None:
+	"""Evaluate each computed column's SQL per row and add result to row.
+
+	SQL expression may use {fieldname} placeholders, replaced with row values.
+	Result: 1 row -> object with column names as keys; N rows -> list of such objects.
+	"""
+	for row in rows:
+		for cc in computed_columns:
+			field_name = cc["field_name"]
+			expr = cc["sql_expression"]
+			try:
+				value = _run_computed_sql(expr, row)
+				row[field_name] = value
+			except Exception as e:
+				row[field_name] = {"_error": str(e)}
+
+
+def _ensure_tab_prefix(sql: str) -> str:
+	"""Prepend 'tab' to bare table names in FROM/JOIN clauses.
+
+	Event -> tabEvent, `Event Registration` -> `tabEvent Registration`.
+	Already-prefixed names (tabEvent) are left unchanged.
+	"""
+	def repl(m: re.Match[str]) -> str:
+		kw, ident = m.group(1), m.group(2)
+		if ident.startswith("`"):
+			ident = ident[1:-1]
+		if ident.lower().startswith("tab"):
+			return m.group(0)
+		tab_name = "tab" + ident
+		if " " in ident or "-" in ident:
+			tab_name = f"`{tab_name}`"
+		return f"{kw} {tab_name}"
+
+	pattern = r"\b(FROM|JOIN|INNER\s+JOIN|LEFT\s+JOIN|RIGHT\s+JOIN|LEFT\s+OUTER\s+JOIN|RIGHT\s+OUTER\s+JOIN)\s+(`[^`]+`|\w+)"
+	return re.sub(pattern, repl, sql, flags=re.IGNORECASE)
+
+
+def _run_computed_sql(expr: str, row: dict[str, Any]) -> Any:
+	"""Run SQL expression with {fieldname} substitution. Returns formatted result.
+
+	Bare table names (e.g. Event) are auto-prefixed with 'tab' (tabEvent).
+	Uses frappe.db.sql for execution.
+	"""
+	params: list[Any] = []
+	for m in re.finditer(r"\{(\w+)\}", expr):
+		val = row.get(m.group(1))
+		if val is None:
+			val = ""
+		params.append(val)
+	sql = re.sub(r"\{\w+\}", "%s", expr)
+	sql = _ensure_tab_prefix(sql)
+
+	results = frappe.db.sql(sql, params, as_dict=True)
+	if not results:
+		return None
+	if len(results) == 1 and len(results[0]) == 1:
+		return list(results[0].values())[0]
+	if len(results) == 1:
+		return dict(results[0])
+	return [dict(r) for r in results]

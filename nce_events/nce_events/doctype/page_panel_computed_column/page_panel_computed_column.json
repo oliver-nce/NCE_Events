@@ -1,0 +1,91 @@
+{
+ "actions": [],
+ "creation": "2026-03-08 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "field_name",
+  "label",
+  "sql_expression",
+  "column_break_display",
+  "tint",
+  "bold",
+  "section_break_advanced",
+  "format",
+  "notes"
+ ],
+ "fields": [
+  {
+   "description": "Internal column key used in JSON output (e.g. days_duration)",
+   "fieldname": "field_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Field Name",
+   "reqd": 1
+  },
+  {
+   "description": "Display label. Defaults to title case of field name when empty.",
+   "fieldname": "label",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Label"
+  },
+  {
+   "description": "SQL expression. Use {fieldname} for row value. Table names auto-get 'tab' prefix (Event -> tabEvent). E.g. SELECT a,b FROM Child WHERE parent = {name}.",
+   "fieldname": "sql_expression",
+   "fieldtype": "Small Text",
+   "in_list_view": 1,
+   "label": "SQL Expression",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_display",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "description": "Color result based on row gender (when root DocType has gender field)",
+   "fieldname": "tint",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Tint by Gender"
+  },
+  {
+   "default": "0",
+   "description": "Render result in bold",
+   "fieldname": "bold",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Bold"
+  },
+  {
+   "fieldname": "section_break_advanced",
+   "fieldtype": "Section Break",
+   "label": "Advanced"
+  },
+  {
+   "description": "Placeholder for presentation rules (future: HTML/JS to render result)",
+   "fieldname": "format",
+   "fieldtype": "Small Text",
+   "label": "Format"
+  },
+  {
+   "fieldname": "notes",
+   "fieldtype": "Small Text",
+   "label": "Notes"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-03-08 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "NCE Events",
+ "name": "Page Panel Computed Column",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}

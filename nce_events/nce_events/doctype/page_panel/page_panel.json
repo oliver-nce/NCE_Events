@@ -9,6 +9,8 @@
   "header_text",
   "core_filter",
   "order_by",
+  "section_break_computed",
+  "unstored_calculation_fields",
   "column_order",
   "bold_fields",
   "gender_column",
@@ -53,6 +55,18 @@
    "fieldname": "order_by",
    "fieldtype": "Small Text",
    "label": "Order By"
+  },
+  {
+   "fieldname": "section_break_computed",
+   "fieldtype": "Section Break",
+   "label": "Unstored Calculation Fields"
+  },
+  {
+   "description": "SQL expressions evaluated at query time (scalar or array). Like FileMaker unstored calculations.",
+   "fieldname": "unstored_calculation_fields",
+   "fieldtype": "Table",
+   "label": "Computed Columns",
+   "options": "Page Panel Computed Column"
   },
   {
    "description": "Comma-delimited visible fields in display order (managed by Display tab)",
