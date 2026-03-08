@@ -571,8 +571,7 @@ def preview_panel_message(root_doctype, filters=None, body="", subject=""):
 		return {"error": "No rows to preview."}
 
 	row = random.choice(rows)
-	col_fieldnames = [c["fieldname"] for c in columns]
-	context = {fn: row.get(fn, "") for fn in col_fieldnames}
+	context = {k: (v if v is not None else "") for k, v in row.items()}
 	context["doc"] = frappe._dict(context)
 
 	try:
@@ -601,15 +600,13 @@ def send_panel_message(
 	"""Send bulk SMS and/or email to all rows in a panel."""
 	send_email_copy = int(send_email_copy)
 	result = get_panel_data(root_doctype, filters)
-	columns = result["columns"]
 	rows = result["rows"]
-	col_fieldnames = [c["fieldname"] for c in columns]
 
 	sent = 0
 	errors = []
 
 	for row in rows:
-		context = {fn: row.get(fn, "") for fn in col_fieldnames}
+		context = {k: (v if v is not None else "") for k, v in row.items()}
 		context["doc"] = frappe._dict(context)
 		recipient = str(context.get(recipient_field, "")).strip()
 		if not recipient:
