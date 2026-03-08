@@ -16,8 +16,12 @@ The app depends on `nce_sync` (provides DocTypes, WP Tables mappings, WordPress 
 
 ### Panel Explorer (`ui.js` + `store.js` + `panel_api.py`)
 
-- **Floating window panels** — Root panel is WP Tables; clicking a row opens that DocType as a floating panel. Child panels drill via relationship-specific buttons.
-- **Drill buttons** — Each panel row shows buttons for child DocTypes (DocTypes that have a Link field pointing TO the current DocType). Buttons display a count badge `(N)` and are grayed out when count is 0. Counts are computed server-side via `GROUP BY` queries.
+- **Floating window panels** — Root panel (WP Tables) opens at 900px width; all other panels open at 1400px. Clicking a row in WP Tables opens that DocType as a floating panel. Child panels drill via relationship-specific buttons.
+- **Progressive lazy loading** — First 50 rows render immediately. Remaining rows stream in the background in batches of 50 until the full dataset is loaded. Header shows "X / Y records (loading…)" during fetch. Server-side pagination via `limit`/`start` params on `get_panel_data`.
+- **Auto-sized columns** — Columns are proportionally sized based on average data content length (sampled from first 20 rows), clamped between 50px–500px, and normalized to fit available panel width.
+- **Drag-resizable columns** — Column dividers can be dragged to resize (min 30px). Resize handles use `position:absolute` inside sticky `<th>` elements.
+- **Sticky table header** — `<th>` elements use `position:sticky; top:0` so the header row stays visible when scrolling.
+- **Drill buttons** — Each panel row shows buttons for child DocTypes (DocTypes that have a Link field pointing TO the current DocType). Buttons display a count badge `(N)` and are grayed out when count is 0. Counts are computed server-side via `GROUP BY` queries. Drill column width is dynamically calculated by rendering buttons off-screen and measuring their DOM width.
 - **Dot-notation fields** — `column_order` supports `link_field.child_field` syntax (e.g. `player_id.first_name`). Base link fields are auto-included in the query. Resolution happens via `frappe.db.get_value` lookups.
 - **Auto-detect email/phone** — If Page Panel doesn't have `email_field` or `sms_field` set, the system scans the root DocType's fields by fieldtype (`Email`/`Phone`) or common names (`email`, `phone`, `mobile`, etc.).
 - **Core filter & order** — Each panel supports `core_filter` (raw SQL WHERE, e.g. `end_date > CURRENT_DATE() - INTERVAL 10 DAY`) and `order_by` (raw SQL ORDER BY, e.g. `end_date DESC`). Both applied server-side. Editable from the panel header via database icon button (two-row widget). Persisted to Page Panel via `save_panel_sql` endpoint. When core_filter is set, `get_panel_data` uses `frappe.db.sql` instead of `frappe.get_all`.

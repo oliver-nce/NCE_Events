@@ -218,7 +218,7 @@ A workspace shortcut is created automatically when the user clicks **Build Page*
 | Function | Params | Purpose |
 |---|---|---|
 | `get_panel_config` | `root_doctype` | Returns display config for a Page Panel (column_order, bold, gender, show flags, core_filter, auto-detected email/sms fields) |
-| `get_panel_data` | `root_doctype, filters` | Fetches rows with dot-notation resolution, child record counts, and child_doctypes list. Applies core_filter (if set) as raw SQL WHERE before other filters. |
+| `get_panel_data` | `root_doctype, filters, limit, start` | Fetches rows with dot-notation resolution, child record counts, and child_doctypes list. Supports pagination via `limit`/`start` (default `limit=0` fetches all). Returns real `total` count from DB. Applies core_filter (if set) as raw SQL WHERE before other filters. |
 | `save_panel_sql` | `root_doctype, core_filter, order_by` | Persists SQL WHERE and ORDER BY on the Page Panel record |
 | `export_panel_data` | `root_doctype, filters` | Saves panel data as CSV to public path, returns URL for Google Sheets `IMPORTDATA` |
 | `send_panel_message` | `root_doctype, filters, mode, recipient_field, body, subject, send_email_copy, email_field` | Bulk SMS (Twilio) and/or email (SendGrid) to all panel rows |
@@ -245,11 +245,13 @@ Reuses `_run_panel_report` to get columns/rows, writes CSV to `sites/{site}/publ
 
 ### get_panel_data
 
-Fetches rows from a DocType with optional filters. Supports dot-notation fields (e.g. `player_id.first_name`) configured in `column_order`. Base link fields are automatically included in the query so dot-notation resolution works. Returns `{columns, rows, total, child_doctypes}`.
+Fetches rows from a DocType with optional filters and pagination. Supports dot-notation fields (e.g. `player_id.first_name`) configured in `column_order`. Base link fields are automatically included in the query so dot-notation resolution works. Returns `{columns, rows, total, child_doctypes}`.
+
+**Pagination:** `limit` and `start` params enable server-side pagination. `limit=0` (default) fetches all rows (backward-compatible with export and other callers). `total` is always the real count from the database (via `frappe.db.count` or `SELECT COUNT(*)` for core_filter queries), not just `len(rows)`. The client uses this for progressive loading — first 50 rows render immediately, then background fetches stream in remaining batches of 50.
 
 **Dot-notation resolution:** Splits columns into simple fields and linked fields. Link base fields (the part before the dot) are added to the query automatically. After fetching rows, resolves dot-notation via `frappe.db.get_value` lookups on the linked DocType.
 
-**Child record counts:** For each child DocType returned by `get_child_doctypes()`, runs a single `GROUP BY` count query. Each row gets a `_count_{ChildDocType}` key with the count of related records.
+**Child record counts:** For each child DocType returned by `get_child_doctypes()`, runs a single `GROUP BY` count query per page of rows. Each row gets a `_count_{ChildDocType}` key with the count of related records.
 
 ### get_child_doctypes
 
@@ -347,7 +349,7 @@ On any change, `_sync()` writes back to `hidden_fields`, `bold_fields`, `card_fi
 
 ### Floating Windows
 
-All panels (including Panel 1) render as **floating windows** — draggable, resizable `position:fixed` elements. Panel 1 opens at `top:60px, left:40px, width:70vw`. Child panels cascade with offset.
+All panels (including Panel 1) render as **floating windows** — draggable, resizable `position:fixed` elements. Root panel (WP Tables) opens at 900px width; all other panels open at 1400px. Child panels cascade with offset from the parent panel.
 
 Each float has a header (draggable, with close button) and a footer (draggable, repeats panel title — ensures recovery if header is pushed off-screen). Vertical position is clamped so the footer stays visible.
 
@@ -357,9 +359,10 @@ Each float has a header (draggable, with close button) and a footer (draggable, 
 
 ### Column Features
 
-- **Drag-resizable columns** with dividers (primary-700 color). Widths persist as relative percentages via async autosave to `localStorage`.
-- **Column order** follows `column_order` from panel config.
-- **Sticky headers** on panel tables.
+- **Auto-sized columns** — proportionally sized based on average data content length (sampled from first 20 rows), clamped between 50px–500px, and normalized to fit available panel width. Available space is calculated as `panel_width - 160px_buffer - drill_column_width`.
+- **Drag-resizable columns** with resize handles (9px wide, blue hover highlight). Min width 30px during drag. Column order follows `column_order` from panel config.
+- **Sticky headers** — `<th>` uses `position:sticky; top:0; z-index:1`. Resize handles sit at `z-index:2` inside the sticky headers.
+- **Drill column width** — dynamically calculated by rendering buttons off-screen and measuring DOM `offsetWidth`, ensuring buttons are never clipped.
 
 ### Filter Widget
 
@@ -389,9 +392,11 @@ Email goes through SendGrid v3 API, SMS through Twilio REST API — both using c
 ### Explorer Render Flow
 
 1. `setup()` — builds container, calls `store.fetch_config()` then `load_panel(1)`
-2. `load_panel(N)` — calls `store.fetch_panel(N)`, then `render_pane(N)` inside a floating window
-3. `render_pane(N)` — builds HTML table with inline styles for bold/gender colors
-4. Row click → single-click opens card popover; double-click drills to next panel
+2. `load_panel(N)` — calls `store.fetch_data(N, 50)` (first page), then `_render_panel(N)` inside a floating window
+3. `_render_panel(N)` — builds HTML table with inline styles for bold/gender colors, auto-sized columns
+4. `_fetch_remaining(N)` — background loop fetches next 50 rows, calls `_append_rows()` to add `<tr>` elements to `<tbody>`, updates header count via `_update_count()`, repeats until all rows loaded
+5. Row click → single-click selects row (WP Tables opens target DocType); drill buttons open child panels
+6. Event binding uses **delegation** (`body.on("click", ".panel-row", ...)`) so dynamically appended rows get handlers automatically
 
 ### Bold and Gender Color
 
@@ -542,6 +547,11 @@ Key color tokens from `Docs/nce_theme.json`:
 | 11 | Blue-themed send dialog + Tag Finder integration | Done — auto-opens Tag Finder in "Type a message" mode |
 | 12 | Core filter + order_by (SQL WHERE / ORDER BY) | Done — raw SQL WHERE and ORDER BY per panel, server-side, editable from panel header, persisted to Page Panel |
 | 13 | Display Settings (site theme) | Done — Single DocType, generates `custom_theme.css` on save, preview before apply |
+| 14 | Panel widths (900/1400px) | Done — WP Tables root panel 900px, all other panels 1400px |
+| 15 | Auto-sized columns | Done — proportional sizing from data sample, 50–500px clamp, normalized to fit |
+| 16 | Drag-resizable columns | Done — resize handles on `<th>`, min 30px, blue hover highlight |
+| 17 | Sticky table header | Done — `position:sticky` on `<th>`, works with resize handles |
+| 18 | Progressive lazy loading | Done — first 50 rows render immediately, background fetches remaining in batches of 50 |
 
 ---
 
