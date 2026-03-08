@@ -32,6 +32,17 @@ def _enrich_row_context(root_doctype: str, row: dict) -> dict[str, Any]:
 	return context
 
 
+def _render_body(body: str, context: dict[str, Any], for_html: bool = True) -> str:
+	"""Render Jinja template. For HTML (email/preview), convert plain-text newlines to <br>."""
+	try:
+		rendered = frappe.render_template(body, context)
+	except Exception:
+		rendered = body
+	if for_html and "<" not in rendered:
+		rendered = rendered.replace("\n", "<br>")
+	return rendered
+
+
 @frappe.whitelist()
 def send_test_email(
 	root_doctype: str,
@@ -52,11 +63,7 @@ def send_test_email(
 
 	row = rows[0]
 	context = _enrich_row_context(root_doctype, row)
-
-	try:
-		rendered_body = frappe.render_template(body, context)
-	except Exception:
-		rendered_body = body
+	rendered_body = _render_body(body, context, for_html=True)
 
 	try:
 		rendered_subject = frappe.render_template(subject, context) if subject else "(Test Email)"
@@ -86,11 +93,7 @@ def send_test_sms(
 
 	row = rows[0]
 	context = _enrich_row_context(root_doctype, row)
-
-	try:
-		rendered_body = frappe.render_template(body, context)
-	except Exception:
-		rendered_body = body
+	rendered_body = _render_body(body, context, for_html=False)
 
 	_send_sms(test_phone, rendered_body)
 	return {"sent": 1, "to": test_phone}
@@ -111,19 +114,12 @@ def preview_panel_message(
 
 	row = rows[0]
 	context = _enrich_row_context(root_doctype, row)
-
-	try:
-		rendered_body = frappe.render_template(body, context)
-	except Exception:
-		rendered_body = body
+	rendered_body = _render_body(body, context, for_html=True)
 
 	try:
 		rendered_subject = frappe.render_template(subject, context) if subject else ""
 	except Exception:
 		rendered_subject = subject
-
-	if "<" not in rendered_body:
-		rendered_body = rendered_body.replace("\n", "<br>")
 
 	return {
 		"rendered_body": rendered_body,
@@ -157,10 +153,7 @@ def send_panel_message(
 		if not recipient:
 			continue
 
-		try:
-			rendered_body = frappe.render_template(body, context)
-		except Exception:
-			rendered_body = body
+		rendered_body = _render_body(body, context, for_html=(mode == "email"))
 
 		try:
 			rendered_subject = frappe.render_template(subject, context) if subject else ""
@@ -178,7 +171,8 @@ def send_panel_message(
 				email_addr = str(context.get(email_field, "")).strip()
 				if email_addr:
 					try:
-						_send_email(email_addr, rendered_subject or "SMS Copy", rendered_body)
+						email_body = _render_body(body, context, for_html=True)
+						_send_email(email_addr, rendered_subject or "SMS Copy", email_body)
 					except Exception as e:
 						errors.append(f"Email to {email_addr}: {e}")
 
