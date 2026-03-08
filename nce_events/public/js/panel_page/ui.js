@@ -266,8 +266,8 @@ nce_events.panel_page.Explorer = class Explorer {
 		var has_drills = !is_wp && child_doctypes.length > 0;
 
 		var float_w = float_el.width() || (is_wp ? 900 : 1400);
-		var drill_count = has_drills ? child_doctypes.length : 0;
-		var col_widths = me._calc_col_widths(columns, rows, drill_count, float_w);
+		var drill_col_w = has_drills ? me._calc_drill_col_width(child_doctypes, config) : 0;
+		var col_widths = me._calc_col_widths(columns, rows, drill_col_w, float_w);
 
 		var html = '<table class="panel-table"><thead><tr>';
 		columns.forEach(function (col, ci) {
@@ -280,7 +280,7 @@ nce_events.panel_page.Explorer = class Explorer {
 				'<div class="col-resize-handle" data-col="' + ci + '"></div></th>';
 		});
 		if (has_drills) {
-			html += '<th class="drill-col"></th>';
+			html += '<th class="drill-col" style="width:' + drill_col_w + 'px;min-width:' + drill_col_w + 'px;"></th>';
 		}
 		html += "</tr></thead><tbody>";
 
@@ -961,13 +961,33 @@ nce_events.panel_page.Explorer = class Explorer {
 		$(".panel-card-popover").remove();
 	}
 
+	/* ── Drill-column width calc ── */
+
+	_calc_drill_col_width(child_doctypes, config) {
+		var font_size = parseFloat(config.font_size) || 12;
+		var btn_font = Math.max(font_size - 2, 9);
+		var char_w = btn_font * 0.62;
+		var btn_pad = 16;
+		var btn_margin = 5;
+		var icon_w = 14;
+		var count_extra = 8;
+
+		var total = 0;
+		child_doctypes.forEach(function (child) {
+			var label_len = (child.label || child.doctype || "").length;
+			var btn_w = Math.ceil(label_len * char_w) + count_extra * char_w + btn_pad + icon_w + btn_margin;
+			total += btn_w;
+		});
+
+		return Math.ceil(total + 12);
+	}
+
 	/* ── Column auto-sizing ── */
 
-	_calc_col_widths(columns, rows, drill_count, float_w) {
+	_calc_col_widths(columns, rows, drill_col_w, float_w) {
 		var sample = rows.slice(0, 20);
 		var MIN_COL = 50;
 		var MAX_COL = 500;
-		var DRILL_BTN_W = 160;
 		var avg_chars = [];
 
 		columns.forEach(function (col) {
@@ -989,8 +1009,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		var total_chars = 0;
 		avg_chars.forEach(function (c) { total_chars += c; });
 
-		var available = float_w - 40;
-		if (drill_count > 0) available -= drill_count * DRILL_BTN_W;
+		var available = float_w - 40 - drill_col_w;
 
 		var widths = [];
 		avg_chars.forEach(function (c) {
