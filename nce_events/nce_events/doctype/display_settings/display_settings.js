@@ -236,6 +236,7 @@ function _open_picker(frm, fieldname, trigger) {
 
 var _FONT_MAP = {
 	"Inter": "'Inter', sans-serif",
+	"Source Sans 3": "'Source Sans 3', sans-serif",
 	"Arial": "Arial, sans-serif",
 	"Helvetica": "Helvetica, Arial, sans-serif",
 	"Georgia": "Georgia, serif",

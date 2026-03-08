@@ -37,6 +37,7 @@ nce_events.panel_page.Explorer = class Explorer {
 	_inject_display_settings() {
 		var FONT_MAP = {
 			"Inter": "'Inter', sans-serif",
+			"Source Sans 3": "'Source Sans 3', sans-serif",
 			"Arial": "Arial, sans-serif",
 			"Helvetica": "Helvetica, Arial, sans-serif",
 			"Georgia": "Georgia, serif",

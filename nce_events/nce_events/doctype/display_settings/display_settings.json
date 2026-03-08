@@ -24,7 +24,7 @@
    "fieldname": "font_family",
    "fieldtype": "Select",
    "label": "Font Family",
-   "options": "Inter\nArial\nHelvetica\nGeorgia\nVerdana\nTahoma\nSystem Default"
+   "options": "Inter\nSource Sans 3\nArial\nHelvetica\nGeorgia\nVerdana\nTahoma\nSystem Default"
   },
   {
    "default": "13px",
