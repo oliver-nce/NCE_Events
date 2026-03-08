@@ -985,14 +985,15 @@ nce_events.panel_page.Explorer = class Explorer {
 	/* ── Drill-column width calc ── */
 
 	_calc_drill_col_width(child_doctypes) {
-		var measurer = $('<div class="panel-float" style="position:absolute;top:-9999px;left:-9999px;white-space:nowrap;visibility:hidden;width:auto;height:auto;border:none;box-shadow:none;"></div>');
+		var ds_font = (this._display_font_size || 13) + "px";
+		var measurer = $('<div style="position:absolute;top:-9999px;left:-9999px;white-space:nowrap;visibility:hidden;"></div>');
 		$(document.body).append(measurer);
 
 		var total = 0;
 		var _dbg2 = "<pre style='font-size:13px;line-height:1.6;'>";
-		_dbg2 += "Drill calc (DOM measured):\n\n";
+		_dbg2 += "Drill calc (DOM, font=" + ds_font + "):\n\n";
 		child_doctypes.forEach(function (child) {
-			var btn = $('<button class="btn btn-xs drill-btn">' +
+			var btn = $('<button class="btn btn-xs drill-btn" style="font-size:' + ds_font + ' !important;">' +
 				frappe.utils.escape_html(child.label) +
 				' <span class="drill-count">(999)</span>' +
 				' <i class="fa fa-chevron-right" style="font-size:9px;"></i></button>');
