@@ -559,6 +559,24 @@ def get_report_columns(report_name):
 # ── Messaging ──
 
 
+def _enrich_row_context(root_doctype, row):
+	"""Build a full template context from a row, including all Link fields."""
+	context = {k: (v if v is not None else "") for k, v in row.items()}
+
+	meta = frappe.get_meta(root_doctype)
+	link_fields = [f.fieldname for f in meta.fields if f.fieldtype == "Link"]
+	row_name = row.get("name")
+	if row_name and link_fields:
+		missing = [f for f in link_fields if f not in context]
+		if missing:
+			stored = frappe.db.get_value(root_doctype, row_name, missing, as_dict=True) or {}
+			for f in missing:
+				context[f] = stored.get(f) or ""
+
+	context["doc"] = frappe._dict(context)
+	return context
+
+
 @frappe.whitelist()
 def preview_panel_message(root_doctype, filters=None, body="", subject=""):
 	"""Render a message template against the first row for preview."""
@@ -569,8 +587,7 @@ def preview_panel_message(root_doctype, filters=None, body="", subject=""):
 		return {"error": "No rows to preview."}
 
 	row = rows[0]
-	context = {k: (v if v is not None else "") for k, v in row.items()}
-	context["doc"] = frappe._dict(context)
+	context = _enrich_row_context(root_doctype, row)
 
 	try:
 		rendered_body = frappe.render_template(body, context)
@@ -607,8 +624,7 @@ def send_panel_message(
 	errors = []
 
 	for row in rows:
-		context = {k: (v if v is not None else "") for k, v in row.items()}
-		context["doc"] = frappe._dict(context)
+		context = _enrich_row_context(root_doctype, row)
 		recipient = str(context.get(recipient_field, "")).strip()
 		if not recipient:
 			continue
