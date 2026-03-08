@@ -1,4 +1,5 @@
 frappe.provide("nce_events.panel_page");
+alert("ui.js loaded – build " + Date.now());
 
 nce_events.panel_page.Explorer = class Explorer {
 	constructor(page) {
@@ -269,16 +270,14 @@ nce_events.panel_page.Explorer = class Explorer {
 		var drill_col_w = has_drills ? me._calc_drill_col_width(child_doctypes, config) : 0;
 		var col_widths = me._calc_col_widths(columns, rows, drill_col_w, float_w);
 
-		console.log("── Panel sizing: " + doctype + " ──");
-		console.log("  float_w:", float_w, "| drill_col_w:", drill_col_w, "| available for data:", float_w - 40 - drill_col_w);
+		var _dbg = "Panel: " + doctype + "\nfloat_w: " + float_w + " | drill_col_w: " + drill_col_w + " | avail: " + (float_w - 40 - drill_col_w) + "\n";
 		columns.forEach(function (col, ci) {
-			console.log("  col[" + ci + "] " + col.label + ": " + col_widths[ci] + "px");
+			_dbg += col.label + ": " + col_widths[ci] + "px\n";
 		});
 		if (has_drills) {
-			child_doctypes.forEach(function (child) {
-				console.log("  drill btn: " + child.label);
-			});
+			child_doctypes.forEach(function (child) { _dbg += "btn: " + child.label + "\n"; });
 		}
+		alert(_dbg);
 
 		var html = '<table class="panel-table"><thead><tr>';
 		columns.forEach(function (col, ci) {
@@ -984,16 +983,17 @@ nce_events.panel_page.Explorer = class Explorer {
 		var count_extra = 8;
 
 		var total = 0;
-		console.log("── Drill btn calc: font_size=" + font_size + " btn_font=" + btn_font + " char_w=" + char_w.toFixed(1) + " ──");
+		var _dbg2 = "Drill calc: font=" + font_size + " btn_font=" + btn_font + " char_w=" + char_w.toFixed(1) + "\n";
 		child_doctypes.forEach(function (child) {
 			var label_len = (child.label || child.doctype || "").length;
 			var btn_w = Math.ceil(label_len * char_w) + count_extra * char_w + btn_pad + icon_w + btn_margin;
-			console.log("  btn '" + child.label + "' (" + label_len + " chars): " + Math.ceil(btn_w) + "px");
+			_dbg2 += "'" + child.label + "' (" + label_len + "ch): " + Math.ceil(btn_w) + "px\n";
 			total += btn_w;
 		});
 
 		var result = Math.ceil(total + 12);
-		console.log("  drill col total: " + result + "px");
+		_dbg2 += "TOTAL: " + result + "px";
+		alert(_dbg2);
 		return result;
 	}
 
