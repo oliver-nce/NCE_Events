@@ -4,17 +4,17 @@
 	if (!window.nce_events) window.nce_events = {};
 	if (!window.nce_events.schema_explorer) window.nce_events.schema_explorer = {};
 
-	var _float_el = null;
-	var _columns = [];
-	var _visited = {};
-	var _last_editable = null;
-	var _last_sel_start = 0;
-	var _last_sel_end = 0;
+	let _float_el = null;
+	let _columns = [];
+	let _visited = {};
+	let _last_editable = null;
+	let _last_sel_start = 0;
+	let _last_sel_end = 0;
 
 	$(document).on("focusin.se_track", function (e) {
-		var el = e.target;
+		const el = e.target;
 		if ($(el).closest(".se-float, .se-tag-panel").length) return;
-		var tag = (el.tagName || "").toLowerCase();
+		const tag = (el.tagName || "").toLowerCase();
 		if (tag === "textarea" || (tag === "input" && el.type === "text") ||
 			el.contentEditable === "true") {
 			_last_editable = el;
@@ -30,13 +30,13 @@
 		}
 	});
 
-	var SKIP_FIELDTYPES = {
+	const SKIP_FIELDTYPES = {
 		"Section Break": 1, "Column Break": 1, "Tab Break": 1,
 		"HTML": 1, "Fold": 1, "Heading": 1, "Button": 1,
 		"Table MultiSelect": 1,
 	};
 
-	var SKIP_FIELDNAMES = {
+	const SKIP_FIELDNAMES = {
 		name: 1, owner: 1, creation: 1, modified: 1, modified_by: 1,
 		docstatus: 1, idx: 1, parent: 1, parentfield: 1, parenttype: 1,
 	};
@@ -73,11 +73,11 @@
 				limit_page_length: 0,
 			},
 			callback: function (r) {
-				var rows = r.message || [];
-				var seen = {};
-				var options = [];
+				const rows = r.message || [];
+				const seen = {};
+				const options = [];
 				rows.forEach(function (row) {
-					var dt = row.frappe_doctype;
+					const dt = row.frappe_doctype;
 					if (dt && !seen[dt]) {
 						seen[dt] = true;
 						options.push(dt);
@@ -118,9 +118,9 @@
 	/* ── Floating Window ────────────────────────────────── */
 
 	function _create_float(doctype) {
-		var $float = $('<div class="se-float"></div>');
+		const $float = $('<div class="se-float"></div>');
 
-		var $header = $(
+		const $header = $(
 			'<div class="se-header">' +
 			'<span class="se-title">Tag Finder: ' +
 			frappe.utils.escape_html(doctype) + '</span>' +
@@ -129,10 +129,10 @@
 		);
 		$float.append($header);
 
-		var $body = $('<div class="se-body"></div>');
+		const $body = $('<div class="se-body"></div>');
 		$float.append($body);
 
-		var $footer = $(
+		const $footer = $(
 			'<div class="se-footer">Tag Finder: ' +
 			frappe.utils.escape_html(doctype) + '</div>'
 		);
@@ -141,11 +141,11 @@
 		$(document.body).append($float);
 		_float_el = $float;
 
-		var vh = window.innerHeight;
-		var left_pos = window.innerWidth - 300;
-		var $send = $(".send-panel");
+		const vh = window.innerHeight;
+		let left_pos = window.innerWidth - 300;
+		const $send = $(".send-panel");
 		if ($send.length) {
-			var sr = $send[0].getBoundingClientRect();
+			const sr = $send[0].getBoundingClientRect();
 			left_pos = sr.right + 400;
 		}
 		if (left_pos + 260 > window.innerWidth) {
@@ -172,9 +172,9 @@
 		$handle.on("mousedown", function (e) {
 			if ($(e.target).hasClass("se-close")) return;
 			e.preventDefault();
-			var sx = e.clientX, sy = e.clientY;
-			var sl = parseInt($float.css("left"), 10) || 0;
-			var st = parseInt($float.css("top"), 10) || 0;
+			const sx = e.clientX, sy = e.clientY;
+			let sl = parseInt($float.css("left"), 10) || 0;
+			const st = parseInt($float.css("top"), 10) || 0;
 
 			if ($float.css("right") !== "auto") {
 				$float.css({ left: $float.offset().left + "px", right: "auto" });
@@ -183,7 +183,7 @@
 
 			$("body").addClass("se-dragging");
 			$(document).on("mousemove.se", function (ev) {
-				var newTop = st + ev.clientY - sy;
+				let newTop = st + ev.clientY - sy;
 				newTop = Math.max(0, Math.min(newTop, window.innerHeight - 40));
 				$float.css({
 					left: (sl + ev.clientX - sx) + "px",
@@ -201,14 +201,14 @@
 
 	function _load_column(doctype, via_field, via_type, col_idx) {
 		while (_columns.length > col_idx) {
-			var removed = _columns.pop();
+			const removed = _columns.pop();
 			if (removed.$el) removed.$el.remove();
 			delete _visited[removed.doctype];
 		}
 
 		_visited[doctype] = true;
 
-		var col = {
+		const col = {
 			doctype: doctype,
 			via_field: via_field,
 			via_type: via_type,
@@ -219,8 +219,8 @@
 		_columns.push(col);
 
 		frappe.model.with_doctype(doctype, function () {
-			var meta = frappe.get_meta(doctype);
-			var fields = [];
+			const meta = frappe.get_meta(doctype);
+			const fields = [];
 
 			(meta.fields || []).forEach(function (f) {
 				if (SKIP_FIELDTYPES[f.fieldtype]) return;
@@ -252,8 +252,8 @@
 	}
 
 	function _render_column(col, col_idx) {
-		var $col = $('<div class="se-column"></div>');
-		var $ch = $(
+		const $col = $('<div class="se-column"></div>');
+		const $ch = $(
 			'<div class="se-col-header">' +
 			frappe.utils.escape_html(col.doctype) +
 			'<span class="se-col-count">' + col.fields.length + ' fields</span>' +
@@ -261,11 +261,11 @@
 		);
 		$col.append($ch);
 
-		var $tiles = $('<div class="se-tiles"></div>');
+		const $tiles = $('<div class="se-tiles"></div>');
 
 		col.fields.forEach(function (f) {
-			var cls = "se-tile";
-			var is_circular = false;
+			let cls = "se-tile";
+			let is_circular = false;
 
 			if (f.is_link) {
 				if (f.options && _visited[f.options]) {
@@ -283,12 +283,12 @@
 				}
 			}
 
-			var badge_text = f.fieldtype;
+			let badge_text = f.fieldtype;
 			if ((f.is_link || f.is_table) && f.options) {
 				badge_text += " \u2192 " + f.options;
 			}
 
-			var $tile = $(
+			const $tile = $(
 				'<div class="' + cls + '">' +
 				'<div class="se-tile-top">' +
 				'<span class="se-tile-label">' + frappe.utils.escape_html(f.label) + '</span>' +
@@ -330,7 +330,7 @@
 		$col.append($tiles);
 		col.$el = $col;
 
-		var $body = _float_el.find(".se-body");
+		const $body = _float_el.find(".se-body");
 		$body.append($col);
 
 		setTimeout(function () {
@@ -341,13 +341,13 @@
 	/* ── Tag Generation ─────────────────────────────────── */
 
 	function _build_tag(col_idx, field) {
-		var hops = [];
-		for (var i = 0; i <= col_idx; i++) {
+		const hops = [];
+		for (let i = 0; i <= col_idx; i++) {
 			hops.push(_columns[i]);
 		}
 
-		var table_hop_idx = -1;
-		for (var j = 1; j < hops.length; j++) {
+		let table_hop_idx = -1;
+		for (let j = 1; j < hops.length; j++) {
 			if (hops[j].via_type === "Table") {
 				table_hop_idx = j;
 				break;
@@ -361,7 +361,7 @@
 	}
 
 	function _build_link_chain_tag(hops, field) {
-		var depth = hops.length - 1;
+		const depth = hops.length - 1;
 
 		if (depth === 0) {
 			return "{{ doc." + field.fieldname + " }}";
@@ -379,10 +379,10 @@
 				"'" + field.fieldname + "') }}";
 		}
 
-		var lines = [];
+		const lines = [];
 		lines.push("{% set hop1 = frappe.get_doc('" +
 			hops[1].doctype + "', doc." + hops[1].via_field + ") %}");
-		for (var k = 2; k < hops.length; k++) {
+		for (let k = 2; k < hops.length; k++) {
 			lines.push("{% set hop" + k + " = frappe.get_doc('" +
 				hops[k].doctype + "', hop" + (k - 1) + "." +
 				hops[k].via_field + ") %}");
@@ -392,21 +392,21 @@
 	}
 
 	function _build_table_tag(hops, field, table_hop_idx) {
-		var pre = [];
-		for (var i = 0; i < table_hop_idx; i++) {
+		const pre = [];
+		for (let i = 0; i < table_hop_idx; i++) {
 			pre.push(hops[i]);
 		}
 
-		var table_field = hops[table_hop_idx].via_field;
+		const table_field = hops[table_hop_idx].via_field;
 
-		var post = [];
-		for (var j = table_hop_idx; j < hops.length; j++) {
+		const post = [];
+		for (let j = table_hop_idx; j < hops.length; j++) {
 			post.push(hops[j]);
 		}
 
-		var pre_depth = pre.length - 1;
-		var lines = [];
-		var table_accessor;
+		const pre_depth = pre.length - 1;
+		const lines = [];
+		let table_accessor;
 
 		if (pre_depth === 0) {
 			table_accessor = "doc." + table_field;
@@ -417,7 +417,7 @@
 		} else {
 			lines.push("{% set hop1 = frappe.get_doc('" +
 				pre[1].doctype + "', doc." + pre[1].via_field + ") %}");
-			for (var p = 2; p < pre.length; p++) {
+			for (let p = 2; p < pre.length; p++) {
 				lines.push("{% set hop" + p + " = frappe.get_doc('" +
 					pre[p].doctype + "', hop" + (p - 1) + "." +
 					pre[p].via_field + ") %}");
@@ -425,8 +425,8 @@
 			table_accessor = "hop" + (pre.length - 1) + "." + table_field;
 		}
 
-		var post_depth = post.length - 1;
-		var inner;
+		const post_depth = post.length - 1;
+		let inner;
 
 		if (post_depth === 0) {
 			inner = "{{ row." + field.fieldname + " }}";
@@ -441,10 +441,10 @@
 				", '" + post[2].via_field + "'), " +
 				"'" + field.fieldname + "') }}";
 		} else {
-			var il = [];
+			const il = [];
 			il.push("{% set rh1 = frappe.get_doc('" +
 				post[1].doctype + "', row." + post[1].via_field + ") %}");
-			for (var r = 2; r < post.length; r++) {
+			for (let r = 2; r < post.length; r++) {
 				il.push("{% set rh" + r + " = frappe.get_doc('" +
 					post[r].doctype + "', rh" + (r - 1) + "." +
 					post[r].via_field + ") %}");
@@ -460,9 +460,9 @@
 	}
 
 	function _build_path_string(col_idx, field) {
-		var parts = [];
-		for (var i = 0; i <= col_idx; i++) {
-			var c = _columns[i];
+		const parts = [];
+		for (let i = 0; i <= col_idx; i++) {
+			const c = _columns[i];
 			if (i === 0) {
 				parts.push(c.doctype);
 			} else {
@@ -476,12 +476,12 @@
 
 	/* ── Tag Panel (non-modal, draggable, multiple allowed) ── */
 
-	var _tag_panel_count = 0;
+	let _tag_panel_count = 0;
 
 	function _apply_filters(tag, fallback, is_html) {
-		var result = tag;
+		let result = tag;
 		if (fallback) {
-			var safe = fallback.replace(/'/g, "\\'");
+			const safe = fallback.replace(/'/g, "\\'");
 			result = result.replace(
 				/\{\{([^}]+)\}\}/g,
 				function (m, inner) { return "{{ " + inner.trim() + " | default('" + safe + "') }}"; }
@@ -491,7 +491,7 @@
 			result = result.replace(
 				/\{\{([^}]+)\}\}/g,
 				function (m, inner) {
-					var trimmed = inner.trim();
+					const trimmed = inner.trim();
 					if (trimmed.indexOf("| safe") === -1) {
 						return "{{ " + trimmed + " | safe }}";
 					}
@@ -503,15 +503,15 @@
 	}
 
 	function _show_tag_dialog(col_idx, field) {
-		var base_tag = _build_tag(col_idx, field);
-		var path = _build_path_string(col_idx, field);
+		const base_tag = _build_tag(col_idx, field);
+		const path = _build_path_string(col_idx, field);
 
 		_tag_panel_count++;
-		var cascade = (_tag_panel_count - 1) * 24;
-		var top = Math.min(100 + cascade, window.innerHeight - 200);
-		var left = Math.min(160 + cascade, window.innerWidth - 420);
+		const cascade = (_tag_panel_count - 1) * 24;
+		const top = Math.min(100 + cascade, window.innerHeight - 200);
+		const left = Math.min(160 + cascade, window.innerWidth - 420);
 
-		var $panel = $(
+		const $panel = $(
 			'<div class="se-tag-panel">' +
 			'<div class="se-tag-panel-header">' +
 			'<span class="se-title">' + frappe.utils.escape_html(field.label) + '</span>' +
@@ -553,14 +553,14 @@
 		});
 		$panel.trigger("mousedown");
 
-		var $header = $panel.find(".se-tag-panel-header");
-		var $pre = $panel.find(".se-tag-pre");
-		var $input = $panel.find(".se-fallback-input");
-		var $html_check = $panel.find(".se-html-check");
+		const $header = $panel.find(".se-tag-panel-header");
+		const $pre = $panel.find(".se-tag-pre");
+		const $input = $panel.find(".se-fallback-input");
+		const $html_check = $panel.find(".se-html-check");
 
 		function _update_tag() {
-			var fb = $input.val().trim();
-			var is_html = $html_check.is(":checked");
+			const fb = $input.val().trim();
+			const is_html = $html_check.is(":checked");
 			$pre.text(_apply_filters(base_tag, fb, is_html));
 		}
 
@@ -568,20 +568,20 @@
 		$html_check.on("change", _update_tag);
 
 		$pre.on("click", function () {
-			var range = document.createRange();
+			const range = document.createRange();
 			range.selectNodeContents(this);
-			var sel = window.getSelection();
+			const sel = window.getSelection();
 			sel.removeAllRanges();
 			sel.addRange(range);
 		});
 
 		$panel.find(".se-insert-btn").on("click", function () {
-			var current_tag = $pre.text();
+			const current_tag = $pre.text();
 			if (!_last_editable || !_last_editable.parentNode) {
 				frappe.show_alert({ message: __("Click into the message box first, then click Insert"), indicator: "orange" });
 				return;
 			}
-			var before = _last_editable.value;
+			const before = _last_editable.value;
 			_insert_at_cursor(_last_editable, current_tag);
 			if (_last_editable.value !== before) {
 				frappe.show_alert({ message: __("Tag inserted"), indicator: "green" });
@@ -592,7 +592,7 @@
 		});
 
 		$panel.find(".se-copy-btn").on("click", function () {
-			var current_tag = $pre.text();
+			const current_tag = $pre.text();
 			if (navigator.clipboard) {
 				navigator.clipboard.writeText(current_tag).then(function () {
 					frappe.show_alert({ message: __("Tag copied"), indicator: "green" });
@@ -612,12 +612,12 @@
 	}
 
 	function _insert_at_cursor(el, text) {
-		var tag = (el.tagName || "").toLowerCase();
+		const tag = (el.tagName || "").toLowerCase();
 		if (tag === "textarea" || tag === "input") {
 			el.focus();
-			var start = _last_sel_start || 0;
-			var end = _last_sel_end || 0;
-			var val = el.value || "";
+			let start = _last_sel_start || 0;
+			let end = _last_sel_end || 0;
+			const val = el.value || "";
 			if (start > val.length) start = val.length;
 			if (end > val.length) end = val.length;
 			el.selectionStart = start;
@@ -627,7 +627,7 @@
 			} else {
 				el.value = val.substring(0, start) + text + val.substring(end);
 			}
-			var new_pos = start + text.length;
+			const new_pos = start + text.length;
 			el.selectionStart = new_pos;
 			el.selectionEnd = new_pos;
 			$(el).trigger("change").trigger("input");
@@ -640,7 +640,7 @@
 	}
 
 	function _clipboard_fallback(text) {
-		var ta = document.createElement("textarea");
+		const ta = document.createElement("textarea");
 		ta.value = text;
 		ta.style.position = "fixed";
 		ta.style.opacity = "0";
@@ -654,7 +654,7 @@
 	/* ── CSS cleanup (styles now in schema_explorer.css) ── */
 
 	function _inject_css() {
-		var existing = document.getElementById("se-style");
+		const existing = document.getElementById("se-style");
 		if (existing) existing.remove();
 	}
 })();

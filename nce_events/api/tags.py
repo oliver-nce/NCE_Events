@@ -1,9 +1,13 @@
+from __future__ import annotations
+
+from typing import Any
+
 import frappe
 
 from nce_events.api.panel_api import _SKIP_FIELDNAMES, _SKIP_FIELDTYPES, _title_case
 
 
-_DEFAULT_SYNTHETICS = [
+_DEFAULT_SYNTHETICS: list[dict[str, str]] = [
 	{"field_name": "he_she", "label": "He/She (lower)", "male_value": "he", "female_value": "she"},
 	{"field_name": "he_she_cap", "label": "He/She", "male_value": "He", "female_value": "She"},
 	{"field_name": "him_her", "label": "Him/Her", "male_value": "him", "female_value": "her"},
@@ -12,18 +16,18 @@ _DEFAULT_SYNTHETICS = [
 
 
 @frappe.whitelist()
-def rebuild_field_tags():
+def rebuild_field_tags() -> dict[str, int]:
 	"""Scan all custom DocTypes and rebuild the Field Tag child table."""
 	doc = frappe.get_doc("Messaging Configuration")
-	gender_field = doc.gender_field or "gender"
+	gender_field: str = doc.gender_field or "gender"
 
-	neutral_fieldnames = {
+	neutral_fieldnames: set[str] = {
 		row.field_name.strip()
 		for row in (doc.neutral_tags or [])
 		if row.field_name
 	}
 
-	existing = {}
+	existing: dict[str, dict[str, Any]] = {}
 	for row in (doc.field_tags or []):
 		key = (row.field_name or "") + ":" + (row.source_table or "")
 		existing[key] = {
@@ -33,7 +37,7 @@ def rebuild_field_tags():
 			"synthetic": row.synthetic,
 		}
 
-	synthetic_by_fn = {}
+	synthetic_by_fn: dict[str, dict[str, Any]] = {}
 	for row in (doc.field_tags or []):
 		if row.synthetic:
 			synthetic_by_fn[row.field_name] = {
@@ -62,8 +66,8 @@ def rebuild_field_tags():
 	)
 	custom_dts = list(set(custom_dts))
 
-	new_rows = []
-	seen_neutral = set()
+	new_rows: list[dict[str, Any]] = []
+	seen_neutral: set[str] = set()
 
 	for dt_name in sorted(custom_dts):
 		try:
@@ -138,7 +142,7 @@ def rebuild_field_tags():
 	return {"total": len(doc.field_tags)}
 
 
-def _compute_jinja_tag(field_name, male_value, female_value, gender_field):
+def _compute_jinja_tag(field_name: str, male_value: str, female_value: str, gender_field: str) -> str:
 	male = (male_value or "").strip()
 	female = (female_value or "").strip()
 	if male or female:

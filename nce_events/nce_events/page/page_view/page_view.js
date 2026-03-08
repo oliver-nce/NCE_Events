@@ -7,7 +7,7 @@ frappe.pages["page-view"].on_page_show = function (wrapper) {
 		});
 	}
 
-	var page = wrapper._page_obj;
+	const page = wrapper._page_obj;
 
 	if (wrapper._explorer) {
 		wrapper._explorer.destroy();

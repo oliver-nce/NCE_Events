@@ -18,12 +18,12 @@ nce_events.panel_page.SendDialog = class SendDialog {
 	/* ── Build DOM ── */
 
 	_build() {
-		var me = this;
-		var count = me.row_count;
-		var mode = me.mode;
-		var title = (mode === "sms" ? "Send SMS" : "Send Email") + " (" + count + " recipients)";
+		const me = this;
+		const count = me.row_count;
+		const mode = me.mode;
+		const title = (mode === "sms" ? "Send SMS" : "Send Email") + " (" + count + " recipients)";
 
-		var el = $('<div class="send-panel"></div>');
+		const el = $('<div class="send-panel"></div>');
 		el.html(
 			'<div class="send-panel-header">' +
 				'<span class="send-panel-title">' + frappe.utils.escape_html(title) + '</span>' +
@@ -82,13 +82,13 @@ nce_events.panel_page.SendDialog = class SendDialog {
 	/* ── Bind events ── */
 
 	_bind() {
-		var me = this;
-		var el = me.el;
+		const me = this;
+		const el = me.el;
 
-		var source_sel = el.find(".send-source-select");
-		var msg_section = el.find(".send-message-section");
-		var tpl_section = el.find(".send-template-section");
-		var tpl_input = el.find(".send-template-input");
+		const source_sel = el.find(".send-source-select");
+		const msg_section = el.find(".send-message-section");
+		const tpl_section = el.find(".send-template-section");
+		const tpl_input = el.find(".send-template-input");
 
 		source_sel.on("change", function () {
 			if (source_sel.val() === "type") {
@@ -132,12 +132,12 @@ nce_events.panel_page.SendDialog = class SendDialog {
 	/* ── Resolve message body from source (type or template) ── */
 
 	_resolve_body(callback) {
-		var el = this.el;
-		var source = el.find(".send-source-select").val();
-		var subject = el.find(".send-subject-input").val() || "";
+		const el = this.el;
+		const source = el.find(".send-source-select").val();
+		const subject = el.find(".send-subject-input").val() || "";
 
 		if (source === "template") {
-			var tpl_name = el.find(".send-template-input").val().trim();
+			const tpl_name = el.find(".send-template-input").val().trim();
 			if (!tpl_name) { frappe.msgprint(__("Select a template first.")); return; }
 			frappe.call({
 				method: "frappe.client.get",
@@ -148,7 +148,7 @@ nce_events.panel_page.SendDialog = class SendDialog {
 				}
 			});
 		} else {
-			var body = el.find(".send-message-input").val() || "";
+			const body = el.find(".send-message-input").val() || "";
 			if (!body.trim()) { frappe.msgprint(__("Enter a message first.")); return; }
 			callback(body, subject);
 		}
@@ -157,12 +157,12 @@ nce_events.panel_page.SendDialog = class SendDialog {
 	/* ── Template autocomplete ── */
 
 	_setup_template_autocomplete(input_el) {
-		var list_el = $('<div class="send-template-list"></div>').insertAfter(input_el);
-		var debounce;
+		const list_el = $('<div class="send-template-list"></div>').insertAfter(input_el);
+		let debounce;
 		input_el.on("input", function () {
 			clearTimeout(debounce);
 			debounce = setTimeout(function () {
-				var q = input_el.val().trim();
+				const q = input_el.val().trim();
 				if (!q) { list_el.empty().hide(); return; }
 				frappe.call({
 					method: "frappe.client.get_list",
@@ -170,7 +170,7 @@ nce_events.panel_page.SendDialog = class SendDialog {
 					callback: function (r) {
 						list_el.empty();
 						(r.message || []).forEach(function (t) {
-							var item = $('<div class="send-template-item"></div>').text(t.name);
+							const item = $('<div class="send-template-item"></div>').text(t.name);
 							item.on("click", function () {
 								input_el.val(t.name);
 								list_el.empty().hide();
@@ -190,10 +190,10 @@ nce_events.panel_page.SendDialog = class SendDialog {
 	/* ── Preview ── */
 
 	_do_preview() {
-		var me = this;
-		var el = me.el;
-		var filters = me.filters;
-		var doctype = me.doctype;
+		const me = this;
+		const el = me.el;
+		const filters = me.filters;
+		const doctype = me.doctype;
 
 		me._resolve_body(function (body_text, subject_text) {
 			el.find(".send-preview-btn").prop("disabled", true);
@@ -209,7 +209,7 @@ nce_events.panel_page.SendDialog = class SendDialog {
 					el.find(".send-preview-btn").prop("disabled", false);
 					if (!r.message) return;
 					if (r.message.error) { frappe.msgprint(r.message.error); return; }
-					var preview_el = el.find(".send-panel-preview");
+					const preview_el = el.find(".send-panel-preview");
 					preview_el.find(".send-preview-subject").text(r.message.rendered_subject || "(No subject)");
 					preview_el.find(".send-preview-body").html(r.message.rendered_body || "");
 					preview_el.show();
@@ -222,11 +222,11 @@ nce_events.panel_page.SendDialog = class SendDialog {
 	/* ── Send ── */
 
 	_do_send() {
-		var me = this;
-		var el = me.el;
-		var send_btn = el.find(".send-send-btn");
-		var send_copy = el.find(".send-copy-check").is(":checked") ? 1 : 0;
-		var recipient_field = me.mode === "sms" ? me.config.sms_field : me.config.email_field;
+		const me = this;
+		const el = me.el;
+		const send_btn = el.find(".send-send-btn");
+		const send_copy = el.find(".send-copy-check").is(":checked") ? 1 : 0;
+		const recipient_field = me.mode === "sms" ? me.config.sms_field : me.config.email_field;
 
 		me._resolve_body(function (final_body, final_subject) {
 			send_btn.prop("disabled", true).text("Sending...");
@@ -257,15 +257,15 @@ nce_events.panel_page.SendDialog = class SendDialog {
 	/* ── Send test email ── */
 
 	_do_send_test() {
-		var me = this;
-		var el = me.el;
-		var test_email = el.find(".send-test-email-input").val().trim();
+		const me = this;
+		const el = me.el;
+		const test_email = el.find(".send-test-email-input").val().trim();
 		if (!test_email) {
 			frappe.msgprint(__("Enter a test email address."));
 			return;
 		}
 
-		var test_btn = el.find(".send-test-btn");
+		const test_btn = el.find(".send-test-btn");
 
 		me._resolve_body(function (body_text, subject_text) {
 			test_btn.prop("disabled", true).text("Sending...");
@@ -307,13 +307,13 @@ nce_events.panel_page.SendDialog = class SendDialog {
 	/* ── Draggable ── */
 
 	_make_draggable(el) {
-		var ns = "send_drag";
+		const ns = "send_drag";
 		function start_drag(e) {
 			if ($(e.target).closest("button, input, textarea, select, .send-template-list").length) return;
 			e.preventDefault();
-			var sx = e.clientX, sy = e.clientY;
-			var sl = parseInt(el.css("left"), 10) || 0;
-			var st = parseInt(el.css("top"), 10) || 0;
+			const sx = e.clientX, sy = e.clientY;
+			const sl = parseInt(el.css("left"), 10) || 0;
+			const st = parseInt(el.css("top"), 10) || 0;
 			$("body").addClass("panel-float-dragging");
 			$(document).on("mousemove." + ns, function (ev) {
 				el.css({
@@ -332,12 +332,12 @@ nce_events.panel_page.SendDialog = class SendDialog {
 	/* ── Resizable ── */
 
 	_make_resizable(el) {
-		var handle = $('<div class="send-panel-resize-handle"></div>');
+		const handle = $('<div class="send-panel-resize-handle"></div>');
 		el.append(handle);
 		handle.on("mousedown", function (e) {
 			e.preventDefault(); e.stopPropagation();
-			var sw = el.width(), sh = el.height();
-			var sx = e.clientX, sy = e.clientY;
+			const sw = el.width(), sh = el.height();
+			const sx = e.clientX, sy = e.clientY;
 			$("body").addClass("panel-float-dragging");
 			$(document).on("mousemove.send_resize", function (ev) {
 				el.css({ width: Math.max(500, sw + ev.clientX - sx) + "px", height: Math.max(300, sh + ev.clientY - sy) + "px" });

@@ -48,8 +48,8 @@ function _add_synthetic_tag(frm) {
 		{ fieldname: "male_value", label: "Male Value", fieldtype: "Data" },
 		{ fieldname: "female_value", label: "Female Value", fieldtype: "Data" },
 	], function (values) {
-		var gender_field = frm.doc.gender_field || "gender";
-		var jinja = _compute_jinja(values.field_name, values.male_value, values.female_value, gender_field);
+		const gender_field = frm.doc.gender_field || "gender";
+		const jinja = _compute_jinja(values.field_name, values.male_value, values.female_value, gender_field);
 		frm.add_child("field_tags", {
 			field_name: values.field_name,
 			label: values.label,

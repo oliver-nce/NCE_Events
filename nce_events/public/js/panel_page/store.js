@@ -41,21 +41,21 @@ nce_events.panel_page.Store = class Store {
 	}
 
 	close_panel(doctype) {
-		var children = this._get_descendants(doctype);
-		var me = this;
+		const children = this._get_descendants(doctype);
+		const me = this;
 		children.forEach(function (dt) {
-			var idx = me.open_stack.indexOf(dt);
+			const idx = me.open_stack.indexOf(dt);
 			if (idx >= 0) me.open_stack.splice(idx, 1);
 			delete me.panels[dt];
 		});
-		var idx = this.open_stack.indexOf(doctype);
+		const idx = this.open_stack.indexOf(doctype);
 		if (idx >= 0) this.open_stack.splice(idx, 1);
 		delete this.panels[doctype];
 	}
 
 	close_all_except(doctype) {
-		var me = this;
-		var to_close = me.open_stack.filter(function (dt) { return dt !== doctype; });
+		const me = this;
+		const to_close = me.open_stack.filter(function (dt) { return dt !== doctype; });
 		to_close.forEach(function (dt) {
 			delete me.panels[dt];
 		});
@@ -63,10 +63,10 @@ nce_events.panel_page.Store = class Store {
 	}
 
 	_get_descendants(doctype) {
-		var me = this;
-		var result = [];
+		const me = this;
+		let result = [];
 		me.open_stack.forEach(function (dt) {
-			var p = me.panels[dt];
+			const p = me.panels[dt];
 			if (p && p.parent_doctype === doctype) {
 				result.push(dt);
 				result = result.concat(me._get_descendants(dt));
@@ -78,7 +78,7 @@ nce_events.panel_page.Store = class Store {
 	/* ── Data fetching ── */
 
 	fetch_config(doctype) {
-		var me = this;
+		const me = this;
 		return new Promise(function (resolve, reject) {
 			frappe.call({
 				method: "nce_events.api.panel_api.get_panel_config",
@@ -97,12 +97,12 @@ nce_events.panel_page.Store = class Store {
 	}
 
 	fetch_data(doctype, limit) {
-		var me = this;
-		var panel = me.panels[doctype];
+		const me = this;
+		const panel = me.panels[doctype];
 		if (!panel) return Promise.reject("Panel not open: " + doctype);
 
-		var filters = Object.assign({}, panel.parent_filter || {});
-		var args = {
+		const filters = Object.assign({}, panel.parent_filter || {});
+		const args = {
 			root_doctype: doctype,
 			filters: JSON.stringify(filters),
 		};
@@ -129,11 +129,11 @@ nce_events.panel_page.Store = class Store {
 	}
 
 	fetch_data_page(doctype, start, limit) {
-		var me = this;
-		var panel = me.panels[doctype];
+		const me = this;
+		const panel = me.panels[doctype];
 		if (!panel) return Promise.reject("Panel not open: " + doctype);
 
-		var filters = Object.assign({}, panel.parent_filter || {});
+		const filters = Object.assign({}, panel.parent_filter || {});
 
 		return new Promise(function (resolve, reject) {
 			frappe.call({
@@ -157,7 +157,7 @@ nce_events.panel_page.Store = class Store {
 	}
 
 	fetch_child_doctypes(doctype) {
-		var me = this;
+		const me = this;
 		if (me._child_cache[doctype]) {
 			return Promise.resolve(me._child_cache[doctype]);
 		}
@@ -166,7 +166,7 @@ nce_events.panel_page.Store = class Store {
 				method: "nce_events.api.panel_api.get_child_doctypes",
 				args: { root_doctype: doctype },
 				callback: function (r) {
-					var children = r.message || [];
+					const children = r.message || [];
 					me._child_cache[doctype] = children;
 					resolve(children);
 				},
@@ -188,20 +188,20 @@ nce_events.panel_page.Store = class Store {
 	}
 
 	get_selected(doctype) {
-		var p = this.panels[doctype];
+		const p = this.panels[doctype];
 		return p ? p.selected_row : null;
 	}
 
 	/* ── User filters ── */
 
 	get_merged_filters(doctype) {
-		var p = this.panels[doctype];
+		const p = this.panels[doctype];
 		if (!p) return {};
 		return Object.assign({}, p.parent_filter || {});
 	}
 
 	get_user_filters(doctype) {
-		var p = this.panels[doctype];
+		const p = this.panels[doctype];
 		return p ? (p.user_filters || []) : [];
 	}
 

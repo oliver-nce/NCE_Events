@@ -1,29 +1,32 @@
+from __future__ import annotations
+
 import csv
 import io
 import json
 import os
+from typing import Any
 
 import frappe
 from frappe import _
 from frappe.utils import cint
 
 
-MALE_HEX = "#0000FF"
-FEMALE_HEX = "#c700e6"
+MALE_HEX: str = "#0000FF"
+FEMALE_HEX: str = "#c700e6"
 
-_SKIP_FIELDTYPES = frozenset({
+_SKIP_FIELDTYPES: frozenset[str] = frozenset({
 	"Section Break", "Column Break", "Tab Break", "HTML",
 	"Fold", "Heading", "Button", "Table", "Table MultiSelect",
 })
 
-_SKIP_FIELDNAMES = frozenset({
+_SKIP_FIELDNAMES: frozenset[str] = frozenset({
 	"name", "owner", "creation", "modified", "modified_by",
 	"docstatus", "idx", "parent", "parentfield", "parenttype",
 })
 
 
 @frappe.whitelist()
-def get_panel_config(root_doctype):
+def get_panel_config(root_doctype: str) -> dict[str, Any]:
 	"""Fetch display configuration for a single Page Panel."""
 	if not frappe.db.exists("Page Panel", root_doctype):
 		auto_email, auto_sms = _auto_detect_contact_fields(root_doctype)
@@ -83,7 +86,12 @@ def get_panel_config(root_doctype):
 
 
 @frappe.whitelist()
-def get_panel_data(root_doctype, filters=None, limit=0, start=0):
+def get_panel_data(
+	root_doctype: str,
+	filters: str | dict | None = None,
+	limit: int | str = 0,
+	start: int | str = 0,
+) -> dict[str, Any]:
 	"""Fetch rows from a DocType, optionally filtered and paginated.
 
 	filters is a JSON dict of {fieldname: value} applied to frappe.get_all.
@@ -99,17 +107,15 @@ def get_panel_data(root_doctype, filters=None, limit=0, start=0):
 	start = cint(start)
 
 	config = get_panel_config(root_doctype)
-	all_fields = config["column_order"]
+	all_fields: list[str] = config["column_order"]
 	if not all_fields:
 		all_fields = ["name"]
 	elif "name" not in all_fields:
 		all_fields = ["name"] + all_fields
 
-	# Split into simple fields and dot-notation (linked) fields
 	simple_fields = [fn for fn in all_fields if "." not in fn]
 	linked_fields = [fn for fn in all_fields if "." in fn]
 
-	# Ensure base link fields are fetched so dot-notation can resolve
 	link_bases = {fn.split(".", 1)[0] for fn in linked_fields}
 	for lf in link_bases:
 		if lf not in simple_fields:
@@ -126,7 +132,7 @@ def get_panel_data(root_doctype, filters=None, limit=0, start=0):
 		)
 	else:
 		total_count = frappe.db.count(root_doctype, filters=filters)
-		get_all_kw = dict(
+		get_all_kw: dict[str, Any] = dict(
 			doctype=root_doctype, fields=simple_fields, filters=filters,
 			order_by=order_by,
 		)
@@ -137,15 +143,14 @@ def get_panel_data(root_doctype, filters=None, limit=0, start=0):
 			get_all_kw["limit_page_length"] = 0
 		rows = frappe.get_all(**get_all_kw)
 
-	# Resolve dot-notation fields via frappe.get_value lookups
 	if linked_fields and rows:
-		grouped = {}
+		grouped: dict[str, list[str]] = {}
 		for fn in linked_fields:
 			link_field, child_field = fn.split(".", 1)
 			grouped.setdefault(link_field, []).append(child_field)
 
 		meta = frappe.get_meta(root_doctype)
-		link_targets = {}
+		link_targets: dict[str, str] = {}
 		for field in meta.fields:
 			if field.fieldtype == "Link" and field.fieldname in grouped:
 				link_targets[field.fieldname] = field.options
@@ -166,14 +171,13 @@ def get_panel_data(root_doctype, filters=None, limit=0, start=0):
 				for cf in child_fields:
 					row[link_field + "." + cf] = linked_values.get(cf, "")
 
-	columns = []
+	columns: list[dict[str, str]] = []
 	for fn in all_fields:
 		label = fn.split(".")[-1] if "." in fn else fn
 		columns.append({"fieldname": fn, "label": _title_case(label)})
 
 	child_doctypes = get_child_doctypes(root_doctype)
 
-	# Compute child record counts per row for each child doctype
 	if child_doctypes and rows:
 		row_names = [row["name"] for row in rows]
 		for child in child_doctypes:
@@ -196,11 +200,11 @@ def get_panel_data(root_doctype, filters=None, limit=0, start=0):
 	}
 
 
-_ROSTER_HASH = "wwe78f6q87ey97f86q9e8fqw98ef"
+_ROSTER_HASH: str = "wwe78f6q87ey97f86q9e8fqw98ef"
 
 
 @frappe.whitelist()
-def export_panel_data(root_doctype, filters=None):
+def export_panel_data(root_doctype: str, filters: str | dict | None = None) -> dict[str, Any]:
 	"""Export a panel's current data as CSV to a public path and return its URL."""
 	result = get_panel_data(root_doctype, filters)
 	columns = result["columns"]
@@ -238,7 +242,7 @@ def export_panel_data(root_doctype, filters=None):
 
 
 @frappe.whitelist()
-def save_panel_sql(root_doctype, core_filter="", order_by=""):
+def save_panel_sql(root_doctype: str, core_filter: str = "", order_by: str = "") -> dict[str, bool]:
 	"""Persist core filter and order_by SQL on a Page Panel record."""
 	core_filter = (core_filter or "").strip()
 	order_by = (order_by or "").strip()
@@ -259,10 +263,12 @@ def save_panel_sql(root_doctype, core_filter="", order_by=""):
 	return {"ok": True}
 
 
-def _build_core_filter_where(root_doctype, filters, core_filter):
+def _build_core_filter_where(
+	root_doctype: str, filters: dict | None, core_filter: str,
+) -> tuple[str, list]:
 	"""Build WHERE clause and params for queries with a raw core_filter."""
 	where_parts = [f"({core_filter})"]
-	params = []
+	params: list[Any] = []
 	for key, val in (filters or {}).items():
 		if isinstance(val, list) and len(val) == 2:
 			op, operand = val
@@ -279,14 +285,22 @@ def _build_core_filter_where(root_doctype, filters, core_filter):
 	return " AND ".join(where_parts), params
 
 
-def _count_with_core_filter(root_doctype, filters, core_filter):
+def _count_with_core_filter(root_doctype: str, filters: dict, core_filter: str) -> int:
 	table = f"`tab{root_doctype}`"
 	where_sql, params = _build_core_filter_where(root_doctype, filters, core_filter)
 	result = frappe.db.sql(f"SELECT COUNT(*) FROM {table} WHERE {where_sql}", params)
 	return result[0][0] if result else 0
 
 
-def _query_with_core_filter(root_doctype, fields, filters, core_filter, order_by="name ASC", limit=0, start=0):
+def _query_with_core_filter(
+	root_doctype: str,
+	fields: list[str],
+	filters: dict,
+	core_filter: str,
+	order_by: str = "name ASC",
+	limit: int = 0,
+	start: int = 0,
+) -> list[dict]:
 	"""Run a panel query using frappe.db.sql so we can inject a raw WHERE clause."""
 	table = f"`tab{root_doctype}`"
 	fields_sql = ", ".join(f"`{f}`" for f in fields)
@@ -301,11 +315,11 @@ def _query_with_core_filter(root_doctype, fields, filters, core_filter, order_by
 # ── Internal helpers ──
 
 
-_EMAIL_NAMES = {"email", "email_address", "email_id"}
-_PHONE_NAMES = {"phone", "mobile", "mobile_no", "phone_number", "cell", "contact_number"}
+_EMAIL_NAMES: set[str] = {"email", "email_address", "email_id"}
+_PHONE_NAMES: set[str] = {"phone", "mobile", "mobile_no", "phone_number", "cell", "contact_number"}
 
 
-def _auto_detect_contact_fields(doctype):
+def _auto_detect_contact_fields(doctype: str) -> tuple[str, str]:
 	"""Auto-detect email and phone/SMS fields directly on a DocType.
 
 	Matches by fieldtype (Email/Phone) or common fieldnames.
@@ -332,7 +346,7 @@ def _auto_detect_contact_fields(doctype):
 	return email_field, sms_field
 
 
-def _find_link_field(doctype, target_doctype):
+def _find_link_field(doctype: str, target_doctype: str) -> str | None:
 	"""Return the first Link fieldname on doctype that points to target_doctype."""
 	try:
 		meta = frappe.get_meta(doctype)
@@ -344,17 +358,17 @@ def _find_link_field(doctype, target_doctype):
 	return None
 
 
-def _title_case(fieldname):
+def _title_case(fieldname: str) -> str:
 	return fieldname.replace("_", " ").title()
 
 
-def _safe_filename(value):
+def _safe_filename(value: str) -> str:
 	"""Sanitize a string for use as a filesystem filename component."""
 	return "".join(c if c.isalnum() or c in "-_" else "_" for c in str(value))
 
 
 @frappe.whitelist()
-def get_child_doctypes(root_doctype):
+def get_child_doctypes(root_doctype: str) -> list[dict[str, str]]:
 	"""Return DocTypes that have a Link field pointing to root_doctype.
 
 	Scans all WP Tables DocTypes for Link fields targeting root_doctype.
@@ -366,15 +380,15 @@ def get_child_doctypes(root_doctype):
 		fields=["frappe_doctype", "nce_name", "table_name"],
 	)
 
-	label_map = {}
-	wp_doctypes = set()
+	label_map: dict[str, str] = {}
+	wp_doctypes: set[str] = set()
 	for row in wp_rows:
 		dt = row.get("frappe_doctype")
 		if dt:
 			wp_doctypes.add(dt)
 			label_map[dt] = row.get("nce_name") or row.get("table_name") or dt
 
-	result = []
+	result: list[dict[str, str]] = []
 	for dt in wp_doctypes:
 		if dt == root_doctype:
 			continue
@@ -399,14 +413,14 @@ def get_child_doctypes(root_doctype):
 
 
 @frappe.whitelist()
-def debug_child_lookup(root_doctype):
+def debug_child_lookup(root_doctype: str) -> dict[str, Any]:
 	"""Diagnostic: show what get_child_doctypes sees."""
 	wp_rows = frappe.get_all(
 		"WP Tables",
 		filters={"frappe_doctype": ["is", "set"]},
 		fields=["name", "frappe_doctype", "nce_name", "table_name", "mirror_status"],
 	)
-	info = {"root_doctype": root_doctype, "wp_tables": wp_rows, "link_fields_found": []}
+	info: dict[str, Any] = {"root_doctype": root_doctype, "wp_tables": wp_rows, "link_fields_found": []}
 
 	for row in wp_rows:
 		dt = row.get("frappe_doctype")
@@ -428,17 +442,17 @@ def debug_child_lookup(root_doctype):
 
 
 @frappe.whitelist()
-def get_doctype_fields(root_doctype):
+def get_doctype_fields(root_doctype: str) -> list[dict[str, str]]:
 	"""Return data-bearing fields for a DocType (excludes layout and system fields).
 
 	Link fields include an 'options' key with the target DocType name.
 	"""
 	meta = frappe.get_meta(root_doctype)
-	result = []
+	result: list[dict[str, str]] = []
 	for f in meta.fields:
 		if f.fieldtype in _SKIP_FIELDTYPES or f.fieldname in _SKIP_FIELDNAMES:
 			continue
-		entry = {
+		entry: dict[str, str] = {
 			"fieldname": f.fieldname,
 			"label": f.label or _title_case(f.fieldname),
 			"fieldtype": f.fieldtype,
@@ -449,7 +463,7 @@ def get_doctype_fields(root_doctype):
 	return result
 
 
-def _parse_csv(value):
+def _parse_csv(value: str | None) -> list[str]:
 	"""Parse a comma-delimited string into a list of stripped, non-empty values."""
 	if not value:
 		return []

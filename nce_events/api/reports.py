@@ -1,13 +1,22 @@
+from __future__ import annotations
+
+from typing import Any
+
 import frappe
 from frappe import _
 
 
-def _title_case(fieldname):
+def _title_case(fieldname: str) -> str:
 	return fieldname.replace("_", " ").title()
 
 
 @frappe.whitelist()
-def create_or_update_report(header_text, frappe_query, existing_report_name=None, ref_doctype=None):
+def create_or_update_report(
+	header_text: str,
+	frappe_query: str,
+	existing_report_name: str | None = None,
+	ref_doctype: str | None = None,
+) -> dict[str, str]:
 	"""Create or update a Query Report from a translated Frappe SQL query."""
 	if not frappe_query:
 		frappe.throw(_("Frappe Query is empty — translate or enter SQL first."))
@@ -31,16 +40,16 @@ def create_or_update_report(header_text, frappe_query, existing_report_name=None
 
 
 @frappe.whitelist()
-def get_report_columns(report_name):
+def get_report_columns(report_name: str) -> list[dict[str, str]]:
 	"""Return column definitions from a Query Report with proper labels."""
 	report = frappe.get_doc("Report", report_name)
 	if report.report_type != "Query Report":
 		frappe.throw(_("{0} is not a Query Report").format(report_name))
 
-	result = frappe.desk.query_report.run(report_name, filters={})
+	result: dict[str, Any] = frappe.desk.query_report.run(report_name, filters={})
 	raw_columns = result.get("columns", [])
 
-	out = []
+	out: list[dict[str, str]] = []
 	for c in raw_columns:
 		if isinstance(c, dict):
 			fn = c.get("fieldname") or c.get("field") or ""

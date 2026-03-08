@@ -1,4 +1,6 @@
-import json
+from __future__ import annotations
+
+from typing import Any
 
 import frappe
 from frappe import _
@@ -6,9 +8,9 @@ from frappe import _
 from nce_events.api.panel_api import get_panel_data
 
 
-def _enrich_row_context(root_doctype, row):
+def _enrich_row_context(root_doctype: str, row: dict) -> dict[str, Any]:
 	"""Build a full template context from a row, including all Link fields."""
-	context = {k: (v if v is not None else "") for k, v in row.items()}
+	context: dict[str, Any] = {k: (v if v is not None else "") for k, v in row.items()}
 
 	meta = frappe.get_meta(root_doctype)
 	link_fields = [f.fieldname for f in meta.fields if f.fieldtype == "Link"]
@@ -25,7 +27,13 @@ def _enrich_row_context(root_doctype, row):
 
 
 @frappe.whitelist()
-def send_test_email(root_doctype, filters=None, body="", subject="", test_email=""):
+def send_test_email(
+	root_doctype: str,
+	filters: str | dict | None = None,
+	body: str = "",
+	subject: str = "",
+	test_email: str = "",
+) -> dict[str, Any]:
 	"""Render the template against the first row and send to a test address."""
 	if not test_email or not test_email.strip():
 		return {"error": "No test email address provided."}
@@ -54,7 +62,12 @@ def send_test_email(root_doctype, filters=None, body="", subject="", test_email=
 
 
 @frappe.whitelist()
-def preview_panel_message(root_doctype, filters=None, body="", subject=""):
+def preview_panel_message(
+	root_doctype: str,
+	filters: str | dict | None = None,
+	body: str = "",
+	subject: str = "",
+) -> dict[str, Any]:
 	"""Render a message template against the first row for preview."""
 	result = get_panel_data(root_doctype, filters)
 	rows = result.get("rows") or []
@@ -86,17 +99,22 @@ def preview_panel_message(root_doctype, filters=None, body="", subject=""):
 
 @frappe.whitelist()
 def send_panel_message(
-	root_doctype, filters=None, mode="sms",
-	recipient_field="", body="", subject="",
-	send_email_copy=0, email_field=""
-):
+	root_doctype: str,
+	filters: str | dict | None = None,
+	mode: str = "sms",
+	recipient_field: str = "",
+	body: str = "",
+	subject: str = "",
+	send_email_copy: int | str = 0,
+	email_field: str = "",
+) -> dict[str, int]:
 	"""Send bulk SMS and/or email to all rows in a panel."""
 	send_email_copy = int(send_email_copy)
 	result = get_panel_data(root_doctype, filters)
 	rows = result["rows"]
 
 	sent = 0
-	errors = []
+	errors: list[str] = []
 
 	for row in rows:
 		context = _enrich_row_context(root_doctype, row)
@@ -147,7 +165,7 @@ def send_panel_message(
 	return {"sent": sent, "total": len(rows), "errors": len(errors)}
 
 
-def _send_sms(phone, message):
+def _send_sms(phone: str, message: str) -> None:
 	"""Send an SMS via Twilio using credentials from API Connector."""
 	import requests
 
@@ -172,7 +190,7 @@ def _send_sms(phone, message):
 		frappe.throw(_(f"Twilio error {resp.status_code}: {resp.text}"))
 
 
-def _send_email(to_email, subject, body):
+def _send_email(to_email: str, subject: str, body: str) -> None:
 	"""Send an email via SendGrid using credentials from API Connector."""
 	import requests
 

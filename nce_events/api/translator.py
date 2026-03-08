@@ -1,11 +1,14 @@
+from __future__ import annotations
+
 import json
 import re
+from typing import Any
 
 import frappe
 
 
 @frappe.whitelist()
-def translate_wp_query(wp_query):
+def translate_wp_query(wp_query: str) -> dict[str, Any]:
 	"""Translate a WordPress SQL query to its Frappe equivalent using WP Tables mappings."""
 	if not wp_query:
 		return {"translated": "", "warnings": []}
@@ -16,9 +19,9 @@ def translate_wp_query(wp_query):
 	)
 
 	translated = wp_query
-	warnings = []
+	warnings: list[str] = []
 
-	table_col_maps = {}
+	table_col_maps: dict[str, dict[str, str]] = {}
 	for wt in wp_tables:
 		tname = wt.get("table_name")
 		if not tname or not wt.get("frappe_doctype"):
@@ -28,7 +31,7 @@ def translate_wp_query(wp_query):
 			continue
 		try:
 			col_map = json.loads(col_map_raw) if isinstance(col_map_raw, str) else col_map_raw
-			resolved = {}
+			resolved: dict[str, str] = {}
 			for wp_col, col_info in col_map.items():
 				if isinstance(col_info, dict):
 					if col_info.get("is_name"):
@@ -44,7 +47,7 @@ def translate_wp_query(wp_query):
 			warnings.append("Could not parse column_mapping for {0}: {1}".format(tname, str(exc)))
 
 	# Pass 1: qualified table.column
-	qualified_map = {}
+	qualified_map: dict[str, str] = {}
 	for wt in wp_tables:
 		tname = wt.get("table_name")
 		frappe_doctype = wt.get("frappe_doctype")
@@ -70,7 +73,7 @@ def translate_wp_query(wp_query):
 		translated = re.sub(r'\b' + re.escape(tname) + r'\b', frappe_table, translated, flags=re.IGNORECASE)
 
 	# Pass 3: remaining bare column names
-	all_col_map = {}
+	all_col_map: dict[str, str] = {}
 	for col_map in table_col_maps.values():
 		for wp_col, frappe_col in col_map.items():
 			if wp_col not in all_col_map:
