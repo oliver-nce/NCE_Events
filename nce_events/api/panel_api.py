@@ -40,6 +40,7 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 			"bold_fields": [],
 			"gender_column": "",
 			"gender_color_fields": [],
+			"tint_by_value_fields": [],
 			"computed_columns": [],
 			"show_filter": 1,
 			"show_sheets": 1,
@@ -71,6 +72,10 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 	for cc in computed_columns:
 		column_order.append(cc["field_name"])
 
+	tint_by_value_fields = [
+		cc["field_name"] for cc in computed_columns
+		if cc.get("gender") in ("Male", "Female")
+	]
 	return {
 		"root_doctype": doc.root_doctype,
 		"header_text": doc.header_text or doc.root_doctype,
@@ -80,6 +85,7 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 		"bold_fields": bold_fields,
 		"gender_column": (doc.gender_column or "").strip(),
 		"gender_color_fields": gender_color_fields,
+		"tint_by_value_fields": tint_by_value_fields,
 		"computed_columns": computed_columns,
 		"show_filter": doc.show_filter,
 		"show_sheets": doc.show_sheets,
@@ -509,6 +515,7 @@ def _get_computed_columns(doc: Any) -> list[dict[str, Any]]:
 			"field_name": (row.field_name or "").strip(),
 			"label": (row.label or "").strip() or _title_case(row.field_name or ""),
 			"sql_expression": expr,
+			"gender": (getattr(row, "gender", None) or "").strip() or None,
 		})
 	return result
 

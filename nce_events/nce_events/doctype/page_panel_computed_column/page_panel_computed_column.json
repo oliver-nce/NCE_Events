@@ -7,6 +7,7 @@
   "field_name",
   "label",
   "sql_expression",
+  "gender",
   "section_break_advanced",
   "format",
   "notes"
@@ -34,6 +35,14 @@
    "in_list_view": 1,
    "label": "SQL Expression",
    "reqd": 1
+  },
+  {
+   "description": "Tint color for this column. Male=blue, Female=pink. Blank=no tint.",
+   "fieldname": "gender",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Gender",
+   "options": "\nMale\nFemale"
   },
   {
    "fieldname": "section_break_advanced",

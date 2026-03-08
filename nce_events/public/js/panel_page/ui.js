@@ -754,8 +754,15 @@ nce_events.panel_page.Explorer = class Explorer {
 
 			const w = ctx.col_widths[ci] || 100;
 			const parts = [`width:${w}px`, "min-width:30px"];
-			if (ctx.gender_col && ctx.gender_tint_set[fn]) {
-				const gv = String(row[ctx.gender_col] || row[ctx.gender_col.toLowerCase()] || "").trim().toLowerCase();
+			if (ctx.gender_tint_set[fn]) {
+				let gv;
+				if (ctx.tint_by_value_set[fn]) {
+					gv = String(value || "").trim().toLowerCase();
+				} else if (ctx.gender_col) {
+					gv = String(row[ctx.gender_col] || row[ctx.gender_col.toLowerCase()] || "").trim().toLowerCase();
+				} else {
+					gv = "";
+				}
 				if (me._looks_male(gv) && ctx.male_hex) {
 					parts.push("font-weight:700", `color:${ctx.male_hex}`);
 				} else if (me._looks_female(gv) && ctx.female_hex) {
@@ -792,6 +799,7 @@ nce_events.panel_page.Explorer = class Explorer {
 			female_hex: (config.female_hex || "").trim(),
 			gender_col: (config.gender_column || "").trim(),
 			gender_tint_set: this._field_set(config.gender_color_fields),
+			tint_by_value_set: this._field_set(config.tint_by_value_fields || []),
 			child_doctypes: data.child_doctypes || [],
 			has_drills: !is_wp && (data.child_doctypes || []).length > 0,
 			selected_row: selected_row || null,
