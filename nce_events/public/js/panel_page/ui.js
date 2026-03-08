@@ -47,6 +47,7 @@ nce_events.panel_page.Explorer = class Explorer {
 			"System Default": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
 		};
 
+		var me = this;
 		frappe.call({
 			method: "frappe.client.get",
 			args: { doctype: "Display Settings", name: "Display Settings" },
@@ -57,6 +58,7 @@ nce_events.panel_page.Explorer = class Explorer {
 				var font = FONT_MAP[doc.font_family] || "'Inter', sans-serif";
 				var weight = parseInt(doc.font_weight) || 400;
 				var size = doc.font_size || "13px";
+				me._display_font_size = parseFloat(size) || 13;
 				var color = doc.text_color || "#333333";
 				var muted = doc.muted_text_color || "#555555";
 
@@ -267,7 +269,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		var has_drills = !is_wp && child_doctypes.length > 0;
 
 		var float_w = float_el.width() || (is_wp ? 900 : 1400);
-		var drill_col_w = has_drills ? me._calc_drill_col_width(child_doctypes, config) : 0;
+		var drill_col_w = has_drills ? me._calc_drill_col_width(child_doctypes) : 0;
 		var col_widths = me._calc_col_widths(columns, rows, drill_col_w, float_w);
 
 		var _dbg = "Panel: " + doctype + "\nfloat_w: " + float_w + " | drill_col_w: " + drill_col_w + " | avail: " + (float_w - 40 - drill_col_w) + "\n";
@@ -973,25 +975,25 @@ nce_events.panel_page.Explorer = class Explorer {
 
 	/* ── Drill-column width calc ── */
 
-	_calc_drill_col_width(child_doctypes, config) {
-		var font_size = parseFloat(config.font_size) || 12;
-		var btn_font = Math.max(font_size - 2, 9);
-		var char_w = btn_font * 0.62;
-		var btn_pad = 16;
-		var btn_margin = 5;
-		var icon_w = 14;
+	_calc_drill_col_width(child_doctypes) {
+		var font_size = this._display_font_size || 13;
+		var char_w = font_size * 0.65;
+		var btn_pad = 18;
+		var btn_border = 2;
+		var btn_margin = 6;
+		var icon_w = 16;
 		var count_extra = 8;
 
 		var total = 0;
-		var _dbg2 = "Drill calc: font=" + font_size + " btn_font=" + btn_font + " char_w=" + char_w.toFixed(1) + "\n";
+		var _dbg2 = "Drill calc: display_font=" + font_size + " char_w=" + char_w.toFixed(1) + "\n";
 		child_doctypes.forEach(function (child) {
 			var label_len = (child.label || child.doctype || "").length;
-			var btn_w = Math.ceil(label_len * char_w) + count_extra * char_w + btn_pad + icon_w + btn_margin;
+			var btn_w = Math.ceil((label_len + count_extra) * char_w) + btn_pad + btn_border + icon_w + btn_margin;
 			_dbg2 += "'" + child.label + "' (" + label_len + "ch): " + Math.ceil(btn_w) + "px\n";
 			total += btn_w;
 		});
 
-		var result = Math.ceil(total + 12);
+		var result = Math.ceil(total + 16);
 		_dbg2 += "TOTAL: " + result + "px";
 		alert(_dbg2);
 		return result;
