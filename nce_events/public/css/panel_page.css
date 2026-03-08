@@ -147,8 +147,8 @@
 .col-resize-handle {
 	position: absolute;
 	top: 0;
-	right: -2px;
-	width: 5px;
+	right: -4px;
+	width: 9px;
 	height: 100%;
 	cursor: col-resize;
 	z-index: 2;
@@ -156,7 +156,9 @@
 }
 
 .col-resize-handle:hover {
-	background: #4198F0;
+	background: rgba(65, 152, 240, 0.5);
+	border-left: 2px solid #126BC4;
+	border-right: 2px solid #126BC4;
 }
 
 body.col-resizing {

@@ -266,13 +266,14 @@ nce_events.panel_page.Explorer = class Explorer {
 		var has_drills = !is_wp && child_doctypes.length > 0;
 
 		var float_w = float_el.width() || (is_wp ? 900 : 1400);
-		var col_widths = me._calc_col_widths(columns, rows, has_drills, float_w);
+		var drill_count = has_drills ? child_doctypes.length : 0;
+		var col_widths = me._calc_col_widths(columns, rows, drill_count, float_w);
 
 		var html = '<table class="panel-table"><thead><tr>';
 		columns.forEach(function (col, ci) {
 			var fn = col.fieldname.toLowerCase();
 			var w = col_widths[ci] || 100;
-			var style = "width:" + w + "px;min-width:" + w + "px;";
+			var style = "width:" + w + "px;min-width:30px;";
 			if (bold_set[fn]) style += "font-weight:700;";
 			html += '<th style="' + style + 'position:relative;">' +
 				frappe.utils.escape_html(col.label) +
@@ -297,7 +298,7 @@ nce_events.panel_page.Explorer = class Explorer {
 				if (me._looks_like_date(value)) value = frappe.datetime.str_to_user(value);
 
 				var w = col_widths[ci] || 100;
-				var parts = ["width:" + w + "px", "min-width:" + w + "px"];
+				var parts = ["width:" + w + "px", "min-width:30px"];
 				if (gender_col && gender_tint_set[fn]) {
 					var gv = String(row[gender_col] || row[gender_col.toLowerCase()] || "").trim().toLowerCase();
 					if (me._looks_male(gv) && male_hex) {
@@ -962,10 +963,11 @@ nce_events.panel_page.Explorer = class Explorer {
 
 	/* ── Column auto-sizing ── */
 
-	_calc_col_widths(columns, rows, has_drills, float_w) {
+	_calc_col_widths(columns, rows, drill_count, float_w) {
 		var sample = rows.slice(0, 20);
 		var MIN_COL = 50;
 		var MAX_COL = 500;
+		var DRILL_BTN_W = 160;
 		var avg_chars = [];
 
 		columns.forEach(function (col) {
@@ -988,7 +990,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		avg_chars.forEach(function (c) { total_chars += c; });
 
 		var available = float_w - 40;
-		if (has_drills) available -= 320;
+		if (drill_count > 0) available -= drill_count * DRILL_BTN_W;
 
 		var widths = [];
 		avg_chars.forEach(function (c) {
@@ -1017,10 +1019,10 @@ nce_events.panel_page.Explorer = class Explorer {
 
 			$("body").addClass("col-resizing");
 			$(document).on("mousemove.col_resize", function (ev) {
-				var new_w = Math.max(40, start_w + ev.clientX - start_x);
-				$th.css({ width: new_w + "px", minWidth: new_w + "px" });
+				var new_w = Math.max(30, start_w + ev.clientX - start_x);
+				$th.css({ width: new_w, minWidth: new_w });
 				float_el.find(".panel-table tbody tr").each(function () {
-					$(this).children("td").eq(col_idx).css({ width: new_w + "px", minWidth: new_w + "px" });
+					$(this).children("td").eq(col_idx).css({ width: new_w, minWidth: new_w });
 				});
 			});
 			$(document).on("mouseup.col_resize", function () {
