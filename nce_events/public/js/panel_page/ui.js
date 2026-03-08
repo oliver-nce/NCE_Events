@@ -1,5 +1,4 @@
 frappe.provide("nce_events.panel_page");
-alert("ui.js loaded – build " + Date.now());
 
 nce_events.panel_page.Explorer = class Explorer {
 	constructor(page) {
@@ -272,31 +271,13 @@ nce_events.panel_page.Explorer = class Explorer {
 		var drill_col_w = has_drills ? me._calc_drill_col_width(child_doctypes) : 0;
 		var col_widths = me._calc_col_widths(columns, rows, drill_col_w, float_w);
 
-		var col_total = 0;
-		var _dbg = "<pre style='font-size:13px;line-height:1.6;'>";
-		_dbg += "Panel: " + doctype + "\n";
-		_dbg += "float_w: " + float_w + "\n";
-		_dbg += "drill_col_w: " + drill_col_w + "\n";
-		_dbg += "avail: " + (float_w - 160 - drill_col_w) + " (panel - 160 - drill)\n\n";
-		_dbg += "COLUMNS:\n";
-		columns.forEach(function (col, ci) {
-			var lbl = (col.label + "                    ").slice(0, 22);
-			_dbg += "  " + lbl + col_widths[ci] + "px\n";
-			col_total += col_widths[ci];
-		});
-		_dbg += "  ----------------------\n";
-		_dbg += "  SUM:                  " + col_total + "px\n\n";
-		_dbg += "TOTAL: " + col_total + " + " + drill_col_w + " + 160 = " + (col_total + drill_col_w + 160) + "  (panel=" + float_w + ")";
-		_dbg += "</pre>";
-		frappe.msgprint({ title: "Panel Sizing Debug", message: _dbg, wide: true });
-
 		var html = '<table class="panel-table"><thead><tr>';
 		columns.forEach(function (col, ci) {
 			var fn = col.fieldname.toLowerCase();
 			var w = col_widths[ci] || 100;
 			var style = "width:" + w + "px;min-width:30px;";
 			if (bold_set[fn]) style += "font-weight:700;";
-			html += '<th style="' + style + 'position:relative;">' +
+			html += '<th style="' + style + '">' +
 				frappe.utils.escape_html(col.label) +
 				'<div class="col-resize-handle" data-col="' + ci + '"></div></th>';
 		});
@@ -989,27 +970,17 @@ nce_events.panel_page.Explorer = class Explorer {
 		$(document.body).append(measurer);
 
 		var total = 0;
-		var _dbg2 = "<pre style='font-size:13px;line-height:1.6;'>";
-		_dbg2 += "Drill calc (DOM measured):\n\n";
 		child_doctypes.forEach(function (child) {
 			var btn = $('<button class="btn btn-xs drill-btn">' +
 				frappe.utils.escape_html(child.label) +
 				' <span class="drill-count">(999)</span>' +
 				' <i class="fa fa-chevron-right" style="font-size:9px;"></i></button>');
 			measurer.append(btn);
-			var w = btn[0].offsetWidth + 6;
-			var lbl = ("'" + child.label + "'                ").slice(0, 22);
-			_dbg2 += "  " + lbl + w + "px\n";
-			total += w;
+			total += btn[0].offsetWidth + 6;
 		});
 
 		measurer.remove();
-		var result = Math.ceil(total + 16);
-		_dbg2 += "  ----------------------\n";
-		_dbg2 += "  TOTAL:                " + result + "px\n";
-		_dbg2 += "</pre>";
-		frappe.msgprint({ title: "Drill Button Sizing", message: _dbg2, wide: true });
-		return result;
+		return Math.ceil(total + 16);
 	}
 
 	/* ── Column auto-sizing ── */
