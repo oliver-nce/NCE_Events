@@ -46,13 +46,22 @@ def _write_theme_css(doc):
 		"}\n"
 	)
 
-	path = frappe.get_app_path("nce_events", "public", "css", "custom_theme.css")
-	os.makedirs(os.path.dirname(path), exist_ok=True)
-	with open(path, "w") as f:
+	# Write to app source (survives bench build)
+	source_path = frappe.get_app_path("nce_events", "public", "css", "custom_theme.css")
+	os.makedirs(os.path.dirname(source_path), exist_ok=True)
+	with open(source_path, "w") as f:
+		f.write(css)
+
+	# Write to served assets (takes effect immediately without bench build)
+	served_path = os.path.join(
+		frappe.local.sites_path, "assets", "nce_events", "css", "custom_theme.css"
+	)
+	os.makedirs(os.path.dirname(served_path), exist_ok=True)
+	with open(served_path, "w") as f:
 		f.write(css)
 
 	frappe.msgprint(
-		f"Theme CSS updated — font: {doc.font_family}, size: {font_size}.",
+		f"Theme CSS updated — font: {doc.font_family}, size: {font_size}. Hard-refresh to see changes.",
 		indicator="green",
 		alert=True,
 	)
