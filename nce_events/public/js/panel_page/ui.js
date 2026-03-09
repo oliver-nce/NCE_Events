@@ -249,7 +249,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		const drill_col_w = has_drills ? me._calc_drill_col_width(child_doctypes) : 0;
 		const col_widths = me._calc_col_widths(columns, rows, drill_col_w, float_w);
 
-		const row_ctx = me._build_row_ctx(config, data, col_widths, is_wp, panel.selected_row);
+		const row_ctx = me._build_row_ctx(doctype, config, data, col_widths, is_wp, panel.selected_row);
 
 		let html = '<table class="panel-table"><thead><tr>';
 		columns.forEach(function (col, ci) {
@@ -353,7 +353,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		const body = float_el.find(".panel-pane-body");
 
 		body.on("click", ".panel-row", function (e) {
-			if ($(e.target).closest(".drill-btn").length) return;
+			if ($(e.target).closest(".drill-btn, .panel-tel-link, .panel-sms-one-btn").length) return;
 
 			const ri = parseInt($(this).data("row-idx"), 10);
 			const rows = me._get_filtered_rows(doctype);
@@ -391,6 +391,15 @@ nce_events.panel_page.Explorer = class Explorer {
 			const parent_filter = {};
 			parent_filter[link_field] = row_name;
 			me._open_doctype_panel(child_dt, doctype, parent_filter);
+		});
+
+		body.on("click", ".panel-sms-one-btn", function (e) {
+			e.preventDefault();
+			e.stopPropagation();
+			const target_dt = $(this).data("doctype");
+			const row_name = $(this).data("row-name");
+			if (!target_dt || !row_name) return;
+			me._open_send_dialog(target_dt, "sms", { name: row_name });
 		});
 	}
 
@@ -580,7 +589,7 @@ nce_events.panel_page.Explorer = class Explorer {
 
 	/* ── Send dialog (delegated to SendDialog class) ── */
 
-	_open_send_dialog(doctype, mode) {
+	_open_send_dialog(doctype, mode, single_row_filter) {
 		const me = this;
 		const panel = me.store.get_panel(doctype);
 		if (!panel || !panel.config || !panel.data) return;
@@ -592,8 +601,18 @@ nce_events.panel_page.Explorer = class Explorer {
 			return;
 		}
 
-		const filtered_rows = me._get_filtered_rows(doctype);
-		if (!filtered_rows.length) { frappe.msgprint(__("No rows.")); return; }
+		let filters, user_filters, row_count;
+		if (single_row_filter) {
+			filters = single_row_filter;
+			user_filters = [];
+			row_count = 1;
+		} else {
+			const filtered_rows = me._get_filtered_rows(doctype);
+			if (!filtered_rows.length) { frappe.msgprint(__("No rows.")); return; }
+			filters = panel.parent_filter || {};
+			user_filters = panel.user_filters || [];
+			row_count = filtered_rows.length;
+		}
 
 		if (me._send_dialog) { me._send_dialog.close(); }
 
@@ -601,9 +620,9 @@ nce_events.panel_page.Explorer = class Explorer {
 			doctype: doctype,
 			mode: mode,
 			config: config,
-			filters: panel.parent_filter || {},
-			user_filters: panel.user_filters || [],
-			row_count: filtered_rows.length,
+			filters: filters,
+			user_filters: user_filters,
+			row_count: row_count,
 			z_index: me._float_z + 10,
 			on_close: function () { me._send_dialog = null; },
 		});
@@ -769,7 +788,7 @@ nce_events.panel_page.Explorer = class Explorer {
 			col_widths.push(parseInt($(this).css("width"), 10) || 100);
 		});
 
-		const row_ctx = me._build_row_ctx(panel.config, panel.data, col_widths, is_wp, null);
+		const row_ctx = me._build_row_ctx(doctype, panel.config, panel.data, col_widths, is_wp, null);
 
 		let html = "";
 		new_rows.forEach(function (row, bi) {
@@ -837,7 +856,14 @@ nce_events.panel_page.Explorer = class Explorer {
 				parts.push("font-weight:700 !important");
 			}
 
-			html += `<td style="${parts.join(";")};">${frappe.utils.escape_html(String(value))}</td>`;
+			let cell_html = frappe.utils.escape_html(String(value));
+			const is_phone = ctx.sms_field && (fn === ctx.sms_field || fn === "phon" || fn === "phone");
+			if (is_phone && value && /[\d+]/.test(String(value))) {
+				const tel_val = String(value).replace(/\s+/g, "");
+				cell_html = cell_html + ' <a href="tel:' + frappe.utils.escape_html(tel_val) + '" class="panel-tel-link" title="Call">&#128222;</a>';
+				cell_html += ' <span class="panel-sms-one-btn" data-doctype="' + frappe.utils.escape_html(ctx.doctype) + '" data-row-name="' + frappe.utils.escape_html(row.name) + '" title="Send SMS to this person">&#128172;</span>';
+			}
+			html += `<td style="${parts.join(";")};">${cell_html}</td>`;
 		});
 
 		if (ctx.has_drills) {
@@ -855,8 +881,9 @@ nce_events.panel_page.Explorer = class Explorer {
 		return html;
 	}
 
-	_build_row_ctx(config, data, col_widths, is_wp, selected_row) {
+	_build_row_ctx(doctype, config, data, col_widths, is_wp, selected_row) {
 		return {
+			doctype: doctype,
 			columns: data.columns || [],
 			col_widths: col_widths,
 			bold_set: this._field_set(config.bold_fields),
@@ -865,6 +892,7 @@ nce_events.panel_page.Explorer = class Explorer {
 			gender_col: (config.gender_column || "").trim(),
 			gender_tint_set: this._field_set(config.gender_color_fields),
 			tint_by_gender: config.tint_by_gender || {},
+			sms_field: (config.sms_field || "").toLowerCase(),
 			child_doctypes: data.child_doctypes || [],
 			has_drills: !is_wp && (data.child_doctypes || []).length > 0,
 			selected_row: selected_row || null,

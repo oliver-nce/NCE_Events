@@ -197,6 +197,28 @@ body.col-resizing * {
 	background: #C7E0FA;
 }
 
+/* ── Phone / SMS icons in table cells ── */
+
+.panel-tel-link,
+.panel-sms-one-btn {
+	cursor: pointer;
+	opacity: 0.7;
+}
+
+.panel-tel-link:hover,
+.panel-sms-one-btn:hover {
+	opacity: 1;
+}
+
+.panel-tel-link {
+	text-decoration: none;
+	color: inherit;
+}
+
+.panel-sms-one-btn {
+	user-select: none;
+}
+
 /* ── Load More ── */
 
 .panel-load-more {
