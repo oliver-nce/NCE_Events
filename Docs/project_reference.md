@@ -49,7 +49,8 @@ nce_events/
 │       ├── panel_page/
 │       │   ├── ui.js                # Explorer renderer (floating windows, sheets)
 │       │   ├── store.js             # Store state management
-│       │   └── send_dialog.js       # SendDialog class (bulk SMS/email UI)
+│       │   ├── sms_dialog.js        # SmsDialog (message only, no subject/template/email copy)
+│       │   └── email_dialog.js      # EmailDialog (full: source, subject, template, copy)
 │       ├── email_template_tags.js   # Insert Tag button (opens Tag Finder) on Email Template
 │       ├── schema_explorer.js       # Tag Finder — Miller columns tag generator
 │       └── hierarchy_explorer/      # Legacy JS (frozen)
@@ -142,7 +143,7 @@ Site-wide settings. Tabs: **Styles** (font, colors — same as former Display Se
 
 All pages route through a single shared Frappe Page (`page-view`) at `/app/page-view/{page_name}`.
 
-`page_view.js` does `frappe.require` on `store.js`, `send_dialog.js`, `ui.js`, and `panel_page.css`, then creates an `Explorer(page, page_name)`. Without a `page_name`, it shows a landing page listing active pages.
+`page_view.js` does `frappe.require` on `store.js`, `sms_dialog.js`, `email_dialog.js`, `ui.js`, and `panel_page.css`, then creates an `Explorer(page, page_name)`. Without a `page_name`, it shows a landing page listing active pages.
 
 ---
 
@@ -243,7 +244,8 @@ Columns from the report's SQL. Each row is a report column; matrix columns: Fiel
 |---|---|---|
 | `Explorer` | `ui.js` | `nce_events.panel_page.Explorer` |
 | `Store` | `store.js` | `nce_events.panel_page.Store` |
-| `SendDialog` | `send_dialog.js` | `nce_events.panel_page.SendDialog` |
+| `SmsDialog` | `sms_dialog.js` | `nce_events.panel_page.SmsDialog` |
+| `EmailDialog` | `email_dialog.js` | `nce_events.panel_page.EmailDialog` |
 
 ### Floating Windows
 
@@ -260,9 +262,9 @@ All panels render as draggable `position:fixed` elements. Root panel (WP Tables)
 
 Each non-WP row shows buttons for child DocTypes (from `get_child_doctypes`). Count badge `(N)`, grayed out at 0.
 
-### SendDialog
+### SmsDialog / EmailDialog
 
-Draggable, resizable floating panel. Two modes: **Type a message** (textarea + Tag Finder opens) or **Use Email Template** (autocomplete). Features: Preview, Send Test, Send.
+Separate dialogs: **SmsDialog** — message only (no subject, template, or email copy). **EmailDialog** — full: Source (Type / Email Template), Subject, Message, "Also send email copy", Preview, Send Test, Send. Both draggable, resizable, Tag Finder integration.
 
 ### Bold and Gender Color
 

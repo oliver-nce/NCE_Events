@@ -12,7 +12,7 @@ A Frappe v15 app that provides a multi-panel floating-window data explorer for N
 
 See `Docs/project_reference.md` for the full file structure and API reference.
 
-Key modules: `api/panel_api.py`, `api/messaging.py`, `public/js/panel_page/` (ui.js, store.js, send_dialog.js), `public/js/schema_explorer.js`.
+Key modules: `api/panel_api.py`, `api/messaging.py`, `public/js/panel_page/` (ui.js, store.js, sms_dialog.js, email_dialog.js), `public/js/schema_explorer.js`.
 
 ## Installation
 

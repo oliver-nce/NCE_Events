@@ -1,9 +1,8 @@
 frappe.provide("nce_events.panel_page");
 
-nce_events.panel_page.SendDialog = class SendDialog {
+nce_events.panel_page.EmailDialog = class EmailDialog {
 	constructor(opts) {
 		this.doctype = opts.doctype;
-		this.mode = opts.mode;
 		this.config = opts.config;
 		this.filters = opts.filters || {};
 		this.user_filters = opts.user_filters || [];
@@ -21,8 +20,7 @@ nce_events.panel_page.SendDialog = class SendDialog {
 	_build() {
 		const me = this;
 		const count = me.row_count;
-		const mode = me.mode;
-		const title = `${mode === "sms" ? "Send SMS" : "Send Email"} (${count} recipients)`;
+		const title = `Send Email (${count} recipients)`;
 
 		const el = $('<div class="send-panel"></div>');
 		el.html(`
@@ -47,7 +45,7 @@ nce_events.panel_page.SendDialog = class SendDialog {
 						<label class="send-field-label">Email Template</label>
 						<input class="send-field send-template-input" type="text" placeholder="Template name...">
 					</div>
-					<label class="send-check-label"><input type="checkbox" class="send-copy-check"${mode === "sms" ? " checked" : ""}> Also send email copy</label>
+					<label class="send-check-label"><input type="checkbox" class="send-copy-check"> Also send email copy</label>
 					<div class="send-panel-actions">
 						<button class="btn btn-xs btn-default send-preview-btn"><i class="fa fa-eye"></i> Preview</button>
 						<span class="send-actions-right">
@@ -64,7 +62,7 @@ nce_events.panel_page.SendDialog = class SendDialog {
 					<div class="send-preview-subject"></div>
 					<div class="send-preview-body"></div>
 					<div class="send-test-row">
-						<input class="send-field send-test-input" type="text" placeholder="${mode === "sms" ? "Test phone number..." : "Test email address..."}">
+						<input class="send-field send-test-input" type="text" placeholder="Test email address...">
 						<button class="btn btn-xs btn-default send-test-btn"><i class="fa fa-paper-plane"></i> Send Test</button>
 					</div>
 				</div>
@@ -192,16 +190,14 @@ nce_events.panel_page.SendDialog = class SendDialog {
 	_do_preview() {
 		const me = this;
 		const el = me.el;
-		const filters = me.filters;
-		const doctype = me.doctype;
 
 		me._resolve_body(function (body_text, subject_text) {
 			el.find(".send-preview-btn").prop("disabled", true);
 			frappe.call({
 				method: "nce_events.api.messaging.preview_panel_message",
 				args: {
-					root_doctype: doctype,
-					filters: JSON.stringify(filters),
+					root_doctype: me.doctype,
+					filters: JSON.stringify(me.filters),
 					user_filters: JSON.stringify(me.user_filters),
 					body: body_text,
 					subject: subject_text,
@@ -227,7 +223,6 @@ nce_events.panel_page.SendDialog = class SendDialog {
 		const el = me.el;
 		const send_btn = el.find(".send-send-btn");
 		const send_copy = el.find(".send-copy-check").is(":checked") ? 1 : 0;
-		const recipient_field = me.mode === "sms" ? me.config.sms_field : me.config.email_field;
 
 		me._resolve_body(function (final_body, final_subject) {
 			send_btn.prop("disabled", true).text("Sending...");
@@ -237,8 +232,8 @@ nce_events.panel_page.SendDialog = class SendDialog {
 					root_doctype: me.doctype,
 					filters: JSON.stringify(me.filters),
 					user_filters: JSON.stringify(me.user_filters),
-					mode: me.mode,
-					recipient_field: recipient_field,
+					mode: "email",
+					recipient_field: me.config.email_field,
 					body: final_body,
 					subject: final_subject,
 					send_email_copy: send_copy,
@@ -256,16 +251,15 @@ nce_events.panel_page.SendDialog = class SendDialog {
 		});
 	}
 
-	/* ── Send test (email or SMS) ── */
+	/* ── Send test ── */
 
 	_do_send_test() {
 		const me = this;
 		const el = me.el;
 		const test_value = el.find(".send-test-input").val().trim();
-		const is_sms = me.mode === "sms";
 
 		if (!test_value) {
-			frappe.msgprint(is_sms ? __("Enter a test phone number.") : __("Enter a test email address."));
+			frappe.msgprint(__("Enter a test email address."));
 			return;
 		}
 
@@ -274,12 +268,20 @@ nce_events.panel_page.SendDialog = class SendDialog {
 		me._resolve_body(function (body_text, subject_text) {
 			test_btn.prop("disabled", true).text("Sending...");
 
-			const call_opts = {
+			frappe.call({
+				method: "nce_events.api.messaging.send_test_email",
+				args: {
+					root_doctype: me.doctype,
+					filters: JSON.stringify(me.filters),
+					user_filters: JSON.stringify(me.user_filters),
+					body: body_text,
+					subject: subject_text,
+					test_email: test_value,
+				},
 				callback: function (r) {
 					test_btn.prop("disabled", false).html('<i class="fa fa-paper-plane"></i> Send Test');
 					if (r.message && r.message.sent) {
-						const msg = is_sms ? __("Test SMS sent to {0}", [r.message.to]) : __("Test email sent to {0}", [r.message.to]);
-						frappe.show_alert({ message: msg, indicator: "green" });
+						frappe.show_alert({ message: __("Test email sent to {0}", [r.message.to]), indicator: "green" });
 					} else if (r.message && r.message.error) {
 						frappe.msgprint(r.message.error);
 					}
@@ -287,30 +289,7 @@ nce_events.panel_page.SendDialog = class SendDialog {
 				error: function () {
 					test_btn.prop("disabled", false).html('<i class="fa fa-paper-plane"></i> Send Test');
 				},
-			};
-
-			if (is_sms) {
-				call_opts.method = "nce_events.api.messaging.send_test_sms";
-				call_opts.args = {
-					root_doctype: me.doctype,
-					filters: JSON.stringify(me.filters),
-					user_filters: JSON.stringify(me.user_filters),
-					body: body_text,
-					test_phone: test_value,
-				};
-			} else {
-				call_opts.method = "nce_events.api.messaging.send_test_email";
-				call_opts.args = {
-					root_doctype: me.doctype,
-					filters: JSON.stringify(me.filters),
-					user_filters: JSON.stringify(me.user_filters),
-					body: body_text,
-					subject: subject_text,
-					test_email: test_value,
-				};
-			}
-
-			frappe.call(call_opts);
+			});
 		});
 	}
 

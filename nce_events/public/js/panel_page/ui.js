@@ -587,7 +587,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		});
 	}
 
-	/* ── Send dialog (delegated to SendDialog class) ── */
+	/* ── Send dialog (SmsDialog or EmailDialog by mode) ── */
 
 	_open_send_dialog(doctype, mode, single_row_filter) {
 		const me = this;
@@ -616,9 +616,9 @@ nce_events.panel_page.Explorer = class Explorer {
 
 		if (me._send_dialog) { me._send_dialog.close(); }
 
-		me._send_dialog = new nce_events.panel_page.SendDialog({
+		const DialogClass = mode === "sms" ? nce_events.panel_page.SmsDialog : nce_events.panel_page.EmailDialog;
+		me._send_dialog = new DialogClass({
 			doctype: doctype,
-			mode: mode,
 			config: config,
 			filters: filters,
 			user_filters: user_filters,
