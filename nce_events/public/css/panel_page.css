@@ -431,8 +431,7 @@ body.panel-float-dragging * {
 	margin-bottom: 5px;
 }
 
-.filter-col-select,
-.filter-op-select {
+.filter-col-select {
 	font-size: 12px;
 	padding: 2px 4px;
 	border: 1px solid #C7E0FA;
@@ -442,7 +441,35 @@ body.panel-float-dragging * {
 }
 
 .filter-col-select { flex: 2; min-width: 0; }
-.filter-op-select  { flex: 1; min-width: 0; }
+
+.filter-op-btns {
+	display: flex;
+	flex-wrap: nowrap;
+	gap: 2px;
+	align-items: center;
+}
+
+.filter-op-btn {
+	font-size: 11px;
+	padding: 2px 6px;
+	line-height: 1.2;
+	border: 1px solid #C7E0FA;
+	border-radius: 3px;
+	background: #FFF;
+	color: #333;
+	cursor: pointer;
+}
+
+.filter-op-btn:hover {
+	border-color: #4198F0;
+	background: #F1F7FE;
+}
+
+.filter-op-btn.active {
+	border-color: #4198F0;
+	background: #4198F0;
+	color: #FFF;
+}
 
 .filter-val-input {
 	flex: 2;

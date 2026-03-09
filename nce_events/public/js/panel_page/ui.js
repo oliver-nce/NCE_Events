@@ -438,17 +438,30 @@ nce_events.panel_page.Explorer = class Explorer {
 		const panel = me.store.get_panel(doctype);
 		if (!panel || !panel.data) return;
 
-		const conditions = me.store.get_user_filters(doctype);
+		let conditions = me.store.get_user_filters(doctype);
+		const was_empty = !conditions.length;
+		if (was_empty) {
+			conditions = [{ field: "", op: "=", value: "" }];
+			me.store.set_user_filters(doctype, conditions);
+		}
 		const ops = ["=", "!=", ">", "<", "like", "in"];
 		const columns = panel.data.columns || [];
 
 		const widget = $('<div class="pane-filter-widget"></div>');
 
-		const refetch_and_render = function () {
+		const refetch_and_render = function (preserve_filter_focus, after_render) {
 			me.store.fetch_data(doctype, me._PAGE_SIZE).then(function () {
 				if (!me._destroyed) {
-					me._render_panel(doctype);
+					me._render_panel(doctype, { skip_header: !!preserve_filter_focus });
 					me._fetch_remaining(doctype);
+					if (preserve_filter_focus) {
+						const p = me.store.get_panel(doctype);
+						const total = (p && p.data) ? (p.data.total || 0) : 0;
+						const rows = me._get_filtered_rows(doctype);
+						const txt = (rows.length !== total) ? rows.length + " / " + total : String(total);
+						float_el.find(".pane-count").text(txt + " records");
+					}
+					if (after_render) after_render();
 				}
 			}).catch(function () {
 				if (!me._destroyed) me._render_panel(doctype);
@@ -464,11 +477,20 @@ nce_events.panel_page.Explorer = class Explorer {
 				if (col.fieldname === cond.field) opt.prop("selected", true);
 				col_sel.append(opt);
 			});
-			const op_sel = $('<select class="filter-op-select"></select>');
+			const op_btns = $('<span class="filter-op-btns"></span>');
 			ops.forEach(function (op) {
-				const opt = $("<option></option>").val(op).text(op);
-				if (op === cond.op) opt.prop("selected", true);
-				op_sel.append(opt);
+				const btn = $('<button type="button" class="filter-op-btn"></button>').text(op);
+				if (op === (cond.op || "=")) btn.addClass("active");
+				btn.on("click", function () {
+					conditions[i].op = op;
+					me.store.set_user_filters(doctype, conditions);
+					op_btns.find(".filter-op-btn").removeClass("active");
+					btn.addClass("active");
+					refetch_and_render(false, function () {
+						float_el.find(".filter-val-input[data-filter-row='" + i + "']").focus();
+					});
+				});
+				op_btns.append(btn);
 			});
 			const val_inp = $('<input class="filter-val-input" type="text" placeholder="value">').val(cond.value);
 			const rm_btn = $('<button class="btn btn-xs filter-remove-btn" title="Remove">&times;</button>');
@@ -483,14 +505,10 @@ nce_events.panel_page.Explorer = class Explorer {
 				conditions[i].field = $(this).val();
 				refetch_and_render();
 			});
-			op_sel.on("change", function () {
-				conditions[i].op = $(this).val();
-				refetch_and_render();
-			});
 			val_inp.on("input", function () {
 				conditions[i].value = $(this).val();
 				if (me._filter_debounce) clearTimeout(me._filter_debounce);
-				me._filter_debounce = setTimeout(refetch_and_render, 1500);
+				me._filter_debounce = setTimeout(function () { refetch_and_render(true); }, 1500);
 			});
 			val_inp.attr("data-filter-row", i);
 			val_inp.on("keydown", function (e) {
@@ -513,11 +531,11 @@ nce_events.panel_page.Explorer = class Explorer {
 			});
 
 			rm_btn.attr("tabindex", "-1");
-			row.append(col_sel, op_sel, val_inp, rm_btn);
+			row.append(col_sel, op_btns, val_inp, rm_btn);
 			widget.append(row);
 		});
 
-		const add_btn = $('<button class="btn btn-xs btn-default filter-add-btn">+ Add Filter</button>');
+		const add_btn = $('<button class="btn btn-xs btn-default filter-add-btn">Add Filter &#9660;</button>');
 		add_btn.on("click", function () {
 			conditions.push({ field: "", op: "=", value: "" });
 			me.store.set_user_filters(doctype, conditions);
@@ -527,6 +545,9 @@ nce_events.panel_page.Explorer = class Explorer {
 
 		float_el.find(".pane-filter-widget").remove();
 		float_el.find(".panel-pane-header").append(widget);
+		if (was_empty) {
+			widget.find(".filter-val-input[data-filter-row='0']").focus();
+		}
 	}
 
 	/* ── Export ── */
