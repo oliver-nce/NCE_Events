@@ -6,6 +6,7 @@ nce_events.panel_page.SendDialog = class SendDialog {
 		this.mode = opts.mode;
 		this.config = opts.config;
 		this.filters = opts.filters || {};
+		this.user_filters = opts.user_filters || [];
 		this.row_count = opts.row_count || 0;
 		this.z_index = opts.z_index || 110;
 		this.on_close = opts.on_close || null;
@@ -201,6 +202,7 @@ nce_events.panel_page.SendDialog = class SendDialog {
 				args: {
 					root_doctype: doctype,
 					filters: JSON.stringify(filters),
+					user_filters: JSON.stringify(me.user_filters),
 					body: body_text,
 					subject: subject_text,
 				},
@@ -234,6 +236,7 @@ nce_events.panel_page.SendDialog = class SendDialog {
 				args: {
 					root_doctype: me.doctype,
 					filters: JSON.stringify(me.filters),
+					user_filters: JSON.stringify(me.user_filters),
 					mode: me.mode,
 					recipient_field: recipient_field,
 					body: final_body,
@@ -291,6 +294,7 @@ nce_events.panel_page.SendDialog = class SendDialog {
 				call_opts.args = {
 					root_doctype: me.doctype,
 					filters: JSON.stringify(me.filters),
+					user_filters: JSON.stringify(me.user_filters),
 					body: body_text,
 					test_phone: test_value,
 				};
@@ -299,6 +303,7 @@ nce_events.panel_page.SendDialog = class SendDialog {
 				call_opts.args = {
 					root_doctype: me.doctype,
 					filters: JSON.stringify(me.filters),
+					user_filters: JSON.stringify(me.user_filters),
 					body: body_text,
 					subject: subject_text,
 					test_email: test_value,

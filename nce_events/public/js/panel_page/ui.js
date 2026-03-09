@@ -444,6 +444,17 @@ nce_events.panel_page.Explorer = class Explorer {
 
 		const widget = $('<div class="pane-filter-widget"></div>');
 
+		const refetch_and_render = function () {
+			me.store.fetch_data(doctype, me._PAGE_SIZE).then(function () {
+				if (!me._destroyed) {
+					me._render_panel(doctype);
+					me._fetch_remaining(doctype);
+				}
+			}).catch(function () {
+				if (!me._destroyed) me._render_panel(doctype);
+			});
+		};
+
 		conditions.forEach(function (cond, i) {
 			const row = $('<div class="filter-condition-row"></div>');
 			const col_sel = $('<select class="filter-col-select"></select>');
@@ -466,14 +477,20 @@ nce_events.panel_page.Explorer = class Explorer {
 				conditions.splice(i, 1);
 				me.store.set_user_filters(doctype, conditions);
 				me._render_filter_widget(doctype);
-				me._render_panel(doctype, { skip_header: false });
+				refetch_and_render();
 			});
-			col_sel.on("change", function () { conditions[i].field = $(this).val(); me._render_panel(doctype, { skip_header: true }); });
-			op_sel.on("change", function () { conditions[i].op = $(this).val(); me._render_panel(doctype, { skip_header: true }); });
+			col_sel.on("change", function () {
+				conditions[i].field = $(this).val();
+				refetch_and_render();
+			});
+			op_sel.on("change", function () {
+				conditions[i].op = $(this).val();
+				refetch_and_render();
+			});
 			val_inp.on("input", function () {
 				conditions[i].value = $(this).val();
 				if (me._filter_debounce) clearTimeout(me._filter_debounce);
-				me._filter_debounce = setTimeout(function () { me._render_panel(doctype, { skip_header: true }); }, 400);
+				me._filter_debounce = setTimeout(refetch_and_render, 400);
 			});
 
 			row.append(col_sel, op_sel, val_inp, rm_btn);
@@ -497,9 +514,14 @@ nce_events.panel_page.Explorer = class Explorer {
 	_on_sheets(doctype) {
 		const panel = this.store.get_panel(doctype);
 		const filters = panel ? panel.parent_filter : {};
+		const user_filters = panel ? (panel.user_filters || []) : [];
 		frappe.call({
 			method: "nce_events.api.panel_api.export_panel_data",
-			args: { root_doctype: doctype, filters: JSON.stringify(filters) },
+			args: {
+				root_doctype: doctype,
+				filters: JSON.stringify(filters),
+				user_filters: JSON.stringify(user_filters),
+			},
 			callback: function (r) {
 				if (!r.message) return;
 				const url = window.location.origin + r.message.url;
@@ -529,8 +551,8 @@ nce_events.panel_page.Explorer = class Explorer {
 			return;
 		}
 
-		const rows = panel.data.rows || [];
-		if (!rows.length) { frappe.msgprint(__("No rows.")); return; }
+		const filtered_rows = me._get_filtered_rows(doctype);
+		if (!filtered_rows.length) { frappe.msgprint(__("No rows.")); return; }
 
 		if (me._send_dialog) { me._send_dialog.close(); }
 
@@ -539,7 +561,8 @@ nce_events.panel_page.Explorer = class Explorer {
 			mode: mode,
 			config: config,
 			filters: panel.parent_filter || {},
-			row_count: rows.length,
+			user_filters: panel.user_filters || [],
+			row_count: filtered_rows.length,
 			z_index: me._float_z + 10,
 			on_close: function () { me._send_dialog = null; },
 		});

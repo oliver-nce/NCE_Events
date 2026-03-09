@@ -113,6 +113,7 @@ def get_panel_data(
 	filters: str | dict | None = None,
 	limit: int | str = 0,
 	start: int | str = 0,
+	user_filters: str | list | None = None,
 ) -> dict[str, Any]:
 	"""Fetch rows from a DocType, optionally filtered and paginated.
 
@@ -120,11 +121,17 @@ def get_panel_data(
 	Supports dot-notation fields (e.g. "link_field.child_field") which are
 	resolved via frappe.get_all's native dot-field support.
 
+	user_filters is a JSON list of {field, op, value} applied after computed
+	columns are evaluated (slow path: per-row evaluation, then filter).
+
 	limit/start enable pagination.  limit=0 (default) fetches all rows.
 	"""
 	if isinstance(filters, str):
 		filters = json.loads(filters) if filters else {}
 	filters = filters or {}
+	if isinstance(user_filters, str):
+		user_filters = json.loads(user_filters) if user_filters else []
+	user_filters = user_filters or []
 	limit = cint(limit)
 	start = cint(start)
 
@@ -147,11 +154,16 @@ def get_panel_data(
 	core_filter = (config.get("core_filter") or "").strip()
 	order_by = (config.get("order_by") or "").strip() or "name ASC"
 
+	# When user_filters present (may include computed columns), fetch all then filter in Python
+	use_slow_filter = bool(user_filters)
+	db_limit = 0 if use_slow_filter else limit
+	db_start = 0 if use_slow_filter else start
+
 	if core_filter:
 		total_count = _count_with_core_filter(root_doctype, filters, core_filter)
 		rows = _query_with_core_filter(
 			root_doctype, simple_fields, filters, core_filter, order_by,
-			limit=limit, start=start,
+			limit=db_limit, start=db_start,
 		)
 	else:
 		total_count = frappe.db.count(root_doctype, filters=filters)
@@ -159,9 +171,9 @@ def get_panel_data(
 			doctype=root_doctype, fields=simple_fields, filters=filters,
 			order_by=order_by,
 		)
-		if limit:
-			get_all_kw["limit_page_length"] = limit
-			get_all_kw["limit_start"] = start
+		if db_limit:
+			get_all_kw["limit_page_length"] = db_limit
+			get_all_kw["limit_start"] = db_start
 		else:
 			get_all_kw["limit_page_length"] = 0
 		rows = frappe.get_all(**get_all_kw)
@@ -231,6 +243,12 @@ def get_panel_data(
 	if computed_columns and rows:
 		_evaluate_computed_columns(root_doctype, rows, computed_columns)
 
+	if use_slow_filter:
+		rows = _apply_user_filters(rows, user_filters)
+		total_count = len(rows)
+		if limit:
+			rows = rows[start : start + limit]
+
 	return {
 		"columns": columns,
 		"rows": rows,
@@ -243,9 +261,13 @@ _ROSTER_HASH: str = "wwe78f6q87ey97f86q9e8fqw98ef"
 
 
 @frappe.whitelist()
-def export_panel_data(root_doctype: str, filters: str | dict | None = None) -> dict[str, Any]:
+def export_panel_data(
+	root_doctype: str,
+	filters: str | dict | None = None,
+	user_filters: str | list | None = None,
+) -> dict[str, Any]:
 	"""Export a panel's current data as CSV to a public path and return its URL."""
-	result = get_panel_data(root_doctype, filters)
+	result = get_panel_data(root_doctype, filters, user_filters=user_filters)
 	columns = result["columns"]
 	rows = result["rows"]
 
@@ -597,3 +619,50 @@ def _run_computed_sql(expr: str, row: dict[str, Any]) -> Any:
 	if len(results) == 1:
 		return dict(results[0])
 	return [dict(r) for r in results]
+
+
+def _apply_user_filters(
+	rows: list[dict[str, Any]],
+	user_filters: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+	"""Filter rows by user filter conditions (field, op, value).
+
+	Supports =, !=, >, <, like, in. Works on both DB and computed columns.
+	"""
+	if not user_filters:
+		return rows
+	active = [c for c in user_filters if c.get("field") and str(c.get("value", "")) != ""]
+	if not active:
+		return rows
+
+	def _cell_str(val: Any) -> str:
+		if val is None:
+			return ""
+		if isinstance(val, (dict, list)):
+			return json.dumps(val)
+		return str(val)
+
+	def _matches(row: dict[str, Any], c: dict[str, Any]) -> bool:
+		field = c.get("field", "")
+		op = (c.get("op") or "=").strip()
+		val = c.get("value", "")
+		cell = _cell_str(row.get(field))
+		try:
+			if op == "=":
+				return cell == val
+			if op == "!=":
+				return cell != val
+			if op == ">":
+				return float(cell or 0) > float(val or 0)
+			if op == "<":
+				return float(cell or 0) < float(val or 0)
+			if op == "like":
+				return val.lower() in cell.lower()
+			if op == "in":
+				vals = [v.strip() for v in val.split(",") if v.strip()]
+				return cell in vals
+		except (ValueError, TypeError):
+			return False
+		return True
+
+	return [r for r in rows if all(_matches(r, c) for c in active)]

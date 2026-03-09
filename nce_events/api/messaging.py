@@ -47,6 +47,7 @@ def _render_body(body: str, context: dict[str, Any], for_html: bool = True) -> s
 def send_test_email(
 	root_doctype: str,
 	filters: str | dict | None = None,
+	user_filters: str | list | None = None,
 	body: str = "",
 	subject: str = "",
 	test_email: str = "",
@@ -56,7 +57,7 @@ def send_test_email(
 		return {"error": "No test email address provided."}
 	test_email = test_email.strip()
 
-	result = get_panel_data(root_doctype, filters)
+	result = get_panel_data(root_doctype, filters, user_filters=user_filters)
 	rows = result.get("rows") or []
 	if not rows:
 		return {"error": "No rows to preview."}
@@ -78,6 +79,7 @@ def send_test_email(
 def send_test_sms(
 	root_doctype: str,
 	filters: str | dict | None = None,
+	user_filters: str | list | None = None,
 	body: str = "",
 	test_phone: str = "",
 ) -> dict[str, Any]:
@@ -86,7 +88,7 @@ def send_test_sms(
 		return {"error": "No test phone number provided."}
 	test_phone = test_phone.strip()
 
-	result = get_panel_data(root_doctype, filters)
+	result = get_panel_data(root_doctype, filters, user_filters=user_filters)
 	rows = result.get("rows") or []
 	if not rows:
 		return {"error": "No rows to preview."}
@@ -103,11 +105,12 @@ def send_test_sms(
 def preview_panel_message(
 	root_doctype: str,
 	filters: str | dict | None = None,
+	user_filters: str | list | None = None,
 	body: str = "",
 	subject: str = "",
 ) -> dict[str, Any]:
 	"""Render a message template against the first row for preview."""
-	result = get_panel_data(root_doctype, filters)
+	result = get_panel_data(root_doctype, filters, user_filters=user_filters)
 	rows = result.get("rows") or []
 	if not rows:
 		return {"error": "No rows to preview."}
@@ -132,6 +135,7 @@ def preview_panel_message(
 def send_panel_message(
 	root_doctype: str,
 	filters: str | dict | None = None,
+	user_filters: str | list | None = None,
 	mode: str = "sms",
 	recipient_field: str = "",
 	body: str = "",
@@ -141,7 +145,7 @@ def send_panel_message(
 ) -> dict[str, int]:
 	"""Send bulk SMS and/or email to all rows in a panel."""
 	send_email_copy = int(send_email_copy)
-	result = get_panel_data(root_doctype, filters)
+	result = get_panel_data(root_doctype, filters, user_filters=user_filters)
 	rows = result["rows"]
 
 	sent = 0

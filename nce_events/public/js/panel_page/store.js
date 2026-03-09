@@ -104,6 +104,7 @@ nce_events.panel_page.Store = class Store {
 		const args = {
 			root_doctype: doctype,
 			filters: JSON.stringify(filters),
+			user_filters: JSON.stringify(panel.user_filters || []),
 		};
 		if (limit) {
 			args.limit = limit;
@@ -140,6 +141,7 @@ nce_events.panel_page.Store = class Store {
 				args: {
 					root_doctype: doctype,
 					filters: JSON.stringify(filters),
+					user_filters: JSON.stringify(panel.user_filters || []),
 					limit: limit,
 					start: start,
 				},

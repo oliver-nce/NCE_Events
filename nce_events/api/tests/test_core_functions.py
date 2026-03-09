@@ -11,7 +11,7 @@ import json
 import unittest
 from unittest.mock import patch
 
-from nce_events.api.panel_api import _build_core_filter_where, _ensure_tab_prefix
+from nce_events.api.panel_api import _apply_user_filters, _build_core_filter_where, _ensure_tab_prefix
 from nce_events.api.tags import _compute_jinja_tag
 
 
@@ -77,6 +77,37 @@ class TestBuildCoreFilterWhere(unittest.TestCase):
 		)
 		self.assertEqual(where, "(1=1) AND `name` like %s")
 		self.assertEqual(params, ["%test%"])
+
+
+# ──────────────────────────────────────────────────────────
+# _apply_user_filters (computed column filters, slow path)
+# ──────────────────────────────────────────────────────────
+
+class TestApplyUserFilters(unittest.TestCase):
+
+	def test_empty_filters_returns_all(self):
+		rows = [{"name": "a", "x": 1}, {"name": "b", "x": 2}]
+		self.assertEqual(_apply_user_filters(rows, []), rows)
+		self.assertEqual(_apply_user_filters(rows, [{"field": "x", "op": "=", "value": ""}]), rows)
+
+	def test_equality_filter(self):
+		rows = [{"name": "a", "status": "Open"}, {"name": "b", "status": "Closed"}]
+		filters = [{"field": "status", "op": "=", "value": "Open"}]
+		self.assertEqual(_apply_user_filters(rows, filters), [{"name": "a", "status": "Open"}])
+
+	def test_like_filter(self):
+		rows = [{"name": "abc"}, {"name": "xyz"}, {"name": "a1b"}]
+		filters = [{"field": "name", "op": "like", "value": "a"}]
+		result = _apply_user_filters(rows, filters)
+		self.assertEqual(len(result), 2)
+		self.assertIn({"name": "abc"}, result)
+		self.assertIn({"name": "a1b"}, result)
+
+	def test_in_filter(self):
+		rows = [{"name": "a"}, {"name": "b"}, {"name": "c"}]
+		filters = [{"field": "name", "op": "in", "value": "a, c"}]
+		result = _apply_user_filters(rows, filters)
+		self.assertEqual(result, [{"name": "a"}, {"name": "c"}])
 
 
 # ──────────────────────────────────────────────────────────
