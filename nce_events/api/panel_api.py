@@ -154,12 +154,13 @@ def get_panel_data(
 	core_filter = (config.get("core_filter") or "").strip()
 	order_by = (config.get("order_by") or "").strip() or "name ASC"
 
-	# When user_filters present (may include computed columns), fetch all then filter in Python
+	# When user_filters present: search whole data, bypass panel WHERE (as if core_filter empty)
 	use_slow_filter = bool(user_filters)
 	db_limit = 0 if use_slow_filter else limit
 	db_start = 0 if use_slow_filter else start
+	use_core_filter = core_filter and not use_slow_filter
 
-	if core_filter:
+	if use_core_filter:
 		total_count = _count_with_core_filter(root_doctype, filters, core_filter)
 		rows = _query_with_core_filter(
 			root_doctype, simple_fields, filters, core_filter, order_by,
