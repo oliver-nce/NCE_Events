@@ -37,15 +37,15 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 					</select>
 					<label class="send-field-label">Subject</label>
 					<input class="send-field send-subject-input" type="text">
+					<div class="send-template-section" style="display:none;">
+						<label class="send-field-label">Load from Email Template</label>
+						<input class="send-field send-template-input" type="text" placeholder="Pick template to load into message below...">
+					</div>
 					<div class="send-message-section">
 						<label class="send-field-label">Message</label>
 						<div class="send-message-editor-wrap"></div>
 					</div>
-					<div class="send-template-section" style="display:none;">
-						<label class="send-field-label">Email Template</label>
-						<input class="send-field send-template-input" type="text" placeholder="Template name...">
-					</div>
-					<label class="send-check-label"><input type="checkbox" class="send-copy-check"> Also send email copy</label>
+					<div class="send-panel-spacer"></div>
 					<div class="send-panel-actions">
 						<button class="btn btn-xs btn-default send-preview-btn"><i class="fa fa-eye"></i> Preview</button>
 						<span class="send-actions-right">
@@ -100,16 +100,20 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 
 		source_sel.on("change", function () {
 			if (source_sel.val() === "type") {
-				msg_section.show(); tpl_section.hide();
+				tpl_section.hide();
+				msg_section.show();
 				me._open_tags();
 			} else {
-				msg_section.hide(); tpl_section.show();
-				me._close_tags();
+				tpl_section.show();
+				msg_section.show();
+				me._open_tags();
 			}
 		});
 
 		if (tpl_input.length) {
-			me._setup_template_autocomplete(tpl_input);
+			me._setup_template_autocomplete(tpl_input, function (tpl_name) {
+				me._load_template_into_editor(tpl_name);
+			});
 		}
 
 		el.find(".send-panel-close").on("click", function () { me.close(); });
@@ -137,34 +141,41 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 		}
 	}
 
-	/* ── Resolve message body from source (type or template) ── */
+	/* ── Load template into message editor (for one-off edits) ── */
+
+	_load_template_into_editor(tpl_name) {
+		const me = this;
+		const el = me.el;
+		if (!tpl_name || !tpl_name.trim()) return;
+		frappe.call({
+			method: "frappe.client.get",
+			args: { doctype: "Email Template", name: tpl_name.trim() },
+			callback: function (r) {
+				if (!r.message) return;
+				const body = r.message.response || "";
+				const subject = r.message.subject || "";
+				el.find(".send-subject-input").val(subject);
+				if (me._message_control && me._message_control.set_value) {
+					me._message_control.set_value(body);
+				}
+			}
+		});
+	}
+
+	/* ── Resolve message body (always from message editor; template just loads into it) ── */
 
 	_resolve_body(callback) {
 		const el = this.el;
-		const source = el.find(".send-source-select").val();
 		const subject = el.find(".send-subject-input").val() || "";
-
-		if (source === "template") {
-			const tpl_name = el.find(".send-template-input").val().trim();
-			if (!tpl_name) { frappe.msgprint(__("Select a template first.")); return; }
-			frappe.call({
-				method: "frappe.client.get",
-				args: { doctype: "Email Template", name: tpl_name },
-				callback: function (r) {
-					if (!r.message) return;
-					callback(r.message.response || "", subject || r.message.subject || "");
-				}
-			});
-		} else {
-			const body = (this._message_control && this._message_control.get_value && this._message_control.get_value()) || "";
-			if (!body || !String(body).trim()) { frappe.msgprint(__("Enter a message first.")); return; }
-			callback(body, subject);
-		}
+		const body = (this._message_control && this._message_control.get_value && this._message_control.get_value()) || "";
+		if (!body || !String(body).trim()) { frappe.msgprint(__("Enter a message first.")); return; }
+		callback(body, subject);
 	}
 
 	/* ── Template autocomplete ── */
 
-	_setup_template_autocomplete(input_el) {
+	_setup_template_autocomplete(input_el, on_pick) {
+		const me = this;
 		const list_el = $('<div class="send-template-list"></div>').insertAfter(input_el);
 		let debounce;
 		input_el.on("input", function () {
@@ -182,6 +193,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 							item.on("click", function () {
 								input_el.val(t.name);
 								list_el.empty().hide();
+								if (on_pick) on_pick(t.name);
 							});
 							list_el.append(item);
 						});
@@ -232,7 +244,6 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 		const me = this;
 		const el = me.el;
 		const send_btn = el.find(".send-send-btn");
-		const send_copy = el.find(".send-copy-check").is(":checked") ? 1 : 0;
 
 		me._resolve_body(function (final_body, final_subject) {
 			send_btn.prop("disabled", true).text("Sending...");
@@ -246,7 +257,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 					recipient_field: me.config.email_field,
 					body: final_body,
 					subject: final_subject,
-					send_email_copy: send_copy,
+					send_email_copy: 0,
 					email_field: me.config.email_field || "",
 				},
 				callback: function (r) {

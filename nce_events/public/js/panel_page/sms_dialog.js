@@ -35,13 +35,13 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 						<option value="type">Type a message</option>
 						<option value="template">Use Email Template</option>
 					</select>
+					<div class="send-template-section" style="display:none;">
+						<label class="send-field-label">Load from Email Template</label>
+						<input class="send-field send-template-input" type="text" placeholder="Pick template to load into message below...">
+					</div>
 					<div class="send-message-section">
 						<label class="send-field-label">Message</label>
 						<textarea class="send-field send-message-input" placeholder="Jinja2 tags supported. Sent to all ${count} rows."></textarea>
-					</div>
-					<div class="send-template-section" style="display:none;">
-						<label class="send-field-label">Email Template</label>
-						<input class="send-field send-template-input" type="text" placeholder="Template name (e.g. Event cancelled)...">
 					</div>
 					<div class="send-panel-actions">
 						<button class="btn btn-xs btn-default send-preview-btn"><i class="fa fa-eye"></i> Preview</button>
@@ -86,16 +86,20 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 
 		source_sel.on("change", function () {
 			if (source_sel.val() === "type") {
-				msg_section.show(); tpl_section.hide();
+				tpl_section.hide();
+				msg_section.show();
 				me._open_tags();
 			} else {
-				msg_section.hide(); tpl_section.show();
-				me._close_tags();
+				tpl_section.show();
+				msg_section.show();
+				me._open_tags();
 			}
 		});
 
 		if (tpl_input.length) {
-			me._setup_template_autocomplete(tpl_input);
+			me._setup_template_autocomplete(tpl_input, function (tpl_name) {
+				me._load_template_into_editor(tpl_name);
+			});
 		}
 
 		el.find(".send-panel-close").on("click", function () { me.close(); });
@@ -123,33 +127,33 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 		}
 	}
 
-	/* ── Resolve message body from source (type or template) ── */
+	/* ── Load template into message area (for one-off edits) ── */
+
+	_load_template_into_editor(tpl_name) {
+		const me = this;
+		const el = me.el;
+		if (!tpl_name || !tpl_name.trim()) return;
+		frappe.call({
+			method: "frappe.client.get",
+			args: { doctype: "Email Template", name: tpl_name.trim() },
+			callback: function (r) {
+				if (!r.message) return;
+				el.find(".send-message-input").val(r.message.response || "");
+			}
+		});
+	}
+
+	/* ── Resolve message body (always from message area; template just loads into it) ── */
 
 	_resolve_body(callback) {
-		const el = this.el;
-		const source = el.find(".send-source-select").val();
-
-		if (source === "template") {
-			const tpl_name = el.find(".send-template-input").val().trim();
-			if (!tpl_name) { frappe.msgprint(__("Select a template first.")); return; }
-			frappe.call({
-				method: "frappe.client.get",
-				args: { doctype: "Email Template", name: tpl_name },
-				callback: function (r) {
-					if (!r.message) return;
-					callback(r.message.response || "");
-				}
-			});
-		} else {
-			const body = el.find(".send-message-input").val() || "";
-			if (!body.trim()) { frappe.msgprint(__("Enter a message first.")); return; }
-			callback(body);
-		}
+		const body = this.el.find(".send-message-input").val() || "";
+		if (!body.trim()) { frappe.msgprint(__("Enter a message first.")); return; }
+		callback(body);
 	}
 
 	/* ── Template autocomplete ── */
 
-	_setup_template_autocomplete(input_el) {
+	_setup_template_autocomplete(input_el, on_pick) {
 		const list_el = $('<div class="send-template-list"></div>').insertAfter(input_el);
 		let debounce;
 		input_el.on("input", function () {
@@ -167,6 +171,7 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 							item.on("click", function () {
 								input_el.val(t.name);
 								list_el.empty().hide();
+								if (on_pick) on_pick(t.name);
 							});
 							list_el.append(item);
 						});
