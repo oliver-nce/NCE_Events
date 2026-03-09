@@ -720,14 +720,20 @@ nce_events.panel_page.Explorer = class Explorer {
 			const col_idx = parseInt($handle.attr("data-col"), 10);
 
 			$("body").addClass("col-resizing");
+			let raf = null;
 			$(document).on("mousemove.col_resize", function (ev) {
-				const new_w = Math.max(30, start_w + ev.clientX - start_x);
-				$th.css({ width: new_w, minWidth: new_w });
-				float_el.find(".panel-table tbody tr").each(function () {
-					$(this).children("td").eq(col_idx).css({ width: new_w, minWidth: new_w });
+				if (raf) return;
+				raf = requestAnimationFrame(function () {
+					const new_w = Math.max(30, start_w + ev.clientX - start_x);
+					$th.css({ width: new_w, minWidth: new_w });
+					float_el.find(".panel-table tbody tr").each(function () {
+						$(this).children("td").eq(col_idx).css({ width: new_w, minWidth: new_w });
+					});
+					raf = null;
 				});
 			});
 			$(document).on("mouseup.col_resize", function () {
+				if (raf) { cancelAnimationFrame(raf); raf = null; }
 				$("body").removeClass("col-resizing");
 				$(document).off("mousemove.col_resize mouseup.col_resize");
 			});
@@ -908,14 +914,27 @@ nce_events.panel_page.Explorer = class Explorer {
 			const sx = e.clientX, sy = e.clientY;
 			const sl = parseInt(el.css("left"), 10) || 0;
 			const st = parseInt(el.css("top"), 10) || 0;
+			const ghost = $("<div class='drag-ghost'></div>").css({
+				position: "fixed", left: sl, top: st,
+				width: el.outerWidth(), height: el.outerHeight(),
+				zIndex: (parseInt(el.css("zIndex"), 10) || 100) + 1,
+			});
+			$(document.body).append(ghost);
+			el.css("opacity", "0.4");
 			$("body").addClass("panel-float-dragging");
 			$(document).on(`mousemove.${ns}`, function (ev) {
-				el.css({
+				ghost.css({
 					left: `${sl + ev.clientX - sx}px`,
 					top: `${Math.min(st + ev.clientY - sy, window.innerHeight - 40)}px`,
 				});
 			});
 			$(document).on(`mouseup.${ns}`, function () {
+				el.css({
+					left: ghost.css("left"),
+					top: ghost.css("top"),
+					opacity: "",
+				});
+				ghost.remove();
 				$("body").removeClass("panel-float-dragging");
 				$(document).off(`mousemove.${ns} mouseup.${ns}`);
 			});

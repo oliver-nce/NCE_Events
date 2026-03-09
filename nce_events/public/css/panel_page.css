@@ -377,6 +377,14 @@ body.panel-float-dragging * {
 	user-select: none !important;
 }
 
+.drag-ghost {
+	border: 2px dashed #126BC4;
+	border-radius: 8px;
+	background: rgba(18, 107, 196, 0.06);
+	pointer-events: none;
+	box-sizing: border-box;
+}
+
 /* ── Landing Page ── */
 
 .panel-landing {

@@ -324,14 +324,23 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 			const sx = e.clientX, sy = e.clientY;
 			const sl = parseInt(el.css("left"), 10) || 0;
 			const st = parseInt(el.css("top"), 10) || 0;
+			const ghost = $("<div class='drag-ghost'></div>").css({
+				position: "fixed", left: sl, top: st,
+				width: el.outerWidth(), height: el.outerHeight(),
+				zIndex: (parseInt(el.css("zIndex"), 10) || 100) + 1,
+			});
+			$(document.body).append(ghost);
+			el.css("opacity", "0.4");
 			$("body").addClass("panel-float-dragging");
 			$(document).on(`mousemove.${ns}`, function (ev) {
-				el.css({
+				ghost.css({
 					left: `${sl + ev.clientX - sx}px`,
 					top: `${Math.min(st + ev.clientY - sy, window.innerHeight - 40)}px`,
 				});
 			});
 			$(document).on(`mouseup.${ns}`, function () {
+				el.css({ left: ghost.css("left"), top: ghost.css("top"), opacity: "" });
+				ghost.remove();
 				$("body").removeClass("panel-float-dragging");
 				$(document).off(`mousemove.${ns} mouseup.${ns}`);
 			});
@@ -346,13 +355,24 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 		el.append(handle);
 		handle.on("mousedown", function (e) {
 			e.preventDefault(); e.stopPropagation();
-			const sw = el.width(), sh = el.height();
+			const sw = el.outerWidth(), sh = el.outerHeight();
 			const sx = e.clientX, sy = e.clientY;
+			const ghost = $("<div class='drag-ghost'></div>").css({
+				position: "fixed",
+				left: parseInt(el.css("left"), 10) || 0,
+				top: parseInt(el.css("top"), 10) || 0,
+				width: sw, height: sh,
+				zIndex: (parseInt(el.css("zIndex"), 10) || 100) + 1,
+			});
+			$(document.body).append(ghost);
+			el.css("opacity", "0.4");
 			$("body").addClass("panel-float-dragging");
 			$(document).on("mousemove.send_resize", function (ev) {
-				el.css({ width: `${Math.max(500, sw + ev.clientX - sx)}px`, height: `${Math.max(300, sh + ev.clientY - sy)}px` });
+				ghost.css({ width: `${Math.max(500, sw + ev.clientX - sx)}px`, height: `${Math.max(300, sh + ev.clientY - sy)}px` });
 			});
 			$(document).on("mouseup.send_resize", function () {
+				el.css({ width: ghost.css("width"), height: ghost.css("height"), opacity: "" });
+				ghost.remove();
 				$("body").removeClass("panel-float-dragging");
 				$(document).off("mousemove.send_resize mouseup.send_resize");
 			});
