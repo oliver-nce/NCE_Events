@@ -17,6 +17,7 @@ frappe.pages["page-view"].on_page_show = function (wrapper) {
 	frappe.require(
 		[
 			"/assets/nce_events/js/panel_page/store.js",
+			"/assets/nce_events/js/panel_page/ai_tools.js",
 			"/assets/nce_events/js/panel_page/sms_dialog.js",
 			"/assets/nce_events/js/panel_page/email_dialog.js",
 			"/assets/nce_events/js/panel_page/ui.js",

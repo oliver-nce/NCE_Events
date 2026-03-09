@@ -47,7 +47,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 					</div>
 				</div>
 				<div class="send-panel-footer">
-					<div class="send-panel-spacer"></div>
+					${nce_events.panel_page.ai_tools.build_bar_html()}
 					<div class="send-panel-actions">
 						<button class="btn btn-xs btn-default send-preview-btn"><i class="fa fa-eye"></i> Preview</button>
 						<span class="send-actions-right">
@@ -87,6 +87,18 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 
 		me._make_draggable(el);
 		me._make_resizable(el);
+
+		me._ai_get_body = function () {
+			return (me._message_control && me._message_control.get_value()) || "";
+		};
+		me._ai_set_body = function (val) {
+			if (me._message_control && me._message_control.set_value) {
+				me._message_control.set_value(val);
+			}
+		};
+		me._ai_is_html = function () { return true; };
+
+		nce_events.panel_page.ai_tools.attach(me);
 	}
 
 	/* ── Bind events ── */

@@ -45,7 +45,7 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 					</div>
 				</div>
 				<div class="send-panel-footer">
-					<div class="send-panel-spacer"></div>
+					${nce_events.panel_page.ai_tools.build_bar_html()}
 					<div class="send-panel-actions">
 						<button class="btn btn-xs btn-default send-preview-btn"><i class="fa fa-eye"></i> Preview</button>
 						<span class="send-actions-right">
@@ -74,6 +74,16 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 
 		me._make_draggable(el);
 		me._make_resizable(el);
+
+		me._ai_get_body = function () {
+			return el.find(".send-message-input").val() || "";
+		};
+		me._ai_set_body = function (val) {
+			el.find(".send-message-input").val(val);
+		};
+		me._ai_is_html = function () { return false; };
+
+		nce_events.panel_page.ai_tools.attach(me);
 	}
 
 	/* ── Bind events ── */
