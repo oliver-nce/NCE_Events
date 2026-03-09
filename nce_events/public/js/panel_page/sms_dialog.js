@@ -167,8 +167,21 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 	/* ── Template autocomplete ── */
 
 	_setup_template_autocomplete(input_el, on_pick) {
-		const list_el = $('<div class="send-template-list"></div>').insertAfter(input_el);
+		const me = this;
+		const list_el = $('<div class="send-template-list"></div>');
+		$(document.body).append(list_el);
 		let debounce;
+
+		function position_list() {
+			const rect = input_el[0].getBoundingClientRect();
+			list_el.css({
+				position: "fixed",
+				left: rect.left,
+				top: rect.bottom + 2,
+				width: rect.width,
+			});
+		}
+
 		input_el.on("input", function () {
 			clearTimeout(debounce);
 			debounce = setTimeout(function () {
@@ -188,7 +201,12 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 							});
 							list_el.append(item);
 						});
-						list_el.toggle(!!(r.message && r.message.length));
+						if (r.message && r.message.length) {
+							position_list();
+							list_el.show();
+						} else {
+							list_el.hide();
+						}
 					}
 				});
 			}, 200);
@@ -196,6 +214,8 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 		input_el.on("blur", function () {
 			setTimeout(function () { list_el.hide(); }, 200);
 		});
+
+		me._tpl_list_el = list_el;
 	}
 
 	/* ── Preview ── */
@@ -306,6 +326,7 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 	/* ── Close ── */
 
 	close() {
+		if (this._tpl_list_el) { this._tpl_list_el.remove(); this._tpl_list_el = null; }
 		if (this.el) {
 			this.el.remove();
 			this.el = null;

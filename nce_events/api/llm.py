@@ -67,9 +67,9 @@ def _anthropic_send(
 	import requests
 
 	connector = frappe.get_doc("API Connector", "Anthropic")
-	api_key = connector.get_password("password")
+	api_key = connector.get_password("api_key")
 	if not api_key or not str(api_key).strip():
-		frappe.throw(_("No API key configured. Set the password on the Anthropic API Connector."))
+		frappe.throw(_("No API key configured. Set the API Key on the Anthropic API Connector."))
 
 	# Model: explicit arg > API Connector model field > default
 	model = (model or connector.get("model") or "").strip() or "claude-sonnet-4-20250514"
