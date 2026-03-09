@@ -177,6 +177,15 @@ Key behaviors:
 
 Credentials from `API Connector` DocType: "Twilio" (Account SID / Auth Token), "SendGrid" (from email / API key).
 
+### llm.py — LLM prompts
+
+| Function | Params | Purpose |
+|---|---|---|
+| `send_prompt_to_llm` | `prompt, provider="Anthropic", system_prompt, model, max_tokens` | Send prompt to LLM, return response text |
+| `llm_send_prompt` | *(whitelisted)* same | Call from UI |
+
+Credentials from `API Connector` "Anthropic" (password = API key). Provider arg allows adding OpenAI, Google, etc. later.
+
 ### translator.py — WP → Frappe SQL
 
 | Function | Params | Purpose |
