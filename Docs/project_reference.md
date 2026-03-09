@@ -264,7 +264,7 @@ Each non-WP row shows buttons for child DocTypes (from `get_child_doctypes`). Co
 
 ### SmsDialog / EmailDialog
 
-Separate dialogs: **SmsDialog** — message only (no subject, template, or email copy). **EmailDialog** — full: Source (Type / Email Template), Subject, Message, "Also send email copy", Preview, Send Test, Send. Both draggable, resizable, Tag Finder integration.
+Separate dialogs: **SmsDialog** — Source (Type / Email Template), message only (no subject, no email copy). Templates store formats like "Event cancelled"; Jinja tags allowed. **EmailDialog** — full: Source (Type / Email Template), Subject, Message, "Also send email copy", Preview, Send Test, Send. Both draggable, resizable, Tag Finder integration.
 
 ### Bold and Gender Color
 

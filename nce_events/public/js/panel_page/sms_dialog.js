@@ -30,8 +30,19 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 			</div>
 			<div class="send-panel-body">
 				<div class="send-panel-form">
-					<label class="send-field-label">Message</label>
-					<textarea class="send-field send-message-input" placeholder="Jinja2 tags supported. Sent to all ${count} rows."></textarea>
+					<label class="send-field-label">Source</label>
+					<select class="send-field send-source-select">
+						<option value="type">Type a message</option>
+						<option value="template">Use Email Template</option>
+					</select>
+					<div class="send-message-section">
+						<label class="send-field-label">Message</label>
+						<textarea class="send-field send-message-input" placeholder="Jinja2 tags supported. Sent to all ${count} rows."></textarea>
+					</div>
+					<div class="send-template-section" style="display:none;">
+						<label class="send-field-label">Email Template</label>
+						<input class="send-field send-template-input" type="text" placeholder="Template name (e.g. Event cancelled)...">
+					</div>
 					<div class="send-panel-actions">
 						<button class="btn btn-xs btn-default send-preview-btn"><i class="fa fa-eye"></i> Preview</button>
 						<span class="send-actions-right">
@@ -68,6 +79,25 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 		const me = this;
 		const el = me.el;
 
+		const source_sel = el.find(".send-source-select");
+		const msg_section = el.find(".send-message-section");
+		const tpl_section = el.find(".send-template-section");
+		const tpl_input = el.find(".send-template-input");
+
+		source_sel.on("change", function () {
+			if (source_sel.val() === "type") {
+				msg_section.show(); tpl_section.hide();
+				me._open_tags();
+			} else {
+				msg_section.hide(); tpl_section.show();
+				me._close_tags();
+			}
+		});
+
+		if (tpl_input.length) {
+			me._setup_template_autocomplete(tpl_input);
+		}
+
 		el.find(".send-panel-close").on("click", function () { me.close(); });
 		el.find(".send-cancel-btn").on("click", function () { me.close(); });
 		el.find(".send-preview-close").on("click", function () { el.find(".send-panel-preview").hide(); });
@@ -93,34 +123,90 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 		}
 	}
 
+	/* ── Resolve message body from source (type or template) ── */
+
+	_resolve_body(callback) {
+		const el = this.el;
+		const source = el.find(".send-source-select").val();
+
+		if (source === "template") {
+			const tpl_name = el.find(".send-template-input").val().trim();
+			if (!tpl_name) { frappe.msgprint(__("Select a template first.")); return; }
+			frappe.call({
+				method: "frappe.client.get",
+				args: { doctype: "Email Template", name: tpl_name },
+				callback: function (r) {
+					if (!r.message) return;
+					callback(r.message.response || "");
+				}
+			});
+		} else {
+			const body = el.find(".send-message-input").val() || "";
+			if (!body.trim()) { frappe.msgprint(__("Enter a message first.")); return; }
+			callback(body);
+		}
+	}
+
+	/* ── Template autocomplete ── */
+
+	_setup_template_autocomplete(input_el) {
+		const list_el = $('<div class="send-template-list"></div>').insertAfter(input_el);
+		let debounce;
+		input_el.on("input", function () {
+			clearTimeout(debounce);
+			debounce = setTimeout(function () {
+				const q = input_el.val().trim();
+				if (!q) { list_el.empty().hide(); return; }
+				frappe.call({
+					method: "frappe.client.get_list",
+					args: { doctype: "Email Template", filters: { name: ["like", `%${q}%`] }, fields: ["name"], limit_page_length: 8 },
+					callback: function (r) {
+						list_el.empty();
+						(r.message || []).forEach(function (t) {
+							const item = $('<div class="send-template-item"></div>').text(t.name);
+							item.on("click", function () {
+								input_el.val(t.name);
+								list_el.empty().hide();
+							});
+							list_el.append(item);
+						});
+						list_el.toggle(!!(r.message && r.message.length));
+					}
+				});
+			}, 200);
+		});
+		input_el.on("blur", function () {
+			setTimeout(function () { list_el.hide(); }, 200);
+		});
+	}
+
 	/* ── Preview ── */
 
 	_do_preview() {
 		const me = this;
 		const el = me.el;
-		const body_text = el.find(".send-message-input").val() || "";
 
-		if (!body_text.trim()) { frappe.msgprint(__("Enter a message first.")); return; }
-
-		el.find(".send-preview-btn").prop("disabled", true);
-		frappe.call({
-			method: "nce_events.api.messaging.preview_panel_message",
-			args: {
-				root_doctype: me.doctype,
-				filters: JSON.stringify(me.filters),
-				user_filters: JSON.stringify(me.user_filters),
-				body: body_text,
-				subject: "",
-			},
-			callback: function (r) {
-				el.find(".send-preview-btn").prop("disabled", false);
-				if (!r.message) return;
-				if (r.message.error) { frappe.msgprint(r.message.error); return; }
-				const preview_el = el.find(".send-panel-preview");
-				preview_el.find(".send-preview-body").html(r.message.rendered_body || "");
-				preview_el.show();
-			},
-			error: function () { el.find(".send-preview-btn").prop("disabled", false); },
+		me._resolve_body(function (body_text) {
+			el.find(".send-preview-btn").prop("disabled", true);
+			frappe.call({
+				method: "nce_events.api.messaging.preview_panel_message",
+				args: {
+					root_doctype: me.doctype,
+					filters: JSON.stringify(me.filters),
+					user_filters: JSON.stringify(me.user_filters),
+					body: body_text,
+					subject: "",
+				},
+				callback: function (r) {
+					el.find(".send-preview-btn").prop("disabled", false);
+					if (!r.message) return;
+					if (r.message.error) { frappe.msgprint(r.message.error); return; }
+					const preview_el = el.find(".send-panel-preview");
+					preview_el.find(".send-preview-body").html(r.message.rendered_body || "");
+					preview_el.show();
+				},
+				error: function () { el.find(".send-preview-btn").prop("disabled", false); },
+			});
 		});
 	}
 
@@ -130,32 +216,31 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 		const me = this;
 		const el = me.el;
 		const send_btn = el.find(".send-send-btn");
-		const body_text = el.find(".send-message-input").val() || "";
 
-		if (!body_text.trim()) { frappe.msgprint(__("Enter a message first.")); return; }
-
-		send_btn.prop("disabled", true).text("Sending...");
-		frappe.call({
-			method: "nce_events.api.messaging.send_panel_message",
-			args: {
-				root_doctype: me.doctype,
-				filters: JSON.stringify(me.filters),
-				user_filters: JSON.stringify(me.user_filters),
-				mode: "sms",
-				recipient_field: me.config.sms_field,
-				body: body_text,
-				subject: "",
-				send_email_copy: 0,
-				email_field: me.config.email_field || "",
-			},
-			callback: function (r) {
-				send_btn.prop("disabled", false).text("Send");
-				if (r.message) {
-					frappe.show_alert({ message: __("{0} messages sent", [r.message.sent || 0]), indicator: "green" });
-					me.close();
-				}
-			},
-			error: function () { send_btn.prop("disabled", false).text("Send"); },
+		me._resolve_body(function (body_text) {
+			send_btn.prop("disabled", true).text("Sending...");
+			frappe.call({
+				method: "nce_events.api.messaging.send_panel_message",
+				args: {
+					root_doctype: me.doctype,
+					filters: JSON.stringify(me.filters),
+					user_filters: JSON.stringify(me.user_filters),
+					mode: "sms",
+					recipient_field: me.config.sms_field,
+					body: body_text,
+					subject: "",
+					send_email_copy: 0,
+					email_field: me.config.email_field || "",
+				},
+				callback: function (r) {
+					send_btn.prop("disabled", false).text("Send");
+					if (r.message) {
+						frappe.show_alert({ message: __("{0} messages sent", [r.message.sent || 0]), indicator: "green" });
+						me.close();
+					}
+				},
+				error: function () { send_btn.prop("disabled", false).text("Send"); },
+			});
 		});
 	}
 
@@ -165,40 +250,38 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 		const me = this;
 		const el = me.el;
 		const test_value = el.find(".send-test-input").val().trim();
-		const body_text = el.find(".send-message-input").val() || "";
 
 		if (!test_value) {
 			frappe.msgprint(__("Enter a test phone number."));
 			return;
 		}
-		if (!body_text.trim()) {
-			frappe.msgprint(__("Enter a message first."));
-			return;
-		}
 
 		const test_btn = el.find(".send-test-btn");
-		test_btn.prop("disabled", true).text("Sending...");
 
-		frappe.call({
-			method: "nce_events.api.messaging.send_test_sms",
-			args: {
-				root_doctype: me.doctype,
-				filters: JSON.stringify(me.filters),
-				user_filters: JSON.stringify(me.user_filters),
-				body: body_text,
-				test_phone: test_value,
-			},
-			callback: function (r) {
-				test_btn.prop("disabled", false).html('<i class="fa fa-paper-plane"></i> Send Test');
-				if (r.message && r.message.sent) {
-					frappe.show_alert({ message: __("Test SMS sent to {0}", [r.message.to]), indicator: "green" });
-				} else if (r.message && r.message.error) {
-					frappe.msgprint(r.message.error);
-				}
-			},
-			error: function () {
-				test_btn.prop("disabled", false).html('<i class="fa fa-paper-plane"></i> Send Test');
-			},
+		me._resolve_body(function (body_text) {
+			test_btn.prop("disabled", true).text("Sending...");
+
+			frappe.call({
+				method: "nce_events.api.messaging.send_test_sms",
+				args: {
+					root_doctype: me.doctype,
+					filters: JSON.stringify(me.filters),
+					user_filters: JSON.stringify(me.user_filters),
+					body: body_text,
+					test_phone: test_value,
+				},
+				callback: function (r) {
+					test_btn.prop("disabled", false).html('<i class="fa fa-paper-plane"></i> Send Test');
+					if (r.message && r.message.sent) {
+						frappe.show_alert({ message: __("Test SMS sent to {0}", [r.message.to]), indicator: "green" });
+					} else if (r.message && r.message.error) {
+						frappe.msgprint(r.message.error);
+					}
+				},
+				error: function () {
+					test_btn.prop("disabled", false).html('<i class="fa fa-paper-plane"></i> Send Test');
+				},
+			});
 		});
 	}
 
