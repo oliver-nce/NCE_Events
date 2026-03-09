@@ -22,7 +22,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 		const count = me.row_count;
 		const title = `Send Email (${count} recipients)`;
 
-		const el = $('<div class="send-panel"></div>');
+		const el = $('<div class="send-panel send-panel-email"></div>');
 		el.html(`
 			<div class="send-panel-header">
 				<span class="send-panel-title">${frappe.utils.escape_html(title)}</span>
@@ -35,12 +35,12 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 						<option value="type">Type a message</option>
 						<option value="template">Use Email Template</option>
 					</select>
-					<label class="send-field-label">Subject</label>
-					<input class="send-field send-subject-input" type="text">
 					<div class="send-template-section" style="display:none;">
 						<label class="send-field-label">Load from Email Template</label>
 						<input class="send-field send-template-input" type="text" placeholder="Pick template to load into message below...">
 					</div>
+					<label class="send-field-label">Subject</label>
+					<input class="send-field send-subject-input" type="text">
 					<div class="send-message-section">
 						<label class="send-field-label">Message</label>
 						<div class="send-message-editor-wrap"></div>
@@ -56,24 +56,30 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 						</span>
 					</div>
 				</div>
-				<div class="send-panel-preview" style="display:none;">
-					<div class="send-preview-header">
-						<span class="send-preview-title">Preview</span>
-						<button class="send-preview-close" title="Close preview">&times;</button>
-					</div>
-					<div class="send-preview-subject"></div>
-					<div class="send-preview-body"></div>
-					<div class="send-test-row">
-						<input class="send-field send-test-input" type="text" placeholder="Test email address...">
-						<button class="btn btn-xs btn-default send-test-btn"><i class="fa fa-paper-plane"></i> Send Test</button>
-					</div>
-				</div>
 			</div>
 		`);
 
-		el.css({ top: "80px", left: "60px", zIndex: me.z_index });
+		const vh85 = window.innerHeight * 0.85;
+		const top = Math.max(10, (window.innerHeight - vh85) / 2);
+		el.css({ top: top + "px", left: "60px", height: vh85 + "px", zIndex: me.z_index });
 		$(document.body).append(el);
 		me.el = el;
+
+		me._preview_el = $(`
+			<div class="send-panel-preview" style="display:none;">
+				<div class="send-preview-header">
+					<span class="send-preview-title">Preview</span>
+					<button class="send-preview-close" title="Close preview">&times;</button>
+				</div>
+				<div class="send-preview-subject"></div>
+				<div class="send-preview-body"></div>
+				<div class="send-test-row">
+					<input class="send-field send-test-input" type="text" placeholder="Test email address...">
+					<button class="btn btn-xs btn-default send-test-btn"><i class="fa fa-paper-plane"></i> Send Test</button>
+				</div>
+			</div>
+		`);
+		$(document.body).append(me._preview_el);
 
 		me._message_control = frappe.ui.form.make_control({
 			parent: el.find(".send-message-editor-wrap"),
@@ -132,11 +138,11 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 
 		el.find(".send-panel-close").on("click", function () { me.close(); });
 		el.find(".send-cancel-btn").on("click", function () { me.close(); });
-		el.find(".send-preview-close").on("click", function () { el.find(".send-panel-preview").hide(); });
+		me._preview_el.find(".send-preview-close").on("click", function () { me._preview_el.hide(); });
 
 		el.on("click", ".send-preview-btn", function () { me._do_preview(); });
 		el.on("click", ".send-send-btn", function () { me._do_send(); });
-		el.on("click", ".send-test-btn", function () { me._do_send_test(); });
+		me._preview_el.on("click", ".send-test-btn", function () { me._do_send_test(); });
 
 		me._open_tags();
 	}
@@ -249,6 +255,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 	_do_preview() {
 		const me = this;
 		const el = me.el;
+		const pv = me._preview_el;
 
 		me._resolve_body(function (body_text, subject_text) {
 			el.find(".send-preview-btn").prop("disabled", true);
@@ -265,10 +272,20 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 					el.find(".send-preview-btn").prop("disabled", false);
 					if (!r.message) return;
 					if (r.message.error) { frappe.msgprint(r.message.error); return; }
-					const preview_el = el.find(".send-panel-preview");
-					preview_el.find(".send-preview-subject").text(r.message.rendered_subject || "(No subject)");
-					preview_el.find(".send-preview-body").html(r.message.rendered_body || "");
-					preview_el.show();
+					pv.find(".send-preview-subject").text(r.message.rendered_subject || "(No subject)");
+					pv.find(".send-preview-body").html(r.message.rendered_body || "");
+					const rect = el[0].getBoundingClientRect();
+					const pvW = 380;
+					let pvLeft = rect.right + 8;
+					if (pvLeft + pvW > window.innerWidth) pvLeft = rect.left - pvW - 8;
+					if (pvLeft < 0) pvLeft = 8;
+					pv.css({
+						top: rect.top + "px",
+						left: pvLeft + "px",
+						height: rect.height + "px",
+						zIndex: (parseInt(el.css("zIndex"), 10) || 110) + 1,
+					});
+					pv.show();
 				},
 				error: function () { el.find(".send-preview-btn").prop("disabled", false); },
 			});
@@ -313,15 +330,15 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 
 	_do_send_test() {
 		const me = this;
-		const el = me.el;
-		const test_value = el.find(".send-test-input").val().trim();
+		const pv = me._preview_el;
+		const test_value = pv.find(".send-test-input").val().trim();
 
 		if (!test_value) {
 			frappe.msgprint(__("Enter a test email address."));
 			return;
 		}
 
-		const test_btn = el.find(".send-test-btn");
+		const test_btn = pv.find(".send-test-btn");
 
 		me._resolve_body(function (body_text, subject_text) {
 			test_btn.prop("disabled", true).text("Sending...");
@@ -355,6 +372,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 
 	close() {
 		if (this._tpl_list_el) { this._tpl_list_el.remove(); this._tpl_list_el = null; }
+		if (this._preview_el) { this._preview_el.remove(); this._preview_el = null; }
 		if (this.el) {
 			this.el.remove();
 			this.el = null;

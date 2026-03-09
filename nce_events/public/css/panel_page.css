@@ -643,6 +643,10 @@ body.panel-float-dragging * {
 	min-width: 0;
 }
 
+.send-panel-email .send-panel-form {
+	overflow: hidden;
+}
+
 .send-panel-footer {
 	flex-shrink: 0;
 	display: flex;
@@ -736,18 +740,41 @@ body.panel-float-dragging * {
 
 .send-message-editor-wrap {
 	flex: 1;
-	min-height: 100px;
-	max-height: 220px;
+	display: flex;
+	flex-direction: column;
+	min-height: 80px;
+}
+
+.send-panel-email .send-message-editor-wrap {
+	overflow: hidden;
+}
+
+.send-message-editor-wrap .frappe-control,
+.send-message-editor-wrap .form-group,
+.send-message-editor-wrap .control-input-wrapper,
+.send-message-editor-wrap .control-input {
+	display: flex !important;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
+	margin-bottom: 0 !important;
+}
+
+.send-message-editor-wrap .ql-toolbar {
+	flex-shrink: 0;
 }
 
 .send-message-editor-wrap .ql-container {
-	min-height: 80px;
-	max-height: 200px;
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
 }
 
 .send-message-editor-wrap .ql-editor {
-	min-height: 80px;
-	max-height: 200px;
+	flex: 1;
+	min-height: 60px;
+	overflow-y: auto;
 }
 
 .send-template-list {
@@ -827,12 +854,14 @@ body.panel-float-dragging * {
 /* ── Preview pane ── */
 
 .send-panel-preview {
+	position: fixed;
 	width: 380px;
-	flex-shrink: 0;
 	display: flex;
 	flex-direction: column;
-	border-left: 1px solid #d1d8dd;
 	background: #FAFBFC;
+	border: 1px solid #A2CCF6;
+	border-radius: 8px;
+	box-shadow: 0 8px 32px rgba(18, 107, 196, 0.22), 0 2px 8px rgba(0, 0, 0, 0.08);
 	overflow: hidden;
 }
 
@@ -914,11 +943,12 @@ body.panel-float-dragging * {
 	position: absolute;
 	bottom: 0;
 	right: 0;
-	width: 14px;
-	height: 14px;
+	width: 18px;
+	height: 18px;
 	cursor: nwse-resize;
-	background: linear-gradient(135deg, transparent 50%, #A2CCF6 50%);
+	background: linear-gradient(135deg, transparent 40%, #A2CCF6 40%);
 	border-radius: 0 0 7px 0;
+	z-index: 10;
 }
 
 /* ── Responsive ── */
