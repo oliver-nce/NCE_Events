@@ -490,9 +490,29 @@ nce_events.panel_page.Explorer = class Explorer {
 			val_inp.on("input", function () {
 				conditions[i].value = $(this).val();
 				if (me._filter_debounce) clearTimeout(me._filter_debounce);
-				me._filter_debounce = setTimeout(refetch_and_render, 400);
+				me._filter_debounce = setTimeout(refetch_and_render, 1500);
+			});
+			val_inp.attr("data-filter-row", i);
+			val_inp.on("keydown", function (e) {
+				if (e.keyCode === 40) {
+					e.preventDefault();
+					const next = widget.find(".filter-val-input[data-filter-row='" + (i + 1) + "']");
+					if (next.length) next.focus();
+					else {
+						conditions.push({ field: "", op: "=", value: "" });
+						me.store.set_user_filters(doctype, conditions);
+						me._render_filter_widget(doctype);
+						const new_widget = float_el.find(".pane-filter-widget");
+						new_widget.find(".filter-val-input[data-filter-row='" + (conditions.length - 1) + "']").focus();
+					}
+				} else if (e.keyCode === 38) {
+					e.preventDefault();
+					const prev = widget.find(".filter-val-input[data-filter-row='" + (i - 1) + "']");
+					if (prev.length) prev.focus();
+				}
 			});
 
+			rm_btn.attr("tabindex", "-1");
 			row.append(col_sel, op_sel, val_inp, rm_btn);
 			widget.append(row);
 		});
