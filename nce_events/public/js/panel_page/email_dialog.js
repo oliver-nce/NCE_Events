@@ -194,47 +194,51 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 		$(document.body).append(list_el);
 		let debounce;
 
-		function position_list() {
+		function position_and_show() {
 			const rect = input_el[0].getBoundingClientRect();
 			list_el.css({
 				position: "fixed",
-				left: rect.left,
-				top: rect.bottom + 2,
-				width: rect.width,
+				left: rect.left + "px",
+				top: (rect.bottom + 2) + "px",
+				width: rect.width + "px",
+				zIndex: 99999,
+			});
+			list_el.show();
+		}
+
+		function do_search(q) {
+			const filters = q ? { name: ["like", `%${q}%`] } : {};
+			frappe.call({
+				method: "frappe.client.get_list",
+				args: { doctype: "Email Template", filters: filters, fields: ["name"], limit_page_length: 20 },
+				callback: function (r) {
+					list_el.empty();
+					(r.message || []).forEach(function (t) {
+						const item = $('<div class="send-template-item"></div>').text(t.name);
+						item.on("mousedown", function (e) {
+							e.preventDefault();
+							input_el.val(t.name);
+							list_el.empty().hide();
+							if (on_pick) on_pick(t.name);
+						});
+						list_el.append(item);
+					});
+					if (r.message && r.message.length) {
+						position_and_show();
+					} else {
+						list_el.hide();
+					}
+				}
 			});
 		}
 
+		input_el.on("focus", function () { do_search(input_el.val().trim()); });
 		input_el.on("input", function () {
 			clearTimeout(debounce);
-			debounce = setTimeout(function () {
-				const q = input_el.val().trim();
-				if (!q) { list_el.empty().hide(); return; }
-				frappe.call({
-					method: "frappe.client.get_list",
-					args: { doctype: "Email Template", filters: { name: ["like", `%${q}%`] }, fields: ["name"], limit_page_length: 8 },
-					callback: function (r) {
-						list_el.empty();
-						(r.message || []).forEach(function (t) {
-							const item = $('<div class="send-template-item"></div>').text(t.name);
-							item.on("click", function () {
-								input_el.val(t.name);
-								list_el.empty().hide();
-								if (on_pick) on_pick(t.name);
-							});
-							list_el.append(item);
-						});
-						if (r.message && r.message.length) {
-							position_list();
-							list_el.show();
-						} else {
-							list_el.hide();
-						}
-					}
-				});
-			}, 200);
+			debounce = setTimeout(function () { do_search(input_el.val().trim()); }, 200);
 		});
 		input_el.on("blur", function () {
-			setTimeout(function () { list_el.hide(); }, 200);
+			setTimeout(function () { list_el.hide(); }, 250);
 		});
 
 		me._tpl_list_el = list_el;

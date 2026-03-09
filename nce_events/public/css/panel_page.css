@@ -751,14 +751,15 @@ body.panel-float-dragging * {
 }
 
 .send-template-list {
+	display: none;
 	position: fixed;
 	background: #fff;
 	border: 1px solid #d1d8dd;
 	border-radius: 4px;
 	box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-	max-height: 160px;
+	max-height: 200px;
 	overflow-y: auto;
-	z-index: 1000;
+	z-index: 99999;
 	display: none;
 }
 
