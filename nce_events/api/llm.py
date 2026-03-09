@@ -7,16 +7,25 @@ import frappe
 from frappe import _
 
 
+def _get_default_provider() -> str:
+	"""Read default provider from Settings."""
+	try:
+		return (frappe.db.get_single_value("Settings", "default_provider") or "Anthropic").strip()
+	except Exception:
+		return "Anthropic"
+
+
 @frappe.whitelist()
 def llm_send_prompt(
 	prompt: str,
-	provider: str = "Anthropic",
+	provider: str | None = None,
 	system_prompt: str | None = None,
 	model: str | None = None,
 	max_tokens: int | str = 1024,
 ) -> str:
 	"""Whitelisted: send prompt to LLM and return response."""
 	max_tokens = int(max_tokens) if max_tokens else 1024
+	provider = (provider or "").strip() or _get_default_provider()
 	return send_prompt_to_llm(
 		prompt=prompt,
 		provider=provider,
@@ -28,20 +37,23 @@ def llm_send_prompt(
 
 def send_prompt_to_llm(
 	prompt: str,
-	provider: str = "Anthropic",
+	provider: str | None = None,
 	system_prompt: str | None = None,
 	model: str | None = None,
 	max_tokens: int = 1024,
 ) -> str:
 	"""Send a prompt to an LLM and return the response text.
 
-	provider: "Anthropic" (default), or future: "OpenAI", "Google", etc.
+	provider: From Settings.default_provider if not passed. "Anthropic", "Gemini", "OpenAI".
 	system_prompt: Optional system instruction.
-	model: Override default model (e.g. claude-sonnet-4-20250514).
+	model: Override; else read from API Connector for that provider.
 	max_tokens: Max tokens to generate.
 	"""
+	provider = (provider or "").strip() or _get_default_provider()
 	if provider == "Anthropic":
 		return _anthropic_send(prompt, system_prompt, model, max_tokens)
+	if provider in ("Gemini", "OpenAI"):
+		raise frappe.ValidationError(_("Provider {0} not yet implemented.").format(provider))
 	raise frappe.ValidationError(_("Unknown LLM provider: {0}").format(provider))
 
 
@@ -59,7 +71,8 @@ def _anthropic_send(
 	if not api_key or not str(api_key).strip():
 		frappe.throw(_("No API key configured. Set the password on the Anthropic API Connector."))
 
-	model = model or "claude-sonnet-4-20250514"
+	# Model: explicit arg > API Connector model field > default
+	model = (model or connector.get("model") or "").strip() or "claude-sonnet-4-20250514"
 	url = "https://api.anthropic.com/v1/messages"
 
 	payload: dict[str, Any] = {

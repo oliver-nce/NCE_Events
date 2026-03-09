@@ -50,7 +50,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		const me = this;
 		frappe.call({
 			method: "frappe.client.get",
-			args: { doctype: "Display Settings", name: "Display Settings" },
+			args: { doctype: "Settings", name: "Settings" },
 			async: false,
 			callback: function (r) {
 				if (!r || !r.message) return;
