@@ -676,6 +676,19 @@ body.panel-float-dragging * {
 	font-family: monospace;
 }
 
+.send-message-editor-wrap {
+	flex: 1;
+	min-height: 120px;
+}
+
+.send-message-editor-wrap .ql-container {
+	min-height: 100px;
+}
+
+.send-message-editor-wrap .ql-editor {
+	min-height: 100px;
+}
+
 .send-template-input { position: relative; }
 
 .send-template-list {

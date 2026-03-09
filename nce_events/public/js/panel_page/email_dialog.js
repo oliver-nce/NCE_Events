@@ -39,7 +39,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 					<input class="send-field send-subject-input" type="text">
 					<div class="send-message-section">
 						<label class="send-field-label">Message</label>
-						<textarea class="send-field send-message-input" placeholder="Jinja2 tags supported. Sent to all ${count} rows."></textarea>
+						<div class="send-message-editor-wrap"></div>
 					</div>
 					<div class="send-template-section" style="display:none;">
 						<label class="send-field-label">Email Template</label>
@@ -72,6 +72,16 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 		el.css({ top: "80px", left: "60px", zIndex: me.z_index });
 		$(document.body).append(el);
 		me.el = el;
+
+		me._message_control = frappe.ui.form.make_control({
+			parent: el.find(".send-message-editor-wrap"),
+			df: {
+				label: "",
+				fieldname: "message",
+				fieldtype: "Text Editor",
+			},
+			render_input: true,
+		});
 
 		me._make_draggable(el);
 		me._make_resizable(el);
@@ -146,8 +156,8 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 				}
 			});
 		} else {
-			const body = el.find(".send-message-input").val() || "";
-			if (!body.trim()) { frappe.msgprint(__("Enter a message first.")); return; }
+			const body = (this._message_control && this._message_control.get_value && this._message_control.get_value()) || "";
+			if (!body || !String(body).trim()) { frappe.msgprint(__("Enter a message first.")); return; }
 			callback(body, subject);
 		}
 	}
@@ -309,7 +319,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 	_make_draggable(el) {
 		const ns = "send_drag";
 		function start_drag(e) {
-			if ($(e.target).closest("button, input, textarea, select, .send-template-list").length) return;
+			if ($(e.target).closest("button, input, textarea, select, .send-template-list, .ql-editor, .ql-toolbar, .send-message-editor-wrap").length) return;
 			e.preventDefault();
 			const sx = e.clientX, sy = e.clientY;
 			const sl = parseInt(el.css("left"), 10) || 0;
