@@ -45,6 +45,8 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 						<label class="send-field-label">Message</label>
 						<div class="send-message-editor-wrap"></div>
 					</div>
+				</div>
+				<div class="send-panel-footer">
 					<div class="send-panel-spacer"></div>
 					<div class="send-panel-actions">
 						<button class="btn btn-xs btn-default send-preview-btn"><i class="fa fa-eye"></i> Preview</button>
@@ -330,7 +332,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 	_make_draggable(el) {
 		const ns = "send_drag";
 		function start_drag(e) {
-			if ($(e.target).closest("button, input, textarea, select, .send-template-list, .ql-editor, .ql-toolbar, .send-message-editor-wrap").length) return;
+			if ($(e.target).closest("button, input, textarea, select, .send-template-list, .ql-editor, .ql-toolbar, .send-message-editor-wrap, .send-panel-footer").length) return;
 			e.preventDefault();
 			const sx = e.clientX, sy = e.clientY;
 			const sl = parseInt(el.css("left"), 10) || 0;

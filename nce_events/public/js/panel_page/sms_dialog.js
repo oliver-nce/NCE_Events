@@ -43,6 +43,9 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 						<label class="send-field-label">Message</label>
 						<textarea class="send-field send-message-input" placeholder="Jinja2 tags supported. Sent to all ${count} rows."></textarea>
 					</div>
+				</div>
+				<div class="send-panel-footer">
+					<div class="send-panel-spacer"></div>
 					<div class="send-panel-actions">
 						<button class="btn btn-xs btn-default send-preview-btn"><i class="fa fa-eye"></i> Preview</button>
 						<span class="send-actions-right">
@@ -306,7 +309,7 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 	_make_draggable(el) {
 		const ns = "send_drag";
 		function start_drag(e) {
-			if ($(e.target).closest("button, input, textarea, select, .send-template-list").length) return;
+			if ($(e.target).closest("button, input, textarea, select, .send-template-list, .send-panel-footer").length) return;
 			e.preventDefault();
 			const sx = e.clientX, sy = e.clientY;
 			const sl = parseInt(el.css("left"), 10) || 0;
