@@ -346,7 +346,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		const body = float_el.find(".panel-pane-body");
 
 		body.on("click", ".panel-row", function (e) {
-			if ($(e.target).closest(".panel-tel-link, .panel-sms-one-btn").length) return;
+			if ($(e.target).closest(".panel-link-val, .panel-tel-link, .panel-sms-one-btn").length) return;
 
 			const ri = parseInt($(this).data("row-idx"), 10);
 			const rows = me._get_filtered_rows(doctype);
@@ -862,6 +862,10 @@ nce_events.panel_page.Explorer = class Explorer {
 			}
 
 			let cell_html = frappe.utils.escape_html(String(value));
+			if (col.is_link && col.link_doctype && value) {
+				const route = `/app/${col.link_doctype.toLowerCase().replace(/ /g, "-")}/${encodeURIComponent(value)}`;
+				cell_html = `<a href="${route}" target="_blank" class="panel-link-val" style="color:royalblue;text-decoration:underline;">${cell_html}</a>`;
+			}
 			const is_phone = ctx.sms_field && (fn === ctx.sms_field || fn === "phon" || fn === "phone");
 			if (is_phone && value && /[\d+]/.test(String(value))) {
 				const tel_val = String(value).replace(/\s+/g, "");

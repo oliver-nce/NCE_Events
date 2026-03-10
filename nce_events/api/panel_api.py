@@ -246,10 +246,16 @@ def get_panel_data(
 			label = _title_case(label)
 		columns.append({"fieldname": fn, "label": label})
 
-	for fn in _get_link_fieldnames(root_doctype):
+	for lf in _get_link_fields_with_target(root_doctype):
+		fn = lf["fieldname"]
 		if fn not in seen:
 			seen.add(fn)
-			columns.append({"fieldname": fn, "label": _title_case(fn), "is_link": True})
+			columns.append({
+				"fieldname": fn,
+				"label": _title_case(fn),
+				"is_link": True,
+				"link_doctype": lf["options"],
+			})
 
 	child_doctypes = get_child_doctypes(root_doctype)
 
@@ -564,6 +570,19 @@ def _get_link_fieldnames(doctype: str) -> list[str]:
 	try:
 		meta = frappe.get_meta(doctype)
 		return [f.fieldname for f in meta.fields if f.fieldtype == "Link" and f.fieldname]
+	except Exception:
+		return []
+
+
+def _get_link_fields_with_target(doctype: str) -> list[dict[str, str]]:
+	"""Return Link fields with their target DocType: [{fieldname, options}]."""
+	try:
+		meta = frappe.get_meta(doctype)
+		return [
+			{"fieldname": f.fieldname, "options": f.options}
+			for f in meta.fields
+			if f.fieldtype == "Link" and f.fieldname and f.options
+		]
 	except Exception:
 		return []
 
