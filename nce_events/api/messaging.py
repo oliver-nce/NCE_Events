@@ -234,13 +234,14 @@ def _send_email(to_email: str, subject: str, body: str) -> None:
 	creds = get_credentials("SendGrid")
 	api_key = creds.get("bearer_token") or creds.get("api_key") or ""
 
-	connector = frappe.get_doc("API Connector", "SendGrid")
-	from_email = (creds.get("username") or connector.get("username") or "").strip()
+	from_email = (
+		frappe.db.get_value("Email Account", {"default_outgoing": 1}, "email_id") or ""
+	).strip()
 
 	if not api_key:
 		frappe.throw(_("SendGrid API key missing. Check the SendGrid API Connector."))
 	if not from_email:
-		frappe.throw(_("No from-email configured. Set the Username field on the SendGrid API Connector."))
+		frappe.throw(_("No default outgoing Email Account configured."))
 
 	base_url = (creds.get("base_url") or "https://api.sendgrid.com/v3").rstrip("/")
 
