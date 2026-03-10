@@ -855,6 +855,8 @@ nce_events.panel_page.Explorer = class Explorer {
 						parts.push("font-weight:700 !important", `color:${ctx.female_hex} !important`);
 					}
 				}
+			} else if (col.is_link) {
+				parts.push("color:royalblue !important", "text-decoration:underline");
 			} else if (ctx.bold_set[fn]) {
 				parts.push("font-weight:700 !important");
 			}
