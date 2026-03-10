@@ -436,14 +436,15 @@ nce_events.panel_page.Explorer = class Explorer {
 		return all_rows.filter(function (row) {
 			return active.every(function (c) {
 				const val = me._get_row_value(row, c.field);
-				const cell = String(val == null ? "" : val);
+				const cell = String(val == null ? "" : val).toLowerCase();
+				const cval = c.value.toLowerCase();
 				switch (c.op) {
-				case "=":    return cell === c.value;
-				case "!=":   return cell !== c.value;
-				case ">":    return parseFloat(cell) > parseFloat(c.value);
-				case "<":    return parseFloat(cell) < parseFloat(c.value);
-				case "like": return cell.toLowerCase().indexOf(c.value.toLowerCase()) >= 0;
-				case "in":   return c.value.split(",").map(function (v) { return v.trim(); }).indexOf(cell) >= 0;
+				case "=":    return cell === cval;
+				case "!=":   return cell !== cval;
+				case ">":    return parseFloat(cell) > parseFloat(cval);
+				case "<":    return parseFloat(cell) < parseFloat(cval);
+				case "like": return cell.indexOf(cval) >= 0;
+				case "in":   return cval.split(",").map(function (v) { return v.trim(); }).indexOf(cell) >= 0;
 				default:     return true;
 				}
 			});
