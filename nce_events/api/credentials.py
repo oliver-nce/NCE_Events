@@ -7,7 +7,9 @@ from typing import Any
 import frappe
 from frappe import _
 
-_PASSWORD_FIELDS: frozenset[str] = frozenset(("api_key", "api_secret", "password"))
+_PASSWORD_FIELDS: frozenset[str] = frozenset((
+	"api_key", "api_secret", "password", "bearer_token", "oauth_refresh_token",
+))
 
 
 def get_credentials(connector_name: str) -> dict[str, Any]:
