@@ -251,6 +251,7 @@ nce_events.panel_page.Explorer = class Explorer {
 			const fn = col.fieldname.toLowerCase();
 			const w = col_widths[ci] || 100;
 			let style = `width:${w}px;min-width:30px;`;
+			if (col.is_link) style += "color:royalblue !important;text-decoration:underline;";
 			if (row_ctx.bold_set[fn]) style += "font-weight:700 !important;";
 			html += `<th style="${style}">${frappe.utils.escape_html(col.label)}<div class="col-resize-handle" data-col="${ci}"></div></th>`;
 		});

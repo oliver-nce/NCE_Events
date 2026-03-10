@@ -249,7 +249,7 @@ def get_panel_data(
 	for fn in _get_link_fieldnames(root_doctype):
 		if fn not in seen:
 			seen.add(fn)
-			columns.append({"fieldname": fn, "label": _title_case(fn)})
+			columns.append({"fieldname": fn, "label": _title_case(fn), "is_link": True})
 
 	child_doctypes = get_child_doctypes(root_doctype)
 
