@@ -84,11 +84,17 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 		if fn not in column_order:
 			column_order.append(fn)
 
-	# Fetch gender when tint fields exist (not displayed unless in column_order)
-	if gender_color_fields:
-		gender_key = _get_gender_field_key(doc.root_doctype)
-		if gender_key and gender_key not in column_order:
-			column_order.append(gender_key)
+	# Fetch-only: always fetch when on root doctype. No conditions.
+	fetch_only_fields: list[str] = []
+	fetch_only_fields.append("name")
+	gender_key = _get_gender_field_key(doc.root_doctype)
+	if gender_key:
+		fetch_only_fields.append(gender_key)
+	if email_field:
+		fetch_only_fields.append(email_field)
+	if sms_field:
+		fetch_only_fields.append(sms_field)
+	fetch_only_fields.extend(_get_link_fieldnames(doc.root_doctype))
 
 	tint_by_gender: dict[str, str] = {}
 	for cc in computed_columns:
@@ -101,6 +107,7 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 		"core_filter": (doc.core_filter or "").strip(),
 		"order_by": (doc.order_by or "").strip(),
 		"column_order": column_order,
+		"fetch_only_fields": fetch_only_fields,
 		"bold_fields": bold_fields,
 		"gender_column": (doc.gender_column or "").strip(),
 		"gender_color_fields": gender_color_fields,
@@ -148,11 +155,14 @@ def get_panel_data(
 	start = cint(start)
 
 	config = get_panel_config(root_doctype)
-	all_fields: list[str] = config["column_order"]
+	display_fields: list[str] = config["column_order"] or []
+	fetch_only: list[str] = list(config.get("fetch_only_fields") or [])
+	all_fields: list[str] = list(display_fields)
+	for fn in fetch_only:
+		if fn not in all_fields:
+			all_fields.append(fn)
 	if not all_fields:
 		all_fields = ["name"]
-	elif "name" not in all_fields:
-		all_fields = ["name"] + all_fields
 
 	computed_names = {cc["field_name"] for cc in (config.get("computed_columns") or [])}
 	simple_fields = [fn for fn in all_fields if "." not in fn and fn not in computed_names]
@@ -225,7 +235,7 @@ def get_panel_data(
 	}
 	seen: set[str] = set()
 	columns: list[dict[str, str]] = []
-	for fn in all_fields:
+	for fn in display_fields:
 		if fn in seen:
 			continue
 		seen.add(fn)
@@ -542,6 +552,15 @@ def get_doctype_fields(root_doctype: str) -> list[dict[str, str]]:
 			entry["options"] = f.options
 		result.append(entry)
 	return result
+
+
+def _get_link_fieldnames(doctype: str) -> list[str]:
+	"""Return Link fieldnames on doctype for fetch-only (future use)."""
+	try:
+		meta = frappe.get_meta(doctype)
+		return [f.fieldname for f in meta.fields if f.fieldtype == "Link" and f.fieldname]
+	except Exception:
+		return []
 
 
 def _get_gender_field_key(root_doctype: str) -> str | None:
