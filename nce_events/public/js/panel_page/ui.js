@@ -237,14 +237,14 @@ nce_events.panel_page.Explorer = class Explorer {
 		const config = panel.config;
 		const data = panel.data;
 		const rows = me._get_filtered_rows(doctype);
-		const columns = data.columns || [];
+		const columns = me._get_display_columns(config, data.columns || []);
 
 		const is_wp = (doctype === me.WP_DOCTYPE);
 
 		const float_w = float_el.width() || (is_wp ? 900 : 1400);
 		const col_widths = me._calc_col_widths(columns, rows, float_w);
 
-		const row_ctx = me._build_row_ctx(doctype, config, data, col_widths, is_wp, panel.selected_row);
+		const row_ctx = me._build_row_ctx(doctype, config, data, col_widths, is_wp, panel.selected_row, columns);
 
 		let html = '<table class="panel-table"><thead><tr>';
 		columns.forEach(function (col, ci) {
@@ -825,7 +825,8 @@ nce_events.panel_page.Explorer = class Explorer {
 			col_widths.push(parseInt($(this).css("width"), 10) || 100);
 		});
 
-		const row_ctx = me._build_row_ctx(doctype, panel.config, panel.data, col_widths, is_wp, null);
+		const display_columns = me._get_display_columns(panel.config, panel.data.columns || []);
+		const row_ctx = me._build_row_ctx(doctype, panel.config, panel.data, col_widths, is_wp, null, display_columns);
 
 		let html = "";
 		new_rows.forEach(function (row, bi) {
@@ -866,13 +867,34 @@ nce_events.panel_page.Explorer = class Explorer {
 
 		ctx.columns.forEach(function (col, ci) {
 			const fn = col.fieldname.toLowerCase();
-			let value = me._get_row_value(row, col.fieldname);
+			let value;
+			if (col.is_action) {
+				if (fn === "_email_action") value = me._get_row_value(row, ctx.email_field);
+				else if (fn === "_phone_action") value = me._get_row_value(row, ctx.sms_field);
+				else value = "";
+			} else {
+				value = me._get_row_value(row, col.fieldname);
+			}
 			if (value === null || value === undefined) value = "";
 			if (typeof value === "object") value = JSON.stringify(value);
-			if (me._looks_like_date(value)) value = frappe.datetime.str_to_user(value);
+			if (!col.is_action && me._looks_like_date(value)) value = frappe.datetime.str_to_user(value);
 
 			const w = ctx.col_widths[ci] || 100;
 			const parts = [`width:${w}px`, "min-width:30px"];
+
+			if (col.is_action) {
+				let cell_html = "";
+				if (fn === "_email_action" && value && String(value).indexOf("@") !== -1) {
+					cell_html = '<span class="panel-email-one-btn" style="cursor:pointer;" data-doctype="' + frappe.utils.escape_html(ctx.doctype) + '" data-row-name="' + frappe.utils.escape_html(row.name) + '" title="' + __("Send email") + '">&#128231;</span>';
+				} else if (fn === "_phone_action" && value && /[\d+]/.test(String(value))) {
+					const tel_val = String(value).replace(/\s+/g, "");
+					cell_html = '<span class="panel-tel-link" style="cursor:pointer;" data-tel="' + frappe.utils.escape_html(tel_val) + '" title="' + __("Call") + '">&#128222;</span> ';
+					cell_html += '<span class="panel-sms-one-btn" style="cursor:pointer;" data-doctype="' + frappe.utils.escape_html(ctx.doctype) + '" data-row-name="' + frappe.utils.escape_html(row.name) + '" title="' + __("Send SMS") + '">&#128172;</span>';
+				}
+				html += `<td style="${parts.join(";")};">${cell_html}</td>`;
+				return;
+			}
+
 			if (ctx.gender_tint_set[fn]) {
 				let gv;
 				const colGender = ctx.tint_by_gender[fn];
@@ -902,16 +924,6 @@ nce_events.panel_page.Explorer = class Explorer {
 			if (col.is_related_link && col.related_doctype) {
 				cell_html = `<span class="panel-related-val" style="color:royalblue;text-decoration:underline;cursor:pointer;" data-related-dt="${frappe.utils.escape_html(col.related_doctype)}" data-link-field="${frappe.utils.escape_html(col.related_link_field)}" data-row-name="${frappe.utils.escape_html(row.name)}">${cell_html}</span>`;
 			}
-			const is_email = ctx.email_field && (fn === ctx.email_field || fn === "email");
-			if (is_email && value && String(value).indexOf("@") !== -1) {
-				cell_html = '<span class="panel-email-one-btn" style="cursor:pointer;" data-doctype="' + frappe.utils.escape_html(ctx.doctype) + '" data-row-name="' + frappe.utils.escape_html(row.name) + '" title="' + __("Send email") + '">&#128231;</span>';
-			}
-			const is_phone = ctx.sms_field && (fn === ctx.sms_field || fn === "phon" || fn === "phone");
-			if (is_phone && value && /[\d+]/.test(String(value))) {
-				const tel_val = String(value).replace(/\s+/g, "");
-				cell_html = '<span class="panel-tel-link" style="cursor:pointer;" data-tel="' + frappe.utils.escape_html(tel_val) + '" title="' + __("Call") + '">&#128222;</span> ';
-				cell_html += '<span class="panel-sms-one-btn" style="cursor:pointer;" data-doctype="' + frappe.utils.escape_html(ctx.doctype) + '" data-row-name="' + frappe.utils.escape_html(row.name) + '" title="' + __("Send SMS") + '">&#128172;</span>';
-			}
 			html += `<td style="${parts.join(";")};">${cell_html}</td>`;
 		});
 
@@ -932,10 +944,20 @@ nce_events.panel_page.Explorer = class Explorer {
 		return html;
 	}
 
-	_build_row_ctx(doctype, config, data, col_widths, is_wp, selected_row) {
+	_get_display_columns(config, base_columns) {
+		let cols = base_columns.slice();
+		const email_field = (config.email_field || "").trim().toLowerCase();
+		const sms_field = (config.sms_field || "").trim().toLowerCase();
+		if (email_field) cols.push({ fieldname: "_email_action", label: "\u2709", is_action: true });
+		if (sms_field) cols.push({ fieldname: "_phone_action", label: "\u260e", is_action: true });
+		return cols;
+	}
+
+	_build_row_ctx(doctype, config, data, col_widths, is_wp, selected_row, display_columns) {
+		const columns = display_columns || data.columns || [];
 		return {
 			doctype: doctype,
-			columns: data.columns || [],
+			columns: columns,
 			col_widths: col_widths,
 			bold_set: this._field_set(config.bold_fields),
 			male_hex: (config.male_hex || "").trim(),
