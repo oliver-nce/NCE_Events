@@ -84,6 +84,12 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 		if fn not in column_order:
 			column_order.append(fn)
 
+	# Fetch gender when tint fields exist (not displayed unless in column_order)
+	if gender_color_fields:
+		gender_key = _get_gender_field_key(doc.root_doctype)
+		if gender_key and gender_key not in column_order:
+			column_order.append(gender_key)
+
 	tint_by_gender: dict[str, str] = {}
 	for cc in computed_columns:
 		g = cc.get("gender")
@@ -536,6 +542,22 @@ def get_doctype_fields(root_doctype: str) -> list[dict[str, str]]:
 			entry["options"] = f.options
 		result.append(entry)
 	return result
+
+
+def _get_gender_field_key(root_doctype: str) -> str | None:
+	"""Return 'gender' or 'link_field.gender'. Case-insensitive field search."""
+	try:
+		meta = frappe.get_meta(root_doctype)
+		for f in meta.fields:
+			if (f.fieldname or "").lower() == "gender":
+				return f.fieldname
+			if f.fieldtype == "Link" and f.options:
+				child_meta = frappe.get_meta(f.options)
+				if any((cf.fieldname or "").lower() == "gender" for cf in child_meta.fields):
+					return f"{f.fieldname}.gender"
+	except Exception:
+		pass
+	return None
 
 
 def _parse_csv(value: str | None) -> list[str]:

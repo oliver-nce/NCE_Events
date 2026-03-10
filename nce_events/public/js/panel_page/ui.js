@@ -424,9 +424,11 @@ nce_events.panel_page.Explorer = class Explorer {
 		const conditions = panel.user_filters || [];
 		const active = conditions.filter(function (c) { return c.field && c.value !== ""; });
 		if (!active.length) return all_rows;
+		const me = this;
 		return all_rows.filter(function (row) {
 			return active.every(function (c) {
-				const cell = String(row[c.field] == null ? "" : row[c.field]);
+				const val = me._get_row_value(row, c.field);
+				const cell = String(val == null ? "" : val);
 				switch (c.op) {
 				case "=":    return cell === c.value;
 				case "!=":   return cell !== c.value;
@@ -666,12 +668,12 @@ nce_events.panel_page.Explorer = class Explorer {
 		const MAX_COL = 500;
 		const avg_chars = [];
 
+		const me = this;
 		columns.forEach(function (col) {
 			let total = 0;
 			let count = 0;
 			sample.forEach(function (row) {
-				let v = row[col.fieldname];
-				if (v === null || v === undefined) v = row[col.fieldname.toLowerCase()];
+				let v = me._get_row_value(row, col.fieldname);
 				const s = String(v || "");
 				total += s.length;
 				count++;
@@ -835,8 +837,7 @@ nce_events.panel_page.Explorer = class Explorer {
 
 		ctx.columns.forEach(function (col, ci) {
 			const fn = col.fieldname.toLowerCase();
-			let value = row[col.fieldname];
-			if (value === null || value === undefined) value = row[fn];
+			let value = me._get_row_value(row, col.fieldname);
 			if (value === null || value === undefined) value = "";
 			if (typeof value === "object") value = JSON.stringify(value);
 			if (me._looks_like_date(value)) value = frappe.datetime.str_to_user(value);
@@ -850,8 +851,8 @@ nce_events.panel_page.Explorer = class Explorer {
 					parts.push("font-weight:700 !important", `color:${ctx.male_hex} !important`);
 				} else if (colGender === "Female" && ctx.female_hex) {
 					parts.push("font-weight:700 !important", `color:${ctx.female_hex} !important`);
-				} else if (ctx.gender_col) {
-					gv = String(row[ctx.gender_col] || row[ctx.gender_col.toLowerCase()] || "").trim().toLowerCase();
+				} else {
+					gv = me._get_row_gender(row, ctx.gender_col);
 					if (me._looks_male(gv) && ctx.male_hex) {
 						parts.push("font-weight:700 !important", `color:${ctx.male_hex} !important`);
 					} else if (me._looks_female(gv) && ctx.female_hex) {
@@ -955,6 +956,36 @@ nce_events.panel_page.Explorer = class Explorer {
 
 	_looks_like_date(v) {
 		return typeof v === "string" && /^\d{4}-\d{2}-\d{2}$/.test(v);
+	}
+
+	/** Get value from row by key. Case-insensitive lookup (Phone/phone, etc.). */
+	_get_row_value(row, key) {
+		let v = row[key] || row[key.toLowerCase()] || row[key.toUpperCase()];
+		if (v !== undefined && v !== null) return v;
+		const want = key.toLowerCase();
+		for (const k in row) {
+			if (k.toLowerCase() === want) return row[k];
+		}
+		return undefined;
+	}
+
+	/** Get gender value from row. Case-insensitive key lookup. Auto-detects when gender_col empty. */
+	_get_row_gender(row, gender_col) {
+		const want = (gender_col || "gender").toLowerCase();
+		const wantBare = want.split(".").pop();
+		function find() {
+			for (const k in row) {
+				const kb = (k.split(".").pop() || "").toLowerCase();
+				if (k.toLowerCase() === want || kb === wantBare) {
+					const v = row[k];
+					if (v != null && String(v).trim()) return String(v).trim().toLowerCase();
+				}
+			}
+			return "";
+		}
+		const v = row[gender_col] || (gender_col && row[gender_col.toLowerCase()]);
+		if (v != null && String(v).trim()) return String(v).trim().toLowerCase();
+		return find();
 	}
 
 	_looks_male(v) { return /^(m|male|boy|man|men|boys)$/.test(v); }
