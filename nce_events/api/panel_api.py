@@ -273,6 +273,17 @@ def get_panel_data(
 			for row in rows:
 				row[count_key] = count_map.get(row["name"], 0)
 
+	if child_doctypes:
+		for child in child_doctypes:
+			related_col_key = "_related_" + child["doctype"]
+			columns.append({
+				"fieldname": related_col_key,
+				"label": child["label"],
+				"is_related_link": True,
+			})
+			for row in rows:
+				row[related_col_key] = child["label"]
+
 	computed_columns = config.get("computed_columns") or []
 	if computed_columns and rows:
 		_evaluate_computed_columns(root_doctype, rows, computed_columns)
