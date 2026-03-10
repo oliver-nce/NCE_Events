@@ -346,7 +346,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		const body = float_el.find(".panel-pane-body");
 
 		body.on("click", ".panel-row", function (e) {
-			if ($(e.target).closest(".panel-link-val, .panel-tel-link, .panel-sms-one-btn").length) return;
+			if ($(e.target).closest(".panel-link-val, .panel-related-val, .panel-tel-link, .panel-sms-one-btn").length) return;
 
 			const ri = parseInt($(this).data("row-idx"), 10);
 			const rows = me._get_filtered_rows(doctype);
@@ -387,6 +387,19 @@ nce_events.panel_page.Explorer = class Explorer {
 			me._open_doctype_panel(child_dt, doctype, parent_filter);
 		});
 		*/
+
+		body.on("click", ".panel-related-val", function (e) {
+			e.preventDefault();
+			e.stopPropagation();
+			const child_dt = $(this).data("related-dt");
+			const link_field = $(this).data("link-field");
+			const row_name = $(this).data("row-name");
+			if (!child_dt || !row_name) return;
+
+			const parent_filter = {};
+			parent_filter[link_field] = row_name;
+			me._open_doctype_panel(child_dt, doctype, parent_filter);
+		});
 
 		body.on("click", ".panel-sms-one-btn", function (e) {
 			e.preventDefault();
@@ -865,6 +878,9 @@ nce_events.panel_page.Explorer = class Explorer {
 			if (col.is_link && col.link_doctype && value) {
 				const route = `/app/${col.link_doctype.toLowerCase().replace(/ /g, "-")}/${encodeURIComponent(value)}`;
 				cell_html = `<a href="${route}" target="_blank" class="panel-link-val" style="color:royalblue;text-decoration:underline;">${cell_html}</a>`;
+			}
+			if (col.is_related_link && col.related_doctype) {
+				cell_html = `<span class="panel-related-val" style="color:royalblue;text-decoration:underline;cursor:pointer;" data-related-dt="${frappe.utils.escape_html(col.related_doctype)}" data-link-field="${frappe.utils.escape_html(col.related_link_field)}" data-row-name="${frappe.utils.escape_html(row.name)}">${cell_html}</span>`;
 			}
 			const is_phone = ctx.sms_field && (fn === ctx.sms_field || fn === "phon" || fn === "phone");
 			if (is_phone && value && /[\d+]/.test(String(value))) {

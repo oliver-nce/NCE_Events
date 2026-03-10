@@ -237,6 +237,10 @@ def get_panel_data(
 	related_label_map: dict[str, str] = {
 		f"_related_{c['doctype']}": c["label"] for c in child_doctypes
 	}
+	related_meta: dict[str, dict[str, str]] = {
+		f"_related_{c['doctype']}": {"doctype": c["doctype"], "link_field": c["link_field"]}
+		for c in child_doctypes
+	}
 
 	computed_label_map = {
 		cc["field_name"]: (cc.get("label") or _title_case(cc["field_name"]))
@@ -271,10 +275,13 @@ def get_panel_data(
 
 	for fn in enabled_related:
 		seen.add(fn)
+		meta = related_meta.get(fn, {})
 		columns.append({
 			"fieldname": fn,
 			"label": related_label_map[fn],
 			"is_related_link": True,
+			"related_doctype": meta.get("doctype", ""),
+			"related_link_field": meta.get("link_field", ""),
 		})
 
 	if child_doctypes and rows:
