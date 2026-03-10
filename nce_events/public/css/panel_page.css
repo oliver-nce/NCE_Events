@@ -689,8 +689,7 @@ body.panel-float-dragging * {
 }
 
 .send-ai-spelling,
-.send-ai-mild,
-.send-ai-full {
+.send-ai-mild {
 	background: linear-gradient(135deg, #EAF2FB, #f0f4f7) !important;
 }
 
