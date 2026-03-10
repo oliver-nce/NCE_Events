@@ -5,6 +5,7 @@ from typing import Any
 import frappe
 from frappe import _
 
+from nce_events.api.credentials import get_credentials
 from nce_events.api.panel_api import get_panel_data
 
 
@@ -199,12 +200,15 @@ def send_panel_message(
 
 
 def _send_sms(phone: str, message: str) -> None:
-	"""Send an SMS via Twilio using credentials from API Connector."""
+	"""Send an SMS via Twilio using credentials from credential_config."""
 	import requests
 
-	connector = frappe.get_doc("API Connector", "Twilio")
-	account_sid = connector.username
-	auth_token = connector.get_password("password")
+	creds = get_credentials("Twilio")
+	account_sid = creds.get("username") or ""
+	auth_token = creds.get("password") or ""
+
+	if not account_sid or not auth_token:
+		frappe.throw(_("Twilio credentials missing. Check the Twilio API Connector credential_config."))
 
 	url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
 
@@ -224,18 +228,22 @@ def _send_sms(phone: str, message: str) -> None:
 
 
 def _send_email(to_email: str, subject: str, body: str) -> None:
-	"""Send an email via SendGrid using credentials from API Connector."""
+	"""Send an email via SendGrid using credentials from credential_config."""
 	import requests
 
-	connector = frappe.get_doc("API Connector", "SendGrid")
-	api_key = connector.get_password("password")
-	from_email = (connector.username or "").strip()
+	creds = get_credentials("SendGrid")
+	api_key = creds.get("api_key") or creds.get("bearer_token") or ""
+	from_email = (creds.get("username") or "").strip()
 
+	if not api_key:
+		frappe.throw(_("SendGrid API key missing. Check the SendGrid API Connector credential_config."))
 	if not from_email:
-		frappe.throw(_("No from-email configured. Set the username on the SendGrid API Connector."))
+		frappe.throw(_("No from-email configured. Check the SendGrid API Connector credential_config."))
+
+	base_url = (creds.get("base_url") or "https://api.sendgrid.com/v3").rstrip("/")
 
 	resp = requests.post(
-		"https://api.sendgrid.com/v3/mail/send",
+		f"{base_url}/mail/send",
 		headers={
 			"Authorization": f"Bearer {api_key}",
 			"Content-Type": "application/json",

@@ -6,6 +6,8 @@ from typing import Any
 import frappe
 from frappe import _
 
+from nce_events.api.credentials import get_credentials
+
 
 def _get_default_provider() -> str:
 	"""Read default provider from Settings."""
@@ -63,17 +65,18 @@ def _anthropic_send(
 	model: str | None,
 	max_tokens: int,
 ) -> str:
-	"""Send prompt to Anthropic Messages API."""
+	"""Send prompt to Anthropic Messages API using credential_config."""
 	import requests
 
-	connector = frappe.get_doc("API Connector", "Anthropic")
-	api_key = connector.get_password("api_key")
-	if not api_key or not str(api_key).strip():
-		frappe.throw(_("No API key configured. Set the API Key on the Anthropic API Connector."))
+	creds = get_credentials("Anthropic")
+	api_key = creds.get("api_key") or ""
+	if not api_key:
+		frappe.throw(_("No API key configured. Check the Anthropic API Connector credential_config."))
 
-	# Model: explicit arg > API Connector model field > default
+	connector = frappe.get_doc("API Connector", "Anthropic")
 	model = (model or connector.get("model") or "").strip() or "claude-sonnet-4-20250514"
-	url = "https://api.anthropic.com/v1/messages"
+
+	base_url = (creds.get("base_url") or "https://api.anthropic.com").rstrip("/")
 
 	payload: dict[str, Any] = {
 		"model": model,
@@ -89,7 +92,7 @@ def _anthropic_send(
 		"content-type": "application/json",
 	}
 
-	resp = requests.post(url, json=payload, headers=headers, timeout=60)
+	resp = requests.post(f"{base_url}/v1/messages", json=payload, headers=headers, timeout=60)
 
 	if resp.status_code != 200:
 		frappe.throw(_("Anthropic API error {0}: {1}").format(resp.status_code, resp.text[:500]))
