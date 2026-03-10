@@ -165,7 +165,11 @@ def get_panel_data(
 		all_fields = ["name"]
 
 	computed_names = {cc["field_name"] for cc in (config.get("computed_columns") or [])}
-	simple_fields = [fn for fn in all_fields if "." not in fn and fn not in computed_names]
+	related_names = {fn for fn in all_fields if fn.startswith("_related_")}
+	simple_fields = [
+		fn for fn in all_fields
+		if "." not in fn and fn not in computed_names and fn not in related_names
+	]
 	linked_fields = [fn for fn in all_fields if "." in fn]
 
 	link_bases = {fn.split(".", 1)[0] for fn in linked_fields}
@@ -229,22 +233,30 @@ def get_panel_data(
 				for cf in child_fields:
 					row[link_field + "." + cf] = linked_values.get(cf, "")
 
+	child_doctypes = get_child_doctypes(root_doctype)
+	related_label_map: dict[str, str] = {
+		f"_related_{c['doctype']}": c["label"] for c in child_doctypes
+	}
+
 	computed_label_map = {
 		cc["field_name"]: (cc.get("label") or _title_case(cc["field_name"]))
 		for cc in (config.get("computed_columns") or [])
 	}
+	enabled_related: set[str] = {fn for fn in display_fields if fn in related_label_map}
+
 	seen: set[str] = set()
 	columns: list[dict[str, str]] = []
 	for fn in display_fields:
-		if fn in seen:
+		if fn in seen or fn in related_label_map:
 			continue
 		seen.add(fn)
 		if fn in computed_label_map:
 			label = computed_label_map[fn]
+			columns.append({"fieldname": fn, "label": label})
 		else:
 			label = fn.split(".")[-1] if "." in fn else fn
 			label = _title_case(label)
-		columns.append({"fieldname": fn, "label": label})
+			columns.append({"fieldname": fn, "label": label})
 
 	for lf in _get_link_fields_with_target(root_doctype):
 		fn = lf["fieldname"]
@@ -257,7 +269,13 @@ def get_panel_data(
 				"link_doctype": lf["options"],
 			})
 
-	child_doctypes = get_child_doctypes(root_doctype)
+	for fn in enabled_related:
+		seen.add(fn)
+		columns.append({
+			"fieldname": fn,
+			"label": related_label_map[fn],
+			"is_related_link": True,
+		})
 
 	if child_doctypes and rows:
 		row_names = [row["name"] for row in rows]
@@ -273,16 +291,10 @@ def get_panel_data(
 			for row in rows:
 				row[count_key] = count_map.get(row["name"], 0)
 
-	if child_doctypes:
-		for child in child_doctypes:
-			related_col_key = "_related_" + child["doctype"]
-			columns.append({
-				"fieldname": related_col_key,
-				"label": child["label"],
-				"is_related_link": True,
-			})
+	for fn, label in related_label_map.items():
+		if fn in seen:
 			for row in rows:
-				row[related_col_key] = child["label"]
+				row[fn] = label
 
 	computed_columns = config.get("computed_columns") or []
 	if computed_columns and rows:

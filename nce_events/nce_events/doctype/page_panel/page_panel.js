@@ -145,13 +145,24 @@ function _get_computed_fields(frm) {
 	}).filter(function (f) { return f.fieldname; });
 }
 
+function _get_related_fields(frm) {
+	const col_order = _parse_csv(frm.doc.column_order);
+	return col_order
+		.filter(function (fn) { return fn.startsWith("_related_"); })
+		.map(function (fn) {
+			const dt_name = fn.substring("_related_".length);
+			return { fieldname: fn, label: dt_name, _related: true };
+		});
+}
+
 function _build_display_tabs(frm, $container, root_fields, link_fields, linked_data) {
 	const root_names = {};
 	root_fields.forEach(function (f) { root_names[f.fieldname] = true; });
 	const computed_fields = _get_computed_fields(frm).filter(function (cf) {
 		return !root_names[cf.fieldname];
 	});
-	const root_with_computed = root_fields.concat(computed_fields);
+	const related_fields = _get_related_fields(frm);
+	const root_with_computed = root_fields.concat(computed_fields).concat(related_fields);
 
 	const saved = {
 		column_order: _parse_csv(frm.doc.column_order),
@@ -275,8 +286,7 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 
 		const $panel = $('<div></div>');
 
-		// Select all/none links
-		const $toolbar = $(`<div style="display:flex;gap:6px;padding:4px 0 8px;">
+		const $toolbar = $(`<div style="display:flex;gap:6px;align-items:center;padding:4px 0 8px;">
 			<a class="pp-select-all" href="#" style="font-size:12px;color:#4198F0;">Select All</a>
 			<span style="color:#d1d8dd;">|</span>
 			<a class="pp-select-none" href="#" style="font-size:12px;color:#4198F0;">Select None</a>
@@ -291,6 +301,40 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 			m.$matrix.find('input[data-role="show"]').prop("checked", false);
 			_sync_all();
 		});
+
+		if (sub_id === "_root" && frm.doc.root_doctype) {
+			const $related_btn = $('<button class="btn btn-xs btn-default pp-add-related-btn" style="margin-left:auto;font-size:11px;padding:2px 10px;">Add Related DocTypes</button>');
+			$related_btn.on("click", function () {
+				frappe.call({
+					method: "nce_events.api.panel_api.get_child_doctypes",
+					args: { root_doctype: frm.doc.root_doctype },
+					callback: function (r) {
+						const children = (r && r.message) || [];
+						if (!children.length) {
+							frappe.show_alert({ message: __("No related DocTypes found"), indicator: "orange" });
+							return;
+						}
+						const current = _parse_csv(frm.doc.column_order);
+						let added = 0;
+						children.forEach(function (c) {
+							const key = "_related_" + c.doctype;
+							if (current.indexOf(key) === -1) {
+								current.push(key);
+								added++;
+							}
+						});
+						if (!added) {
+							frappe.show_alert({ message: __("All related DocTypes already added"), indicator: "blue" });
+							return;
+						}
+						frm.set_value("column_order", current.join(", "));
+						frappe.show_alert({ message: __("{0} related DocType(s) added", [added]), indicator: "green" });
+						_render_display(frm);
+					},
+				});
+			});
+			$toolbar.append($related_btn);
+		}
 
 		$panel.append($toolbar);
 		$panel.append(m.$matrix);
@@ -331,7 +375,10 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set) {
 	fields.forEach(function (f, i) {
 		const key = prefix + f.fieldname;
 		const label = f.label || _title_case(f.fieldname);
-		const fn_display = frappe.utils.escape_html(f.fieldname) + (f._computed ? " <span style='color:#8d949a;font-size:10px;'>(computed)</span>" : "");
+		let tag = "";
+		if (f._computed) tag = " <span style='color:#8d949a;font-size:10px;'>(computed)</span>";
+		if (f._related) tag = " <span style='color:royalblue;font-size:10px;'>(related)</span>";
+		const fn_display = frappe.utils.escape_html(f.fieldname) + tag;
 		const bg = i % 2 !== 0 ? ' style="background:#f8f9fa;"' : '';
 		const esc_key = frappe.utils.escape_html(key);
 		const td = 'style="text-align:center;padding:4px 8px;"';
