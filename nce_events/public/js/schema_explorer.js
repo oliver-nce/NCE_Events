@@ -10,7 +10,6 @@
 	let _last_editable = null;
 	let _last_sel_start = 0;
 	let _last_sel_end = 0;
-	let _last_range = null;
 
 	$(document).on("focusin.se_track", function (e) {
 		const el = e.target;
@@ -539,20 +538,9 @@
 		$panel.css({ top: `${top}px`, left: `${left}px` });
 		$(document.body).append($panel);
 
-		$panel.on("mousedown", function (e) {
+		$panel.on("mousedown", function () {
 			$(".se-tag-panel").css("z-index", 1070);
 			$panel.css("z-index", 1080);
-			if (!$(e.target).closest(".se-insert-btn").length) {
-				const act = document.activeElement;
-				if (act && act.contentEditable === "true" && act.contains) {
-					const sel = window.getSelection();
-					if (sel && sel.rangeCount > 0 && sel.anchorNode && act.contains(sel.anchorNode)) {
-						try {
-							_last_range = sel.getRangeAt(0).cloneRange();
-						} catch (err) { _last_range = null; }
-					}
-				}
-			}
 		});
 		$panel.trigger("mousedown");
 
@@ -578,9 +566,6 @@
 			sel.addRange(range);
 		});
 
-		$panel.find(".se-insert-btn").on("mousedown", function (e) {
-			e.preventDefault();
-		});
 		$panel.find(".se-insert-btn").on("click", function () {
 			const current_tag = $pre.text();
 			if (!_last_editable || !_last_editable.parentNode) {
@@ -589,10 +574,7 @@
 			}
 			const before = _last_editable.value;
 			_insert_at_cursor(_last_editable, current_tag);
-			const inserted = _last_editable.value !== undefined
-				? (_last_editable.value !== before)
-				: true;
-			if (inserted) {
+			if (_last_editable.value !== before) {
 				frappe.show_alert({ message: __("Tag inserted"), indicator: "green" });
 				$panel.remove();
 			} else {
@@ -644,13 +626,6 @@
 			_last_sel_end = new_pos;
 		} else if (el.contentEditable === "true") {
 			el.focus();
-			const sel = window.getSelection();
-			const needRestore = !sel || sel.rangeCount === 0 || !el.contains(sel.anchorNode);
-			if (needRestore && _last_range && el.contains(_last_range.startContainer)) {
-				sel.removeAllRanges();
-				sel.addRange(_last_range);
-				_last_range = null;
-			}
 			document.execCommand("insertText", false, text);
 		}
 	}
