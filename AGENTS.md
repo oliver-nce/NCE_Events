@@ -35,6 +35,7 @@
 | `_get_link_fields_with_target(doctype)` | `api/panel_api.py` | Link fields with target DocType `[{fieldname, options}]` |
 | `get_panel_data`, `get_panel_config` | `api/panel_api.py` | Panel data fetch |
 | `get_child_doctypes(root_doctype)` | `api/panel_api.py` | DocTypes with Link to root (for related columns + drill-down) |
+| `get_credentials(connector_name)` | `api/credentials.py` | Read credential_config JSON from API Connector — returns auth_pattern, base_url, and required credential values |
 
 ---
 

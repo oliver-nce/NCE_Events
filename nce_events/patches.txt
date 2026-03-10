@@ -8,3 +8,4 @@ nce_events.patches.v0_0_2.create_event_explorer_page
 nce_events.patches.v0_0_2.remove_messaging_configuration_doctypes
 nce_events.patches.v0_0_2.migrate_display_settings_to_settings
 nce_events.patches.v0_0_2.add_model_field_to_api_connector
+nce_events.patches.v0_0_2.add_credential_config_to_api_connector

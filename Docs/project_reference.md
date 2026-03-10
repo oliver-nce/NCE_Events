@@ -25,6 +25,7 @@ nce_events/
 │   ├── translator.py                # WP → Frappe SQL translator
 │   ├── tags.py                      # get_pronoun_tags_for_doctype + _compute_jinja_tag
 │   ├── reports.py                   # create_or_update_report, get_report_columns
+│   ├── credentials.py               # get_credentials — reads credential_config JSON from API Connector
 │   └── tests/
 │       └── test_core_functions.py   # Unit tests for pure helpers
 ├── hooks.py
@@ -52,6 +53,7 @@ nce_events/
 │       │   ├── sms_dialog.js        # SmsDialog (message only, no subject/template/email copy)
 │       │   └── email_dialog.js      # EmailDialog (full: source, subject, template, copy)
 │       ├── email_template_tags.js   # Insert Tag button (opens Tag Finder) on Email Template
+│       ├── api_connector_tags.js    # Credential Config AI button on API Connector
 │       ├── schema_explorer.js       # Tag Finder — Miller columns tag generator
 │       └── hierarchy_explorer/      # Legacy JS (frozen)
 ├── patches/v0_0_2/                  # Migration patches
@@ -212,6 +214,29 @@ Credentials from `API Connector` DocType: "Twilio" (Account SID / Auth Token), "
 | `get_report_columns` | `report_name` | Column definitions from a Query Report |
 | `create_or_update_report` | `header_text, frappe_query, existing_report_name, ref_doctype` | Create or update a Query Report |
 
+### credentials.py — API Connector credential helper
+
+| Function | Params | Purpose |
+|---|---|---|
+| `get_credentials` | `connector_name` | Read `credential_config` JSON from API Connector and return dict with auth_pattern, base_url, and all required credential values |
+
+**credential_config** — a Code (JSON) Custom Field on API Connector, populated by the "Credential Config" AI button (`api_connector_tags.js`). The LLM researches the service and generates a JSON object describing which fields are required, what they're labelled, and how they map to the API's auth scheme. Scripts call `get_credentials(name)` instead of hardcoding field access.
+
+Example `credential_config` for SendGrid:
+```json
+{
+  "auth_pattern": "bearer_token",
+  "fields": {
+    "api_key": {"required": true, "label": "SendGrid API Key", "maps_to": "Authorization: Bearer {value}"},
+    "api_secret": {"required": false, "label": ""},
+    "username": {"required": true, "label": "From Email Address", "maps_to": "from.email"},
+    "password": {"required": false, "label": ""}
+  },
+  "base_url": "https://api.sendgrid.com/v3",
+  "notes": "SendGrid uses Bearer token auth with the API key in the Authorization header."
+}
+```
+
 ---
 
 ## 6. Inter-Panel Filtering
@@ -367,6 +392,7 @@ app_include_css = "/assets/nce_events/css/schema_explorer.css"
 
 doctype_js = {
     "Email Template": "public/js/email_template_tags.js",
+    "API Connector": "public/js/api_connector_tags.js",
 }
 
 add_to_apps_screen = [

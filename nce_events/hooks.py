@@ -13,6 +13,7 @@ app_include_css = "/assets/nce_events/css/schema_explorer.css"
 
 doctype_js = {
 	"Email Template": "public/js/email_template_tags.js",
+	"API Connector": "public/js/api_connector_tags.js",
 }
 
 add_to_apps_screen = [
