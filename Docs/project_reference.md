@@ -95,8 +95,8 @@ nce_events/
 | male_field | Small Text | column rendered with `male_hex` + bold |
 | female_field | Small Text | column rendered with `female_hex` + bold |
 | header_overrides | Small Text | JSON map of custom column headers, e.g. `{"F": "Girls"}` |
-| column_order | Small Text | comma-delimited column display order |
-| gender_column | Small Text | column designating row gender for tint coloring |
+| column_order | Small Text | comma-delimited columns to **display** (Display tab Show) |
+| gender_column | Small Text | *(unused)* gender auto-detected from row |
 | gender_color_fields | Small Text | comma-delimited columns tinted by row gender |
 | email_field | Data | column containing email address (auto-detected if blank) |
 | sms_field | Data | column containing phone number (auto-detected if blank) |
@@ -143,7 +143,7 @@ Site-wide settings. Tabs: **Styles** (font, colors — same as former Display Se
 
 All pages route through a single shared Frappe Page (`page-view`) at `/app/page-view/{page_name}`.
 
-`page_view.js` does `frappe.require` on `store.js`, `sms_dialog.js`, `email_dialog.js`, `ui.js`, and `panel_page.css`, then creates an `Explorer(page, page_name)`. Without a `page_name`, it shows a landing page listing active pages.
+`page_view.js` does `frappe.require` on `store.js`, `sms_dialog.js`, `email_dialog.js`, `ui.js`, and `panel_page.css`, then creates an `Explorer(page, page_name)`. Without a `page_name`, it shows a landing page listing active pages. On route change (e.g. logo → Desk home), Explorer is destroyed and floating panels close.
 
 ---
 
@@ -155,11 +155,13 @@ All under `nce_events/api/`.
 
 | Function | Params | Purpose |
 |---|---|---|
-| `get_panel_config` | `root_doctype` | Display config for a Page Panel (column_order, bold, gender, show flags, core_filter, auto-detected email/sms fields) |
-| `get_panel_data` | `root_doctype, filters, limit, start` | Rows with dot-notation resolution, child counts, child_doctypes. `limit=0` (default) = all rows. Returns real DB `total` for progressive loading. |
+| `get_panel_config` | `root_doctype` | Display config (column_order, fetch_only_fields, bold, gender, show flags, core_filter, auto-detected email/sms) |
+| `get_panel_data` | `root_doctype, filters, limit, start` | Rows with dot-notation resolution, child counts, child_doctypes. `limit=0` (default) = all rows. Returns real DB `total` for progressive loading. Link fields are appended as visible columns at the right end (after display_fields). |
+
+**Fetch vs display:** `column_order` = columns to display. `fetch_only_fields` = fields always fetched when on root doctype but not displayed unless in column_order. Fetch-only: name, gender (or link.gender), email_field, sms_field. Link fields are now auto-appended to visible columns (at the end) by `get_panel_data`. No conditions — always fetch when on root DT.
 | `save_panel_sql` | `root_doctype, core_filter, order_by` | Persist SQL WHERE/ORDER BY on Page Panel |
 | `export_panel_data` | `root_doctype, filters` | CSV to public path, returns URL for Google Sheets `IMPORTDATA` |
-| `get_child_doctypes` | `root_doctype` | DocTypes with Link fields pointing to root_doctype (for drill buttons) |
+| `get_child_doctypes` | `root_doctype` | DocTypes with Link fields pointing to root_doctype (drill buttons disabled; code retained) |
 | `get_doctype_fields` | `root_doctype` | Data-bearing fields for a DocType |
 | `debug_child_lookup` | `root_doctype` | Diagnostic for get_child_doctypes |
 
@@ -232,7 +234,9 @@ Custom **5-tab layout** on the Page Panel child-row form:
 
 ### Display Tab — Matrix
 
-Columns from the report's SQL. Each row is a report column; matrix columns: Field, Default Header, Header (editable), List, Card, Bold, Male (radio), Female (radio), Gender (radio), Tint. Rows are drag-reorderable. On change, `_sync()` writes back to all relevant Page Panel fields.
+Columns from the report's SQL. Each row is a report column; matrix columns: Field, Default Header, Header (editable), List, Card, Bold, Tint. Rows are drag-reorderable. On change, `_sync()` writes back to all relevant Page Panel fields. Gender is auto-detected from row; no Gender column to designate.
+
+**Computed columns** (Page Panel child table): SQL expression per row. `tint_by_row` = true tints by row's gender instead of forced Male/Female.
 
 ---
 
@@ -253,14 +257,14 @@ All panels render as draggable `position:fixed` elements. Root panel (WP Tables)
 
 ### Column Features
 
-- **Auto-sized** — proportional to data content (sample of 20 rows), 50–500px clamp, normalized to `panel_width - 160px - drill_col_width`
+- **Auto-sized** — proportional to data content (sample of 20 rows), 50–500px clamp, normalized to `panel_width - 160px`
 - **Drag-resizable** — handles on `<th>`, min 30px
 - **Sticky headers** — `position:sticky; top:0`
-- **Drill column width** — measured by rendering buttons off-screen
+- **Link fields** — appended as ordinary columns at the right end of every panel
 
-### Drill Buttons
+### Drill Buttons (disabled)
 
-Each non-WP row shows buttons for child DocTypes (from `get_child_doctypes`). Count badge `(N)`, grayed out at 0.
+Drill button code is preserved (commented out) in `ui.js` but no longer rendered. Link fields now appear as regular columns instead. The `get_child_doctypes` endpoint and child-count queries still run server-side (data available for future use).
 
 ### SmsDialog / EmailDialog
 
@@ -269,6 +273,14 @@ Separate dialogs: **SmsDialog** — Source (Type / Email Template), message only
 ### Bold and Gender Color
 
 Use **inline styles** on `<th>`/`<td>`. Required for specificity — do not switch to CSS classes.
+
+### Fetch vs Display (ui.js)
+
+- **display_fields** — from `column_order` + link fields appended at end; used for building visible columns.
+- **fetch_only_fields** — name, gender, email, sms; always fetched when on root doctype; not shown unless also in display_fields.
+- **all_fields** — display + fetch_only; used for data fetch.
+- **Link fields** — automatically appended as visible columns at the right end by `get_panel_data`.
+- Gender and field lookups are **case-insensitive** (`_get_row_gender`, `_get_row_value`).
 
 ### Render Flow
 

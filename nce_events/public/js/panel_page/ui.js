@@ -62,9 +62,8 @@ nce_events.panel_page.Explorer = class Explorer {
 				const color = doc.text_color || "#333333";
 				const muted = doc.muted_text_color || "#555555";
 
-				const sel = ".panel-float, .panel-float .panel-table td, .panel-float .panel-table th, " +
-					".panel-float .drill-btn, " +
-					".panel-float .pane-filter-widget, " +
+			const sel = ".panel-float, .panel-float .panel-table td, .panel-float .panel-table th, " +
+				".panel-float .pane-filter-widget, " +
 					".panel-float .filter-col-select, " +
 					".panel-float .filter-op-select, .panel-float .filter-val-input";
 
@@ -86,7 +85,6 @@ nce_events.panel_page.Explorer = class Explorer {
   color: ${color} !important;
 }
 .panel-float .panel-table th,
-.panel-float .drill-btn.disabled,
 .send-panel .send-field-label, .send-preview-recipient,
 .se-tag-lbl {
   color: ${muted} !important;
@@ -219,7 +217,7 @@ nce_events.panel_page.Explorer = class Explorer {
 	_make_draggable(float_el) {
 		this._make_float_draggable(float_el,
 			[".panel-pane-header", ".panel-float-footer"],
-			".pane-header-btn, .panel-float-close, .pane-filter-widget, .drill-btn",
+			".pane-header-btn, .panel-float-close, .pane-filter-widget",
 			"float_drag");
 	}
 
@@ -242,12 +240,9 @@ nce_events.panel_page.Explorer = class Explorer {
 		const columns = data.columns || [];
 
 		const is_wp = (doctype === me.WP_DOCTYPE);
-		const child_doctypes = data.child_doctypes || [];
-		const has_drills = !is_wp && child_doctypes.length > 0;
 
 		const float_w = float_el.width() || (is_wp ? 900 : 1400);
-		const drill_col_w = has_drills ? me._calc_drill_col_width(child_doctypes) : 0;
-		const col_widths = me._calc_col_widths(columns, rows, drill_col_w, float_w);
+		const col_widths = me._calc_col_widths(columns, rows, float_w);
 
 		const row_ctx = me._build_row_ctx(doctype, config, data, col_widths, is_wp, panel.selected_row);
 
@@ -259,9 +254,6 @@ nce_events.panel_page.Explorer = class Explorer {
 			if (row_ctx.bold_set[fn]) style += "font-weight:700 !important;";
 			html += `<th style="${style}">${frappe.utils.escape_html(col.label)}<div class="col-resize-handle" data-col="${ci}"></div></th>`;
 		});
-		if (has_drills) {
-			html += `<th class="drill-col" style="width:${drill_col_w}px;min-width:${drill_col_w}px;"></th>`;
-		}
 		html += "</tr></thead><tbody>";
 
 		rows.forEach(function (row, ri) {
@@ -353,7 +345,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		const body = float_el.find(".panel-pane-body");
 
 		body.on("click", ".panel-row", function (e) {
-			if ($(e.target).closest(".drill-btn, .panel-tel-link, .panel-sms-one-btn").length) return;
+			if ($(e.target).closest(".panel-tel-link, .panel-sms-one-btn").length) return;
 
 			const ri = parseInt($(this).data("row-idx"), 10);
 			const rows = me._get_filtered_rows(doctype);
@@ -381,6 +373,7 @@ nce_events.panel_page.Explorer = class Explorer {
 			}
 		});
 
+		/* ── Drill button click handler (disabled — drill buttons removed) ──
 		body.on("click", ".drill-btn", function () {
 			if ($(this).hasClass("disabled")) return;
 			const child_dt = $(this).data("child-dt");
@@ -392,6 +385,7 @@ nce_events.panel_page.Explorer = class Explorer {
 			parent_filter[link_field] = row_name;
 			me._open_doctype_panel(child_dt, doctype, parent_filter);
 		});
+		*/
 
 		body.on("click", ".panel-sms-one-btn", function (e) {
 			e.preventDefault();
@@ -643,8 +637,8 @@ nce_events.panel_page.Explorer = class Explorer {
 		$(".panel-card-popover").remove();
 	}
 
-	/* ── Drill-column width calc ── */
-
+	/* ── Drill-column width calc (disabled — drill buttons removed) ── */
+	/*
 	_calc_drill_col_width(child_doctypes) {
 		const measurer = $('<div style="position:absolute;top:-9999px;left:-9999px;white-space:nowrap;visibility:hidden;"></div>');
 		$(document.body).append(measurer);
@@ -659,10 +653,11 @@ nce_events.panel_page.Explorer = class Explorer {
 		measurer.remove();
 		return Math.ceil(total + 16);
 	}
+	*/
 
 	/* ── Column auto-sizing ── */
 
-	_calc_col_widths(columns, rows, drill_col_w, float_w) {
+	_calc_col_widths(columns, rows, float_w) {
 		const sample = rows.slice(0, 20);
 		const MIN_COL = 50;
 		const MAX_COL = 500;
@@ -687,7 +682,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		let total_chars = 0;
 		avg_chars.forEach(function (c) { total_chars += c; });
 
-		const available = float_w - 160 - drill_col_w;
+		const available = float_w - 160;
 
 		let widths = [];
 		avg_chars.forEach(function (c) {
@@ -792,7 +787,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		const is_wp = (doctype === me.WP_DOCTYPE);
 
 		const col_widths = [];
-		float_el.find(".panel-table thead th").not(".drill-col").each(function () {
+		float_el.find(".panel-table thead th").each(function () {
 			col_widths.push(parseInt($(this).css("width"), 10) || 100);
 		});
 
@@ -873,6 +868,7 @@ nce_events.panel_page.Explorer = class Explorer {
 			html += `<td style="${parts.join(";")};">${cell_html}</td>`;
 		});
 
+		/* ── Drill buttons (disabled — link fields shown as columns instead) ──
 		if (ctx.has_drills) {
 			html += '<td class="drill-cell">';
 			ctx.child_doctypes.forEach(function (child) {
@@ -883,6 +879,7 @@ nce_events.panel_page.Explorer = class Explorer {
 			});
 			html += "</td>";
 		}
+		*/
 
 		html += "</tr>";
 		return html;
@@ -900,8 +897,8 @@ nce_events.panel_page.Explorer = class Explorer {
 			gender_tint_set: this._field_set(config.gender_color_fields),
 			tint_by_gender: config.tint_by_gender || {},
 			sms_field: (config.sms_field || "").toLowerCase(),
-			child_doctypes: data.child_doctypes || [],
-			has_drills: !is_wp && (data.child_doctypes || []).length > 0,
+			// child_doctypes: data.child_doctypes || [],   // drill buttons disabled
+			// has_drills: !is_wp && (data.child_doctypes || []).length > 0,
 			selected_row: selected_row || null,
 		};
 	}
