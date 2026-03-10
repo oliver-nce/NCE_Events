@@ -948,8 +948,8 @@ nce_events.panel_page.Explorer = class Explorer {
 		let cols = base_columns.slice();
 		const email_field = (config.email_field || "").trim().toLowerCase();
 		const sms_field = (config.sms_field || "").trim().toLowerCase();
-		if (email_field) cols.push({ fieldname: "_email_action", label: "\u2709", is_action: true });
-		if (sms_field) cols.push({ fieldname: "_phone_action", label: "\u260e", is_action: true });
+		if (email_field) cols.push({ fieldname: "_email_action", label: "", is_action: true });
+		if (sms_field) cols.push({ fieldname: "_phone_action", label: "", is_action: true });
 		return cols;
 	}
 
