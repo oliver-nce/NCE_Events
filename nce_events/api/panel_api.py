@@ -72,6 +72,12 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 			sms_field = auto_sms
 	bold_fields = _parse_csv(doc.bold_fields)
 	gender_color_fields = _parse_csv(doc.gender_color_fields)
+	# Add computed columns with tint_by_row so they tint based on row's gender_column
+	for cc in computed_columns:
+		if cc.get("tint_by_row") and cc.get("field_name"):
+			fn = cc["field_name"].strip()
+			if fn and fn not in gender_color_fields:
+				gender_color_fields.append(fn)
 
 	for cc in computed_columns:
 		fn = cc["field_name"]
@@ -551,6 +557,7 @@ def _get_computed_columns(doc: Any) -> list[dict[str, Any]]:
 			"label": (row.label or "").strip() or _title_case(row.field_name or ""),
 			"sql_expression": expr,
 			"gender": (getattr(row, "gender", None) or "").strip() or None,
+			"tint_by_row": bool(getattr(row, "tint_by_row", False)),
 		})
 	return result
 

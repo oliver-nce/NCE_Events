@@ -8,6 +8,7 @@
   "label",
   "sql_expression",
   "gender",
+  "tint_by_row",
   "section_break_advanced",
   "format",
   "notes"
@@ -37,12 +38,20 @@
    "reqd": 1
   },
   {
-   "description": "Tint color for this column (e.g. female count=46 gets pink). Male=blue, Female=pink. Blank=no tint.",
+   "description": "Forced tint when SQL selects by gender (e.g. male_count, female_count). Male=blue, Female=pink. Blank=no forced tint.",
    "fieldname": "gender",
    "fieldtype": "Select",
    "in_list_view": 1,
    "label": "Gender",
    "options": "\nMale\nFemale"
+  },
+  {
+   "default": "0",
+   "description": "When set, tint based on the row's gender column (from panel Gender Column). Use when the value varies by row.",
+   "fieldname": "tint_by_row",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Tint by Row"
   },
   {
    "fieldname": "section_break_advanced",
