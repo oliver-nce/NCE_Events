@@ -73,10 +73,21 @@ function _generate_credential_config(frm) {
 				let text = r.message.trim();
 				text = text.replace(/^```json?\s*/i, "").replace(/\s*```$/, "");
 				const config = JSON.parse(text);
-				frm.set_value(
-					"credential_config",
-					JSON.stringify(config, null, 2)
-				);
+				const json_str = JSON.stringify(config, null, 2);
+
+				if (!frm.fields_dict.credential_config) {
+					frappe.msgprint({
+						title: __("Field Missing"),
+						message: __(
+							"The credential_config field does not exist yet. Run <code>bench migrate</code> first.<br><br>Generated JSON:<br><pre>{0}</pre>",
+							[frappe.utils.escape_html(json_str)]
+						),
+						indicator: "orange",
+					});
+					return;
+				}
+
+				frm.set_value("credential_config", json_str);
 				frm.dirty();
 				frappe.show_alert({
 					message: __("Credential config generated."),
