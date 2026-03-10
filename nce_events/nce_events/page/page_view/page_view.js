@@ -13,6 +13,10 @@ frappe.pages["page-view"].on_page_show = function (wrapper) {
 		wrapper._explorer.destroy();
 		wrapper._explorer = null;
 	}
+	if (wrapper._route_cleanup) {
+		wrapper._route_cleanup();
+		wrapper._route_cleanup = null;
+	}
 
 	frappe.require(
 		[
@@ -25,6 +29,28 @@ frappe.pages["page-view"].on_page_show = function (wrapper) {
 		],
 		function () {
 			wrapper._explorer = new nce_events.panel_page.Explorer(page);
+
+			// When user navigates away (e.g. clicks logo), close floating panels
+			const on_route_change = function () {
+				const route = frappe.get_route();
+				if (route[0] !== "page-view") {
+					if (wrapper._explorer) {
+						wrapper._explorer.destroy();
+						wrapper._explorer = null;
+					}
+					if (wrapper._route_cleanup) {
+						wrapper._route_cleanup();
+						wrapper._route_cleanup = null;
+					}
+				}
+			};
+			frappe.router.on("change", on_route_change);
+			wrapper._route_cleanup = function () {
+				if (frappe.router.off) {
+					frappe.router.off("change", on_route_change);
+				}
+				wrapper._route_cleanup = null;
+			};
 		}
 	);
 };
