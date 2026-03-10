@@ -32,8 +32,9 @@
 | `_build_core_filter_where(doctype, filters, core_filter)` | `api/panel_api.py` | Combine user filters with core SQL |
 | `_auto_detect_contact_fields(doctype)` | `api/panel_api.py` | Detect email/sms fields |
 | `_find_link_field(doctype, target_doctype)` | `api/panel_api.py` | Find Link field pointing to target |
+| `_get_link_fields_with_target(doctype)` | `api/panel_api.py` | Link fields with target DocType `[{fieldname, options}]` |
 | `get_panel_data`, `get_panel_config` | `api/panel_api.py` | Panel data fetch |
-| `get_child_doctypes(root_doctype)` | `api/panel_api.py` | DocTypes with Link to root |
+| `get_child_doctypes(root_doctype)` | `api/panel_api.py` | DocTypes with Link to root (for related columns + drill-down) |
 
 ---
 

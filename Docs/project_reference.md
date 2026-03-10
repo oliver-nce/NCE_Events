@@ -156,12 +156,16 @@ All under `nce_events/api/`.
 | Function | Params | Purpose |
 |---|---|---|
 | `get_panel_config` | `root_doctype` | Display config (column_order, fetch_only_fields, bold, gender, show flags, core_filter, auto-detected email/sms) |
-| `get_panel_data` | `root_doctype, filters, limit, start` | Rows with dot-notation resolution, child counts, child_doctypes. `limit=0` (default) = all rows. Returns real DB `total` for progressive loading. Link fields are appended as visible columns at the right end (after display_fields). |
+| `get_panel_data` | `root_doctype, filters, limit, start` | Rows with dot-notation resolution, child counts, child_doctypes. `limit=0` (default) = all rows. Returns real DB `total` for progressive loading. Column order: display fields → link fields → related fields. |
 
-**Fetch vs display:** `column_order` = columns to display. `fetch_only_fields` = fields always fetched when on root doctype but not displayed unless in column_order. Fetch-only: name, gender (or link.gender), email_field, sms_field. Link fields are now auto-appended to visible columns (at the end) by `get_panel_data`. No conditions — always fetch when on root DT.
+**Fetch vs display:** `column_order` = columns to display. `fetch_only_fields` = fields always fetched when on root doctype but not displayed unless in column_order. Fetch-only: name, gender (or link.gender), email_field, sms_field. No conditions — always fetch when on root DT.
+
+**Link fields:** Auto-appended as visible columns at the right end by `get_panel_data`. Styled royal blue + underlined. Clicking a link cell value opens the related record's form in a new browser tab. Column carries `is_link: True` and `link_doctype`.
+
+**Related fields:** `_related_{DocType}` entries in `column_order` (added via "Add Related DocTypes" button on Display tab). Placed after link fields at the far right. Each row shows the static label (e.g., "Enrollments"). Styled royal blue + underlined. Clicking opens a filtered child panel (drill-down). Column carries `is_related_link: True`, `related_doctype`, `related_link_field`. Excluded from DB queries (virtual columns).
 | `save_panel_sql` | `root_doctype, core_filter, order_by` | Persist SQL WHERE/ORDER BY on Page Panel |
 | `export_panel_data` | `root_doctype, filters` | CSV to public path, returns URL for Google Sheets `IMPORTDATA` |
-| `get_child_doctypes` | `root_doctype` | DocTypes with Link fields pointing to root_doctype (drill buttons disabled; code retained) |
+| `get_child_doctypes` | `root_doctype` | DocTypes with Link fields pointing to root_doctype (used for related columns + child-panel drill-down) |
 | `get_doctype_fields` | `root_doctype` | Data-bearing fields for a DocType |
 | `debug_child_lookup` | `root_doctype` | Diagnostic for get_child_doctypes |
 
@@ -222,19 +226,18 @@ Credentials from `API Connector` DocType: "Twilio" (Account SID / Auth Token), "
 
 ## 7. Page Panel Form UI (page_definition.js)
 
-Custom **5-tab layout** on the Page Panel child-row form:
+Custom **2-tab layout** on the Page Panel form (`page_panel.js`):
 
-| Tab | Frappe Fields | Custom UI |
-|---|---|---|
-| Basic | panel_number, header_text, root_doctype, where_clause | — |
-| Display | *(all hidden)* | Interactive matrix table |
-| Widgets | show_filter, show_sheets, show_email, show_sms, show_card_email, show_card_sms | — |
-| Buttons | button_1_name, button_1_code, button_2_name, button_2_code | — |
-| Report | report_name, wp_query, frappe_query | Translate + Create/Update Report buttons |
+| Tab | Contents |
+|---|---|
+| Config | root_doctype, header_text, computed columns, widget toggles (filter, sheets, email, sms), email/sms fields, card actions |
+| Display | Interactive matrix with sub-tabs per DocType + Order tab |
 
 ### Display Tab — Matrix
 
-Columns from the report's SQL. Each row is a report column; matrix columns: Field, Default Header, Header (editable), List, Card, Bold, Tint. Rows are drag-reorderable. On change, `_sync()` writes back to all relevant Page Panel fields. Gender is auto-detected from row; no Gender column to designate.
+Sub-tabs: root DocType, each linked DocType, and Order (when links exist). Each sub-tab shows a field matrix with columns: Field, Label, Show, Bold, Gender, Tint. Checkboxes sync to `column_order`, `bold_fields`, `gender_column`, `gender_color_fields`. Select All / Select None links. Order tab enables drag-reorder of all selected fields.
+
+**"Add Related DocTypes" button** — on the root sub-tab toolbar. Fetches related DocTypes (via `get_child_doctypes`) and appends `_related_{DocType}` entries to `column_order`. These appear in the matrix with a blue "(related)" tag.
 
 **Computed columns** (Page Panel child table): SQL expression per row. `tint_by_row` = true tints by row's gender instead of forced Male/Female.
 
@@ -260,11 +263,12 @@ All panels render as draggable `position:fixed` elements. Root panel (WP Tables)
 - **Auto-sized** — proportional to data content (sample of 20 rows), 50–500px clamp, normalized to `panel_width - 160px`
 - **Drag-resizable** — handles on `<th>`, min 30px
 - **Sticky headers** — `position:sticky; top:0`
-- **Link fields** — appended as ordinary columns at the right end of every panel
+- **Link fields** — auto-appended at the right end; royal blue + underlined; click opens form in new tab
+- **Related fields** — appended after link fields at far right; royal blue + underlined; click opens filtered child panel (drill-down)
 
 ### Drill Buttons (disabled)
 
-Drill button code is preserved (commented out) in `ui.js` but no longer rendered. Link fields now appear as regular columns instead. The `get_child_doctypes` endpoint and child-count queries still run server-side (data available for future use).
+Legacy drill button code is preserved (commented out) in `ui.js`. Drill-down is now handled by clicking related field cells, which open filtered child panels via `_open_doctype_panel`.
 
 ### SmsDialog / EmailDialog
 
@@ -276,10 +280,11 @@ Use **inline styles** on `<th>`/`<td>`. Required for specificity — do not swit
 
 ### Fetch vs Display (ui.js)
 
-- **display_fields** — from `column_order` + link fields appended at end; used for building visible columns.
+- **display_fields** — from `column_order`; used for building visible columns.
 - **fetch_only_fields** — name, gender, email, sms; always fetched when on root doctype; not shown unless also in display_fields.
-- **all_fields** — display + fetch_only; used for data fetch.
-- **Link fields** — automatically appended as visible columns at the right end by `get_panel_data`.
+- **all_fields** — display + fetch_only; used for data fetch (`_related_*` entries excluded from DB query).
+- **Link fields** — auto-appended as visible columns after display fields. Click opens form in new tab.
+- **Related fields** — `_related_*` entries from `column_order`; appended after link fields. Click opens child panel.
 - Gender and field lookups are **case-insensitive** (`_get_row_gender`, `_get_row_value`).
 
 ### Render Flow
