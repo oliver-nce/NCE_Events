@@ -32,7 +32,6 @@
 		const tag = (el.tagName || "").toLowerCase();
 		if (tag === "textarea" || (tag === "input" && el.type === "text") ||
 			el.contentEditable === "true") {
-			console.log("[SE] focusin: set _last_editable", tag, el.className, "contentEditable=" + el.contentEditable);
 			_last_editable = el;
 			_save_selection();
 		}
@@ -47,10 +46,8 @@
 	$(document).on("selectionchange.se_track", function () {
 		if (_last_editable && _last_editable.contentEditable === "true") {
 			const sel = window.getSelection();
-			const inside = sel && sel.rangeCount > 0 && _last_editable.contains(sel.anchorNode);
-			if (inside) {
+			if (sel && sel.rangeCount > 0 && _last_editable.contains(sel.anchorNode)) {
 				_last_range = sel.getRangeAt(0).cloneRange();
-				console.log("[SE] selectionchange: saved range", _last_range.startOffset);
 			}
 		}
 	});
@@ -593,9 +590,12 @@
 
 		$panel.find(".se-insert-btn").on("click", function () {
 			const current_tag = $pre.text();
-			console.log("[SE] Insert clicked. _last_editable:", _last_editable ? _last_editable.tagName + "." + _last_editable.className : null);
-			console.log("[SE] _last_range:", _last_range);
-			console.log("[SE] contentEditable:", _last_editable ? _last_editable.contentEditable : "N/A");
+			const _dbg = [];
+			_dbg.push("editable: " + (_last_editable ? _last_editable.tagName + "." + (_last_editable.className || "").substring(0, 30) : "NULL"));
+			_dbg.push("contentEditable: " + (_last_editable ? _last_editable.contentEditable : "N/A"));
+			_dbg.push("range: " + (_last_range ? "yes (offset " + _last_range.startOffset + ")" : "NULL"));
+			_dbg.push("sel_start: " + _last_sel_start + " sel_end: " + _last_sel_end);
+			frappe.show_alert({ message: _dbg.join("<br>"), indicator: "blue" }, 15);
 			if (!_last_editable || !_last_editable.parentNode) {
 				frappe.show_alert({ message: __("Click into the message box first, then click Insert"), indicator: "orange" });
 				return;
@@ -656,16 +656,15 @@
 			_last_sel_start = new_pos;
 			_last_sel_end = new_pos;
 		} else if (el.contentEditable === "true") {
-			console.log("[SE] _insert_at_cursor: contentEditable path");
-			console.log("[SE] _last_range:", _last_range, "contains:", _last_range ? el.contains(_last_range.startContainer) : "N/A");
 			el.focus();
-			if (_last_range && el.contains(_last_range.startContainer)) {
+			const _hasRange = _last_range && el.contains(_last_range.startContainer);
+			if (_hasRange) {
 				const sel = window.getSelection();
 				sel.removeAllRanges();
 				sel.addRange(_last_range);
-				console.log("[SE] Range restored");
+				frappe.show_alert({ message: "Range restored at offset " + _last_range.startOffset, indicator: "green" }, 15);
 			} else {
-				console.log("[SE] Range NOT restored");
+				frappe.show_alert({ message: "Range NOT restored. _last_range=" + !!_last_range + " contains=" + (_last_range ? el.contains(_last_range.startContainer) : "N/A"), indicator: "red" }, 15);
 			}
 			document.execCommand("insertText", false, text);
 			_save_selection();
