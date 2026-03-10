@@ -10,6 +10,21 @@
 	let _last_editable = null;
 	let _last_sel_start = 0;
 	let _last_sel_end = 0;
+	let _last_range = null;
+
+	function _save_selection() {
+		if (!_last_editable) return;
+		if (_last_editable.selectionStart !== undefined) {
+			_last_sel_start = _last_editable.selectionStart || 0;
+			_last_sel_end = _last_editable.selectionEnd || 0;
+		}
+		if (_last_editable.contentEditable === "true") {
+			const sel = window.getSelection();
+			if (sel && sel.rangeCount > 0 && _last_editable.contains(sel.anchorNode)) {
+				_last_range = sel.getRangeAt(0).cloneRange();
+			}
+		}
+	}
 
 	$(document).on("focusin.se_track", function (e) {
 		const el = e.target;
@@ -18,15 +33,22 @@
 		if (tag === "textarea" || (tag === "input" && el.type === "text") ||
 			el.contentEditable === "true") {
 			_last_editable = el;
-			_last_sel_start = el.selectionStart || 0;
-			_last_sel_end = el.selectionEnd || 0;
+			_save_selection();
 		}
 	});
 
 	$(document).on("mouseup.se_track keyup.se_track", function (e) {
-		if (_last_editable && _last_editable === e.target) {
-			_last_sel_start = _last_editable.selectionStart || 0;
-			_last_sel_end = _last_editable.selectionEnd || 0;
+		if (_last_editable && (_last_editable === e.target || _last_editable.contains(e.target))) {
+			_save_selection();
+		}
+	});
+
+	$(document).on("selectionchange.se_track", function () {
+		if (_last_editable && _last_editable.contentEditable === "true") {
+			const sel = window.getSelection();
+			if (sel && sel.rangeCount > 0 && _last_editable.contains(sel.anchorNode)) {
+				_last_range = sel.getRangeAt(0).cloneRange();
+			}
 		}
 	});
 
@@ -574,7 +596,10 @@
 			}
 			const before = _last_editable.value;
 			_insert_at_cursor(_last_editable, current_tag);
-			if (_last_editable.value !== before) {
+			const inserted = _last_editable.value !== undefined
+				? (_last_editable.value !== before)
+				: true;
+			if (inserted) {
 				frappe.show_alert({ message: __("Tag inserted"), indicator: "green" });
 				$panel.remove();
 			} else {
@@ -626,7 +651,13 @@
 			_last_sel_end = new_pos;
 		} else if (el.contentEditable === "true") {
 			el.focus();
+			if (_last_range && el.contains(_last_range.startContainer)) {
+				const sel = window.getSelection();
+				sel.removeAllRanges();
+				sel.addRange(_last_range);
+			}
 			document.execCommand("insertText", false, text);
+			_save_selection();
 		}
 	}
 
