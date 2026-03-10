@@ -32,6 +32,7 @@
 		const tag = (el.tagName || "").toLowerCase();
 		if (tag === "textarea" || (tag === "input" && el.type === "text") ||
 			el.contentEditable === "true") {
+			console.log("[SE] focusin: set _last_editable", tag, el.className, "contentEditable=" + el.contentEditable);
 			_last_editable = el;
 			_save_selection();
 		}
@@ -46,8 +47,10 @@
 	$(document).on("selectionchange.se_track", function () {
 		if (_last_editable && _last_editable.contentEditable === "true") {
 			const sel = window.getSelection();
-			if (sel && sel.rangeCount > 0 && _last_editable.contains(sel.anchorNode)) {
+			const inside = sel && sel.rangeCount > 0 && _last_editable.contains(sel.anchorNode);
+			if (inside) {
 				_last_range = sel.getRangeAt(0).cloneRange();
+				console.log("[SE] selectionchange: saved range", _last_range.startOffset);
 			}
 		}
 	});
@@ -590,6 +593,9 @@
 
 		$panel.find(".se-insert-btn").on("click", function () {
 			const current_tag = $pre.text();
+			console.log("[SE] Insert clicked. _last_editable:", _last_editable ? _last_editable.tagName + "." + _last_editable.className : null);
+			console.log("[SE] _last_range:", _last_range);
+			console.log("[SE] contentEditable:", _last_editable ? _last_editable.contentEditable : "N/A");
 			if (!_last_editable || !_last_editable.parentNode) {
 				frappe.show_alert({ message: __("Click into the message box first, then click Insert"), indicator: "orange" });
 				return;
@@ -650,11 +656,16 @@
 			_last_sel_start = new_pos;
 			_last_sel_end = new_pos;
 		} else if (el.contentEditable === "true") {
+			console.log("[SE] _insert_at_cursor: contentEditable path");
+			console.log("[SE] _last_range:", _last_range, "contains:", _last_range ? el.contains(_last_range.startContainer) : "N/A");
 			el.focus();
 			if (_last_range && el.contains(_last_range.startContainer)) {
 				const sel = window.getSelection();
 				sel.removeAllRanges();
 				sel.addRange(_last_range);
+				console.log("[SE] Range restored");
+			} else {
+				console.log("[SE] Range NOT restored");
 			}
 			document.execCommand("insertText", false, text);
 			_save_selection();
