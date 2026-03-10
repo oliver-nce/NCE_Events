@@ -885,11 +885,11 @@ nce_events.panel_page.Explorer = class Explorer {
 			if (col.is_action) {
 				let cell_html = "";
 				if (fn === "_email_action" && value && String(value).indexOf("@") !== -1) {
-					cell_html = '<span class="panel-email-one-btn" style="cursor:pointer;" data-doctype="' + frappe.utils.escape_html(ctx.doctype) + '" data-row-name="' + frappe.utils.escape_html(row.name) + '" title="' + __("Send email") + '">&#128231;</span>';
+					cell_html = '<button type="button" class="btn btn-xs btn-default panel-cell-btn panel-email-one-btn" data-doctype="' + frappe.utils.escape_html(ctx.doctype) + '" data-row-name="' + frappe.utils.escape_html(row.name) + '" title="' + __("Send email") + '"><i class="fa fa-envelope"></i></button>';
 				} else if (fn === "_phone_action" && value && /[\d+]/.test(String(value))) {
 					const tel_val = String(value).replace(/\s+/g, "");
-					cell_html = '<span class="panel-tel-link" style="cursor:pointer;" data-tel="' + frappe.utils.escape_html(tel_val) + '" title="' + __("Call") + '">&#128222;</span> ';
-					cell_html += '<span class="panel-sms-one-btn" style="cursor:pointer;" data-doctype="' + frappe.utils.escape_html(ctx.doctype) + '" data-row-name="' + frappe.utils.escape_html(row.name) + '" title="' + __("Send SMS") + '">&#128172;</span>';
+					cell_html = '<button type="button" class="btn btn-xs btn-default panel-cell-btn panel-tel-link" data-tel="' + frappe.utils.escape_html(tel_val) + '" title="' + __("Call") + '"><i class="fa fa-phone"></i></button> ';
+					cell_html += '<button type="button" class="btn btn-xs btn-default panel-cell-btn panel-sms-one-btn" data-doctype="' + frappe.utils.escape_html(ctx.doctype) + '" data-row-name="' + frappe.utils.escape_html(row.name) + '" title="' + __("Send SMS") + '"><i class="fa fa-comment"></i></button>';
 				}
 				html += `<td style="${parts.join(";")};">${cell_html}</td>`;
 				return;
