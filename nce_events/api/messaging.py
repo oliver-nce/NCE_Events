@@ -243,10 +243,10 @@ def _send_email(to_email: str, subject: str, body: str) -> None:
 	if not from_email:
 		frappe.throw(_("No default outgoing Email Account configured."))
 
-	base_url = (creds.get("base_url") or "https://api.sendgrid.com/v3").rstrip("/")
+	base_url = (creds.get("base_url") or "https://api.sendgrid.com").rstrip("/")
 
 	resp = requests.post(
-		f"{base_url}/mail/send",
+		f"{base_url}/v3/mail/send",
 		headers={
 			"Authorization": f"Bearer {api_key}",
 			"Content-Type": "application/json",
