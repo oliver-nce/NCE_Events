@@ -210,11 +210,13 @@ def _send_sms(phone: str, message: str) -> None:
 	if not account_sid or not auth_token:
 		frappe.throw(_("Twilio credentials missing. Check the Twilio API Connector credential_config."))
 
-	url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Messages.json"
+	base_url = (creds.get("base_url") or "https://api.twilio.com").rstrip("/")
+	url = f"{base_url}/2010-04-01/Accounts/{account_sid}/Messages.json"
 
-	from_number = frappe.db.get_single_value("SMS Settings", "sms_sender_name") or ""
+	config = creds.get("_config") or {}
+	from_number = (config.get("from_number") or "").strip()
 	if not from_number:
-		frappe.throw(_("No sender number configured. Set SMS Sender Name in SMS Settings."))
+		frappe.throw(_("No from_number in Twilio credential_config. Add a from_number field to the JSON."))
 
 	resp = requests.post(
 		url,
