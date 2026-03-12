@@ -49,8 +49,11 @@ let panelCounter = 0;
 
 onMounted(() => { load(); });
 
+const OFFSET_STEP = 80;
+
 function nextPos() {
-	return { x: 140, y: 120 };
+	const n = openPanels.length;
+	return { x: 140 + n * OFFSET_STEP, y: 120 + n * OFFSET_STEP };
 }
 
 async function openPanel(doctype, parentFilter = {}) {
