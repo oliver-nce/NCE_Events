@@ -12,9 +12,6 @@
 				<button v-if="showSms" class="ppv2-hdr-btn" title="SMS" @click="$emit('sms')">
 					<i class="fa fa-comment"></i>
 				</button>
-				<button v-if="showEmail || showSms" class="ppv2-hdr-btn" title="Tag Finder" @click="$emit('tags')">
-					<i class="fa fa-tags"></i>
-				</button>
 				<span class="ppv2-count">{{ rows.length }} / {{ total }} records</span>
 				<button class="ppv2-hdr-btn ppv2-close-btn" title="Close" @click="$emit('close')">&times;</button>
 			</span>
