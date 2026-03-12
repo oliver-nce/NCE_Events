@@ -1,32 +1,52 @@
 <template>
 	<div class="ppv2-root">
-		<PanelTable
-			:title="config?.header_text || 'WP Tables'"
-			:columns="columns"
-			:rows="rows"
-			:total="total"
-			:loading="loading"
-			:error="error"
-			:width="900"
-			@row-click="onRowClick"
-		/>
+		<PanelFloat :init-x="40" :init-y="60" :init-w="900" :init-h="550">
+			<template #header>
+				<PanelTable
+					:title="config?.header_text || 'WP Tables'"
+					:columns="[]"
+					:rows="[]"
+					:total="0"
+					style="display:none"
+				/>
+			</template>
+			<PanelTable
+				:title="config?.header_text || 'WP Tables'"
+				:columns="columns"
+				:rows="rows"
+				:total="total"
+				:loading="loading"
+				:error="error"
+				@row-click="onRowClick"
+			/>
+			<template #footer>{{ config?.header_text || 'WP Tables' }}</template>
+		</PanelFloat>
 
-		<PanelTable
-			v-if="childPanel.columns.length"
-			:title="childPanel.config?.header_text || childPanel.doctype"
-			:columns="childPanel.columns"
-			:rows="childPanel.rows"
-			:total="childPanel.total"
-			:loading="childPanel.loading"
-			:error="childPanel.error"
-			:width="1200"
-		/>
+		<PanelFloat
+			v-if="childPanel.doctype"
+			:init-x="160"
+			:init-y="160"
+			:init-w="1200"
+			:init-h="600"
+		>
+			<PanelTable
+				:title="childPanel.config?.header_text || childPanel.doctype"
+				:columns="childPanel.columns"
+				:rows="childPanel.rows"
+				:total="childPanel.total"
+				:loading="childPanel.loading"
+				:error="childPanel.error"
+				@close="childPanel.doctype = ''"
+			/>
+			<template #footer>{{ childPanel.config?.header_text || childPanel.doctype }}</template>
+		</PanelFloat>
 	</div>
 </template>
 
 <script setup>
 import { reactive, onMounted } from "vue";
 import { usePanel } from "./composables/usePanel.js";
+import PanelFloat from "./components/PanelFloat.vue";
 import PanelTable from "./components/PanelTable.vue";
 
 const { config, columns, rows, total, loading, error, load } = usePanel("WP Tables");
@@ -72,9 +92,8 @@ async function onRowClick(row) {
 
 <style scoped>
 .ppv2-root {
-	padding: 16px;
-	display: flex;
-	flex-direction: column;
-	gap: 16px;
+	position: relative;
+	width: 100%;
+	height: calc(100vh - 60px);
 }
 </style>

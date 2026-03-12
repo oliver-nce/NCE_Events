@@ -1,8 +1,11 @@
 <template>
-	<div class="ppv2-panel" :style="{ width: width + 'px' }">
+	<div class="ppv2-panel">
 		<div class="ppv2-header">
 			<span class="ppv2-title">{{ title }}</span>
-			<span class="ppv2-count">{{ rows.length }} / {{ total }} records</span>
+			<span class="ppv2-header-right">
+				<button class="ppv2-hdr-btn" title="Close" @click="$emit('close')">&times;</button>
+				<span class="ppv2-count">{{ rows.length }} / {{ total }} records</span>
+			</span>
 		</div>
 
 		<div v-if="loading" class="ppv2-loading">Loading…</div>
@@ -48,10 +51,9 @@ const props = defineProps({
 	loading: { type: Boolean, default: false },
 	error: { type: String, default: null },
 	selectedName: { type: String, default: null },
-	width: { type: Number, default: 900 },
 });
 
-defineEmits(["row-click"]);
+defineEmits(["row-click", "close"]);
 
 function cellValue(row, col) {
 	const fn = col.fieldname;
@@ -64,12 +66,9 @@ function cellValue(row, col) {
 
 <style scoped>
 .ppv2-panel {
-	background: #fafafa;
-	border: 1px solid #d1d8dd;
-	border-radius: 6px;
-	overflow: hidden;
-	box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-	margin-bottom: 16px;
+	display: flex;
+	flex-direction: column;
+	height: 100%;
 }
 
 .ppv2-header {
@@ -79,12 +78,31 @@ function cellValue(row, col) {
 	padding: 8px 14px;
 	background: #126BC4;
 	color: #fff;
+	flex-shrink: 0;
 }
 
 .ppv2-title {
 	font-weight: 600;
 	font-size: 14px;
 }
+
+.ppv2-header-right {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.ppv2-hdr-btn {
+	background: none;
+	border: none;
+	color: #fff;
+	font-size: 18px;
+	cursor: pointer;
+	padding: 0 4px;
+	line-height: 1;
+	opacity: 0.8;
+}
+.ppv2-hdr-btn:hover { opacity: 1; }
 
 .ppv2-count {
 	font-size: 11px;
@@ -100,8 +118,8 @@ function cellValue(row, col) {
 .ppv2-error { color: #e53e3e; }
 
 .ppv2-body {
+	flex: 1;
 	overflow: auto;
-	max-height: 500px;
 }
 
 .ppv2-table {
