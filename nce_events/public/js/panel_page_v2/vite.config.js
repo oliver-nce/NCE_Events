@@ -10,7 +10,7 @@ export default defineConfig({
 		lib: {
 			entry: path.resolve(__dirname, "main.js"),
 			name: "NCEPanelPageV2",
-			fileName: "panel_page_v2",
+			fileName: () => "panel_page_v2.js",
 			formats: ["iife"],
 		},
 		rollupOptions: {

@@ -10,7 +10,10 @@ frappe.pages["panel-page-v2"].on_page_show = function (wrapper) {
 	if (wrapper._vue_app) return;
 
 	frappe.require(
-		["/assets/nce_events/js/panel_page_v2/panel_page_v2.js"],
+		[
+			"/assets/nce_events/js/panel_page_v2/panel_page_v2.js",
+			"/assets/nce_events/js/panel_page_v2/style.css",
+		],
 		function () {
 			const mount_el = document.createElement("div");
 			mount_el.id = "panel-page-v2-app";
