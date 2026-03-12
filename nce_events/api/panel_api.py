@@ -354,9 +354,10 @@ def export_panel_data(
 	csv_content = output.getvalue()
 
 	safe_dt = _safe_filename(root_doctype)
-	context_key = json.dumps({"f": filters, "uf": user_filters}, sort_keys=True, default=str)
+	ts = frappe.utils.now_datetime().strftime("%Y%m%d_%H%M%S")
+	context_key = json.dumps({"f": filters, "uf": user_filters, "t": ts}, sort_keys=True, default=str)
 	suffix = hashlib.md5(context_key.encode()).hexdigest()[:10]
-	filename = f"{safe_dt}_{suffix}.csv"
+	filename = f"{safe_dt}_{ts}_{suffix}.csv"
 
 	roster_dir = frappe.get_site_path("public", "files", "panels", _ROSTER_HASH)
 	os.makedirs(roster_dir, exist_ok=True)
