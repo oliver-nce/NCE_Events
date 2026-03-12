@@ -26,6 +26,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 		el.html(`
 			<div class="send-panel-header">
 				<span class="send-panel-title">${frappe.utils.escape_html(title)}</span>
+				<button class="btn btn-xs send-tags-btn" title="Tag Finder" style="border-color:rgba(255,255,255,0.3);color:rgba(255,255,255,0.85);background:transparent;margin-left:auto;margin-right:6px;"><i class="fa fa-tags"></i></button>
 				<button class="send-panel-close" title="Close">&times;</button>
 			</div>
 			<div class="send-panel-body">
@@ -50,7 +51,6 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 					${nce_events.panel_page.ai_tools.build_bar_html()}
 					<div class="send-panel-actions">
 						<button class="btn btn-xs btn-default send-preview-btn"><i class="fa fa-eye"></i> Preview</button>
-						<button class="btn btn-xs btn-default send-tags-btn"><i class="fa fa-tags"></i> Tags</button>
 						<span class="send-actions-right">
 							<button class="btn btn-xs btn-default send-cancel-btn">Cancel</button>
 							<button class="btn btn-xs btn-primary send-send-btn">Send</button>
