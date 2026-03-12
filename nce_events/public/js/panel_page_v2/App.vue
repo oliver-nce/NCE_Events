@@ -50,8 +50,7 @@ let panelCounter = 0;
 onMounted(() => { load(); });
 
 function nextPos() {
-	const n = openPanels.length;
-	return { x: 140 + n * 30, y: 120 + n * 30 };
+	return { x: 140, y: 120 };
 }
 
 async function openPanel(doctype, parentFilter = {}) {
