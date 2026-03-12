@@ -139,33 +139,42 @@ function onSheets(p) {
 	});
 }
 
-function onEmail(p) {
+let _sendDialog = null;
+
+function _openSendDialog(p, mode) {
+	const cfg = p.config;
+	if (!cfg) return;
+	const recipientField = mode === "sms" ? cfg.sms_field : cfg.email_field;
+	if (!recipientField) {
+		frappe.msgprint(__("No {0} field configured for this panel.", [mode === "sms" ? "SMS" : "Email"]));
+		return;
+	}
+	if (!p.rows.length) { frappe.msgprint(__("No rows.")); return; }
+
+	if (_sendDialog) { _sendDialog.close(); _sendDialog = null; }
+
 	frappe.require([
+		"/assets/nce_events/js/panel_page/sms_dialog.js",
 		"/assets/nce_events/js/panel_page/email_dialog.js",
 		"/assets/nce_events/css/panel_page.css",
 	], () => {
-		const dialog = new nce_events.panel_page.EmailDialog({
+		const DialogClass = mode === "sms"
+			? nce_events.panel_page.SmsDialog
+			: nce_events.panel_page.EmailDialog;
+		_sendDialog = new DialogClass({
 			doctype: p.doctype,
-			rows: p.rows,
-			config: p.config,
+			config: cfg,
+			filters: p.parentFilter || {},
+			user_filters: [],
+			row_count: p.rows.length,
+			z_index: 9999,
+			on_close() { _sendDialog = null; },
 		});
-		dialog.show();
 	});
 }
 
-function onSms(p) {
-	frappe.require([
-		"/assets/nce_events/js/panel_page/sms_dialog.js",
-		"/assets/nce_events/css/panel_page.css",
-	], () => {
-		const dialog = new nce_events.panel_page.SmsDialog({
-			doctype: p.doctype,
-			rows: p.rows,
-			config: p.config,
-		});
-		dialog.show();
-	});
-}
+function onEmail(p) { _openSendDialog(p, "email"); }
+function onSms(p) { _openSendDialog(p, "sms"); }
 </script>
 
 <style scoped>
