@@ -50,6 +50,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 					${nce_events.panel_page.ai_tools.build_bar_html()}
 					<div class="send-panel-actions">
 						<button class="btn btn-xs btn-default send-preview-btn"><i class="fa fa-eye"></i> Preview</button>
+						<button class="btn btn-xs btn-default send-tags-btn"><i class="fa fa-tags"></i> Tags</button>
 						<span class="send-actions-right">
 							<button class="btn btn-xs btn-default send-cancel-btn">Cancel</button>
 							<button class="btn btn-xs btn-primary send-send-btn">Send</button>
@@ -122,11 +123,9 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 			if (source_sel.val() === "type") {
 				tpl_section.hide();
 				msg_section.show();
-				me._open_tags();
 			} else {
 				tpl_section.show();
 				msg_section.show();
-				me._open_tags();
 			}
 		});
 
@@ -142,9 +141,8 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 
 		el.on("click", ".send-preview-btn", function () { me._do_preview(); });
 		el.on("click", ".send-send-btn", function () { me._do_send(); });
+		el.on("click", ".send-tags-btn", function () { me._open_tags(); });
 		me._preview_el.on("click", ".send-test-btn", function () { me._do_send_test(); });
-
-		me._open_tags();
 	}
 
 	/* ── Tag Finder integration ── */
