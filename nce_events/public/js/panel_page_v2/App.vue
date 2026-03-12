@@ -46,7 +46,7 @@ onMounted(() => {
 });
 
 async function onRowClick(row) {
-	const doctype = row.doctype || row.name;
+	const doctype = row.frappe_doctype || row.name;
 	if (!doctype) return;
 
 	childPanel.doctype = doctype;
@@ -56,7 +56,7 @@ async function onRowClick(row) {
 	childPanel.rows = [];
 
 	try {
-		const child = usePanel(doctype, { wp_tables: row.name });
+		const child = usePanel(doctype);
 		await child.load();
 		childPanel.config = child.config.value;
 		childPanel.columns = child.columns.value;
