@@ -24,6 +24,7 @@
 
 		<PanelFloat
 			v-if="childPanel.doctype"
+			:key="childPanel.doctype"
 			:init-x="160"
 			:init-y="160"
 			:init-w="1200"

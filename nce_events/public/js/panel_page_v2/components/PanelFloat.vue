@@ -21,6 +21,11 @@
 	</div>
 </template>
 
+<script>
+let _globalZ = 100;
+function getNextZ() { return ++_globalZ; }
+</script>
+
 <script setup>
 import { ref, computed } from "vue";
 
@@ -37,10 +42,8 @@ const x = ref(props.initX);
 const y = ref(props.initY);
 const w = ref(props.initW);
 const h = ref(props.initH);
-const z = ref(100);
+const z = ref(getNextZ());
 const floatEl = ref(null);
-
-let nextZ = 101;
 
 const floatStyle = computed(() => ({
 	left: x.value + "px",
@@ -51,7 +54,7 @@ const floatStyle = computed(() => ({
 }));
 
 function bringToFront() {
-	z.value = nextZ++;
+	z.value = getNextZ();
 }
 
 function startDrag(e) {
