@@ -9,6 +9,7 @@
 				:loading="loading"
 				:error="error"
 				@row-click="onRootRowClick"
+				@sheets="onSheets({ doctype: 'WP Tables', parentFilter: {}, rows })"
 			/>
 			<template #footer>{{ config?.header_text || 'NCE Tables' }}</template>
 		</PanelFloat>
@@ -28,8 +29,13 @@
 				:total="p.total"
 				:loading="p.loading"
 				:error="p.error"
+				:show-email="!!(p.config?.email_field)"
+				:show-sms="!!(p.config?.sms_field)"
 				@close="closePanel(p.id)"
 				@drill="(ev) => onDrill(ev, p)"
+				@sheets="onSheets(p)"
+				@email="onEmail(p)"
+				@sms="onSms(p)"
 			/>
 			<template #footer>{{ p.config?.header_text || p.doctype }}</template>
 		</PanelFloat>
@@ -108,6 +114,57 @@ function onDrill(ev, parentPanel) {
 		filter[ev.linkField] = ev.rowName;
 	}
 	openPanel(ev.doctype, filter);
+}
+
+function onSheets(p) {
+	frappe.call({
+		method: "nce_events.api.panel_api.export_panel_data",
+		args: {
+			root_doctype: p.doctype,
+			filters: JSON.stringify(p.parentFilter || {}),
+			user_filters: JSON.stringify([]),
+		},
+		callback(r) {
+			if (!r.message) return;
+			const url = window.location.origin + r.message.url;
+			const formula = `=IMPORTDATA("${url}")`;
+			if (navigator.clipboard && navigator.clipboard.writeText) {
+				navigator.clipboard.writeText(formula).then(() => {
+					frappe.show_alert({ message: __("Link copied — paste in Google Sheets"), indicator: "green" });
+				});
+			} else {
+				frappe.show_alert({ message: __("Exported {0} rows", [r.message.rows_exported]), indicator: "green" });
+			}
+		},
+	});
+}
+
+function onEmail(p) {
+	frappe.require([
+		"/assets/nce_events/js/panel_page/email_dialog.js",
+		"/assets/nce_events/css/panel_page.css",
+	], () => {
+		const dialog = new nce_events.panel_page.EmailDialog({
+			doctype: p.doctype,
+			rows: p.rows,
+			config: p.config,
+		});
+		dialog.show();
+	});
+}
+
+function onSms(p) {
+	frappe.require([
+		"/assets/nce_events/js/panel_page/sms_dialog.js",
+		"/assets/nce_events/css/panel_page.css",
+	], () => {
+		const dialog = new nce_events.panel_page.SmsDialog({
+			doctype: p.doctype,
+			rows: p.rows,
+			config: p.config,
+		});
+		dialog.show();
+	});
 }
 </script>
 

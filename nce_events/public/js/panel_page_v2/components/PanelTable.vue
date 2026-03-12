@@ -3,8 +3,17 @@
 		<div class="ppv2-header">
 			<span class="ppv2-title">{{ title }}</span>
 			<span class="ppv2-header-right">
-				<button class="ppv2-hdr-btn" title="Close" @click="$emit('close')">&times;</button>
+				<button class="ppv2-hdr-btn" title="Export to Sheets" @click="$emit('sheets')">
+					<i class="fa fa-table"></i>
+				</button>
+				<button v-if="showEmail" class="ppv2-hdr-btn" title="Email" @click="$emit('email')">
+					<i class="fa fa-envelope"></i>
+				</button>
+				<button v-if="showSms" class="ppv2-hdr-btn" title="SMS" @click="$emit('sms')">
+					<i class="fa fa-comment"></i>
+				</button>
 				<span class="ppv2-count">{{ rows.length }} / {{ total }} records</span>
+				<button class="ppv2-hdr-btn ppv2-close-btn" title="Close" @click="$emit('close')">&times;</button>
 			</span>
 		</div>
 
@@ -56,9 +65,11 @@ const props = defineProps({
 	loading: { type: Boolean, default: false },
 	error: { type: String, default: null },
 	selectedName: { type: String, default: null },
+	showEmail: { type: Boolean, default: false },
+	showSms: { type: Boolean, default: false },
 });
 
-defineEmits(["row-click", "close", "drill"]);
+defineEmits(["row-click", "close", "drill", "sheets", "email", "sms"]);
 
 function cellValue(row, col) {
 	const fn = col.fieldname;
