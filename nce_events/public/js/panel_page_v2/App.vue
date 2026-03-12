@@ -8,8 +8,10 @@
 				:total="total"
 				:loading="loading"
 				:error="error"
+				:config="config || {}"
 				@row-click="onRootRowClick"
 				@sheets="onSheets({ doctype: 'WP Tables', parentFilter: {}, rows })"
+				@filter-change="(f) => onFilterChange(null, f)"
 			/>
 			<template #footer>{{ config?.header_text || 'NCE Tables' }}</template>
 		</PanelFloat>
@@ -29,6 +31,7 @@
 				:total="p.total"
 				:loading="p.loading"
 				:error="p.error"
+				:config="p.config || {}"
 				:show-email="!!(p.config?.email_field)"
 				:show-sms="!!(p.config?.sms_field)"
 				@close="closePanel(p.id)"
@@ -37,6 +40,7 @@
 				@email="onEmail(p)"
 				@sms="onSms(p)"
 				@tags="tagFinderDoctype = p.doctype"
+				@filter-change="(f) => onFilterChange(p, f)"
 			/>
 			<template #footer>{{ p.config?.header_text || p.doctype }}</template>
 		</PanelFloat>
@@ -56,7 +60,8 @@ import PanelFloat from "./components/PanelFloat.vue";
 import PanelTable from "./components/PanelTable.vue";
 import TagFinder from "./components/TagFinder.vue";
 
-const { config, columns, rows, total, loading, error, load } = usePanel("WP Tables");
+const rootPanel = usePanel("WP Tables");
+const { config, columns, rows, total, loading, error, load } = rootPanel;
 
 const openPanels = reactive([]);
 let panelCounter = 0;
@@ -89,6 +94,7 @@ async function openPanel(doctype, parentFilter = {}) {
 		error: null,
 		x: pos.x,
 		y: pos.y,
+		_refetch: null,
 	});
 	openPanels.push(p);
 
@@ -99,6 +105,13 @@ async function openPanel(doctype, parentFilter = {}) {
 		p.columns = panel.columns.value;
 		p.rows = panel.rows.value;
 		p.total = panel.total.value;
+		p._refetch = async (uf) => {
+			p.loading = true;
+			await panel.refetch(uf);
+			p.rows = panel.rows.value;
+			p.total = panel.total.value;
+			p.loading = false;
+		};
 	} catch (e) {
 		p.error = String(e);
 	} finally {
@@ -123,6 +136,14 @@ function onDrill(ev, parentPanel) {
 		filter[ev.linkField] = ev.rowName;
 	}
 	openPanel(ev.doctype, filter);
+}
+
+function onFilterChange(panel, userFilters) {
+	if (!panel) {
+		rootPanel.refetch(userFilters);
+	} else if (panel._refetch) {
+		panel._refetch(userFilters);
+	}
 }
 
 function onSheets(p) {

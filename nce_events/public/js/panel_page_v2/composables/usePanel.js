@@ -58,5 +58,19 @@ export function usePanel(doctype, parentFilter = {}) {
 		}
 	}
 
-	return { config, columns, rows, total, loading, error, load, fetchData };
+	async function refetch(userFilters = []) {
+		loading.value = true;
+		error.value = null;
+		try {
+			const data = await fetchData({}, userFilters, 0, 0);
+			rows.value = data.rows || [];
+			total.value = data.total || 0;
+		} catch (e) {
+			error.value = String(e);
+		} finally {
+			loading.value = false;
+		}
+	}
+
+	return { config, columns, rows, total, loading, error, load, fetchData, refetch };
 }
