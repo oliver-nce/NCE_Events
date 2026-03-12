@@ -166,7 +166,7 @@
 		const $send = $(".send-panel");
 		if ($send.length) {
 			const sr = $send[0].getBoundingClientRect();
-			left_pos = sr.right + 400;
+			left_pos = sr.right + 72;
 		}
 		if (left_pos + 260 > window.innerWidth) {
 			left_pos = window.innerWidth - 280;
