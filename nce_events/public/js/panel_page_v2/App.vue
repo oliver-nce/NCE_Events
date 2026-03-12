@@ -54,14 +54,9 @@ function nextPos() {
 	return { x: 140 + n * 30, y: 120 + n * 30 };
 }
 
-function findOpenPanel(doctype, parentFilter = {}) {
-	const filterKey = JSON.stringify(parentFilter);
-	return openPanels.find((p) => p.doctype === doctype && JSON.stringify(p.parentFilter || {}) === filterKey);
-}
-
 async function openPanel(doctype, parentFilter = {}) {
-	const existing = findOpenPanel(doctype, parentFilter);
-	if (existing) return;
+	const existingIdx = openPanels.findIndex((p) => p.doctype === doctype);
+	if (existingIdx >= 0) openPanels.splice(existingIdx, 1);
 
 	const pos = nextPos();
 	const id = ++panelCounter;
