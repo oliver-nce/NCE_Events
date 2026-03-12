@@ -36,22 +36,31 @@
 				@sheets="onSheets(p)"
 				@email="onEmail(p)"
 				@sms="onSms(p)"
+				@tags="tagFinderDoctype = p.doctype"
 			/>
 			<template #footer>{{ p.config?.header_text || p.doctype }}</template>
 		</PanelFloat>
+
+		<TagFinder
+			v-if="tagFinderDoctype"
+			:root-doctype="tagFinderDoctype"
+			@close="tagFinderDoctype = ''"
+		/>
 	</div>
 </template>
 
 <script setup>
-import { reactive, onMounted } from "vue";
+import { ref, reactive, onMounted } from "vue";
 import { usePanel } from "./composables/usePanel.js";
 import PanelFloat from "./components/PanelFloat.vue";
 import PanelTable from "./components/PanelTable.vue";
+import TagFinder from "./components/TagFinder.vue";
 
 const { config, columns, rows, total, loading, error, load } = usePanel("WP Tables");
 
 const openPanels = reactive([]);
 let panelCounter = 0;
+const tagFinderDoctype = ref("");
 
 onMounted(() => { load(); });
 
