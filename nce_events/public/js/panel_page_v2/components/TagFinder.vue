@@ -56,7 +56,7 @@ const bodyEl = ref(null);
 
 const x = ref(window.innerWidth - 560);
 const y = ref(80);
-const z = ref(1060);
+const z = ref(10060);
 
 const floatStyle = computed(() => ({
 	left: x.value + "px",

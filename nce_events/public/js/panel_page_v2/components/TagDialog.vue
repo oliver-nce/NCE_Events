@@ -48,7 +48,7 @@ const fallback = ref("");
 const isHtml = ref(false);
 const top = ref(props.initTop);
 const left = ref(props.initLeft);
-const z = ref(1080);
+const z = ref(10080);
 
 const displayTag = computed(() => props.applyFilters(props.baseTag, fallback.value, isHtml.value));
 
@@ -99,7 +99,7 @@ function startDrag(e) {
 	border: 1px solid #b0b8c0;
 	border-radius: 6px;
 	box-shadow: 0 4px 16px rgba(0,0,0,0.18);
-	z-index: 1080;
+	z-index: 10080;
 	font-family: Arial, sans-serif;
 }
 
