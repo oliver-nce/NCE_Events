@@ -33,7 +33,12 @@
 						@click="$emit('row-click', row)"
 					>
 						<td v-for="col in columns" :key="col.fieldname">
-							{{ cellValue(row, col) }}
+							<span
+								v-if="col.is_related_link && col.related_doctype"
+								class="ppv2-related-link"
+								@click.stop="$emit('drill', { doctype: col.related_doctype, linkField: col.related_link_field, rowName: row.name })"
+							>{{ cellValue(row, col) }}</span>
+							<template v-else>{{ cellValue(row, col) }}</template>
 						</td>
 					</tr>
 				</tbody>
@@ -53,7 +58,7 @@ const props = defineProps({
 	selectedName: { type: String, default: null },
 });
 
-defineEmits(["row-click", "close"]);
+defineEmits(["row-click", "close", "drill"]);
 
 function cellValue(row, col) {
 	const fn = col.fieldname;
@@ -161,4 +166,13 @@ function cellValue(row, col) {
 
 .ppv2-alt { background: #f6f8fa; }
 .ppv2-selected { background: #D4E8FC !important; }
+
+.ppv2-related-link {
+	color: royalblue;
+	text-decoration: underline;
+	cursor: pointer;
+}
+.ppv2-related-link:hover {
+	color: #1a3fb5;
+}
 </style>

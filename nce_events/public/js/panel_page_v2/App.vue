@@ -1,45 +1,37 @@
 <template>
 	<div class="ppv2-root">
 		<PanelFloat :init-x="40" :init-y="60" :init-w="900" :init-h="550">
-			<template #header>
-				<PanelTable
-					:title="config?.header_text || 'WP Tables'"
-					:columns="[]"
-					:rows="[]"
-					:total="0"
-					style="display:none"
-				/>
-			</template>
 			<PanelTable
-				:title="config?.header_text || 'WP Tables'"
+				:title="config?.header_text || 'NCE Tables'"
 				:columns="columns"
 				:rows="rows"
 				:total="total"
 				:loading="loading"
 				:error="error"
-				@row-click="onRowClick"
+				@row-click="onRootRowClick"
 			/>
-			<template #footer>{{ config?.header_text || 'WP Tables' }}</template>
+			<template #footer>{{ config?.header_text || 'NCE Tables' }}</template>
 		</PanelFloat>
 
 		<PanelFloat
-			v-if="childPanel.doctype"
-			:key="childPanel.doctype"
-			:init-x="160"
-			:init-y="160"
+			v-for="p in openPanels"
+			:key="p.id"
+			:init-x="p.x"
+			:init-y="p.y"
 			:init-w="1200"
 			:init-h="600"
 		>
 			<PanelTable
-				:title="childPanel.config?.header_text || childPanel.doctype"
-				:columns="childPanel.columns"
-				:rows="childPanel.rows"
-				:total="childPanel.total"
-				:loading="childPanel.loading"
-				:error="childPanel.error"
-				@close="childPanel.doctype = ''"
+				:title="p.config?.header_text || p.doctype"
+				:columns="p.columns"
+				:rows="p.rows"
+				:total="p.total"
+				:loading="p.loading"
+				:error="p.error"
+				@close="closePanel(p.id)"
+				@drill="(ev) => onDrill(ev, p)"
 			/>
-			<template #footer>{{ childPanel.config?.header_text || childPanel.doctype }}</template>
+			<template #footer>{{ p.config?.header_text || p.doctype }}</template>
 		</PanelFloat>
 	</div>
 </template>
@@ -52,42 +44,64 @@ import PanelTable from "./components/PanelTable.vue";
 
 const { config, columns, rows, total, loading, error, load } = usePanel("WP Tables");
 
-const childPanel = reactive({
-	doctype: "",
-	config: null,
-	columns: [],
-	rows: [],
-	total: 0,
-	loading: false,
-	error: null,
-});
+const openPanels = reactive([]);
+let panelCounter = 0;
 
-onMounted(() => {
-	load();
-});
+onMounted(() => { load(); });
 
-async function onRowClick(row) {
-	const doctype = row.frappe_doctype || row.name;
-	if (!doctype) return;
+function nextPos() {
+	const n = openPanels.length;
+	return { x: 140 + n * 30, y: 120 + n * 30 };
+}
 
-	childPanel.doctype = doctype;
-	childPanel.loading = true;
-	childPanel.error = null;
-	childPanel.columns = [];
-	childPanel.rows = [];
+async function openPanel(doctype, parentFilter = {}) {
+	const pos = nextPos();
+	const id = ++panelCounter;
+	const p = reactive({
+		id,
+		doctype,
+		config: null,
+		columns: [],
+		rows: [],
+		total: 0,
+		loading: true,
+		error: null,
+		x: pos.x,
+		y: pos.y,
+	});
+	openPanels.push(p);
 
 	try {
-		const child = usePanel(doctype);
-		await child.load();
-		childPanel.config = child.config.value;
-		childPanel.columns = child.columns.value;
-		childPanel.rows = child.rows.value;
-		childPanel.total = child.total.value;
+		const panel = usePanel(doctype, parentFilter);
+		await panel.load();
+		p.config = panel.config.value;
+		p.columns = panel.columns.value;
+		p.rows = panel.rows.value;
+		p.total = panel.total.value;
 	} catch (e) {
-		childPanel.error = String(e);
+		p.error = String(e);
 	} finally {
-		childPanel.loading = false;
+		p.loading = false;
 	}
+}
+
+function closePanel(id) {
+	const idx = openPanels.findIndex((p) => p.id === id);
+	if (idx >= 0) openPanels.splice(idx, 1);
+}
+
+function onRootRowClick(row) {
+	const doctype = row.frappe_doctype || row.name;
+	if (!doctype) return;
+	openPanel(doctype);
+}
+
+function onDrill(ev, parentPanel) {
+	const filter = {};
+	if (ev.linkField && ev.rowName) {
+		filter[ev.linkField] = ev.rowName;
+	}
+	openPanel(ev.doctype, filter);
 }
 </script>
 
