@@ -3,12 +3,8 @@
 		ref="floatEl"
 		class="ppv2-float"
 		:style="floatStyle"
-		@mousedown="bringToFront"
+		@mousedown="onMouseDown"
 	>
-		<div class="ppv2-float-header" @mousedown.prevent="startDrag">
-			<slot name="header" />
-		</div>
-
 		<div class="ppv2-float-body">
 			<slot />
 		</div>
@@ -55,6 +51,14 @@ const floatStyle = computed(() => ({
 
 function bringToFront() {
 	z.value = getNextZ();
+}
+
+function onMouseDown(e) {
+	bringToFront();
+	if (e.target.closest && e.target.closest(".ppv2-header")) {
+		e.preventDefault();
+		startDrag(e);
+	}
 }
 
 function startDrag(e) {
@@ -104,12 +108,6 @@ function startResize(e) {
 	overflow: hidden;
 }
 
-.ppv2-float-header {
-	flex-shrink: 0;
-	cursor: move;
-	user-select: none;
-}
-
 .ppv2-float-body {
 	flex: 1;
 	overflow: auto;
@@ -124,6 +122,11 @@ function startResize(e) {
 	cursor: move;
 	user-select: none;
 	text-align: center;
+}
+
+.ppv2-float :deep(.ppv2-header) {
+	cursor: move;
+	user-select: none;
 }
 
 .ppv2-resize-handle {
