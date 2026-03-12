@@ -21,3 +21,5 @@ Docs/nce_theme.json
 Docs/cursor_engineering_policy_frappe_v15_v16.md
 Docs/frappe_rag_context_v15_v16.md
 Docs/Cursor-Ready Implementation Plan*
+nce_events/public/js/panel_page_v2/node_modules/
+nce_events/public/js/panel_page_v2_dist/

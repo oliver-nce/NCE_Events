@@ -11,8 +11,8 @@ frappe.pages["panel-page-v2"].on_page_show = function (wrapper) {
 
 	frappe.require(
 		[
-			"/assets/nce_events/js/panel_page_v2/panel_page_v2.js",
-			"/assets/nce_events/js/panel_page_v2/style.css",
+			"/assets/nce_events/js/panel_page_v2_dist/panel_page_v2.js",
+			"/assets/nce_events/js/panel_page_v2_dist/style.css",
 		],
 		function () {
 			const mount_el = document.createElement("div");

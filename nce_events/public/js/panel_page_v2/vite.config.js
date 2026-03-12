@@ -5,7 +5,7 @@ import path from "path";
 export default defineConfig({
 	plugins: [vue()],
 	build: {
-		outDir: path.resolve(__dirname, "../../../assets/nce_events/js/panel_page_v2"),
+		outDir: path.resolve(__dirname, "../panel_page_v2_dist"),
 		emptyOutDir: true,
 		lib: {
 			entry: path.resolve(__dirname, "main.js"),
