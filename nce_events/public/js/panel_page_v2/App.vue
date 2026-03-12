@@ -163,6 +163,7 @@ function _openSendDialog(p, mode) {
 	if (_sendDialog) { _sendDialog.close(); _sendDialog = null; }
 
 	frappe.require([
+		"/assets/nce_events/js/panel_page/ai_tools.js",
 		"/assets/nce_events/js/panel_page/sms_dialog.js",
 		"/assets/nce_events/js/panel_page/email_dialog.js",
 		"/assets/nce_events/css/panel_page.css",
