@@ -41,6 +41,8 @@
 				@sms="onSms(p)"
 				@tags="tagFinderDoctype = p.doctype"
 				@filter-change="(f) => onFilterChange(p, f)"
+				@email-one="(row) => onEmailOne(p, row)"
+				@sms-one="(row) => onSmsOne(p, row)"
 			/>
 			<template #footer>{{ p.config?.header_text || p.doctype }}</template>
 		</PanelFloat>
@@ -206,6 +208,38 @@ function _openSendDialog(p, mode) {
 
 function onEmail(p) { _openSendDialog(p, "email"); }
 function onSms(p) { _openSendDialog(p, "sms"); }
+
+function _openSendDialogOne(p, mode, row) {
+	const cfg = p.config;
+	if (!cfg) return;
+	const recipientField = mode === "sms" ? cfg.sms_field : cfg.email_field;
+	if (!recipientField) return;
+
+	if (_sendDialog) { _sendDialog.close(); _sendDialog = null; }
+
+	frappe.require([
+		"/assets/nce_events/js/panel_page/ai_tools.js",
+		"/assets/nce_events/js/panel_page/sms_dialog.js",
+		"/assets/nce_events/js/panel_page/email_dialog.js",
+		"/assets/nce_events/css/panel_page.css",
+	], () => {
+		const DialogClass = mode === "sms"
+			? nce_events.panel_page.SmsDialog
+			: nce_events.panel_page.EmailDialog;
+		_sendDialog = new DialogClass({
+			doctype: p.doctype,
+			config: cfg,
+			filters: { name: row.name },
+			user_filters: [],
+			row_count: 1,
+			z_index: 9999,
+			on_close() { _sendDialog = null; },
+		});
+	});
+}
+
+function onEmailOne(p, row) { _openSendDialogOne(p, "email", row); }
+function onSmsOne(p, row) { _openSendDialogOne(p, "sms", row); }
 </script>
 
 <style scoped>

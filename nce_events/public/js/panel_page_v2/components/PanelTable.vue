@@ -22,20 +22,20 @@
 
 		<div v-if="showFilterWidget" class="ppv2-filter-widget">
 			<div v-for="(cond, i) in filters" :key="i" class="ppv2-filter-row">
-		<select v-model="cond.field" class="ppv2-filter-col" @change="emitFilterChange">
-				<option value="">— column —</option>
-				<option v-for="col in columns" :key="col.fieldname" :value="col.fieldname">{{ col.label }}</option>
-			</select>
-			<span class="ppv2-filter-ops">
-				<button
-					v-for="op in ops"
-					:key="op"
-					:class="['ppv2-op-btn', { active: cond.op === op }]"
-					@click="cond.op = op; emitFilterChange()"
-				>{{ op }}</button>
-			</span>
-			<input v-model="cond.value" class="ppv2-filter-val" placeholder="value" @input="emitFilterDebounced">
-			<button class="ppv2-filter-rm" @click="filters.splice(i, 1); emitFilterChange()">&times;</button>
+				<select v-model="cond.field" class="ppv2-filter-col" @change="emitFilterChange">
+					<option value="">— column —</option>
+					<option v-for="col in columns" :key="col.fieldname" :value="col.fieldname">{{ col.label }}</option>
+				</select>
+				<span class="ppv2-filter-ops">
+					<button
+						v-for="op in ops"
+						:key="op"
+						:class="['ppv2-op-btn', { active: cond.op === op }]"
+						@click="cond.op = op; emitFilterChange()"
+					>{{ op }}</button>
+				</span>
+				<input v-model="cond.value" class="ppv2-filter-val" placeholder="value" @input="emitFilterDebounced">
+				<button class="ppv2-filter-rm" @click="filters.splice(i, 1); emitFilterChange()">&times;</button>
 			</div>
 			<button class="ppv2-filter-add" @click="filters.push({ field: '', op: '=', value: '' })">Add Filter &#9660;</button>
 		</div>
@@ -49,13 +49,14 @@
 				<thead>
 					<tr>
 						<th
-							v-for="(col, ci) in columns"
+							v-for="(col, ci) in dataCols"
 							:key="col.fieldname"
 							:style="{ width: colWidths[ci] ? colWidths[ci] + 'px' : 'auto', minWidth: '40px', position: 'relative' }"
 						>
 							{{ col.label }}
 							<div class="ppv2-col-resize" @mousedown.prevent="startColResize($event, ci)" />
 						</th>
+						<th v-if="hasEmailAction || hasPhoneAction" class="ppv2-action-th" />
 					</tr>
 				</thead>
 				<tbody>
@@ -66,16 +67,43 @@
 						@click="$emit('row-click', row)"
 					>
 						<td
-							v-for="col in columns"
+							v-for="col in dataCols"
 							:key="col.fieldname"
 							:style="cellStyle(row, col)"
 						>
+							<a
+								v-if="col.is_link && col.link_doctype && getVal(row, col.fieldname)"
+								class="ppv2-link-val"
+								:href="formRoute(col.link_doctype, getVal(row, col.fieldname))"
+								target="_blank"
+								@click.stop
+							>{{ cellValue(row, col) }}</a>
 							<span
-								v-if="col.is_related_link && col.related_doctype"
+								v-else-if="col.is_related_link && col.related_doctype"
 								class="ppv2-related-link"
 								@click.stop="$emit('drill', { doctype: col.related_doctype, linkField: col.related_link_field, rowName: row.name })"
 							>{{ cellValue(row, col) }}</span>
 							<template v-else>{{ cellValue(row, col) }}</template>
+						</td>
+						<td v-if="hasEmailAction || hasPhoneAction" class="ppv2-action-td">
+							<button
+								v-if="hasEmailAction && rowHasEmail(row)"
+								class="ppv2-row-btn"
+								title="Send email"
+								@click.stop="$emit('email-one', row)"
+							><i class="fa fa-envelope"></i></button>
+							<button
+								v-if="hasPhoneAction && rowHasPhone(row)"
+								class="ppv2-row-btn"
+								title="Call"
+								@click.stop="onCallRow(row)"
+							><i class="fa fa-phone"></i></button>
+							<button
+								v-if="hasPhoneAction && rowHasPhone(row)"
+								class="ppv2-row-btn"
+								title="Send SMS"
+								@click.stop="$emit('sms-one', row)"
+							><i class="fa fa-comment"></i></button>
 						</td>
 					</tr>
 				</tbody>
@@ -100,13 +128,23 @@ const props = defineProps({
 	config: { type: Object, default: () => ({}) },
 });
 
-const emit = defineEmits(["row-click", "close", "drill", "sheets", "email", "sms", "filter-change"]);
+const emit = defineEmits([
+	"row-click", "close", "drill", "sheets", "email", "sms",
+	"filter-change", "email-one", "sms-one",
+]);
 
 const ops = ["=", "!=", ">", "<", "like", "in"];
 const showFilterWidget = ref(false);
 const filters = reactive([]);
 const colWidths = reactive({});
 let _filterTimer = null;
+
+const emailField = computed(() => (props.config.email_field || "").trim().toLowerCase());
+const smsField = computed(() => (props.config.sms_field || "").trim().toLowerCase());
+const hasEmailAction = computed(() => !!emailField.value);
+const hasPhoneAction = computed(() => !!smsField.value);
+
+const dataCols = computed(() => props.columns);
 
 const boldSet = computed(() => {
 	const s = {};
@@ -148,6 +186,7 @@ function emitFilterDebounced() {
 }
 
 function getVal(row, key) {
+	if (!key) return null;
 	return row[key] ?? row[key.toLowerCase()] ?? row[key.toUpperCase()] ?? null;
 }
 
@@ -156,6 +195,28 @@ function cellValue(row, col) {
 	if (v === null || v === undefined) return "";
 	if (typeof v === "object") return JSON.stringify(v);
 	return String(v);
+}
+
+function formRoute(doctype, name) {
+	const slug = doctype.toLowerCase().replace(/ /g, "-");
+	return `/app/${slug}/${encodeURIComponent(name)}`;
+}
+
+function rowHasEmail(row) {
+	const v = getVal(row, emailField.value);
+	return v && String(v).includes("@");
+}
+
+function rowHasPhone(row) {
+	const v = getVal(row, smsField.value);
+	return v && /[\d+]/.test(String(v));
+}
+
+function onCallRow(row) {
+	const v = getVal(row, smsField.value);
+	if (!v) return;
+	const tel = String(v).replace(/\s+/g, "");
+	window.open("tel:" + tel, "_self");
 }
 
 function looksLike(val, gender) {
@@ -188,9 +249,6 @@ function cellStyle(row, col) {
 				style.color = femaleHex.value;
 			}
 		}
-	} else if (col.is_link || col.is_related_link) {
-		style.color = "royalblue";
-		style.textDecoration = "underline";
 	} else if (boldSet.value[fn]) {
 		style.fontWeight = "700";
 	}
@@ -363,6 +421,11 @@ function startColResize(e, ci) {
 }
 .ppv2-table th:last-child { border-right: none; }
 
+.ppv2-action-th {
+	width: 110px;
+	min-width: 110px;
+}
+
 .ppv2-table td {
 	padding: 5px 8px;
 	border-bottom: 1px solid #eaebec;
@@ -376,12 +439,48 @@ function startColResize(e, ci) {
 .ppv2-alt { background: #f6f8fa; }
 .ppv2-selected { background: #D4E8FC !important; }
 
+.ppv2-link-val {
+	color: royalblue;
+	text-decoration: underline;
+	cursor: pointer;
+}
+.ppv2-link-val:hover { color: #1a3fb5; }
+
 .ppv2-related-link {
 	color: royalblue;
 	text-decoration: underline;
 	cursor: pointer;
 }
 .ppv2-related-link:hover { color: #1a3fb5; }
+
+/* ── Row action buttons ── */
+
+.ppv2-action-td {
+	white-space: nowrap;
+	text-align: center;
+	overflow: visible;
+}
+
+.ppv2-row-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 3px 7px;
+	margin: 0 2px;
+	background: #fff;
+	border: 1px solid #d1d8dd;
+	border-radius: 3px;
+	color: #36414c;
+	cursor: pointer;
+	font-size: 13px;
+	line-height: 1;
+}
+.ppv2-row-btn:hover {
+	background: #f0f4f7;
+	border-color: #8d99a6;
+	color: #1f2933;
+}
+.ppv2-row-btn i { margin: 0; }
 
 /* ── Column resize handle ── */
 
