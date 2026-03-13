@@ -1,5 +1,5 @@
 <template>
-	<div class="ppv2-panel">
+	<div ref="panelRef" class="ppv2-panel">
 		<div class="ppv2-header">
 			<span class="ppv2-title">{{ title }}</span>
 			<span class="ppv2-header-right">
@@ -113,7 +113,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed } from "vue";
+import { ref, reactive, computed, watch, nextTick } from "vue";
 
 const props = defineProps({
 	title: { type: String, default: "" },
@@ -137,7 +137,50 @@ const ops = ["=", "!=", ">", "<", "like", "in"];
 const showFilterWidget = ref(false);
 const filters = reactive([]);
 const colWidths = reactive({});
+const panelRef = ref(null);
 let _filterTimer = null;
+
+function calcColWidths(columns, rows, containerWidth) {
+	const sample = rows.slice(0, 20);
+	const MIN_COL = 50;
+	const MAX_COL = 500;
+	const available = Math.max(200, (containerWidth || 800) - 160);
+	const avgChars = columns.map((col) => {
+		let total = 0;
+		sample.forEach((row) => {
+			const v = getVal(row, col.fieldname);
+			total += String(v ?? "").length;
+		});
+		const headerLen = (col.label || col.fieldname).length;
+		const avg = sample.length > 0 ? total / sample.length : headerLen;
+		return Math.max(avg, headerLen, 2);
+	});
+	let totalChars = avgChars.reduce((s, c) => s + c, 0);
+	if (totalChars <= 0) totalChars = 1;
+	let widths = avgChars.map((c) =>
+		Math.min(MAX_COL, Math.max(MIN_COL, Math.round((c / totalChars) * available)))
+	);
+	const wSum = widths.reduce((s, w) => s + w, 0);
+	if (wSum > available && wSum > 0) {
+		const scale = available / wSum;
+		widths = widths.map((w) => Math.floor(w * scale));
+	}
+	return widths;
+}
+
+watch(
+	() => [props.rows, props.columns],
+	() => {
+		if (!props.columns?.length) return;
+		nextTick(() => {
+			const el = panelRef.value;
+			const w = el?.offsetWidth ?? el?.clientWidth ?? 0;
+			const widths = calcColWidths(props.columns, props.rows || [], w);
+			widths.forEach((w, i) => { colWidths[i] = w; });
+		});
+	},
+	{ immediate: true }
+);
 
 const emailField = computed(() => (props.config.email_field || "").trim().toLowerCase());
 const smsField = computed(() => (props.config.sms_field || "").trim().toLowerCase());
@@ -285,23 +328,23 @@ function startColResize(e, ci) {
 	align-items: center;
 	justify-content: space-between;
 	padding: 8px 14px;
-	background: #126BC4;
-	color: #fff;
+	background: var(--bg-header);
+	color: var(--text-header);
 	flex-shrink: 0;
 }
 
-.ppv2-title { font-weight: 600; font-size: 14px; }
+.ppv2-title { font-weight: var(--font-weight-bold); font-size: 14px; }
 
 .ppv2-header-right {
 	display: flex;
 	align-items: center;
-	gap: 8px;
+	gap: var(--spacing-sm);
 }
 
 .ppv2-hdr-btn {
 	background: none;
 	border: none;
-	color: #fff;
+	color: var(--text-header);
 	font-size: 18px;
 	cursor: pointer;
 	padding: 0 4px;
@@ -310,29 +353,29 @@ function startColResize(e, ci) {
 }
 .ppv2-hdr-btn:hover { opacity: 1; }
 
-.ppv2-count { font-size: 11px; opacity: 0.8; }
+.ppv2-count { font-size: var(--font-size-sm); opacity: 0.8; }
 
 /* ── Filter Widget ── */
 
 .ppv2-filter-widget {
 	padding: 6px 10px;
-	background: #E3F0FC;
-	border-bottom: 1px solid #A2CCF6;
+	background: var(--primary-light);
+	border-bottom: 1px solid var(--border-color);
 	flex-shrink: 0;
 }
 
 .ppv2-filter-row {
 	display: flex;
 	align-items: center;
-	gap: 4px;
-	margin-bottom: 4px;
+	gap: var(--spacing-xs);
+	margin-bottom: var(--spacing-xs);
 }
 
 .ppv2-filter-col {
-	font-size: 11px;
+	font-size: var(--font-size-sm);
 	padding: 2px 4px;
-	border: 1px solid #A2CCF6;
-	border-radius: 3px;
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-sm);
 	min-width: 120px;
 }
 
@@ -341,22 +384,22 @@ function startColResize(e, ci) {
 .ppv2-op-btn {
 	font-size: 10px;
 	padding: 2px 5px;
-	border: 1px solid #A2CCF6;
-	background: #fff;
+	border: 1px solid var(--border-color);
+	background: var(--bg-card);
 	cursor: pointer;
 	border-radius: 2px;
 }
 .ppv2-op-btn.active {
-	background: #126BC4;
-	color: #fff;
-	border-color: #126BC4;
+	background: var(--bg-header);
+	color: var(--text-header);
+	border-color: var(--bg-header);
 }
 
 .ppv2-filter-val {
-	font-size: 11px;
+	font-size: var(--font-size-sm);
 	padding: 2px 6px;
-	border: 1px solid #A2CCF6;
-	border-radius: 3px;
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-sm);
 	flex: 1;
 	min-width: 60px;
 }
@@ -373,11 +416,11 @@ function startColResize(e, ci) {
 .ppv2-filter-add {
 	font-size: 10px;
 	padding: 2px 8px;
-	background: #fff;
-	border: 1px solid #A2CCF6;
-	border-radius: 3px;
+	background: var(--bg-card);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-sm);
 	cursor: pointer;
-	color: #126BC4;
+	color: var(--primary);
 }
 
 /* ── Loading / Error ── */
@@ -385,9 +428,9 @@ function startColResize(e, ci) {
 .ppv2-loading, .ppv2-error {
 	padding: 24px;
 	text-align: center;
-	font-size: 13px;
+	font-size: var(--font-size-base);
 }
-.ppv2-loading { color: #4198F0; }
+.ppv2-loading { color: var(--primary); }
 .ppv2-error { color: #e53e3e; }
 
 /* ── Table ── */
@@ -405,19 +448,19 @@ function startColResize(e, ci) {
 .ppv2-table th {
 	position: sticky;
 	top: 0;
-	background: #E3F0FC;
-	color: #105EAD;
-	font-weight: 600;
-	font-size: 11px;
+	background: var(--portal-header-bg);
+	color: var(--primary);
+	font-weight: var(--font-weight-bold);
+	font-size: var(--font-size-sm);
 	text-transform: uppercase;
 	letter-spacing: 0.3px;
 	padding: 6px 8px;
-	border-bottom: 2px solid #A2CCF6;
+	border-bottom: 2px solid var(--border-color);
 	text-align: left;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	border-right: 1px solid #A2CCF6;
+	border-right: 1px solid var(--border-color);
 }
 .ppv2-table th:last-child { border-right: none; }
 
@@ -428,16 +471,16 @@ function startColResize(e, ci) {
 
 .ppv2-table td {
 	padding: 5px 8px;
-	border-bottom: 1px solid #eaebec;
-	color: #464D53;
+	border-bottom: 1px solid var(--border-color);
+	color: var(--text-color);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
 
-.ppv2-table tbody tr:hover { background: #EAF3FD; cursor: pointer; }
-.ppv2-alt { background: #f6f8fa; }
-.ppv2-selected { background: #D4E8FC !important; }
+.ppv2-table tbody tr:hover { background: var(--primary-light); cursor: pointer; }
+.ppv2-alt { background: var(--portal-alt-row); }
+.ppv2-selected { background: var(--primary-light) !important; }
 
 .ppv2-link-val {
 	color: royalblue;
@@ -467,18 +510,18 @@ function startColResize(e, ci) {
 	justify-content: center;
 	padding: 3px 7px;
 	margin: 0 2px;
-	background: #fff;
-	border: 1px solid #d1d8dd;
-	border-radius: 3px;
-	color: #36414c;
+	background: var(--bg-card);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-sm);
+	color: var(--text-color);
 	cursor: pointer;
-	font-size: 13px;
+	font-size: var(--font-size-base);
 	line-height: 1;
 }
 .ppv2-row-btn:hover {
-	background: #f0f4f7;
-	border-color: #8d99a6;
-	color: #1f2933;
+	background: var(--bg-surface);
+	border-color: var(--border-color);
+	color: var(--text-color);
 }
 .ppv2-row-btn i { margin: 0; }
 
@@ -493,5 +536,5 @@ function startColResize(e, ci) {
 	cursor: col-resize;
 	z-index: 2;
 }
-.ppv2-col-resize:hover { background: rgba(18, 107, 196, 0.3); }
+.ppv2-col-resize:hover { background: color-mix(in srgb, var(--primary) 30%, transparent); }
 </style>
