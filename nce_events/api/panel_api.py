@@ -249,6 +249,11 @@ def get_panel_data(
 	}
 	enabled_related: set[str] = {fn for fn in display_fields if fn in related_label_map}
 
+	link_target_map: dict[str, str] = {
+		lf["fieldname"]: lf["options"]
+		for lf in _get_link_fields_with_target(root_doctype)
+	}
+
 	seen: set[str] = set()
 	columns: list[dict[str, str]] = []
 	for fn in display_fields:
@@ -257,21 +262,24 @@ def get_panel_data(
 		seen.add(fn)
 		if fn in computed_label_map:
 			label = computed_label_map[fn]
-			columns.append({"fieldname": fn, "label": label})
+			col: dict[str, Any] = {"fieldname": fn, "label": label}
 		else:
 			label = fn.split(".")[-1] if "." in fn else fn
 			label = _title_case(label)
-			columns.append({"fieldname": fn, "label": label})
+			col = {"fieldname": fn, "label": label}
+		if fn in link_target_map:
+			col["is_link"] = True
+			col["link_doctype"] = link_target_map[fn]
+		columns.append(col)
 
-	for lf in _get_link_fields_with_target(root_doctype):
-		fn = lf["fieldname"]
+	for fn, target_dt in link_target_map.items():
 		if fn not in seen:
 			seen.add(fn)
 			columns.append({
 				"fieldname": fn,
 				"label": _title_case(fn),
 				"is_link": True,
-				"link_doctype": lf["options"],
+				"link_doctype": target_dt,
 			})
 
 	for fn in enabled_related:
