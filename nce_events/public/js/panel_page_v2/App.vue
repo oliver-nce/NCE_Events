@@ -35,6 +35,7 @@
 				:show-email="!!(p.config?.email_field)"
 				:show-sms="!!(p.config?.sms_field)"
 				@close="closePanel(p.id)"
+				@row-click="(row) => onDrilledRowClick(p, row)"
 				@drill="(ev) => onDrill(ev, p)"
 				@sheets="onSheets(p)"
 				@email="onEmail(p)"
@@ -138,6 +139,13 @@ function onDrill(ev, parentPanel) {
 		filter[ev.linkField] = ev.rowName;
 	}
 	openPanel(ev.doctype, filter);
+}
+
+function onDrilledRowClick(p, row) {
+	if (!p.config?.open_card_on_click || !row?.name) return;
+	const slug = p.doctype.toLowerCase().replace(/ /g, "-");
+	const url = `${window.location.origin}/app/${slug}/${encodeURIComponent(row.name)}`;
+	window.open(url, "_blank");
 }
 
 function onFilterChange(panel, userFilters) {

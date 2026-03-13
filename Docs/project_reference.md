@@ -128,6 +128,7 @@ nce_events/
 | show_sms | Check | SMS button (header) |
 | show_card_email | Check | email button (card popover) |
 | show_card_sms | Check | SMS button (card popover) |
+| open_card_on_click | Check | V2 only: row click opens form in new tab |
 | button_1_name | Data | custom card action button label |
 | button_1_code | Code (JS) | JS executed on button click |
 | button_2_name | Data | second button label |

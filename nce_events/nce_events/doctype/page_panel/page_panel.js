@@ -22,7 +22,7 @@ const TAB_GROUPS = {
 		"section_break_widgets", "show_filter", "show_sheets",
 		"column_break_widgets", "show_email", "show_sms",
 		"email_field", "sms_field",
-		"section_break_tile_actions", "show_card_email", "show_card_sms",
+		"section_break_tile_actions", "show_card_email", "show_card_sms", "open_card_on_click",
 	],
 	display: [],
 };

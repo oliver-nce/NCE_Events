@@ -25,7 +25,8 @@
   "sms_field",
   "section_break_tile_actions",
   "show_card_email",
-  "show_card_sms"
+  "show_card_sms",
+  "open_card_on_click"
  ],
  "fields": [
   {
@@ -159,6 +160,13 @@
    "fieldname": "show_card_sms",
    "fieldtype": "Check",
    "label": "Show Tile SMS"
+  },
+  {
+   "default": "0",
+   "description": "V2 only: when user clicks a row (except WP Tables), open the form view of that record in a new browser tab",
+   "fieldname": "open_card_on_click",
+   "fieldtype": "Check",
+   "label": "Open Card on Click"
   }
  ],
  "index_web_pages_for_search": 0,
