@@ -199,9 +199,10 @@ Key behaviors:
 
 | Function | Params | Purpose |
 |---|---|---|
-| `send_panel_message` | `root_doctype, filters, mode, recipient_field, body, subject, send_email_copy, email_field` | Bulk SMS (Twilio) and/or email (SendGrid) to all rows |
+| `send_panel_message` | `root_doctype, filters, mode, recipient_field, body, subject, send_email_copy, email_field, from_email` | Bulk SMS (Twilio) and/or email (SendGrid) to all rows |
 | `preview_panel_message` | `root_doctype, filters, body, subject` | Jinja2 preview against first row |
-| `send_test_email` | `root_doctype, filters, body, subject, test_email` | Single test email |
+| `send_test_email` | `root_doctype, filters, body, subject, test_email, from_email` | Single test email |
+| `get_email_accounts` | — | List of Email Accounts with enable_outgoing for from-address picker |
 
 Credentials from `API Connector` DocType: "Twilio" (Account SID / Auth Token), "SendGrid" (from email / API key).
 

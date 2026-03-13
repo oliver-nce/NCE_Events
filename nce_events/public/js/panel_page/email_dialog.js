@@ -31,6 +31,10 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 			</div>
 			<div class="send-panel-body">
 				<div class="send-panel-form">
+					<label class="send-field-label">From</label>
+					<select class="send-field send-from-select">
+						<option value="">Default</option>
+					</select>
 					<label class="send-field-label">Source</label>
 					<select class="send-field send-source-select">
 						<option value="type">Type a message</option>
@@ -95,6 +99,8 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 		me._make_draggable(el);
 		me._make_resizable(el);
 
+		me._load_from_accounts();
+
 		me._ai_get_body = function () {
 			return (me._message_control && me._message_control.get_value()) || "";
 		};
@@ -143,6 +149,25 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 		el.on("click", ".send-send-btn", function () { me._do_send(); });
 		el.on("click", ".send-tags-btn", function () { me._open_tags(); });
 		me._preview_el.on("click", ".send-test-btn", function () { me._do_send_test(); });
+	}
+
+	/* ── Load From (email account) options ── */
+
+	_load_from_accounts() {
+		const me = this;
+		const sel = me.el.find(".send-from-select");
+		frappe.call({
+			method: "nce_events.api.messaging.get_email_accounts",
+			callback: function (r) {
+				const accounts = r.message || [];
+				accounts.forEach(function (acc) {
+					const label = acc.name && acc.name !== acc.email_id
+						? acc.name + " — " + acc.email_id
+						: acc.email_id;
+					sel.append($("<option></option>").attr("value", acc.email_id).text(label));
+				});
+			},
+		});
 	}
 
 	/* ── Tag Finder integration ── */
@@ -311,6 +336,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 					subject: final_subject,
 					send_email_copy: 0,
 					email_field: me.config.email_field || "",
+					from_email: el.find(".send-from-select").val() || "",
 				},
 				callback: function (r) {
 					send_btn.prop("disabled", false).text("Send");
@@ -350,6 +376,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 					body: body_text,
 					subject: subject_text,
 					test_email: test_value,
+					from_email: me.el.find(".send-from-select").val() || "",
 				},
 				callback: function (r) {
 					test_btn.prop("disabled", false).html('<i class="fa fa-paper-plane"></i> Send Test');

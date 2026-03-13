@@ -45,6 +45,18 @@ def _render_body(body: str, context: dict[str, Any], for_html: bool = True) -> s
 
 
 @frappe.whitelist()
+def get_email_accounts() -> list[dict[str, str]]:
+	"""Return list of Email Accounts with enable_outgoing for from-address picker."""
+	rows = frappe.get_all(
+		"Email Account",
+		filters={"enable_outgoing": 1},
+		fields=["name", "email_id"],
+		order_by="default_outgoing desc, name asc",
+	)
+	return [{"name": r.name, "email_id": r.email_id or ""} for r in rows if r.email_id]
+
+
+@frappe.whitelist()
 def send_test_email(
 	root_doctype: str,
 	filters: str | dict | None = None,
@@ -52,6 +64,7 @@ def send_test_email(
 	body: str = "",
 	subject: str = "",
 	test_email: str = "",
+	from_email: str = "",
 ) -> dict[str, Any]:
 	"""Render the template against the first row and send to a test address."""
 	if not test_email or not test_email.strip():
@@ -72,7 +85,7 @@ def send_test_email(
 	except Exception:
 		rendered_subject = subject or "(Test Email)"
 
-	_send_email(test_email, rendered_subject, rendered_body)
+	_send_email(test_email, rendered_subject, rendered_body, from_email=from_email.strip() or None)
 	return {"sent": 1, "to": test_email}
 
 
@@ -143,6 +156,7 @@ def send_panel_message(
 	subject: str = "",
 	send_email_copy: int | str = 0,
 	email_field: str = "",
+	from_email: str = "",
 ) -> dict[str, int]:
 	"""Send bulk SMS and/or email to all rows in a panel."""
 	send_email_copy = int(send_email_copy)
@@ -165,6 +179,8 @@ def send_panel_message(
 		except Exception:
 			rendered_subject = subject
 
+		from_email_val = from_email.strip() or None
+
 		if mode == "sms":
 			try:
 				_send_sms(recipient, rendered_body)
@@ -177,7 +193,7 @@ def send_panel_message(
 				if email_addr:
 					try:
 						email_body = _render_body(body, context, for_html=True)
-						_send_email(email_addr, rendered_subject or "SMS Copy", email_body)
+						_send_email(email_addr, rendered_subject or "SMS Copy", email_body, from_email=from_email_val)
 					except Exception as e:
 						errors.append(f"Email to {email_addr}: {e}")
 
@@ -185,7 +201,7 @@ def send_panel_message(
 			email_addr = recipient
 			if email_addr:
 				try:
-					_send_email(email_addr, rendered_subject or "(No Subject)", rendered_body)
+					_send_email(email_addr, rendered_subject or "(No Subject)", rendered_body, from_email=from_email_val)
 					sent += 1
 				except Exception as e:
 					errors.append(f"Email to {email_addr}: {e}")
@@ -229,16 +245,19 @@ def _send_sms(phone: str, message: str) -> None:
 		frappe.throw(_(f"Twilio error {resp.status_code}: {resp.text}"))
 
 
-def _send_email(to_email: str, subject: str, body: str) -> None:
+def _send_email(to_email: str, subject: str, body: str, *, from_email: str | None = None) -> None:
 	"""Send an email via SendGrid using credentials from credential_config."""
 	import requests
 
 	creds = get_credentials("SendGrid")
 	api_key = creds.get("bearer_token") or creds.get("api_key") or ""
 
-	from_email = (
-		frappe.db.get_value("Email Account", {"default_outgoing": 1}, "email_id") or ""
-	).strip()
+	if not from_email or not from_email.strip():
+		from_email = (
+			frappe.db.get_value("Email Account", {"default_outgoing": 1}, "email_id") or ""
+		).strip()
+	else:
+		from_email = from_email.strip()
 
 	if not api_key:
 		frappe.throw(_("SendGrid API key missing. Check the SendGrid API Connector."))
