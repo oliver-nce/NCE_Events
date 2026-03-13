@@ -1,0 +1,245 @@
+{
+ "actions": [],
+ "autoname": "format:CARD-{####}",
+ "creation": "2026-03-13 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "title",
+  "root_doctype",
+  "is_default",
+  "grid_columns",
+  "grid_rows",
+  "grid_cell_size",
+  "offset_x",
+  "offset_y",
+  "section_tabs",
+  "tabs",
+  "section_fields",
+  "fields_list",
+  "section_displays",
+  "displays",
+  "section_portals",
+  "portals",
+  "portal_columns",
+  "section_text_blocks",
+  "text_blocks",
+  "section_pivot_tables",
+  "pivot_tables",
+  "section_media",
+  "graphics",
+  "videos",
+  "web_viewers",
+  "section_actions",
+  "scripts",
+  "actions",
+  "section_styles",
+  "styles_json"
+ ],
+ "fields": [
+  {
+   "fieldname": "title",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Title",
+   "reqd": 1
+  },
+  {
+   "fieldname": "root_doctype",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Root DocType",
+   "options": "DocType",
+   "reqd": 1
+  },
+  {
+   "description": "Default card for this DocType",
+   "fieldname": "is_default",
+   "fieldtype": "Check",
+   "label": "Is Default"
+  },
+  {
+   "default": "12",
+   "fieldname": "grid_columns",
+   "fieldtype": "Int",
+   "label": "Grid Columns"
+  },
+  {
+   "default": "10",
+   "fieldname": "grid_rows",
+   "fieldtype": "Int",
+   "label": "Grid Rows"
+  },
+  {
+   "default": "50",
+   "description": "Pixel size of one grid square (width = height)",
+   "fieldname": "grid_cell_size",
+   "fieldtype": "Int",
+   "label": "Grid Cell Size"
+  },
+  {
+   "default": "80",
+   "description": "Horizontal offset from parent when opening",
+   "fieldname": "offset_x",
+   "fieldtype": "Int",
+   "label": "Offset X"
+  },
+  {
+   "default": "60",
+   "description": "Vertical offset from parent when opening",
+   "fieldname": "offset_y",
+   "fieldtype": "Int",
+   "label": "Offset Y"
+  },
+  {
+   "fieldname": "section_tabs",
+   "fieldtype": "Section Break",
+   "label": "Tabs"
+  },
+  {
+   "fieldname": "tabs",
+   "fieldtype": "Table",
+   "label": "Tabs",
+   "options": "Card Tab"
+  },
+  {
+   "fieldname": "section_fields",
+   "fieldtype": "Section Break",
+   "label": "Fields"
+  },
+  {
+   "fieldname": "fields_list",
+   "fieldtype": "Table",
+   "label": "Fields",
+   "options": "Card Field"
+  },
+  {
+   "fieldname": "section_displays",
+   "fieldtype": "Section Break",
+   "label": "Displays"
+  },
+  {
+   "fieldname": "displays",
+   "fieldtype": "Table",
+   "label": "Displays",
+   "options": "Card Display"
+  },
+  {
+   "fieldname": "section_portals",
+   "fieldtype": "Section Break",
+   "label": "Portals"
+  },
+  {
+   "fieldname": "portals",
+   "fieldtype": "Table",
+   "label": "Portals",
+   "options": "Card Portal"
+  },
+  {
+   "fieldname": "portal_columns",
+   "fieldtype": "Table",
+   "label": "Portal Columns",
+   "options": "Card Portal Column"
+  },
+  {
+   "fieldname": "section_text_blocks",
+   "fieldtype": "Section Break",
+   "label": "Text Blocks"
+  },
+  {
+   "fieldname": "text_blocks",
+   "fieldtype": "Table",
+   "label": "Text Blocks",
+   "options": "Card Text Block"
+  },
+  {
+   "fieldname": "section_pivot_tables",
+   "fieldtype": "Section Break",
+   "label": "Pivot Tables"
+  },
+  {
+   "fieldname": "pivot_tables",
+   "fieldtype": "Table",
+   "label": "Pivot Tables",
+   "options": "Card Pivot Table"
+  },
+  {
+   "fieldname": "section_media",
+   "fieldtype": "Section Break",
+   "label": "Media"
+  },
+  {
+   "fieldname": "graphics",
+   "fieldtype": "Table",
+   "label": "Graphics",
+   "options": "Card Graphic"
+  },
+  {
+   "fieldname": "videos",
+   "fieldtype": "Table",
+   "label": "Videos",
+   "options": "Card Video"
+  },
+  {
+   "fieldname": "web_viewers",
+   "fieldtype": "Table",
+   "label": "Web Viewers",
+   "options": "Card Web Viewer"
+  },
+  {
+   "fieldname": "section_actions",
+   "fieldtype": "Section Break",
+   "label": "Actions & Scripts"
+  },
+  {
+   "fieldname": "scripts",
+   "fieldtype": "Table",
+   "label": "Scripts",
+   "options": "Card Script"
+  },
+  {
+   "fieldname": "actions",
+   "fieldtype": "Table",
+   "label": "Actions",
+   "options": "Card Action"
+  },
+  {
+   "fieldname": "section_styles",
+   "fieldtype": "Section Break",
+   "label": "Style Overrides"
+  },
+  {
+   "description": "Per-card CSS variable overrides",
+   "fieldname": "styles_json",
+   "fieldtype": "Code",
+   "label": "Styles JSON",
+   "options": "JSON"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 0,
+ "links": [],
+ "modified": "2026-03-13 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "NCE Events",
+ "name": "Card Definition",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "title",
+ "sort_order": "ASC",
+ "states": [],
+ "track_changes": 1
+}

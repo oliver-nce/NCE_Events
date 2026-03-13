@@ -11,6 +11,8 @@
   "column_break_colors",
   "text_color",
   "muted_text_color",
+  "section_theme",
+  "theme_json",
   "section_preview",
   "preview_html",
   "section_actions",
@@ -59,6 +61,18 @@
    "fieldname": "muted_text_color",
    "fieldtype": "Color",
    "label": "Muted Text Color"
+  },
+  {
+   "fieldname": "section_theme",
+   "fieldtype": "Section Break",
+   "label": "Theme JSON"
+  },
+  {
+   "fieldname": "theme_json",
+   "fieldtype": "Code",
+   "label": "Theme Variables (JSON)",
+   "options": "JSON",
+   "description": "JSON object of CSS custom properties. Keys must start with --. Example: {\"--primary\": \"#126BC4\"}"
   },
   {
    "fieldname": "section_preview",

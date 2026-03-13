@@ -1,0 +1,33 @@
+{
+  "actions": [],
+  "creation": "2026-03-13 00:00:00.000000",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "field_order": ["tab", "source", "src", "fieldname", "alt_text", "object_fit", "x", "y", "w", "h"],
+  "fields": [
+    {"fieldname": "tab", "fieldtype": "Data", "in_list_view": 1, "label": "Tab"},
+    {"default": "static", "description": "Attach Image field name (if source=field)", "fieldname": "source", "fieldtype": "Select", "in_list_view": 1, "label": "Source", "options": "static\nfield"},
+    {"description": "Static URL or Jinja-tokenised URL", "fieldname": "src", "fieldtype": "Data", "label": "Src"},
+    {"description": "Attach Image field name (if source=field)", "fieldname": "fieldname", "fieldtype": "Data", "label": "Fieldname"},
+    {"fieldname": "alt_text", "fieldtype": "Data", "label": "Alt Text"},
+    {"default": "contain", "fieldname": "object_fit", "fieldtype": "Select", "label": "Object Fit", "options": "contain\ncover\nfill"},
+    {"default": 0, "fieldname": "x", "fieldtype": "Int", "label": "X"},
+    {"default": 0, "fieldname": "y", "fieldtype": "Int", "label": "Y"},
+    {"default": 3, "fieldname": "w", "fieldtype": "Int", "label": "W"},
+    {"default": 3, "fieldname": "h", "fieldtype": "Int", "label": "H"}
+  ],
+  "index_web_pages_for_search": 0,
+  "istable": 1,
+  "links": [],
+  "modified": "2026-03-13 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "NCE Events",
+  "name": "Card Graphic",
+  "owner": "Administrator",
+  "permissions": [],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 0
+}

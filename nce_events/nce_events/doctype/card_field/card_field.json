@@ -1,0 +1,74 @@
+{
+ "actions": [],
+ "creation": "2026-03-13 00:00:00.000000",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": ["tab", "path", "editable", "x", "y", "w", "h"],
+ "fields": [
+  {
+   "description": "Tab label this field belongs to",
+   "fieldname": "tab",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Tab"
+  },
+  {
+   "description": "Field path, e.g. event_name or venue.venue_name",
+   "fieldname": "path",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Path",
+   "reqd": 1
+  },
+  {
+   "default": "1",
+   "fieldname": "editable",
+   "fieldtype": "Check",
+   "label": "Editable"
+  },
+  {
+   "default": "0",
+   "fieldname": "x",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "X"
+  },
+  {
+   "default": "0",
+   "fieldname": "y",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "Y"
+  },
+  {
+   "default": "3",
+   "description": "Column span",
+   "fieldname": "w",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "W"
+  },
+  {
+   "default": "1",
+   "description": "Row span",
+   "fieldname": "h",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "H"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "istable": 1,
+ "links": [],
+ "modified": "2026-03-13 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "NCE Events",
+ "name": "Card Field",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}

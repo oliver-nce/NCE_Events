@@ -1,0 +1,27 @@
+{
+  "actions": [],
+  "creation": "2026-03-13 00:00:00.000000",
+  "doctype": "DocType",
+  "editable_grid": 1,
+  "engine": "InnoDB",
+  "field_order": ["script_name", "script_type", "method", "description"],
+  "fields": [
+    {"description": "Unique identifier referenced by actions", "fieldname": "script_name", "fieldtype": "Data", "in_list_view": 1, "label": "Script Name", "reqd": 1},
+    {"fieldname": "script_type", "fieldtype": "Select", "in_list_view": 1, "label": "Script Type", "options": "server\nclient\nopen_url\nopen_card\nfrappe_action", "reqd": 1},
+    {"description": "Python method path, JS function name, URL, card def name, or Frappe action", "fieldname": "method", "fieldtype": "Data", "in_list_view": 1, "label": "Method"},
+    {"fieldname": "description", "fieldtype": "Small Text", "label": "Description"}
+  ],
+  "index_web_pages_for_search": 0,
+  "istable": 1,
+  "links": [],
+  "modified": "2026-03-13 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "NCE Events",
+  "name": "Card Script",
+  "owner": "Administrator",
+  "permissions": [],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 0
+}

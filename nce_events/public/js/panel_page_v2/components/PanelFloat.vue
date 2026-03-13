@@ -101,10 +101,10 @@ function startResize(e) {
 	position: fixed;
 	display: flex;
 	flex-direction: column;
-	background: #fafafa;
-	border: 1px solid #b0b8c0;
-	border-radius: 6px;
-	box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+	background: var(--bg-surface);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius);
+	box-shadow: var(--shadow);
 	overflow: hidden;
 }
 
@@ -116,9 +116,9 @@ function startResize(e) {
 .ppv2-float-footer {
 	flex-shrink: 0;
 	padding: 4px 12px;
-	background: #e8ecf0;
-	font-size: 11px;
-	color: #555;
+	background: var(--portal-header-bg);
+	font-size: var(--font-size-sm);
+	color: var(--text-muted);
 	cursor: move;
 	user-select: none;
 	text-align: center;
@@ -136,7 +136,7 @@ function startResize(e) {
 	width: 16px;
 	height: 16px;
 	cursor: nwse-resize;
-	background: linear-gradient(135deg, transparent 50%, #b0b8c0 50%);
-	border-radius: 0 0 6px 0;
+	background: linear-gradient(135deg, transparent 50%, var(--border-color) 50%);
+	border-radius: 0 0 var(--border-radius) 0;
 }
 </style>

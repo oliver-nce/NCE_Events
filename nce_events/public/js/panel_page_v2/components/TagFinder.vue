@@ -112,10 +112,10 @@ function onSelectField(field, colIdx) {
 	position: fixed;
 	width: 520px;
 	max-height: 70vh;
-	background: #fafafa;
-	border: 1px solid #b0b8c0;
-	border-radius: 6px;
-	box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+	background: var(--bg-surface);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius);
+	box-shadow: var(--shadow);
 	display: flex;
 	flex-direction: column;
 }
@@ -125,11 +125,11 @@ function onSelectField(field, colIdx) {
 	justify-content: space-between;
 	align-items: center;
 	padding: 8px 12px;
-	background: #126BC4;
-	color: #fff;
+	background: var(--bg-header);
+	color: var(--text-header);
 	font-weight: 600;
-	font-size: 13px;
-	border-radius: 6px 6px 0 0;
+	font-size: var(--font-size-base);
+	border-radius: var(--border-radius) var(--border-radius) 0 0;
 	cursor: move;
 	user-select: none;
 }
@@ -137,7 +137,7 @@ function onSelectField(field, colIdx) {
 .tf-close {
 	background: none;
 	border: none;
-	color: #fff;
+	color: var(--text-header);
 	font-size: 18px;
 	cursor: pointer;
 	opacity: 0.8;
@@ -153,12 +153,12 @@ function onSelectField(field, colIdx) {
 
 .tf-footer {
 	padding: 4px 12px;
-	background: #e8ecf0;
-	font-size: 11px;
-	color: #555;
+	background: var(--portal-header-bg);
+	font-size: var(--font-size-sm);
+	color: var(--text-muted);
 	text-align: center;
 	cursor: move;
 	user-select: none;
-	border-radius: 0 0 6px 6px;
+	border-radius: 0 0 var(--border-radius) var(--border-radius);
 }
 </style>

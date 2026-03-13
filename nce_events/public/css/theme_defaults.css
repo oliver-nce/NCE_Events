@@ -1,0 +1,32 @@
+:root {
+  --primary: #126BC4;
+  --primary-light: #e8f0fe;
+  --bg-surface: #fafafa;
+  --bg-card: #ffffff;
+  --bg-header: #126BC4;
+  --text-color: #333333;
+  --text-muted: #888888;
+  --text-header: #ffffff;
+  --border-color: #b0b8c0;
+  --shadow: 0 4px 16px rgba(0,0,0,0.15);
+  --male-hex: #dce6f0;
+  --female-hex: #f0dce6;
+  --font-family: 'Instrument Sans', -apple-system, sans-serif;
+  --font-size-base: 13px;
+  --font-size-sm: 11px;
+  --font-size-lg: 16px;
+  --font-weight-bold: 600;
+  --border-radius: 6px;
+  --border-radius-sm: 4px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 12px;
+  --spacing-lg: 16px;
+  --input-border: #ccc;
+  --input-focus-border: var(--primary);
+  --btn-primary-bg: var(--primary);
+  --btn-primary-text: #ffffff;
+  --tab-active-border: var(--primary);
+  --portal-header-bg: #e8ecf0;
+  --portal-alt-row: #f5f7f9;
+}
