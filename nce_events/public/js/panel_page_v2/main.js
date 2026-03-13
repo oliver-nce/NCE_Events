@@ -12,30 +12,52 @@ const FONT_MAP = {
 	"System Default": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
 };
 
+const CLASSIC_HEADER_BG = "#126BC4";
+const CLASSIC_HEADER_TEXT = "#ffffff";
+
 async function applyTheme() {
 	try {
-		// Prefer Settings (replaces Display Settings per migration); fallback to Display Settings
-		let doc = await new Promise((resolve) => {
-			frappe.call({
-				method: "frappe.client.get",
-				args: { doctype: "Settings", name: "Settings" },
-				callback: (r) => resolve(r.message || {}),
-				error: () => resolve({}),
-			});
-		});
-		if (!doc || (!doc.text_color && !doc.muted_text_color && !doc.font_family)) {
-			doc = await new Promise((resolve) => {
+		const [settingsDoc, displayDoc] = await Promise.all([
+			new Promise((resolve) => {
+				frappe.call({
+					method: "frappe.client.get",
+					args: { doctype: "Settings", name: "Settings" },
+					callback: (r) => resolve(r.message || {}),
+					error: () => resolve({}),
+				});
+			}),
+			new Promise((resolve) => {
 				frappe.call({
 					method: "frappe.client.get",
 					args: { doctype: "Display Settings", name: "Display Settings" },
 					callback: (r) => resolve(r.message || {}),
 					error: () => resolve({}),
 				});
-			});
+			}),
+		]);
+
+		// If theme_json has full implementation, use it and we're done
+		const themeJson = (displayDoc && displayDoc.theme_json) || (settingsDoc && settingsDoc.theme_json);
+		if (themeJson && themeJson.trim()) {
+			try {
+				const vars = JSON.parse(themeJson);
+				for (const [key, value] of Object.entries(vars)) {
+					if (key.startsWith("--") && value != null && value !== "") {
+						document.documentElement.style.setProperty(key, String(value));
+					}
+				}
+				return;
+			} catch {
+				// Invalid JSON, fall through to old way
+			}
 		}
+
+		// Fallback: old way — direct font/color fields + classic blue header
+		const doc = settingsDoc && (settingsDoc.text_color || settingsDoc.muted_text_color || settingsDoc.font_family)
+			? settingsDoc
+			: displayDoc || settingsDoc;
 		if (!doc) return;
 
-		// Apply font + colors (same source as V1)
 		const font = FONT_MAP[doc.font_family] || FONT_MAP.Inter;
 		const weight = parseInt(doc.font_weight) || 400;
 		const size = doc.font_size || "13px";
@@ -47,16 +69,8 @@ async function applyTheme() {
 		document.documentElement.style.setProperty("--font-weight-bold", String(weight > 400 ? weight : 600));
 		document.documentElement.style.setProperty("--text-color", textColor);
 		document.documentElement.style.setProperty("--text-muted", mutedColor);
-
-		// Also apply theme_json if present (Display Settings has this)
-		if (doc.theme_json) {
-			const vars = JSON.parse(doc.theme_json);
-			for (const [key, value] of Object.entries(vars)) {
-				if (key.startsWith("--") && value) {
-					document.documentElement.style.setProperty(key, value);
-				}
-			}
-		}
+		document.documentElement.style.setProperty("--bg-header", CLASSIC_HEADER_BG);
+		document.documentElement.style.setProperty("--text-header", CLASSIC_HEADER_TEXT);
 	} catch (e) {
 		console.warn("applyTheme failed:", e);
 	}
