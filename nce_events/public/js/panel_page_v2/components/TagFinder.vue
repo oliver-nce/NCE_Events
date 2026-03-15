@@ -24,17 +24,19 @@
 			Tag Finder: {{ rootDoctype }}
 		</div>
 
-		<TagDialog
-			v-for="(td, ti) in tagDialogs"
-			:key="ti"
-			:field="td.field"
-			:base-tag="td.baseTag"
-			:path="td.path"
-			:apply-filters="finder.applyFilters"
-			:init-top="100 + ti * 24"
-			:init-left="160 + ti * 24"
-			@close="tagDialogs.splice(ti, 1)"
-		/>
+		<Teleport to="body">
+			<TagDialog
+				v-for="(td, ti) in tagDialogs"
+				:key="ti"
+				:field="td.field"
+				:base-tag="td.baseTag"
+				:path="td.path"
+				:apply-filters="finder.applyFilters"
+				:init-top="100 + ti * 24"
+				:init-left="160 + ti * 24"
+				@close="tagDialogs.splice(ti, 1)"
+			/>
+		</Teleport>
 	</div>
 </template>
 
