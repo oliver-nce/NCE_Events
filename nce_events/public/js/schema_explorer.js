@@ -561,9 +561,10 @@
 		$(document.body).append($panel);
 
 		$panel.on("mousedown", function () {
-			$(".se-tag-panel").css("z-index", 1070);
-			$panel.css("z-index", 1080);
+			$(".se-tag-panel").css("z-index", 100040);
+			$panel.css("z-index", 100050);
 		});
+		$panel.css("z-index", 100050);
 		$panel.trigger("mousedown");
 
 		const $header = $panel.find(".se-tag-panel-header");
