@@ -129,12 +129,18 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 	_open_tags() {
 		if (window._nce_open_tag_finder) {
 			window._nce_open_tag_finder(this.doctype);
+		} else if (nce_events.schema_explorer && nce_events.schema_explorer.open) {
+			nce_events.schema_explorer.open(this.doctype);
+		} else {
+			console.warn("Tag Finder: no handler registered (V2 window global or V1 schema_explorer)");
 		}
 	}
 
 	_close_tags() {
 		if (window._nce_close_tag_finder) {
 			window._nce_close_tag_finder();
+		} else if (nce_events.schema_explorer && nce_events.schema_explorer.close) {
+			nce_events.schema_explorer.close();
 		}
 	}
 
