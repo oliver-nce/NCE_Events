@@ -53,15 +53,27 @@
 			:root-doctype="tagFinderDoctype"
 			@close="tagFinderDoctype = ''"
 		/>
+
+		<CardModal
+			v-for="(card, i) in cardStack"
+			:key="'card-' + card.id"
+			:card-def-name="card.cardDefName"
+			:doctype="card.doctype"
+			:record-name="card.recordName"
+			:style="{ zIndex: 1000 + i }"
+			@open-card="onOpenCard"
+			@close="closeTopCard"
+		/>
 	</div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from "vue";
+import { ref, reactive, onMounted, onUnmounted } from "vue";
 import { usePanel } from "./composables/usePanel.js";
 import PanelFloat from "./components/PanelFloat.vue";
 import PanelTable from "./components/PanelTable.vue";
 import TagFinder from "./components/TagFinder.vue";
+import CardModal from "./components/CardModal.vue";
 
 const rootPanel = usePanel("WP Tables");
 const { config, columns, rows, total, loading, error, load } = rootPanel;
@@ -70,7 +82,44 @@ const openPanels = reactive([]);
 let panelCounter = 0;
 const tagFinderDoctype = ref("");
 
-onMounted(() => { load(); });
+const cardStack = reactive([]);
+let cardCounter = 0;
+
+function openCardModal(cardDefName, doctype, recordName) {
+	cardStack.push({
+		id: ++cardCounter,
+		cardDefName,
+		doctype,
+		recordName,
+	});
+}
+
+function closeTopCard() {
+	cardStack.pop();
+}
+
+function onOpenCard(cfg) {
+	openCardModal(cfg.cardDefName, cfg.doctype, cfg.name);
+}
+
+function _onOpenTagFinder(e) {
+	const dt = e.detail && e.detail.doctype;
+	if (dt) tagFinderDoctype.value = dt;
+}
+function _onCloseTagFinder() {
+	tagFinderDoctype.value = "";
+}
+
+onMounted(() => {
+	load();
+	document.addEventListener("nce:open-tag-finder", _onOpenTagFinder);
+	document.addEventListener("nce:close-tag-finder", _onCloseTagFinder);
+});
+
+onUnmounted(() => {
+	document.removeEventListener("nce:open-tag-finder", _onOpenTagFinder);
+	document.removeEventListener("nce:close-tag-finder", _onCloseTagFinder);
+});
 
 const OFFSET_STEP = 80;
 
@@ -133,10 +182,25 @@ function onRootRowClick(row) {
 	openPanel(doctype);
 }
 
-function onDrill(ev, parentPanel) {
+async function onDrill(ev, parentPanel) {
 	const filter = {};
 	if (ev.linkField && ev.rowName) {
 		filter[ev.linkField] = ev.rowName;
+	}
+	try {
+		const r = await new Promise((resolve) => {
+			frappe.db
+				.get_value("Card Definition", { root_doctype: ev.doctype, is_default: 1 }, "name")
+				.then((val) => resolve(val))
+				.catch(() => resolve(null));
+		});
+		const cardDefName = typeof r === "object" && r?.name ? r.name : typeof r === "string" ? r : null;
+		if (cardDefName && ev.rowName) {
+			openCardModal(cardDefName, ev.doctype, ev.rowName);
+			return;
+		}
+	} catch (e) {
+		/* fall through to panel */
 	}
 	openPanel(ev.doctype, filter);
 }

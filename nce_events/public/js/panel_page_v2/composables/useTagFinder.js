@@ -69,6 +69,7 @@ export function useTagFinder() {
 					frappe.call({
 						method: "nce_events.api.tags.get_pronoun_tags_for_doctype",
 						args: { doctype },
+						freeze: false,
 						callback(r) {
 							const tags = (r.message || []).map((t) => ({
 								fieldname: t.field_name,

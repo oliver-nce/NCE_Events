@@ -20,7 +20,11 @@ def get_pronoun_tags_for_doctype(doctype: str) -> list[dict[str, str]]:
 	doctype = doctype.strip()
 	try:
 		meta = frappe.get_meta(doctype)
-	except Exception:
+	except Exception as exc:
+		frappe.log_error(
+			title=f"get_pronoun_tags_for_doctype failed: {doctype}",
+			message=f"User: {frappe.session.user}\n{exc}",
+		)
 		return []
 	has_gender = any(
 		f.fieldname and f.fieldname.lower() == "gender"

@@ -272,6 +272,7 @@
 				frappe.call({
 					method: "nce_events.api.tags.get_pronoun_tags_for_doctype",
 					args: { doctype: doctype },
+					freeze: false,
 					callback: function (r) {
 						const tags = r.message || [];
 						const pronoun_fields = tags.map(function (t) {
@@ -283,6 +284,9 @@
 							};
 						});
 						col.fields = pronoun_fields.concat(col.fields);
+						_render_column(col, col_idx);
+					},
+					error: function () {
 						_render_column(col, col_idx);
 					},
 				});

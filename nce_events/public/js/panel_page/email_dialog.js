@@ -173,15 +173,11 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 	/* ── Tag Finder integration ── */
 
 	_open_tags() {
-		if (nce_events.schema_explorer && nce_events.schema_explorer.open) {
-			nce_events.schema_explorer.open(this.doctype);
-		}
+		document.dispatchEvent(new CustomEvent("nce:open-tag-finder", { detail: { doctype: this.doctype } }));
 	}
 
 	_close_tags() {
-		if (nce_events.schema_explorer && nce_events.schema_explorer.close) {
-			nce_events.schema_explorer.close();
-		}
+		document.dispatchEvent(new CustomEvent("nce:close-tag-finder"));
 	}
 
 	/* ── Load template into message editor (for one-off edits) ── */
@@ -193,12 +189,16 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 		frappe.call({
 			method: "frappe.client.get",
 			args: { doctype: "Email Template", name: tpl_name.trim() },
+			freeze: false,
 			callback: function (r) {
 				if (!r.message) return;
-				const body = r.message.response || "";
+				const body = r.message.response_html || r.message.response || "";
 				const subject = r.message.subject || "";
 				el.find(".send-subject-input").val(subject);
-				if (me._message_control && me._message_control.set_value) {
+				if (me._message_control && me._message_control.quill) {
+					me._message_control.quill.root.innerHTML = body;
+					me._message_control.value = body;
+				} else if (me._message_control && me._message_control.set_value) {
 					me._message_control.set_value(body);
 				}
 			}
@@ -240,6 +240,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 			frappe.call({
 				method: "frappe.client.get_list",
 				args: { doctype: "Email Template", filters: filters, fields: ["name"], limit_page_length: 20 },
+				freeze: false,
 				callback: function (r) {
 					list_el.empty();
 					(r.message || []).forEach(function (t) {
@@ -261,7 +262,8 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 			});
 		}
 
-		input_el.on("focus", function () { do_search(input_el.val().trim()); });
+		input_el.on("focus", function (e) { e.stopPropagation(); do_search(input_el.val().trim()); });
+		input_el.on("click", function (e) { e.stopPropagation(); });
 		input_el.on("input", function () {
 			clearTimeout(debounce);
 			debounce = setTimeout(function () { do_search(input_el.val().trim()); }, 200);

@@ -127,15 +127,11 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 	/* ── Tag Finder integration ── */
 
 	_open_tags() {
-		if (nce_events.schema_explorer && nce_events.schema_explorer.open) {
-			nce_events.schema_explorer.open(this.doctype);
-		}
+		document.dispatchEvent(new CustomEvent("nce:open-tag-finder", { detail: { doctype: this.doctype } }));
 	}
 
 	_close_tags() {
-		if (nce_events.schema_explorer && nce_events.schema_explorer.close) {
-			nce_events.schema_explorer.close();
-		}
+		document.dispatchEvent(new CustomEvent("nce:close-tag-finder"));
 	}
 
 	/* ── Load template into message area (for one-off edits) ── */
