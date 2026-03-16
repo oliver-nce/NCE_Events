@@ -120,9 +120,9 @@ function nextPos() {
 	return { x: 140 + n * OFFSET_STEP, y: 120 + n * OFFSET_STEP };
 }
 
-async function openPanel(doctype, parentFilter = {}) {
+async function openPanel(doctype, parentFilter = {}, parentId = null) {
 	const existingIdx = openPanels.findIndex((p) => p.doctype === doctype);
-	if (existingIdx >= 0) openPanels.splice(existingIdx, 1);
+	if (existingIdx >= 0) closePanel(openPanels[existingIdx].id);
 
 	const pos = nextPos();
 	const id = ++panelCounter;
@@ -130,6 +130,7 @@ async function openPanel(doctype, parentFilter = {}) {
 		id,
 		doctype,
 		parentFilter,
+		parentId,
 		config: null,
 		columns: [],
 		rows: [],
@@ -164,6 +165,8 @@ async function openPanel(doctype, parentFilter = {}) {
 }
 
 function closePanel(id) {
+	const children = openPanels.filter((p) => p.parentId === id);
+	children.forEach((c) => closePanel(c.id));
 	const idx = openPanels.findIndex((p) => p.id === id);
 	if (idx >= 0) openPanels.splice(idx, 1);
 }
@@ -171,7 +174,7 @@ function closePanel(id) {
 function onRootRowClick(row) {
 	const doctype = row.frappe_doctype || row.name;
 	if (!doctype) return;
-	openPanel(doctype);
+	openPanel(doctype, {}, "root");
 }
 
 async function onDrill(ev, parentPanel) {
@@ -194,7 +197,7 @@ async function onDrill(ev, parentPanel) {
 	} catch (e) {
 		/* fall through to panel */
 	}
-	openPanel(ev.doctype, filter);
+	openPanel(ev.doctype, filter, parentPanel.id);
 }
 
 function onDrilledRowClick(p, row) {
