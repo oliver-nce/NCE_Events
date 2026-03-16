@@ -182,11 +182,15 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 	/* ── Tag Finder integration ── */
 
 	_open_tags() {
-		document.dispatchEvent(new CustomEvent("nce:open-tag-finder", { detail: { doctype: this.doctype } }));
+		if (window._nce_open_tag_finder) {
+			window._nce_open_tag_finder(this.doctype);
+		}
 	}
 
 	_close_tags() {
-		document.dispatchEvent(new CustomEvent("nce:close-tag-finder"));
+		if (window._nce_close_tag_finder) {
+			window._nce_close_tag_finder();
+		}
 	}
 
 	/* ── Load template into message editor (for one-off edits) ── */

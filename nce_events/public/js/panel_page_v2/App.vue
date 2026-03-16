@@ -102,23 +102,15 @@ function onOpenCard(cfg) {
 	openCardModal(cfg.cardDefName, cfg.doctype, cfg.name);
 }
 
-function _onOpenTagFinder(e) {
-	const dt = e.detail && e.detail.doctype;
-	if (dt) tagFinderDoctype.value = dt;
-}
-function _onCloseTagFinder() {
-	tagFinderDoctype.value = "";
-}
-
 onMounted(() => {
 	load();
-	document.addEventListener("nce:open-tag-finder", _onOpenTagFinder);
-	document.addEventListener("nce:close-tag-finder", _onCloseTagFinder);
+	window._nce_open_tag_finder = (dt) => { if (dt) tagFinderDoctype.value = dt; };
+	window._nce_close_tag_finder = () => { tagFinderDoctype.value = ""; };
 });
 
 onUnmounted(() => {
-	document.removeEventListener("nce:open-tag-finder", _onOpenTagFinder);
-	document.removeEventListener("nce:close-tag-finder", _onCloseTagFinder);
+	delete window._nce_open_tag_finder;
+	delete window._nce_close_tag_finder;
 });
 
 const OFFSET_STEP = 80;
