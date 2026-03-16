@@ -865,6 +865,8 @@ body.panel-float-dragging * {
 .send-panel-preview {
 	position: fixed;
 	width: 380px;
+	min-width: 280px;
+	min-height: 200px;
 	display: flex;
 	flex-direction: column;
 	background: #FAFBFC;
@@ -877,11 +879,13 @@ body.panel-float-dragging * {
 .send-preview-header {
 	display: flex;
 	align-items: center;
-	justify-content: space-between;
+	gap: 8px;
 	padding: 8px 12px;
 	background: #E3F0FC;
 	border-bottom: 1px solid #A2CCF6;
 	flex-shrink: 0;
+	cursor: move;
+	user-select: none;
 }
 
 .send-preview-title {
@@ -900,6 +904,34 @@ body.panel-float-dragging * {
 }
 
 .send-preview-close:hover { color: #333; }
+
+.send-preview-zoom-controls {
+	display: flex;
+	align-items: center;
+	gap: 2px;
+	margin-left: auto;
+}
+
+.send-preview-zoom-btn {
+	background: transparent;
+	border: 1px solid #A2CCF6;
+	border-radius: 3px;
+	color: #126BC4;
+	font-size: 12px;
+	line-height: 1;
+	padding: 2px 6px;
+	cursor: pointer;
+	min-width: 22px;
+	text-align: center;
+}
+
+.send-preview-zoom-btn:hover { background: #D4E8FA; }
+
+.send-preview-zoom-reset {
+	font-size: 10px;
+	min-width: 36px;
+	font-weight: 600;
+}
 
 .send-test-row {
 	display: flex;
@@ -942,7 +974,7 @@ body.panel-float-dragging * {
 	padding: 12px;
 	font-size: 13px;
 	color: #464D53;
-	overflow-y: auto;
+	overflow: auto;
 	line-height: 1.5;
 }
 

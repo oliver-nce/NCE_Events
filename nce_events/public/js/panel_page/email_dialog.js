@@ -74,6 +74,11 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 			<div class="send-panel-preview" style="display:none;">
 				<div class="send-preview-header">
 					<span class="send-preview-title">Preview</span>
+					<span class="send-preview-zoom-controls">
+						<button class="send-preview-zoom-btn" data-action="out" title="Zoom out">&minus;</button>
+						<button class="send-preview-zoom-btn send-preview-zoom-reset" data-action="reset" title="Reset zoom">100%</button>
+						<button class="send-preview-zoom-btn" data-action="in" title="Zoom in">+</button>
+					</span>
 					<button class="send-preview-close" title="Close preview">&times;</button>
 				</div>
 				<div class="send-preview-subject"></div>
@@ -82,9 +87,13 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 					<input class="send-field send-test-input" type="text" placeholder="Test email address...">
 					<button class="btn btn-xs btn-default send-test-btn"><i class="fa fa-paper-plane"></i> Send Test</button>
 				</div>
+				<div class="send-panel-resize-handle"></div>
 			</div>
 		`);
 		$(document.body).append(me._preview_el);
+		me._make_draggable_preview(me._preview_el);
+		me._make_resizable_preview(me._preview_el);
+		me._setup_preview_zoom(me._preview_el);
 
 		me._message_control = frappe.ui.form.make_control({
 			parent: el.find(".send-message-editor-wrap"),
@@ -195,22 +204,22 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 				const body = r.message.response_html || r.message.response || "";
 				const subject = r.message.subject || "";
 				el.find(".send-subject-input").val(subject);
+				me._template_body = body;
 				if (me._message_control && me._message_control.quill) {
-					me._message_control.quill.root.innerHTML = body;
-					me._message_control.value = body;
-				} else if (me._message_control && me._message_control.set_value) {
-					me._message_control.set_value(body);
+					me._message_control.quill.setText(body);
 				}
 			}
 		});
 	}
 
-	/* ── Resolve message body (always from message editor; template just loads into it) ── */
+	/* ── Resolve message body (prefer stored template HTML, fall back to editor) ── */
 
 	_resolve_body(callback) {
 		const el = this.el;
 		const subject = el.find(".send-subject-input").val() || "";
-		const body = (this._message_control && this._message_control.get_value && this._message_control.get_value()) || "";
+		const body = this._template_body
+			|| (this._message_control && this._message_control.get_value && this._message_control.get_value())
+			|| "";
 		if (!body || !String(body).trim()) { frappe.msgprint(__("Enter a message first.")); return; }
 		callback(body, subject);
 	}
@@ -392,6 +401,74 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 					test_btn.prop("disabled", false).html('<i class="fa fa-paper-plane"></i> Send Test');
 				},
 			});
+		});
+	}
+
+	/* ── Preview: draggable ── */
+
+	_make_draggable_preview(pv) {
+		const ns = "pv_drag";
+		pv.find(".send-preview-header").on(`mousedown.${ns}`, function (e) {
+			if ($(e.target).closest("button").length) return;
+			e.preventDefault();
+			const sx = e.clientX, sy = e.clientY;
+			const sl = parseInt(pv.css("left"), 10) || 0;
+			const st = parseInt(pv.css("top"), 10) || 0;
+			$(document).on(`mousemove.${ns}`, function (ev) {
+				pv.css({
+					left: `${sl + ev.clientX - sx}px`,
+					top: `${Math.max(0, st + ev.clientY - sy)}px`,
+				});
+			});
+			$(document).on(`mouseup.${ns}`, function () {
+				$(document).off(`mousemove.${ns} mouseup.${ns}`);
+			});
+		});
+	}
+
+	/* ── Preview: resizable ── */
+
+	_make_resizable_preview(pv) {
+		const handle = pv.find(".send-panel-resize-handle");
+		handle.on("mousedown", function (e) {
+			e.preventDefault(); e.stopPropagation();
+			const sw = pv.outerWidth(), sh = pv.outerHeight();
+			const sx = e.clientX, sy = e.clientY;
+			$(document).on("mousemove.pv_resize", function (ev) {
+				pv.css({
+					width: `${Math.max(280, sw + ev.clientX - sx)}px`,
+					height: `${Math.max(200, sh + ev.clientY - sy)}px`,
+				});
+			});
+			$(document).on("mouseup.pv_resize", function () {
+				$(document).off("mousemove.pv_resize mouseup.pv_resize");
+			});
+		});
+	}
+
+	/* ── Preview: zoom ── */
+
+	_setup_preview_zoom(pv) {
+		let zoom = 100;
+		const body = pv.find(".send-preview-body");
+		const label = pv.find(".send-preview-zoom-reset");
+
+		function apply() {
+			const scale = zoom / 100;
+			body.css({
+				transform: `scale(${scale})`,
+				"transform-origin": "0 0",
+				width: `${100 / scale}%`,
+			});
+			label.text(zoom + "%");
+		}
+
+		pv.on("click", ".send-preview-zoom-btn", function () {
+			const action = $(this).data("action");
+			if (action === "in") zoom = Math.min(200, zoom + 10);
+			else if (action === "out") zoom = Math.max(30, zoom - 10);
+			else zoom = 100;
+			apply();
 		});
 	}
 
