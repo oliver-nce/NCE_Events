@@ -5,7 +5,8 @@ frappe.ui.form.on("Enrollments", {
 			return;
 		}
 
-		frm.add_custom_button(__("Switch to Another Event"), () => _do_exchange(frm));
+		const btn = frm.add_custom_button(__("Switch to Another Event"), () => _do_exchange(frm));
+		btn.css({ "background-color": "#000", color: "#fff", "border-color": "#000" });
 	},
 });
 
