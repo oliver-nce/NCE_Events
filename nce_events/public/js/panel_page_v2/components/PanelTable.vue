@@ -458,7 +458,7 @@ function startColResize(e, ci) {
 .ppv2-table th {
 	position: sticky;
 	top: 0;
-	background: color-mix(in srgb, var(--nce-color-secondary) 40%, white);
+	background: color-mix(in srgb, var(--nce-color-secondary) 30%, white);
 	color: color-mix(in srgb, var(--nce-color-secondary) 70%, black);
 	font-weight: var(--font-weight-bold);
 	font-size: var(--font-size-sm);
