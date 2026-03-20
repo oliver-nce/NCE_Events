@@ -50,7 +50,7 @@ const showBar = computed(() => {
 }
 .tab-btn.active {
 	color: var(--text-color);
-	border-bottom-color: var(--tab-active-border);
+	border-bottom-color: var(--color-primary);
 	font-weight: var(--font-weight-bold);
 }
 .tab-btn:hover {

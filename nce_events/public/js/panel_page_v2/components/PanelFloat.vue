@@ -116,7 +116,7 @@ function startResize(e) {
 .ppv2-float-footer {
 	flex-shrink: 0;
 	padding: 4px 12px;
-	background: var(--portal-header-bg);
+	background: var(--bg-header);
 	font-size: var(--font-size-sm);
 	color: var(--text-muted);
 	cursor: move;

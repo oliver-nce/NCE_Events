@@ -155,7 +155,7 @@ function onSelectField(field, colIdx) {
 
 .tf-footer {
 	padding: 4px 12px;
-	background: var(--portal-header-bg);
+	background: var(--bg-header);
 	font-size: var(--font-size-sm);
 	color: var(--text-muted);
 	text-align: center;

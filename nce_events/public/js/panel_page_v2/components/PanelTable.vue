@@ -430,7 +430,7 @@ function startColResize(e, ci) {
 	border: 1px solid var(--border-color);
 	border-radius: var(--border-radius-sm);
 	cursor: pointer;
-	color: var(--primary);
+	color: var(--color-primary);
 }
 
 /* ── Loading / Error ── */
@@ -440,7 +440,7 @@ function startColResize(e, ci) {
 	text-align: center;
 	font-size: var(--font-size-base);
 }
-.ppv2-loading { color: var(--primary); }
+.ppv2-loading { color: var(--color-primary); }
 .ppv2-error { color: #e53e3e; }
 
 /* ── Table ── */
@@ -458,8 +458,8 @@ function startColResize(e, ci) {
 .ppv2-table th {
 	position: sticky;
 	top: 0;
-	background: var(--portal-header-bg);
-	color: var(--primary);
+	background: var(--bg-header);
+	color: var(--color-primary);
 	font-weight: var(--font-weight-bold);
 	font-size: var(--font-size-sm);
 	text-transform: uppercase;
@@ -489,7 +489,7 @@ function startColResize(e, ci) {
 }
 
 .ppv2-table tbody tr:hover { background: var(--primary-light); cursor: pointer; }
-.ppv2-alt { background: var(--portal-alt-row); }
+.ppv2-alt { background: var(--row-alt); }
 .ppv2-selected { background: var(--primary-light) !important; }
 
 .ppv2-link-val {
@@ -546,5 +546,5 @@ function startColResize(e, ci) {
 	cursor: col-resize;
 	z-index: 2;
 }
-.ppv2-col-resize:hover { background: color-mix(in srgb, var(--primary) 30%, transparent); }
+.ppv2-col-resize:hover { background: color-mix(in srgb, var(--color-primary) 30%, transparent); }
 </style>
