@@ -330,7 +330,7 @@ function startColResize(e, ci) {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	padding: 8px 14px;
+	padding: 5px 8px;
 	background: var(--bg-header);
 	color: var(--text-header);
 	flex-shrink: 0;
