@@ -458,8 +458,8 @@ function startColResize(e, ci) {
 .ppv2-table th {
 	position: sticky;
 	top: 0;
-	background: var(--bg-header);
-	color: var(--text-header);
+	background: color-mix(in srgb, var(--nce-color-secondary) 40%, white);
+	color: color-mix(in srgb, var(--nce-color-secondary) 70%, black);
 	font-weight: var(--font-weight-bold);
 	font-size: var(--font-size-sm);
 	text-transform: uppercase;
