@@ -17,6 +17,7 @@ app_include_css = [
 doctype_js = {
 	"Email Template": "public/js/email_template_tags.js",
 	"API Connector": "public/js/api_connector_tags.js",
+	"Enrollments": "public/js/enrollments_exchange.js",
 }
 
 add_to_apps_screen = [
