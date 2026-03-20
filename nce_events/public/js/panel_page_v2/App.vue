@@ -9,7 +9,7 @@
 				:loading="loading"
 				:error="error"
 				:config="config || {}"
-				@row-click="(e, row) => onRootRowClick(e, row)"
+				@row-click="onRootRowClick"
 				@sheets="onSheets({ doctype: 'WP Tables', parentFilter: {}, rows })"
 				@filter-change="(f) => onFilterChange(null, f)"
 			/>
@@ -35,7 +35,7 @@
 				:show-email="!!(p.config?.email_field)"
 				:show-sms="!!(p.config?.sms_field)"
 				@close="closePanel(p.id)"
-				@row-click="(e, row) => onDrilledRowClick(e, p, row)"
+				@row-click="(row) => onDrilledRowClick(p, row)"
 				@drill="(ev) => onDrill(ev, p)"
 				@sheets="onSheets(p)"
 				@email="onEmail(p)"
@@ -171,15 +171,7 @@ function closePanel(id) {
 	if (idx >= 0) openPanels.splice(idx, 1);
 }
 
-function onRootRowClick(event, row) {
-	// Shift-click with open_card_on_click enabled opens form in new tab
-	if (event.shiftKey && config?.open_card_on_click && row?.name) {
-		const slug = config.root_doctype.toLowerCase().replace(/ /g, "-");
-		const url = `${window.location.origin}/app/${slug}/${encodeURIComponent(row.name)}`;
-		window.open(url, "_blank");
-		return;
-	}
-	// Non-Shift click or setting disabled: open next panel
+function onRootRowClick(row) {
 	const doctype = row.frappe_doctype || row.name;
 	if (!doctype) return;
 	openPanel(doctype, {}, "root");
@@ -208,8 +200,8 @@ async function onDrill(ev, parentPanel) {
 	openPanel(ev.doctype, filter, parentPanel.id);
 }
 
-function onDrilledRowClick(event, p, row) {
-	if (!event.shiftKey || !p.config?.open_card_on_click || !row?.name) return;
+function onDrilledRowClick(p, row) {
+	if (!p.config?.open_card_on_click || !row?.name) return;
 	const slug = p.doctype.toLowerCase().replace(/ /g, "-");
 	const url = `${window.location.origin}/app/${slug}/${encodeURIComponent(row.name)}`;
 	window.open(url, "_blank");
