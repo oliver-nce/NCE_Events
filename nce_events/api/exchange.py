@@ -27,9 +27,8 @@ def execute_product_exchange(enrollment_name: str, new_product_id: int | str) ->
 
     doc = frappe.get_doc("Enrollments", enrollment_name)
 
-    order_item_id = doc.get("order_item_id")
-    if not order_item_id:
-        frappe.throw(_("This Enrollment has no order_item_id. Cannot process exchange."))
+    # The Frappe primary key (name) is the WooCommerce order_item_id
+    order_item_id = doc.name
 
     new_product_id = int(new_product_id)
 

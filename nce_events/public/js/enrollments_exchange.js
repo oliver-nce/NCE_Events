@@ -11,14 +11,8 @@ frappe.ui.form.on("Enrollments", {
 });
 
 function _do_exchange(frm) {
-	if (!frm.doc.order_item_id) {
-		frappe.msgprint({
-			title: __("Cannot Switch Event"),
-			message: __("This enrollment has no Order Item ID. The exchange cannot be processed."),
-			indicator: "orange",
-		});
-		return;
-	}
+	// The Enrollment's Frappe primary key (name) is the WooCommerce order_item_id
+	const order_item_id = frm.doc.name;
 
 	frappe.prompt(
 		[
@@ -27,7 +21,10 @@ function _do_exchange(frm) {
 				fieldtype: "Int",
 				label: __("New Product ID"),
 				reqd: 1,
-				description: __("Enter the WooCommerce product ID for the new event."),
+				description: __(
+					"Enter the WooCommerce Product ID for the new event to switch this enrollment (Order Item ID: {0}) to.",
+					[order_item_id],
+				),
 			},
 		],
 		(values) => {
