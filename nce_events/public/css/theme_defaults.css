@@ -1,32 +1,77 @@
+/*
+ * NCE Events — Panel Theme
+ * ========================
+ * All visual tokens are consumed from NCE Builder's site-wide CSS variables
+ * (--nce-color-*, --nce-shadow, --nce-border-radius, --nce-font-*, etc.).
+ *
+ * Each var() has a hardcoded fallback so panels render correctly even when
+ * nce_builder is not installed or the theme has not been saved yet.
+ *
+ * DO NOT put hardcoded colours, shadows, or radii anywhere else.
+ * To retheme: change NCE Builder → NCE Theme Settings → Save.
+ * Every panel updates automatically. Zero per-component changes needed.
+ */
+
 :root {
-  --primary: #126BC4;
-  --primary-light: #e8f0fe;
-  --bg-surface: #fafafa;
-  --bg-card: #ffffff;
-  --bg-header: #126BC4;
-  --text-color: #333333;
-  --text-muted: #888888;
-  --text-header: #ffffff;
-  --border-color: #b0b8c0;
-  --shadow: 0 4px 16px rgba(0,0,0,0.15);
-  --male-hex: #dce6f0;
-  --female-hex: #f0dce6;
-  --font-family: 'Instrument Sans', -apple-system, sans-serif;
-  --font-size-base: 13px;
-  --font-size-sm: 11px;
-  --font-size-lg: 16px;
-  --font-weight-bold: 600;
-  --border-radius: 6px;
-  --border-radius-sm: 4px;
-  --spacing-xs: 4px;
-  --spacing-sm: 8px;
-  --spacing-md: 12px;
-  --spacing-lg: 16px;
-  --input-border: #ccc;
-  --input-focus-border: var(--primary);
-  --btn-primary-bg: var(--primary);
-  --btn-primary-text: #ffffff;
-  --tab-active-border: var(--primary);
-  --portal-header-bg: #e8ecf0;
-  --portal-alt-row: #f5f7f9;
+	/* ── Primary / brand ─────────────────────────────────────────────────── */
+	--primary: var(--nce-color-primary, #126bc4);
+	--primary-light: var(--nce-color-focus, #e8f0fe);
+
+	/* ── Surfaces ─────────────────────────────────────────────────────────── */
+	--bg-surface: var(--nce-color-surface, #fafafa);
+	--bg-card: var(--nce-color-bg, #ffffff);
+
+	/* Panel header uses primary as background, white text on top */
+	--bg-header: var(--nce-color-primary, #126bc4);
+	--text-header: #ffffff;
+
+	/* ── Typography ───────────────────────────────────────────────────────── */
+	--text-color: var(--nce-color-text, #333333);
+	--text-muted: var(--nce-color-muted, #888888);
+
+	--font-family: var(--nce-font-family, "Inter", -apple-system, sans-serif);
+	--font-size-base: var(--nce-font-size, 13px);
+	--font-size-sm: 11px;
+	--font-size-lg: 16px;
+	--font-weight-base: var(--nce-font-weight, 400);
+	--font-weight-bold: 600;
+	--line-height: var(--nce-line-height, 1.5);
+
+	/* ── Borders ──────────────────────────────────────────────────────────── */
+	--border-color: var(--nce-color-border, #b0b8c0);
+	--border-radius: var(--nce-border-radius, 6px);
+	--border-radius-sm: 4px;
+
+	/* ── Shadow ───────────────────────────────────────────────────────────── */
+	--shadow: var(--nce-shadow, 0 4px 16px rgba(0, 0, 0, 0.15));
+
+	/* ── Spacing ──────────────────────────────────────────────────────────── */
+	--spacing-xs: 4px;
+	--spacing-sm: 8px;
+	--spacing-md: 12px;
+	--spacing-lg: 16px;
+
+	/* ── Form inputs ──────────────────────────────────────────────────────── */
+	--input-border: var(--nce-color-border, #cccccc);
+	--input-focus-border: var(--nce-color-focus, var(--primary));
+
+	/* ── Buttons ──────────────────────────────────────────────────────────── */
+	--btn-primary-bg: var(--nce-color-primary, #126bc4);
+	--btn-primary-text: #ffffff;
+
+	/* ── Tab / accent ─────────────────────────────────────────────────────── */
+	--tab-active-border: var(--nce-color-primary, #126bc4);
+
+	/* ── Table chrome ─────────────────────────────────────────────────────── */
+	/* Sticky thead background — a very light tint of the surface */
+	--portal-header-bg: var(--nce-color-surface, #e8ecf0);
+	/* Alternating row tint */
+	--portal-alt-row: var(--nce-color-row-alt, #f5f7f9);
+
+	/* ── Gender colour-coding (static — not part of brand theme) ──────────── */
+	--male-hex: #dce6f0;
+	--female-hex: #f0dce6;
+
+	/* ── Transition ───────────────────────────────────────────────────────── */
+	--transition-speed: var(--nce-transition-speed, 200ms);
 }

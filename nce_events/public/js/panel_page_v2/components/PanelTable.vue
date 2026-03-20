@@ -459,7 +459,7 @@ function startColResize(e, ci) {
 	position: sticky;
 	top: 0;
 	background: var(--bg-header);
-	color: var(--color-primary);
+	color: var(--text-header);
 	font-weight: var(--font-weight-bold);
 	font-size: var(--font-size-sm);
 	text-transform: uppercase;
