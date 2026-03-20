@@ -2,6 +2,7 @@
 	<div ref="panelRef" class="ppv2-panel">
 		<div class="ppv2-header">
 			<span class="ppv2-title">{{ title }}</span>
+			<span v-if="config.open_card_on_click" class="ppv2-click-hint">Click on a row for details</span>
 			<span class="ppv2-header-right">
 				<button class="ppv2-hdr-btn" title="Filter" @click="toggleFilter">
 					<i class="fa fa-filter"></i>
@@ -139,6 +140,8 @@ const filters = reactive([]);
 const colWidths = reactive({});
 const panelRef = ref(null);
 let _filterTimer = null;
+
+
 
 function calcColWidths(columns, rows, containerWidth) {
 	const sample = rows.slice(0, 20);
@@ -354,6 +357,13 @@ function startColResize(e, ci) {
 .ppv2-hdr-btn:hover { opacity: 1; }
 
 .ppv2-count { font-size: var(--font-size-sm); opacity: 0.8; }
+
+.ppv2-click-hint {
+	font-size: var(--font-size-sm);
+	opacity: 0.7;
+	font-style: italic;
+	margin-left: var(--spacing-sm);
+}
 
 /* ── Filter Widget ── */
 
