@@ -5,7 +5,7 @@
 				:title="config?.header_text || 'NCE Tables'"
 				:columns="columns"
 				:rows="rows"
-				:total="total"
+				:total="fullTotal"
 				:loading="loading"
 				:error="error"
 				:config="config || {}"
@@ -28,7 +28,7 @@
 				:title="p.config?.header_text || p.doctype"
 				:columns="p.columns"
 				:rows="p.rows"
-				:total="p.total"
+				:total="p.fullTotal"
 				:loading="p.loading"
 				:error="p.error"
 				:config="p.config || {}"
@@ -76,7 +76,7 @@ import TagFinder from "./components/TagFinder.vue";
 import CardModal from "./components/CardModal.vue";
 
 const rootPanel = usePanel("WP Tables");
-const { config, columns, rows, total, loading, error, load } = rootPanel;
+const { config, columns, rows, total, fullTotal, loading, error, load } = rootPanel;
 
 const openPanels = reactive([]);
 let panelCounter = 0;
@@ -135,6 +135,7 @@ async function openPanel(doctype, parentFilter = {}, parentId = null) {
 		columns: [],
 		rows: [],
 		total: 0,
+		fullTotal: 0,
 		loading: true,
 		error: null,
 		x: pos.x,
@@ -150,6 +151,7 @@ async function openPanel(doctype, parentFilter = {}, parentId = null) {
 		p.columns = panel.columns.value;
 		p.rows = panel.rows.value;
 		p.total = panel.total.value;
+		p.fullTotal = panel.fullTotal.value;
 		p._refetch = async (uf) => {
 			p.loading = true;
 			await panel.refetch(uf);

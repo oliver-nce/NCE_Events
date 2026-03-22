@@ -16,6 +16,7 @@ export function usePanel(doctype, parentFilter = {}) {
 	const columns = ref([]);
 	const rows = ref([]);
 	const total = ref(0);
+	const fullTotal = ref(0);
 	const loading = ref(false);
 	const error = ref(null);
 
@@ -45,6 +46,7 @@ export function usePanel(doctype, parentFilter = {}) {
 			columns.value = data.columns || [];
 			rows.value = data.rows || [];
 			total.value = data.total || 0;
+			fullTotal.value = data.total || 0;
 
 			if (rows.value.length < total.value) {
 				const rest = await fetchData({}, [], 0, rows.value.length);
@@ -72,5 +74,5 @@ export function usePanel(doctype, parentFilter = {}) {
 		}
 	}
 
-	return { config, columns, rows, total, loading, error, load, fetchData, refetch };
+	return { config, columns, rows, total, fullTotal, loading, error, load, fetchData, refetch };
 }
