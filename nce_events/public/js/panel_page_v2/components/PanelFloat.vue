@@ -2,6 +2,7 @@
 	<div
 		ref="floatEl"
 		class="ppv2-float"
+		:class="{ 'ppv2-float--dragging': isDragging, 'ppv2-float--resizing': isResizing }"
 		:style="floatStyle"
 		@mousedown="onMouseDown"
 	>
@@ -40,10 +41,16 @@ const w = ref(props.initW);
 const h = ref(props.initH);
 const z = ref(getNextZ());
 const floatEl = ref(null);
+const isDragging = ref(false);
+const isResizing = ref(false);
 
+/*
+ * Position via transform: translate3d() — this is composited on the GPU
+ * and does NOT trigger layout or repaint on the rest of the document.
+ * Width/height still need layout but only change during resize, not drag.
+ */
 const floatStyle = computed(() => ({
-	left: x.value + "px",
-	top: y.value + "px",
+	transform: `translate3d(${x.value}px, ${y.value}px, 0)`,
 	width: w.value + "px",
 	height: h.value + "px",
 	zIndex: z.value,
@@ -65,12 +72,14 @@ function startDrag(e) {
 	bringToFront();
 	const sx = e.clientX, sy = e.clientY;
 	const ox = x.value, oy = y.value;
+	isDragging.value = true;
 
 	function onMove(ev) {
 		x.value = ox + ev.clientX - sx;
 		y.value = Math.max(0, oy + ev.clientY - sy);
 	}
 	function onUp() {
+		isDragging.value = false;
 		document.removeEventListener("mousemove", onMove);
 		document.removeEventListener("mouseup", onUp);
 	}
@@ -82,12 +91,14 @@ function startResize(e) {
 	bringToFront();
 	const sx = e.clientX, sy = e.clientY;
 	const ow = w.value, oh = h.value;
+	isResizing.value = true;
 
 	function onMove(ev) {
 		w.value = Math.max(300, ow + ev.clientX - sx);
 		h.value = Math.max(200, oh + ev.clientY - sy);
 	}
 	function onUp() {
+		isResizing.value = false;
 		document.removeEventListener("mousemove", onMove);
 		document.removeEventListener("mouseup", onUp);
 	}
@@ -98,7 +109,13 @@ function startResize(e) {
 
 <style scoped>
 .ppv2-float {
+	/*
+	 * position: fixed + translate3d for movement.
+	 * left/top stay at 0 — all positioning is via transform.
+	 */
 	position: fixed;
+	left: 0;
+	top: 0;
 	display: flex;
 	flex-direction: column;
 	background: var(--bg-surface);
@@ -106,6 +123,30 @@ function startResize(e) {
 	border-radius: var(--border-radius);
 	box-shadow: var(--shadow);
 	overflow: hidden;
+
+	/* GPU layer promotion — avoids repaint of siblings during drag */
+	will-change: transform;
+
+	/* Scope layout/paint/style to this subtree */
+	contain: layout style;
+}
+
+/*
+ * During drag: freeze pointer-events on children so the table doesn't
+ * try to respond to hover/scroll while being moved. This is the
+ * professional alternative to outline-only dragging — the content
+ * stays visible but is inert, and transform movement is free.
+ */
+.ppv2-float--dragging > .ppv2-float-body {
+	pointer-events: none;
+}
+
+/*
+ * During resize: same idea — prevent child interaction while sizing
+ * to avoid layout thrash from hover effects inside the table.
+ */
+.ppv2-float--resizing > .ppv2-float-body {
+	pointer-events: none;
 }
 
 .ppv2-float-body {
