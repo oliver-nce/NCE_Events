@@ -25,6 +25,10 @@
 	--bg-header: var(--nce-color-primary, #126bc4);
 	--text-header: #ffffff;
 
+	/* ── Row states ───────────────────────────────────────────────────────── */
+	--row-hover-bg: var(--nce-color-primary-100, #e3f0fc);
+	--row-selected-bg: var(--nce-color-primary-200, #c7e0fa);
+
 	/* ── Typography ───────────────────────────────────────────────────────── */
 	--text-color: var(--nce-color-text, #333333);
 	--text-muted: var(--nce-color-muted, #888888);
