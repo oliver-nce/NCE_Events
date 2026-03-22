@@ -12,19 +12,37 @@ import frappe
 from frappe import _
 from frappe.utils import cint
 
-
 MALE_HEX: str = "#0000FF"
 FEMALE_HEX: str = "#c700e6"
 
-_SKIP_FIELDTYPES: frozenset[str] = frozenset({
-	"Section Break", "Column Break", "Tab Break", "HTML",
-	"Fold", "Heading", "Button", "Table", "Table MultiSelect",
-})
+_SKIP_FIELDTYPES: frozenset[str] = frozenset(
+	{
+		"Section Break",
+		"Column Break",
+		"Tab Break",
+		"HTML",
+		"Fold",
+		"Heading",
+		"Button",
+		"Table",
+		"Table MultiSelect",
+	}
+)
 
-_SKIP_FIELDNAMES: frozenset[str] = frozenset({
-	"name", "owner", "creation", "modified", "modified_by",
-	"docstatus", "idx", "parent", "parentfield", "parenttype",
-})
+_SKIP_FIELDNAMES: frozenset[str] = frozenset(
+	{
+		"name",
+		"owner",
+		"creation",
+		"modified",
+		"modified_by",
+		"docstatus",
+		"idx",
+		"parent",
+		"parentfield",
+		"parenttype",
+	}
+)
 
 
 @frappe.whitelist()
@@ -170,8 +188,7 @@ def get_panel_data(
 	computed_names = {cc["field_name"] for cc in (config.get("computed_columns") or [])}
 	related_names = {fn for fn in all_fields if fn.startswith("_related_")}
 	simple_fields = [
-		fn for fn in all_fields
-		if "." not in fn and fn not in computed_names and fn not in related_names
+		fn for fn in all_fields if "." not in fn and fn not in computed_names and fn not in related_names
 	]
 	linked_fields = [fn for fn in all_fields if "." in fn]
 
@@ -183,6 +200,9 @@ def get_panel_data(
 	core_filter = (config.get("core_filter") or "").strip()
 	order_by = (config.get("order_by") or "").strip() or "name ASC"
 
+	# Unfiltered count of the entire doctype — used as the denominator in the UI
+	full_count = frappe.db.count(root_doctype)
+
 	# When user_filters present: search whole data, bypass panel WHERE (as if core_filter empty)
 	use_slow_filter = bool(user_filters)
 	db_limit = 0 if use_slow_filter else limit
@@ -192,13 +212,20 @@ def get_panel_data(
 	if use_core_filter:
 		total_count = _count_with_core_filter(root_doctype, filters, core_filter)
 		rows = _query_with_core_filter(
-			root_doctype, simple_fields, filters, core_filter, order_by,
-			limit=db_limit, start=db_start,
+			root_doctype,
+			simple_fields,
+			filters,
+			core_filter,
+			order_by,
+			limit=db_limit,
+			start=db_start,
 		)
 	else:
 		total_count = frappe.db.count(root_doctype, filters=filters)
 		get_all_kw: dict[str, Any] = dict(
-			doctype=root_doctype, fields=simple_fields, filters=filters,
+			doctype=root_doctype,
+			fields=simple_fields,
+			filters=filters,
 			order_by=order_by,
 		)
 		if db_limit:
@@ -226,9 +253,9 @@ def get_panel_data(
 				linked_name = row.get(link_field)
 				if target_dt and linked_name:
 					try:
-						linked_values = frappe.db.get_value(
-							target_dt, linked_name, child_fields, as_dict=True
-						) or {}
+						linked_values = (
+							frappe.db.get_value(target_dt, linked_name, child_fields, as_dict=True) or {}
+						)
 					except Exception:
 						linked_values = {}
 				else:
@@ -237,9 +264,7 @@ def get_panel_data(
 					row[link_field + "." + cf] = linked_values.get(cf, "")
 
 	child_doctypes = get_child_doctypes(root_doctype)
-	related_label_map: dict[str, str] = {
-		f"_related_{c['doctype']}": c["label"] for c in child_doctypes
-	}
+	related_label_map: dict[str, str] = {f"_related_{c['doctype']}": c["label"] for c in child_doctypes}
 	related_meta: dict[str, dict[str, str]] = {
 		f"_related_{c['doctype']}": {"doctype": c["doctype"], "link_field": c["link_field"]}
 		for c in child_doctypes
@@ -252,8 +277,7 @@ def get_panel_data(
 	enabled_related: set[str] = {fn for fn in display_fields if fn in related_label_map}
 
 	link_target_map: dict[str, str] = {
-		lf["fieldname"]: lf["options"]
-		for lf in _get_link_fields_with_target(root_doctype)
+		lf["fieldname"]: lf["options"] for lf in _get_link_fields_with_target(root_doctype)
 	}
 
 	seen: set[str] = set()
@@ -277,23 +301,27 @@ def get_panel_data(
 	for fn, target_dt in link_target_map.items():
 		if fn not in seen:
 			seen.add(fn)
-			columns.append({
-				"fieldname": fn,
-				"label": _title_case(fn),
-				"is_link": True,
-				"link_doctype": target_dt,
-			})
+			columns.append(
+				{
+					"fieldname": fn,
+					"label": _title_case(fn),
+					"is_link": True,
+					"link_doctype": target_dt,
+				}
+			)
 
 	for fn in enabled_related:
 		seen.add(fn)
 		meta = related_meta.get(fn, {})
-		columns.append({
-			"fieldname": fn,
-			"label": related_label_map[fn],
-			"is_related_link": True,
-			"related_doctype": meta.get("doctype", ""),
-			"related_link_field": meta.get("link_field", ""),
-		})
+		columns.append(
+			{
+				"fieldname": fn,
+				"label": related_label_map[fn],
+				"is_related_link": True,
+				"related_doctype": meta.get("doctype", ""),
+				"related_link_field": meta.get("link_field", ""),
+			}
+		)
 
 	if child_doctypes and rows:
 		row_names = [row["name"] for row in rows]
@@ -328,6 +356,7 @@ def get_panel_data(
 		"columns": columns,
 		"rows": rows,
 		"total": total_count,
+		"full_count": full_count,
 		"child_doctypes": child_doctypes,
 	}
 
@@ -400,17 +429,23 @@ def save_panel_sql(root_doctype: str, core_filter: str = "", order_by: str = "")
 		doc.order_by = order_by
 		doc.insert(ignore_permissions=True)
 	else:
-		frappe.db.set_value("Page Panel", root_doctype, {
-			"core_filter": core_filter,
-			"order_by": order_by,
-		})
+		frappe.db.set_value(
+			"Page Panel",
+			root_doctype,
+			{
+				"core_filter": core_filter,
+				"order_by": order_by,
+			},
+		)
 
 	frappe.db.commit()
 	return {"ok": True}
 
 
 def _build_core_filter_where(
-	root_doctype: str, filters: dict | None, core_filter: str,
+	root_doctype: str,
+	filters: dict | None,
+	core_filter: str,
 ) -> tuple[str, list]:
 	"""Build WHERE clause and params for queries with a raw core_filter."""
 	where_parts = [f"({core_filter})"]
@@ -544,17 +579,17 @@ def get_child_doctypes(root_doctype: str) -> list[dict[str, str]]:
 			continue
 		for field in meta.fields:
 			if field.fieldtype == "Link" and field.options == root_doctype:
-				result.append({
-					"doctype": dt,
-					"link_field": field.fieldname,
-					"label": label_map.get(dt, dt),
-				})
+				result.append(
+					{
+						"doctype": dt,
+						"link_field": field.fieldname,
+						"label": label_map.get(dt, dt),
+					}
+				)
 				break
 
 	result.sort(key=lambda r: r["label"])
-	frappe.logger().info(
-		f"get_child_doctypes({root_doctype}): wp_doctypes={wp_doctypes}, result={result}"
-	)
+	frappe.logger().info(f"get_child_doctypes({root_doctype}): wp_doctypes={wp_doctypes}, result={result}")
 	return result
 
 
@@ -576,11 +611,13 @@ def debug_child_lookup(root_doctype: str) -> dict[str, Any]:
 			meta = frappe.get_meta(dt)
 			for field in meta.fields:
 				if field.fieldtype == "Link" and field.options == root_doctype:
-					info["link_fields_found"].append({
-						"doctype": dt,
-						"fieldname": field.fieldname,
-						"options": field.options,
-					})
+					info["link_fields_found"].append(
+						{
+							"doctype": dt,
+							"fieldname": field.fieldname,
+							"options": field.options,
+						}
+					)
 		except Exception as e:
 			info["link_fields_found"].append({"doctype": dt, "error": str(e)})
 
@@ -657,17 +694,19 @@ def _parse_csv(value: str | None) -> list[str]:
 def _get_computed_columns(doc: Any) -> list[dict[str, Any]]:
 	"""Extract unstored calculation fields from Page Panel as config list."""
 	result: list[dict[str, Any]] = []
-	for row in (doc.unstored_calculation_fields or []):
+	for row in doc.unstored_calculation_fields or []:
 		expr = (row.sql_expression or "").strip()
 		if not expr:
 			continue
-		result.append({
-			"field_name": (row.field_name or "").strip(),
-			"label": (row.label or "").strip() or _title_case(row.field_name or ""),
-			"sql_expression": expr,
-			"gender": (getattr(row, "gender", None) or "").strip() or None,
-			"tint_by_row": bool(getattr(row, "tint_by_row", False)),
-		})
+		result.append(
+			{
+				"field_name": (row.field_name or "").strip(),
+				"label": (row.label or "").strip() or _title_case(row.field_name or ""),
+				"sql_expression": expr,
+				"gender": (getattr(row, "gender", None) or "").strip() or None,
+				"tint_by_row": bool(getattr(row, "tint_by_row", False)),
+			}
+		)
 	return result
 
 
@@ -698,6 +737,7 @@ def _ensure_tab_prefix(sql: str) -> str:
 	Event -> tabEvent, `Event Registration` -> `tabEvent Registration`.
 	Already-prefixed names (tabEvent) are left unchanged.
 	"""
+
 	def repl(m: re.Match[str]) -> str:
 		kw, ident = m.group(1), m.group(2)
 		if ident.startswith("`"):
