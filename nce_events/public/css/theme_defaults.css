@@ -1,86 +1,28 @@
 /*
  * NCE Events — Panel Theme
  * ========================
- * All visual tokens are consumed from NCE Builder's site-wide CSS variables
- * (--nce-color-*, --nce-shadow, --nce-border-radius, --nce-font-*, etc.).
+ * Semantic aliases that map a PURPOSE to an NCE Builder token.
+ * NCE Builder injects --nce-* variables (including shade scales 50–950)
+ * at runtime via :root. We consume them directly — no fallbacks.
  *
- * Each var() has a hardcoded fallback so panels render correctly even when
- * nce_builder is not installed or the theme has not been saved yet.
- *
- * DO NOT put hardcoded colours, shadows, or radii anywhere else.
- * To retheme: change NCE Builder → NCE Theme Settings → Save.
- * Every panel updates automatically. Zero per-component changes needed.
+ * If something looks wrong, adjust in NCE Builder → NCE Theme Settings.
+ * For one-off overrides, add custom CSS there or in this file.
  */
 
 :root {
-	/* ── Primary / brand ─────────────────────────────────────────────────── */
-	--primary: var(--nce-color-primary, #126bc4);
-	--primary-light: var(--nce-color-focus, #e8f0fe);
-
-	/* ── Surfaces ─────────────────────────────────────────────────────────── */
-	--bg-surface: var(--nce-color-surface, #fafafa);
-	--bg-card: var(--nce-color-bg, #ffffff);
-
-	/* Panel header uses primary as background, white text on top */
-	--bg-header: var(--nce-color-primary, #126bc4);
+	/* ── Header chrome ───────────────────────────────────────────────────── */
+	--bg-header: var(--nce-color-primary);
 	--text-header: #ffffff;
 
-	/* ── Typography ───────────────────────────────────────────────────────── */
-	--text-color: var(--nce-color-text, #333333);
-	--text-muted: var(--nce-color-muted, #888888);
-
-	--font-family: var(--nce-font-family, "Inter", -apple-system, sans-serif);
-	--font-size-base: var(--nce-font-size, 13px);
-	--font-size-sm: 11px;
-	--font-size-lg: 16px;
-	--font-weight-base: var(--nce-font-weight, 400);
-	--font-weight-bold: 600;
-	--line-height: var(--nce-line-height, 1.5);
-
-	/* ── Borders ──────────────────────────────────────────────────────────── */
-	--border-color: var(--nce-color-border, #b0b8c0);
-	--border-radius: var(--nce-border-radius, 6px);
-	--border-radius-sm: 4px;
-
-	/* ── Shadow ───────────────────────────────────────────────────────────── */
-	--shadow: var(--nce-shadow, 0 4px 16px rgba(0, 0, 0, 0.15));
-
-	/* ── Spacing ──────────────────────────────────────────────────────────── */
-	--spacing-xs: 4px;
-	--spacing-sm: 8px;
-	--spacing-md: 12px;
-	--spacing-lg: 16px;
-
-	/* ── Form inputs ──────────────────────────────────────────────────────── */
-	--input-border: var(--nce-color-border, #cccccc);
-	--input-focus-border: var(--nce-color-focus, var(--primary));
-
-	/* ── Buttons ──────────────────────────────────────────────────────────── */
-	--btn-primary-bg: var(--nce-color-primary, #126bc4);
-	--btn-primary-text: #ffffff;
-
-	/* ── Tab / accent ─────────────────────────────────────────────────────── */
-	--tab-active-border: var(--nce-color-primary, #126bc4);
-
-	/* ── Secondary colour ────────────────────────────────────────────────── */
-	--color-secondary: var(--nce-color-secondary, #10b981);
+	/* ── Row states ───────────────────────────────────────────────────────── */
+	--row-hover-bg: var(--nce-color-primary-100);
+	--row-selected-bg: var(--nce-color-primary-200);
 
 	/* ── Table column-header chrome ──────────────────────────────────────── */
-	/* secondary-200: light tint for the sticky <th> background */
-	--column-header-bg: var(--nce-color-secondary-200, #a7f3d0);
-	/* secondary-800: dark shade for the <th> text */
-	--column-header-text: var(--nce-color-secondary-800, #065f46);
+	--column-header-bg: var(--nce-color-secondary-200);
+	--column-header-text: var(--nce-color-secondary-800);
 
-	/* ── Table chrome ─────────────────────────────────────────────────────── */
-	/* Sticky thead background — kept as alias for non-column-header uses */
-	--portal-header-bg: var(--nce-color-surface, #e8ecf0);
-	/* Alternating row tint */
-	--portal-alt-row: var(--nce-color-row-alt, #f5f7f9);
-
-	/* ── Gender colour-coding (static — not part of brand theme) ──────────── */
+	/* ── Gender colour-coding (static — not part of brand theme) ─────────── */
 	--male-hex: #dce6f0;
 	--female-hex: #f0dce6;
-
-	/* ── Transition ───────────────────────────────────────────────────────── */
-	--transition-speed: var(--nce-transition-speed, 200ms);
 }
