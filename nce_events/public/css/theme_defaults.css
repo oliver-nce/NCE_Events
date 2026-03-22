@@ -70,10 +70,10 @@
 	--color-secondary: var(--nce-color-secondary, #10b981);
 
 	/* ── Table column-header chrome ──────────────────────────────────────── */
-	/* secondary-200: light tint for the sticky <th> background */
-	--column-header-bg: var(--nce-color-secondary-200, #a7f3d0);
-	/* secondary-800: dark shade for the <th> text */
-	--column-header-text: var(--nce-color-secondary-800, #065f46);
+	/* secondary-100: light tint for the sticky <th> background */
+	--column-header-bg: var(--nce-color-secondary-100, #d1fae5);
+	/* secondary-700: dark shade for the <th> text */
+	--column-header-text: var(--nce-color-secondary-700, #047857);
 
 	/* ── Table chrome ─────────────────────────────────────────────────────── */
 	/* Sticky thead background — kept as alias for non-column-header uses */
