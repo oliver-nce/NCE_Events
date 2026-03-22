@@ -46,12 +46,12 @@ export function usePanel(doctype, parentFilter = {}) {
 			columns.value = data.columns || [];
 			rows.value = data.rows || [];
 			total.value = data.total || 0;
-			fullTotal.value = data.total || 0;
 
 			if (rows.value.length < total.value) {
 				const rest = await fetchData({}, [], 0, rows.value.length);
 				rows.value = rows.value.concat(rest.rows || []);
 			}
+			fullTotal.value = rows.value.length;
 		} catch (e) {
 			error.value = String(e);
 			console.error(`Panel load error [${doctype}]:`, e);
