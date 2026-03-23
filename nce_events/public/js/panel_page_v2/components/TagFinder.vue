@@ -48,6 +48,8 @@ import TagDialog from "./TagDialog.vue";
 
 const props = defineProps({
 	rootDoctype: { type: String, required: true },
+	initX: { type: Number, default: -1 },
+	initY: { type: Number, default: 80 },
 });
 
 defineEmits(["close"]);
@@ -56,8 +58,8 @@ const finder = useTagFinder();
 const tagDialogs = reactive([]);
 const bodyEl = ref(null);
 
-const x = ref(window.innerWidth - 560);
-const y = ref(80);
+const x = ref(props.initX >= 0 ? props.initX : window.innerWidth - 560);
+const y = ref(props.initY);
 const z = ref(10060);
 
 const floatStyle = computed(() => ({

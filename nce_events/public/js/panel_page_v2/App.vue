@@ -40,7 +40,7 @@
 				@sheets="onSheets(p)"
 				@email="onEmail(p)"
 				@sms="onSms(p)"
-				@tags="tagFinderDoctype = p.doctype"
+				@tags="openTagFinder(p)"
 				@filter-change="(f) => onFilterChange(p, f)"
 				@email-one="(row) => onEmailOne(p, row)"
 				@sms-one="(row) => onSmsOne(p, row)"
@@ -51,6 +51,8 @@
 		<TagFinder
 			v-if="tagFinderDoctype"
 			:root-doctype="tagFinderDoctype"
+			:init-x="tagFinderX"
+			:init-y="tagFinderY"
 			@close="tagFinderDoctype = ''"
 		/>
 
@@ -81,6 +83,8 @@ const { config, columns, rows, total, fullTotal, loading, error, load } = rootPa
 const openPanels = reactive([]);
 let panelCounter = 0;
 const tagFinderDoctype = ref("");
+const tagFinderX = ref(0);
+const tagFinderY = ref(80);
 
 const cardStack = reactive([]);
 let cardCounter = 0;
@@ -113,18 +117,31 @@ onUnmounted(() => {
 	delete window._nce_close_tag_finder;
 });
 
-const OFFSET_STEP = 80;
+function nextPos(parentId) {
+	/* Find the parent panel's position and offset from it */
+	if (parentId === "root") {
+		/* Offset from the root WP Tables panel (40, 60) */
+		return { x: 40 + 80, y: 60 + 24 };
+	}
+	const parent = openPanels.find((p) => p.id === parentId);
+	if (parent) {
+		return { x: parent.x + 80, y: parent.y + 24 };
+	}
+	/* Fallback */
+	return { x: 140, y: 120 };
+}
 
-function nextPos() {
-	const n = openPanels.length;
-	return { x: 140 + n * OFFSET_STEP, y: 120 + n * OFFSET_STEP };
+function openTagFinder(panel) {
+	tagFinderDoctype.value = panel.doctype;
+	tagFinderX.value = panel.x + 20;
+	tagFinderY.value = panel.y;
 }
 
 async function openPanel(doctype, parentFilter = {}, parentId = null) {
 	const existingIdx = openPanels.findIndex((p) => p.doctype === doctype);
 	if (existingIdx >= 0) closePanel(openPanels[existingIdx].id);
 
-	const pos = nextPos();
+	const pos = nextPos(parentId);
 	const id = ++panelCounter;
 	const p = reactive({
 		id,

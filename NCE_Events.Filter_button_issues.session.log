@@ -1,0 +1,14 @@
+[17:20:23] TOOL_CALL | tool=check_approval | task=Fix PanelFloat.vue onMouseDown handler to skip buttons — only start dragging on header background clicks, not on button clicks
+[17:20:23] STATE_CHANGE | tool=check_approval | COMPLETED → APPROVED
+[17:28:51] TOOL_CALL | tool=check_approval | task=Add .send-panel and .send-panel-preview to the CSS variable scope in theme_defaults.css so email/SMS dialogs get their background colors
+[17:38:26] TOOL_CALL | tool=check_approval | task=Add all missing top-level NCE element selectors to theme_defaults.css CSS variable scope
+[17:38:26] TOOL_CALL | tool=check_approval | user_said="GO ahead  - tel  mcp to have qwen coder execute" — not an approval, presenting prompt
+[17:38:39] TOOL_CALL | tool=check_approval | task=Add all missing top-level NCE element selectors to theme_defaults.css CSS variable scope
+[17:38:39] ERROR | tool=check_approval | approveWithRecord failed from state=APPROVED
+[17:38:53] ERROR | tool=delegate_task | Execution blocked (approval validation): state=APPROVED | task="Fix PanelFloat.vue onMouseDown handler to skip buttons — only start dragging on " | consumed=false | age=1110s | keyword="yes" | user_said="yes" | caller=Claude Sonnet 4 Thinking
+[17:38:57] TOOL_CALL | tool=check_approval | task=Add all missing top-level NCE element selectors to theme_defaults.css and commit/push
+[17:38:57] ERROR | tool=check_approval | approveWithRecord failed from state=APPROVED
+[17:47:57] TOOL_CALL | tool=check_approval | task=Fix child panel offset (+80px right, +24px down from parent) and tag finder positioning (20px right of child window)
+[17:47:57] TOOL_CALL | tool=check_approval | user_said="(+80px right, +24px down)" — not an approval, presenting prompt
+[17:48:11] TOOL_CALL | tool=check_approval | task=Fix child panel offset (+80px right, +24px down from parent) and tag finder positioning (20px right of child window)
+[17:48:11] ERROR | tool=check_approval | approveWithRecord failed from state=APPROVED
