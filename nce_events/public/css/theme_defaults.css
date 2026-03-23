@@ -12,7 +12,12 @@
  * Every panel updates automatically. Zero per-component changes needed.
  */
 
-:root {
+/*
+ * Scoped to our panel components only — NOT :root — so we never
+ * stomp on Frappe's own --primary, --text-color, --border-color, etc.
+ */
+.ppv2-root,
+.ppv2-float {
 	/* ── Primary / brand ─────────────────────────────────────────────────── */
 	--primary: var(--nce-color-primary, #126bc4);
 	--primary-light: var(--nce-color-focus, #e8f0fe);
