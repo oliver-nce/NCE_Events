@@ -17,7 +17,9 @@
  * stomp on Frappe's own --primary, --text-color, --border-color, etc.
  */
 .ppv2-root,
-.ppv2-float {
+.ppv2-float,
+.send-panel,
+.send-panel-preview {
 	/* ── Primary / brand ─────────────────────────────────────────────────── */
 	--primary: var(--nce-color-primary, #126bc4);
 	--primary-light: var(--nce-color-focus, #e8f0fe);
