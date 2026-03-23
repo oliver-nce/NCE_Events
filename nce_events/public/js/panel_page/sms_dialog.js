@@ -8,6 +8,8 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 		this.user_filters = opts.user_filters || [];
 		this.row_count = opts.row_count || 0;
 		this.z_index = opts.z_index || 110;
+		this.init_left = opts.init_left != null ? opts.init_left : 60;
+		this.init_top = opts.init_top != null ? opts.init_top : 80;
 		this.on_close = opts.on_close || null;
 		this.el = null;
 
@@ -69,7 +71,7 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 			</div>
 		`);
 
-		el.css({ top: "80px", left: "60px", zIndex: me.z_index });
+		el.css({ top: me.init_top + "px", left: me.init_left + "px", zIndex: me.z_index });
 		$(document.body).append(el);
 		me.el = el;
 
@@ -82,7 +84,9 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 		me._ai_set_body = function (val) {
 			el.find(".send-message-input").val(val);
 		};
-		me._ai_is_html = function () { return false; };
+		me._ai_is_html = function () {
+			return false;
+		};
 
 		nce_events.panel_page.ai_tools.attach(me);
 	}
@@ -114,14 +118,28 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 			});
 		}
 
-		el.find(".send-panel-close").on("click", function () { me.close(); });
-		el.find(".send-cancel-btn").on("click", function () { me.close(); });
-		el.find(".send-preview-close").on("click", function () { el.find(".send-panel-preview").hide(); });
+		el.find(".send-panel-close").on("click", function () {
+			me.close();
+		});
+		el.find(".send-cancel-btn").on("click", function () {
+			me.close();
+		});
+		el.find(".send-preview-close").on("click", function () {
+			el.find(".send-panel-preview").hide();
+		});
 
-		el.on("click", ".send-preview-btn", function () { me._do_preview(); });
-		el.on("click", ".send-send-btn", function () { me._do_send(); });
-		el.on("click", ".send-test-btn", function () { me._do_send_test(); });
-		el.on("click", ".send-tags-btn", function () { me._open_tags(); });
+		el.on("click", ".send-preview-btn", function () {
+			me._do_preview();
+		});
+		el.on("click", ".send-send-btn", function () {
+			me._do_send();
+		});
+		el.on("click", ".send-test-btn", function () {
+			me._do_send_test();
+		});
+		el.on("click", ".send-tags-btn", function () {
+			me._open_tags();
+		});
 	}
 
 	/* ── Tag Finder integration ── */
@@ -150,7 +168,7 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 			callback: function (r) {
 				if (!r.message) return;
 				el.find(".send-message-input").val(r.message.response || "");
-			}
+			},
 		});
 	}
 
@@ -158,7 +176,10 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 
 	_resolve_body(callback) {
 		const body = this.el.find(".send-message-input").val() || "";
-		if (!body.trim()) { frappe.msgprint(__("Enter a message first.")); return; }
+		if (!body.trim()) {
+			frappe.msgprint(__("Enter a message first."));
+			return;
+		}
 		callback(body);
 	}
 
@@ -175,7 +196,7 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 			list_el.css({
 				position: "fixed",
 				left: rect.left + "px",
-				top: (rect.bottom + 2) + "px",
+				top: rect.bottom + 2 + "px",
 				width: rect.width + "px",
 				zIndex: 99999,
 			});
@@ -186,7 +207,12 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 			const filters = q ? { name: ["like", `%${q}%`] } : {};
 			frappe.call({
 				method: "frappe.client.get_list",
-				args: { doctype: "Email Template", filters: filters, fields: ["name"], limit_page_length: 20 },
+				args: {
+					doctype: "Email Template",
+					filters: filters,
+					fields: ["name"],
+					limit_page_length: 20,
+				},
 				callback: function (r) {
 					list_el.empty();
 					(r.message || []).forEach(function (t) {
@@ -204,17 +230,23 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 					} else {
 						list_el.hide();
 					}
-				}
+				},
 			});
 		}
 
-		input_el.on("focus", function () { do_search(input_el.val().trim()); });
+		input_el.on("focus", function () {
+			do_search(input_el.val().trim());
+		});
 		input_el.on("input", function () {
 			clearTimeout(debounce);
-			debounce = setTimeout(function () { do_search(input_el.val().trim()); }, 200);
+			debounce = setTimeout(function () {
+				do_search(input_el.val().trim());
+			}, 200);
 		});
 		input_el.on("blur", function () {
-			setTimeout(function () { list_el.hide(); }, 250);
+			setTimeout(function () {
+				list_el.hide();
+			}, 250);
 		});
 
 		me._tpl_list_el = list_el;
@@ -240,12 +272,17 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 				callback: function (r) {
 					el.find(".send-preview-btn").prop("disabled", false);
 					if (!r.message) return;
-					if (r.message.error) { frappe.msgprint(r.message.error); return; }
+					if (r.message.error) {
+						frappe.msgprint(r.message.error);
+						return;
+					}
 					const preview_el = el.find(".send-panel-preview");
 					preview_el.find(".send-preview-body").html(r.message.rendered_body || "");
 					preview_el.show();
 				},
-				error: function () { el.find(".send-preview-btn").prop("disabled", false); },
+				error: function () {
+					el.find(".send-preview-btn").prop("disabled", false);
+				},
 			});
 		});
 	}
@@ -275,11 +312,16 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 				callback: function (r) {
 					send_btn.prop("disabled", false).text("Send");
 					if (r.message) {
-						frappe.show_alert({ message: __("{0} messages sent", [r.message.sent || 0]), indicator: "green" });
+						frappe.show_alert({
+							message: __("{0} messages sent", [r.message.sent || 0]),
+							indicator: "green",
+						});
 						me.close();
 					}
 				},
-				error: function () { send_btn.prop("disabled", false).text("Send"); },
+				error: function () {
+					send_btn.prop("disabled", false).text("Send");
+				},
 			});
 		});
 	}
@@ -311,15 +353,22 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 					test_phone: test_value,
 				},
 				callback: function (r) {
-					test_btn.prop("disabled", false).html('<i class="fa fa-paper-plane"></i> Send Test');
+					test_btn
+						.prop("disabled", false)
+						.html('<i class="fa fa-paper-plane"></i> Send Test');
 					if (r.message && r.message.sent) {
-						frappe.show_alert({ message: __("Test SMS sent to {0}", [r.message.to]), indicator: "green" });
+						frappe.show_alert({
+							message: __("Test SMS sent to {0}", [r.message.to]),
+							indicator: "green",
+						});
 					} else if (r.message && r.message.error) {
 						frappe.msgprint(r.message.error);
 					}
 				},
 				error: function () {
-					test_btn.prop("disabled", false).html('<i class="fa fa-paper-plane"></i> Send Test');
+					test_btn
+						.prop("disabled", false)
+						.html('<i class="fa fa-paper-plane"></i> Send Test');
 				},
 			});
 		});
@@ -328,7 +377,10 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 	/* ── Close ── */
 
 	close() {
-		if (this._tpl_list_el) { this._tpl_list_el.remove(); this._tpl_list_el = null; }
+		if (this._tpl_list_el) {
+			this._tpl_list_el.remove();
+			this._tpl_list_el = null;
+		}
 		if (this.el) {
 			this.el.remove();
 			this.el = null;
@@ -342,14 +394,23 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 	_make_draggable(el) {
 		const ns = "send_drag";
 		function start_drag(e) {
-			if ($(e.target).closest("button, input, textarea, select, .send-template-list, .send-panel-footer").length) return;
+			if (
+				$(e.target).closest(
+					"button, input, textarea, select, .send-template-list, .send-panel-footer",
+				).length
+			)
+				return;
 			e.preventDefault();
-			const sx = e.clientX, sy = e.clientY;
+			const sx = e.clientX,
+				sy = e.clientY;
 			const sl = parseInt(el.css("left"), 10) || 0;
 			const st = parseInt(el.css("top"), 10) || 0;
 			const ghost = $("<div class='drag-ghost'></div>").css({
-				position: "fixed", left: sl, top: st,
-				width: el.outerWidth(), height: el.outerHeight(),
+				position: "fixed",
+				left: sl,
+				top: st,
+				width: el.outerWidth(),
+				height: el.outerHeight(),
 				zIndex: (parseInt(el.css("zIndex"), 10) || 100) + 1,
 			});
 			$(document.body).append(ghost);
@@ -377,21 +438,28 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 		const handle = $('<div class="send-panel-resize-handle"></div>');
 		el.append(handle);
 		handle.on("mousedown", function (e) {
-			e.preventDefault(); e.stopPropagation();
-			const sw = el.outerWidth(), sh = el.outerHeight();
-			const sx = e.clientX, sy = e.clientY;
+			e.preventDefault();
+			e.stopPropagation();
+			const sw = el.outerWidth(),
+				sh = el.outerHeight();
+			const sx = e.clientX,
+				sy = e.clientY;
 			const ghost = $("<div class='drag-ghost'></div>").css({
 				position: "fixed",
 				left: parseInt(el.css("left"), 10) || 0,
 				top: parseInt(el.css("top"), 10) || 0,
-				width: sw, height: sh,
+				width: sw,
+				height: sh,
 				zIndex: (parseInt(el.css("zIndex"), 10) || 100) + 1,
 			});
 			$(document.body).append(ghost);
 			el.css("opacity", "0.4");
 			$("body").addClass("panel-float-dragging");
 			$(document).on("mousemove.send_resize", function (ev) {
-				ghost.css({ width: `${Math.max(500, sw + ev.clientX - sx)}px`, height: `${Math.max(300, sh + ev.clientY - sy)}px` });
+				ghost.css({
+					width: `${Math.max(500, sw + ev.clientX - sx)}px`,
+					height: `${Math.max(300, sh + ev.clientY - sy)}px`,
+				});
 			});
 			$(document).on("mouseup.send_resize", function () {
 				el.css({ width: ghost.css("width"), height: ghost.css("height"), opacity: "" });

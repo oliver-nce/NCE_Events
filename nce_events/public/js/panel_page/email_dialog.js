@@ -8,6 +8,8 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 		this.user_filters = opts.user_filters || [];
 		this.row_count = opts.row_count || 0;
 		this.z_index = opts.z_index || 110;
+		this.init_left = opts.init_left ?? null;
+		this.init_top = opts.init_top ?? null;
 		this.on_close = opts.on_close || null;
 		this.el = null;
 
@@ -65,8 +67,15 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 		`);
 
 		const vh85 = window.innerHeight * 0.85;
-		const top = Math.max(10, (window.innerHeight - vh85) / 2);
-		el.css({ top: top + "px", left: "60px", height: vh85 + "px", zIndex: me.z_index });
+		const defaultTop = Math.max(10, (window.innerHeight - vh85) / 2);
+		const initTop = me.init_top != null ? me.init_top : defaultTop;
+		const initLeft = me.init_left != null ? me.init_left : 60;
+		el.css({
+			top: initTop + "px",
+			left: initLeft + "px",
+			height: vh85 + "px",
+			zIndex: me.z_index,
+		});
 		$(document.body).append(el);
 		me.el = el;
 
@@ -118,7 +127,9 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 				me._message_control.set_value(val);
 			}
 		};
-		me._ai_is_html = function () { return true; };
+		me._ai_is_html = function () {
+			return true;
+		};
 
 		nce_events.panel_page.ai_tools.attach(me);
 	}
@@ -150,14 +161,28 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 			});
 		}
 
-		el.find(".send-panel-close").on("click", function () { me.close(); });
-		el.find(".send-cancel-btn").on("click", function () { me.close(); });
-		me._preview_el.find(".send-preview-close").on("click", function () { me._preview_el.hide(); });
+		el.find(".send-panel-close").on("click", function () {
+			me.close();
+		});
+		el.find(".send-cancel-btn").on("click", function () {
+			me.close();
+		});
+		me._preview_el.find(".send-preview-close").on("click", function () {
+			me._preview_el.hide();
+		});
 
-		el.on("click", ".send-preview-btn", function () { me._do_preview(); });
-		el.on("click", ".send-send-btn", function () { me._do_send(); });
-		el.on("click", ".send-tags-btn", function () { me._open_tags(); });
-		me._preview_el.on("click", ".send-test-btn", function () { me._do_send_test(); });
+		el.on("click", ".send-preview-btn", function () {
+			me._do_preview();
+		});
+		el.on("click", ".send-send-btn", function () {
+			me._do_send();
+		});
+		el.on("click", ".send-tags-btn", function () {
+			me._open_tags();
+		});
+		me._preview_el.on("click", ".send-test-btn", function () {
+			me._do_send_test();
+		});
 	}
 
 	/* ── Load From (email account) options ── */
@@ -170,9 +195,10 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 			callback: function (r) {
 				const accounts = r.message || [];
 				accounts.forEach(function (acc) {
-					const label = acc.name && acc.name !== acc.email_id
-						? acc.name + " — " + acc.email_id
-						: acc.email_id;
+					const label =
+						acc.name && acc.name !== acc.email_id
+							? acc.name + " — " + acc.email_id
+							: acc.email_id;
 					sel.append($("<option></option>").attr("value", acc.email_id).text(label));
 				});
 			},
@@ -212,7 +238,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 				if (me._message_control && me._message_control.quill) {
 					me._message_control.quill.setText(body);
 				}
-			}
+			},
 		});
 	}
 
@@ -221,10 +247,16 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 	_resolve_body(callback) {
 		const el = this.el;
 		const subject = el.find(".send-subject-input").val() || "";
-		const body = this._template_body
-			|| (this._message_control && this._message_control.get_value && this._message_control.get_value())
-			|| "";
-		if (!body || !String(body).trim()) { frappe.msgprint(__("Enter a message first.")); return; }
+		const body =
+			this._template_body ||
+			(this._message_control &&
+				this._message_control.get_value &&
+				this._message_control.get_value()) ||
+			"";
+		if (!body || !String(body).trim()) {
+			frappe.msgprint(__("Enter a message first."));
+			return;
+		}
 		callback(body, subject);
 	}
 
@@ -241,7 +273,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 			list_el.css({
 				position: "fixed",
 				left: rect.left + "px",
-				top: (rect.bottom + 2) + "px",
+				top: rect.bottom + 2 + "px",
 				width: rect.width + "px",
 				zIndex: 99999,
 			});
@@ -252,7 +284,12 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 			const filters = q ? { name: ["like", `%${q}%`] } : {};
 			frappe.call({
 				method: "frappe.client.get_list",
-				args: { doctype: "Email Template", filters: filters, fields: ["name"], limit_page_length: 20 },
+				args: {
+					doctype: "Email Template",
+					filters: filters,
+					fields: ["name"],
+					limit_page_length: 20,
+				},
 				freeze: false,
 				callback: function (r) {
 					list_el.empty();
@@ -271,18 +308,27 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 					} else {
 						list_el.hide();
 					}
-				}
+				},
 			});
 		}
 
-		input_el.on("focus", function (e) { e.stopPropagation(); do_search(input_el.val().trim()); });
-		input_el.on("click", function (e) { e.stopPropagation(); });
+		input_el.on("focus", function (e) {
+			e.stopPropagation();
+			do_search(input_el.val().trim());
+		});
+		input_el.on("click", function (e) {
+			e.stopPropagation();
+		});
 		input_el.on("input", function () {
 			clearTimeout(debounce);
-			debounce = setTimeout(function () { do_search(input_el.val().trim()); }, 200);
+			debounce = setTimeout(function () {
+				do_search(input_el.val().trim());
+			}, 200);
 		});
 		input_el.on("blur", function () {
-			setTimeout(function () { list_el.hide(); }, 250);
+			setTimeout(function () {
+				list_el.hide();
+			}, 250);
 		});
 
 		me._tpl_list_el = list_el;
@@ -309,8 +355,13 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 				callback: function (r) {
 					el.find(".send-preview-btn").prop("disabled", false);
 					if (!r.message) return;
-					if (r.message.error) { frappe.msgprint(r.message.error); return; }
-					pv.find(".send-preview-subject").text(r.message.rendered_subject || "(No subject)");
+					if (r.message.error) {
+						frappe.msgprint(r.message.error);
+						return;
+					}
+					pv.find(".send-preview-subject").text(
+						r.message.rendered_subject || "(No subject)",
+					);
 					pv.find(".send-preview-body").html(r.message.rendered_body || "");
 					const rect = el[0].getBoundingClientRect();
 					const pvW = 380;
@@ -325,7 +376,9 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 					});
 					pv.show();
 				},
-				error: function () { el.find(".send-preview-btn").prop("disabled", false); },
+				error: function () {
+					el.find(".send-preview-btn").prop("disabled", false);
+				},
 			});
 		});
 	}
@@ -356,11 +409,16 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 				callback: function (r) {
 					send_btn.prop("disabled", false).text("Send");
 					if (r.message) {
-						frappe.show_alert({ message: __("{0} messages sent", [r.message.sent || 0]), indicator: "green" });
+						frappe.show_alert({
+							message: __("{0} messages sent", [r.message.sent || 0]),
+							indicator: "green",
+						});
 						me.close();
 					}
 				},
-				error: function () { send_btn.prop("disabled", false).text("Send"); },
+				error: function () {
+					send_btn.prop("disabled", false).text("Send");
+				},
 			});
 		});
 	}
@@ -394,15 +452,22 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 					from_email: me.el.find(".send-from-select").val() || "",
 				},
 				callback: function (r) {
-					test_btn.prop("disabled", false).html('<i class="fa fa-paper-plane"></i> Send Test');
+					test_btn
+						.prop("disabled", false)
+						.html('<i class="fa fa-paper-plane"></i> Send Test');
 					if (r.message && r.message.sent) {
-						frappe.show_alert({ message: __("Test email sent to {0}", [r.message.to]), indicator: "green" });
+						frappe.show_alert({
+							message: __("Test email sent to {0}", [r.message.to]),
+							indicator: "green",
+						});
 					} else if (r.message && r.message.error) {
 						frappe.msgprint(r.message.error);
 					}
 				},
 				error: function () {
-					test_btn.prop("disabled", false).html('<i class="fa fa-paper-plane"></i> Send Test');
+					test_btn
+						.prop("disabled", false)
+						.html('<i class="fa fa-paper-plane"></i> Send Test');
 				},
 			});
 		});
@@ -415,7 +480,8 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 		pv.find(".send-preview-header").on(`mousedown.${ns}`, function (e) {
 			if ($(e.target).closest("button").length) return;
 			e.preventDefault();
-			const sx = e.clientX, sy = e.clientY;
+			const sx = e.clientX,
+				sy = e.clientY;
 			const sl = parseInt(pv.css("left"), 10) || 0;
 			const st = parseInt(pv.css("top"), 10) || 0;
 			$(document).on(`mousemove.${ns}`, function (ev) {
@@ -435,9 +501,12 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 	_make_resizable_preview(pv) {
 		const handle = pv.find(".send-panel-resize-handle");
 		handle.on("mousedown", function (e) {
-			e.preventDefault(); e.stopPropagation();
-			const sw = pv.outerWidth(), sh = pv.outerHeight();
-			const sx = e.clientX, sy = e.clientY;
+			e.preventDefault();
+			e.stopPropagation();
+			const sw = pv.outerWidth(),
+				sh = pv.outerHeight();
+			const sx = e.clientX,
+				sy = e.clientY;
 			$(document).on("mousemove.pv_resize", function (ev) {
 				pv.css({
 					width: `${Math.max(280, sw + ev.clientX - sx)}px`,
@@ -479,8 +548,14 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 	/* ── Close ── */
 
 	close() {
-		if (this._tpl_list_el) { this._tpl_list_el.remove(); this._tpl_list_el = null; }
-		if (this._preview_el) { this._preview_el.remove(); this._preview_el = null; }
+		if (this._tpl_list_el) {
+			this._tpl_list_el.remove();
+			this._tpl_list_el = null;
+		}
+		if (this._preview_el) {
+			this._preview_el.remove();
+			this._preview_el = null;
+		}
 		if (this.el) {
 			this.el.remove();
 			this.el = null;
@@ -494,14 +569,23 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 	_make_draggable(el) {
 		const ns = "send_drag";
 		function start_drag(e) {
-			if ($(e.target).closest("button, input, textarea, select, .send-template-list, .ql-editor, .ql-toolbar, .send-message-editor-wrap, .send-panel-footer").length) return;
+			if (
+				$(e.target).closest(
+					"button, input, textarea, select, .send-template-list, .ql-editor, .ql-toolbar, .send-message-editor-wrap, .send-panel-footer",
+				).length
+			)
+				return;
 			e.preventDefault();
-			const sx = e.clientX, sy = e.clientY;
+			const sx = e.clientX,
+				sy = e.clientY;
 			const sl = parseInt(el.css("left"), 10) || 0;
 			const st = parseInt(el.css("top"), 10) || 0;
 			const ghost = $("<div class='drag-ghost'></div>").css({
-				position: "fixed", left: sl, top: st,
-				width: el.outerWidth(), height: el.outerHeight(),
+				position: "fixed",
+				left: sl,
+				top: st,
+				width: el.outerWidth(),
+				height: el.outerHeight(),
 				zIndex: (parseInt(el.css("zIndex"), 10) || 100) + 1,
 			});
 			$(document.body).append(ghost);
@@ -529,21 +613,28 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 		const handle = $('<div class="send-panel-resize-handle"></div>');
 		el.append(handle);
 		handle.on("mousedown", function (e) {
-			e.preventDefault(); e.stopPropagation();
-			const sw = el.outerWidth(), sh = el.outerHeight();
-			const sx = e.clientX, sy = e.clientY;
+			e.preventDefault();
+			e.stopPropagation();
+			const sw = el.outerWidth(),
+				sh = el.outerHeight();
+			const sx = e.clientX,
+				sy = e.clientY;
 			const ghost = $("<div class='drag-ghost'></div>").css({
 				position: "fixed",
 				left: parseInt(el.css("left"), 10) || 0,
 				top: parseInt(el.css("top"), 10) || 0,
-				width: sw, height: sh,
+				width: sw,
+				height: sh,
 				zIndex: (parseInt(el.css("zIndex"), 10) || 100) + 1,
 			});
 			$(document.body).append(ghost);
 			el.css("opacity", "0.4");
 			$("body").addClass("panel-float-dragging");
 			$(document).on("mousemove.send_resize", function (ev) {
-				ghost.css({ width: `${Math.max(500, sw + ev.clientX - sx)}px`, height: `${Math.max(300, sh + ev.clientY - sy)}px` });
+				ghost.css({
+					width: `${Math.max(500, sw + ev.clientX - sx)}px`,
+					height: `${Math.max(300, sh + ev.clientY - sy)}px`,
+				});
 			});
 			$(document).on("mouseup.send_resize", function () {
 				el.css({ width: ghost.css("width"), height: ghost.css("height"), opacity: "" });

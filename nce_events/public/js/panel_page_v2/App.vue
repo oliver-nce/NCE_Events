@@ -287,6 +287,8 @@ function _openSendDialog(p, mode) {
 			user_filters: [],
 			row_count: p.rows.length,
 			z_index: 9999,
+			init_left: (p.x || 40) + 60,
+			init_top: (p.y || 60) + 20,
 			on_close() { _sendDialog = null; },
 		});
 	});
@@ -319,6 +321,8 @@ function _openSendDialogOne(p, mode, row) {
 			user_filters: [],
 			row_count: 1,
 			z_index: 9999,
+			init_left: (p.x || 40) + 60,
+			init_top: (p.y || 60) + 20,
 			on_close() { _sendDialog = null; },
 		});
 	});
