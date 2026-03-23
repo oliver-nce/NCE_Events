@@ -18,8 +18,14 @@
  */
 .ppv2-root,
 .ppv2-float,
+.panel-float,
 .send-panel,
-.send-panel-preview {
+.send-panel-preview,
+.send-template-list,
+.se-tag-panel,
+.card-modal-backdrop,
+.tf-float,
+.tf-tag-panel {
 	/* ── Primary / brand ─────────────────────────────────────────────────── */
 	--primary: var(--nce-color-primary, #126bc4);
 	--primary-light: var(--nce-color-focus, #e8f0fe);
