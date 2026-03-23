@@ -10,6 +10,7 @@
 				:error="error"
 				:config="config || {}"
 				@row-click="onRootRowClick"
+				@row-drop="(row) => onRowDrop(null, row)"
 				@sheets="onSheets({ doctype: 'WP Tables', parentFilter: {}, rows })"
 				@filter-change="(f) => onFilterChange(null, f)"
 			/>
@@ -44,6 +45,7 @@
 				@filter-change="(f) => onFilterChange(p, f)"
 				@email-one="(row) => onEmailOne(p, row)"
 				@sms-one="(row) => onSmsOne(p, row)"
+				@row-drop="(row) => onRowDrop(p, row)"
 			/>
 			<template #footer>{{ p.config?.header_text || p.doctype }}</template>
 		</PanelFloat>
@@ -82,6 +84,7 @@ const { config, columns, rows, total, fullTotal, loading, error, load } = rootPa
 
 const openPanels = reactive([]);
 let panelCounter = 0;
+const dropStack = reactive([]);
 const tagFinderDoctype = ref("");
 const tagFinderX = ref(0);
 const tagFinderY = ref(80);
@@ -106,8 +109,34 @@ function onOpenCard(cfg) {
 	openCardModal(cfg.cardDefName, cfg.doctype, cfg.name);
 }
 
+function onRowDrop(panel, row) {
+	const arr = panel ? panel.rows : rows.value;
+	const idx = arr.findIndex(r => r.name === row.name);
+	if (idx >= 0) {
+		arr.splice(idx, 1);
+		dropStack.push({ panel, row, idx });
+	}
+}
+
+function undoDrop() {
+	if (!dropStack.length) return;
+	const { panel, row, idx } = dropStack.pop();
+	const arr = panel ? panel.rows : rows.value;
+	const insertAt = Math.min(idx, arr.length);
+	arr.splice(insertAt, 0, row);
+}
+
+function onKeyDown(e) {
+	if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+		if (!dropStack.length) return;
+		e.preventDefault();
+		undoDrop();
+	}
+}
+
 onMounted(() => {
 	load();
+	window.addEventListener('keydown', onKeyDown);
 	window._nce_open_tag_finder = (dt, x, y) => {
 		if (!dt) return;
 		if (typeof x === "number") tagFinderX.value = x;
@@ -118,6 +147,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
+	window.removeEventListener('keydown', onKeyDown);
 	delete window._nce_open_tag_finder;
 	delete window._nce_close_tag_finder;
 });

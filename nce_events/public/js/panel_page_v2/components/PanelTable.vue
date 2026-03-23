@@ -2,7 +2,7 @@
 	<div ref="panelRef" class="ppv2-panel">
 		<div class="ppv2-header">
 			<span class="ppv2-title">{{ title }}</span>
-			<span v-if="config.open_card_on_click" class="ppv2-click-hint">Click on a row for details</span>
+			<span v-if="config.open_card_on_click" class="ppv2-click-hint">Click row for details · Ctrl-click to remove</span>
 			<span class="ppv2-header-right">
 				<button class="ppv2-hdr-btn" title="Filter" @click="toggleFilter">
 					<i class="fa fa-filter"></i>
@@ -65,7 +65,8 @@
 						v-for="(row, ri) in rows"
 						:key="row.name || ri"
 						:class="{ 'ppv2-alt': ri % 2 === 1, 'ppv2-selected': selectedName === row.name }"
-						@click="$emit('row-click', row)"
+						@click="onRowClick($event, row)"
+						@contextmenu="onContextMenu($event, row)"
 					>
 						<td
 							v-for="col in dataCols"
@@ -130,7 +131,7 @@ const props = defineProps({
 });
 
 const emit = defineEmits([
-	"row-click", "close", "drill", "sheets", "email", "sms",
+	"row-click", "row-drop", "close", "drill", "sheets", "email", "sms",
 	"filter-change", "email-one", "sms-one",
 ]);
 
@@ -140,6 +141,23 @@ const filters = reactive([]);
 const colWidths = reactive({});
 const panelRef = ref(null);
 let _filterTimer = null;
+
+function onRowClick(event, row) {
+	if (event.ctrlKey) {
+		event.preventDefault();
+		emit('row-drop', row);
+	} else {
+		emit('row-click', row);
+	}
+}
+
+function onContextMenu(event, row) {
+	// On Mac, Ctrl+Click fires contextmenu instead of click
+	if (event.ctrlKey) {
+		event.preventDefault();
+		emit('row-drop', row);
+	}
+}
 
 
 
