@@ -62,6 +62,7 @@ function bringToFront() {
 
 function onMouseDown(e) {
 	bringToFront();
+	if (e.target.closest && e.target.closest("button, a, input, select, textarea")) return;
 	if (e.target.closest && e.target.closest(".ppv2-header")) {
 		e.preventDefault();
 		startDrag(e);
