@@ -108,7 +108,12 @@ function onOpenCard(cfg) {
 
 onMounted(() => {
 	load();
-	window._nce_open_tag_finder = (dt) => { if (dt) tagFinderDoctype.value = dt; };
+	window._nce_open_tag_finder = (dt, x, y) => {
+		if (!dt) return;
+		if (typeof x === "number") tagFinderX.value = x;
+		if (typeof y === "number") tagFinderY.value = y;
+		tagFinderDoctype.value = dt;
+	};
 	window._nce_close_tag_finder = () => { tagFinderDoctype.value = ""; };
 });
 

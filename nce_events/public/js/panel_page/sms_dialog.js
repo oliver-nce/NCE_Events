@@ -146,7 +146,13 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 
 	_open_tags() {
 		if (window._nce_open_tag_finder) {
-			window._nce_open_tag_finder(this.doctype);
+			let tx, ty;
+			if (this.el && this.el[0]) {
+				const rect = this.el[0].getBoundingClientRect();
+				tx = Math.round(rect.right + 20);
+				ty = Math.round(rect.top);
+			}
+			window._nce_open_tag_finder(this.doctype, tx, ty);
 		}
 	}
 

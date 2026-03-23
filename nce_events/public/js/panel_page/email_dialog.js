@@ -209,7 +209,13 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 
 	_open_tags() {
 		if (window._nce_open_tag_finder) {
-			window._nce_open_tag_finder(this.doctype);
+			let tfX, tfY;
+			if (this.el && this.el[0]) {
+				const rect = this.el[0].getBoundingClientRect();
+				tfX = Math.round(rect.right + 20);
+				tfY = Math.round(rect.top);
+			}
+			window._nce_open_tag_finder(this.doctype, tfX, tfY);
 		}
 	}
 
