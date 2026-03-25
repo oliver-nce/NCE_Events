@@ -378,7 +378,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 						top: rect.top + "px",
 						left: pvLeft + "px",
 						height: rect.height + "px",
-						zIndex: (parseInt(el.css("zIndex"), 10) || 110) + 1,
+						zIndex: Math.max(parseInt(el.css("zIndex"), 10) || 110, 10060) + 10,
 					});
 					pv.show();
 				},

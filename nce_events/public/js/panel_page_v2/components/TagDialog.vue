@@ -48,13 +48,13 @@ const panelStyle = computed(() => ({
 
 function bringToFront() { zIndex.value = zIndex.value + 1; }
 
-function showToast() {
+function showToast(t, l) {
 	const el = document.createElement("div");
 	el.textContent = "Tag is on the clipboard";
 	Object.assign(el.style, {
 		position: "fixed",
-		top: top.value + "px",
-		left: left.value + "px",
+		top: t + "px",
+		left: l + "px",
 		padding: "10px 18px",
 		background: "#126BC4",
 		color: "#fff",
@@ -72,12 +72,28 @@ function showToast() {
 	setTimeout(() => { el.remove(); }, 2000);
 }
 
+function fallbackCopy(text) {
+	const ta = document.createElement("textarea");
+	ta.value = text;
+	ta.style.cssText = "position:fixed;opacity:0";
+	document.body.appendChild(ta);
+	ta.select();
+	document.execCommand("copy");
+	ta.remove();
+}
+
 function onOk() {
-	if (!navigator.clipboard) return;
-	navigator.clipboard.writeText(displayTag.value).then(() => {
-		showToast();
-		emit("close");
-	});
+	const tag = displayTag.value;
+	const t = top.value, l = left.value;
+	emit("close");
+
+	if (navigator.clipboard) {
+		navigator.clipboard.writeText(tag).catch(() => fallbackCopy(tag));
+	} else {
+		fallbackCopy(tag);
+	}
+
+	showToast(t, l);
 }
 
 function startDrag(e) {
