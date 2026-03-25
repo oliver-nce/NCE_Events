@@ -14,7 +14,8 @@
 				v-for="(col, ci) in finder.columns"
 				:key="ci"
 				:col="col"
-				:visited="finder.visited"
+				:col-index="ci"
+				:columns="finder.columns"
 				@navigate="(f) => onNavigate(f, ci)"
 				@select-field="(f) => onSelectField(f, ci)"
 			/>

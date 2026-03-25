@@ -28,13 +28,18 @@
 <script setup>
 const props = defineProps({
 	col: { type: Object, required: true },
-	visited: { type: Object, default: () => ({}) },
+	colIndex: { type: Number, default: 0 },
+	columns: { type: Array, default: () => [] },
 });
 
 const emit = defineEmits(["navigate", "select-field"]);
 
 function isCircular(f) {
-	return (f.is_link || f.is_table) && f.options && props.visited[f.options];
+	if (!(f.is_link || f.is_table) || !f.options) return false;
+	for (let i = 0; i < props.colIndex; i++) {
+		if (props.columns[i] && props.columns[i].doctype === f.options) return true;
+	}
+	return false;
 }
 
 function tileClass(f) {
