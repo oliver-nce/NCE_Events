@@ -25,6 +25,8 @@
 			Tag Finder: {{ rootDoctype }}
 		</div>
 
+		<div class="tf-resize-handle" @mousedown.prevent="startResize"></div>
+
 		<Teleport to="body">
 			<TagDialog
 				v-for="(td, ti) in tagDialogs"
@@ -62,12 +64,19 @@ const bodyEl = ref(null);
 const x = ref(props.initX >= 0 ? props.initX : window.innerWidth - 560);
 const y = ref(props.initY);
 const z = ref(10060);
+const manualW = ref(null);
+const manualH = ref(null);
 
-const floatStyle = computed(() => ({
-	left: x.value + "px",
-	top: y.value + "px",
-	zIndex: z.value,
-}));
+const floatStyle = computed(() => {
+	const s = {
+		left: x.value + "px",
+		top: y.value + "px",
+		zIndex: z.value,
+	};
+	if (manualW.value) s.width = manualW.value + "px";
+	if (manualH.value) s.maxHeight = manualH.value + "px";
+	return s;
+});
 
 function bringToFront() { z.value = z.value + 1; }
 
@@ -78,6 +87,23 @@ function startDrag(e) {
 	function onMove(ev) {
 		x.value = ox + ev.clientX - sx;
 		y.value = Math.max(0, oy + ev.clientY - sy);
+	}
+	function onUp() {
+		document.removeEventListener("mousemove", onMove);
+		document.removeEventListener("mouseup", onUp);
+	}
+	document.addEventListener("mousemove", onMove);
+	document.addEventListener("mouseup", onUp);
+}
+
+function startResize(e) {
+	bringToFront();
+	const sx = e.clientX, sy = e.clientY;
+	const panel = e.target.parentElement;
+	const ow = panel.offsetWidth, oh = panel.offsetHeight;
+	function onMove(ev) {
+		manualW.value = Math.max(260, ow + ev.clientX - sx);
+		manualH.value = Math.max(200, oh + ev.clientY - sy);
 	}
 	function onUp() {
 		document.removeEventListener("mousemove", onMove);
@@ -101,6 +127,8 @@ async function onNavigate(field, colIdx) {
 	);
 	await nextTick();
 	if (bodyEl.value) bodyEl.value.scrollLeft = bodyEl.value.scrollWidth;
+	if (!manualW.value) return;
+	// auto-widen if user hasn't resized or content exceeds current width
 }
 
 function onSelectField(field, colIdx) {
@@ -115,7 +143,9 @@ function onSelectField(field, colIdx) {
 <style scoped>
 .tf-float {
 	position: fixed;
-	width: 520px;
+	width: fit-content;
+	min-width: 260px;
+	max-width: 90vw;
 	max-height: 70vh;
 	background: var(--bg-surface);
 	border: 1px solid var(--border-color);
@@ -165,5 +195,16 @@ function onSelectField(field, colIdx) {
 	cursor: move;
 	user-select: none;
 	border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
+
+.tf-resize-handle {
+	position: absolute;
+	right: 0;
+	bottom: 0;
+	width: 16px;
+	height: 16px;
+	cursor: nwse-resize;
+	background: linear-gradient(135deg, transparent 50%, var(--border-color) 50%, var(--border-color) 60%, transparent 60%, transparent 75%, var(--border-color) 75%, var(--border-color) 85%, transparent 85%);
+	border-radius: 0 0 var(--border-radius) 0;
 }
 </style>
