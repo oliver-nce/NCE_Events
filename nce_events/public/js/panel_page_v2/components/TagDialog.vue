@@ -12,7 +12,10 @@
 				<label class="tf-check-label">
 					<input v-model="isHtml" type="checkbox"> Is this HTML?
 				</label>
-				<button class="btn btn-primary btn-sm" @click="onOk">OK</button>
+				<div class="tf-btn-group">
+					<button class="btn btn-default btn-sm" @click="$emit('close')">Cancel</button>
+					<button class="btn btn-primary btn-sm" @click="onOk">Copy Tag to Clipboard</button>
+				</div>
 			</div>
 		</div>
 	</div>
@@ -169,8 +172,14 @@ function startDrag(e) {
 .tf-actions {
 	margin-top: 10px;
 	display: flex;
-	justify-content: space-between;
-	align-items: center;
+	flex-direction: column;
+	gap: 8px;
 }
 .tf-check-label { font-size: 11px; }
+
+.tf-btn-group {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+}
 </style>
