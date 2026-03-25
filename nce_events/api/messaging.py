@@ -10,24 +10,14 @@ from nce_events.api.panel_api import get_panel_data
 
 
 def _enrich_row_context(root_doctype: str, row: dict) -> dict[str, Any]:
-	"""Build a full template context from a row, including all Link fields and gender."""
-	context: dict[str, Any] = {k: (v if v is not None else "") for k, v in row.items()}
-
-	meta = frappe.get_meta(root_doctype)
-	link_fields = [f.fieldname for f in meta.fields if f.fieldtype == "Link"]
+	"""Build a full template context from a row — fetches ALL fields, not just panel columns."""
 	row_name = row.get("name")
 
-	# Ensure gender is in context for pronoun tags (always "gender" per project spec)
-	if meta.get_field("gender") and "gender" not in context and row_name:
-		gender_val = frappe.db.get_value(root_doctype, row_name, "gender")
-		context["gender"] = gender_val if gender_val is not None else ""
-
-	if row_name and link_fields:
-		missing = [f for f in link_fields if f not in context]
-		if missing:
-			stored = frappe.db.get_value(root_doctype, row_name, missing, as_dict=True) or {}
-			for f in missing:
-				context[f] = stored.get(f) or ""
+	if row_name:
+		full = frappe.db.get_value(root_doctype, row_name, "*", as_dict=True) or {}
+		context: dict[str, Any] = {k: (v if v is not None else "") for k, v in full.items()}
+	else:
+		context = {k: (v if v is not None else "") for k, v in row.items()}
 
 	context["doc"] = frappe._dict(context)
 	return context
