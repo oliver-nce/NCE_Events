@@ -20,6 +20,16 @@ def _enrich_row_context(root_doctype: str, row: dict) -> dict[str, Any]:
 		context = {k: (v if v is not None else "") for k, v in row.items()}
 
 	context["doc"] = frappe._dict(context)
+
+	# Log Link field values for debugging 2-hop resolution
+	meta = frappe.get_meta(root_doctype)
+	link_fields = [f for f in meta.fields if f.fieldtype == "Link" and f.options]
+	debug_lines = [f"DocType: {root_doctype}, row: {row_name}"]
+	for lf in link_fields:
+		val = context.get(lf.fieldname, "")
+		debug_lines.append(f"  {lf.fieldname} ({lf.options}): {repr(val)}")
+	frappe.log_error(title="enrich_row_context debug", message="\n".join(debug_lines))
+
 	return context
 
 
@@ -27,7 +37,11 @@ def _render_body(body: str, context: dict[str, Any], for_html: bool = True) -> s
 	"""Render Jinja template. For HTML (email/preview), convert plain-text newlines to <br>."""
 	try:
 		rendered = frappe.render_template(body, context)
-	except Exception:
+	except Exception as exc:
+		frappe.log_error(
+			title="Template render error",
+			message=f"Body:\n{body[:500]}\n\nError:\n{exc}",
+		)
 		rendered = body
 	if for_html and "<" not in rendered:
 		rendered = rendered.replace("\n", "<br>")
