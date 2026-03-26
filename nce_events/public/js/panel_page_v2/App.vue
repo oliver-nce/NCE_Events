@@ -72,7 +72,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, onUnmounted } from "vue";
+import { ref, reactive, computed, onMounted, onUnmounted } from "vue";
 import { usePanel } from "./composables/usePanel.js";
 import PanelFloat from "./components/PanelFloat.vue";
 import PanelTable from "./components/PanelTable.vue";
@@ -80,7 +80,16 @@ import TagFinder from "./components/TagFinder.vue";
 import CardModal from "./components/CardModal.vue";
 
 const rootPanel = usePanel("WP Tables");
-const { config, columns, rows, total, fullTotal, loading, error, load } = rootPanel;
+const { config, columns: rawColumns, rows, total, fullTotal, loading, error, load } = rootPanel;
+
+// Hide nce_name — it duplicates frappe_doctype in the root panel.
+// Also strip is_link from frappe_doctype so clicking opens the next panel (via row-click)
+// rather than navigating to the Frappe desk form view.
+const columns = computed(() =>
+	(rawColumns.value || [])
+		.filter(c => c.fieldname !== "nce_name")
+		.map(c => c.fieldname === "frappe_doctype" ? { ...c, is_link: false } : c)
+);
 
 const openPanels = reactive([]);
 let panelCounter = 0;
