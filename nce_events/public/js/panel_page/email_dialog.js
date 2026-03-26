@@ -688,7 +688,6 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 				zIndex: (parseInt(el.css("zIndex"), 10) || 100) + 1,
 			});
 			$(document.body).append(ghost);
-			el.css("opacity", "0.4");
 			$("body").addClass("panel-float-dragging");
 			$(document).on(`mousemove.${ns}`, function (ev) {
 				ghost.css({
@@ -697,7 +696,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 				});
 			});
 			$(document).on(`mouseup.${ns}`, function () {
-				el.css({ left: ghost.css("left"), top: ghost.css("top"), opacity: "" });
+				el.css({ left: ghost.css("left"), top: ghost.css("top") });
 				ghost.remove();
 				$("body").removeClass("panel-float-dragging");
 				$(document).off(`mousemove.${ns} mouseup.${ns}`);
@@ -727,7 +726,6 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 				zIndex: (parseInt(el.css("zIndex"), 10) || 100) + 1,
 			});
 			$(document.body).append(ghost);
-			el.css("opacity", "0.4");
 			$("body").addClass("panel-float-dragging");
 			$(document).on("mousemove.send_resize", function (ev) {
 				ghost.css({
@@ -736,7 +734,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 				});
 			});
 			$(document).on("mouseup.send_resize", function () {
-				el.css({ width: ghost.css("width"), height: ghost.css("height"), opacity: "" });
+				el.css({ width: ghost.css("width"), height: ghost.css("height") });
 				ghost.remove();
 				$("body").removeClass("panel-float-dragging");
 				$(document).off("mousemove.send_resize mouseup.send_resize");
