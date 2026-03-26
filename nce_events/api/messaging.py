@@ -345,15 +345,34 @@ def _send_sms(phone: str, message: str) -> None:
 		frappe.throw(_(f"Twilio error {resp.status_code}: {resp.text}"))
 
 
-def _send_email(to_email: str, subject: str, body: str, *, from_email: str | None = None) -> None:
-	"""Send an email via Frappe's outgoing email queue (uses the configured Email Account)."""
+def _send_email(
+	to_email: str, subject: str, body: str, *, from_email: str | None = None, send_after_seconds: int = 0
+) -> None:
+	"""Send an email via Frappe's outgoing email queue (uses the configured Email Account).
+	If send_after_seconds > 0, the email is queued and sent after that delay."""
+	from frappe.utils import add_to_date, now_datetime
+
 	sender = (from_email or "").strip() or None
-	frappe.sendmail(
-		recipients=[to_email],
-		subject=subject,
-		message=body,
-		sender=sender,
-		add_unsubscribe_link=0,  # don't append Frappe's unsubscribe footer
-		delayed=False,
-		now=True,
-	)
+
+	if send_after_seconds and send_after_seconds > 0:
+		send_after = add_to_date(now_datetime(), seconds=send_after_seconds)
+		frappe.sendmail(
+			recipients=[to_email],
+			subject=subject,
+			message=body,
+			sender=sender,
+			add_unsubscribe_link=0,
+			delayed=True,
+			now=False,
+			send_after=send_after,
+		)
+	else:
+		frappe.sendmail(
+			recipients=[to_email],
+			subject=subject,
+			message=body,
+			sender=sender,
+			add_unsubscribe_link=0,
+			delayed=False,
+			now=True,
+		)
