@@ -6,6 +6,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 		this.config = opts.config;
 		this.filters = opts.filters || {};
 		this.user_filters = opts.user_filters || [];
+		this.row_names = opts.row_names || [];
 		this.row_count = opts.row_count || 0;
 		this.z_index = opts.z_index || 110;
 		this.init_left = opts.init_left ?? null;
@@ -359,6 +360,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 					root_doctype: me.doctype,
 					filters: JSON.stringify(me.filters),
 					user_filters: JSON.stringify(me.user_filters),
+					row_names: JSON.stringify(me.row_names),
 					body: body_text,
 					subject: subject_text,
 				},
@@ -406,8 +408,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 				method: "nce_events.api.messaging.send_panel_message",
 				args: {
 					root_doctype: me.doctype,
-					filters: JSON.stringify(me.filters),
-					user_filters: JSON.stringify(me.user_filters),
+					row_names: JSON.stringify(me.row_names),
 					mode: "email",
 					recipient_field: me.config.email_field,
 					body: final_body,
@@ -444,8 +445,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 			method: "nce_events.api.messaging.get_recipients",
 			args: {
 				root_doctype: me.doctype,
-				filters: JSON.stringify(me.filters),
-				user_filters: JSON.stringify(me.user_filters),
+				row_names: JSON.stringify(me.row_names),
 				recipient_field: me.config.email_field,
 			},
 			callback: function (r) {

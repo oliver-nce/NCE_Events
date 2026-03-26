@@ -320,8 +320,7 @@ function _openSendDialog(p, mode) {
 		_sendDialog = new DialogClass({
 			doctype: p.doctype,
 			config: cfg,
-			filters: p.parentFilter || {},
-			user_filters: [],
+			row_names: p.rows.map(r => r.name),
 			row_count: p.rows.length,
 			z_index: 9999,
 			init_left: (p.x || 40) + 60,
@@ -354,8 +353,7 @@ function _openSendDialogOne(p, mode, row) {
 		_sendDialog = new DialogClass({
 			doctype: p.doctype,
 			config: cfg,
-			filters: { name: row.name },
-			user_filters: [],
+			row_names: [row.name],
 			row_count: 1,
 			z_index: 9999,
 			init_left: (p.x || 40) + 60,

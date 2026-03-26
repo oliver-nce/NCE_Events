@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from typing import Any
 
 import frappe
@@ -116,14 +117,21 @@ def preview_panel_message(
 	user_filters: str | list | None = None,
 	body: str = "",
 	subject: str = "",
+	row_names: str | list | None = None,
 ) -> dict[str, Any]:
 	"""Render a message template against the first row for preview."""
-	result = get_panel_data(root_doctype, filters, user_filters=user_filters)
-	rows = result.get("rows") or []
-	if not rows:
-		return {"error": "No rows to preview."}
+	if isinstance(row_names, str):
+		row_names = json.loads(row_names) if row_names else []
+	row_names = row_names or []
 
-	row = rows[0]
+	if row_names:
+		row = {"name": row_names[0]}
+	else:
+		result = get_panel_data(root_doctype, filters, user_filters=user_filters)
+		rows = result.get("rows") or []
+		if not rows:
+			return {"error": "No rows to preview."}
+		row = rows[0]
 	context = _enrich_row_context(root_doctype, row)
 	rendered_body = _render_body(body, context, for_html=True)
 
@@ -142,26 +150,27 @@ def preview_panel_message(
 @frappe.whitelist()
 def get_recipients(
 	root_doctype: str,
-	filters: str | dict | None = None,
-	user_filters: str | list | None = None,
+	row_names: str | list | None = None,
 	recipient_field: str = "",
 ) -> dict[str, Any]:
 	"""Return the list of (name, address) pairs that would be sent to — without sending anything.
-	Uses exactly the same filter + field logic as send_panel_message."""
-	result = get_panel_data(root_doctype, filters, user_filters=user_filters)
-	rows = result.get("rows") or []
+	row_names is the list of PKs already showing in the panel (passed from the frontend)."""
+	if isinstance(row_names, str):
+		row_names = json.loads(row_names) if row_names else []
+	row_names = row_names or []
 
 	recipients: list[dict[str, str]] = []
-	for row in rows:
+	for name in row_names:
+		row = {"name": name}
 		context = _enrich_row_context(root_doctype, row)
 		addr = str(context.get(recipient_field, "")).strip()
-		recipients.append({"name": row.get("name", ""), "address": addr})
+		recipients.append({"name": name, "address": addr})
 
 	resolved = [r for r in recipients if r["address"]]
 	skipped = [r for r in recipients if not r["address"]]
 
 	return {
-		"total_rows": len(rows),
+		"total_rows": len(row_names),
 		"resolved": resolved,
 		"skipped": skipped,
 	}
@@ -170,8 +179,7 @@ def get_recipients(
 @frappe.whitelist()
 def send_panel_message(
 	root_doctype: str,
-	filters: str | dict | None = None,
-	user_filters: str | list | None = None,
+	row_names: str | list | None = None,
 	mode: str = "sms",
 	recipient_field: str = "",
 	body: str = "",
@@ -180,10 +188,14 @@ def send_panel_message(
 	email_field: str = "",
 	from_email: str = "",
 ) -> dict[str, int]:
-	"""Send bulk SMS and/or email to all rows in a panel."""
+	"""Send bulk SMS and/or email to the rows currently showing in the panel.
+	row_names is the list of PKs passed directly from the frontend — no re-querying."""
+	if isinstance(row_names, str):
+		row_names = json.loads(row_names) if row_names else []
+	row_names = row_names or []
 	send_email_copy = int(send_email_copy)
-	result = get_panel_data(root_doctype, filters, user_filters=user_filters)
-	rows = result["rows"]
+
+	rows = [{"name": n} for n in row_names]
 
 	sent = 0
 	errors: list[str] = []
