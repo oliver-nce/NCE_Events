@@ -13,6 +13,7 @@
 				@row-drop="(row) => onRowDrop(null, row)"
 				@sheets="onSheets({ doctype: 'WP Tables', parentFilter: {}, rows })"
 				@filter-change="(f) => onFilterChange(null, f)"
+				@refresh="(f) => onFilterChange(null, f)"
 			/>
 			<template #footer>{{ config?.header_text || 'NCE Tables' }}</template>
 		</PanelFloat>
@@ -43,6 +44,7 @@
 				@sms="onSms(p)"
 				@tags="openTagFinder(p)"
 				@filter-change="(f) => onFilterChange(p, f)"
+				@refresh="(f) => onFilterChange(p, f)"
 				@email-one="(row) => onEmailOne(p, row)"
 				@sms-one="(row) => onSmsOne(p, row)"
 				@row-drop="(row) => onRowDrop(p, row)"

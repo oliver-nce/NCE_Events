@@ -4,6 +4,9 @@
 			<span class="ppv2-title">{{ title }}</span>
 			<span v-if="config.open_card_on_click" class="ppv2-click-hint">Click row for details · Ctrl-click to remove</span>
 			<span class="ppv2-header-right">
+				<button class="ppv2-hdr-btn" title="Refresh" @click="onRefresh">
+					<i class="fa fa-refresh"></i>
+				</button>
 				<button class="ppv2-hdr-btn" title="Filter" @click="toggleFilter">
 					<i class="fa fa-filter"></i>
 				</button>
@@ -132,7 +135,7 @@ const props = defineProps({
 
 const emit = defineEmits([
 	"row-click", "row-drop", "close", "drill", "sheets", "email", "sms",
-	"filter-change", "email-one", "sms-one",
+	"filter-change", "email-one", "sms-one", "refresh",
 ]);
 
 const ops = ["=", "!=", ">", "<", "like", "in"];
@@ -160,6 +163,10 @@ function onContextMenu(event, row) {
 }
 
 
+
+function onRefresh() {
+	emit("refresh", activeFilters());
+}
 
 function calcColWidths(columns, rows, containerWidth) {
 	const sample = rows.slice(0, 20);
