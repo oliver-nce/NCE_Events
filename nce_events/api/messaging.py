@@ -148,6 +148,68 @@ def preview_panel_message(
 
 
 @frappe.whitelist()
+def preview_one_email(
+	root_doctype: str,
+	row_name: str = "",
+	recipient_field: str = "",
+	body: str = "",
+	subject: str = "",
+	from_email: str = "",
+) -> dict[str, Any]:
+	"""Render body + subject for a single row and return without sending.
+	Used by the step-through send reviewer in the email dialog."""
+	if not row_name:
+		return {"error": "No row_name provided."}
+
+	context = _enrich_row_context(root_doctype, {"name": row_name})
+	recipient = str(context.get(recipient_field, "")).strip()
+
+	rendered_body = _render_body(body, context, for_html=True)
+	try:
+		rendered_subject = frappe.render_template(subject, context) if subject else ""
+	except Exception:
+		rendered_subject = subject
+
+	return {
+		"row_name": row_name,
+		"to": recipient,
+		"subject": rendered_subject,
+		"rendered_body": rendered_body,
+	}
+
+
+@frappe.whitelist()
+def send_one_email(
+	root_doctype: str,
+	row_name: str = "",
+	recipient_field: str = "",
+	body: str = "",
+	subject: str = "",
+	from_email: str = "",
+) -> dict[str, Any]:
+	"""Render and queue a single email for one row via Frappe's email queue."""
+	if not row_name:
+		return {"error": "No row_name provided."}
+
+	context = _enrich_row_context(root_doctype, {"name": row_name})
+	recipient = str(context.get(recipient_field, "")).strip()
+	if not recipient:
+		return {"error": f"No email address found in field '{recipient_field}' for {row_name}."}
+
+	rendered_body = _render_body(body, context, for_html=True)
+	try:
+		rendered_subject = frappe.render_template(subject, context) if subject else ""
+	except Exception:
+		rendered_subject = subject
+
+	_send_email(
+		recipient, rendered_subject or "(No Subject)", rendered_body, from_email=from_email.strip() or None
+	)
+
+	return {"sent": 1, "to": recipient}
+
+
+@frappe.whitelist()
 def get_recipients(
 	root_doctype: str,
 	row_names: str | list | None = None,

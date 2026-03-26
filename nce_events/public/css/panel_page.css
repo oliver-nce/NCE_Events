@@ -1149,3 +1149,98 @@ body.panel-float-dragging * {
 .send-recipients-btn:hover {
 	background: var(--nce-color-primary-100, #e3f0fc) !important;
 }
+
+/* ── Step-through email review panel ── */
+
+.send-review-panel {
+	position: fixed;
+	width: 420px;
+	max-height: 85vh;
+	display: flex;
+	flex-direction: column;
+	background: var(--bg-card);
+	border: 1px solid var(--nce-color-primary-300, #a2ccf6);
+	border-radius: var(--border-radius);
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.22);
+	overflow: hidden;
+}
+
+.send-review-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 8px 12px;
+	background: var(--bg-header);
+	flex-shrink: 0;
+}
+
+.send-review-progress {
+	color: var(--text-header);
+	font-weight: 600;
+	font-size: calc(var(--font-size-base) * 0.923);
+}
+
+.send-review-stop-btn {
+	background: transparent;
+	border: 1px solid rgba(255, 255, 255, 0.3);
+	border-radius: var(--border-radius-sm);
+	color: rgba(255, 255, 255, 0.85);
+	font-size: calc(var(--font-size-base) * 0.846);
+	cursor: pointer;
+	padding: 2px 8px;
+	line-height: 1.4;
+}
+
+.send-review-stop-btn:hover {
+	background: rgba(255, 255, 255, 0.15);
+	color: #fff;
+}
+
+.send-review-to-row,
+.send-review-subject-row {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+	padding: 6px 12px;
+	border-bottom: 1px solid var(--border-color);
+	font-size: calc(var(--font-size-base) * 0.923);
+	flex-shrink: 0;
+}
+
+.send-review-label {
+	color: var(--text-muted);
+	font-weight: 600;
+	white-space: nowrap;
+	min-width: 52px;
+}
+
+.send-review-to {
+	color: var(--primary);
+	font-weight: 600;
+	word-break: break-all;
+}
+
+.send-review-subject {
+	color: var(--text-color);
+	word-break: break-word;
+}
+
+.send-review-body {
+	flex: 1;
+	overflow-y: auto;
+	padding: 12px;
+	font-size: var(--font-size-base);
+	color: var(--text-color);
+	line-height: 1.5;
+	border-bottom: 1px solid var(--border-color);
+}
+
+.send-review-actions {
+	display: flex;
+	justify-content: flex-end;
+	align-items: center;
+	gap: 8px;
+	padding: 10px 12px;
+	flex-shrink: 0;
+	background: var(--bg-card);
+}
