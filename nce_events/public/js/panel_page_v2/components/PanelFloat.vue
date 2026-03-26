@@ -74,13 +74,20 @@ function startDrag(e) {
 	const sx = e.clientX, sy = e.clientY;
 	const ox = x.value, oy = y.value;
 	isDragging.value = true;
+	const el = floatEl.value;
 
 	function onMove(ev) {
+		// Write directly to the DOM — bypasses Vue reactivity entirely
+		// so the table never re-renders during drag
+		const nx = ox + ev.clientX - sx;
+		const ny = Math.max(0, oy + ev.clientY - sy);
+		el.style.transform = `translate3d(${nx}px, ${ny}px, 0)`;
+	}
+	function onUp(ev) {
+		isDragging.value = false;
+		// Now write back to Vue refs once so it knows the final position
 		x.value = ox + ev.clientX - sx;
 		y.value = Math.max(0, oy + ev.clientY - sy);
-	}
-	function onUp() {
-		isDragging.value = false;
 		document.removeEventListener("mousemove", onMove);
 		document.removeEventListener("mouseup", onUp);
 	}

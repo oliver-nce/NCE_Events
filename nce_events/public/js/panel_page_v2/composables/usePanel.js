@@ -1,4 +1,6 @@
-import { ref, reactive, shallowRef } from "vue";
+import { ref, shallowRef } from "vue";
+
+const PAGE_SIZE = 400;
 
 function frappeCall(method, args) {
 	return new Promise((resolve, reject) => {
@@ -20,13 +22,16 @@ export function usePanel(doctype, parentFilter = {}) {
 	const loading = ref(false);
 	const error = ref(null);
 
-	async function fetchConfig() {
+	// Incremented on every load/refetch so stale background loops self-cancel
+	let _loadId = 0;
+
+	function fetchConfig() {
 		return frappeCall("nce_events.api.panel_api.get_panel_config", {
 			root_doctype: doctype,
 		});
 	}
 
-	async function fetchData(filters = {}, userFilters = [], limit = 50, start = 0) {
+	function fetchData(filters = {}, userFilters = [], limit = PAGE_SIZE, start = 0) {
 		return frappeCall("nce_events.api.panel_api.get_panel_data", {
 			root_doctype: doctype,
 			filters: JSON.stringify({ ...parentFilter, ...filters }),
@@ -37,40 +42,72 @@ export function usePanel(doctype, parentFilter = {}) {
 	}
 
 	async function load() {
+		const myId = ++_loadId;
 		loading.value = true;
 		error.value = null;
+
 		try {
-			const cfg = await fetchConfig();
+			// Fetch config and first page in parallel — neither depends on the other
+			const [cfg, data] = await Promise.all([
+				fetchConfig(),
+				fetchData({}, [], PAGE_SIZE, 0),
+			]);
+
+			if (myId !== _loadId) return; // superseded by a newer load
+
 			config.value = cfg;
-			const data = await fetchData();
 			columns.value = data.columns || [];
 			rows.value = data.rows || [];
 			total.value = data.total || 0;
 			fullTotal.value = data.full_count ?? data.total ?? 0;
+			loading.value = false;
 
+			// Stream remaining pages in the background without blocking render
 			if (rows.value.length < total.value) {
-				const rest = await fetchData({}, [], 0, rows.value.length);
-				rows.value = rows.value.concat(rest.rows || []);
+				_streamRemaining(myId);
 			}
 		} catch (e) {
+			if (myId !== _loadId) return;
 			error.value = String(e);
 			console.error(`Panel load error [${doctype}]:`, e);
-		} finally {
 			loading.value = false;
 		}
 	}
 
+	async function _streamRemaining(myId) {
+		while (true) {
+			if (myId !== _loadId) return; // cancelled
+			const start = rows.value.length;
+			if (start >= total.value) return;
+
+			try {
+				const page = await fetchData({}, [], PAGE_SIZE, start);
+				if (myId !== _loadId) return;
+				const newRows = page.rows || [];
+				if (!newRows.length) return;
+				// Append reactively so the table updates as each batch arrives
+				rows.value = rows.value.concat(newRows);
+			} catch (e) {
+				console.error(`Panel background fetch error [${doctype}]:`, e);
+				return;
+			}
+		}
+	}
+
 	async function refetch(userFilters = []) {
+		const myId = ++_loadId;
 		loading.value = true;
 		error.value = null;
 		try {
 			const data = await fetchData({}, userFilters, 0, 0);
+			if (myId !== _loadId) return;
 			rows.value = data.rows || [];
 			total.value = data.total || 0;
 		} catch (e) {
+			if (myId !== _loadId) return;
 			error.value = String(e);
 		} finally {
-			loading.value = false;
+			if (myId === _loadId) loading.value = false;
 		}
 	}
 
