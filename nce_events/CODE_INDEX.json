@@ -1,0 +1,268 @@
+{
+  "_meta": {
+    "description": "Machine-readable index of every module in the NCE Events Frappe app. Read this file FIRST before exploring the codebase. See also AGENTS.md at the project root for contributor conventions.",
+    "generated": "2026-03-26",
+    "usage": "Find the module whose 'purpose' matches your task, then read only that file and its 'depends_on' entries. AGENTS.md lists reusable helpers — check there before adding new code."
+  },
+
+  "architecture": {
+    "overview": "NCE Events is a Frappe app that renders configurable multi-panel data explorer pages. It has a Python API layer and two frontend generations: V1 (vanilla JS class-based) and V2 (Vue 3 SFC with Vite build). Both share SMS/Email dialogs from V1. Depends on nce_sync app.",
+    "data_flow": "Frappe Page (panel_page / panel_page_v2) → JS/Vue → frappe.call() → api/panel_api.py, api/messaging.py, api/tags.py, api/reports.py → Frappe ORM → MariaDB",
+    "key_patterns": [
+      "V2 Vue app built separately: npm run build in public/js/panel_page_v2/ then bench build",
+      "V2 reuses V1 SmsDialog, EmailDialog, and ai_tools.js at runtime — do NOT duplicate",
+      "Python helpers follow snake_case private convention (_helper_name) — check AGENTS.md before adding",
+      "frozenset used for fieldtype/fieldname skip sets",
+      "Tag system uses Jinja template tags with gender-conditional pronouns"
+    ]
+  },
+
+  "backend": {
+    "nce_events/hooks.py": {
+      "purpose": "App config: metadata, required_apps (nce_sync), global JS/CSS includes, doctype_js overrides, apps screen entry",
+      "exports": ["app_name", "required_apps", "app_include_js", "app_include_css", "doctype_js"],
+      "depends_on": [],
+      "sections": ["App Metadata", "Global JS/CSS", "DocType JS Overrides", "Apps Screen"]
+    },
+    "nce_events/api/panel_api.py": {
+      "purpose": "Core panel data API: fetch panel config, fetch paginated/filtered panel data, export CSV, save SQL filter, child doctype discovery, field metadata",
+      "exports": ["get_panel_config", "get_panel_data", "export_panel_data", "save_panel_sql", "get_child_doctypes", "debug_child_lookup", "get_doctype_fields"],
+      "private_helpers": ["_build_core_filter_where", "_auto_detect_contact_fields", "_find_link_field", "_get_link_fields_with_target", "_evaluate_computed_columns", "_apply_user_filters", "_title_case"],
+      "depends_on": ["nce_events/nce_events/doctype/page_panel/", "nce_events/nce_events/doctype/page_panel_computed_column/"],
+      "sections": ["Panel config fetch", "Panel data fetch with filters/pagination", "CSV export", "SQL filter save", "Child doctype discovery", "Field metadata", "Internal query helpers"]
+    },
+    "nce_events/api/messaging.py": {
+      "purpose": "Email and SMS messaging: preview Jinja-rendered message, send bulk panel message, get email accounts",
+      "exports": ["get_email_accounts", "send_test_email", "send_test_sms", "preview_panel_message", "send_panel_message"],
+      "private_helpers": ["_render_body", "_enrich_row_context", "_send_sms", "_send_email"],
+      "depends_on": [],
+      "sections": ["Jinja body rendering", "Row context enrichment", "Email account list", "Test send", "Bulk panel send"]
+    },
+    "nce_events/api/tags.py": {
+      "purpose": "Jinja tag generation for email/SMS templates — pronoun tags, gender-conditional values",
+      "exports": ["get_pronoun_tags_for_doctype"],
+      "private_helpers": ["_compute_jinja_tag"],
+      "depends_on": [],
+      "sections": ["Pronoun tag computation"]
+    },
+    "nce_events/api/reports.py": {
+      "purpose": "Report generation — panel data as structured report output",
+      "exports": [],
+      "depends_on": ["nce_events/api/panel_api.py"],
+      "sections": ["Report data fetch and formatting"]
+    },
+    "nce_events/api/credentials.py": {
+      "purpose": "Read credential_config JSON from API Connector doctype — returns auth_pattern, base_url, required credential values",
+      "exports": ["get_credentials"],
+      "depends_on": [],
+      "sections": ["Credential lookup from API Connector"]
+    },
+    "nce_events/api/exchange.py": {
+      "purpose": "Data exchange/import functionality for enrollments",
+      "exports": [],
+      "depends_on": [],
+      "sections": ["Exchange logic"]
+    },
+    "nce_events/api/hierarchy_explorer.py": {
+      "purpose": "Hierarchy explorer backend — tree traversal for hierarchical doctypes",
+      "exports": [],
+      "depends_on": [],
+      "sections": ["Hierarchy data fetch"]
+    },
+    "nce_events/api/llm.py": {
+      "purpose": "LLM/AI integration helpers for AI tools panel feature",
+      "exports": [],
+      "depends_on": [],
+      "sections": ["LLM call wrappers"]
+    },
+    "nce_events/api/translator.py": {
+      "purpose": "Translation/localisation utilities",
+      "exports": [],
+      "depends_on": [],
+      "sections": ["Translation helpers"]
+    }
+  },
+
+  "doctypes": {
+    "nce_events/nce_events/doctype/page_panel/": {
+      "purpose": "Core config doctype — one record per root DocType being displayed. Stores column order, filters, gender config, email/SMS fields, computed columns.",
+      "key_fields": ["root_doctype", "header_text", "core_filter", "order_by", "column_order", "gender_column", "email_field", "sms_field"],
+      "depends_on": ["page_panel_computed_column"]
+    },
+    "nce_events/nce_events/doctype/page_panel_computed_column/": {
+      "purpose": "Child table for SQL-expression computed columns on a panel",
+      "key_fields": ["column_name", "expression"],
+      "depends_on": []
+    },
+    "nce_events/nce_events/doctype/card_definition/": {
+      "purpose": "Card layout definition — composite display card with tabs, fields, actions, graphics",
+      "key_fields": ["title", "target_doctype"],
+      "depends_on": ["card_tab", "card_field", "card_action", "card_display", "card_graphic", "card_script", "card_text_block", "card_video", "card_web_viewer", "card_pivot_table"]
+    },
+    "nce_events/nce_events/doctype/card_portal/": {
+      "purpose": "Portal page definition — ordered columns of cards",
+      "key_fields": ["title"],
+      "depends_on": ["card_portal_column"]
+    },
+    "nce_events/nce_events/doctype/display_settings/": {
+      "purpose": "Global display settings singleton for NCE Events UI",
+      "key_fields": [],
+      "depends_on": []
+    },
+    "nce_events/nce_events/doctype/settings/": {
+      "purpose": "App-level settings singleton",
+      "key_fields": [],
+      "depends_on": []
+    }
+  },
+
+  "frontend_v1": {
+    "nce_events/public/js/panel_page/ui.js": {
+      "purpose": "V1 Explorer class — renders panel table, handles pagination, column toggle, row click",
+      "exports": ["nce_events.Explorer"],
+      "depends_on": ["panel_page/store.js", "panel_page/sms_dialog.js", "panel_page/email_dialog.js"]
+    },
+    "nce_events/public/js/panel_page/store.js": {
+      "purpose": "V1 Store class — state management for V1 panel (filters, data, pagination)",
+      "exports": ["nce_events.Store"],
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page/sms_dialog.js": {
+      "purpose": "SMS compose/send dialog — shared by V1 and V2",
+      "exports": ["nce_events.SmsDialog"],
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page/email_dialog.js": {
+      "purpose": "Email compose/send dialog — shared by V1 and V2",
+      "exports": ["nce_events.EmailDialog"],
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page/ai_tools.js": {
+      "purpose": "AI tools sidebar panel — shared by V1 and V2",
+      "exports": ["nce_events.AiTools"],
+      "depends_on": []
+    },
+    "nce_events/public/js/schema_explorer.js": {
+      "purpose": "Tag Finder V1 — DocType field browser for building Jinja template tags",
+      "exports": ["nce_events.schema_explorer"],
+      "depends_on": []
+    },
+    "nce_events/public/js/email_template_tags.js": {
+      "purpose": "DocType JS extension for Email Template — adds Tag Finder button",
+      "exports": [],
+      "depends_on": ["schema_explorer.js"]
+    },
+    "nce_events/public/js/api_connector_tags.js": {
+      "purpose": "DocType JS extension for API Connector — tag generation helpers",
+      "exports": [],
+      "depends_on": []
+    },
+    "nce_events/public/js/enrollments_exchange.js": {
+      "purpose": "Enrollments data exchange UI — globally included",
+      "exports": [],
+      "depends_on": []
+    }
+  },
+
+  "frontend_v2": {
+    "note": "V2 is a Vue 3 SFC app built with Vite. Source in public/js/panel_page_v2/, built output in public/js/panel_page_v2_dist/. Run update_v2.sh to build.",
+    "nce_events/public/js/panel_page_v2/App.vue": {
+      "purpose": "V2 root component — panel orchestration, tab management, panel switching",
+      "exports": [],
+      "depends_on": ["composables/usePanel.js", "components/PanelTable.vue", "components/TabBar.vue"]
+    },
+    "nce_events/public/js/panel_page_v2/composables/usePanel.js": {
+      "purpose": "V2 composable — load panel config and data, refetch with user_filters",
+      "exports": ["usePanel"],
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/composables/useTagFinder.js": {
+      "purpose": "V2 composable — Tag Finder field loading and tag generation",
+      "exports": ["useTagFinder"],
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/composables/useCardForm.js": {
+      "purpose": "V2 composable — card form state and submission",
+      "exports": ["useCardForm"],
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelTable.vue": {
+      "purpose": "Main data table component for V2 panel — columns, rows, pagination, sorting",
+      "exports": [],
+      "depends_on": ["usePanel.js"]
+    },
+    "nce_events/public/js/panel_page_v2/components/TabBar.vue": {
+      "purpose": "Tab navigation bar for switching between panels",
+      "exports": [],
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/components/TagFinder.vue": {
+      "purpose": "Tag Finder V2 — Vue port of schema_explorer.js for template tag building",
+      "exports": [],
+      "depends_on": ["useTagFinder.js"]
+    },
+    "nce_events/public/js/panel_page_v2/components/TagDialog.vue": {
+      "purpose": "Modal dialog wrapping TagFinder for in-context tag insertion",
+      "exports": [],
+      "depends_on": ["TagFinder.vue"]
+    },
+    "nce_events/public/js/panel_page_v2/components/TagColumn.vue": {
+      "purpose": "Table column cell renderer with tag highlighting",
+      "exports": [],
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/components/ActionsPanel.vue": {
+      "purpose": "Side panel showing available actions (email, SMS, AI tools) for selected rows",
+      "exports": [],
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/components/CardModal.vue": {
+      "purpose": "Modal wrapper for card display/editing",
+      "exports": [],
+      "depends_on": ["CardForm.vue"]
+    },
+    "nce_events/public/js/panel_page_v2/components/CardForm.vue": {
+      "purpose": "Card definition form renderer within modal",
+      "exports": [],
+      "depends_on": ["useCardForm.js"]
+    },
+    "nce_events/public/js/panel_page_v2/components/DisplayWidget.vue": {
+      "purpose": "Read-only display widget for card fields",
+      "exports": [],
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/components/FieldWidget.vue": {
+      "purpose": "Editable field widget for card form inputs",
+      "exports": [],
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFloat.vue": {
+      "purpose": "Floating overlay panel for contextual actions",
+      "exports": [],
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/components/WidgetGrid.vue": {
+      "purpose": "Grid layout container for card widgets",
+      "exports": [],
+      "depends_on": []
+    }
+  },
+
+  "hierarchy_explorer": {
+    "nce_events/public/js/hierarchy_explorer/ui.js": {
+      "purpose": "Hierarchy Explorer UI — tree view rendering for hierarchical doctypes",
+      "exports": [],
+      "depends_on": ["hierarchy_explorer/store.js", "hierarchy_explorer/config.js"]
+    },
+    "nce_events/public/js/hierarchy_explorer/store.js": {
+      "purpose": "Hierarchy Explorer state — tree data, expansion state",
+      "exports": [],
+      "depends_on": []
+    },
+    "nce_events/public/js/hierarchy_explorer/config.js": {
+      "purpose": "Hierarchy Explorer configuration — which doctypes to show as hierarchies",
+      "exports": [],
+      "depends_on": []
+    }
+  }
+}

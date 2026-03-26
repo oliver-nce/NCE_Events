@@ -1042,3 +1042,110 @@ body.panel-float-dragging * {
 		min-width: 280px;
 	}
 }
+
+/* ── Recipients popup ── */
+
+.send-recipients-popup {
+	position: fixed;
+	width: 320px;
+	max-height: 480px;
+	display: flex;
+	flex-direction: column;
+	background: var(--bg-card);
+	border: 1px solid var(--nce-color-primary-300, #a2ccf6);
+	border-radius: var(--border-radius);
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
+	overflow: hidden;
+}
+
+.recip-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 8px 12px;
+	background: var(--nce-color-primary-100, #e3f0fc);
+	border-bottom: 1px solid var(--nce-color-primary-300, #a2ccf6);
+	flex-shrink: 0;
+}
+
+.recip-title {
+	font-weight: 600;
+	font-size: calc(var(--font-size-base) * 0.923);
+	color: var(--primary);
+}
+
+.recip-close {
+	background: transparent;
+	border: none;
+	font-size: 16px;
+	color: var(--text-muted);
+	cursor: pointer;
+	line-height: 1;
+	padding: 0;
+}
+
+.recip-close:hover {
+	color: var(--text-color);
+}
+
+.recip-body {
+	flex: 1;
+	overflow-y: auto;
+	padding: 6px 0;
+}
+
+.recip-row {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+	padding: 4px 12px;
+	font-size: calc(var(--font-size-base) * 0.923);
+	border-bottom: 1px solid var(--border-color);
+}
+
+.recip-row:last-child {
+	border-bottom: none;
+}
+
+.recip-name {
+	color: var(--text-muted);
+	white-space: nowrap;
+	min-width: 80px;
+	max-width: 100px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	flex-shrink: 0;
+}
+
+.recip-addr {
+	color: var(--text-color);
+	word-break: break-all;
+}
+
+.recip-none {
+	color: var(--text-muted);
+}
+
+.recip-skipped-header {
+	padding: 6px 12px 2px;
+	font-size: calc(var(--font-size-base) * 0.846);
+	color: var(--text-muted);
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+}
+
+.recip-empty {
+	padding: 12px;
+	color: var(--text-muted);
+	font-size: calc(var(--font-size-base) * 0.923);
+}
+
+.send-recipients-btn {
+	color: var(--primary) !important;
+	border-color: var(--nce-color-primary-300, #a2ccf6) !important;
+}
+
+.send-recipients-btn:hover {
+	background: var(--nce-color-primary-100, #e3f0fc) !important;
+}

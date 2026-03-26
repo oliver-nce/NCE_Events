@@ -20,16 +20,6 @@ def _enrich_row_context(root_doctype: str, row: dict) -> dict[str, Any]:
 		context = {k: (v if v is not None else "") for k, v in row.items()}
 
 	context["doc"] = frappe._dict(context)
-
-	# Log Link field values for debugging 2-hop resolution
-	meta = frappe.get_meta(root_doctype)
-	link_fields = [f for f in meta.fields if f.fieldtype == "Link" and f.options]
-	debug_lines = [f"DocType: {root_doctype}, row: {row_name}"]
-	for lf in link_fields:
-		val = context.get(lf.fieldname, "")
-		debug_lines.append(f"  {lf.fieldname} ({lf.options}): {repr(val)}")
-	frappe.log_error(title="enrich_row_context debug", message="\n".join(debug_lines))
-
 	return context
 
 
@@ -150,6 +140,34 @@ def preview_panel_message(
 
 
 @frappe.whitelist()
+def get_recipients(
+	root_doctype: str,
+	filters: str | dict | None = None,
+	user_filters: str | list | None = None,
+	recipient_field: str = "",
+) -> dict[str, Any]:
+	"""Return the list of (name, address) pairs that would be sent to — without sending anything.
+	Uses exactly the same filter + field logic as send_panel_message."""
+	result = get_panel_data(root_doctype, filters, user_filters=user_filters)
+	rows = result.get("rows") or []
+
+	recipients: list[dict[str, str]] = []
+	for row in rows:
+		context = _enrich_row_context(root_doctype, row)
+		addr = str(context.get(recipient_field, "")).strip()
+		recipients.append({"name": row.get("name", ""), "address": addr})
+
+	resolved = [r for r in recipients if r["address"]]
+	skipped = [r for r in recipients if not r["address"]]
+
+	return {
+		"total_rows": len(rows),
+		"resolved": resolved,
+		"skipped": skipped,
+	}
+
+
+@frappe.whitelist()
 def send_panel_message(
 	root_doctype: str,
 	filters: str | dict | None = None,
@@ -197,7 +215,9 @@ def send_panel_message(
 				if email_addr:
 					try:
 						email_body = _render_body(body, context, for_html=True)
-						_send_email(email_addr, rendered_subject or "SMS Copy", email_body, from_email=from_email_val)
+						_send_email(
+							email_addr, rendered_subject or "SMS Copy", email_body, from_email=from_email_val
+						)
 					except Exception as e:
 						errors.append(f"Email to {email_addr}: {e}")
 
@@ -205,16 +225,18 @@ def send_panel_message(
 			email_addr = recipient
 			if email_addr:
 				try:
-					_send_email(email_addr, rendered_subject or "(No Subject)", rendered_body, from_email=from_email_val)
+					_send_email(
+						email_addr,
+						rendered_subject or "(No Subject)",
+						rendered_body,
+						from_email=from_email_val,
+					)
 					sent += 1
 				except Exception as e:
 					errors.append(f"Email to {email_addr}: {e}")
 
 	if errors:
-		frappe.log_error(
-			"\n".join(errors),
-			f"send_panel_message errors ({root_doctype})"
-		)
+		frappe.log_error("\n".join(errors), f"send_panel_message errors ({root_doctype})")
 
 	return {"sent": sent, "total": len(rows), "errors": len(errors)}
 
@@ -257,9 +279,7 @@ def _send_email(to_email: str, subject: str, body: str, *, from_email: str | Non
 	api_key = creds.get("bearer_token") or creds.get("api_key") or ""
 
 	if not from_email or not from_email.strip():
-		from_email = (
-			frappe.db.get_value("Email Account", {"default_outgoing": 1}, "email_id") or ""
-		).strip()
+		from_email = (frappe.db.get_value("Email Account", {"default_outgoing": 1}, "email_id") or "").strip()
 	else:
 		from_email = from_email.strip()
 

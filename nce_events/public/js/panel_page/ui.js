@@ -37,14 +37,15 @@ nce_events.panel_page.Explorer = class Explorer {
 
 	_inject_display_settings() {
 		const FONT_MAP = {
-			"Inter": "'Inter', sans-serif",
+			Inter: "'Inter', sans-serif",
 			"Source Sans 3": "'Source Sans 3', sans-serif",
-			"Arial": "Arial, sans-serif",
-			"Helvetica": "Helvetica, Arial, sans-serif",
-			"Georgia": "Georgia, serif",
-			"Verdana": "Verdana, sans-serif",
-			"Tahoma": "Tahoma, sans-serif",
-			"System Default": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+			Arial: "Arial, sans-serif",
+			Helvetica: "Helvetica, Arial, sans-serif",
+			Georgia: "Georgia, serif",
+			Verdana: "Verdana, sans-serif",
+			Tahoma: "Tahoma, sans-serif",
+			"System Default":
+				"-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
 		};
 
 		const me = this;
@@ -62,17 +63,20 @@ nce_events.panel_page.Explorer = class Explorer {
 				const color = doc.text_color || "#333333";
 				const muted = doc.muted_text_color || "#555555";
 
-			const sel = ".panel-float, .panel-float .panel-table td, .panel-float .panel-table th, " +
-				".panel-float .pane-filter-widget, " +
+				const sel =
+					".panel-float, .panel-float .panel-table td, .panel-float .panel-table th, " +
+					".panel-float .pane-filter-widget, " +
 					".panel-float .filter-col-select, " +
 					".panel-float .filter-op-select, .panel-float .filter-val-input";
 
-				const send_sel = ".send-panel, .send-panel .send-field, .send-panel .send-field-label, " +
+				const send_sel =
+					".send-panel, .send-panel .send-field, .send-panel .send-field-label, " +
 					".send-panel .send-panel-title, .send-panel .send-check-label, " +
 					".send-panel .send-panel-actions .btn, " +
 					".send-preview-body, .send-preview-subject, .send-preview-recipient";
 
-				const tag_sel = ".se-tag-panel-body, .se-tag-val, .se-tag-lbl, .se-tag-pre, " +
+				const tag_sel =
+					".se-tag-panel-body, .se-tag-val, .se-tag-lbl, .se-tag-pre, " +
 					".se-fallback-input, .se-html-check-label, " +
 					".se-tag-panel .btn";
 
@@ -93,7 +97,7 @@ nce_events.panel_page.Explorer = class Explorer {
 
 				$("#display-settings-runtime").remove();
 				$("<style>").attr("id", "display-settings-runtime").text(css).appendTo("head");
-			}
+			},
 		});
 	}
 
@@ -118,13 +122,16 @@ nce_events.panel_page.Explorer = class Explorer {
 		me._create_float(me.WP_DOCTYPE, true, null);
 		me._show_loading(me.WP_DOCTYPE);
 
-		me.store.fetch_config(me.WP_DOCTYPE).then(function () {
-			return me.store.fetch_data(me.WP_DOCTYPE, PAGE);
-		}).then(function () {
-			if (me._destroyed) return;
-			me._render_panel(me.WP_DOCTYPE);
-			me._fetch_remaining(me.WP_DOCTYPE);
-		});
+		me.store
+			.fetch_config(me.WP_DOCTYPE)
+			.then(function () {
+				return me.store.fetch_data(me.WP_DOCTYPE, PAGE);
+			})
+			.then(function () {
+				if (me._destroyed) return;
+				me._render_panel(me.WP_DOCTYPE);
+				me._fetch_remaining(me.WP_DOCTYPE);
+			});
 	}
 
 	/* ── Open a DocType panel (from WP Tables row click or drill-down) ── */
@@ -136,16 +143,17 @@ nce_events.panel_page.Explorer = class Explorer {
 		me._create_float(doctype, false, parent_doctype);
 		me._show_loading(doctype);
 
-		me.store.fetch_config(doctype).then(function () {
-			return me.store.fetch_data(doctype, PAGE);
-		}).then(function () {
-			if (me._destroyed) return;
-			me._render_panel(doctype);
-			me._fetch_remaining(doctype);
-		}).catch(function (err) {
-			console.error(`Error loading panel ${doctype}:`, err);
-			if (!me._destroyed) me._render_panel(doctype);
-		});
+		// Fetch config and first page in parallel — they are independent
+		Promise.all([me.store.fetch_config(doctype), me.store.fetch_data(doctype, PAGE)])
+			.then(function () {
+				if (me._destroyed) return;
+				me._render_panel(doctype);
+				me._fetch_remaining(doctype);
+			})
+			.catch(function (err) {
+				console.error(`Error loading panel ${doctype}:`, err);
+				if (!me._destroyed) me._render_panel(doctype);
+			});
 	}
 
 	/* ── Float management ── */
@@ -157,7 +165,8 @@ nce_events.panel_page.Explorer = class Explorer {
 		}
 		this._float_z += 1;
 
-		let top = 60, left = 40;
+		let top = 60,
+			left = 40;
 		if (!is_root && parent_doctype && this.floats[parent_doctype]) {
 			const parent_el = this.floats[parent_doctype];
 			top = (parseInt(parent_el.css("top"), 10) || 60) + 100;
@@ -169,15 +178,23 @@ nce_events.panel_page.Explorer = class Explorer {
 
 		const float_width = is_root ? 900 : 1400;
 
-		const float_el = $(`<div class="panel-float" data-doctype="${frappe.utils.escape_html(doctype)}"></div>`);
+		const float_el = $(
+			`<div class="panel-float" data-doctype="${frappe.utils.escape_html(doctype)}"></div>`,
+		);
 		float_el.css({
-			top: `${top}px`, left: `${left}px`,
-			width: `${float_width}px`, height: "600px",
+			top: `${top}px`,
+			left: `${left}px`,
+			width: `${float_width}px`,
+			height: "600px",
 			zIndex: this._float_z,
 		});
 
-		const pane_el = $(`<div class="panel-pane" data-doctype="${frappe.utils.escape_html(doctype)}"><div class="panel-pane-header"></div><div class="panel-pane-body"></div></div>`);
-		const footer_el = $(`<div class="panel-float-footer">${frappe.utils.escape_html(doctype)}</div>`);
+		const pane_el = $(
+			`<div class="panel-pane" data-doctype="${frappe.utils.escape_html(doctype)}"><div class="panel-pane-header"></div><div class="panel-pane-body"></div></div>`,
+		);
+		const footer_el = $(
+			`<div class="panel-float-footer">${frappe.utils.escape_html(doctype)}</div>`,
+		);
 		float_el.append(pane_el, footer_el);
 		$(document.body).append(float_el);
 		this.floats[doctype] = float_el;
@@ -200,25 +217,33 @@ nce_events.panel_page.Explorer = class Explorer {
 		const me = this;
 		const descendants = me.store._get_descendants(doctype);
 		descendants.forEach(function (dt) {
-			if (me.floats[dt]) { me.floats[dt].remove(); delete me.floats[dt]; }
+			if (me.floats[dt]) {
+				me.floats[dt].remove();
+				delete me.floats[dt];
+			}
 		});
-		if (me.floats[doctype]) { me.floats[doctype].remove(); delete me.floats[doctype]; }
+		if (me.floats[doctype]) {
+			me.floats[doctype].remove();
+			delete me.floats[doctype];
+		}
 		me.store.close_panel(doctype);
 	}
 
 	_show_loading(doctype) {
 		const float_el = this.floats[doctype];
 		if (!float_el) return;
-		float_el.find(".panel-pane-body").html(
-			`<div class="panel-loading">${__("Loading\u2026")}</div>`
-		);
+		float_el
+			.find(".panel-pane-body")
+			.html(`<div class="panel-loading">${__("Loading\u2026")}</div>`);
 	}
 
 	_make_draggable(float_el) {
-		this._make_float_draggable(float_el,
+		this._make_float_draggable(
+			float_el,
 			[".panel-pane-header", ".panel-float-footer"],
 			".pane-header-btn, .panel-float-close, .pane-filter-widget",
-			"float_drag");
+			"float_drag",
+		);
 	}
 
 	/* ── Panel rendering ── */
@@ -239,19 +264,28 @@ nce_events.panel_page.Explorer = class Explorer {
 		const rows = me._get_filtered_rows(doctype);
 		const columns = me._get_display_columns(config, data.columns || []);
 
-		const is_wp = (doctype === me.WP_DOCTYPE);
+		const is_wp = doctype === me.WP_DOCTYPE;
 
 		const float_w = float_el.width() || (is_wp ? 900 : 1400);
 		const col_widths = me._calc_col_widths(columns, rows, float_w);
 
-		const row_ctx = me._build_row_ctx(doctype, config, data, col_widths, is_wp, panel.selected_row, columns);
+		const row_ctx = me._build_row_ctx(
+			doctype,
+			config,
+			data,
+			col_widths,
+			is_wp,
+			panel.selected_row,
+			columns,
+		);
 
 		let html = '<table class="panel-table"><thead><tr>';
 		columns.forEach(function (col, ci) {
 			const fn = col.fieldname.toLowerCase();
 			const w = col_widths[ci] || 100;
 			let style = `width:${w}px;min-width:30px;`;
-			if (col.is_link || col.is_related_link) style += "color:royalblue !important;text-decoration:underline;";
+			if (col.is_link || col.is_related_link)
+				style += "color:royalblue !important;text-decoration:underline;";
 			if (row_ctx.bold_set[fn]) style += "font-weight:700 !important;";
 			html += `<th style="${style}">${frappe.utils.escape_html(col.label)}<div class="col-resize-handle" data-col="${ci}"></div></th>`;
 		});
@@ -289,7 +323,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		const label = config.header_text || doctype;
 		const filtered_rows = me._get_filtered_rows(doctype);
 		const total = panel.data.total || 0;
-		const is_wp = (doctype === me.WP_DOCTYPE);
+		const is_wp = doctype === me.WP_DOCTYPE;
 
 		let html = '<div class="pane-title-row">';
 		html += `<span class="pane-label">${frappe.utils.escape_html(label)}</span>`;
@@ -309,11 +343,12 @@ nce_events.panel_page.Explorer = class Explorer {
 		}
 
 		html += '<span class="pane-count">';
-		html += (filtered_rows.length !== total) ? `${filtered_rows.length} / ${total}` : String(total);
-		html += ' records</span>';
+		html +=
+			filtered_rows.length !== total ? `${filtered_rows.length} / ${total}` : String(total);
+		html += " records</span>";
 
 		html += '<button class="panel-float-close" title="Close">&times;</button>';
-		html += '</span></div>';
+		html += "</span></div>";
 
 		const header_el = float_el.find(".panel-pane-header");
 		header_el.html(html);
@@ -328,10 +363,18 @@ nce_events.panel_page.Explorer = class Explorer {
 				}
 			});
 		}
-		header_el.find(".pane-sheets-btn").on("click", function () { me._on_sheets(doctype); });
-		header_el.find(".pane-email-btn").on("click", function () { me._open_send_dialog(doctype, "email"); });
-		header_el.find(".pane-sms-btn").on("click", function () { me._open_send_dialog(doctype, "sms"); });
-		header_el.find(".panel-float-close").on("click", function () { me._close_float(doctype); });
+		header_el.find(".pane-sheets-btn").on("click", function () {
+			me._on_sheets(doctype);
+		});
+		header_el.find(".pane-email-btn").on("click", function () {
+			me._open_send_dialog(doctype, "email");
+		});
+		header_el.find(".pane-sms-btn").on("click", function () {
+			me._open_send_dialog(doctype, "sms");
+		});
+		header_el.find(".panel-float-close").on("click", function () {
+			me._close_float(doctype);
+		});
 
 		float_el.find(".panel-float-footer").text(label);
 	}
@@ -342,11 +385,16 @@ nce_events.panel_page.Explorer = class Explorer {
 		const me = this;
 		const float_el = me.floats[doctype];
 		if (!float_el) return;
-		const is_wp = (doctype === me.WP_DOCTYPE);
+		const is_wp = doctype === me.WP_DOCTYPE;
 		const body = float_el.find(".panel-pane-body");
 
 		body.on("click", ".panel-row", function (e) {
-			if ($(e.target).closest(".panel-link-val, .panel-related-val, .panel-tel-link, .panel-sms-one-btn, .panel-email-one-btn").length) return;
+			if (
+				$(e.target).closest(
+					".panel-link-val, .panel-related-val, .panel-tel-link, .panel-sms-one-btn, .panel-email-one-btn",
+				).length
+			)
+				return;
 
 			const ri = parseInt($(this).data("row-idx"), 10);
 			const rows = me._get_filtered_rows(doctype);
@@ -362,14 +410,19 @@ nce_events.panel_page.Explorer = class Explorer {
 				if (target_dt) {
 					me._wp_open_target(target_dt);
 				} else {
-					frappe.db.get_value("WP Tables", row.name, "frappe_doctype").then(function (r) {
-						const dt = r && r.message && r.message.frappe_doctype;
-						if (!dt) {
-							frappe.show_alert({ message: __("No frappe_doctype on this WP Tables row"), indicator: "orange" });
-							return;
-						}
-						me._wp_open_target(dt);
-					});
+					frappe.db
+						.get_value("WP Tables", row.name, "frappe_doctype")
+						.then(function (r) {
+							const dt = r && r.message && r.message.frappe_doctype;
+							if (!dt) {
+								frappe.show_alert({
+									message: __("No frappe_doctype on this WP Tables row"),
+									indicator: "orange",
+								});
+								return;
+							}
+							me._wp_open_target(dt);
+						});
 				}
 			}
 		});
@@ -449,7 +502,9 @@ nce_events.panel_page.Explorer = class Explorer {
 		if (!panel || !panel.data) return [];
 		const all_rows = panel.data.rows || [];
 		const conditions = panel.user_filters || [];
-		const active = conditions.filter(function (c) { return c.field && c.value !== ""; });
+		const active = conditions.filter(function (c) {
+			return c.field && c.value !== "";
+		});
 		if (!active.length) return all_rows;
 		const me = this;
 		return all_rows.filter(function (row) {
@@ -458,13 +513,27 @@ nce_events.panel_page.Explorer = class Explorer {
 				const cell = String(val == null ? "" : val).toLowerCase();
 				const cval = c.value.toLowerCase();
 				switch (c.op) {
-				case "=":    return cell === cval;
-				case "!=":   return cell !== cval;
-				case ">":    return parseFloat(cell) > parseFloat(cval);
-				case "<":    return parseFloat(cell) < parseFloat(cval);
-				case "like": return cell.indexOf(cval) >= 0;
-				case "in":   return cval.split(",").map(function (v) { return v.trim(); }).indexOf(cell) >= 0;
-				default:     return true;
+					case "=":
+						return cell === cval;
+					case "!=":
+						return cell !== cval;
+					case ">":
+						return parseFloat(cell) > parseFloat(cval);
+					case "<":
+						return parseFloat(cell) < parseFloat(cval);
+					case "like":
+						return cell.indexOf(cval) >= 0;
+					case "in":
+						return (
+							cval
+								.split(",")
+								.map(function (v) {
+									return v.trim();
+								})
+								.indexOf(cell) >= 0
+						);
+					default:
+						return true;
 				}
 			});
 		});
@@ -489,22 +558,28 @@ nce_events.panel_page.Explorer = class Explorer {
 		const widget = $('<div class="pane-filter-widget"></div>');
 
 		const refetch_and_render = function (preserve_filter_focus, after_render) {
-			me.store.fetch_data(doctype, me._PAGE_SIZE).then(function () {
-				if (!me._destroyed) {
-					me._render_panel(doctype, { skip_header: !!preserve_filter_focus });
-					me._fetch_remaining(doctype);
-					if (preserve_filter_focus) {
-						const p = me.store.get_panel(doctype);
-						const total = (p && p.data) ? (p.data.total || 0) : 0;
-						const rows = me._get_filtered_rows(doctype);
-						const txt = (rows.length !== total) ? rows.length + " / " + total : String(total);
-						float_el.find(".pane-count").text(txt + " records");
+			me.store
+				.fetch_data(doctype, me._PAGE_SIZE)
+				.then(function () {
+					if (!me._destroyed) {
+						me._render_panel(doctype, { skip_header: !!preserve_filter_focus });
+						me._fetch_remaining(doctype);
+						if (preserve_filter_focus) {
+							const p = me.store.get_panel(doctype);
+							const total = p && p.data ? p.data.total || 0 : 0;
+							const rows = me._get_filtered_rows(doctype);
+							const txt =
+								rows.length !== total
+									? rows.length + " / " + total
+									: String(total);
+							float_el.find(".pane-count").text(txt + " records");
+						}
+						if (after_render) after_render();
 					}
-					if (after_render) after_render();
-				}
-			}).catch(function () {
-				if (!me._destroyed) me._render_panel(doctype);
-			});
+				})
+				.catch(function () {
+					if (!me._destroyed) me._render_panel(doctype);
+				});
 		};
 
 		conditions.forEach(function (cond, i) {
@@ -531,8 +606,12 @@ nce_events.panel_page.Explorer = class Explorer {
 				});
 				op_btns.append(btn);
 			});
-			const val_inp = $('<input class="filter-val-input" type="text" placeholder="value">').val(cond.value);
-			const rm_btn = $('<button class="btn btn-xs filter-remove-btn" title="Remove">&times;</button>');
+			const val_inp = $(
+				'<input class="filter-val-input" type="text" placeholder="value">',
+			).val(cond.value);
+			const rm_btn = $(
+				'<button class="btn btn-xs filter-remove-btn" title="Remove">&times;</button>',
+			);
 
 			rm_btn.on("click", function () {
 				conditions.splice(i, 1);
@@ -547,24 +626,36 @@ nce_events.panel_page.Explorer = class Explorer {
 			val_inp.on("input", function () {
 				conditions[i].value = $(this).val();
 				if (me._filter_debounce) clearTimeout(me._filter_debounce);
-				me._filter_debounce = setTimeout(function () { refetch_and_render(true); }, 1500);
+				me._filter_debounce = setTimeout(function () {
+					refetch_and_render(true);
+				}, 1500);
 			});
 			val_inp.attr("data-filter-row", i);
 			val_inp.on("keydown", function (e) {
 				if (e.keyCode === 40) {
 					e.preventDefault();
-					const next = widget.find(".filter-val-input[data-filter-row='" + (i + 1) + "']");
+					const next = widget.find(
+						".filter-val-input[data-filter-row='" + (i + 1) + "']",
+					);
 					if (next.length) next.focus();
 					else {
 						conditions.push({ field: "", op: "=", value: "" });
 						me.store.set_user_filters(doctype, conditions);
 						me._render_filter_widget(doctype);
 						const new_widget = float_el.find(".pane-filter-widget");
-						new_widget.find(".filter-val-input[data-filter-row='" + (conditions.length - 1) + "']").focus();
+						new_widget
+							.find(
+								".filter-val-input[data-filter-row='" +
+									(conditions.length - 1) +
+									"']",
+							)
+							.focus();
 					}
 				} else if (e.keyCode === 38) {
 					e.preventDefault();
-					const prev = widget.find(".filter-val-input[data-filter-row='" + (i - 1) + "']");
+					const prev = widget.find(
+						".filter-val-input[data-filter-row='" + (i - 1) + "']",
+					);
 					if (prev.length) prev.focus();
 				}
 			});
@@ -574,7 +665,9 @@ nce_events.panel_page.Explorer = class Explorer {
 			widget.append(row);
 		});
 
-		const add_btn = $('<button class="btn btn-xs btn-default filter-add-btn">Add Filter &#9660;</button>');
+		const add_btn = $(
+			'<button class="btn btn-xs btn-default filter-add-btn">Add Filter &#9660;</button>',
+		);
 		add_btn.on("click", function () {
 			conditions.push({ field: "", op: "=", value: "" });
 			me.store.set_user_filters(doctype, conditions);
@@ -594,7 +687,7 @@ nce_events.panel_page.Explorer = class Explorer {
 	_on_sheets(doctype) {
 		const panel = this.store.get_panel(doctype);
 		const filters = panel ? panel.parent_filter : {};
-		const user_filters = panel ? (panel.user_filters || []) : [];
+		const user_filters = panel ? panel.user_filters || [] : [];
 		frappe.call({
 			method: "nce_events.api.panel_api.export_panel_data",
 			args: {
@@ -608,10 +701,16 @@ nce_events.panel_page.Explorer = class Explorer {
 				const formula = `=IMPORTDATA("${url}")`;
 				if (navigator.clipboard && navigator.clipboard.writeText) {
 					navigator.clipboard.writeText(formula).then(function () {
-						frappe.show_alert({ message: __("Link copied — paste in Google Sheets"), indicator: "green" });
+						frappe.show_alert({
+							message: __("Link copied — paste in Google Sheets"),
+							indicator: "green",
+						});
 					});
 				} else {
-					frappe.show_alert({ message: __("Exported {0} rows", [r.message.rows_exported]), indicator: "green" });
+					frappe.show_alert({
+						message: __("Exported {0} rows", [r.message.rows_exported]),
+						indicator: "green",
+					});
 				}
 			},
 		});
@@ -627,7 +726,9 @@ nce_events.panel_page.Explorer = class Explorer {
 		const config = panel.config;
 		const recipient_field = mode === "sms" ? config.sms_field : config.email_field;
 		if (!recipient_field) {
-			frappe.msgprint(__("No {0} field configured for this panel.", [mode === "sms" ? "SMS" : "Email"]));
+			frappe.msgprint(
+				__("No {0} field configured for this panel.", [mode === "sms" ? "SMS" : "Email"]),
+			);
 			return;
 		}
 
@@ -638,15 +739,21 @@ nce_events.panel_page.Explorer = class Explorer {
 			row_count = 1;
 		} else {
 			const filtered_rows = me._get_filtered_rows(doctype);
-			if (!filtered_rows.length) { frappe.msgprint(__("No rows.")); return; }
+			if (!filtered_rows.length) {
+				frappe.msgprint(__("No rows."));
+				return;
+			}
 			filters = panel.parent_filter || {};
 			user_filters = panel.user_filters || [];
 			row_count = filtered_rows.length;
 		}
 
-		if (me._send_dialog) { me._send_dialog.close(); }
+		if (me._send_dialog) {
+			me._send_dialog.close();
+		}
 
-		const DialogClass = mode === "sms" ? nce_events.panel_page.SmsDialog : nce_events.panel_page.EmailDialog;
+		const DialogClass =
+			mode === "sms" ? nce_events.panel_page.SmsDialog : nce_events.panel_page.EmailDialog;
 		me._send_dialog = new DialogClass({
 			doctype: doctype,
 			config: config,
@@ -654,7 +761,9 @@ nce_events.panel_page.Explorer = class Explorer {
 			user_filters: user_filters,
 			row_count: row_count,
 			z_index: me._float_z + 10,
-			on_close: function () { me._send_dialog = null; },
+			on_close: function () {
+				me._send_dialog = null;
+			},
 		});
 	}
 
@@ -714,7 +823,9 @@ nce_events.panel_page.Explorer = class Explorer {
 		});
 
 		let total_chars = 0;
-		avg_chars.forEach(function (c) { total_chars += c; });
+		avg_chars.forEach(function (c) {
+			total_chars += c;
+		});
 
 		const available = float_w - 160;
 
@@ -725,10 +836,14 @@ nce_events.panel_page.Explorer = class Explorer {
 		});
 
 		let w_sum = 0;
-		widths.forEach(function (w) { w_sum += w; });
+		widths.forEach(function (w) {
+			w_sum += w;
+		});
 		if (w_sum > available && w_sum > 0) {
 			const scale = available / w_sum;
-			widths = widths.map(function (w) { return Math.floor(w * scale); });
+			widths = widths.map(function (w) {
+				return Math.floor(w * scale);
+			});
 		}
 
 		return widths;
@@ -764,7 +879,10 @@ nce_events.panel_page.Explorer = class Explorer {
 				});
 			});
 			$(document).on("mouseup.col_resize", function () {
-				if (raf) { cancelAnimationFrame(raf); raf = null; }
+				if (raf) {
+					cancelAnimationFrame(raf);
+					raf = null;
+				}
 				$("body").removeClass("col-resizing");
 				$(document).off("mousemove.col_resize mouseup.col_resize");
 			});
@@ -786,24 +904,27 @@ nce_events.panel_page.Explorer = class Explorer {
 		}
 
 		const PAGE = me._PAGE_SIZE;
-		me.store.fetch_data_page(doctype, loaded, PAGE).then(function (page_data) {
-			if (me._destroyed) return;
-			panel = me.store.get_panel(doctype);
-			if (!panel || !panel.data) return;
+		me.store
+			.fetch_data_page(doctype, loaded, PAGE)
+			.then(function (page_data) {
+				if (me._destroyed) return;
+				panel = me.store.get_panel(doctype);
+				if (!panel || !panel.data) return;
 
-			const new_rows = page_data.rows || [];
-			if (!new_rows.length) return;
+				const new_rows = page_data.rows || [];
+				if (!new_rows.length) return;
 
-			panel.data.rows = panel.data.rows.concat(new_rows);
-			me._append_rows(doctype, new_rows);
-			me._update_count(doctype);
+				panel.data.rows = panel.data.rows.concat(new_rows);
+				me._append_rows(doctype, new_rows);
+				me._update_count(doctype);
 
-			if (panel.data.rows.length < total) {
-				me._fetch_remaining(doctype);
-			}
-		}).catch(function (err) {
-			console.error(`Background fetch error for ${doctype}:`, err);
-		});
+				if (panel.data.rows.length < total) {
+					me._fetch_remaining(doctype);
+				}
+			})
+			.catch(function (err) {
+				console.error(`Background fetch error for ${doctype}:`, err);
+			});
 	}
 
 	_append_rows(doctype, new_rows) {
@@ -818,7 +939,7 @@ nce_events.panel_page.Explorer = class Explorer {
 		if (!tbody.length) return;
 
 		const existing_count = tbody.find("tr").length;
-		const is_wp = (doctype === me.WP_DOCTYPE);
+		const is_wp = doctype === me.WP_DOCTYPE;
 
 		const col_widths = [];
 		float_el.find(".panel-table thead th").each(function () {
@@ -826,7 +947,15 @@ nce_events.panel_page.Explorer = class Explorer {
 		});
 
 		const display_columns = me._get_display_columns(panel.config, panel.data.columns || []);
-		const row_ctx = me._build_row_ctx(doctype, panel.config, panel.data, col_widths, is_wp, null, display_columns);
+		const row_ctx = me._build_row_ctx(
+			doctype,
+			panel.config,
+			panel.data,
+			col_widths,
+			is_wp,
+			null,
+			display_columns,
+		);
 
 		let html = "";
 		new_rows.forEach(function (row, bi) {
@@ -877,7 +1006,8 @@ nce_events.panel_page.Explorer = class Explorer {
 			}
 			if (value === null || value === undefined) value = "";
 			if (typeof value === "object") value = JSON.stringify(value);
-			if (!col.is_action && me._looks_like_date(value)) value = frappe.datetime.str_to_user(value);
+			if (!col.is_action && me._looks_like_date(value))
+				value = frappe.datetime.str_to_user(value);
 
 			const w = ctx.col_widths[ci] || 100;
 			const parts = [`width:${w}px`, "min-width:30px"];
@@ -885,11 +1015,30 @@ nce_events.panel_page.Explorer = class Explorer {
 			if (col.is_action) {
 				let cell_html = "";
 				if (fn === "_email_action" && value && String(value).indexOf("@") !== -1) {
-					cell_html = '<button type="button" class="btn btn-xs btn-default panel-cell-btn panel-email-one-btn" data-doctype="' + frappe.utils.escape_html(ctx.doctype) + '" data-row-name="' + frappe.utils.escape_html(row.name) + '" title="' + __("Send email") + '"><i class="fa fa-envelope"></i></button>';
+					cell_html =
+						'<button type="button" class="btn btn-xs btn-default panel-cell-btn panel-email-one-btn" data-doctype="' +
+						frappe.utils.escape_html(ctx.doctype) +
+						'" data-row-name="' +
+						frappe.utils.escape_html(row.name) +
+						'" title="' +
+						__("Send email") +
+						'"><i class="fa fa-envelope"></i></button>';
 				} else if (fn === "_phone_action" && value && /[\d+]/.test(String(value))) {
 					const tel_val = String(value).replace(/\s+/g, "");
-					cell_html = '<button type="button" class="btn btn-xs btn-default panel-cell-btn panel-tel-link" data-tel="' + frappe.utils.escape_html(tel_val) + '" title="' + __("Call") + '"><i class="fa fa-phone"></i></button> ';
-					cell_html += '<button type="button" class="btn btn-xs btn-default panel-cell-btn panel-sms-one-btn" data-doctype="' + frappe.utils.escape_html(ctx.doctype) + '" data-row-name="' + frappe.utils.escape_html(row.name) + '" title="' + __("Send SMS") + '"><i class="fa fa-comment"></i></button>';
+					cell_html =
+						'<button type="button" class="btn btn-xs btn-default panel-cell-btn panel-tel-link" data-tel="' +
+						frappe.utils.escape_html(tel_val) +
+						'" title="' +
+						__("Call") +
+						'"><i class="fa fa-phone"></i></button> ';
+					cell_html +=
+						'<button type="button" class="btn btn-xs btn-default panel-cell-btn panel-sms-one-btn" data-doctype="' +
+						frappe.utils.escape_html(ctx.doctype) +
+						'" data-row-name="' +
+						frappe.utils.escape_html(row.name) +
+						'" title="' +
+						__("Send SMS") +
+						'"><i class="fa fa-comment"></i></button>';
 				}
 				html += `<td style="${parts.join(";")};">${cell_html}</td>`;
 				return;
@@ -905,9 +1054,15 @@ nce_events.panel_page.Explorer = class Explorer {
 				} else {
 					gv = me._get_row_gender(row, ctx.gender_col);
 					if (me._looks_male(gv) && ctx.male_hex) {
-						parts.push("font-weight:700 !important", `color:${ctx.male_hex} !important`);
+						parts.push(
+							"font-weight:700 !important",
+							`color:${ctx.male_hex} !important`,
+						);
 					} else if (me._looks_female(gv) && ctx.female_hex) {
-						parts.push("font-weight:700 !important", `color:${ctx.female_hex} !important`);
+						parts.push(
+							"font-weight:700 !important",
+							`color:${ctx.female_hex} !important`,
+						);
 					}
 				}
 			} else if (col.is_link || col.is_related_link) {
@@ -979,12 +1134,16 @@ nce_events.panel_page.Explorer = class Explorer {
 		function start_drag(e) {
 			if (ignore_selector && $(e.target).closest(ignore_selector).length) return;
 			e.preventDefault();
-			const sx = e.clientX, sy = e.clientY;
+			const sx = e.clientX,
+				sy = e.clientY;
 			const sl = parseInt(el.css("left"), 10) || 0;
 			const st = parseInt(el.css("top"), 10) || 0;
 			const ghost = $("<div class='drag-ghost'></div>").css({
-				position: "fixed", left: sl, top: st,
-				width: el.outerWidth(), height: el.outerHeight(),
+				position: "fixed",
+				left: sl,
+				top: st,
+				width: el.outerWidth(),
+				height: el.outerHeight(),
 				zIndex: (parseInt(el.css("zIndex"), 10) || 100) + 1,
 			});
 			$(document.body).append(ghost);
@@ -1017,7 +1176,9 @@ nce_events.panel_page.Explorer = class Explorer {
 	_field_set(list) {
 		const s = {};
 		if (!list || !list.length) return s;
-		list.forEach(function (f) { s[f.trim().toLowerCase()] = true; });
+		list.forEach(function (f) {
+			s[f.trim().toLowerCase()] = true;
+		});
 		return s;
 	}
 
@@ -1055,6 +1216,10 @@ nce_events.panel_page.Explorer = class Explorer {
 		return find();
 	}
 
-	_looks_male(v) { return /^(m|male|boy|man|men|boys)$/.test(v); }
-	_looks_female(v) { return /^(f|female|girl|woman|women|girls)$/.test(v); }
+	_looks_male(v) {
+		return /^(m|male|boy|man|men|boys)$/.test(v);
+	}
+	_looks_female(v) {
+		return /^(f|female|girl|woman|women|girls)$/.test(v);
+	}
 };

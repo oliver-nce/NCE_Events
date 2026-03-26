@@ -57,6 +57,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 					${nce_events.panel_page.ai_tools.build_bar_html()}
 					<div class="send-panel-actions">
 						<button class="btn btn-xs btn-default send-preview-btn"><i class="fa fa-eye"></i> Preview</button>
+						<button class="btn btn-xs btn-default send-recipients-btn" title="Check who will receive this email"><i class="fa fa-users"></i> Who receives this?</button>
 						<span class="send-actions-right">
 							<button class="btn btn-xs btn-default send-cancel-btn">Cancel</button>
 							<button class="btn btn-xs btn-primary send-send-btn">Send</button>
@@ -176,6 +177,9 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 		});
 		el.on("click", ".send-send-btn", function () {
 			me._do_send();
+		});
+		el.on("click", ".send-recipients-btn", function () {
+			me._do_show_recipients();
 		});
 		el.on("click", ".send-tags-btn", function () {
 			me._open_tags();
@@ -429,6 +433,91 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 		});
 	}
 
+	/* ── Show recipients ── */
+
+	_do_show_recipients() {
+		const me = this;
+		const btn = me.el.find(".send-recipients-btn");
+		btn.prop("disabled", true).html('<i class="fa fa-spinner fa-spin"></i> Loading...');
+
+		frappe.call({
+			method: "nce_events.api.messaging.get_recipients",
+			args: {
+				root_doctype: me.doctype,
+				filters: JSON.stringify(me.filters),
+				user_filters: JSON.stringify(me.user_filters),
+				recipient_field: me.config.email_field,
+			},
+			callback: function (r) {
+				btn.prop("disabled", false).html('<i class="fa fa-users"></i> Who receives this?');
+				if (!r.message) return;
+				const { total_rows, resolved, skipped } = r.message;
+				me._show_recipients_popup(total_rows, resolved, skipped);
+			},
+			error: function () {
+				btn.prop("disabled", false).html('<i class="fa fa-users"></i> Who receives this?');
+			},
+		});
+	}
+
+	_show_recipients_popup(total_rows, resolved, skipped) {
+		const me = this;
+
+		if (me._recipients_el) {
+			me._recipients_el.remove();
+			me._recipients_el = null;
+		}
+
+		const resolvedHtml = resolved.length
+			? resolved
+					.map(function (r) {
+						return `<div class="recip-row recip-ok"><span class="recip-name">${frappe.utils.escape_html(r.name)}</span><span class="recip-addr">${frappe.utils.escape_html(r.address)}</span></div>`;
+					})
+					.join("")
+			: `<div class="recip-empty">No resolved addresses.</div>`;
+
+		const skippedHtml = skipped.length
+			? `<div class="recip-skipped-header">Skipped — no address (${skipped.length}):</div>` +
+				skipped
+					.map(function (r) {
+						return `<div class="recip-row recip-skip"><span class="recip-name">${frappe.utils.escape_html(r.name)}</span><span class="recip-addr recip-none">—</span></div>`;
+					})
+					.join("")
+			: "";
+
+		const popup = $(`
+			<div class="send-recipients-popup">
+				<div class="recip-header">
+					<span class="recip-title">Recipients — ${resolved.length} of ${total_rows} rows have an address</span>
+					<button class="recip-close" title="Close">&times;</button>
+				</div>
+				<div class="recip-body">
+					${resolvedHtml}
+					${skippedHtml}
+				</div>
+			</div>
+		`);
+
+		$(document.body).append(popup);
+		me._recipients_el = popup;
+
+		const rect = me.el[0].getBoundingClientRect();
+		const pw = 320;
+		let left = rect.right + 8;
+		if (left + pw > window.innerWidth) left = rect.left - pw - 8;
+		if (left < 0) left = 8;
+		popup.css({
+			top: rect.top + "px",
+			left: left + "px",
+			zIndex: Math.max(parseInt(me.el.css("zIndex"), 10) || 110, 110) + 5,
+		});
+
+		popup.find(".recip-close").on("click", function () {
+			popup.remove();
+			me._recipients_el = null;
+		});
+	}
+
 	/* ── Send test ── */
 
 	_do_send_test() {
@@ -561,6 +650,10 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 		if (this._preview_el) {
 			this._preview_el.remove();
 			this._preview_el = null;
+		}
+		if (this._recipients_el) {
+			this._recipients_el.remove();
+			this._recipients_el = null;
 		}
 		if (this.el) {
 			this.el.remove();

@@ -28,7 +28,7 @@
 			<PanelTable
 				:title="p.config?.header_text || p.doctype"
 				:columns="p.columns"
-				:rows="p.rows"
+				:rows="p._panelRows || p.rows"
 				:total="p.fullTotal"
 				:loading="p.loading"
 				:error="p.error"
@@ -201,6 +201,8 @@ async function openPanel(doctype, parentFilter = {}, parentId = null) {
 		await panel.load();
 		p.config = panel.config.value;
 		p.columns = panel.columns.value;
+		// Keep a live reference so background batch appends stay reactive
+		p._panelRows = panel.rows;
 		p.rows = panel.rows.value;
 		p.total = panel.total.value;
 		p.fullTotal = panel.fullTotal.value;
