@@ -458,6 +458,8 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 		$(document.body).append(panel);
 		me._review_el = panel;
 
+		me._make_popup_draggable(panel, ".send-review-header");
+
 		// position to the right of the compose panel
 		const rect = me.el[0].getBoundingClientRect();
 		const pw = 420;
@@ -682,6 +684,8 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 			popup.remove();
 			me._recipients_el = null;
 		});
+
+		me._make_popup_draggable(popup, ".recip-header");
 	}
 
 	/* ── Send test ── */
@@ -831,6 +835,29 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 		}
 		this._close_tags();
 		if (this.on_close) this.on_close();
+	}
+
+	/* ── Generic popup drag (for recipients popup, review panel, etc.) ── */
+
+	_make_popup_draggable(el, handle_sel) {
+		const ns = "popup_drag_" + Math.random().toString(36).slice(2);
+		el.find(handle_sel).on(`mousedown.${ns}`, function (e) {
+			if ($(e.target).closest("button").length) return;
+			e.preventDefault();
+			const sx = e.clientX,
+				sy = e.clientY;
+			const sl = parseInt(el.css("left"), 10) || 0;
+			const st = parseInt(el.css("top"), 10) || 0;
+			$(document).on(`mousemove.${ns}`, function (ev) {
+				el.css({
+					left: `${sl + ev.clientX - sx}px`,
+					top: `${Math.max(0, st + ev.clientY - sy)}px`,
+				});
+			});
+			$(document).on(`mouseup.${ns}`, function () {
+				$(document).off(`mousemove.${ns} mouseup.${ns}`);
+			});
+		});
 	}
 
 	/* ── Draggable ── */

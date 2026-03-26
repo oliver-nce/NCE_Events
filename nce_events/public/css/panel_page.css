@@ -623,6 +623,8 @@ body.panel-float-dragging * {
 		0 8px 32px rgba(18, 107, 196, 0.22),
 		0 2px 8px rgba(0, 0, 0, 0.08);
 	overflow: hidden;
+	opacity: 1 !important;
+	isolation: isolate;
 }
 
 .send-panel-header {
@@ -901,6 +903,8 @@ body.panel-float-dragging * {
 	background: var(--bg-surface);
 	border: 1px solid var(--nce-color-primary-300, #a2ccf6);
 	border-radius: var(--border-radius);
+	opacity: 1 !important;
+	isolation: isolate;
 	box-shadow:
 		0 8px 32px rgba(18, 107, 196, 0.22),
 		0 2px 8px rgba(0, 0, 0, 0.08);
@@ -1056,6 +1060,8 @@ body.panel-float-dragging * {
 	border-radius: var(--border-radius);
 	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
 	overflow: hidden;
+	opacity: 1 !important;
+	isolation: isolate;
 }
 
 .recip-header {
@@ -1066,6 +1072,8 @@ body.panel-float-dragging * {
 	background: var(--nce-color-primary-100, #e3f0fc);
 	border-bottom: 1px solid var(--nce-color-primary-300, #a2ccf6);
 	flex-shrink: 0;
+	cursor: move;
+	user-select: none;
 }
 
 .recip-title {
@@ -1163,6 +1171,8 @@ body.panel-float-dragging * {
 	border-radius: var(--border-radius);
 	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.22);
 	overflow: hidden;
+	opacity: 1 !important;
+	isolation: isolate;
 }
 
 .send-review-header {
@@ -1172,6 +1182,8 @@ body.panel-float-dragging * {
 	padding: 8px 12px;
 	background: var(--bg-header);
 	flex-shrink: 0;
+	cursor: move;
+	user-select: none;
 }
 
 .send-review-progress {
