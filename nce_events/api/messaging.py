@@ -80,7 +80,14 @@ def send_test_email(
 	except Exception:
 		rendered_subject = subject or "(Test Email)"
 
-	_send_email(test_email, rendered_subject, rendered_body, from_email=from_email.strip() or None)
+	_send_email(
+		test_email,
+		rendered_subject,
+		rendered_body,
+		from_email=from_email.strip() or None,
+		reference_doctype=root_doctype,
+		reference_name=None,
+	)
 	return {"sent": 1, "to": test_email}
 
 
@@ -208,6 +215,8 @@ def send_one_email(
 		rendered_body,
 		from_email=from_email.strip() or None,
 		send_after_seconds=30,
+		reference_doctype=root_doctype,
+		reference_name=row_name,
 	)
 
 	return {"sent": 1, "to": recipient}
@@ -299,6 +308,8 @@ def send_panel_message(
 							email_body,
 							from_email=from_email_val,
 							send_after_seconds=30,
+							reference_doctype=root_doctype,
+							reference_name=row.get("name"),
 						)
 					except Exception as e:
 						errors.append(f"Email to {email_addr}: {e}")
@@ -313,6 +324,8 @@ def send_panel_message(
 						rendered_body,
 						from_email=from_email_val,
 						send_after_seconds=30,
+						reference_doctype=root_doctype,
+						reference_name=row.get("name"),
 					)
 					sent += 1
 				except Exception as e:
@@ -355,33 +368,81 @@ def _send_sms(phone: str, message: str) -> None:
 
 
 def _send_email(
-	to_email: str, subject: str, body: str, *, from_email: str | None = None, send_after_seconds: int = 0
+	to_email: str,
+	subject: str,
+	body: str,
+	*,
+	from_email: str | None = None,
+	send_after_seconds: int = 0,
+	reference_doctype: str | None = None,
+	reference_name: str | None = None,
 ) -> None:
-	"""Send an email via Frappe's outgoing email queue (uses the configured Email Account).
-	If send_after_seconds > 0, the email is queued and sent after that delay."""
+	"""Send an email via Frappe's email system.
+
+	Always creates a Communication record first, then queues/sends the email
+	linked to that Communication so every outbound email is auditable in both
+	Communication (subject/history) and Email Queue (delivery status).
+
+	If send_after_seconds > 0, the email is queued with a delay.
+	"""
 	from frappe.utils import add_to_date, now_datetime
 
 	sender = (from_email or "").strip() or None
+	if not sender:
+		sender = (
+			frappe.db.get_value("Email Account", {"default_outgoing": 1}, "email_id") or ""
+		).strip() or None
 
-	if send_after_seconds and send_after_seconds > 0:
-		send_after = add_to_date(now_datetime(), seconds=send_after_seconds)
-		frappe.sendmail(
+	# Step 1: Create Communication record
+	try:
+		comm = frappe.get_doc(
+			{
+				"doctype": "Communication",
+				"subject": subject,
+				"content": body,
+				"sender": sender or "",
+				"recipients": to_email,
+				"communication_medium": "Email",
+				"communication_type": "Automated Message",
+				"send_email": 0,
+				"reference_doctype": reference_doctype or "",
+				"reference_name": reference_name or "",
+			}
+		)
+		comm.insert(ignore_permissions=True)
+		frappe.db.commit()
+	except Exception as exc:
+		frappe.log_error(
+			title="Email Communication creation failed",
+			message=f"To: {to_email}\nSubject: {subject}\nError: {exc}",
+		)
+		frappe.throw(_(f"Could not create Communication record: {exc}"))
+
+	# Step 2: Send/queue the email linked to the Communication
+	try:
+		send_kwargs = dict(
 			recipients=[to_email],
 			subject=subject,
 			message=body,
 			sender=sender,
 			add_unsubscribe_link=0,
-			delayed=True,
-			now=False,
-			send_after=send_after,
+			reference_doctype=reference_doctype,
+			reference_name=reference_name,
+			communication=comm.name,
 		)
-	else:
-		frappe.sendmail(
-			recipients=[to_email],
-			subject=subject,
-			message=body,
-			sender=sender,
-			add_unsubscribe_link=0,
-			delayed=False,
-			now=True,
+
+		if send_after_seconds and send_after_seconds > 0:
+			send_kwargs["send_after"] = add_to_date(now_datetime(), seconds=send_after_seconds)
+			send_kwargs["delayed"] = True
+			send_kwargs["now"] = False
+		else:
+			send_kwargs["delayed"] = False
+			send_kwargs["now"] = True
+
+		frappe.sendmail(**send_kwargs)
+	except Exception as exc:
+		frappe.log_error(
+			title="Email send/queue failed",
+			message=f"Communication: {comm.name}\nTo: {to_email}\nError: {exc}",
 		)
+		raise
