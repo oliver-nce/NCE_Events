@@ -291,5 +291,7 @@ def _send_email(to_email: str, subject: str, body: str, *, from_email: str | Non
 		subject=subject,
 		message=body,
 		sender=sender,
-		now=False,  # queue it — lets Frappe rate-limit and log
+		add_unsubscribe_link=0,  # don't append Frappe's unsubscribe footer
+		delayed=True,  # queue through Email Queue — rate-limited, cancellable, logged
+		now=False,
 	)
