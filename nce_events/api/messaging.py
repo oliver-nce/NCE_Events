@@ -203,7 +203,11 @@ def send_one_email(
 		rendered_subject = subject
 
 	_send_email(
-		recipient, rendered_subject or "(No Subject)", rendered_body, from_email=from_email.strip() or None
+		recipient,
+		rendered_subject or "(No Subject)",
+		rendered_body,
+		from_email=from_email.strip() or None,
+		send_after_seconds=30,
 	)
 
 	return {"sent": 1, "to": recipient}
@@ -290,7 +294,11 @@ def send_panel_message(
 					try:
 						email_body = _render_body(body, context, for_html=True)
 						_send_email(
-							email_addr, rendered_subject or "SMS Copy", email_body, from_email=from_email_val
+							email_addr,
+							rendered_subject or "SMS Copy",
+							email_body,
+							from_email=from_email_val,
+							send_after_seconds=30,
 						)
 					except Exception as e:
 						errors.append(f"Email to {email_addr}: {e}")
@@ -304,6 +312,7 @@ def send_panel_message(
 						rendered_subject or "(No Subject)",
 						rendered_body,
 						from_email=from_email_val,
+						send_after_seconds=30,
 					)
 					sent += 1
 				except Exception as e:
