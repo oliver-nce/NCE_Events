@@ -284,38 +284,12 @@ def _send_sms(phone: str, message: str) -> None:
 
 
 def _send_email(to_email: str, subject: str, body: str, *, from_email: str | None = None) -> None:
-	"""Send an email via SendGrid using credentials from credential_config."""
-	import requests
-
-	creds = get_credentials("SendGrid")
-	api_key = creds.get("bearer_token") or creds.get("api_key") or ""
-
-	if not from_email or not from_email.strip():
-		from_email = (frappe.db.get_value("Email Account", {"default_outgoing": 1}, "email_id") or "").strip()
-	else:
-		from_email = from_email.strip()
-
-	if not api_key:
-		frappe.throw(_("SendGrid API key missing. Check the SendGrid API Connector."))
-	if not from_email:
-		frappe.throw(_("No default outgoing Email Account configured."))
-
-	base_url = (creds.get("base_url") or "https://api.sendgrid.com").rstrip("/")
-
-	resp = requests.post(
-		f"{base_url}/v3/mail/send",
-		headers={
-			"Authorization": f"Bearer {api_key}",
-			"Content-Type": "application/json",
-		},
-		json={
-			"personalizations": [{"to": [{"email": to_email}]}],
-			"from": {"email": from_email},
-			"subject": subject,
-			"content": [{"type": "text/html", "value": body}],
-		},
-		timeout=15,
+	"""Send an email via Frappe's outgoing email queue (uses the configured Email Account)."""
+	sender = (from_email or "").strip() or None
+	frappe.sendmail(
+		recipients=[to_email],
+		subject=subject,
+		message=body,
+		sender=sender,
+		now=False,  # queue it — lets Frappe rate-limit and log
 	)
-
-	if resp.status_code not in (200, 201, 202):
-		frappe.throw(_(f"SendGrid error {resp.status_code}: {resp.text}"))
