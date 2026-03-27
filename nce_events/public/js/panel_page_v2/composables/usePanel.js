@@ -22,12 +22,12 @@ export function usePanel(doctype, parentFilter = {}) {
 
 	// Full unfiltered dataset from backend
 	const _allRows = ref([]);
-	// core_filter string from backend config
-	const coreFilter = ref("");
-	// current active user filters
+	// core_filter parsed into [{field, op, value}] at load time
+	let _coreFilters = [];
+	// current active user filters [{field, op, value}]
 	const userFilters = ref([]);
 
-	// Incremented on every load so stale background loops self-cancel
+	// Incremented on every load so stale calls self-cancel
 	let _loadId = 0;
 
 	function fetchConfig() {
@@ -43,302 +43,93 @@ export function usePanel(doctype, parentFilter = {}) {
 		});
 	}
 
-	// Parse and apply core_filter (SQL-like string) to rows
-	// Resolve SQL date functions to ISO date strings before parsing
-	// Handles: current_date(), now(), curdate(), and INTERVAL N DAY/MONTH/YEAR arithmetic
-	function _resolveSqlDateFunctions(str) {
+	// ── Core filter parsing ───────────────────────────────────────────────────
+	// Resolve SQL date functions to a concrete ISO date string (yyyy-mm-dd).
+	// Handles: current_date(), curdate(), now(), optionally ± INTERVAL N DAY/MONTH/YEAR
+	function _resolveDateExpr(str) {
 		const today = new Date();
 		today.setHours(0, 0, 0, 0);
 
-		// Replace: current_date() [+/-] interval N day/month/year
-		// e.g. "current_date() -interval 30 day"  →  "2024-11-15"
-		str = str.replace(
-			/(?:current_date\(\s*\)|curdate\(\s*\)|now\(\s*\))\s*([-+])\s*interval\s+(\d+)\s+(day|month|year)/gi,
-			(_, sign, n, unit) => {
-				const d = new Date(today);
-				const amount = parseInt(n, 10) * (sign === "-" ? -1 : 1);
-				if (/day/i.test(unit)) d.setDate(d.getDate() + amount);
-				if (/month/i.test(unit)) d.setMonth(d.getMonth() + amount);
-				if (/year/i.test(unit)) d.setFullYear(d.getFullYear() + amount);
-				return `'${d.toISOString().slice(0, 10)}'`;
-			},
-		);
+		// current_date() +/- interval N day/month/year
+		const intervalRe =
+			/(?:current_date\(\s*\)|curdate\(\s*\)|now\(\s*\))\s*([-+])\s*interval\s+(\d+)\s+(day|month|year)/i;
+		const m = str.match(intervalRe);
+		if (m) {
+			const d = new Date(today);
+			const amount = parseInt(m[2], 10) * (m[1] === "-" ? -1 : 1);
+			if (/day/i.test(m[3])) d.setDate(d.getDate() + amount);
+			else if (/month/i.test(m[3])) d.setMonth(d.getMonth() + amount);
+			else if (/year/i.test(m[3])) d.setFullYear(d.getFullYear() + amount);
+			return d.toISOString().slice(0, 10);
+		}
 
-		// Replace bare current_date() / curdate() / now() with today's date
-		str = str.replace(/(?:current_date\(\s*\)|curdate\(\s*\)|now\(\s*\))/gi, () => {
-			return `'${today.toISOString().slice(0, 10)}'`;
-		});
+		// bare current_date() / curdate() / now()
+		if (/(?:current_date\(\s*\)|curdate\(\s*\)|now\(\s*\))/i.test(str)) {
+			return today.toISOString().slice(0, 10);
+		}
 
-		return str;
+		// unquote single-quoted literals
+		if (str.startsWith("'") && str.endsWith("'")) return str.slice(1, -1);
+		if (str.startsWith('"') && str.endsWith('"')) return str.slice(1, -1);
+
+		return str.trim();
 	}
 
-	function _applyCoreFilter(allRows, coreFilterStr) {
-		if (!coreFilterStr || !allRows.length) return allRows;
+	// Parse a core_filter string like:
+	//   "end_date > current_date() -interval 30 day"
+	//   "status = 'Active' AND state != 'VIC'"
+	// into [{field, op, value}, ...]
+	// Returns [] and warns if unparseable (fail open).
+	function _parseCoreFilterString(str) {
+		if (!str || !str.trim()) return [];
 
-		try {
-			const resolved = _resolveSqlDateFunctions(coreFilterStr);
-			const parsed = _parseCoreFilter(resolved);
-			return allRows.filter((row) => _matchesCoreFilter(row, parsed));
-		} catch (e) {
-			// Fail open: return all rows if parsing fails
-			console.warn(`core_filter parse error: ${e.message}`);
-			return allRows;
-		}
-	}
+		const results = [];
+		// Split on AND (case-insensitive); OR is not supported — treat as fail-open
+		const clauses = str.split(/\bAND\b/i);
 
-	// Parse SQL-like filter string into AST
-	// Example: "status = 'Active' AND amount > 100"
-	function _parseCoreFilter(str) {
-		const parts = [];
-		const tokens = _tokenizeFilter(str);
-		let i = 0;
+		const OPS = [">=", "<=", "!=", ">", "<", "=", /\blike\b/i, /\bin\b/i];
 
-		function peek() {
-			return tokens[i];
-		}
-		function consume() {
-			return tokens[i++];
-		}
+		for (const clause of clauses) {
+			const s = clause.trim();
+			if (!s) continue;
 
-		function parseExpression() {
-			let left = parseComparison();
-
-			while (peek() && (peek().type === "AND" || peek().type === "OR")) {
-				const op = consume().type;
-				const right = parseComparison();
-				left = { type: "BINOP", op, left, right };
-			}
-			return left;
-		}
-
-		function parseComparison() {
-			if (peek() && peek().type === "NOT") {
-				consume();
-				return { type: "NOT", expr: parseComparison() };
-			}
-
-			if (peek() && peek().type === "LPAREN") {
-				consume(); // consume '('
-				const expr = parseExpression();
-				if (peek() && peek().type === "RPAREN") consume(); // consume ')'
-				return expr;
-			}
-
-			// fieldname operator value
-			const fieldToken = consume();
-			if (!fieldToken) return { type: "TRUE" };
-
-			const opToken = consume();
-			if (!opToken) return { type: "TRUE" };
-
-			const valueToken = consume();
-			if (!valueToken) return { type: "TRUE" };
-
-			return {
-				type: "CMP",
-				field: fieldToken.value,
-				op: opToken.value,
-				value: _unquote(valueToken.value),
-			};
-		}
-
-		return parseExpression();
-	}
-
-	// Tokenize filter string
-	function _tokenizeFilter(str) {
-		const tokens = [];
-		let i = 0;
-		const keywords = ["AND", "OR", "NOT", "IN", "LIKE"];
-
-		while (i < str.length) {
-			// Skip whitespace
-			if (/[ \t\n\r]/.test(str[i])) {
-				i++;
-				continue;
-			}
-
-			// Parentheses
-			if (str[i] === "(") {
-				tokens.push({ type: "LPAREN", value: "(" });
-				i++;
-				continue;
-			}
-			if (str[i] === ")") {
-				tokens.push({ type: "RPAREN", value: ")" });
-				i++;
-				continue;
-			}
-
-			// Keywords (case-insensitive)
-			let kw = "";
-			let j = i;
-			while (j < str.length && /[a-zA-Z]/.test(str[j])) {
-				kw += str[j];
-				j++;
-			}
-			if (keywords.includes(kw.toUpperCase())) {
-				tokens.push({ type: kw.toUpperCase(), value: kw.toUpperCase() });
-				i = j;
-				continue;
-			}
-
-			// Operators
-			if (str[i] === "=" && str[i + 1] === "=") {
-				tokens.push({ type: "=", value: "=" });
-				i += 2;
-				continue;
-			}
-			if (str[i] === "=") {
-				tokens.push({ type: "=", value: "=" });
-				i++;
-				continue;
-			}
-			if (str[i] === "!" && str[i + 1] === "=") {
-				tokens.push({ type: "!=", value: "!=" });
-				i += 2;
-				continue;
-			}
-			if (str[i] === ">" && str[i + 1] !== "=") {
-				tokens.push({ type: ">", value: ">" });
-				i++;
-				continue;
-			}
-			if (str[i] === "<" && str[i + 1] !== "=") {
-				tokens.push({ type: "<", value: "<" });
-				i++;
-				continue;
-			}
-			if (str[i] === ">" && str[i + 1] === "=") {
-				tokens.push({ type: ">=", value: ">=" });
-				i += 2;
-				continue;
-			}
-			if (str[i] === "<" && str[i + 1] === "=") {
-				tokens.push({ type: "<=", value: "<=" });
-				i += 2;
-				continue;
-			}
-
-			// Quoted string
-			if (str[i] === "'" || str[i] === '"') {
-				const quote = str[i];
-				j = i + 1;
-				while (j < str.length && str[j] !== quote) {
-					j++;
+			let matched = false;
+			for (const op of OPS) {
+				const opStr =
+					op instanceof RegExp ? op.source.replace(/\\b/g, "").replace(/\/i/, "") : op;
+				const re = new RegExp(
+					`^([\\w.]+)\\s*(?:${op instanceof RegExp ? op.source : escapeRe(op)})\\s*(.+)$`,
+					"i",
+				);
+				const m = s.match(re);
+				if (m) {
+					const field = m[1].trim();
+					const rawVal = m[2].trim();
+					// The operator string to store — normalise keyword ops to lowercase
+					const normOp =
+						op instanceof RegExp ? opStr.toLowerCase().replace(/\\b/g, "").trim() : op;
+					const value = _resolveDateExpr(rawVal);
+					results.push({ field, op: normOp, value });
+					matched = true;
+					break;
 				}
-				tokens.push({ type: "VALUE", value: str.slice(i + 1, j) });
-				i = j + 1;
-				continue;
 			}
 
-			// Unquoted value (number or identifier)
-			j = i;
-			while (j < str.length && /[0-9a-zA-Z_.\-]/.test(str[j])) {
-				j++;
-			}
-			if (j > i) {
-				tokens.push({ type: "VALUE", value: str.slice(i, j) });
-				i = j;
-				continue;
-			}
-
-			i++; // skip unknown char
-		}
-		return tokens;
-	}
-
-	// Unquote SQL string value
-	function _unquote(val) {
-		if (!val) return val;
-		if (
-			(val.startsWith("'") && val.endsWith("'")) ||
-			(val.startsWith('"') && val.endsWith('"'))
-		) {
-			return val.slice(1, -1);
-		}
-		return val;
-	}
-
-	// Check if row matches parsed filter AST
-	function _matchesCoreFilter(row, ast) {
-		if (!ast || ast.type === "TRUE") return true;
-		if (ast.type === "NOT") return !_matchesCoreFilter(row, ast.expr);
-		if (ast.type === "BINOP") {
-			if (ast.op === "AND")
-				return _matchesCoreFilter(row, ast.left) && _matchesCoreFilter(row, ast.right);
-			if (ast.op === "OR")
-				return _matchesCoreFilter(row, ast.left) || _matchesCoreFilter(row, ast.right);
-		}
-		if (ast.type === "CMP") {
-			return _compareCore(row[ast.field], ast.value, ast.op);
-		}
-		return true;
-	}
-
-	// Compare a single value against filter (core_filter)
-	// For date fields (ISO yyyy-mm-dd strings), string lexicographic order is correct.
-	// For numeric fields, fall back to parseFloat.
-	function _compareCore(val, filterVal, op) {
-		if (val === undefined || val === null) val = "";
-		if (filterVal === undefined || filterVal === null) filterVal = "";
-		const left = String(val).trim();
-		const right = String(filterVal).trim();
-
-		// Detect date strings: yyyy-mm-dd
-		const dateRe = /^\d{4}-\d{2}-\d{2}/;
-		if (dateRe.test(left) && dateRe.test(right)) {
-			// Lexicographic comparison is correct for ISO dates
-			switch (op) {
-				case "=":
-					return left.slice(0, 10) === right.slice(0, 10);
-				case "!=":
-					return left.slice(0, 10) !== right.slice(0, 10);
-				case ">":
-					return left.slice(0, 10) > right.slice(0, 10);
-				case "<":
-					return left.slice(0, 10) < right.slice(0, 10);
-				case ">=":
-					return left.slice(0, 10) >= right.slice(0, 10);
-				case "<=":
-					return left.slice(0, 10) <= right.slice(0, 10);
-				default:
-					return left.slice(0, 10) === right.slice(0, 10);
+			if (!matched) {
+				console.warn(`usePanel: could not parse core_filter clause: "${s}" — skipping`);
 			}
 		}
 
-		const leftLow = left.toLowerCase();
-		const rightLow = right.toLowerCase();
-		const leftNum = parseFloat(left);
-		const rightNum = parseFloat(right);
-		const numeric = !isNaN(leftNum) && !isNaN(rightNum);
-
-		switch (op) {
-			case "=":
-				return leftLow === rightLow;
-			case "!=":
-				return leftLow !== rightLow;
-			case ">":
-				return numeric ? leftNum > rightNum : leftLow > rightLow;
-			case "<":
-				return numeric ? leftNum < rightNum : leftLow < rightLow;
-			case ">=":
-				return numeric ? leftNum >= rightNum : leftLow >= rightLow;
-			case "<=":
-				return numeric ? leftNum <= rightNum : leftLow <= rightLow;
-			case "like":
-				return leftLow.includes(rightLow);
-			case "in":
-				return right
-					.split(",")
-					.map((s) => s.trim().toLowerCase())
-					.includes(leftLow);
-			default:
-				return leftLow === rightLow;
-		}
+		return results;
 	}
 
-	// Apply user filters (from filter widget) to rows
+	function escapeRe(s) {
+		return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+	}
+
+	// ── User filter application ───────────────────────────────────────────────
+	// Single path used for both core filters and user-entered filters.
+	// Each filter: { field, op, value }
 	function _applyUserFilters(allRows, activeFilters) {
 		if (!activeFilters.length) return allRows;
 
@@ -353,71 +144,105 @@ export function usePanel(doctype, parentFilter = {}) {
 					continue;
 				}
 
-				const left = String(rowVal).toLowerCase();
-				const right = String(filterVal || "").toLowerCase();
+				const left = String(rowVal).trim();
+				const right = String(filterVal ?? "").trim();
+
+				// ISO date comparison (yyyy-mm-dd) — lexicographic order is correct
+				const dateRe = /^\d{4}-\d{2}-\d{2}/;
+				if (dateRe.test(left) && dateRe.test(right)) {
+					const l = left.slice(0, 10);
+					const r = right.slice(0, 10);
+					switch (f.op) {
+						case "=":
+							if (l !== r) return false;
+							break;
+						case "!=":
+							if (l === r) return false;
+							break;
+						case ">":
+							if (!(l > r)) return false;
+							break;
+						case "<":
+							if (!(l < r)) return false;
+							break;
+						case ">=":
+							if (!(l >= r)) return false;
+							break;
+						case "<=":
+							if (!(l <= r)) return false;
+							break;
+						default:
+							if (l !== r) return false;
+					}
+					continue;
+				}
+
+				const leftLow = left.toLowerCase();
+				const rightLow = right.toLowerCase();
+				const leftNum = parseFloat(left);
+				const rightNum = parseFloat(right);
+				const numeric = !isNaN(leftNum) && !isNaN(rightNum);
 
 				switch (f.op) {
 					case "=":
-						if (left !== right) return false;
+						if (leftLow !== rightLow) return false;
 						break;
 					case "!=":
-						if (left === right) return false;
+						if (leftLow === rightLow) return false;
 						break;
 					case ">":
-						if (parseFloat(left) <= parseFloat(right || 0)) return false;
+						if (numeric ? leftNum <= rightNum : leftLow <= rightLow) return false;
 						break;
 					case "<":
-						if (parseFloat(left) >= parseFloat(right || 0)) return false;
+						if (numeric ? leftNum >= rightNum : leftLow >= rightLow) return false;
+						break;
+					case ">=":
+						if (numeric ? leftNum < rightNum : leftLow < rightLow) return false;
+						break;
+					case "<=":
+						if (numeric ? leftNum > rightNum : leftLow > rightLow) return false;
 						break;
 					case "like":
-						if (!left.includes(right)) return false;
+						if (!leftLow.includes(rightLow)) return false;
 						break;
-					case "in":
-						// in operator: value is comma-separated list
-						const inValues = right.split(",").map((s) => s.trim());
-						if (!inValues.includes(left)) return false;
+					case "in": {
+						const inValues = rightLow.split(",").map((s) => s.trim());
+						if (!inValues.includes(leftLow)) return false;
 						break;
+					}
 					default:
-						if (left !== right) return false;
+						if (leftLow !== rightLow) return false;
 				}
 			}
 			return true;
 		});
 	}
 
+	// ── Filter orchestration ──────────────────────────────────────────────────
+	// core filters always applied; user filters layered on top (both AND-combined)
 	function _applyFilters() {
 		const active = userFilters.value.filter((f) => f.field && String(f.value ?? "") !== "");
-
-		if (active.length === 0) {
-			// No user filters — apply core_filter
-			rows.value = _applyCoreFilter(_allRows.value, coreFilter.value);
-		} else {
-			// User filters present — drop core_filter, filter raw dataset
-			rows.value = _applyUserFilters(_allRows.value, active);
-		}
+		const combined = [..._coreFilters, ...active];
+		rows.value = _applyUserFilters(_allRows.value, combined);
 		total.value = rows.value.length;
 	}
 
+	// ── Load / reload ─────────────────────────────────────────────────────────
 	async function load() {
 		const myId = ++_loadId;
 		loading.value = true;
 		error.value = null;
 
 		try {
-			// Fetch config and data in parallel — neither depends on the other
 			const [cfg, data] = await Promise.all([fetchConfig(), fetchData()]);
 
-			if (myId !== _loadId) return; // superseded by a newer load
+			if (myId !== _loadId) return;
 
 			config.value = cfg;
 			columns.value = data.columns || [];
-			// Store full unfiltered dataset
 			_allRows.value = data.rows || [];
-			// Store core_filter for client-side application
-			coreFilter.value = data.core_filter || "";
-			// Apply filters (initially no user filters, so core_filter applies)
+			_coreFilters = _parseCoreFilterString(data.core_filter || "");
 			_applyFilters();
-			// Full count is the raw count from backend (before core_filter)
 			fullTotal.value = data.full_count ?? 0;
 			loading.value = false;
 		} catch (e) {
@@ -428,7 +253,6 @@ export function usePanel(doctype, parentFilter = {}) {
 		}
 	}
 
-	// Reload data from backend (hard refresh)
 	async function reload() {
 		const myId = ++_loadId;
 		loading.value = true;
@@ -442,7 +266,7 @@ export function usePanel(doctype, parentFilter = {}) {
 			config.value = cfg;
 			columns.value = data.columns || [];
 			_allRows.value = data.rows || [];
-			coreFilter.value = data.core_filter || "";
+			_coreFilters = _parseCoreFilterString(data.core_filter || "");
 			_applyFilters();
 			fullTotal.value = data.full_count ?? 0;
 			loading.value = false;
