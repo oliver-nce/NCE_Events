@@ -1,7 +1,5 @@
 import { ref, shallowRef } from "vue";
 
-const PAGE_SIZE = 400;
-
 function frappeCall(method, args) {
 	return new Promise((resolve, reject) => {
 		frappe.call({
@@ -22,7 +20,14 @@ export function usePanel(doctype, parentFilter = {}) {
 	const loading = ref(false);
 	const error = ref(null);
 
-	// Incremented on every load/refetch so stale background loops self-cancel
+	// Full unfiltered dataset from backend
+	const _allRows = ref([]);
+	// core_filter string from backend config
+	const coreFilter = ref("");
+	// current active user filters
+	const userFilters = ref([]);
+
+	// Incremented on every load so stale background loops self-cancel
 	let _loadId = 0;
 
 	function fetchConfig() {
@@ -31,14 +36,306 @@ export function usePanel(doctype, parentFilter = {}) {
 		});
 	}
 
-	function fetchData(filters = {}, userFilters = [], limit = PAGE_SIZE, start = 0) {
+	function fetchData(filters = {}) {
 		return frappeCall("nce_events.api.panel_api.get_panel_data", {
 			root_doctype: doctype,
 			filters: JSON.stringify({ ...parentFilter, ...filters }),
-			user_filters: JSON.stringify(userFilters),
-			limit,
-			start,
 		});
+	}
+
+	// Parse and apply core_filter (SQL-like string) to rows
+	function _applyCoreFilter(allRows, coreFilterStr) {
+		if (!coreFilterStr || !allRows.length) return allRows;
+
+		try {
+			const parsed = _parseCoreFilter(coreFilterStr);
+			return allRows.filter((row) => _matchesCoreFilter(row, parsed));
+		} catch (e) {
+			// Fail open: return all rows if parsing fails
+			console.warn(`core_filter parse error: ${e.message}`);
+			return allRows;
+		}
+	}
+
+	// Parse SQL-like filter string into AST
+	// Example: "status = 'Active' AND amount > 100"
+	function _parseCoreFilter(str) {
+		const parts = [];
+		const tokens = _tokenizeFilter(str);
+		let i = 0;
+
+		function peek() {
+			return tokens[i];
+		}
+		function consume() {
+			return tokens[i++];
+		}
+
+		function parseExpression() {
+			let left = parseComparison();
+
+			while (peek() && (peek().type === "AND" || peek().type === "OR")) {
+				const op = consume().type;
+				const right = parseComparison();
+				left = { type: "BINOP", op, left, right };
+			}
+			return left;
+		}
+
+		function parseComparison() {
+			if (peek() && peek().type === "NOT") {
+				consume();
+				return { type: "NOT", expr: parseComparison() };
+			}
+
+			if (peek() && peek().type === "LPAREN") {
+				consume(); // consume '('
+				const expr = parseExpression();
+				if (peek() && peek().type === "RPAREN") consume(); // consume ')'
+				return expr;
+			}
+
+			// fieldname operator value
+			const fieldToken = consume();
+			if (!fieldToken) return { type: "TRUE" };
+
+			const opToken = consume();
+			if (!opToken) return { type: "TRUE" };
+
+			const valueToken = consume();
+			if (!valueToken) return { type: "TRUE" };
+
+			return {
+				type: "CMP",
+				field: fieldToken.value,
+				op: opToken.value,
+				value: _unquote(valueToken.value),
+			};
+		}
+
+		return parseExpression();
+	}
+
+	// Tokenize filter string
+	function _tokenizeFilter(str) {
+		const tokens = [];
+		let i = 0;
+		const keywords = ["AND", "OR", "NOT", "IN", "LIKE"];
+
+		while (i < str.length) {
+			// Skip whitespace
+			if (/[ \t\n\r]/.test(str[i])) {
+				i++;
+				continue;
+			}
+
+			// Parentheses
+			if (str[i] === "(") {
+				tokens.push({ type: "LPAREN", value: "(" });
+				i++;
+				continue;
+			}
+			if (str[i] === ")") {
+				tokens.push({ type: "RPAREN", value: ")" });
+				i++;
+				continue;
+			}
+
+			// Keywords (case-insensitive)
+			let kw = "";
+			let j = i;
+			while (j < str.length && /[a-zA-Z]/.test(str[j])) {
+				kw += str[j];
+				j++;
+			}
+			if (keywords.includes(kw.toUpperCase())) {
+				tokens.push({ type: kw.toUpperCase(), value: kw.toUpperCase() });
+				i = j;
+				continue;
+			}
+
+			// Operators
+			if (str[i] === "=" && str[i + 1] === "=") {
+				tokens.push({ type: "=", value: "=" });
+				i += 2;
+				continue;
+			}
+			if (str[i] === "=") {
+				tokens.push({ type: "=", value: "=" });
+				i++;
+				continue;
+			}
+			if (str[i] === "!" && str[i + 1] === "=") {
+				tokens.push({ type: "!=", value: "!=" });
+				i += 2;
+				continue;
+			}
+			if (str[i] === ">" && str[i + 1] !== "=") {
+				tokens.push({ type: ">", value: ">" });
+				i++;
+				continue;
+			}
+			if (str[i] === "<" && str[i + 1] !== "=") {
+				tokens.push({ type: "<", value: "<" });
+				i++;
+				continue;
+			}
+			if (str[i] === ">" && str[i + 1] === "=") {
+				tokens.push({ type: ">=", value: ">=" });
+				i += 2;
+				continue;
+			}
+			if (str[i] === "<" && str[i + 1] === "=") {
+				tokens.push({ type: "<=", value: "<=" });
+				i += 2;
+				continue;
+			}
+
+			// Quoted string
+			if (str[i] === "'" || str[i] === '"') {
+				const quote = str[i];
+				j = i + 1;
+				while (j < str.length && str[j] !== quote) {
+					j++;
+				}
+				tokens.push({ type: "VALUE", value: str.slice(i + 1, j) });
+				i = j + 1;
+				continue;
+			}
+
+			// Unquoted value (number or identifier)
+			j = i;
+			while (j < str.length && /[0-9a-zA-Z_.\-]/.test(str[j])) {
+				j++;
+			}
+			if (j > i) {
+				tokens.push({ type: "VALUE", value: str.slice(i, j) });
+				i = j;
+				continue;
+			}
+
+			i++; // skip unknown char
+		}
+		return tokens;
+	}
+
+	// Unquote SQL string value
+	function _unquote(val) {
+		if (!val) return val;
+		if (
+			(val.startsWith("'") && val.endsWith("'")) ||
+			(val.startsWith('"') && val.endsWith('"'))
+		) {
+			return val.slice(1, -1);
+		}
+		return val;
+	}
+
+	// Check if row matches parsed filter AST
+	function _matchesCoreFilter(row, ast) {
+		if (!ast || ast.type === "TRUE") return true;
+		if (ast.type === "NOT") return !_matchesCoreFilter(row, ast.expr);
+		if (ast.type === "BINOP") {
+			if (ast.op === "AND")
+				return _matchesCoreFilter(row, ast.left) && _matchesCoreFilter(row, ast.right);
+			if (ast.op === "OR")
+				return _matchesCoreFilter(row, ast.left) || _matchesCoreFilter(row, ast.right);
+		}
+		if (ast.type === "CMP") {
+			return _compareCore(row[ast.field], ast.value, ast.op);
+		}
+		return true;
+	}
+
+	// Compare a single value against filter (core_filter)
+	function _compareCore(val, filterVal, op) {
+		if (val === undefined || val === null) val = "";
+		if (filterVal === undefined || filterVal === null) filterVal = "";
+		const left = String(val).toLowerCase();
+		const right = String(filterVal).toLowerCase();
+
+		switch (op) {
+			case "=":
+				return left === right;
+			case "!=":
+				return left !== right;
+			case ">":
+				return parseFloat(left) > parseFloat(right || 0);
+			case "<":
+				return parseFloat(left) < parseFloat(right || 0);
+			case ">=":
+				return parseFloat(left) >= parseFloat(right || 0);
+			case "<=":
+				return parseFloat(left) <= parseFloat(right || 0);
+			case "like":
+				return left.includes(right);
+			case "in":
+				// Handle IN (val1, val2, ...)
+				// For core_filter, we'll treat it as simple string comparison
+				return left === right;
+			default:
+				return left === right;
+		}
+	}
+
+	// Apply user filters (from filter widget) to rows
+	function _applyUserFilters(allRows, activeFilters) {
+		if (!activeFilters.length) return allRows;
+
+		return allRows.filter((row) => {
+			for (const f of activeFilters) {
+				if (!f.field) continue;
+				const rowVal = row[f.field];
+				const filterVal = f.value;
+
+				if (rowVal === undefined || rowVal === null) {
+					if (f.op !== "!=") return false;
+					continue;
+				}
+
+				const left = String(rowVal).toLowerCase();
+				const right = String(filterVal || "").toLowerCase();
+
+				switch (f.op) {
+					case "=":
+						if (left !== right) return false;
+						break;
+					case "!=":
+						if (left === right) return false;
+						break;
+					case ">":
+						if (parseFloat(left) <= parseFloat(right || 0)) return false;
+						break;
+					case "<":
+						if (parseFloat(left) >= parseFloat(right || 0)) return false;
+						break;
+					case "like":
+						if (!left.includes(right)) return false;
+						break;
+					case "in":
+						// in operator: value is comma-separated list
+						const inValues = right.split(",").map((s) => s.trim());
+						if (!inValues.includes(left)) return false;
+						break;
+					default:
+						if (left !== right) return false;
+				}
+			}
+			return true;
+		});
+	}
+
+	function _applyFilters() {
+		const active = userFilters.value.filter((f) => f.field && String(f.value ?? "") !== "");
+
+		if (active.length === 0) {
+			// No user filters — apply core_filter
+			rows.value = _applyCoreFilter(_allRows.value, coreFilter.value);
+		} else {
+			// User filters present — drop core_filter, filter raw dataset
+			rows.value = _applyUserFilters(_allRows.value, active);
+		}
+		total.value = rows.value.length;
 	}
 
 	async function load() {
@@ -47,25 +344,22 @@ export function usePanel(doctype, parentFilter = {}) {
 		error.value = null;
 
 		try {
-			// Fetch config and first page in parallel — neither depends on the other
-			const [cfg, data] = await Promise.all([
-				fetchConfig(),
-				fetchData({}, [], PAGE_SIZE, 0),
-			]);
+			// Fetch config and data in parallel — neither depends on the other
+			const [cfg, data] = await Promise.all([fetchConfig(), fetchData()]);
 
 			if (myId !== _loadId) return; // superseded by a newer load
 
 			config.value = cfg;
 			columns.value = data.columns || [];
-			rows.value = data.rows || [];
-			total.value = data.total || 0;
-			fullTotal.value = data.full_count ?? data.total ?? 0;
+			// Store full unfiltered dataset
+			_allRows.value = data.rows || [];
+			// Store core_filter for client-side application
+			coreFilter.value = data.core_filter || "";
+			// Apply filters (initially no user filters, so core_filter applies)
+			_applyFilters();
+			// Full count is the raw count from backend (before core_filter)
+			fullTotal.value = data.full_count ?? 0;
 			loading.value = false;
-
-			// Stream remaining pages in the background without blocking render
-			if (rows.value.length < total.value) {
-				_streamRemaining(myId);
-			}
 		} catch (e) {
 			if (myId !== _loadId) return;
 			error.value = String(e);
@@ -74,42 +368,37 @@ export function usePanel(doctype, parentFilter = {}) {
 		}
 	}
 
-	async function _streamRemaining(myId) {
-		while (true) {
-			if (myId !== _loadId) return; // cancelled
-			const start = rows.value.length;
-			if (start >= total.value) return;
-
-			try {
-				const page = await fetchData({}, [], PAGE_SIZE, start);
-				if (myId !== _loadId) return;
-				const newRows = page.rows || [];
-				if (!newRows.length) return;
-				// Append reactively so the table updates as each batch arrives
-				rows.value = rows.value.concat(newRows);
-			} catch (e) {
-				console.error(`Panel background fetch error [${doctype}]:`, e);
-				return;
-			}
-		}
-	}
-
-	async function refetch(userFilters = []) {
+	// Reload data from backend (hard refresh)
+	async function reload() {
 		const myId = ++_loadId;
 		loading.value = true;
 		error.value = null;
+
 		try {
-			const data = await fetchData({}, userFilters, 0, 0);
+			const [cfg, data] = await Promise.all([fetchConfig(), fetchData()]);
+
 			if (myId !== _loadId) return;
-			rows.value = data.rows || [];
-			total.value = data.total || 0;
+
+			config.value = cfg;
+			columns.value = data.columns || [];
+			_allRows.value = data.rows || [];
+			coreFilter.value = data.core_filter || "";
+			_applyFilters();
+			fullTotal.value = data.full_count ?? 0;
+			loading.value = false;
 		} catch (e) {
 			if (myId !== _loadId) return;
 			error.value = String(e);
-		} finally {
-			if (myId === _loadId) loading.value = false;
+			console.error(`Panel reload error [${doctype}]:`, e);
+			loading.value = false;
 		}
 	}
 
-	return { config, columns, rows, total, fullTotal, loading, error, load, fetchData, refetch };
+	// Set user filters and re-apply (synchronous, no API call)
+	function setFilters(newUserFilters = []) {
+		userFilters.value = newUserFilters;
+		_applyFilters();
+	}
+
+	return { config, columns, rows, total, fullTotal, loading, error, load, reload, setFilters };
 }

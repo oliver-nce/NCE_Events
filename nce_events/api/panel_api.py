@@ -155,23 +155,22 @@ def get_panel_data(
 	start: int | str = 0,
 	user_filters: str | list | None = None,
 ) -> dict[str, Any]:
-	"""Fetch rows from a DocType, optionally filtered and paginated.
+	"""Fetch rows from a DocType.
 
 	filters is a JSON dict of {fieldname: value} applied to frappe.get_all.
 	Supports dot-notation fields (e.g. "link_field.child_field") which are
 	resolved via frappe.get_all's native dot-field support.
 
-	user_filters is a JSON list of {field, op, value} applied after computed
-	columns are evaluated (slow path: per-row evaluation, then filter).
+	user_filters, limit, and start are accepted but ignored — filtering and
+	pagination are handled client-side on the full dataset.
 
-	limit/start enable pagination.  limit=0 (default) fetches all rows.
+	Returns the full dataset with core_filter applied server-side for initial
+	security, and the raw unfiltered count (full_count) for UI denominators.
 	"""
 	if isinstance(filters, str):
 		filters = json.loads(filters) if filters else {}
 	filters = filters or {}
-	if isinstance(user_filters, str):
-		user_filters = json.loads(user_filters) if user_filters else []
-	user_filters = user_filters or []
+	# user_filters, limit, start are ignored for V2 in-memory filtering
 	limit = cint(limit)
 	start = cint(start)
 
@@ -203,11 +202,8 @@ def get_panel_data(
 	# Unfiltered count of the entire doctype — used as the denominator in the UI
 	full_count = frappe.db.count(root_doctype)
 
-	# When user_filters present: search whole data, bypass panel WHERE (as if core_filter empty)
-	use_slow_filter = bool(user_filters)
-	db_limit = 0 if use_slow_filter else limit
-	db_start = 0 if use_slow_filter else start
-	use_core_filter = core_filter and not use_slow_filter
+	# For V2: always fetch all rows; core_filter applied server-side if present
+	use_core_filter = bool(core_filter)
 
 	if use_core_filter:
 		total_count = _count_with_core_filter(root_doctype, filters, core_filter)
@@ -217,8 +213,8 @@ def get_panel_data(
 			filters,
 			core_filter,
 			order_by,
-			limit=db_limit,
-			start=db_start,
+			limit=0,
+			start=0,
 		)
 	else:
 		total_count = frappe.db.count(root_doctype, filters=filters)
@@ -228,11 +224,7 @@ def get_panel_data(
 			filters=filters,
 			order_by=order_by,
 		)
-		if db_limit:
-			get_all_kw["limit_page_length"] = db_limit
-			get_all_kw["limit_start"] = db_start
-		else:
-			get_all_kw["limit_page_length"] = 0
+		get_all_kw["limit_page_length"] = 0  # Fetch all rows
 		rows = frappe.get_all(**get_all_kw)
 
 	if linked_fields and rows:
@@ -346,18 +338,13 @@ def get_panel_data(
 	if computed_columns and rows:
 		_evaluate_computed_columns(root_doctype, rows, computed_columns)
 
-	if use_slow_filter:
-		rows = _apply_user_filters(rows, user_filters)
-		total_count = len(rows)
-		if limit:
-			rows = rows[start : start + limit]
-
 	return {
 		"columns": columns,
 		"rows": rows,
 		"total": total_count,
 		"full_count": full_count,
 		"child_doctypes": child_doctypes,
+		"core_filter": core_filter,
 	}
 
 

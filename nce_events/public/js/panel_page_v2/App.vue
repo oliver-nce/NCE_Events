@@ -13,7 +13,7 @@
 				@row-drop="(row) => onRowDrop(null, row)"
 				@sheets="onSheets({ doctype: 'WP Tables', parentFilter: {}, rows })"
 				@filter-change="(f) => onFilterChange(null, f)"
-				@refresh="(f) => onFilterChange(null, f)"
+				@refresh="onRefreshRoot"
 			/>
 			<template #footer>{{ config?.header_text || 'NCE Tables' }}</template>
 		</PanelFloat>
@@ -44,7 +44,7 @@
 				@sms="onSms(p)"
 				@tags="openTagFinder(p)"
 				@filter-change="(f) => onFilterChange(p, f)"
-				@refresh="(f) => onFilterChange(p, f)"
+				@refresh="onRefreshPanel(p)"
 				@email-one="(row) => onEmailOne(p, row)"
 				@sms-one="(row) => onSmsOne(p, row)"
 				@row-drop="(row) => onRowDrop(p, row)"
@@ -82,7 +82,7 @@ import TagFinder from "./components/TagFinder.vue";
 import CardModal from "./components/CardModal.vue";
 
 const rootPanel = usePanel("WP Tables");
-const { config, columns: rawColumns, rows, total, fullTotal, loading, error, load } = rootPanel;
+const { config, columns: rawColumns, rows, total, fullTotal, loading, error, load, reload } = rootPanel;
 
 // Hide nce_name — it duplicates frappe_doctype in the root panel.
 // Also strip is_link from frappe_doctype so clicking opens the next panel (via row-click)
@@ -203,7 +203,8 @@ async function openPanel(doctype, parentFilter = {}, parentId = null) {
 		error: null,
 		x: pos.x,
 		y: pos.y,
-		_refetch: null,
+		_setFilters: null,
+		_reload: null,
 	});
 	openPanels.push(p);
 
@@ -217,12 +218,13 @@ async function openPanel(doctype, parentFilter = {}, parentId = null) {
 		p.rows = panel.rows.value;
 		p.total = panel.total.value;
 		p.fullTotal = panel.fullTotal.value;
-		p._refetch = async (uf) => {
-			p.loading = true;
-			await panel.refetch(uf);
-			p.rows = panel.rows.value;
-			p.total = panel.total.value;
-			p.loading = false;
+		p._setFilters = (uf) => {
+			panel.setFilters(uf);
+			// p.rows and p.total are live references to panel.rows.value and panel.total.value
+			// They update reactively when _applyFilters is called
+		};
+		p._reload = () => {
+			return panel.reload();
 		};
 	} catch (e) {
 		p.error = String(e);
@@ -275,11 +277,21 @@ function onDrilledRowClick(p, row) {
 }
 
 function onFilterChange(panel, userFilters) {
-	if (!panel) {
-		rootPanel.refetch(userFilters);
-	} else if (panel._refetch) {
-		panel._refetch(userFilters);
-	}
+    if (!panel) {
+        rootPanel.setFilters(userFilters);
+    } else if (panel._setFilters) {
+        panel._setFilters(userFilters);
+    }
+}
+
+function onRefreshRoot() {
+    rootPanel.reload();
+}
+
+function onRefreshPanel(panel) {
+    if (panel._reload) {
+        panel._reload();
+    }
 }
 
 function onSheets(p) {

@@ -165,7 +165,7 @@ function onContextMenu(event, row) {
 
 
 function onRefresh() {
-	emit("refresh", activeFilters());
+	emit("refresh");
 }
 
 function calcColWidths(columns, rows, containerWidth) {
