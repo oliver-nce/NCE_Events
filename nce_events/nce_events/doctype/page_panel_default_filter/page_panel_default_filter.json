@@ -1,48 +1,41 @@
 {
- "actions": [],
- "creation": "2026-03-01 00:00:00.000000",
- "doctype": "DocType",
- "engine": "InnoDB",
- "field_order": [
-  "field",
-  "op",
-  "value"
- ],
- "fields": [
-  {
-   "fieldname": "field",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Field",
-   "reqd": 1
-  },
-  {
-   "fieldname": "op",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "label": "Operator",
-   "options": "=\n!=\n>\n<\n>=\n<=\nlike\nin",
-   "default": "=",
-   "reqd": 1
-  },
-  {
-   "fieldname": "value",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Value",
-   "reqd": 1
-  }
- ],
- "index_web_pages_for_search": 0,
- "istable": 1,
- "links": [],
- "modified": "2026-03-07 00:00:00.000000",
- "modified_by": "Administrator",
- "module": "NCE Events",
- "name": "Page Panel Default Filter",
- "owner": "Administrator",
- "permissions": [],
- "sort_field": "creation",
- "sort_order": "ASC",
- "states": []
+  "actions": [],
+  "creation": "2026-03-01 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": ["field", "op", "value"],
+  "fields": [
+    {
+      "fieldname": "field",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Field"
+    },
+    {
+      "fieldname": "op",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Operator",
+      "options": "=\n!=\n>\n<\n>=\n<=\nlike\nin",
+      "default": "="
+    },
+    {
+      "fieldname": "value",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Value"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "istable": 1,
+  "links": [],
+  "modified": "2026-03-07 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "NCE Events",
+  "name": "Page Panel Default Filter",
+  "owner": "Administrator",
+  "permissions": [],
+  "sort_field": "creation",
+  "sort_order": "ASC",
+  "states": []
 }
