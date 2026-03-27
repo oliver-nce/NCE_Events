@@ -608,20 +608,7 @@ function _render_order_tab($sub_content, uid, sub_tabs, matrices, saved, _sync_a
 
 const DATE_FIELDTYPES = new Set(["Date", "Datetime"]);
 const OPS_DEFAULT = ["=", "!=", ">", "<", ">=", "<=", "like", "in"];
-const OPS_DATE = [">", "<", ">=", "<=", "=", "!="];
-const DATE_SUGGESTIONS = [
-	"today",
-	"7 days ago",
-	"14 days ago",
-	"30 days ago",
-	"60 days ago",
-	"90 days ago",
-	"180 days ago",
-	"1 month ago",
-	"3 months ago",
-	"6 months ago",
-	"12 months ago",
-];
+const OPS_DATE = ["=", ">", "<"];
 
 // Build the field list for the filter widget from column_order + fieldtype cache.
 // Falls back to all doctype fields if column_order is empty.
@@ -735,31 +722,49 @@ function _render_default_filters_now(frm) {
 					})
 					.join("");
 
-				let value_html;
-				if (isDate) {
-					const sugg_id = `pp-df-sugg-${i}`;
-					const sugg_opts = DATE_SUGGESTIONS.map(function (s) {
-						return `<option value="${s}">`;
-					}).join("");
-					value_html = `
-						<input class="pp-df-val" type="text" list="${sugg_id}"
-							placeholder="e.g. 30 days ago" value="${_esc(row.value || "")}" data-idx="${i}">
-						<datalist id="${sugg_id}">${sugg_opts}</datalist>`;
-				} else {
-					value_html = `<input class="pp-df-val" type="text"
-						placeholder="value" value="${_esc(row.value || "")}" data-idx="${i}">`;
+				// Determine SQL date vs days-ago split for date fields
+				let sqlDateVal = "";
+				let daysAgoVal = "";
+				if (isDate && row.value) {
+					if (/days ago|month|today/i.test(row.value)) {
+						daysAgoVal = row.value.replace(/\s*days ago$/i, "").trim();
+					} else {
+						sqlDateVal = row.value;
+					}
 				}
 
+				let value_html;
+				if (isDate) {
+					value_html = `
+						<input class="pp-df-sql-date" type="text"
+							placeholder="Enter a SQL date e.g. 1950-06-08"
+							value="${_esc(sqlDateVal)}" data-idx="${i}"
+							style="flex:1;min-width:60px;">
+						<input class="pp-df-days-ago" type="text"
+							placeholder="OR enter days ago e.g. 30"
+							value="${_esc(daysAgoVal)}" data-idx="${i}"
+							style="flex:1;min-width:60px;">`;
+				} else {
+					value_html = `<input class="pp-df-val" type="text"
+						placeholder="value" value="${_esc(row.value || "")}" data-idx="${i}"
+						style="flex:1;min-width:60px;">`;
+				}
+
+				const hasField = !!row.field;
 				const $row = $(`
 					<div class="pp-df-row" data-idx="${i}" style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
 						<select class="pp-df-field form-control form-control-sm" data-idx="${i}"
 							style="min-width:160px;max-width:200px;">
 							${_field_options_html(row.field)}
 						</select>
-						<span class="pp-df-ops" style="display:flex;gap:2px;">${ops_html}</span>
-						${value_html}
-						<button class="pp-df-rm btn btn-xs btn-danger" data-idx="${i}"
-							style="padding:2px 8px;line-height:1;">&times;</button>
+						<span class="pp-df-ops" style="display:flex;gap:2px;${hasField ? "" : "display:none!"}">${ops_html}</span>
+						${hasField ? value_html : ""}
+						${
+							hasField
+								? `<button class="pp-df-rm btn btn-xs btn-danger" data-idx="${i}"
+							style="padding:2px 8px;line-height:1;">&times;</button>`
+								: ""
+						}
 					</div>`);
 				$widget.append($row);
 			});
@@ -785,8 +790,18 @@ function _render_default_filters_now(frm) {
 				const idx = $(this).data("idx");
 				const field = $(this).find(".pp-df-field").val();
 				const op = $(this).find(".pp-df-op-btn.pp-df-op-active").data("op") || "=";
-				const value = $(this).find(".pp-df-val").val();
-				newRows.push({ field: field || "", op: op, value: value || "" });
+				// Date rows have two inputs; non-date rows have one
+				const sqlDate = $(this).find(".pp-df-sql-date").val();
+				const daysAgo = $(this).find(".pp-df-days-ago").val();
+				let value;
+				if (sqlDate) {
+					value = sqlDate;
+				} else if (daysAgo) {
+					value = daysAgo + " days ago";
+				} else {
+					value = $(this).find(".pp-df-val").val() || "";
+				}
+				newRows.push({ field: field || "", op: op, value: value });
 			});
 
 			// Sync back to the child table
@@ -821,6 +836,7 @@ function _render_default_filters_now(frm) {
 					if (!frm.doc.default_filters[idx]) frm.doc.default_filters[idx] = {};
 					frm.doc.default_filters[idx].field = fieldname;
 					frm.doc.default_filters[idx].op = newOp;
+					frm.doc.default_filters[idx].value = "";
 					frm.dirty();
 					_render_rows();
 				});
@@ -842,7 +858,7 @@ function _render_default_filters_now(frm) {
 					frm.dirty();
 				});
 
-			// Value input
+			// Value input (non-date)
 			$widget
 				.find(".pp-df-val")
 				.off("input")
@@ -850,6 +866,32 @@ function _render_default_filters_now(frm) {
 					const idx = parseInt($(this).data("idx"), 10);
 					if (!frm.doc.default_filters[idx]) frm.doc.default_filters[idx] = {};
 					frm.doc.default_filters[idx].value = $(this).val();
+					frm.dirty();
+				});
+
+			// SQL date input — clears days-ago sibling
+			$widget
+				.find(".pp-df-sql-date")
+				.off("input")
+				.on("input", function () {
+					const idx = parseInt($(this).data("idx"), 10);
+					const val = $(this).val();
+					$(this).closest(".pp-df-row").find(".pp-df-days-ago").val("");
+					if (!frm.doc.default_filters[idx]) frm.doc.default_filters[idx] = {};
+					frm.doc.default_filters[idx].value = val;
+					frm.dirty();
+				});
+
+			// Days ago input — clears SQL date sibling
+			$widget
+				.find(".pp-df-days-ago")
+				.off("input")
+				.on("input", function () {
+					const idx = parseInt($(this).data("idx"), 10);
+					const val = $(this).val();
+					$(this).closest(".pp-df-row").find(".pp-df-sql-date").val("");
+					if (!frm.doc.default_filters[idx]) frm.doc.default_filters[idx] = {};
+					frm.doc.default_filters[idx].value = val ? val + " days ago" : "";
 					frm.dirty();
 				});
 
