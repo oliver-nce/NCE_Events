@@ -225,8 +225,13 @@ async function openPanel(doctype, parentFilter = {}, parentId = null) {
 			// p.rows and p.total are live references to panel.rows.value and panel.total.value
 			// They update reactively when _applyFilters is called
 		};
-		p._reload = () => {
-			return panel.reload();
+		p._reload = async () => {
+			await panel.reload();
+			p.config = panel.config.value;
+			p.columns = panel.columns.value;
+			p.rows = panel.rows.value;
+			p.total = panel.total.value;
+			p.fullTotal = panel.fullTotal.value;
 		};
 	} catch (e) {
 		p.error = String(e);
