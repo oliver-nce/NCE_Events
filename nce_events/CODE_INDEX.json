@@ -191,14 +191,15 @@
     }
   },
 
-  "frontend_v1": {
-    "nce_events/public/js/panel_page/ui.js": {
-      "purpose": "V1 Explorer class — renders panel table, handles pagination, column toggle, row click (V1 only — pending deletion after V2 validation)",
+  "frontend_v0": {
+    "note": "Renamed from panel_page to panel_page_v0. Any reference to the old /js/panel_page/ path will 404 — use this to surface stale references. Pending deletion after V2 validation.",
+    "nce_events/public/js/panel_page_v0/ui.js": {
+      "purpose": "V0 Explorer class — renders panel table, handles pagination, column toggle, row click (defunct — pending deletion)",
       "exports": ["nce_events.Explorer"],
-      "depends_on": ["panel_page/store.js"]
+      "depends_on": ["panel_page_v0/store.js"]
     },
-    "nce_events/public/js/panel_page/store.js": {
-      "purpose": "V1 Store class — state management for V1 panel (V1 only — pending deletion after V2 validation)",
+    "nce_events/public/js/panel_page_v0/store.js": {
+      "purpose": "V0 Store class — state management for V0 panel (defunct — pending deletion)",
       "exports": ["nce_events.Store"],
       "depends_on": []
     },
