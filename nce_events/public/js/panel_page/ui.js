@@ -200,8 +200,19 @@ nce_events.panel_page.Explorer = class Explorer {
 		this.floats[doctype] = float_el;
 
 		const me = this;
-		float_el.on("mousedown.float_focus", function () {
-			me._bring_to_front(doctype);
+		let focus_start = null;
+		float_el.on("mousedown.float_focus", function (e) {
+			focus_start = { x: e.clientX, y: e.clientY };
+		});
+		float_el.on("mouseup.float_focus", function (e) {
+			if (focus_start) {
+				const dx = Math.abs(e.clientX - focus_start.x);
+				const dy = Math.abs(e.clientY - focus_start.y);
+				if (dx < 10 && dy < 10) {
+					me._bring_to_front(doctype);
+				}
+				focus_start = null;
+			}
 		});
 		this._make_draggable(float_el);
 	}
