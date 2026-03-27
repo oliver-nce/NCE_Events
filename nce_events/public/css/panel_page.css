@@ -476,12 +476,12 @@ body.panel-float-dragging * {
 }
 
 .filter-col-select {
-	font-size: calc(var(--font-size-base) * 0.923);
-	padding: 2px 4px;
+	font-size: var(--font-size-base);
+	padding: 3px 6px;
 	border: 1px solid var(--nce-color-primary-200, #c7e0fa);
 	border-radius: var(--border-radius-sm);
 	background: var(--bg-card);
-	height: 26px;
+	height: 30px;
 }
 
 .filter-col-select {
@@ -497,9 +497,9 @@ body.panel-float-dragging * {
 }
 
 .filter-op-btn {
-	font-size: var(--font-size-sm);
-	padding: 2px 6px;
-	line-height: 1.2;
+	font-size: var(--font-size-base);
+	padding: 3px 8px;
+	line-height: 1.4;
 	border: 1px solid var(--nce-color-primary-200, #c7e0fa);
 	border-radius: var(--border-radius-sm);
 	background: var(--bg-card);
@@ -521,11 +521,11 @@ body.panel-float-dragging * {
 .filter-val-input {
 	flex: 2;
 	min-width: 0;
-	font-size: calc(var(--font-size-base) * 0.923);
-	padding: 2px 6px;
+	font-size: var(--font-size-base);
+	padding: 3px 8px;
 	border: 1px solid var(--nce-color-primary-200, #c7e0fa);
 	border-radius: var(--border-radius-sm);
-	height: 26px;
+	height: 30px;
 }
 
 .filter-val-input:focus {
