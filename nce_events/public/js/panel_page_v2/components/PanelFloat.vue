@@ -61,7 +61,6 @@ function bringToFront() {
 }
 
 function onMouseDown(e) {
-	bringToFront();
 	if (e.target.closest && e.target.closest("button, a, input, select, textarea")) return;
 	if (e.target.closest && e.target.closest(".ppv2-header")) {
 		e.preventDefault();
@@ -70,13 +69,14 @@ function onMouseDown(e) {
 }
 
 function startDrag(e) {
-	bringToFront();
 	const sx = e.clientX, sy = e.clientY;
 	const ox = x.value, oy = y.value;
 	isDragging.value = true;
 	const el = floatEl.value;
+	let moved = false;
 
 	function onMove(ev) {
+		moved = true;
 		// Write directly to the DOM — bypasses Vue reactivity entirely
 		// so the table never re-renders during drag
 		const nx = ox + ev.clientX - sx;
@@ -85,6 +85,12 @@ function startDrag(e) {
 	}
 	function onUp(ev) {
 		isDragging.value = false;
+		const dx = Math.abs(ev.clientX - sx);
+		const dy = Math.abs(ev.clientY - sy);
+		// Click (<10px movement) — bring to front
+		if (dx < 10 && dy < 10) {
+			bringToFront();
+		}
 		// Now write back to Vue refs once so it knows the final position
 		x.value = ox + ev.clientX - sx;
 		y.value = Math.max(0, oy + ev.clientY - sy);
