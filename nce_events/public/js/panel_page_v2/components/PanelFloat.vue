@@ -2,7 +2,7 @@
 	<div
 		ref="floatEl"
 		class="ppv2-float"
-		:class="{ 'ppv2-float--dragging': isDragging, 'ppv2-float--resizing': isResizing }"
+
 		:style="floatStyle"
 		@mousedown="onMouseDown"
 	>
@@ -41,8 +41,6 @@ const w = ref(props.initW);
 const h = ref(props.initH);
 const z = ref(getNextZ());
 const floatEl = ref(null);
-const isDragging = ref(false);
-const isResizing = ref(false);
 
 /*
  * Position via transform: translate3d() — this is composited on the GPU
@@ -71,12 +69,10 @@ function onMouseDown(e) {
 function startDrag(e) {
 	const sx = e.clientX, sy = e.clientY;
 	const ox = x.value, oy = y.value;
-	isDragging.value = true;
 	const el = floatEl.value;
-	let moved = false;
+	el.classList.add("ppv2-float--dragging");
 
 	function onMove(ev) {
-		moved = true;
 		// Write directly to the DOM — bypasses Vue reactivity entirely
 		// so the table never re-renders during drag
 		const nx = ox + ev.clientX - sx;
@@ -84,7 +80,7 @@ function startDrag(e) {
 		el.style.transform = `translate3d(${nx}px, ${ny}px, 0)`;
 	}
 	function onUp(ev) {
-		isDragging.value = false;
+		el.classList.remove("ppv2-float--dragging");
 		const dx = Math.abs(ev.clientX - sx);
 		const dy = Math.abs(ev.clientY - sy);
 		// Click (<10px movement) — bring to front
@@ -105,14 +101,15 @@ function startResize(e) {
 	bringToFront();
 	const sx = e.clientX, sy = e.clientY;
 	const ow = w.value, oh = h.value;
-	isResizing.value = true;
+	const el = floatEl.value;
+	el.classList.add("ppv2-float--resizing");
 
 	function onMove(ev) {
 		w.value = Math.max(300, ow + ev.clientX - sx);
 		h.value = Math.max(200, oh + ev.clientY - sy);
 	}
 	function onUp() {
-		isResizing.value = false;
+		el.classList.remove("ppv2-float--resizing");
 		document.removeEventListener("mousemove", onMove);
 		document.removeEventListener("mouseup", onUp);
 	}
