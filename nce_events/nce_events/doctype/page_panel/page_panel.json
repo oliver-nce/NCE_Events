@@ -27,7 +27,6 @@
     "show_card_email",
     "show_card_sms",
     "open_card_on_click",
-    "tab_query",
     "panel_sql"
   ],
   "fields": [
@@ -170,11 +169,6 @@
       "fieldname": "open_card_on_click",
       "fieldtype": "Check",
       "label": "Open Card on Click"
-    },
-    {
-      "fieldname": "tab_query",
-      "fieldtype": "Tab Break",
-      "label": "Query"
     },
     {
       "description": "Auto-generated SQL query used to fetch this panel's data. Rebuilt when you click the Query tab. Read-only — for inspection and troubleshooting.",

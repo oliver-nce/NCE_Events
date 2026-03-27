@@ -50,6 +50,7 @@ const BREAK_FIELDS = [
 	"section_break_widgets",
 	"column_break_widgets",
 	"section_break_tile_actions",
+	"panel_sql",
 ];
 
 // ── Top-level tab show/hide ───────────────────────────────────────────────────
@@ -65,6 +66,12 @@ function _show_tab(frm, tab_id) {
 		const fd = frm.fields_dict[fn];
 		if (fd && fd.$wrapper) $(fd.$wrapper).show();
 	});
+
+	// Query tab: show panel_sql explicitly
+	const fd_sql = frm.fields_dict["panel_sql"];
+	if (fd_sql && fd_sql.$wrapper) {
+		$(fd_sql.$wrapper).toggle(tab_id === "query");
+	}
 
 	const $wrap = $(frm.fields_dict["root_doctype"].$wrapper).parent();
 	$wrap.find(".pp-matrix-wrap").toggle(tab_id === "display");
