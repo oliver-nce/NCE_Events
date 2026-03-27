@@ -476,7 +476,7 @@ body.panel-float-dragging * {
 }
 
 .filter-col-select {
-	font-size: var(--font-size-base);
+	font-size: calc(var(--font-size-base) + 2px);
 	padding: 3px 6px;
 	border: 1px solid var(--nce-color-primary-200, #c7e0fa);
 	border-radius: var(--border-radius-sm);
@@ -497,7 +497,7 @@ body.panel-float-dragging * {
 }
 
 .filter-op-btn {
-	font-size: var(--font-size-base);
+	font-size: calc(var(--font-size-base) + 2px);
 	padding: 3px 8px;
 	line-height: 1.4;
 	border: 1px solid var(--nce-color-primary-200, #c7e0fa);
@@ -521,7 +521,7 @@ body.panel-float-dragging * {
 .filter-val-input {
 	flex: 2;
 	min-width: 0;
-	font-size: var(--font-size-base);
+	font-size: calc(var(--font-size-base) + 2px);
 	padding: 3px 8px;
 	border: 1px solid var(--nce-color-primary-200, #c7e0fa);
 	border-radius: var(--border-radius-sm);
