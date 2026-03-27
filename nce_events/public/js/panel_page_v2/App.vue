@@ -226,12 +226,22 @@ async function openPanel(doctype, parentFilter = {}, parentId = null) {
 			// They update reactively when _applyFilters is called
 		};
 		p._reload = async () => {
-			await panel.reload();
-			p.config = panel.config.value;
-			p.columns = panel.columns.value;
-			p.rows = panel.rows.value;
-			p.total = panel.total.value;
-			p.fullTotal = panel.fullTotal.value;
+			console.log("[PanelReload] starting reload for", p.doctype, "p.loading before:", p.loading);
+			p.loading = true;
+			console.log("[PanelReload] p.loading set to true");
+			try {
+				await panel.reload();
+				console.log("[PanelReload] panel.reload() complete, panel.loading.value:", panel.loading.value);
+				p.config = panel.config.value;
+				p.columns = panel.columns.value;
+				p.rows = panel.rows.value;
+				p.total = panel.total.value;
+				p.fullTotal = panel.fullTotal.value;
+				console.log("[PanelReload] p.rows updated, length:", p.rows.length);
+			} finally {
+				p.loading = false;
+				console.log("[PanelReload] p.loading set back to false");
+			}
 		};
 	} catch (e) {
 		p.error = String(e);
@@ -292,13 +302,15 @@ function onFilterChange(panel, userFilters) {
 }
 
 function onRefreshRoot() {
-    rootPanel.reload();
+	console.log("[PanelReload] onRefreshRoot called, loading.value:", loading.value);
+	rootPanel.reload();
 }
 
 function onRefreshPanel(panel) {
-    if (panel._reload) {
-        panel._reload();
-    }
+	console.log("[PanelReload] onRefreshPanel called for", panel.doctype, "has _reload:", !!panel._reload);
+	if (panel._reload) {
+		panel._reload();
+	}
 }
 
 function onSheets(p) {
