@@ -1147,7 +1147,7 @@ nce_events.panel_page.Explorer = class Explorer {
 				zIndex: (parseInt(el.css("zIndex"), 10) || 100) + 1,
 			});
 			$(document.body).append(ghost);
-			el.css("opacity", "0.4");
+
 			$("body").addClass("panel-float-dragging");
 			$(document).on(`mousemove.${ns}`, function (ev) {
 				ghost.css({
@@ -1159,7 +1159,6 @@ nce_events.panel_page.Explorer = class Explorer {
 				el.css({
 					left: ghost.css("left"),
 					top: ghost.css("top"),
-					opacity: "",
 				});
 				ghost.remove();
 				$("body").removeClass("panel-float-dragging");
