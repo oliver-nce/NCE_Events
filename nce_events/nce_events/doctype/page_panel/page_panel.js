@@ -644,11 +644,23 @@ function _filter_fields_from_columns(frm, allFields) {
 }
 
 function _render_default_filters(frm) {
+	// Defer until Frappe has finished rendering the form layout
+	setTimeout(function () {
+		_render_default_filters_now(frm);
+	}, 50);
+}
+
+function _render_default_filters_now(frm) {
 	const fd = frm.fields_dict["default_filters"];
 	if (!fd || !fd.$wrapper) return;
 
-	// Hide the default Frappe child table grid
+	// Hide the default Frappe child table grid entirely
 	fd.$wrapper.find(".frappe-control").hide();
+	fd.$wrapper.find(".grid-heading-row").hide();
+	fd.$wrapper.find(".grid-body").hide();
+	fd.$wrapper.find(".btn.grid-add-row").hide();
+	fd.$wrapper.find("[data-fieldname='default_filters']").hide();
+	fd.$wrapper.children().not(".pp-df-widget").hide();
 
 	// Remove any previously rendered custom widget
 	fd.$wrapper.find(".pp-df-widget").remove();
