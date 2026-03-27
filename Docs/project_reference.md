@@ -364,7 +364,7 @@ Vite config: IIFE format, `process.env.NODE_ENV` defined for browser, output fil
 | `App.vue` | Root — mounts WP Tables root panel, manages `openPanels` array, handles drill-down, sheets/email/sms, filter re-fetch |
 | `PanelFloat.vue` | Draggable + resizable floating container. Shared `_globalZ` counter for z-index stacking |
 | `PanelTable.vue` | Data table with header bar, filter widget, bold/gender/color styling, column resize, per-row action icons |
-| `usePanel.js` | Composable — `load()` fetches config + all rows, `refetch(userFilters)` re-queries with server-side filters |
+| `usePanel.js` | Composable — `load()` fetches config + all rows, `reload()` re-fetches server data preserving user filters, `setFilters()` applies client-side filtering without a server round-trip. Full dataset cached in `_allRows`; filtering is a pure client-side scan. |
 | `TagFinder.vue` / `TagColumn.vue` / `TagDialog.vue` | Vue port of Tag Finder (Miller columns + tag generation) |
 | `useTagFinder.js` | Composable — field loading, tag building, path tracking |
 
@@ -372,14 +372,14 @@ Vite config: IIFE format, `process.env.NODE_ENV` defined for browser, output fil
 
 | Feature | Implementation |
 |---------|----------------|
-| **Filtering** | Server-side via `user_filters` API param. PanelTable emits `filter-change`, App.vue calls `refetch()`. 1.2s debounce on value input, immediate on column/op/remove changes. When `user_filters` present, API bypasses `core_filter` and searches all rows in the DocType. |
+| **Filtering** | Client-side on full cached dataset. PanelTable emits `filter-change`, App.vue calls `setFilters()`. 1.2s debounce on value input, immediate on column/op/remove changes. Filter widget behaviour: ops/value/remove hidden until a field is selected; switching fields clears the value. Non-date fields: operators `=`, `!=`, `>`, `<`, `>=`, `<=`, `like`, `in`. Date/Datetime fields: operators `=`, `>`, `<` only; two mutually-exclusive value inputs — SQL date (e.g. `1950-06-08`) and days-ago (e.g. `30`, stored as `"30 days ago"`). Default filters from Panel Definition are pre-populated in the widget on load and applied immediately. |
 | **Bold fields** | `config.bold_fields` → `font-weight: 700` on matching `<td>` cells |
 | **Gender coloring** | `config.gender_color_fields` + `gender_column` + `male_hex`/`female_hex` + `tint_by_gender`. Fixed-gender columns (from computed columns) or row-gender lookup. |
 | **Resizable columns** | Drag handle on right edge of each `<th>`. `table-layout: fixed`. Min 40px. |
 | **Forward Link fields** | Rendered as `<a href="/app/doctype/name" target="_blank">`. Opens form view in new tab. |
 | **Related (reverse) links** | Click opens filtered child panel (drill-down). Same as V1. |
 | **Per-row action icons** | Email / Phone / SMS buttons at end of each row. Only shown if panel config has `email_field` / `sms_field`. Email icon requires `@` in value; phone/SMS require digits. Single-row send dialog uses `{ name: row.name }` filter. |
-| **Header buttons** | Sheets (always), Email, SMS (conditional on config). Sheets copies `=IMPORTDATA(url)` to clipboard. Email/SMS open V1 dialogs via `frappe.require`. |
+| **Header buttons** | Refresh, Filter toggle, Sheets (always), Email, SMS (conditional on config). Sheets copies `=IMPORTDATA(url)` to clipboard. Email/SMS open V1 dialogs via `frappe.require`. Refresh button re-fetches config + all rows from the server while preserving active user filters; turns `--color-secondary` and spins while `loading` is true. |
 | **One panel per DocType** | Opening a child panel replaces any existing panel of the same DocType. Staggered offset (80px step). |
 | **Tag Finder** | Vue port with same Miller columns, pronoun tags, hop-aware Jinja generation, fallback values. z-index above email/SMS dialogs. |
 
