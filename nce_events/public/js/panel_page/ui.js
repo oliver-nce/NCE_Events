@@ -1136,32 +1136,20 @@ nce_events.panel_page.Explorer = class Explorer {
 			e.preventDefault();
 			const sx = e.clientX,
 				sy = e.clientY;
-			const sl = parseInt(el.css("left"), 10) || 0;
-			const st = parseInt(el.css("top"), 10) || 0;
-			const ghost = $("<div class='drag-ghost'></div>").css({
-				position: "fixed",
-				left: sl,
-				top: st,
-				width: el.outerWidth(),
-				height: el.outerHeight(),
-				zIndex: (parseInt(el.css("zIndex"), 10) || 100) + 1,
-			});
-			$(document.body).append(ghost);
-			el.css("opacity", "0.4");
+			let dx = 0,
+				dy = 0;
 			$("body").addClass("panel-float-dragging");
 			$(document).on(`mousemove.${ns}`, function (ev) {
-				ghost.css({
-					left: `${sl + ev.clientX - sx}px`,
-					top: `${Math.min(st + ev.clientY - sy, window.innerHeight - 40)}px`,
-				});
+				dx = ev.clientX - sx;
+				dy = ev.clientY - sy;
+				el[0].style.transform = `translate(${dx}px,${dy}px)`;
 			});
 			$(document).on(`mouseup.${ns}`, function () {
-				el.css({
-					left: ghost.css("left"),
-					top: ghost.css("top"),
-					opacity: "",
-				});
-				ghost.remove();
+				const sl = parseInt(el.css("left"), 10) || 0;
+				const st = parseInt(el.css("top"), 10) || 0;
+				el[0].style.transform = "";
+				el[0].style.left = `${sl + dx}px`;
+				el[0].style.top = `${Math.min(st + dy, window.innerHeight - 40)}px`;
 				$("body").removeClass("panel-float-dragging");
 				$(document).off(`mousemove.${ns} mouseup.${ns}`);
 			});
