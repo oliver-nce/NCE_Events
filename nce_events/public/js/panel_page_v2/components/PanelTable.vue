@@ -26,22 +26,45 @@
 
 		<div v-if="showFilterWidget" class="ppv2-filter-widget">
 			<div v-for="(cond, i) in filters" :key="i" class="ppv2-filter-row">
-				<select v-model="cond.field" class="ppv2-filter-col" @change="emitFilterChange">
+				<select v-model="cond.field" class="ppv2-filter-col" @change="onFilterFieldChange(cond); emitFilterChange()">
 					<option value="">— column —</option>
 					<option v-for="col in columns" :key="col.fieldname" :value="col.fieldname">{{ col.label }}</option>
 				</select>
 				<span class="ppv2-filter-ops">
 					<button
-						v-for="op in ops"
+						v-for="op in opsForCond(cond)"
 						:key="op"
 						:class="['ppv2-op-btn', { active: cond.op === op }]"
 						@click="cond.op = op; emitFilterChange()"
 					>{{ op }}</button>
 				</span>
-				<input v-model="cond.value" class="ppv2-filter-val" placeholder="value" @input="emitFilterDebounced">
+				<!-- Date / Datetime column: plain text input with datalist suggestions -->
+				<template v-if="isDateField(cond.field)">
+					<input
+						v-model="cond.value"
+						class="ppv2-filter-val"
+						:list="'ppv2-datelist-' + i"
+						placeholder="e.g. 30 days ago"
+						@input="emitFilterDebounced"
+					>
+					<datalist :id="'ppv2-datelist-' + i">
+						<option value="today" />
+						<option value="7 days ago" />
+						<option value="14 days ago" />
+						<option value="30 days ago" />
+						<option value="60 days ago" />
+						<option value="90 days ago" />
+						<option value="180 days ago" />
+						<option value="1 month ago" />
+						<option value="3 months ago" />
+						<option value="6 months ago" />
+						<option value="12 months ago" />
+					</datalist>
+				</template>
+				<input v-else v-model="cond.value" class="ppv2-filter-val" placeholder="value" @input="emitFilterDebounced">
 				<button class="ppv2-filter-rm" @click="filters.splice(i, 1); emitFilterChange()">&times;</button>
 			</div>
-			<button class="ppv2-filter-add" @click="filters.push({ field: '', op: '=', value: '' })">Add Filter &#9660;</button>
+			<button class="ppv2-filter-add" @click="filters.push({ field: '', op: '>', value: '' })">Add Filter &#9660;</button>
 		</div>
 
 		<div v-if="loading" class="ppv2-loading">Loading…</div>
@@ -139,7 +162,8 @@ const emit = defineEmits([
 	"filter-change", "email-one", "sms-one", "refresh",
 ]);
 
-const ops = ["=", "!=", ">", "<", ">=", "<=", "like", "in"];
+const opsDefault = ["=", "!=", ">", "<", ">=", "<=", "like", "in"];
+const opsDate    = [">", "<", ">=", "<=", "=", "!="];
 const showFilterWidget = ref(false);
 const filters = reactive([]);
 const colWidths = reactive({});
@@ -234,6 +258,35 @@ const genderCol = computed(() => (props.config.gender_column || "").trim().toLow
 const maleHex = computed(() => (props.config.male_hex || "").trim());
 const femaleHex = computed(() => (props.config.female_hex || "").trim());
 const tintByGender = computed(() => props.config.tint_by_gender || {});
+
+const DATE_FIELDTYPES = new Set(["Date", "Datetime"]);
+
+function colByFieldname(fieldname) {
+	return props.columns.find((c) => c.fieldname === fieldname) || null;
+}
+
+function isDateField(fieldname) {
+	if (!fieldname) return false;
+	const col = colByFieldname(fieldname);
+	if (col && col.fieldtype) return DATE_FIELDTYPES.has(col.fieldtype);
+	// Heuristic fallback: common date-ish field name fragments
+	return /date|_at$/.test(fieldname.toLowerCase());
+}
+
+function opsForCond(cond) {
+	return isDateField(cond.field) ? opsDate : opsDefault;
+}
+
+function onFilterFieldChange(cond) {
+	// When switching to a date field, default op to > (most common intent)
+	if (isDateField(cond.field) && !opsDate.includes(cond.op)) {
+		cond.op = ">";
+	}
+	// When switching to a non-date field, reset op to = if it was a date-only op
+	if (!isDateField(cond.field) && !opsDefault.includes(cond.op)) {
+		cond.op = "=";
+	}
+}
 
 function toggleFilter() {
 	showFilterWidget.value = !showFilterWidget.value;

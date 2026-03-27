@@ -262,6 +262,16 @@ def get_panel_data(
 		lf["fieldname"]: lf["options"] for lf in _get_link_fields_with_target(root_doctype)
 	}
 
+	# Build fieldtype map from meta for date/datetime awareness in the filter widget
+	_fieldtype_map: dict[str, str] = {}
+	try:
+		_meta = frappe.get_meta(root_doctype)
+		for _f in _meta.fields:
+			if _f.fieldname:
+				_fieldtype_map[_f.fieldname] = _f.fieldtype or ""
+	except Exception:
+		pass
+
 	seen: set[str] = set()
 	columns: list[dict[str, str]] = []
 	for fn in display_fields:
@@ -278,6 +288,9 @@ def get_panel_data(
 		if fn in link_target_map:
 			col["is_link"] = True
 			col["link_doctype"] = link_target_map[fn]
+		ft = _fieldtype_map.get(fn, "")
+		if ft:
+			col["fieldtype"] = ft
 		columns.append(col)
 
 	for fn, target_dt in link_target_map.items():

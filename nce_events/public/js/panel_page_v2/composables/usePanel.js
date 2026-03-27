@@ -43,6 +43,34 @@ export function usePanel(doctype, parentFilter = {}) {
 		});
 	}
 
+	// ── Relative date resolution ──────────────────────────────────────────────
+	// Resolves human-friendly date shorthand to a concrete yyyy-mm-dd string.
+	// Supported: "today", "N days ago", "N months ago", "N years ago"
+	// Anything else is returned unchanged.
+	function _resolveFilterValue(val) {
+		if (!val) return val;
+		const s = String(val).trim().toLowerCase();
+
+		if (s === "today") {
+			const d = new Date();
+			return d.toISOString().slice(0, 10);
+		}
+
+		const m = s.match(/^(\d+)\s+(day|month|year)s?\s+ago$/);
+		if (m) {
+			const n = parseInt(m[1], 10);
+			const unit = m[2];
+			const d = new Date();
+			d.setHours(0, 0, 0, 0);
+			if (unit === "day") d.setDate(d.getDate() - n);
+			if (unit === "month") d.setMonth(d.getMonth() - n);
+			if (unit === "year") d.setFullYear(d.getFullYear() - n);
+			return d.toISOString().slice(0, 10);
+		}
+
+		return val;
+	}
+
 	// ── User filter application ───────────────────────────────────────────────
 	// Single path used for both core filters and user-entered filters.
 	// Each filter: { field, op, value }
@@ -61,7 +89,7 @@ export function usePanel(doctype, parentFilter = {}) {
 				}
 
 				const left = String(rowVal).trim();
-				const right = String(filterVal ?? "").trim();
+				const right = String(_resolveFilterValue(filterVal) ?? "").trim();
 
 				// ISO date comparison (yyyy-mm-dd) — lexicographic order is correct
 				const dateRe = /^\d{4}-\d{2}-\d{2}/;
