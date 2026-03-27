@@ -582,8 +582,9 @@ function _render_order_tab($sub_content, uid, sub_tabs, matrices, saved, _sync_a
 }
 
 // ── Default Filters widget ────────────────────────────────────────────────────
-// Renders a custom filter widget in place of the default child table grid,
-// matching the filter UI in PanelTable.vue exactly.
+// Renders a custom filter widget for default_filters.
+// Field list comes from the visible column_order (same as the Order tab),
+// with fieldtype looked up from the cached get_doctype_fields result.
 
 const DATE_FIELDTYPES = new Set(["Date", "Datetime"]);
 const OPS_DEFAULT = ["=", "!=", ">", "<", ">=", "<=", "like", "in"];
@@ -602,6 +603,27 @@ const DATE_SUGGESTIONS = [
 	"12 months ago",
 ];
 
+// Build the field list for the filter widget from column_order + fieldtype cache.
+// Falls back to all doctype fields if column_order is empty.
+function _filter_fields_from_columns(frm, allFields) {
+	const col_order = _parse_csv(frm.doc.column_order);
+	// Build a map from fieldname → {fieldname, label, fieldtype}
+	const by_name = {};
+	allFields.forEach(function (f) {
+		by_name[f.fieldname] = f;
+	});
+	// Only keep fields that are in column_order and exist in allFields
+	// (skip _related_ and dot-notation linked fields — not filterable)
+	const visible = col_order
+		.filter(function (fn) {
+			return by_name[fn] && fn.indexOf(".") === -1 && fn.indexOf("_related_") !== 0;
+		})
+		.map(function (fn) {
+			return by_name[fn];
+		});
+	return visible.length ? visible : allFields;
+}
+
 function _render_default_filters(frm) {
 	const fd = frm.fields_dict["default_filters"];
 	if (!fd || !fd.$wrapper) return;
@@ -614,8 +636,8 @@ function _render_default_filters(frm) {
 
 	const doctype = frm.doc.root_doctype;
 
-	function _build(fields) {
-		const rows = frm.doc.default_filters || [];
+	function _build(allFields) {
+		const fields = _filter_fields_from_columns(frm, allFields);
 
 		const $widget = $('<div class="pp-df-widget" style="margin: 8px 0;"></div>');
 
@@ -633,7 +655,6 @@ function _render_default_filters(frm) {
 				return x.fieldname === fieldname;
 			});
 			if (f && DATE_FIELDTYPES.has(f.fieldtype)) return OPS_DATE;
-			// Heuristic fallback
 			if (fieldname && /date|_at$/.test(fieldname.toLowerCase())) return OPS_DATE;
 			return OPS_DEFAULT;
 		}
@@ -874,5 +895,10 @@ frappe.ui.form.on("Page Panel", {
 		if ($layout.data("pp-active-tab") === "display") {
 			_render_display(frm);
 		}
+	},
+
+	column_order: function (frm) {
+		// Re-render filter widget so field list reflects updated visible columns
+		_render_default_filters(frm);
 	},
 });
