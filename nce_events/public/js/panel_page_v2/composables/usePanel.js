@@ -44,11 +44,40 @@ export function usePanel(doctype, parentFilter = {}) {
 	}
 
 	// Parse and apply core_filter (SQL-like string) to rows
+	// Resolve SQL date functions to ISO date strings before parsing
+	// Handles: current_date(), now(), curdate(), and INTERVAL N DAY/MONTH/YEAR arithmetic
+	function _resolveSqlDateFunctions(str) {
+		const today = new Date();
+		today.setHours(0, 0, 0, 0);
+
+		// Replace: current_date() [+/-] interval N day/month/year
+		// e.g. "current_date() -interval 30 day"  →  "2024-11-15"
+		str = str.replace(
+			/(?:current_date\(\s*\)|curdate\(\s*\)|now\(\s*\))\s*([-+])\s*interval\s+(\d+)\s+(day|month|year)/gi,
+			(_, sign, n, unit) => {
+				const d = new Date(today);
+				const amount = parseInt(n, 10) * (sign === "-" ? -1 : 1);
+				if (/day/i.test(unit)) d.setDate(d.getDate() + amount);
+				if (/month/i.test(unit)) d.setMonth(d.getMonth() + amount);
+				if (/year/i.test(unit)) d.setFullYear(d.getFullYear() + amount);
+				return `'${d.toISOString().slice(0, 10)}'`;
+			},
+		);
+
+		// Replace bare current_date() / curdate() / now() with today's date
+		str = str.replace(/(?:current_date\(\s*\)|curdate\(\s*\)|now\(\s*\))/gi, () => {
+			return `'${today.toISOString().slice(0, 10)}'`;
+		});
+
+		return str;
+	}
+
 	function _applyCoreFilter(allRows, coreFilterStr) {
 		if (!coreFilterStr || !allRows.length) return allRows;
 
 		try {
-			const parsed = _parseCoreFilter(coreFilterStr);
+			const resolved = _resolveSqlDateFunctions(coreFilterStr);
+			const parsed = _parseCoreFilter(resolved);
 			return allRows.filter((row) => _matchesCoreFilter(row, parsed));
 		} catch (e) {
 			// Fail open: return all rows if parsing fails
@@ -248,33 +277,64 @@ export function usePanel(doctype, parentFilter = {}) {
 	}
 
 	// Compare a single value against filter (core_filter)
+	// For date fields (ISO yyyy-mm-dd strings), string lexicographic order is correct.
+	// For numeric fields, fall back to parseFloat.
 	function _compareCore(val, filterVal, op) {
 		if (val === undefined || val === null) val = "";
 		if (filterVal === undefined || filterVal === null) filterVal = "";
-		const left = String(val).toLowerCase();
-		const right = String(filterVal).toLowerCase();
+		const left = String(val).trim();
+		const right = String(filterVal).trim();
+
+		// Detect date strings: yyyy-mm-dd
+		const dateRe = /^\d{4}-\d{2}-\d{2}/;
+		if (dateRe.test(left) && dateRe.test(right)) {
+			// Lexicographic comparison is correct for ISO dates
+			switch (op) {
+				case "=":
+					return left.slice(0, 10) === right.slice(0, 10);
+				case "!=":
+					return left.slice(0, 10) !== right.slice(0, 10);
+				case ">":
+					return left.slice(0, 10) > right.slice(0, 10);
+				case "<":
+					return left.slice(0, 10) < right.slice(0, 10);
+				case ">=":
+					return left.slice(0, 10) >= right.slice(0, 10);
+				case "<=":
+					return left.slice(0, 10) <= right.slice(0, 10);
+				default:
+					return left.slice(0, 10) === right.slice(0, 10);
+			}
+		}
+
+		const leftLow = left.toLowerCase();
+		const rightLow = right.toLowerCase();
+		const leftNum = parseFloat(left);
+		const rightNum = parseFloat(right);
+		const numeric = !isNaN(leftNum) && !isNaN(rightNum);
 
 		switch (op) {
 			case "=":
-				return left === right;
+				return leftLow === rightLow;
 			case "!=":
-				return left !== right;
+				return leftLow !== rightLow;
 			case ">":
-				return parseFloat(left) > parseFloat(right || 0);
+				return numeric ? leftNum > rightNum : leftLow > rightLow;
 			case "<":
-				return parseFloat(left) < parseFloat(right || 0);
+				return numeric ? leftNum < rightNum : leftLow < rightLow;
 			case ">=":
-				return parseFloat(left) >= parseFloat(right || 0);
+				return numeric ? leftNum >= rightNum : leftLow >= rightLow;
 			case "<=":
-				return parseFloat(left) <= parseFloat(right || 0);
+				return numeric ? leftNum <= rightNum : leftLow <= rightLow;
 			case "like":
-				return left.includes(right);
+				return leftLow.includes(rightLow);
 			case "in":
-				// Handle IN (val1, val2, ...)
-				// For core_filter, we'll treat it as simple string comparison
-				return left === right;
+				return right
+					.split(",")
+					.map((s) => s.trim().toLowerCase())
+					.includes(leftLow);
 			default:
-				return left === right;
+				return leftLow === rightLow;
 		}
 	}
 

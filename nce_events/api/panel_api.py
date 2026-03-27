@@ -202,30 +202,16 @@ def get_panel_data(
 	# Unfiltered count of the entire doctype — used as the denominator in the UI
 	full_count = frappe.db.count(root_doctype)
 
-	# For V2: always fetch all rows; core_filter applied server-side if present
-	use_core_filter = bool(core_filter)
-
-	if use_core_filter:
-		total_count = _count_with_core_filter(root_doctype, filters, core_filter)
-		rows = _query_with_core_filter(
-			root_doctype,
-			simple_fields,
-			filters,
-			core_filter,
-			order_by,
-			limit=0,
-			start=0,
-		)
-	else:
-		total_count = frappe.db.count(root_doctype, filters=filters)
-		get_all_kw: dict[str, Any] = dict(
-			doctype=root_doctype,
-			fields=simple_fields,
-			filters=filters,
-			order_by=order_by,
-		)
-		get_all_kw["limit_page_length"] = 0  # Fetch all rows
-		rows = frappe.get_all(**get_all_kw)
+	# V2: always fetch all rows — core_filter is sent to the client and applied in JS
+	total_count = frappe.db.count(root_doctype, filters=filters)
+	get_all_kw: dict[str, Any] = dict(
+		doctype=root_doctype,
+		fields=simple_fields,
+		filters=filters,
+		order_by=order_by,
+		limit_page_length=0,
+	)
+	rows = frappe.get_all(**get_all_kw)
 
 	if linked_fields and rows:
 		grouped: dict[str, list[str]] = {}
