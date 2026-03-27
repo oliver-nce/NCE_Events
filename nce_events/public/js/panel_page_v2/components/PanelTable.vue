@@ -4,7 +4,7 @@
 			<span class="ppv2-title">{{ title }}</span>
 			<span v-if="config.open_card_on_click" class="ppv2-click-hint">Click row for details · Ctrl-click to remove</span>
 			<span class="ppv2-header-right">
-				<button class="ppv2-hdr-btn" title="Refresh" @click="onRefresh">
+				<button class="ppv2-hdr-btn" :class="{ 'ppv2-hdr-btn--refreshing': loading }" title="Refresh" @click="onRefresh">
 					<i class="fa fa-refresh"></i>
 				</button>
 				<button class="ppv2-hdr-btn" title="Filter" @click="toggleFilter">
@@ -469,6 +469,17 @@ function startColResize(e, ci) {
 	opacity: 0.8;
 }
 .ppv2-hdr-btn:hover { opacity: 1; }
+.ppv2-hdr-btn--refreshing {
+	color: var(--color-secondary) !important;
+	opacity: 1;
+}
+.ppv2-hdr-btn--refreshing .fa-refresh {
+	animation: ppv2-spin 0.8s linear infinite;
+}
+@keyframes ppv2-spin {
+	from { transform: rotate(0deg); }
+	to   { transform: rotate(360deg); }
+}
 
 .ppv2-count { font-size: var(--font-size-sm); opacity: 0.8; }
 
