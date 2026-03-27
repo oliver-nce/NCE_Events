@@ -44,8 +44,13 @@ export function usePanel(doctype, parentFilter = {}) {
 	}
 
 	// ── Relative date resolution ──────────────────────────────────────────────
-	// Resolves human-friendly date shorthand to a concrete yyyy-mm-dd string.
-	// Supported: "today", "N days ago", "N months ago", "N years ago"
+	// Resolves date shorthand to a concrete yyyy-mm-dd string.
+	// Supported:
+	//   "today"
+	//   "N days ago", "N months ago", "N years ago"
+	//   "current_date() -interval N day/month/year"  (from migration patch)
+	//   "current_date() +interval N day/month/year"
+	//   bare "current_date()" / "curdate()" / "now()"
 	// Anything else is returned unchanged.
 	function _resolveFilterValue(val) {
 		if (!val) return val;
@@ -53,18 +58,43 @@ export function usePanel(doctype, parentFilter = {}) {
 
 		if (s === "today") {
 			const d = new Date();
+			d.setHours(0, 0, 0, 0);
 			return d.toISOString().slice(0, 10);
 		}
 
-		const m = s.match(/^(\d+)\s+(day|month|year)s?\s+ago$/);
-		if (m) {
-			const n = parseInt(m[1], 10);
-			const unit = m[2];
+		// "N days/months/years ago"
+		const agoM = s.match(/^(\d+)\s+(day|month|year)s?\s+ago$/);
+		if (agoM) {
+			const n = parseInt(agoM[1], 10);
+			const unit = agoM[2];
 			const d = new Date();
 			d.setHours(0, 0, 0, 0);
 			if (unit === "day") d.setDate(d.getDate() - n);
 			if (unit === "month") d.setMonth(d.getMonth() - n);
 			if (unit === "year") d.setFullYear(d.getFullYear() - n);
+			return d.toISOString().slice(0, 10);
+		}
+
+		// "current_date() -interval 30 day" (and +, and curdate/now variants)
+		const sqlM = s.match(
+			/(?:current_date\(\s*\)|curdate\(\s*\)|now\(\s*\))\s*([-+])\s*interval\s+(\d+)\s+(day|month|year)/,
+		);
+		if (sqlM) {
+			const sign = sqlM[1] === "-" ? -1 : 1;
+			const n = parseInt(sqlM[2], 10) * sign;
+			const unit = sqlM[3];
+			const d = new Date();
+			d.setHours(0, 0, 0, 0);
+			if (unit === "day") d.setDate(d.getDate() + n);
+			if (unit === "month") d.setMonth(d.getMonth() + n);
+			if (unit === "year") d.setFullYear(d.getFullYear() + n);
+			return d.toISOString().slice(0, 10);
+		}
+
+		// bare current_date() / curdate() / now()
+		if (/^(?:current_date\(\s*\)|curdate\(\s*\)|now\(\s*\))$/.test(s)) {
+			const d = new Date();
+			d.setHours(0, 0, 0, 0);
 			return d.toISOString().slice(0, 10);
 		}
 
