@@ -38,28 +38,20 @@
 						@click="cond.op = op; emitFilterChange()"
 					>{{ op }}</button>
 				</span>
-				<!-- Date / Datetime column: plain text input with datalist suggestions -->
+				<!-- Date / Datetime column: two mutually-exclusive inputs -->
 				<template v-if="cond.field && isDateField(cond.field)">
 					<input
-						v-model="cond.value"
+						:value="cond._sqlDate || ''"
 						class="ppv2-filter-val"
-						:list="'ppv2-datelist-' + i"
-						placeholder="e.g. 30 days ago"
-						@input="emitFilterDebounced"
+						placeholder="Enter a SQL date e.g. 1950-06-08"
+						@input="onDateSqlInput(cond, $event.target.value); emitFilterDebounced()"
 					>
-					<datalist :id="'ppv2-datelist-' + i">
-						<option value="today" />
-						<option value="7 days ago" />
-						<option value="14 days ago" />
-						<option value="30 days ago" />
-						<option value="60 days ago" />
-						<option value="90 days ago" />
-						<option value="180 days ago" />
-						<option value="1 month ago" />
-						<option value="3 months ago" />
-						<option value="6 months ago" />
-						<option value="12 months ago" />
-					</datalist>
+					<input
+						:value="cond._daysAgo || ''"
+						class="ppv2-filter-val"
+						placeholder="OR enter days ago e.g. 30"
+						@input="onDaysAgoInput(cond, $event.target.value); emitFilterDebounced()"
+					>
 				</template>
 				<input v-else-if="cond.field" v-model="cond.value" class="ppv2-filter-val" placeholder="value" @input="emitFilterDebounced">
 				<button v-if="cond.field" class="ppv2-filter-rm" @click="filters.splice(i, 1); emitFilterChange()">&times;</button>
@@ -280,6 +272,8 @@ function opsForCond(cond) {
 function onFilterFieldChange(cond) {
 	// Clear stale value whenever the field changes
 	cond.value = "";
+	cond._sqlDate = "";
+	cond._daysAgo = "";
 	// When switching to a date field, default op to > (most common intent)
 	if (isDateField(cond.field) && !opsDate.includes(cond.op)) {
 		cond.op = ">";
@@ -288,6 +282,18 @@ function onFilterFieldChange(cond) {
 	if (!isDateField(cond.field) && !opsDefault.includes(cond.op)) {
 		cond.op = "=";
 	}
+}
+
+function onDateSqlInput(cond, val) {
+	cond._sqlDate = val;
+	cond._daysAgo = "";
+	cond.value = val;
+}
+
+function onDaysAgoInput(cond, val) {
+	cond._daysAgo = val;
+	cond._sqlDate = "";
+	cond.value = val ? val + " days ago" : "";
 }
 
 function toggleFilter() {
