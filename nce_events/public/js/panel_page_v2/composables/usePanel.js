@@ -22,8 +22,8 @@ export function usePanel(doctype, parentFilter = {}) {
 
 	// Full unfiltered dataset from backend
 	const _allRows = ref([]);
-	// core_filter parsed into [{field, op, value}] at load time
-	let _coreFilters = [];
+	// default_filters from backend config [{field, op, value}] — pre-populated in filter widget
+	let _defaultFilters = [];
 	// current active user filters [{field, op, value}]
 	const userFilters = ref([]);
 
@@ -41,92 +41,6 @@ export function usePanel(doctype, parentFilter = {}) {
 			root_doctype: doctype,
 			filters: JSON.stringify({ ...parentFilter, ...filters }),
 		});
-	}
-
-	// ── Core filter parsing ───────────────────────────────────────────────────
-	// Resolve SQL date functions to a concrete ISO date string (yyyy-mm-dd).
-	// Handles: current_date(), curdate(), now(), optionally ± INTERVAL N DAY/MONTH/YEAR
-	function _resolveDateExpr(str) {
-		const today = new Date();
-		today.setHours(0, 0, 0, 0);
-
-		// current_date() +/- interval N day/month/year
-		const intervalRe =
-			/(?:current_date\(\s*\)|curdate\(\s*\)|now\(\s*\))\s*([-+])\s*interval\s+(\d+)\s+(day|month|year)/i;
-		const m = str.match(intervalRe);
-		if (m) {
-			const d = new Date(today);
-			const amount = parseInt(m[2], 10) * (m[1] === "-" ? -1 : 1);
-			if (/day/i.test(m[3])) d.setDate(d.getDate() + amount);
-			else if (/month/i.test(m[3])) d.setMonth(d.getMonth() + amount);
-			else if (/year/i.test(m[3])) d.setFullYear(d.getFullYear() + amount);
-			return d.toISOString().slice(0, 10);
-		}
-
-		// bare current_date() / curdate() / now()
-		if (/(?:current_date\(\s*\)|curdate\(\s*\)|now\(\s*\))/i.test(str)) {
-			return today.toISOString().slice(0, 10);
-		}
-
-		// unquote single-quoted literals
-		if (str.startsWith("'") && str.endsWith("'")) return str.slice(1, -1);
-		if (str.startsWith('"') && str.endsWith('"')) return str.slice(1, -1);
-
-		return str.trim();
-	}
-
-	// Parse a core_filter string like:
-	//   "end_date > current_date() -interval 30 day"
-	//   "status = 'Active' AND state != 'VIC'"
-	// into [{field, op, value}, ...]
-	// Returns [] and warns if unparseable (fail open).
-	function _parseCoreFilterString(str) {
-		if (!str || !str.trim()) return [];
-		console.log("[usePanel] _parseCoreFilterString input:", str);
-
-		const results = [];
-		// Split on AND (case-insensitive); OR is not supported — treat as fail-open
-		const clauses = str.split(/\bAND\b/i);
-
-		const OPS = [">=", "<=", "!=", ">", "<", "=", /\blike\b/i, /\bin\b/i];
-
-		for (const clause of clauses) {
-			const s = clause.trim();
-			if (!s) continue;
-
-			let matched = false;
-			for (const op of OPS) {
-				const opStr =
-					op instanceof RegExp ? op.source.replace(/\\b/g, "").replace(/\/i/, "") : op;
-				const re = new RegExp(
-					`^([\\w.]+)\\s*(?:${op instanceof RegExp ? op.source : escapeRe(op)})\\s*(.+)$`,
-					"i",
-				);
-				const m = s.match(re);
-				if (m) {
-					const field = m[1].trim();
-					const rawVal = m[2].trim();
-					// The operator string to store — normalise keyword ops to lowercase
-					const normOp =
-						op instanceof RegExp ? opStr.toLowerCase().replace(/\\b/g, "").trim() : op;
-					const value = _resolveDateExpr(rawVal);
-					results.push({ field, op: normOp, value });
-					matched = true;
-					break;
-				}
-			}
-
-			if (!matched) {
-				console.warn(`usePanel: could not parse core_filter clause: "${s}" — skipping`);
-			}
-		}
-
-		console.log("[usePanel] _parseCoreFilterString result:", results);
-		return results;
-	}
-
-	function escapeRe(s) {
-		return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 	}
 
 	// ── User filter application ───────────────────────────────────────────────
@@ -224,16 +138,11 @@ export function usePanel(doctype, parentFilter = {}) {
 	// core filters always applied; user filters layered on top (both AND-combined)
 	function _applyFilters() {
 		const active = userFilters.value.filter((f) => f.field && String(f.value ?? "") !== "");
-		const combined = [..._coreFilters, ...active];
-		console.log("[usePanel] _applyFilters", {
-			allRows: _allRows.value.length,
-			coreFilters: _coreFilters,
-			userFilters: active,
-			combined,
-			sampleRow: _allRows.value[0],
-		});
+		// If user has entered any filters, use only those — default filters are already
+		// visible in the widget and the user is in full control.
+		// If no user filters, fall back to default filters.
+		const combined = active.length > 0 ? active : _defaultFilters;
 		rows.value = _applyUserFilters(_allRows.value, combined);
-		console.log("[usePanel] after filter:", rows.value.length, "rows");
 		total.value = rows.value.length;
 	}
 
@@ -251,7 +160,7 @@ export function usePanel(doctype, parentFilter = {}) {
 			config.value = cfg;
 			columns.value = data.columns || [];
 			_allRows.value = data.rows || [];
-			_coreFilters = _parseCoreFilterString(data.core_filter || "");
+			_defaultFilters = data.default_filters || [];
 			_applyFilters();
 			fullTotal.value = data.full_count ?? 0;
 			loading.value = false;
@@ -276,7 +185,7 @@ export function usePanel(doctype, parentFilter = {}) {
 			config.value = cfg;
 			columns.value = data.columns || [];
 			_allRows.value = data.rows || [];
-			_coreFilters = _parseCoreFilterString(data.core_filter || "");
+			_defaultFilters = data.default_filters || [];
 			_applyFilters();
 			fullTotal.value = data.full_count ?? 0;
 			loading.value = false;

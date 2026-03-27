@@ -131,6 +131,7 @@ const props = defineProps({
 	showEmail: { type: Boolean, default: false },
 	showSms: { type: Boolean, default: false },
 	config: { type: Object, default: () => ({}) },
+	defaultFilters: { type: Array, default: () => [] },
 });
 
 const emit = defineEmits([
@@ -138,7 +139,7 @@ const emit = defineEmits([
 	"filter-change", "email-one", "sms-one", "refresh",
 ]);
 
-const ops = ["=", "!=", ">", "<", "like", "in"];
+const ops = ["=", "!=", ">", "<", ">=", "<=", "like", "in"];
 const showFilterWidget = ref(false);
 const filters = reactive([]);
 const colWidths = reactive({});
@@ -240,6 +241,22 @@ function toggleFilter() {
 		filters.push({ field: "", op: "=", value: "" });
 	}
 }
+
+// When defaultFilters change (i.e. panel first loads with config), pre-populate
+// the filter widget and open it — only if the user hasn't already entered filters.
+watch(
+	() => props.defaultFilters,
+	(defs) => {
+		if (!defs || !defs.length) return;
+		// Only seed if user hasn't touched the filters yet
+		const hasUserFilters = filters.some((f) => f.field && String(f.value ?? "") !== "");
+		if (hasUserFilters) return;
+		filters.splice(0, filters.length, ...defs.map((f) => ({ field: f.field, op: f.op, value: f.value })));
+		showFilterWidget.value = true;
+		emitFilterChange();
+	},
+	{ immediate: true },
+);
 
 function activeFilters() {
 	return filters.filter((f) => f.field && String(f.value || "") !== "")

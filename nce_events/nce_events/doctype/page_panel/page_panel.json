@@ -1,199 +1,200 @@
 {
- "actions": [],
- "autoname": "field:root_doctype",
- "creation": "2026-03-01 00:00:00.000000",
- "doctype": "DocType",
- "engine": "InnoDB",
- "field_order": [
-  "root_doctype",
-  "header_text",
-  "core_filter",
-  "order_by",
-  "section_break_computed",
-  "unstored_calculation_fields",
-  "column_order",
-  "bold_fields",
-  "gender_column",
-  "gender_color_fields",
-  "section_break_widgets",
-  "show_filter",
-  "show_sheets",
-  "column_break_widgets",
-  "show_email",
-  "show_sms",
-  "email_field",
-  "sms_field",
-  "section_break_tile_actions",
-  "show_card_email",
-  "show_card_sms",
-  "open_card_on_click"
- ],
- "fields": [
-  {
-   "description": "The DocType this panel displays (one panel per DocType)",
-   "fieldname": "root_doctype",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "DocType",
-   "options": "DocType",
-   "reqd": 1,
-   "unique": 1
-  },
-  {
-   "fieldname": "header_text",
-   "fieldtype": "Data",
-   "in_list_view": 1,
-   "label": "Header Text"
-  },
-  {
-   "description": "SQL WHERE clause fragment applied before user filters, e.g. end_date > CURRENT_DATE() - INTERVAL 10 DAY",
-   "fieldname": "core_filter",
-   "fieldtype": "Small Text",
-   "label": "Core Filter"
-  },
-  {
-   "description": "SQL ORDER BY clause, e.g. end_date DESC",
-   "fieldname": "order_by",
-   "fieldtype": "Small Text",
-   "label": "Order By"
-  },
-  {
-   "fieldname": "section_break_computed",
-   "fieldtype": "Section Break",
-   "label": "Unstored Calculation Fields"
-  },
-  {
-   "description": "SQL expressions evaluated at query time (scalar or array). Like FileMaker unstored calculations.",
-   "fieldname": "unstored_calculation_fields",
-   "fieldtype": "Table",
-   "label": "Computed Columns",
-   "options": "Page Panel Computed Column"
-  },
-  {
-   "description": "Comma-delimited visible fields in display order (managed by Display tab)",
-   "fieldname": "column_order",
-   "fieldtype": "Small Text",
-   "hidden": 1,
-   "label": "Column Order"
-  },
-  {
-   "description": "Comma-delimited fields to render bold (managed by Display tab)",
-   "fieldname": "bold_fields",
-   "fieldtype": "Small Text",
-   "hidden": 1,
-   "label": "Bold Fields"
-  },
-  {
-   "description": "Field that holds the gender indicator for each row",
-   "fieldname": "gender_column",
-   "fieldtype": "Small Text",
-   "hidden": 1,
-   "label": "Gender Column"
-  },
-  {
-   "description": "Comma-delimited fields to color based on row gender",
-   "fieldname": "gender_color_fields",
-   "fieldtype": "Small Text",
-   "hidden": 1,
-   "label": "Gender Color Fields"
-  },
-  {
-   "fieldname": "section_break_widgets",
-   "fieldtype": "Section Break",
-   "label": "Header Widgets"
-  },
-  {
-   "default": "1",
-   "fieldname": "show_filter",
-   "fieldtype": "Check",
-   "label": "Show Filter"
-  },
-  {
-   "default": "1",
-   "fieldname": "show_sheets",
-   "fieldtype": "Check",
-   "label": "Show Sheets"
-  },
-  {
-   "fieldname": "column_break_widgets",
-   "fieldtype": "Column Break"
-  },
-  {
-   "default": "1",
-   "fieldname": "show_email",
-   "fieldtype": "Check",
-   "label": "Show Email"
-  },
-  {
-   "default": "1",
-   "fieldname": "show_sms",
-   "fieldtype": "Check",
-   "label": "Show SMS"
-  },
-  {
-   "description": "Field containing the email address for recipients",
-   "fieldname": "email_field",
-   "fieldtype": "Data",
-   "label": "Email Field"
-  },
-  {
-   "description": "Field containing the phone number for SMS recipients",
-   "fieldname": "sms_field",
-   "fieldtype": "Data",
-   "label": "SMS Field"
-  },
-  {
-   "fieldname": "section_break_tile_actions",
-   "fieldtype": "Section Break",
-   "label": "Tile Actions"
-  },
-  {
-   "default": "0",
-   "description": "Show Email button on each tile in the listing",
-   "fieldname": "show_card_email",
-   "fieldtype": "Check",
-   "label": "Show Tile Email"
-  },
-  {
-   "default": "0",
-   "description": "Show SMS button on each tile in the listing",
-   "fieldname": "show_card_sms",
-   "fieldtype": "Check",
-   "label": "Show Tile SMS"
-  },
-  {
-   "default": "0",
-   "description": "V2 only: when user clicks a row (except WP Tables), open the form view of that record in a new browser tab",
-   "fieldname": "open_card_on_click",
-   "fieldtype": "Check",
-   "label": "Open Card on Click"
-  }
- ],
- "index_web_pages_for_search": 0,
- "istable": 0,
- "links": [],
- "modified": "2026-03-07 00:00:00.000000",
- "modified_by": "Administrator",
- "module": "NCE Events",
- "name": "Page Panel",
- "naming_rule": "By fieldname",
- "owner": "Administrator",
- "permissions": [
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "export": 1,
-   "print": 1,
-   "read": 1,
-   "report": 1,
-   "role": "System Manager",
-   "share": 1,
-   "write": 1
-  }
- ],
- "sort_field": "creation",
- "sort_order": "DESC",
- "states": [],
- "track_changes": 1
+  "actions": [],
+  "autoname": "field:root_doctype",
+  "creation": "2026-03-01 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "root_doctype",
+    "header_text",
+    "default_filters",
+    "order_by",
+    "section_break_computed",
+    "unstored_calculation_fields",
+    "column_order",
+    "bold_fields",
+    "gender_column",
+    "gender_color_fields",
+    "section_break_widgets",
+    "show_filter",
+    "show_sheets",
+    "column_break_widgets",
+    "show_email",
+    "show_sms",
+    "email_field",
+    "sms_field",
+    "section_break_tile_actions",
+    "show_card_email",
+    "show_card_sms",
+    "open_card_on_click"
+  ],
+  "fields": [
+    {
+      "description": "The DocType this panel displays (one panel per DocType)",
+      "fieldname": "root_doctype",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "DocType",
+      "options": "DocType",
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "fieldname": "header_text",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Header Text"
+    },
+    {
+      "description": "Default filters pre-applied when the panel opens. Visible and editable in the filter widget.",
+      "fieldname": "default_filters",
+      "fieldtype": "Table",
+      "label": "Default Filters",
+      "options": "Page Panel Default Filter"
+    },
+    {
+      "description": "SQL ORDER BY clause, e.g. end_date DESC",
+      "fieldname": "order_by",
+      "fieldtype": "Small Text",
+      "label": "Order By"
+    },
+    {
+      "fieldname": "section_break_computed",
+      "fieldtype": "Section Break",
+      "label": "Unstored Calculation Fields"
+    },
+    {
+      "description": "SQL expressions evaluated at query time (scalar or array). Like FileMaker unstored calculations.",
+      "fieldname": "unstored_calculation_fields",
+      "fieldtype": "Table",
+      "label": "Computed Columns",
+      "options": "Page Panel Computed Column"
+    },
+    {
+      "description": "Comma-delimited visible fields in display order (managed by Display tab)",
+      "fieldname": "column_order",
+      "fieldtype": "Small Text",
+      "hidden": 1,
+      "label": "Column Order"
+    },
+    {
+      "description": "Comma-delimited fields to render bold (managed by Display tab)",
+      "fieldname": "bold_fields",
+      "fieldtype": "Small Text",
+      "hidden": 1,
+      "label": "Bold Fields"
+    },
+    {
+      "description": "Field that holds the gender indicator for each row",
+      "fieldname": "gender_column",
+      "fieldtype": "Small Text",
+      "hidden": 1,
+      "label": "Gender Column"
+    },
+    {
+      "description": "Comma-delimited fields to color based on row gender",
+      "fieldname": "gender_color_fields",
+      "fieldtype": "Small Text",
+      "hidden": 1,
+      "label": "Gender Color Fields"
+    },
+    {
+      "fieldname": "section_break_widgets",
+      "fieldtype": "Section Break",
+      "label": "Header Widgets"
+    },
+    {
+      "default": "1",
+      "fieldname": "show_filter",
+      "fieldtype": "Check",
+      "label": "Show Filter"
+    },
+    {
+      "default": "1",
+      "fieldname": "show_sheets",
+      "fieldtype": "Check",
+      "label": "Show Sheets"
+    },
+    {
+      "fieldname": "column_break_widgets",
+      "fieldtype": "Column Break"
+    },
+    {
+      "default": "1",
+      "fieldname": "show_email",
+      "fieldtype": "Check",
+      "label": "Show Email"
+    },
+    {
+      "default": "1",
+      "fieldname": "show_sms",
+      "fieldtype": "Check",
+      "label": "Show SMS"
+    },
+    {
+      "description": "Field containing the email address for recipients",
+      "fieldname": "email_field",
+      "fieldtype": "Data",
+      "label": "Email Field"
+    },
+    {
+      "description": "Field containing the phone number for SMS recipients",
+      "fieldname": "sms_field",
+      "fieldtype": "Data",
+      "label": "SMS Field"
+    },
+    {
+      "fieldname": "section_break_tile_actions",
+      "fieldtype": "Section Break",
+      "label": "Tile Actions"
+    },
+    {
+      "default": "0",
+      "description": "Show Email button on each tile in the listing",
+      "fieldname": "show_card_email",
+      "fieldtype": "Check",
+      "label": "Show Tile Email"
+    },
+    {
+      "default": "0",
+      "description": "Show SMS button on each tile in the listing",
+      "fieldname": "show_card_sms",
+      "fieldtype": "Check",
+      "label": "Show Tile SMS"
+    },
+    {
+      "default": "0",
+      "description": "V2 only: when user clicks a row (except WP Tables), open the form view of that record in a new browser tab",
+      "fieldname": "open_card_on_click",
+      "fieldtype": "Check",
+      "label": "Open Card on Click"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "istable": 0,
+  "links": [],
+  "modified": "2026-03-07 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "NCE Events",
+  "name": "Page Panel",
+  "naming_rule": "By fieldname",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "sort_field": "creation",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
 }

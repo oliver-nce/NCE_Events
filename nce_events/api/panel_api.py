@@ -53,7 +53,7 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 		return {
 			"root_doctype": root_doctype,
 			"header_text": root_doctype,
-			"core_filter": "",
+			"default_filters": [],
 			"order_by": "",
 			"column_order": [],
 			"bold_fields": [],
@@ -121,10 +121,15 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 		g = cc.get("gender")
 		if g in ("Male", "Female"):
 			tint_by_gender[cc["field_name"].lower()] = g
+	default_filters = [
+		{"field": row.field, "op": row.op, "value": row.value}
+		for row in (doc.default_filters or [])
+		if row.field and row.op and row.value
+	]
 	return {
 		"root_doctype": doc.root_doctype,
 		"header_text": doc.header_text or doc.root_doctype,
-		"core_filter": (doc.core_filter or "").strip(),
+		"default_filters": default_filters,
 		"order_by": (doc.order_by or "").strip(),
 		"column_order": column_order,
 		"fetch_only_fields": fetch_only_fields,
@@ -196,7 +201,6 @@ def get_panel_data(
 		if lf not in simple_fields:
 			simple_fields.append(lf)
 
-	core_filter = (config.get("core_filter") or "").strip()
 	order_by = (config.get("order_by") or "").strip() or "name ASC"
 
 	# Unfiltered count of the entire doctype — used as the denominator in the UI
@@ -330,7 +334,7 @@ def get_panel_data(
 		"total": total_count,
 		"full_count": full_count,
 		"child_doctypes": child_doctypes,
-		"core_filter": core_filter,
+		"default_filters": config.get("default_filters") or [],
 	}
 
 
