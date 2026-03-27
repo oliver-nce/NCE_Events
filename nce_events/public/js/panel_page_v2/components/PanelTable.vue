@@ -477,8 +477,8 @@ function startColResize(e, ci) {
 }
 
 .ppv2-filter-col {
-	font-size: var(--font-size-sm);
-	padding: 2px 4px;
+	font-size: calc(var(--font-size-base) + 2px);
+	padding: 3px 6px;
 	border: 1px solid var(--border-color);
 	border-radius: var(--border-radius-sm);
 	min-width: 120px;
@@ -487,8 +487,8 @@ function startColResize(e, ci) {
 .ppv2-filter-ops { display: flex; gap: 1px; }
 
 .ppv2-op-btn {
-	font-size: 10px;
-	padding: 2px 5px;
+	font-size: calc(var(--font-size-base) + 2px);
+	padding: 3px 8px;
 	border: 1px solid var(--border-color);
 	background: var(--bg-card);
 	cursor: pointer;
@@ -501,8 +501,8 @@ function startColResize(e, ci) {
 }
 
 .ppv2-filter-val {
-	font-size: var(--font-size-sm);
-	padding: 2px 6px;
+	font-size: calc(var(--font-size-base) + 2px);
+	padding: 3px 8px;
 	border: 1px solid var(--border-color);
 	border-radius: var(--border-radius-sm);
 	flex: 1;
