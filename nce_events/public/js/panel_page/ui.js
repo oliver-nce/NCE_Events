@@ -788,7 +788,7 @@ nce_events.panel_page.Explorer = class Explorer {
 	/* ── Card popover (hidden for now — removed old card_fields logic) ── */
 
 	_hide_card() {
-		$(".panel-card-popover").remove();
+		$("body > .panel-card-popover").remove();
 	}
 
 	/* ── Drill-column width calc (disabled — drill buttons removed) ── */
