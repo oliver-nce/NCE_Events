@@ -607,20 +607,39 @@ const DATE_SUGGESTIONS = [
 // Falls back to all doctype fields if column_order is empty.
 function _filter_fields_from_columns(frm, allFields) {
 	const col_order = _parse_csv(frm.doc.column_order);
-	// Build a map from fieldname → {fieldname, label, fieldtype}
+
+	// Map of real fields from meta
 	const by_name = {};
 	allFields.forEach(function (f) {
 		by_name[f.fieldname] = f;
 	});
-	// Only keep fields that are in column_order and exist in allFields
-	// (skip _related_ and dot-notation linked fields — not filterable)
-	const visible = col_order
+
+	// Synthetic _related_ fields from column_order (e.g. "_related_Event Sessions")
+	// These are count columns present on every row object — fully filterable client-side.
+	const related_fields = col_order
 		.filter(function (fn) {
-			return by_name[fn] && fn.indexOf(".") === -1 && fn.indexOf("_related_") !== 0;
+			return fn.indexOf("_related_") === 0;
+		})
+		.map(function (fn) {
+			const label = fn.substring("_related_".length).replace(/_/g, " ");
+			return { fieldname: fn, label: label, fieldtype: "Int" };
+		});
+
+	// Computed columns from unstored_calculation_fields
+	const computed_fields = _get_computed_fields(frm).map(function (f) {
+		return { fieldname: f.fieldname, label: f.label, fieldtype: "Data" };
+	});
+
+	// Real fields visible in column_order (skip dot-notation — not directly on row)
+	const real_fields = col_order
+		.filter(function (fn) {
+			return by_name[fn] && fn.indexOf(".") === -1;
 		})
 		.map(function (fn) {
 			return by_name[fn];
 		});
+
+	const visible = [...real_fields, ...related_fields, ...computed_fields];
 	return visible.length ? visible : allFields;
 }
 
