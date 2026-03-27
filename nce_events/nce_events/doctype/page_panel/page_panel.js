@@ -40,9 +40,10 @@ const TAB_GROUPS = {
 		"open_card_on_click",
 	],
 	display: [],
+	query: ["panel_sql"],
 };
-const TAB_ORDER = ["config", "display"];
-const TAB_LABELS = { config: "Config", display: "Display" };
+const TAB_ORDER = ["config", "display", "query"];
+const TAB_LABELS = { config: "Config", display: "Display", query: "Query" };
 
 const MATRIX_FIELDS = ["column_order", "bold_fields", "gender_column", "gender_color_fields"];
 const BREAK_FIELDS = [
@@ -53,7 +54,7 @@ const BREAK_FIELDS = [
 
 // ── Top-level tab show/hide ───────────────────────────────────────────────────
 function _show_tab(frm, tab_id) {
-	const all_fields = TAB_GROUPS.config.concat(MATRIX_FIELDS);
+	const all_fields = TAB_GROUPS.config.concat(MATRIX_FIELDS).concat(TAB_GROUPS.query || []);
 	all_fields.forEach(function (fn) {
 		const fd = frm.fields_dict[fn];
 		if (fd && fd.$wrapper) $(fd.$wrapper).hide();
@@ -101,10 +102,29 @@ function _ensure_tab_bar(frm) {
 		const tab_id = $(this).data("tab");
 		_show_tab(frm, tab_id);
 		if (tab_id === "display") _render_display(frm);
+		if (tab_id === "query") _refresh_query_tab(frm);
 	});
 
 	$layout.find(".section-head").hide();
 	_show_tab(frm, "config");
+}
+
+function _refresh_query_tab(frm) {
+	if (!frm.doc.root_doctype) return;
+	const fd = frm.fields_dict["panel_sql"];
+	if (fd && fd.$wrapper) {
+		fd.$wrapper.find(".control-value, .like-disabled-input").text("Generating…");
+	}
+	frappe.call({
+		method: "nce_events.api.panel_api.build_panel_sql",
+		args: { root_doctype: frm.doc.root_doctype },
+		callback: function (r) {
+			if (r.message) {
+				frm.set_value("panel_sql", r.message);
+				frm.refresh_field("panel_sql");
+			}
+		},
+	});
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────

@@ -26,7 +26,9 @@
     "section_break_tile_actions",
     "show_card_email",
     "show_card_sms",
-    "open_card_on_click"
+    "open_card_on_click",
+    "tab_query",
+    "panel_sql"
   ],
   "fields": [
     {
@@ -168,12 +170,25 @@
       "fieldname": "open_card_on_click",
       "fieldtype": "Check",
       "label": "Open Card on Click"
+    },
+    {
+      "fieldname": "tab_query",
+      "fieldtype": "Tab Break",
+      "label": "Query"
+    },
+    {
+      "description": "Auto-generated SQL query used to fetch this panel's data. Rebuilt when you click the Query tab. Read-only — for inspection and troubleshooting.",
+      "fieldname": "panel_sql",
+      "fieldtype": "Code",
+      "label": "Panel SQL",
+      "options": "SQL",
+      "read_only": 1
     }
   ],
   "index_web_pages_for_search": 0,
   "istable": 0,
   "links": [],
-  "modified": "2026-03-07 00:00:00.000000",
+  "modified": "2026-05-01 00:00:00.000000",
   "modified_by": "Administrator",
   "module": "NCE Events",
   "name": "Page Panel",
