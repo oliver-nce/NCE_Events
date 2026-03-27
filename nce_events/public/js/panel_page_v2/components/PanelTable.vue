@@ -30,7 +30,7 @@
 					<option value="">— column —</option>
 					<option v-for="col in columns" :key="col.fieldname" :value="col.fieldname">{{ col.label }}</option>
 				</select>
-				<span class="ppv2-filter-ops">
+				<span v-if="cond.field" class="ppv2-filter-ops">
 					<button
 						v-for="op in opsForCond(cond)"
 						:key="op"
@@ -39,7 +39,7 @@
 					>{{ op }}</button>
 				</span>
 				<!-- Date / Datetime column: plain text input with datalist suggestions -->
-				<template v-if="isDateField(cond.field)">
+				<template v-if="cond.field && isDateField(cond.field)">
 					<input
 						v-model="cond.value"
 						class="ppv2-filter-val"
@@ -61,8 +61,8 @@
 						<option value="12 months ago" />
 					</datalist>
 				</template>
-				<input v-else v-model="cond.value" class="ppv2-filter-val" placeholder="value" @input="emitFilterDebounced">
-				<button class="ppv2-filter-rm" @click="filters.splice(i, 1); emitFilterChange()">&times;</button>
+				<input v-else-if="cond.field" v-model="cond.value" class="ppv2-filter-val" placeholder="value" @input="emitFilterDebounced">
+				<button v-if="cond.field" class="ppv2-filter-rm" @click="filters.splice(i, 1); emitFilterChange()">&times;</button>
 			</div>
 			<button class="ppv2-filter-add" @click="filters.push({ field: '', op: '>', value: '' })">Add Filter &#9660;</button>
 		</div>
@@ -163,7 +163,7 @@ const emit = defineEmits([
 ]);
 
 const opsDefault = ["=", "!=", ">", "<", ">=", "<=", "like", "in"];
-const opsDate    = [">", "<", ">=", "<=", "=", "!="];
+const opsDate    = ["=", ">", "<"];
 const showFilterWidget = ref(false);
 const filters = reactive([]);
 const colWidths = reactive({});
@@ -278,6 +278,8 @@ function opsForCond(cond) {
 }
 
 function onFilterFieldChange(cond) {
+	// Clear stale value whenever the field changes
+	cond.value = "";
 	// When switching to a date field, default op to > (most common intent)
 	if (isDateField(cond.field) && !opsDate.includes(cond.op)) {
 		cond.op = ">";
