@@ -2,7 +2,10 @@
 const _dt_field_cache = {};
 
 function _get_doctype_fields(doctype, callback) {
-	if (_dt_field_cache[doctype]) { callback(_dt_field_cache[doctype]); return; }
+	if (_dt_field_cache[doctype]) {
+		callback(_dt_field_cache[doctype]);
+		return;
+	}
 	frappe.call({
 		method: "nce_events.api.panel_api.get_doctype_fields",
 		args: { root_doctype: doctype },
@@ -17,20 +20,36 @@ function _get_doctype_fields(doctype, callback) {
 // ── Top-level tab definitions ─────────────────────────────────────────────────
 const TAB_GROUPS = {
 	config: [
-		"root_doctype", "header_text",
-		"section_break_computed", "unstored_calculation_fields",
-		"section_break_widgets", "show_filter", "show_sheets",
-		"column_break_widgets", "show_email", "show_sms",
-		"email_field", "sms_field",
-		"section_break_tile_actions", "show_card_email", "show_card_sms", "open_card_on_click",
+		"root_doctype",
+		"header_text",
+		"default_filters",
+		"order_by",
+		"section_break_computed",
+		"unstored_calculation_fields",
+		"section_break_widgets",
+		"show_filter",
+		"show_sheets",
+		"column_break_widgets",
+		"show_email",
+		"show_sms",
+		"email_field",
+		"sms_field",
+		"section_break_tile_actions",
+		"show_card_email",
+		"show_card_sms",
+		"open_card_on_click",
 	],
 	display: [],
 };
-const TAB_ORDER  = ["config", "display"];
+const TAB_ORDER = ["config", "display"];
 const TAB_LABELS = { config: "Config", display: "Display" };
 
 const MATRIX_FIELDS = ["column_order", "bold_fields", "gender_column", "gender_color_fields"];
-const BREAK_FIELDS = ["section_break_widgets", "column_break_widgets", "section_break_tile_actions"];
+const BREAK_FIELDS = [
+	"section_break_widgets",
+	"column_break_widgets",
+	"section_break_tile_actions",
+];
 
 // ── Top-level tab show/hide ───────────────────────────────────────────────────
 function _show_tab(frm, tab_id) {
@@ -51,7 +70,9 @@ function _show_tab(frm, tab_id) {
 
 	$(frm.layout.wrapper).find(".pp-tab-btn").css({ background: "", color: "", fontWeight: "" });
 	$(frm.layout.wrapper).find(`.pp-tab-btn[data-tab="${tab_id}"]`).css({
-		background: "#171717", color: "#fff", fontWeight: "600",
+		background: "#171717",
+		color: "#fff",
+		fontWeight: "600",
 	});
 	$(frm.layout.wrapper).data("pp-active-tab", tab_id);
 }
@@ -70,7 +91,9 @@ function _ensure_tab_bar(frm) {
 	tab_html += `</div>`;
 
 	const $tab_bar = $(tab_html);
-	const $matrix_wrap = $('<div class="pp-matrix-wrap" style="display:none;padding-bottom:8px;"></div>');
+	const $matrix_wrap = $(
+		'<div class="pp-matrix-wrap" style="display:none;padding-bottom:8px;"></div>',
+	);
 
 	$(first_fd.$wrapper).before($tab_bar).before($matrix_wrap);
 
@@ -86,11 +109,18 @@ function _ensure_tab_bar(frm) {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 function _parse_csv(val) {
-	return ((val || "").split(",")).map(function (s) { return s.trim(); }).filter(Boolean);
+	return (val || "")
+		.split(",")
+		.map(function (s) {
+			return s.trim();
+		})
+		.filter(Boolean);
 }
 
 function _title_case(name) {
-	return name.replace(/_/g, " ").replace(/\b\w/g, function (c) { return c.toUpperCase(); });
+	return name.replace(/_/g, " ").replace(/\b\w/g, function (c) {
+		return c.toUpperCase();
+	});
 }
 
 // ── Display tab — sub-tab architecture ────────────────────────────────────────
@@ -104,12 +134,16 @@ function _render_display(frm) {
 	if (!$container.length) return;
 
 	if (!frm.doc.root_doctype) {
-		$container.html('<p style="color:#8d949a;font-size:12px;padding:8px 0;">Select a DocType in the Config tab first.</p>');
+		$container.html(
+			'<p style="color:#8d949a;font-size:12px;padding:8px 0;">Select a DocType in the Config tab first.</p>',
+		);
 		return;
 	}
 
 	_get_doctype_fields(frm.doc.root_doctype, function (root_fields) {
-		const link_fields = root_fields.filter(function (f) { return f.fieldtype === "Link" && f.options; });
+		const link_fields = root_fields.filter(function (f) {
+			return f.fieldtype === "Link" && f.options;
+		});
 
 		let pending = link_fields.length;
 		const linked_data = {};
@@ -126,7 +160,11 @@ function _render_display(frm) {
 
 		link_fields.forEach(function (lf) {
 			_get_doctype_fields(lf.options, function (fields) {
-				linked_data[lf.fieldname] = { doctype: lf.options, label: lf.label, fields: fields };
+				linked_data[lf.fieldname] = {
+					doctype: lf.options,
+					label: lf.label,
+					fields: fields,
+				};
 				pending--;
 				if (pending === 0) _build_once_ready();
 			});
@@ -136,19 +174,25 @@ function _render_display(frm) {
 
 function _get_computed_fields(frm) {
 	const rows = frm.doc.unstored_calculation_fields || [];
-	return rows.map(function (r) {
-		return {
-			fieldname: (r.field_name || "").trim(),
-			label: (r.label || "").trim() || _title_case(r.field_name || ""),
-			_computed: true,
-		};
-	}).filter(function (f) { return f.fieldname; });
+	return rows
+		.map(function (r) {
+			return {
+				fieldname: (r.field_name || "").trim(),
+				label: (r.label || "").trim() || _title_case(r.field_name || ""),
+				_computed: true,
+			};
+		})
+		.filter(function (f) {
+			return f.fieldname;
+		});
 }
 
 function _get_related_fields(frm) {
 	const col_order = _parse_csv(frm.doc.column_order);
 	return col_order
-		.filter(function (fn) { return fn.startsWith("_related_"); })
+		.filter(function (fn) {
+			return fn.startsWith("_related_");
+		})
 		.map(function (fn) {
 			const dt_name = fn.substring("_related_".length);
 			return { fieldname: fn, label: dt_name, _related: true };
@@ -157,7 +201,9 @@ function _get_related_fields(frm) {
 
 function _build_display_tabs(frm, $container, root_fields, link_fields, linked_data) {
 	const root_names = {};
-	root_fields.forEach(function (f) { root_names[f.fieldname] = true; });
+	root_fields.forEach(function (f) {
+		root_names[f.fieldname] = true;
+	});
 	const computed_fields = _get_computed_fields(frm).filter(function (cf) {
 		return !root_names[cf.fieldname];
 	});
@@ -178,7 +224,9 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 	});
 
 	const shown_set = {};
-	saved.column_order.forEach(function (k) { shown_set[k] = true; });
+	saved.column_order.forEach(function (k) {
+		shown_set[k] = true;
+	});
 
 	// Build sub-tab list: root + each link + optional Order tab
 	const sub_tabs = [{ id: "_root", label: frm.doc.root_doctype, prefix: "" }];
@@ -200,7 +248,7 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 	const $sub_bar = $('<div style="display:flex;gap:4px;padding:0 0 8px;flex-wrap:wrap;"></div>');
 	sub_tabs.forEach(function (st) {
 		$sub_bar.append(
-			`<button class="btn btn-xs btn-default pp-sub-btn" data-sub="${st.id}" style="padding:2px 12px;border-radius:4px;font-size:11px;">${frappe.utils.escape_html(st.label)}</button>`
+			`<button class="btn btn-xs btn-default pp-sub-btn" data-sub="${st.id}" style="padding:2px 12px;border-radius:4px;font-size:11px;">${frappe.utils.escape_html(st.label)}</button>`,
 		);
 	});
 	$container.append($sub_bar);
@@ -215,14 +263,17 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 	// Build a field matrix for each sub-tab (except Order)
 	sub_tabs.forEach(function (st) {
 		if (st.id === "_order") return;
-		const fields = (st.id === "_root") ? root_with_computed : linked_data[st.id].fields;
+		const fields = st.id === "_root" ? root_with_computed : linked_data[st.id].fields;
 		const prefix = st.prefix;
 		matrices[st.id] = _build_field_matrix(fields, prefix, uid, saved, shown_set);
 	});
 
 	// Sync function — collects from ALL matrices
 	function _sync_all() {
-		let col_order = [], nb = [], nt = [], ngc = "";
+		let col_order = [],
+			nb = [],
+			nt = [],
+			ngc = "";
 		sub_tabs.forEach(function (st) {
 			if (st.id === "_order") return;
 			const m = matrices[st.id];
@@ -243,12 +294,23 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 			const $order_body = $sub_content.find(".pp-order-matrix tbody");
 			if ($order_body.length) {
 				const order_keys = [];
-				$order_body.find("tr").each(function () { order_keys.push($(this).data("key")); });
+				$order_body.find("tr").each(function () {
+					order_keys.push($(this).data("key"));
+				});
 				const in_order = {};
-				col_order.forEach(function (k) { in_order[k] = true; });
+				col_order.forEach(function (k) {
+					in_order[k] = true;
+				});
 				const reordered = [];
-				order_keys.forEach(function (k) { if (in_order[k]) { reordered.push(k); delete in_order[k]; } });
-				col_order.forEach(function (k) { if (in_order[k]) reordered.push(k); });
+				order_keys.forEach(function (k) {
+					if (in_order[k]) {
+						reordered.push(k);
+						delete in_order[k];
+					}
+				});
+				col_order.forEach(function (k) {
+					if (in_order[k]) reordered.push(k);
+				});
 				col_order = reordered;
 			}
 		}
@@ -257,7 +319,6 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		frm.set_value("bold_fields", nb.join(", "));
 		frm.set_value("gender_column", ngc);
 		frm.set_value("gender_color_fields", nt.join(", "));
-
 	}
 
 	// Wire change events on all matrices
@@ -273,7 +334,9 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		$sub_content.children().detach();
 		$sub_bar.find(".pp-sub-btn").css({ background: "", color: "", fontWeight: "" });
 		$sub_bar.find(`.pp-sub-btn[data-sub="${sub_id}"]`).css({
-			background: "#4198F0", color: "#fff", fontWeight: "600",
+			background: "#4198F0",
+			color: "#fff",
+			fontWeight: "600",
 		});
 
 		if (sub_id === "_order") {
@@ -284,9 +347,10 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		const m = matrices[sub_id];
 		if (!m) return;
 
-		const $panel = $('<div></div>');
+		const $panel = $("<div></div>");
 
-		const $toolbar = $(`<div style="display:flex;gap:6px;align-items:center;padding:4px 0 8px;">
+		const $toolbar =
+			$(`<div style="display:flex;gap:6px;align-items:center;padding:4px 0 8px;">
 			<a class="pp-select-all" href="#" style="font-size:12px;color:#4198F0;">Select All</a>
 			<span style="color:#d1d8dd;">|</span>
 			<a class="pp-select-none" href="#" style="font-size:12px;color:#4198F0;">Select None</a>
@@ -303,7 +367,9 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		});
 
 		if (sub_id === "_root" && frm.doc.root_doctype) {
-			const $related_btn = $('<button class="btn btn-xs btn-default pp-add-related-btn" style="margin-left:auto;font-size:11px;padding:2px 10px;">Add Related DocTypes</button>');
+			const $related_btn = $(
+				'<button class="btn btn-xs btn-default pp-add-related-btn" style="margin-left:auto;font-size:11px;padding:2px 10px;">Add Related DocTypes</button>',
+			);
 			$related_btn.on("click", function () {
 				frappe.call({
 					method: "nce_events.api.panel_api.get_child_doctypes",
@@ -311,7 +377,10 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 					callback: function (r) {
 						const children = (r && r.message) || [];
 						if (!children.length) {
-							frappe.show_alert({ message: __("No related DocTypes found"), indicator: "orange" });
+							frappe.show_alert({
+								message: __("No related DocTypes found"),
+								indicator: "orange",
+							});
 							return;
 						}
 						const current = _parse_csv(frm.doc.column_order);
@@ -324,11 +393,17 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 							}
 						});
 						if (!added) {
-							frappe.show_alert({ message: __("All related DocTypes already added"), indicator: "blue" });
+							frappe.show_alert({
+								message: __("All related DocTypes already added"),
+								indicator: "blue",
+							});
 							return;
 						}
 						frm.set_value("column_order", current.join(", "));
-						frappe.show_alert({ message: __("{0} related DocType(s) added", [added]), indicator: "green" });
+						frappe.show_alert({
+							message: __("{0} related DocType(s) added", [added]),
+							indicator: "green",
+						});
 						_render_display(frm);
 					},
 				});
@@ -360,8 +435,10 @@ tr[draggable="true"]:active .matrix-drag-handle { cursor: grabbing; }
 
 // ── Build a single field-selection matrix ─────────────────────────────────────
 function _build_field_matrix(fields, prefix, uid, saved, shown_set) {
-	const th_style = 'style="text-align:center;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;"';
-	const th_left = 'style="text-align:left;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;"';
+	const th_style =
+		'style="text-align:center;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;"';
+	const th_left =
+		'style="text-align:left;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;"';
 	let html = `<table style="width:100%;border-collapse:collapse;font-size:12px;">
 		<thead><tr>
 			<th ${th_left}>Field</th>
@@ -379,7 +456,7 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set) {
 		if (f._computed) tag = " <span style='color:#8d949a;font-size:10px;'>(computed)</span>";
 		if (f._related) tag = " <span style='color:royalblue;font-size:10px;'>(related)</span>";
 		const fn_display = frappe.utils.escape_html(f.fieldname) + tag;
-		const bg = i % 2 !== 0 ? ' style="background:#f8f9fa;"' : '';
+		const bg = i % 2 !== 0 ? ' style="background:#f8f9fa;"' : "";
 		const esc_key = frappe.utils.escape_html(key);
 		const td = 'style="text-align:center;padding:4px 8px;"';
 		html += `<tr data-key="${esc_key}"${bg}>
@@ -391,7 +468,7 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set) {
 			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="tint"${saved.gender_tint.indexOf(key) !== -1 ? " checked" : ""}></td>
 		</tr>`;
 	});
-	html += '</tbody></table>';
+	html += "</tbody></table>";
 
 	return { $matrix: $(html) };
 }
@@ -415,21 +492,31 @@ function _render_order_tab($sub_content, uid, sub_tabs, matrices, saved, _sync_a
 	// Apply saved column_order for initial ordering
 	if (saved.column_order.length) {
 		const key_map = {};
-		selected.forEach(function (s) { key_map[s.key] = s; });
+		selected.forEach(function (s) {
+			key_map[s.key] = s;
+		});
 		const ordered = [];
 		saved.column_order.forEach(function (k) {
-			if (key_map[k]) { ordered.push(key_map[k]); delete key_map[k]; }
+			if (key_map[k]) {
+				ordered.push(key_map[k]);
+				delete key_map[k];
+			}
 		});
-		selected.forEach(function (s) { if (key_map[s.key]) ordered.push(s); });
+		selected.forEach(function (s) {
+			if (key_map[s.key]) ordered.push(s);
+		});
 		selected = ordered;
 	}
 
 	if (!selected.length) {
-		$sub_content.html('<p style="color:#8d949a;font-size:12px;padding:8px 0;">No fields selected. Use the other tabs to select fields first.</p>');
+		$sub_content.html(
+			'<p style="color:#8d949a;font-size:12px;padding:8px 0;">No fields selected. Use the other tabs to select fields first.</p>',
+		);
 		return;
 	}
 
-	const th_left = 'style="text-align:left;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;"';
+	const th_left =
+		'style="text-align:left;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;"';
 	const th_grip = 'style="width:24px;padding:4px;border-bottom:2px solid #d1d8dd;"';
 	let html = `<table class="pp-order-matrix" style="width:100%;border-collapse:collapse;font-size:12px;">
 		<thead><tr>
@@ -440,7 +527,7 @@ function _render_order_tab($sub_content, uid, sub_tabs, matrices, saved, _sync_a
 		</tr></thead><tbody>`;
 
 	selected.forEach(function (s, i) {
-		const bg = i % 2 !== 0 ? ' style="background:#f8f9fa;"' : '';
+		const bg = i % 2 !== 0 ? ' style="background:#f8f9fa;"' : "";
 		const esc = frappe.utils.escape_html(s.key);
 		html += `<tr draggable="true" data-key="${esc}"${bg}>
 			<td style="padding:4px;text-align:center;cursor:grab;">
@@ -450,49 +537,328 @@ function _render_order_tab($sub_content, uid, sub_tabs, matrices, saved, _sync_a
 			<td style="padding:4px 8px;color:#8d949a;font-size:11px;">${frappe.utils.escape_html(s.source)}</td>
 		</tr>`;
 	});
-	html += '</tbody></table>';
+	html += "</tbody></table>";
 
 	const $order = $(html);
 
 	// Drag reorder
 	let drag_src = null;
-	$order.find("tbody tr").on("dragstart", function (e) {
-		drag_src = this;
-		$(this).css("opacity", "0.4");
-		e.originalEvent.dataTransfer.effectAllowed = "move";
-		e.originalEvent.dataTransfer.setData("text/plain", "");
-	}).on("dragend", function () {
-		$(this).css("opacity", "");
-		$order.find("tbody tr").removeClass("matrix-drag-over");
-	}).on("dragover", function (e) {
-		e.preventDefault();
-		e.originalEvent.dataTransfer.dropEffect = "move";
-		$order.find("tbody tr").removeClass("matrix-drag-over");
-		$(this).addClass("matrix-drag-over");
-	}).on("drop", function (e) {
-		e.preventDefault();
-		if (drag_src === this) return;
-		const $target = $(this);
-		const $src = $(drag_src);
-		if ($src.index() < $target.index()) {
-			$target.after($src);
-		} else {
-			$target.before($src);
-		}
-		$order.find("tbody tr").removeClass("matrix-drag-over");
-		$order.find("tbody tr").each(function (i) {
-			$(this).css("background", i % 2 !== 0 ? "#f8f9fa" : "");
+	$order
+		.find("tbody tr")
+		.on("dragstart", function (e) {
+			drag_src = this;
+			$(this).css("opacity", "0.4");
+			e.originalEvent.dataTransfer.effectAllowed = "move";
+			e.originalEvent.dataTransfer.setData("text/plain", "");
+		})
+		.on("dragend", function () {
+			$(this).css("opacity", "");
+			$order.find("tbody tr").removeClass("matrix-drag-over");
+		})
+		.on("dragover", function (e) {
+			e.preventDefault();
+			e.originalEvent.dataTransfer.dropEffect = "move";
+			$order.find("tbody tr").removeClass("matrix-drag-over");
+			$(this).addClass("matrix-drag-over");
+		})
+		.on("drop", function (e) {
+			e.preventDefault();
+			if (drag_src === this) return;
+			const $target = $(this);
+			const $src = $(drag_src);
+			if ($src.index() < $target.index()) {
+				$target.after($src);
+			} else {
+				$target.before($src);
+			}
+			$order.find("tbody tr").removeClass("matrix-drag-over");
+			$order.find("tbody tr").each(function (i) {
+				$(this).css("background", i % 2 !== 0 ? "#f8f9fa" : "");
+			});
+			_sync_all();
 		});
-		_sync_all();
-	});
 
 	$sub_content.append($order);
 }
+
+// ── Default Filters widget ────────────────────────────────────────────────────
+// Renders a custom filter widget in place of the default child table grid,
+// matching the filter UI in PanelTable.vue exactly.
+
+const DATE_FIELDTYPES = new Set(["Date", "Datetime"]);
+const OPS_DEFAULT = ["=", "!=", ">", "<", ">=", "<=", "like", "in"];
+const OPS_DATE = [">", "<", ">=", "<=", "=", "!="];
+const DATE_SUGGESTIONS = [
+	"today",
+	"7 days ago",
+	"14 days ago",
+	"30 days ago",
+	"60 days ago",
+	"90 days ago",
+	"180 days ago",
+	"1 month ago",
+	"3 months ago",
+	"6 months ago",
+	"12 months ago",
+];
+
+function _render_default_filters(frm) {
+	const fd = frm.fields_dict["default_filters"];
+	if (!fd || !fd.$wrapper) return;
+
+	// Hide the default Frappe child table grid
+	fd.$wrapper.find(".frappe-control").hide();
+
+	// Remove any previously rendered custom widget
+	fd.$wrapper.find(".pp-df-widget").remove();
+
+	const doctype = frm.doc.root_doctype;
+
+	function _build(fields) {
+		const rows = frm.doc.default_filters || [];
+
+		const $widget = $('<div class="pp-df-widget" style="margin: 8px 0;"></div>');
+
+		function _field_options_html(selected) {
+			let html = '<option value="">— field —</option>';
+			fields.forEach(function (f) {
+				const sel = f.fieldname === selected ? " selected" : "";
+				html += `<option value="${f.fieldname}"${sel}>${f.label} (${f.fieldname})</option>`;
+			});
+			return html;
+		}
+
+		function _ops_for_field(fieldname) {
+			const f = fields.find(function (x) {
+				return x.fieldname === fieldname;
+			});
+			if (f && DATE_FIELDTYPES.has(f.fieldtype)) return OPS_DATE;
+			// Heuristic fallback
+			if (fieldname && /date|_at$/.test(fieldname.toLowerCase())) return OPS_DATE;
+			return OPS_DEFAULT;
+		}
+
+		function _is_date_field(fieldname) {
+			const f = fields.find(function (x) {
+				return x.fieldname === fieldname;
+			});
+			if (f && DATE_FIELDTYPES.has(f.fieldtype)) return true;
+			if (fieldname && /date|_at$/.test(fieldname.toLowerCase())) return true;
+			return false;
+		}
+
+		function _render_rows() {
+			$widget.empty();
+
+			const currentRows = frm.doc.default_filters || [];
+
+			currentRows.forEach(function (row, i) {
+				const ops = _ops_for_field(row.field);
+				const isDate = _is_date_field(row.field);
+
+				let ops_html = ops
+					.map(function (op) {
+						const active = (row.op || "=") === op ? " pp-df-op-active" : "";
+						return `<button class="pp-df-op-btn${active}" data-op="${op}" data-idx="${i}">${op}</button>`;
+					})
+					.join("");
+
+				let value_html;
+				if (isDate) {
+					const sugg_id = `pp-df-sugg-${i}`;
+					const sugg_opts = DATE_SUGGESTIONS.map(function (s) {
+						return `<option value="${s}">`;
+					}).join("");
+					value_html = `
+						<input class="pp-df-val" type="text" list="${sugg_id}"
+							placeholder="e.g. 30 days ago" value="${_esc(row.value || "")}" data-idx="${i}">
+						<datalist id="${sugg_id}">${sugg_opts}</datalist>`;
+				} else {
+					value_html = `<input class="pp-df-val" type="text"
+						placeholder="value" value="${_esc(row.value || "")}" data-idx="${i}">`;
+				}
+
+				const $row = $(`
+					<div class="pp-df-row" data-idx="${i}" style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+						<select class="pp-df-field form-control form-control-sm" data-idx="${i}"
+							style="min-width:160px;max-width:200px;">
+							${_field_options_html(row.field)}
+						</select>
+						<span class="pp-df-ops" style="display:flex;gap:2px;">${ops_html}</span>
+						${value_html}
+						<button class="pp-df-rm btn btn-xs btn-danger" data-idx="${i}"
+							style="padding:2px 8px;line-height:1;">&times;</button>
+					</div>`);
+				$widget.append($row);
+			});
+
+			// Add filter button
+			$widget.append(
+				$(
+					'<button class="btn btn-xs btn-default pp-df-add" style="margin-top:4px;">+ Add Filter</button>',
+				),
+			);
+
+			_bind_events();
+		}
+
+		function _esc(s) {
+			return String(s).replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+		}
+
+		function _save_rows() {
+			// Rebuild frm.doc.default_filters from widget state
+			const newRows = [];
+			$widget.find(".pp-df-row").each(function () {
+				const idx = $(this).data("idx");
+				const field = $(this).find(".pp-df-field").val();
+				const op = $(this).find(".pp-df-op-btn.pp-df-op-active").data("op") || "=";
+				const value = $(this).find(".pp-df-val").val();
+				newRows.push({ field: field || "", op: op, value: value || "" });
+			});
+
+			// Sync back to the child table
+			frm.doc.default_filters = newRows.map(function (r, i) {
+				return $.extend(
+					{},
+					(frm.doc.default_filters && frm.doc.default_filters[i]) || {},
+					{
+						field: r.field,
+						op: r.op,
+						value: r.value,
+						doctype: "Page Panel Default Filter",
+						parenttype: "Page Panel",
+						parentfield: "default_filters",
+					},
+				);
+			});
+			frm.dirty();
+		}
+
+		function _bind_events() {
+			// Field change
+			$widget
+				.find(".pp-df-field")
+				.off("change")
+				.on("change", function () {
+					const idx = parseInt($(this).data("idx"), 10);
+					const fieldname = $(this).val();
+					const ops = _ops_for_field(fieldname);
+					const currentOp = (frm.doc.default_filters[idx] || {}).op || "=";
+					const newOp = ops.includes(currentOp) ? currentOp : ops[0];
+					if (!frm.doc.default_filters[idx]) frm.doc.default_filters[idx] = {};
+					frm.doc.default_filters[idx].field = fieldname;
+					frm.doc.default_filters[idx].op = newOp;
+					frm.dirty();
+					_render_rows();
+				});
+
+			// Op button
+			$widget
+				.find(".pp-df-op-btn")
+				.off("click")
+				.on("click", function () {
+					const idx = parseInt($(this).data("idx"), 10);
+					const op = $(this).data("op");
+					if (!frm.doc.default_filters[idx]) frm.doc.default_filters[idx] = {};
+					frm.doc.default_filters[idx].op = op;
+					$(this)
+						.closest(".pp-df-ops")
+						.find(".pp-df-op-btn")
+						.removeClass("pp-df-op-active");
+					$(this).addClass("pp-df-op-active");
+					frm.dirty();
+				});
+
+			// Value input
+			$widget
+				.find(".pp-df-val")
+				.off("input")
+				.on("input", function () {
+					const idx = parseInt($(this).data("idx"), 10);
+					if (!frm.doc.default_filters[idx]) frm.doc.default_filters[idx] = {};
+					frm.doc.default_filters[idx].value = $(this).val();
+					frm.dirty();
+				});
+
+			// Remove row
+			$widget
+				.find(".pp-df-rm")
+				.off("click")
+				.on("click", function () {
+					const idx = parseInt($(this).data("idx"), 10);
+					frm.doc.default_filters.splice(idx, 1);
+					frm.dirty();
+					_render_rows();
+				});
+
+			// Add row
+			$widget
+				.find(".pp-df-add")
+				.off("click")
+				.on("click", function () {
+					if (!frm.doc.default_filters) frm.doc.default_filters = [];
+					frm.doc.default_filters.push({
+						doctype: "Page Panel Default Filter",
+						parenttype: "Page Panel",
+						parentfield: "default_filters",
+						field: "",
+						op: "=",
+						value: "",
+					});
+					frm.dirty();
+					_render_rows();
+				});
+		}
+
+		_render_rows();
+		fd.$wrapper.append($widget);
+	}
+
+	if (doctype) {
+		_get_doctype_fields(doctype, _build);
+	} else {
+		_build([]);
+	}
+}
+
+// ── Default filter widget CSS ─────────────────────────────────────────────────
+$("<style>")
+	.text(
+		`
+		.pp-df-op-btn {
+			padding: 2px 7px;
+			font-size: 11px;
+			border: 1px solid #d1d8dd;
+			background: #fff;
+			border-radius: 3px;
+			cursor: pointer;
+			line-height: 1.4;
+		}
+		.pp-df-op-btn.pp-df-op-active {
+			background: #171717;
+			color: #fff;
+			border-color: #171717;
+		}
+		.pp-df-val {
+			flex: 1;
+			min-width: 80px;
+			max-width: 220px;
+			font-size: 12px;
+			padding: 3px 7px;
+			border: 1px solid #d1d8dd;
+			border-radius: 3px;
+			height: 28px;
+		}
+	`,
+	)
+	.appendTo("head");
 
 // ── Page Panel form events ────────────────────────────────────────────────────
 frappe.ui.form.on("Page Panel", {
 	refresh: function (frm) {
 		_ensure_tab_bar(frm);
+		_render_default_filters(frm);
 	},
 
 	root_doctype: function (frm) {
@@ -503,6 +869,7 @@ frappe.ui.form.on("Page Panel", {
 		frm.set_value("bold_fields", "");
 		frm.set_value("gender_column", "");
 		frm.set_value("gender_color_fields", "");
+		_render_default_filters(frm);
 		const $layout = $(frm.layout.wrapper);
 		if ($layout.data("pp-active-tab") === "display") {
 			_render_display(frm);
