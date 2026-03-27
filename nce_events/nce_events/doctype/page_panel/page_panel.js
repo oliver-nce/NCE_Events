@@ -106,8 +106,6 @@ function _ensure_tab_bar(frm) {
 	});
 
 	$layout.find(".section-head").hide();
-	// Hide Frappe's native tab bar (rendered when Tab Break fields exist)
-	$layout.find(".form-tabs-list, .nav-tabs").hide();
 	_show_tab(frm, "config");
 }
 
@@ -933,6 +931,8 @@ frappe.ui.form.on("Page Panel", {
 	refresh: function (frm) {
 		_ensure_tab_bar(frm);
 		_render_default_filters(frm);
+		// Hide Frappe's native tab bar (rendered when Tab Break fields exist in the DocType)
+		$(frm.layout.wrapper).find(".form-tabs-list, .nav-tabs").hide();
 	},
 
 	root_doctype: function (frm) {
