@@ -82,6 +82,7 @@ export function usePanel(doctype, parentFilter = {}) {
 	// Returns [] and warns if unparseable (fail open).
 	function _parseCoreFilterString(str) {
 		if (!str || !str.trim()) return [];
+		console.log("[usePanel] _parseCoreFilterString input:", str);
 
 		const results = [];
 		// Split on AND (case-insensitive); OR is not supported — treat as fail-open
@@ -120,6 +121,7 @@ export function usePanel(doctype, parentFilter = {}) {
 			}
 		}
 
+		console.log("[usePanel] _parseCoreFilterString result:", results);
 		return results;
 	}
 
@@ -223,7 +225,15 @@ export function usePanel(doctype, parentFilter = {}) {
 	function _applyFilters() {
 		const active = userFilters.value.filter((f) => f.field && String(f.value ?? "") !== "");
 		const combined = [..._coreFilters, ...active];
+		console.log("[usePanel] _applyFilters", {
+			allRows: _allRows.value.length,
+			coreFilters: _coreFilters,
+			userFilters: active,
+			combined,
+			sampleRow: _allRows.value[0],
+		});
 		rows.value = _applyUserFilters(_allRows.value, combined);
+		console.log("[usePanel] after filter:", rows.value.length, "rows");
 		total.value = rows.value.length;
 	}
 
