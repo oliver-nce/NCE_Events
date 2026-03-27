@@ -312,7 +312,18 @@ watch(
 		// Only seed if user hasn't touched the filters yet
 		const hasUserFilters = filters.some((f) => f.field && String(f.value ?? "") !== "");
 		if (hasUserFilters) return;
-		filters.splice(0, filters.length, ...defs.map((f) => ({ field: f.field, op: f.op, value: f.value })));
+		filters.splice(0, filters.length, ...defs.map((f) => {
+			let _sqlDate = "";
+			let _daysAgo = "";
+			if (f.value) {
+				if (/days ago|month|today/i.test(f.value)) {
+					_daysAgo = f.value.replace(/\s*days ago$/i, "").trim();
+				} else {
+					_sqlDate = f.value;
+				}
+			}
+			return { field: f.field, op: f.op, value: f.value, _sqlDate, _daysAgo };
+		}));
 		showFilterWidget.value = true;
 		emitFilterChange();
 	},
