@@ -20,23 +20,78 @@
   "backend": {
     "nce_events/hooks.py": {
       "purpose": "App config: metadata, required_apps (nce_sync), global JS/CSS includes, doctype_js overrides, apps screen entry",
-      "exports": ["app_name", "required_apps", "app_include_js", "app_include_css", "doctype_js"],
+      "exports": [
+        "app_name",
+        "required_apps",
+        "app_include_js",
+        "app_include_css",
+        "doctype_js"
+      ],
       "depends_on": [],
-      "sections": ["App Metadata", "Global JS/CSS", "DocType JS Overrides", "Apps Screen"]
+      "sections": [
+        "App Metadata",
+        "Global JS/CSS",
+        "DocType JS Overrides",
+        "Apps Screen"
+      ]
     },
     "nce_events/api/panel_api.py": {
       "purpose": "Core panel data API: fetch panel config, fetch paginated/filtered panel data, export CSV, save SQL filter, child doctype discovery, field metadata",
-      "exports": ["get_panel_config", "get_panel_data", "export_panel_data", "save_panel_sql", "get_child_doctypes", "debug_child_lookup", "get_doctype_fields"],
-      "private_helpers": ["_build_core_filter_where", "_auto_detect_contact_fields", "_find_link_field", "_get_link_fields_with_target", "_evaluate_computed_columns", "_apply_user_filters", "_title_case"],
-      "depends_on": ["nce_events/nce_events/doctype/page_panel/", "nce_events/nce_events/doctype/page_panel_computed_column/"],
-      "sections": ["Panel config fetch", "Panel data fetch with filters/pagination", "CSV export", "SQL filter save", "Child doctype discovery", "Field metadata", "Internal query helpers"]
+      "exports": [
+        "get_panel_config",
+        "get_panel_data",
+        "export_panel_data",
+        "save_panel_sql",
+        "get_child_doctypes",
+        "debug_child_lookup",
+        "get_doctype_fields"
+      ],
+      "private_helpers": [
+        "_build_core_filter_where",
+        "_auto_detect_contact_fields",
+        "_find_link_field",
+        "_get_link_fields_with_target",
+        "_evaluate_computed_columns",
+        "_apply_user_filters",
+        "_title_case"
+      ],
+      "depends_on": [
+        "nce_events/nce_events/doctype/page_panel/",
+        "nce_events/nce_events/doctype/page_panel_computed_column/"
+      ],
+      "sections": [
+        "Panel config fetch",
+        "Panel data fetch with filters/pagination",
+        "CSV export",
+        "SQL filter save",
+        "Child doctype discovery",
+        "Field metadata",
+        "Internal query helpers"
+      ]
     },
     "nce_events/api/messaging.py": {
       "purpose": "Email and SMS messaging: preview Jinja-rendered message, send bulk panel message, get email accounts",
-      "exports": ["get_email_accounts", "send_test_email", "send_test_sms", "preview_panel_message", "send_panel_message"],
-      "private_helpers": ["_render_body", "_enrich_row_context", "_send_sms", "_send_email"],
+      "exports": [
+        "get_email_accounts",
+        "send_test_email",
+        "send_test_sms",
+        "preview_panel_message",
+        "send_panel_message"
+      ],
+      "private_helpers": [
+        "_render_body",
+        "_enrich_row_context",
+        "_send_sms",
+        "_send_email"
+      ],
       "depends_on": [],
-      "sections": ["Jinja body rendering", "Row context enrichment", "Email account list", "Test send", "Bulk panel send"]
+      "sections": [
+        "Jinja body rendering",
+        "Row context enrichment",
+        "Email account list",
+        "Test send",
+        "Bulk panel send"
+      ]
     },
     "nce_events/api/tags.py": {
       "purpose": "Jinja tag generation for email/SMS templates — pronoun tags, gender-conditional values",
@@ -86,7 +141,16 @@
   "doctypes": {
     "nce_events/nce_events/doctype/page_panel/": {
       "purpose": "Core config doctype — one record per root DocType being displayed. Stores column order, filters, gender config, email/SMS fields, computed columns.",
-      "key_fields": ["root_doctype", "header_text", "core_filter", "order_by", "column_order", "gender_column", "email_field", "sms_field"],
+      "key_fields": [
+        "root_doctype",
+        "header_text",
+        "core_filter",
+        "order_by",
+        "column_order",
+        "gender_column",
+        "email_field",
+        "sms_field"
+      ],
       "depends_on": ["page_panel_computed_column"]
     },
     "nce_events/nce_events/doctype/page_panel_computed_column/": {
@@ -97,7 +161,18 @@
     "nce_events/nce_events/doctype/card_definition/": {
       "purpose": "Card layout definition — composite display card with tabs, fields, actions, graphics",
       "key_fields": ["title", "target_doctype"],
-      "depends_on": ["card_tab", "card_field", "card_action", "card_display", "card_graphic", "card_script", "card_text_block", "card_video", "card_web_viewer", "card_pivot_table"]
+      "depends_on": [
+        "card_tab",
+        "card_field",
+        "card_action",
+        "card_display",
+        "card_graphic",
+        "card_script",
+        "card_text_block",
+        "card_video",
+        "card_web_viewer",
+        "card_pivot_table"
+      ]
     },
     "nce_events/nce_events/doctype/card_portal/": {
       "purpose": "Portal page definition — ordered columns of cards",
@@ -118,28 +193,13 @@
 
   "frontend_v1": {
     "nce_events/public/js/panel_page/ui.js": {
-      "purpose": "V1 Explorer class — renders panel table, handles pagination, column toggle, row click",
+      "purpose": "V1 Explorer class — renders panel table, handles pagination, column toggle, row click (V1 only — pending deletion after V2 validation)",
       "exports": ["nce_events.Explorer"],
-      "depends_on": ["panel_page/store.js", "panel_page/sms_dialog.js", "panel_page/email_dialog.js"]
+      "depends_on": ["panel_page/store.js"]
     },
     "nce_events/public/js/panel_page/store.js": {
-      "purpose": "V1 Store class — state management for V1 panel (filters, data, pagination)",
+      "purpose": "V1 Store class — state management for V1 panel (V1 only — pending deletion after V2 validation)",
       "exports": ["nce_events.Store"],
-      "depends_on": []
-    },
-    "nce_events/public/js/panel_page/sms_dialog.js": {
-      "purpose": "SMS compose/send dialog — shared by V1 and V2",
-      "exports": ["nce_events.SmsDialog"],
-      "depends_on": []
-    },
-    "nce_events/public/js/panel_page/email_dialog.js": {
-      "purpose": "Email compose/send dialog — shared by V1 and V2",
-      "exports": ["nce_events.EmailDialog"],
-      "depends_on": []
-    },
-    "nce_events/public/js/panel_page/ai_tools.js": {
-      "purpose": "AI tools sidebar panel — shared by V1 and V2",
-      "exports": ["nce_events.AiTools"],
       "depends_on": []
     },
     "nce_events/public/js/schema_explorer.js": {
@@ -166,10 +226,32 @@
 
   "frontend_v2": {
     "note": "V2 is a Vue 3 SFC app built with Vite. Source in public/js/panel_page_v2/, built output in public/js/panel_page_v2_dist/. Run update_v2.sh to build.",
+    "nce_events/public/js/panel_page_v2/shared/sms_dialog.js": {
+      "purpose": "SMS compose/send dialog — loaded at runtime by V2 via frappe.require()",
+      "exports": ["nce_events.panel_page.SmsDialog"],
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/shared/email_dialog.js": {
+      "purpose": "Email compose/send dialog — loaded at runtime by V2 via frappe.require()",
+      "exports": ["nce_events.panel_page.EmailDialog"],
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/shared/ai_tools.js": {
+      "purpose": "AI tools sidebar panel — loaded at runtime by V2 via frappe.require()",
+      "exports": ["nce_events.AiTools"],
+      "depends_on": []
+    },
     "nce_events/public/js/panel_page_v2/App.vue": {
       "purpose": "V2 root component — panel orchestration, tab management, panel switching",
       "exports": [],
-      "depends_on": ["composables/usePanel.js", "components/PanelTable.vue", "components/TabBar.vue"]
+      "depends_on": [
+        "composables/usePanel.js",
+        "components/PanelTable.vue",
+        "components/TabBar.vue",
+        "shared/sms_dialog.js",
+        "shared/email_dialog.js",
+        "shared/ai_tools.js"
+      ]
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js": {
       "purpose": "V2 composable — load panel config and data, refetch with user_filters",
@@ -252,7 +334,10 @@
     "nce_events/public/js/hierarchy_explorer/ui.js": {
       "purpose": "Hierarchy Explorer UI — tree view rendering for hierarchical doctypes",
       "exports": [],
-      "depends_on": ["hierarchy_explorer/store.js", "hierarchy_explorer/config.js"]
+      "depends_on": [
+        "hierarchy_explorer/store.js",
+        "hierarchy_explorer/config.js"
+      ]
     },
     "nce_events/public/js/hierarchy_explorer/store.js": {
       "purpose": "Hierarchy Explorer state — tree data, expansion state",
