@@ -3,7 +3,7 @@
 		<PanelFloat :init-x="40" :init-y="60" :init-w="900" :init-h="550">
 			<template #header>
 				<span class="ppv2-title">{{ config?.header_text || 'NCE Tables' }}</span>
-				<span v-if="config.open_card_on_click" class="ppv2-click-hint">Click row for details · Ctrl-click to remove</span>
+				<span v-if="config?.open_card_on_click" class="ppv2-click-hint">Click row for details · Ctrl-click to remove</span>
 				<div class="ppv2-header-controls" @mousedown.stop>
 					<button class="ppv2-hdr-btn" :class="{ 'ppv2-hdr-btn--refreshing': loading }" title="Refresh" @click="onRefreshRoot">
 						<i class="fa fa-refresh"></i>
