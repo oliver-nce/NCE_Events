@@ -40,7 +40,7 @@
 
 		<div v-else-if="error" class="ppv2-error">{{ error }}</div>
 
-		<div v-else class="ppv2-body">
+		<div v-else-if="config" class="ppv2-body">
 			<table class="ppv2-table">
 				<thead>
 					<tr>
