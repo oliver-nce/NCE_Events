@@ -46,7 +46,7 @@
 		>
 			<template #header>
 				<span class="ppv2-title">{{ p.config?.header_text || p.doctype }}</span>
-				<span v-if="p.config.open_card_on_click" class="ppv2-click-hint">Click row for details · Ctrl-click to remove</span>
+				<span v-if="p.config?.open_card_on_click" class="ppv2-click-hint">Click row for details · Ctrl-click to remove</span>
 				<div class="ppv2-header-controls" @mousedown.stop>
 					<button class="ppv2-hdr-btn" :class="{ 'ppv2-hdr-btn--refreshing': p.loading }" title="Refresh" @click="onRefreshPanel(p)">
 						<i class="fa fa-refresh"></i>
@@ -249,6 +249,8 @@ async function openPanel(doctype, parentFilter = {}, parentId = null) {
 		y: pos.y,
 		_setFilters: null,
 		_reload: null,
+		_showFilter: false,
+		_floatRef: null,
 	});
 	openPanels.push(p);
 

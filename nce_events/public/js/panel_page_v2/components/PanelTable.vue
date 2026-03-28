@@ -416,54 +416,7 @@ function startColResize(e, ci) {
 }
 
 
-
-.ppv2-title { font-weight: var(--font-weight-bold); font-size: 14px; }
-
-.ppv2-header-right {
-	display: flex;
-	align-items: center;
-	gap: var(--spacing-sm);
-}
-
-.ppv2-hdr-btn {
-	background: none;
-	border: none;
-	color: var(--text-header);
-	font-size: 18px;
-	cursor: pointer;
-	padding: 0 4px;
-	line-height: 1;
-	opacity: 0.8;
-}
-.ppv2-hdr-btn:hover { opacity: 1; }
-.ppv2-hdr-btn--refreshing {
-	color: var(--color-secondary) !important;
-	opacity: 1;
-}
-.ppv2-hdr-btn--refreshing .fa-refresh {
-	animation: ppv2-spin 0.8s linear infinite;
-}
-@keyframes ppv2-spin {
-	from { transform: rotate(0deg); }
-	to   { transform: rotate(360deg); }
-}
-
-.ppv2-count { font-size: var(--font-size-sm); opacity: 0.8; }
-
-.ppv2-click-hint {
-	font-size: var(--font-size-sm);
-	opacity: 0.7;
-	font-style: italic;
-	margin-left: var(--spacing-sm);
-}
-
 /* ── Filter Widget ── */
-
-.ppv2-header-controls {
-	display: flex;
-	gap: var(--spacing-xs);
-	align-items: center;
-}
 
 .ppv2-filter-widget {
 	padding: 6px 10px;
