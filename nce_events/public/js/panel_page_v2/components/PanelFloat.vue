@@ -106,12 +106,23 @@ function startResize(e) {
 	const el = floatEl.value;
 	const overlay = _addOverlay("nwse-resize");
 
+	// Create outline div that shows target size during resize
+	const rect = el.getBoundingClientRect();
+	const outline = document.createElement("div");
+	outline.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.top}px;width:${ow}px;height:${oh}px;border:1px solid var(--bg-header, #4a5568);z-index:999998;pointer-events:none;box-sizing:border-box;`;
+	document.body.appendChild(outline);
+
 	function onMove(ev) {
+		// Only update the lightweight outline — no Vue reactivity, no table redraw
+		outline.style.width = Math.max(300, ow + ev.clientX - sx) + "px";
+		outline.style.height = Math.max(200, oh + ev.clientY - sy) + "px";
+	}
+	function onUp(ev) {
+		document.body.removeChild(overlay);
+		document.body.removeChild(outline);
+		// Snap to final size — single redraw
 		w.value = Math.max(300, ow + ev.clientX - sx);
 		h.value = Math.max(200, oh + ev.clientY - sy);
-	}
-	function onUp() {
-		document.body.removeChild(overlay);
 		document.removeEventListener("mousemove", onMove);
 		document.removeEventListener("mouseup", onUp);
 	}
