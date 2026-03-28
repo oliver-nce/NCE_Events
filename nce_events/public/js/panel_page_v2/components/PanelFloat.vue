@@ -43,18 +43,26 @@ const w = ref(props.initW);
 const h = ref(props.initH);
 const z = ref(getNextZ());
 const floatEl = ref(null);
+const resizing = ref(false);
 
 /*
  * Position via transform: translate3d() — this is composited on the GPU
  * and does NOT trigger layout or repaint of siblings during drag.
  * Width/height still need layout but only change during resize, not drag.
  */
-const floatStyle = computed(() => ({
-	transform: `translate3d(${x.value}px, ${y.value}px, 0)`,
-	width: w.value + "px",
-	height: h.value + "px",
-	zIndex: z.value,
-}));
+const floatStyle = computed(() => {
+	const style = {
+		transform: `translate3d(${x.value}px, ${y.value}px, 0)`,
+		zIndex: z.value,
+	};
+	// Only include width/height in Vue binding when NOT resizing
+	// During resize, we write directly to DOM to avoid redraw
+	if (!resizing.value) {
+		style.width = w.value + "px";
+		style.height = h.value + "px";
+	}
+	return style;
+});
 
 function bringToFront() {
 	z.value = getNextZ();
@@ -105,6 +113,7 @@ function startResize(e) {
 	const ow = w.value, oh = h.value;
 	const el = floatEl.value;
 	const overlay = _addOverlay("nwse-resize");
+	resizing.value = true;
 
 	function onMove(ev) {
 		// Write directly to the DOM — bypasses Vue reactivity entirely
@@ -116,6 +125,7 @@ function startResize(e) {
 	}
 	function onUp(ev) {
 		document.body.removeChild(overlay);
+		resizing.value = false;
 		// Now write back to Vue refs once so it knows the final size
 		w.value = Math.max(300, ow + ev.clientX - sx);
 		h.value = Math.max(200, oh + ev.clientY - sy);
