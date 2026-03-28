@@ -219,11 +219,11 @@ def get_panel_data(
 	if stored_sql:
 		rows = frappe.db.sql(stored_sql, as_dict=True)
 	else:
-		sql = _build_panel_sql(root_doctype, filters=parsed_filters)
+		sql, params = _build_panel_sql(root_doctype, filters=parsed_filters)
 		if not parsed_filters and frappe.db.exists("Page Panel", root_doctype):
 			frappe.db.set_value("Page Panel", root_doctype, "panel_sql", sql)
 			frappe.db.commit()
-		rows = frappe.db.sql(sql, as_dict=True)
+		rows = frappe.db.sql(sql, params, as_dict=True)
 
 	child_doctypes = get_child_doctypes(root_doctype)
 	related_label_map: dict[str, str] = {f"_related_{c['doctype']}": c["label"] for c in child_doctypes}
@@ -386,10 +386,10 @@ def export_panel_data(
 # ── Core filter ──
 
 
-def _build_panel_sql(root_doctype: str, filters: dict | None = None) -> str:
+def _build_panel_sql(root_doctype: str, filters: dict | None = None) -> tuple[str, list[Any]]:
 	"""Build the main SELECT [LEFT JOIN...] SQL for a panel, without executing it.
 
-	Returns the SQL string. Used by build_panel_sql (to save + display)
+	Returns (sql, params) tuple. Used by build_panel_sql (to save + display)
 	and by get_panel_data (to execute). filters is only used for the WHERE
 	clause when a drill-down parent filter is active.
 	"""
@@ -484,7 +484,7 @@ def _build_panel_sql(root_doctype: str, filters: dict | None = None) -> str:
 			f"SELECT {', '.join(select_parts)} FROM {root_table} {where_sql} ORDER BY {qualified_order}"
 		).strip()
 
-	return sql
+	return sql, params
 
 
 @frappe.whitelist()
@@ -494,7 +494,7 @@ def build_panel_sql(root_doctype: str) -> str:
 	Called from the Query tab in the Page Panel form.
 	Saves the result into panel_sql so get_panel_data can reuse it.
 	"""
-	sql = _build_panel_sql(root_doctype)
+	sql, _ = _build_panel_sql(root_doctype)
 	if frappe.db.exists("Page Panel", root_doctype):
 		frappe.db.set_value("Page Panel", root_doctype, "panel_sql", sql)
 		frappe.db.commit()

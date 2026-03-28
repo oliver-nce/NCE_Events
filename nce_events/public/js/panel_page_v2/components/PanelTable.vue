@@ -129,7 +129,7 @@ const props = defineProps({
 
 const emit = defineEmits([
 	"row-click", "row-drop", "close", "drill", "sheets", "email", "sms",
-	"filter-change", "email-one", "sms-one", "refresh",
+	"filter-change", "email-one", "sms-one", "refresh", "show-filter",
 ]);
 
 const opsDefault = ["=", "!=", ">", "<", ">=", "<=", "like", "in"];
@@ -299,7 +299,7 @@ watch(
 			}
 			return { field: f.field, op: f.op, value: f.value, _sqlDate, _daysAgo };
 		}));
-		showFilterWidget.value = true;
+		emit("show-filter", true);
 		emitFilterChange();
 	},
 	{ immediate: true },

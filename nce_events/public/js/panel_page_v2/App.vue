@@ -32,6 +32,7 @@
 				@sheets="onSheets({ doctype: 'WP Tables', parentFilter: {}, rows })"
 				@filter-change="(f) => onFilterChange(null, f)"
 				@refresh="onRefreshRoot"
+				@show-filter="rootPanelShowFilter = true"
 			/>
 			<template #footer>{{ config?.header_text || 'NCE Tables' }}</template>
 		</PanelFloat>
@@ -91,6 +92,7 @@
 				@email-one="(row) => onEmailOne(p, row)"
 				@sms-one="(row) => onSmsOne(p, row)"
 				@row-drop="(row) => onRowDrop(p, row)"
+				@show-filter="p._showFilter = true"
 			/>
 			<template #footer>{{ p.config?.header_text || p.doctype }}</template>
 		</PanelFloat>
