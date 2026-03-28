@@ -1,6 +1,22 @@
 <template>
 	<div class="ppv2-root">
 		<PanelFloat :init-x="40" :init-y="60" :init-w="900" :init-h="550">
+			<template #header>
+				<span class="ppv2-title">{{ config?.header_text || 'NCE Tables' }}</span>
+				<span v-if="config.open_card_on_click" class="ppv2-click-hint">Click row for details · Ctrl-click to remove</span>
+				<div class="ppv2-header-controls" @mousedown.stop>
+					<button class="ppv2-hdr-btn" :class="{ 'ppv2-hdr-btn--refreshing': loading }" title="Refresh" @click="onRefreshRoot">
+						<i class="fa fa-refresh"></i>
+					</button>
+					<button class="ppv2-hdr-btn" title="Filter" @click="rootPanelShowFilter = !rootPanelShowFilter">
+						<i class="fa fa-filter"></i>
+					</button>
+					<button class="ppv2-hdr-btn" title="Export to Sheets" @click="onSheets({ doctype: 'WP Tables', parentFilter: {}, rows })">
+						<i class="fa fa-table"></i>
+					</button>
+					<span class="ppv2-count">{{ rows.length }} / {{ fullTotal }} records</span>
+				</div>
+			</template>
 			<PanelTable
 				:title="config?.header_text || 'NCE Tables'"
 				:columns="columns"
@@ -10,6 +26,7 @@
 				:error="error"
 				:config="config || {}"
 				:default-filters="config?.default_filters || []"
+				:show-filter="rootPanelShowFilter"
 				@row-click="onRootRowClick"
 				@row-drop="(row) => onRowDrop(null, row)"
 				@sheets="onSheets({ doctype: 'WP Tables', parentFilter: {}, rows })"
@@ -27,6 +44,29 @@
 			:init-w="1200"
 			:init-h="600"
 		>
+			<template #header>
+				<span class="ppv2-title">{{ p.config?.header_text || p.doctype }}</span>
+				<span v-if="p.config.open_card_on_click" class="ppv2-click-hint">Click row for details · Ctrl-click to remove</span>
+				<div class="ppv2-header-controls" @mousedown.stop>
+					<button class="ppv2-hdr-btn" :class="{ 'ppv2-hdr-btn--refreshing': p.loading }" title="Refresh" @click="onRefreshPanel(p)">
+						<i class="fa fa-refresh"></i>
+					</button>
+					<button class="ppv2-hdr-btn" title="Filter" @click="p._showFilter = !p._showFilter">
+						<i class="fa fa-filter"></i>
+					</button>
+					<button class="ppv2-hdr-btn" title="Export to Sheets" @click="onSheets(p)">
+						<i class="fa fa-table"></i>
+					</button>
+					<button v-if="p.config?.email_field" class="ppv2-hdr-btn" title="Email" @click="onEmail(p)">
+						<i class="fa fa-envelope"></i>
+					</button>
+					<button v-if="p.config?.sms_field" class="ppv2-hdr-btn" title="SMS" @click="onSms(p)">
+						<i class="fa fa-comment"></i>
+					</button>
+					<span class="ppv2-count">{{ (p._panelRows || p.rows).length }} / {{ p.fullTotal }} records</span>
+					<button class="ppv2-hdr-btn ppv2-close-btn" title="Close" @click="closePanel(p.id)">&times;</button>
+				</div>
+			</template>
 			<PanelTable
 				:title="p.config?.header_text || p.doctype"
 				:columns="p.columns"
@@ -38,6 +78,7 @@
 				:default-filters="p.config?.default_filters || []"
 				:show-email="!!(p.config?.email_field)"
 				:show-sms="!!(p.config?.sms_field)"
+				:show-filter="p._showFilter"
 				@close="closePanel(p.id)"
 				@row-click="(row) => onDrilledRowClick(p, row)"
 				@drill="(ev) => onDrill(ev, p)"
@@ -85,6 +126,7 @@ import CardModal from "./components/CardModal.vue";
 
 const rootPanel = usePanel("WP Tables");
 const { config, columns: rawColumns, rows, total, fullTotal, loading, error, load, reload } = rootPanel;
+const rootPanelShowFilter = ref(false);
 
 // Hide nce_name — it duplicates frappe_doctype in the root panel.
 // Also strip is_link from frappe_doctype so clicking opens the next panel (via row-click)

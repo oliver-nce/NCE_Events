@@ -2,10 +2,12 @@
 	<div
 		ref="floatEl"
 		class="ppv2-float"
-
 		:style="floatStyle"
-		@mousedown="onMouseDown"
 	>
+		<div class="ppv2-float-header" @mousedown.prevent="startDrag">
+			<slot name="header" />
+		</div>
+
 		<div class="ppv2-float-body">
 			<slot />
 		</div>
@@ -44,7 +46,7 @@ const floatEl = ref(null);
 
 /*
  * Position via transform: translate3d() — this is composited on the GPU
- * and does NOT trigger layout or repaint on the rest of the document.
+ * and does NOT trigger layout or repaint of siblings during drag.
  * Width/height still need layout but only change during resize, not drag.
  */
 const floatStyle = computed(() => ({
@@ -58,19 +60,10 @@ function bringToFront() {
 	z.value = getNextZ();
 }
 
-function onMouseDown(e) {
-	if (e.target.closest && e.target.closest("button, a, input, select, textarea")) return;
-	if (e.target.closest && e.target.closest(".ppv2-header")) {
-		e.preventDefault();
-		startDrag(e);
-	}
-}
-
 function startDrag(e) {
 	const sx = e.clientX, sy = e.clientY;
 	const ox = x.value, oy = y.value;
 	const el = floatEl.value;
-	el.classList.add("ppv2-float--dragging");
 
 	function onMove(ev) {
 		// Write directly to the DOM — bypasses Vue reactivity entirely
@@ -80,7 +73,6 @@ function startDrag(e) {
 		el.style.transform = `translate3d(${nx}px, ${ny}px, 0)`;
 	}
 	function onUp(ev) {
-		el.classList.remove("ppv2-float--dragging");
 		const dx = Math.abs(ev.clientX - sx);
 		const dy = Math.abs(ev.clientY - sy);
 		// Click (<10px movement) — bring to front
@@ -102,14 +94,12 @@ function startResize(e) {
 	const sx = e.clientX, sy = e.clientY;
 	const ow = w.value, oh = h.value;
 	const el = floatEl.value;
-	el.classList.add("ppv2-float--resizing");
 
 	function onMove(ev) {
 		w.value = Math.max(300, ow + ev.clientX - sx);
 		h.value = Math.max(200, oh + ev.clientY - sy);
 	}
 	function onUp() {
-		el.classList.remove("ppv2-float--resizing");
 		document.removeEventListener("mousemove", onMove);
 		document.removeEventListener("mouseup", onUp);
 	}
@@ -142,22 +132,16 @@ function startResize(e) {
 	contain: layout style;
 }
 
-/*
- * During drag: freeze pointer-events on children so the table doesn't
- * try to respond to hover/scroll while being moved. This is the
- * professional alternative to outline-only dragging — the content
- * stays visible but is inert, and transform movement is free.
- */
-.ppv2-float--dragging > .ppv2-float-body {
-	pointer-events: none;
-}
-
-/*
- * During resize: same idea — prevent child interaction while sizing
- * to avoid layout thrash from hover effects inside the table.
- */
-.ppv2-float--resizing > .ppv2-float-body {
-	pointer-events: none;
+.ppv2-float-header {
+	flex-shrink: 0;
+	padding: 5px 8px;
+	background: var(--bg-header);
+	color: var(--text-header);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	cursor: move;
+	user-select: none;
 }
 
 .ppv2-float-body {
@@ -174,11 +158,6 @@ function startResize(e) {
 	cursor: move;
 	user-select: none;
 	text-align: center;
-}
-
-.ppv2-float :deep(.ppv2-header) {
-	cursor: move;
-	user-select: none;
 }
 
 .ppv2-resize-handle {

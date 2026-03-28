@@ -1,30 +1,7 @@
 <template>
 	<div ref="panelRef" class="ppv2-panel">
-		<div class="ppv2-header">
-			<span class="ppv2-title">{{ title }}</span>
-			<span v-if="config.open_card_on_click" class="ppv2-click-hint">Click row for details · Ctrl-click to remove</span>
-			<span class="ppv2-header-right">
-				<button class="ppv2-hdr-btn" :class="{ 'ppv2-hdr-btn--refreshing': loading }" title="Refresh" @click="onRefresh">
-					<i class="fa fa-refresh"></i>
-				</button>
-				<button class="ppv2-hdr-btn" title="Filter" @click="toggleFilter">
-					<i class="fa fa-filter"></i>
-				</button>
-				<button class="ppv2-hdr-btn" title="Export to Sheets" @click="$emit('sheets')">
-					<i class="fa fa-table"></i>
-				</button>
-				<button v-if="showEmail" class="ppv2-hdr-btn" title="Email" @click="$emit('email')">
-					<i class="fa fa-envelope"></i>
-				</button>
-				<button v-if="showSms" class="ppv2-hdr-btn" title="SMS" @click="$emit('sms')">
-					<i class="fa fa-comment"></i>
-				</button>
-				<span class="ppv2-count">{{ rows.length }} / {{ total }} records</span>
-				<button class="ppv2-hdr-btn ppv2-close-btn" title="Close" @click="$emit('close')">&times;</button>
-			</span>
-		</div>
 
-		<div v-if="showFilterWidget" class="ppv2-filter-widget">
+		<div v-if="props.showFilter" class="ppv2-filter-widget">
 			<div v-for="(cond, i) in filters" :key="i" class="ppv2-filter-row">
 				<select v-model="cond.field" class="ppv2-filter-col" @change="onFilterFieldChange(cond); emitFilterChange()">
 					<option value="">— column —</option>
@@ -147,6 +124,7 @@ const props = defineProps({
 	showSms: { type: Boolean, default: false },
 	config: { type: Object, default: () => ({}) },
 	defaultFilters: { type: Array, default: () => [] },
+	showFilter: { type: Boolean, default: false },
 });
 
 const emit = defineEmits([
@@ -156,7 +134,6 @@ const emit = defineEmits([
 
 const opsDefault = ["=", "!=", ">", "<", ">=", "<=", "like", "in"];
 const opsDate    = ["=", ">", "<"];
-const showFilterWidget = ref(false);
 const filters = reactive([]);
 const colWidths = reactive({});
 const panelRef = ref(null);
@@ -297,10 +274,8 @@ function onDaysAgoInput(cond, val) {
 }
 
 function toggleFilter() {
-	showFilterWidget.value = !showFilterWidget.value;
-	if (showFilterWidget.value && !filters.length) {
-		filters.push({ field: "", op: "=", value: "" });
-	}
+	// Filter visibility is now controlled by parent via showFilter prop
+	// This function is kept for backwards compatibility but does nothing
 }
 
 // When defaultFilters change (i.e. panel first loads with config), pre-populate
@@ -440,15 +415,7 @@ function startColResize(e, ci) {
 	height: 100%;
 }
 
-.ppv2-header {
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-	padding: 5px 8px;
-	background: var(--bg-header);
-	color: var(--text-header);
-	flex-shrink: 0;
-}
+
 
 .ppv2-title { font-weight: var(--font-weight-bold); font-size: 14px; }
 
@@ -491,6 +458,12 @@ function startColResize(e, ci) {
 }
 
 /* ── Filter Widget ── */
+
+.ppv2-header-controls {
+	display: flex;
+	gap: var(--spacing-xs);
+	align-items: center;
+}
 
 .ppv2-filter-widget {
 	padding: 6px 10px;
