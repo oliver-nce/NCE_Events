@@ -60,10 +60,19 @@ function bringToFront() {
 	z.value = getNextZ();
 }
 
+// Full-screen overlay prevents expensive hit-testing on table DOM during drag/resize
+function _addOverlay(cursor) {
+	const overlay = document.createElement("div");
+	overlay.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;z-index:999999;cursor:${cursor};`;
+	document.body.appendChild(overlay);
+	return overlay;
+}
+
 function startDrag(e) {
 	const sx = e.clientX, sy = e.clientY;
 	const ox = x.value, oy = y.value;
 	const el = floatEl.value;
+	const overlay = _addOverlay("move");
 
 	function onMove(ev) {
 		// Write directly to the DOM — bypasses Vue reactivity entirely
@@ -73,6 +82,7 @@ function startDrag(e) {
 		el.style.transform = `translate3d(${nx}px, ${ny}px, 0)`;
 	}
 	function onUp(ev) {
+		document.body.removeChild(overlay);
 		const dx = Math.abs(ev.clientX - sx);
 		const dy = Math.abs(ev.clientY - sy);
 		// Click (<10px movement) — bring to front
@@ -94,12 +104,14 @@ function startResize(e) {
 	const sx = e.clientX, sy = e.clientY;
 	const ow = w.value, oh = h.value;
 	const el = floatEl.value;
+	const overlay = _addOverlay("nwse-resize");
 
 	function onMove(ev) {
 		w.value = Math.max(300, ow + ev.clientX - sx);
 		h.value = Math.max(200, oh + ev.clientY - sy);
 	}
 	function onUp() {
+		document.body.removeChild(overlay);
 		document.removeEventListener("mousemove", onMove);
 		document.removeEventListener("mouseup", onUp);
 	}
