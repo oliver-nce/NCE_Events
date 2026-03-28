@@ -107,11 +107,18 @@ function startResize(e) {
 	const overlay = _addOverlay("nwse-resize");
 
 	function onMove(ev) {
+		// Write directly to the DOM — bypasses Vue reactivity entirely
+		// so the table never re-renders during resize
+		const nw = Math.max(300, ow + ev.clientX - sx);
+		const nh = Math.max(200, oh + ev.clientY - sy);
+		el.style.width = nw + "px";
+		el.style.height = nh + "px";
+	}
+	function onUp(ev) {
+		document.body.removeChild(overlay);
+		// Now write back to Vue refs once so it knows the final size
 		w.value = Math.max(300, ow + ev.clientX - sx);
 		h.value = Math.max(200, oh + ev.clientY - sy);
-	}
-	function onUp() {
-		document.body.removeChild(overlay);
 		document.removeEventListener("mousemove", onMove);
 		document.removeEventListener("mouseup", onUp);
 	}
