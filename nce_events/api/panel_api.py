@@ -31,7 +31,6 @@ _SKIP_FIELDTYPES: frozenset[str] = frozenset(
 
 _SKIP_FIELDNAMES: frozenset[str] = frozenset(
 	{
-		"name",
 		"owner",
 		"creation",
 		"modified",
@@ -716,7 +715,9 @@ def get_doctype_fields(root_doctype: str) -> list[dict[str, str]]:
 	Link fields include an 'options' key with the target DocType name.
 	"""
 	meta = frappe.get_meta(root_doctype)
-	result: list[dict[str, str]] = []
+	result: list[dict[str, str]] = [
+		{"fieldname": "name", "label": "ID", "fieldtype": "Data"},
+	]
 	for f in meta.fields:
 		if f.fieldtype in _SKIP_FIELDTYPES or f.fieldname in _SKIP_FIELDNAMES:
 			continue
