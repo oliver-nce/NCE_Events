@@ -15,6 +15,7 @@
     "bold_fields",
     "gender_column",
     "gender_color_fields",
+    "title_field",
     "section_break_widgets",
     "show_filter",
     "show_sheets",
@@ -100,6 +101,13 @@
       "label": "Gender Color Fields"
     },
     {
+      "description": "Single root-table field used as the row title (Display tab — root fields only)",
+      "fieldname": "title_field",
+      "fieldtype": "Small Text",
+      "hidden": 1,
+      "label": "Title Field"
+    },
+    {
       "fieldname": "section_break_widgets",
       "fieldtype": "Section Break",
       "label": "Header Widgets"
@@ -182,7 +190,7 @@
   "index_web_pages_for_search": 0,
   "istable": 0,
   "links": [],
-  "modified": "2026-05-01 00:00:00.000000",
+  "modified": "2026-03-30 00:00:00.000000",
   "modified_by": "Administrator",
   "module": "NCE Events",
   "name": "Page Panel",

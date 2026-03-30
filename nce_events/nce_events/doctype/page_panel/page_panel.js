@@ -45,7 +45,13 @@ const TAB_GROUPS = {
 const TAB_ORDER = ["config", "display", "query"];
 const TAB_LABELS = { config: "Config", display: "Display", query: "Query" };
 
-const MATRIX_FIELDS = ["column_order", "bold_fields", "gender_column", "gender_color_fields"];
+const MATRIX_FIELDS = [
+	"column_order",
+	"bold_fields",
+	"gender_column",
+	"gender_color_fields",
+	"title_field",
+];
 const BREAK_FIELDS = [
 	"section_break_widgets",
 	"column_break_widgets",
@@ -235,6 +241,7 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		bold: _parse_csv(frm.doc.bold_fields),
 		gender_col: (frm.doc.gender_column || "").trim(),
 		gender_tint: _parse_csv(frm.doc.gender_color_fields),
+		title_field: (frm.doc.title_field || "").trim(),
 	};
 
 	// Merge computed column field_names into column_order so new ones appear in Display
@@ -285,7 +292,9 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		if (st.id === "_order") return;
 		const fields = st.id === "_root" ? root_with_computed : linked_data[st.id].fields;
 		const prefix = st.prefix;
-		matrices[st.id] = _build_field_matrix(fields, prefix, uid, saved, shown_set);
+		matrices[st.id] = _build_field_matrix(fields, prefix, uid, saved, shown_set, {
+			showTitleColumn: st.id === "_root",
+		});
 	});
 
 	// Sync function — collects from ALL matrices
@@ -293,7 +302,8 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		let col_order = [],
 			nb = [],
 			nt = [],
-			ngc = "";
+			ngc = "",
+			ntf = "";
 		sub_tabs.forEach(function (st) {
 			if (st.id === "_order") return;
 			const m = matrices[st.id];
@@ -308,6 +318,12 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		});
 		const $all_gc = $container.find(`input[name="gender_col_${uid}"]:checked`);
 		if ($all_gc.length) ngc = $all_gc.data("key") || "";
+
+		const mroot = matrices["_root"];
+		if (mroot && mroot.$matrix) {
+			const $tf = mroot.$matrix.find(`input[name="title_field_${uid}"]:checked`);
+			if ($tf.length) ntf = $tf.data("key") || "";
+		}
 
 		// Reorder col_order by Order tab if it exists
 		if (has_links) {
@@ -339,6 +355,7 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		frm.set_value("bold_fields", nb.join(", "));
 		frm.set_value("gender_column", ngc);
 		frm.set_value("gender_color_fields", nt.join(", "));
+		frm.set_value("title_field", ntf);
 	}
 
 	// Wire change events on all matrices
@@ -454,7 +471,9 @@ tr[draggable="true"]:active .matrix-drag-handle { cursor: grabbing; }
 }
 
 // ── Build a single field-selection matrix ─────────────────────────────────────
-function _build_field_matrix(fields, prefix, uid, saved, shown_set) {
+function _build_field_matrix(fields, prefix, uid, saved, shown_set, matrix_opts) {
+	matrix_opts = matrix_opts || {};
+	const showTitleColumn = !!matrix_opts.showTitleColumn;
 	const th_style =
 		'style="text-align:center;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;"';
 	const th_left =
@@ -466,8 +485,11 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set) {
 			<th ${th_style}>Show</th>
 			<th ${th_style}>Bold</th>
 			<th ${th_style}>Gender</th>
-			<th ${th_style}>Tint</th>
-		</tr></thead><tbody>`;
+			<th ${th_style}>Tint</th>`;
+	if (showTitleColumn) {
+		html += `<th ${th_style}>Title</th>`;
+	}
+	html += `</tr></thead><tbody>`;
 
 	fields.forEach(function (f, i) {
 		const key = prefix + f.fieldname;
@@ -479,6 +501,17 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set) {
 		const bg = i % 2 !== 0 ? ' style="background:#f8f9fa;"' : "";
 		const esc_key = frappe.utils.escape_html(key);
 		const td = 'style="text-align:center;padding:4px 8px;"';
+		const titleEligible = showTitleColumn && !f._computed && !f._related;
+		let title_cell = "";
+		if (showTitleColumn) {
+			if (titleEligible) {
+				title_cell = `<td ${td}><input type="radio" data-key="${esc_key}" name="title_field_${uid}" data-role="title"${
+					saved.title_field === key ? " checked" : ""
+				}></td>`;
+			} else {
+				title_cell = `<td ${td} style="background:#f0f0f0;"></td>`;
+			}
+		}
 		html += `<tr data-key="${esc_key}"${bg}>
 			<td style="padding:4px 8px;color:#8d949a;font-size:11px;">${fn_display}</td>
 			<td style="padding:4px 8px;color:#4c5a67;">${frappe.utils.escape_html(label)}</td>
@@ -486,6 +519,7 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set) {
 			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="bold"${saved.bold.indexOf(key) !== -1 ? " checked" : ""}></td>
 			<td ${td}><input type="radio"    data-key="${esc_key}" name="gender_col_${uid}"${saved.gender_col === key ? " checked" : ""}></td>
 			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="tint"${saved.gender_tint.indexOf(key) !== -1 ? " checked" : ""}></td>
+			${title_cell}
 		</tr>`;
 	});
 	html += "</tbody></table>";
@@ -985,6 +1019,7 @@ frappe.ui.form.on("Page Panel", {
 		frm.set_value("bold_fields", "");
 		frm.set_value("gender_column", "");
 		frm.set_value("gender_color_fields", "");
+		frm.set_value("title_field", "");
 		_render_default_filters(frm);
 		const $layout = $(frm.layout.wrapper);
 		if ($layout.data("pp-active-tab") === "display") {

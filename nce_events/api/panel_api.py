@@ -58,6 +58,7 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 			"bold_fields": [],
 			"gender_column": "",
 			"gender_color_fields": [],
+			"title_field": "",
 			"tint_by_gender": {},
 			"computed_columns": [],
 			"show_filter": 1,
@@ -113,6 +114,9 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 		fetch_only_fields.append(email_field)
 	if sms_field:
 		fetch_only_fields.append(sms_field)
+	title_field = (doc.title_field or "").strip()
+	if title_field and title_field not in fetch_only_fields:
+		fetch_only_fields.append(title_field)
 	fetch_only_fields.extend(_get_link_fieldnames(doc.root_doctype))
 
 	tint_by_gender: dict[str, str] = {}
@@ -135,6 +139,7 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 		"bold_fields": bold_fields,
 		"gender_column": (doc.gender_column or "").strip(),
 		"gender_color_fields": gender_color_fields,
+		"title_field": title_field,
 		"tint_by_gender": tint_by_gender,
 		"computed_columns": computed_columns,
 		"show_filter": doc.show_filter,
