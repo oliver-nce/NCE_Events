@@ -187,8 +187,8 @@ function startResize(e) {
 }
 
 .ppv2-float-header :deep(.ppv2-click-hint) {
-	font-size: var(--font-size-sm);
-	opacity: 0.7;
+	font-size: calc(var(--font-size-sm) + 1pt);
+	color: #fff;
 	font-style: italic;
 	white-space: nowrap;
 }
