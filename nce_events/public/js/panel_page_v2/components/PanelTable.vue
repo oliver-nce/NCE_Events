@@ -78,7 +78,7 @@
 							<span
 								v-else-if="col.is_related_link && col.related_doctype"
 								class="ppv2-related-link"
-								@click.stop="$emit('drill', { doctype: col.related_doctype, linkField: col.related_link_field, rowName: row.name })"
+								@click.stop="$emit('drill', { doctype: col.related_doctype, linkField: col.related_link_field, rowName: row.name, parentRow: row })"
 							>{{ cellValue(row, col) }}</span>
 							<template v-else>{{ cellValue(row, col) }}</template>
 						</td>

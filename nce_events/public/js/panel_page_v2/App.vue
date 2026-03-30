@@ -46,7 +46,7 @@
 			:init-h="600"
 		>
 			<template #header>
-				<span class="ppv2-title">{{ p.config?.header_text || p.doctype }}</span>
+				<span class="ppv2-title">{{ floatedPanelTitle(p) }}</span>
 				<span v-if="p.config?.open_card_on_click" class="ppv2-click-hint">Click row for details · Ctrl-click to remove</span>
 				<div class="ppv2-header-controls" @mousedown.stop>
 					<button class="ppv2-hdr-btn" :class="{ 'ppv2-hdr-btn--refreshing': p.loading }" title="Refresh" @click="onRefreshPanel(p)">
@@ -69,7 +69,7 @@
 				</div>
 			</template>
 			<PanelTable
-				:title="p.config?.header_text || p.doctype"
+				:title="floatedPanelTitle(p)"
 				:columns="p.columns"
 				:rows="p._panelRows || p.rows"
 				:total="p.fullTotal"
@@ -94,7 +94,7 @@
 				@row-drop="(row) => onRowDrop(p, row)"
 				@show-filter="p._showFilter = true"
 			/>
-			<template #footer>{{ p.config?.header_text || p.doctype }}</template>
+			<template #footer>{{ floatedPanelTitle(p) }}</template>
 		</PanelFloat>
 
 		<TagFinder
@@ -209,6 +209,14 @@ onUnmounted(() => {
 	delete window._nce_close_tag_finder;
 });
 
+/** Child float header: "Enrollments" or "Enrollments for {parent title}" when drilled with context. */
+function floatedPanelTitle(p) {
+	const base = p.config?.header_text || p.doctype || "";
+	const suffix = (p.parentContextTitle || "").trim();
+	if (suffix) return `${base} for ${suffix}`;
+	return base;
+}
+
 function nextPos(parentId) {
 	/* Find the parent panel's position and offset from it */
 	if (parentId === "root") {
@@ -229,7 +237,7 @@ function openTagFinder(panel) {
 	tagFinderY.value = panel.y;
 }
 
-async function openPanel(doctype, parentFilter = {}, parentId = null) {
+async function openPanel(doctype, parentFilter = {}, parentId = null, parentContextTitle = "") {
 	const existingIdx = openPanels.findIndex((p) => p.doctype === doctype);
 	if (existingIdx >= 0) closePanel(openPanels[existingIdx].id);
 
@@ -240,6 +248,7 @@ async function openPanel(doctype, parentFilter = {}, parentId = null) {
 		doctype,
 		parentFilter,
 		parentId,
+		parentContextTitle: (parentContextTitle || "").trim(),
 		config: null,
 		columns: [],
 		rows: [],
@@ -329,7 +338,12 @@ async function onDrill(ev, parentPanel) {
 	} catch (e) {
 		/* fall through to panel */
 	}
-	openPanel(ev.doctype, filter, parentPanel.id);
+	let parentContextTitle = "";
+	const tf = (parentPanel.config?.title_field || "").trim();
+	if (tf && ev.parentRow && ev.parentRow[tf] != null && String(ev.parentRow[tf]).trim() !== "") {
+		parentContextTitle = String(ev.parentRow[tf]).trim();
+	}
+	openPanel(ev.doctype, filter, parentPanel.id, parentContextTitle);
 }
 
 function onDrilledRowClick(p, row) {
