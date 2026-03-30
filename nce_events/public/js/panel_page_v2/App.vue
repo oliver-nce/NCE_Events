@@ -3,8 +3,9 @@
 		<PanelFloat :init-x="40" :init-y="60" :init-w="900" :init-h="550">
 			<template #header>
 				<span class="ppv2-title">{{ config?.header_text || 'NCE Tables' }}</span>
+				<div class="ppv2-header-right" @mousedown.stop>
 				<span v-if="config?.open_card_on_click" class="ppv2-click-hint">Click row for details · Ctrl-click to remove</span>
-				<div class="ppv2-header-controls" @mousedown.stop>
+				<div class="ppv2-header-controls">
 					<button class="ppv2-hdr-btn" :class="{ 'ppv2-hdr-btn--refreshing': loading }" title="Refresh" @click="onRefreshRoot">
 						<i class="fa fa-refresh"></i>
 					</button>
@@ -15,6 +16,7 @@
 						<i class="fa fa-table"></i>
 					</button>
 					<span class="ppv2-count">{{ rows.length }} / {{ fullTotal }} records</span>
+				</div>
 				</div>
 			</template>
 			<PanelTable
@@ -47,8 +49,9 @@
 		>
 			<template #header>
 				<span class="ppv2-title">{{ floatedPanelTitle(p) }}</span>
+				<div class="ppv2-header-right" @mousedown.stop>
 				<span v-if="p.config?.open_card_on_click" class="ppv2-click-hint">Click row for details · Ctrl-click to remove</span>
-				<div class="ppv2-header-controls" @mousedown.stop>
+				<div class="ppv2-header-controls">
 					<button class="ppv2-hdr-btn" :class="{ 'ppv2-hdr-btn--refreshing': p.loading }" title="Refresh" @click="onRefreshPanel(p)">
 						<i class="fa fa-refresh"></i>
 					</button>
@@ -66,6 +69,7 @@
 					</button>
 					<span class="ppv2-count">{{ (p._panelRows || p.rows).length }} / {{ p.fullTotal }} records</span>
 					<button class="ppv2-hdr-btn ppv2-close-btn" title="Close" @click="closePanel(p.id)">&times;</button>
+				</div>
 				</div>
 			</template>
 			<PanelTable

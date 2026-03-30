@@ -172,13 +172,25 @@ function startResize(e) {
 .ppv2-float-header :deep(.ppv2-title) {
 	font-weight: var(--font-weight-bold);
 	font-size: 14px;
+	flex: 1 1 auto;
+	min-width: 0;
+	line-height: 1.25;
+	padding-right: var(--spacing-sm);
+}
+
+/* Hint + icon cluster — stays right; avoids sandwiching hint between long title and buttons */
+.ppv2-float-header :deep(.ppv2-header-right) {
+	display: flex;
+	align-items: center;
+	gap: var(--spacing-sm);
+	flex-shrink: 0;
 }
 
 .ppv2-float-header :deep(.ppv2-click-hint) {
 	font-size: var(--font-size-sm);
 	opacity: 0.7;
 	font-style: italic;
-	margin-left: var(--spacing-sm);
+	white-space: nowrap;
 }
 
 .ppv2-float-header :deep(.ppv2-header-controls) {
