@@ -119,6 +119,17 @@
 			@open-card="onOpenCard"
 			@close="closeTopCard"
 		/>
+
+		<!-- Form Dialog -->
+		<PanelFormDialog
+			v-if="formDialogDefinition"
+			:open="showFormDialog"
+			:definition-name="formDialogDefinition"
+			:doctype="formDialogDoctype"
+			:doc-name="formDialogDocName"
+			@close="onFormDialogClose"
+			@saved="onFormDialogSaved"
+		/>
 	</div>
 </template>
 
@@ -129,6 +140,7 @@ import PanelFloat from "./components/PanelFloat.vue";
 import PanelTable from "./components/PanelTable.vue";
 import TagFinder from "./components/TagFinder.vue";
 import CardModal from "./components/CardModal.vue";
+import PanelFormDialog from "./components/PanelFormDialog.vue";
 
 const rootPanel = usePanel("WP Tables");
 const { config, columns: rawColumns, rows, total, fullTotal, loading, error, load, reload } = rootPanel;
@@ -149,6 +161,12 @@ const dropStack = reactive([]);
 const tagFinderDoctype = ref("");
 const tagFinderX = ref(0);
 const tagFinderY = ref(80);
+
+// Form dialog state
+const showFormDialog = ref(false);
+const formDialogDocName = ref(null);
+const formDialogDefinition = ref(null);
+const formDialogDoctype = ref(null);
 
 const cardStack = reactive([]);
 let cardCounter = 0;
@@ -351,10 +369,37 @@ async function onDrill(ev, parentPanel) {
 }
 
 function onDrilledRowClick(p, row) {
-	if (!p.config?.open_card_on_click || !row?.name) return;
+	if (!row?.name) return;
+
+	// If panel has a form_dialog configured, open the dialog instead of a new tab
+	if (p.config?.form_dialog) {
+		formDialogDefinition.value = p.config.form_dialog;
+		formDialogDoctype.value = p.doctype;
+		formDialogDocName.value = row.name;
+		showFormDialog.value = true;
+		return;
+	}
+
+	if (!p.config?.open_card_on_click) return;
 	const slug = p.doctype.toLowerCase().replace(/ /g, "-");
 	const url = `${window.location.origin}/app/${slug}/${encodeURIComponent(row.name)}`;
 	window.open(url, "_blank");
+}
+
+function onFormDialogClose() {
+	showFormDialog.value = false;
+	formDialogDocName.value = null;
+}
+
+function onFormDialogSaved(doc) {
+	showFormDialog.value = false;
+	formDialogDocName.value = null;
+	// Refresh the panel that opened the dialog
+	// Find the panel whose doctype matches and reload it
+	const panel = openPanels.find((p) => p.doctype === formDialogDoctype.value);
+	if (panel && panel._reload) {
+		panel._reload();
+	}
 }
 
 function onFilterChange(panel, userFilters) {

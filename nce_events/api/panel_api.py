@@ -70,6 +70,7 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 			"show_card_email": 0,
 			"show_card_sms": 0,
 			"open_card_on_click": 0,
+			"form_dialog": None,
 			"male_hex": MALE_HEX,
 			"female_hex": FEMALE_HEX,
 		}
@@ -151,6 +152,7 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 		"show_card_email": doc.show_card_email,
 		"show_card_sms": doc.show_card_sms,
 		"open_card_on_click": cint(doc.get("open_card_on_click")),
+		"form_dialog": (doc.form_dialog or "").strip() or None,
 		"male_hex": MALE_HEX,
 		"female_hex": FEMALE_HEX,
 	}

@@ -522,3 +522,106 @@ bench get-app https://github.com/oliver-nce/NCE_Events.git
 bench --site your-site install-app nce_events
 bench build && bench migrate
 ```
+
+---
+
+## 19. Form Dialog System
+
+Frozen Desk-derived forms rendered as Vue dialogs in Panel Page V2. An admin captures a snapshot of a DocType's field schema, and the Vue frontend renders a form dialog from that snapshot — without calling back to Desk for the schema at runtime.
+
+### DocTypes
+
+| DocType | Type | Module | Purpose |
+|---------|------|--------|---------|
+| Form Dialog | Parent | NCE Events | Stores frozen DocType schema + dialog config |
+| Form Dialog Button | Child table | NCE Events | Action buttons (placeholder, scripts not yet executed) |
+
+### Form Dialog Fields
+
+| Field | Type | Notes |
+|-------|------|-------|
+| title | Data | Required. Human name, autoname source. |
+| target_doctype | Link → DocType | Must exist in WP Tables (`frappe_doctype` field). |
+| frozen_meta_json | Code (JSON) | `{ "fields": [...] }` — frozen schema snapshot from `frappe.get_meta()`. |
+| captured_at | Datetime | Set on capture/rebuild. Read-only. |
+| dialog_size | Select | sm, md, lg, xl, 2xl, 3xl. Default xl. |
+| is_active | Check | Default 1. Inactive dialogs hidden from pickers. |
+| buttons | Table → Form Dialog Button | Placeholder action buttons. |
+
+### Form Dialog Button Fields
+
+| Field | Type | Notes |
+|-------|------|-------|
+| label | Data | Required. Button label. |
+| button_script | Code (JS) | Copied script body. Not executed yet. |
+| sort_order | Int | Display order (ascending). |
+| source_note | Small Text | Optional human note about script origin. |
+
+### Page Panel Integration
+
+`Page Panel` has a Link field `form_dialog` → `Form Dialog`, filtered by `target_doctype == root_doctype` and `is_active == 1`.
+
+When `form_dialog` is set, `get_panel_config()` returns it. The Vue frontend opens `PanelFormDialog` on row click instead of navigating to a new tab.
+
+The Desk form for Page Panel has a **Dialogs** tab (after Config, Display, Query) for managing Form Dialog associations — create & capture, rebuild, open in full form, and set as active.
+
+### Server API: `nce_events/api/form_dialog_api.py`
+
+| Method | Args | Returns | Purpose |
+|--------|------|---------|---------|
+| `capture_form_dialog_from_desk` | doctype, title | name (str) | Create/update Form Dialog from live Desk schema |
+| `rebuild_form_dialog` | name | {name, target_doctype, captured_at} | Re-capture schema, overwrite frozen JSON |
+| `get_form_dialog_definition` | name | {name, title, target_doctype, dialog_size, frozen_meta, buttons} | Load definition for Vue renderer |
+| `list_form_dialogs_for_doctype` | doctype | [{name, title, ...}] | List active dialogs for a DocType |
+
+All methods require System Manager role.
+
+### Vue Components
+
+| File | Purpose |
+|------|---------|
+| `panel_page_v2/utils/parseLayout.js` | Parse flat field list → Tabs → Sections → Columns → Fields tree |
+| `panel_page_v2/utils/fieldTypeMap.js` | Map Frappe fieldtype → component config |
+| `panel_page_v2/composables/usePanelFormDialog.js` | Load definition, manage form state, save, validate, fetch_from |
+| `panel_page_v2/components/PanelFormDialog.vue` | Dialog wrapper with tabs, sections, columns, Cancel/Submit |
+| `panel_page_v2/components/PanelFormField.vue` | Individual field renderer |
+
+### Frozen JSON Contract
+
+`get_form_dialog_definition(name)` returns:
+
+```json
+{
+  "name": "Events — dialog",
+  "title": "Events — dialog",
+  "target_doctype": "Event",
+  "dialog_size": "xl",
+  "frozen_meta": {
+    "fields": [
+      { "fieldname": "subject", "fieldtype": "Data", "label": "Subject", "reqd": 1 },
+      { "fieldname": "", "fieldtype": "Section Break", "label": "Details" }
+    ]
+  },
+  "buttons": [
+    { "label": "Validate", "sort_order": 1 }
+  ]
+}
+```
+
+The `frozen_meta.fields` array has the same shape as `frappe.get_meta(doctype).fields` — each object is a DocField dict.
+
+### Features Supported
+
+- `depends_on` — field visibility based on document values
+- `mandatory_depends_on` — conditional mandatory fields
+- `read_only_depends_on` — conditional read-only fields
+- `fetch_from` — auto-populate fields when a Link value changes (respects `fetch_if_empty`)
+- Tabs, sections, columns layout from frozen schema
+- Cancel (revert + close) and Submit (save + close) dialog actions
+
+### Not Yet Supported
+
+- Button script execution (buttons render as placeholders)
+- Child table (Table fieldtype) rendering (shows placeholder)
+- Frappe formal submit (`docstatus` lifecycle)
+- `frm` / `cur_frm` shim for Desk Client Scripts

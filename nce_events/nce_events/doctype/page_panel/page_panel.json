@@ -28,7 +28,8 @@
     "show_card_email",
     "show_card_sms",
     "open_card_on_click",
-    "panel_sql"
+    "panel_sql",
+    "form_dialog"
   ],
   "fields": [
     {
@@ -185,6 +186,13 @@
       "label": "Panel SQL",
       "options": "SQL",
       "read_only": 1
+    },
+    {
+      "description": "Which frozen Form Dialog opens for this panel in V2.",
+      "fieldname": "form_dialog",
+      "fieldtype": "Link",
+      "label": "Form Dialog",
+      "options": "Form Dialog"
     }
   ],
   "index_web_pages_for_search": 0,
