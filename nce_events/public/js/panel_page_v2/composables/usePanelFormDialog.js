@@ -305,4 +305,3 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
     handleFetchFrom,
   };
 }
-```
