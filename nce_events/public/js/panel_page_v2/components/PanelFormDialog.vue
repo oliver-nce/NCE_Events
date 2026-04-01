@@ -28,11 +28,13 @@
             >{{ tab.label }}</button>
           </div>
 
-          <!-- Tab content -->
+          <!-- Tab content — all tabs stay rendered to maintain stable height -->
+          <div class="ppv2-fd-tab-panels">
           <div
             v-for="(tab, ti) in form.tabs.value"
             :key="ti"
-            v-show="form.tabs.value.length === 1 || activeTab === ti"
+            class="ppv2-fd-tab-panel"
+            :class="{ 'ppv2-fd-tab-panel-active': form.tabs.value.length === 1 || activeTab === ti }"
           >
             <!-- Sections -->
             <div
@@ -69,6 +71,7 @@
             </div>
           </div>
 
+          </div>
           <!-- Validation error -->
           <div v-if="form.validationError.value" class="ppv2-fd-validation-error">
             {{ form.validationError.value }}
@@ -257,6 +260,18 @@ function onPlaceholderButton(btn) {
   color: var(--text-header);
   border-color: var(--bg-header);
   font-weight: var(--font-weight-bold);
+}
+.ppv2-fd-tab-panels {
+  display: grid;
+}
+.ppv2-fd-tab-panel {
+  grid-area: 1 / 1;
+  visibility: hidden;
+  pointer-events: none;
+}
+.ppv2-fd-tab-panel-active {
+  visibility: visible;
+  pointer-events: auto;
 }
 .ppv2-fd-section {
   margin-bottom: 16px;
