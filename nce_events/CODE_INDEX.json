@@ -1,19 +1,21 @@
 {
   "_meta": {
     "description": "Machine-readable index of every module in the NCE Events Frappe app. Read this file FIRST before exploring the codebase. See also AGENTS.md at the project root for contributor conventions.",
-    "generated": "2026-03-26",
+    "generated": "2026-04-01",
     "usage": "Find the module whose 'purpose' matches your task, then read only that file and its 'depends_on' entries. AGENTS.md lists reusable helpers — check there before adding new code."
   },
 
   "architecture": {
-    "overview": "NCE Events is a Frappe app that renders configurable multi-panel data explorer pages. It has a Python API layer and two frontend generations: V1 (vanilla JS class-based) and V2 (Vue 3 SFC with Vite build). Both share SMS/Email dialogs from V1. Depends on nce_sync app.",
-    "data_flow": "Frappe Page (panel_page / panel_page_v2) → JS/Vue → frappe.call() → api/panel_api.py, api/messaging.py, api/tags.py, api/reports.py → Frappe ORM → MariaDB",
+    "overview": "NCE Events is a Frappe app that renders configurable multi-panel data explorer pages. It has a Python API layer and two frontend generations: V1 (vanilla JS class-based) and V2 (Vue 3 SFC with Vite build). Both share SMS/Email dialogs from V1. Depends on nce_sync app. V2 supports optional frozen Form Dialogs for editing panel rows without leaving the panel page.",
+    "data_flow": "Frappe Page (panel_page / panel_page_v2) → JS/Vue → frappe.call() → api/panel_api.py, api/messaging.py, api/tags.py, api/reports.py, api/form_dialog_api.py → Frappe ORM → MariaDB",
     "key_patterns": [
       "V2 Vue app built separately: npm run build in public/js/panel_page_v2/ then bench build",
       "V2 reuses V1 SmsDialog, EmailDialog, and ai_tools.js at runtime — do NOT duplicate",
       "Python helpers follow snake_case private convention (_helper_name) — check AGENTS.md before adding",
       "frozenset used for fieldtype/fieldname skip sets",
-      "Tag system uses Jinja template tags with gender-conditional pronouns"
+      "Tag system uses Jinja template tags with gender-conditional pronouns",
+      "Form Dialog: frozen_meta_json (snapshot of frappe.get_meta fields) is parsed by parseLayout.js + rendered by PanelFormDialog.vue. Only DocTypes in WP Tables are eligible.",
+      "Form Dialog buttons: script text is copied from Desk at capture/rebuild time — not live-linked. Rebuild is manual."
     ]
   },
 
@@ -135,12 +137,34 @@
       "exports": [],
       "depends_on": [],
       "sections": ["Translation helpers"]
+    },
+    "nce_events/api/form_dialog_api.py": {
+      "purpose": "CRUD and schema-capture API for Form Dialog DocType. Validates DocType is in WP Tables. Capture freezes live Desk meta (fields array) into frozen_meta_json on the Form Dialog record.",
+      "exports": [
+        "capture_form_dialog_from_desk",
+        "rebuild_form_dialog",
+        "get_form_dialog_definition",
+        "list_form_dialogs_for_doctype"
+      ],
+      "private_helpers": [
+        "_assert_doctype_in_wp_tables",
+        "_require_system_manager"
+      ],
+      "depends_on": [
+        "nce_events/nce_events/doctype/form_dialog/"
+      ],
+      "sections": [
+        "WP Tables validation",
+        "Capture / rebuild frozen schema from frappe.get_meta",
+        "Get frozen definition for V2 renderer",
+        "List dialogs filtered by target_doctype"
+      ]
     }
   },
 
   "doctypes": {
     "nce_events/nce_events/doctype/page_panel/": {
-      "purpose": "Core config doctype — one record per root DocType being displayed. Stores column order, filters, gender config, email/SMS fields, computed columns.",
+      "purpose": "Core config doctype — one record per root DocType being displayed. Stores column order, filters, gender config, email/SMS fields, computed columns, and optional link to a Form Dialog for V2 row editing.",
       "key_fields": [
         "root_doctype",
         "header_text",
@@ -149,9 +173,10 @@
         "column_order",
         "gender_column",
         "email_field",
-        "sms_field"
+        "sms_field",
+        "form_dialog"
       ],
-      "depends_on": ["page_panel_computed_column"]
+      "depends_on": ["page_panel_computed_column", "form_dialog"]
     },
     "nce_events/nce_events/doctype/page_panel_computed_column/": {
       "purpose": "Child table for SQL-expression computed columns on a panel",
@@ -187,6 +212,29 @@
     "nce_events/nce_events/doctype/settings/": {
       "purpose": "App-level settings singleton",
       "key_fields": [],
+      "depends_on": []
+    },
+    "nce_events/nce_events/doctype/form_dialog/": {
+      "purpose": "Frozen Desk form definition for V2 dialog rendering. One record per named dialog. Stores frozen_meta_json (fields array snapshot from frappe.get_meta), dialog_size, is_active, and child buttons table. Only DocTypes in WP Tables are allowed as target_doctype.",
+      "key_fields": [
+        "title",
+        "target_doctype",
+        "frozen_meta_json",
+        "captured_at",
+        "dialog_size",
+        "is_active",
+        "buttons"
+      ],
+      "depends_on": ["form_dialog_button"]
+    },
+    "nce_events/nce_events/doctype/form_dialog_button/": {
+      "purpose": "Child table of Form Dialog. Each row is an action button shown in the V2 dialog. Stores a copied button_script (JS) and sort_order. Scripts are copied from Desk Client Scripts manually; rebuild updates them.",
+      "key_fields": [
+        "label",
+        "button_script",
+        "sort_order",
+        "source_note"
+      ],
       "depends_on": []
     }
   },
@@ -243,12 +291,13 @@
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/App.vue": {
-      "purpose": "V2 root component — panel orchestration, tab management, panel switching",
+      "purpose": "V2 root component — panel orchestration, tab management, panel switching, form dialog open/close from row action",
       "exports": [],
       "depends_on": [
         "composables/usePanel.js",
         "components/PanelTable.vue",
         "components/TabBar.vue",
+        "components/PanelFormDialog.vue",
         "shared/sms_dialog.js",
         "shared/email_dialog.js",
         "shared/ai_tools.js"
@@ -268,6 +317,14 @@
       "purpose": "V2 composable — card form state and submission",
       "exports": ["useCardForm"],
       "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/composables/usePanelFormDialog.js": {
+      "purpose": "V2 composable — load Form Dialog definition, manage reactive doc state, validate mandatory fields, save/insert document, expose loading/error/dirty state. Used by PanelFormDialog.vue.",
+      "exports": ["usePanelFormDialog"],
+      "depends_on": [
+        "utils/parseLayout.js",
+        "nce_events/api/form_dialog_api.py"
+      ]
     },
     "nce_events/public/js/panel_page_v2/components/PanelTable.vue": {
       "purpose": "Main data table component for V2 panel — columns, rows, pagination, sorting",
@@ -327,6 +384,31 @@
     "nce_events/public/js/panel_page_v2/components/WidgetGrid.vue": {
       "purpose": "Grid layout container for card widgets",
       "exports": [],
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue": {
+      "purpose": "V2 form dialog rendered from frozen Form Dialog definition. Shows Frappe-layout tabs/sections/columns. Handles save/insert and action buttons. Opened from a panel row when panel.form_dialog is set.",
+      "exports": [],
+      "depends_on": [
+        "composables/usePanelFormDialog.js",
+        "components/PanelFormField.vue"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormField.vue": {
+      "purpose": "Single field renderer inside PanelFormDialog. Maps Frappe fieldtype → control element (FormControl, checkbox, select, Link placeholder, etc.). Respects hidden/read_only/reqd and depends_on eval expressions.",
+      "exports": [],
+      "depends_on": [
+        "utils/fieldTypeMap.js"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/utils/parseLayout.js": {
+      "purpose": "Utility: parse a flat Frappe DocField array into a nested Tabs→Sections→Columns→Fields tree. Used by usePanelFormDialog to render frozen_meta_json layout.",
+      "exports": ["parseLayout"],
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/utils/fieldTypeMap.js": {
+      "purpose": "Utility: maps every Frappe fieldtype string to a { component, props } config (or { layout } for structural types). Single source of truth for fieldtype→control mapping in V2 dialogs.",
+      "exports": ["getComponentConfig"],
       "depends_on": []
     }
   },
