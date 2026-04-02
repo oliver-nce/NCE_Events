@@ -1081,6 +1081,7 @@ function _build_dialogs_tab_html(frm, $container, dialogs) {
 				<td style="padding:4px 8px;">${d.captured_at ? frappe.datetime.str_to_user(d.captured_at) : "—"}</td>
 				<td style="padding:4px 8px;">
 					${is_current ? '<span style="color:#27ae60;font-weight:600;">Active</span>' : '<button class="btn btn-xs btn-default pp-dialog-select" data-name="' + frappe.utils.escape_html(d.name) + '">Set as active</button>'}
+					<button class="btn btn-xs btn-default pp-dialog-delete" data-name="${frappe.utils.escape_html(d.name)}" style="margin-left:4px;color:#c0392b;">Delete</button>
 				</td>
 			</tr>`;
 		});
@@ -1165,6 +1166,36 @@ function _build_dialogs_tab_html(frm, $container, dialogs) {
 		frm.save().then(function () {
 			_render_dialogs_tab(frm);
 		});
+	});
+
+	$container.on("click", ".pp-dialog-delete", function () {
+		const name = $(this).data("name");
+		frappe.confirm(
+			"Delete Form Dialog <strong>" + frappe.utils.escape_html(name) + "</strong>? This cannot be undone.",
+			function () {
+				// If deleting the active dialog, unlink it first
+				if (name === current) {
+					frm.set_value("form_dialog", "");
+					frm.dirty();
+				}
+				frappe.call({
+					method: "frappe.client.delete",
+					args: { doctype: "Form Dialog", name: name },
+					freeze: true,
+					freeze_message: "Deleting…",
+					callback: function () {
+						frappe.show_alert({ message: "Deleted: " + name, indicator: "orange" });
+						if (name === current) {
+							frm.save().then(function () {
+								_render_dialogs_tab(frm);
+							});
+						} else {
+							_render_dialogs_tab(frm);
+						}
+					},
+				});
+			},
+		);
 	});
 }
 

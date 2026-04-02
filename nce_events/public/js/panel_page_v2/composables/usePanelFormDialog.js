@@ -113,6 +113,16 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
         Object.assign(formData, doc);
       }
 
+      // 5. Auto-resolve fetch_from fields — fetch live values from linked records
+      //    so that "display related value" fields always show the current linked
+      //    value, not a stale (or empty) stored copy.
+      const linkFields = fields.filter(
+        (f) => f.fieldtype === "Link" && f.options && formData[f.fieldname]
+      );
+      await Promise.all(
+        linkFields.map((lf) => handleFetchFrom(lf.fieldname, formData[lf.fieldname]))
+      );
+
       // Store original data for cancel/revert
       originalData.value = JSON.parse(JSON.stringify(formData));
     } catch (err) {
