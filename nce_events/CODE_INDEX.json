@@ -325,7 +325,7 @@
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/composables/usePanelFormDialog.js": {
-      "purpose": "V2 composable — load Form Dialog definition, manage reactive doc state, validate mandatory fields, save/insert document, expose loading/error/dirty state. Used by PanelFormDialog.vue.",
+      "purpose": "V2 composable — load Form Dialog definition, manage reactive doc state, validate mandatory fields, save/insert document, fetch_from via handleFetchFrom, writebackBeforeSave (linked doc set_value before save when writeback_on_submit). Used by PanelFormDialog.vue.",
       "exports": ["usePanelFormDialog"],
       "depends_on": [
         "utils/parseLayout.js",
@@ -393,7 +393,7 @@
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue": {
-      "purpose": "V2 form dialog rendered from frozen Form Dialog definition. Shows Frappe-layout tabs/sections/columns. Handles save/insert and action buttons. Opened from a panel row when panel.form_dialog is set.",
+      "purpose": "V2 form dialog rendered from frozen Form Dialog definition. Shows Frappe-layout tabs/sections/columns. Handles save/insert; when writeback_on_submit, runs writebackBeforeSave on the composable before save so fetch_from edits propagate to linked docs. Opened from a panel row when panel.form_dialog is set.",
       "exports": [],
       "depends_on": [
         "composables/usePanelFormDialog.js",
