@@ -235,6 +235,56 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
   }
 
   /**
+   * Pre-save writeback: push user-edited fetch_from field values back to
+   * the SOURCE documents BEFORE calling frappe.client.save.
+   *
+   * Why before save? Because Frappe's server-side Document.save() re-runs
+   * set_fetch_from_values(), which re-fetches from the source and would
+   * overwrite the user's edit. By writing back first, the re-fetch picks
+   * up the updated value and the edit sticks.
+   *
+   * Only writes back fields the user actually changed (compares to originalData).
+   */
+  async function writebackBeforeSave() {
+    const promises = [];
+
+    for (const field of allFields.value) {
+      if (!field.fetch_from) continue;
+      const parts = field.fetch_from.split(".");
+      if (parts.length !== 2) continue;
+
+      const [linkFieldname, sourceFieldname] = parts;
+      const currentValue = formData[field.fieldname];
+      const originalValue = originalData.value[field.fieldname];
+
+      // Only writeback if the user actually changed this field
+      if (String(currentValue ?? "") === String(originalValue ?? "")) continue;
+
+      // Find the Link field to get the target DocType
+      const linkField = allFields.value.find((f) => f.fieldname === linkFieldname);
+      if (!linkField || !linkField.options) continue;
+
+      const targetDocname = formData[linkFieldname];
+      if (!targetDocname) continue;
+
+      promises.push(
+        frappeCall("frappe.client.set_value", {
+          doctype: linkField.options,
+          name: targetDocname,
+          fieldname: sourceFieldname,
+          value: currentValue,
+        })
+      );
+    }
+
+    if (promises.length) {
+      await Promise.all(promises);
+    }
+
+    return promises.length;
+  }
+
+  /**
    * Handle fetch_from when a Link field value changes.
    * Looks at all fields with fetch_from referencing this Link field,
    * then fetches values from the linked document.
@@ -313,5 +363,6 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
     isFieldMandatory,
     isFieldReadOnly,
     handleFetchFrom,
+    writebackBeforeSave,
   };
 }
