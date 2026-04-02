@@ -154,23 +154,7 @@ function onCancel() {
 
 async function onSubmit() {
   try {
-    const defn = form.definition.value;
-    let writtenBack = 0;
-    // Must run BEFORE save: server save re-runs fetch_from and would overwrite
-    // user edits on this doc; post-save Python writeback then sees stale values.
-    if (defn && defn.writeback_on_submit) {
-      writtenBack = await form.writebackBeforeSave();
-    }
-
     const result = await form.save();
-
-    if (writtenBack > 0) {
-      frappe.show_alert({
-        message: writtenBack + " field(s) written back to linked record(s)",
-        indicator: "green",
-      });
-    }
-
     emit("saved", result);
     emit("close");
   } catch {

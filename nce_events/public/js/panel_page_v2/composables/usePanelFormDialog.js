@@ -186,10 +186,19 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 
 		saving.value = true;
 		try {
-			const method = isNew.value ? "frappe.client.insert" : "frappe.client.save";
-			const result = await frappeCall(method, {
-				doc: { doctype: doctype, ...formData },
-			});
+			const useWriteback = !!definition.value?.writeback_on_submit;
+			const method = useWriteback
+				? "nce_events.api.form_dialog_api.save_form_dialog_document"
+				: isNew.value
+					? "frappe.client.insert"
+					: "frappe.client.save";
+			const args = useWriteback
+				? {
+						doc: { doctype: doctype, ...formData },
+						writeback_fetches: 1,
+					}
+				: { doc: { doctype: doctype, ...formData } };
+			const result = await frappeCall(method, args);
 			Object.assign(formData, result);
 			return result;
 		} catch (err) {
@@ -298,56 +307,6 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 		}
 	}
 
-	/**
-	 * Push user-edited fetch_from values to linked documents BEFORE save.
-	 *
-	 * If we save first, Frappe runs set_fetch_from_values() on the server and
-	 * overwrites local fetched fields from the source — the user's edit is lost
-	 * and any post-save writeback reads the wrong value from DB.
-	 */
-	async function writebackBeforeSave() {
-		const orig = originalData.value || {};
-		const promises = [];
-
-		for (const field of allFields.value) {
-			if (!field.fetch_from) continue;
-			// Match Desk: only write back fields the user could edit
-			if (field.read_only_depends_on) {
-				if (evaluateExpression(field.read_only_depends_on, formData)) continue;
-			} else if (field.read_only) {
-				continue;
-			}
-
-			const parts = field.fetch_from.split(".");
-			if (parts.length !== 2) continue;
-			const [linkFieldname, sourceFieldname] = parts;
-
-			const cur = formData[field.fieldname];
-			const was = orig[field.fieldname];
-			if (String(cur ?? "") === String(was ?? "")) continue;
-
-			const linkField = allFields.value.find((f) => f.fieldname === linkFieldname);
-			if (!linkField || linkField.fieldtype !== "Link" || !linkField.options) continue;
-
-			const targetDocname = formData[linkFieldname];
-			if (!targetDocname) continue;
-
-			promises.push(
-				frappeCall("frappe.client.set_value", {
-					doctype: linkField.options,
-					name: targetDocname,
-					fieldname: sourceFieldname,
-					value: cur,
-				}),
-			);
-		}
-
-		if (promises.length) {
-			await Promise.all(promises);
-		}
-		return promises.length;
-	}
-
 	return {
 		definition,
 		tabs,
@@ -369,6 +328,5 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 		isFieldMandatory,
 		isFieldReadOnly,
 		handleFetchFrom,
-		writebackBeforeSave,
 	};
 }

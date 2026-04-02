@@ -1,13 +1,17 @@
 """
 Server API for Form Dialog CRUD and frozen schema capture.
 
-All methods require System Manager role.
+Capture/rebuild/list/get require System Manager.
+save_form_dialog_document uses normal DocType create/write permission.
 """
+
+from __future__ import annotations
 
 import json
 
 import frappe
 from frappe import _
+from frappe.utils import cint, cstr
 
 
 def _assert_doctype_in_wp_tables(doctype: str) -> None:
@@ -236,3 +240,76 @@ def list_form_dialogs_for_doctype(doctype: str) -> list[dict]:
 		fields=["name", "title", "target_doctype", "dialog_size", "captured_at", "is_active"],
 		order_by="title asc",
 	)
+
+
+@frappe.whitelist()
+def save_form_dialog_document(doc, writeback_fetches: int | str | None = None) -> dict:
+	"""
+	Save a document from the panel Form Dialog.
+
+	When writeback_fetches is truthy: for each editable meta field with fetch_from,
+	push the submitted value to the linked document *before* saving this document,
+	so Document.save()'s fetch logic reads the updated source (same as Desk).
+
+	Client-side frappe.client.set_value + save is unreliable (empty API responses,
+	permission noise, and ordering). This runs everything server-side with normal
+	permission checks.
+	"""
+	doc = frappe.parse_json(doc) if isinstance(doc, str) else doc
+	doctype = doc.get("doctype")
+	if not doctype:
+		frappe.throw(_("Missing doctype"))
+
+	_assert_doctype_in_wp_tables(doctype)
+
+	name = doc.get("name")
+	if name:
+		if not frappe.has_permission(doctype, "write", doc=name):
+			frappe.throw(_("Not permitted"), frappe.PermissionError)
+	else:
+		if not frappe.has_permission(doctype, "create"):
+			frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+	if cint(writeback_fetches):
+		meta = frappe.get_meta(doctype)
+		# (link_doctype, link_name) -> { source_fieldname: value }
+		pending: dict[tuple[str, str], dict[str, object]] = {}
+
+		for df in meta.fields:
+			if not df.fetch_from or df.read_only:
+				continue
+			parts = df.fetch_from.split(".", 1)
+			if len(parts) != 2:
+				continue
+			link_fn, src_fn = parts
+			link_field = meta.get_field(link_fn)
+			if not link_field or link_field.fieldtype != "Link" or not link_field.options:
+				continue
+			target_name = doc.get(link_fn)
+			if not target_name:
+				continue
+			target_dt = link_field.options
+			key = (target_dt, str(target_name))
+			pending.setdefault(key, {})[src_fn] = doc.get(df.fieldname)
+
+		for (target_dt, target_name), field_map in pending.items():
+			if not frappe.has_permission(target_dt, "write", target_name):
+				frappe.log_error(
+					_("save_form_dialog_document: no write permission on {0}/{1}").format(
+						target_dt, target_name
+					),
+					"form_dialog_writeback",
+				)
+				continue
+			target = frappe.get_doc(target_dt, target_name)
+			changed = False
+			for fn, val in field_map.items():
+				if cstr(target.get(fn)) != cstr(val):
+					target.set(fn, val)
+					changed = True
+			if changed:
+				target.save()
+
+	d = frappe.get_doc(doc)
+	d.save()
+	return d.as_dict()

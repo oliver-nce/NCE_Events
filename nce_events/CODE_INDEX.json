@@ -139,12 +139,13 @@
       "sections": ["Translation helpers"]
     },
     "nce_events/api/form_dialog_api.py": {
-      "purpose": "CRUD and schema-capture API for Form Dialog DocType. Validates DocType is in WP Tables. Capture freezes live Desk meta (fields array) into frozen_meta_json on the Form Dialog record.",
+      "purpose": "CRUD and schema-capture API for Form Dialog DocType. Validates DocType is in WP Tables. Capture freezes live Desk meta. save_form_dialog_document updates linked docs for fetch_from then saves (used when writeback_on_submit).",
       "exports": [
         "capture_form_dialog_from_desk",
         "rebuild_form_dialog",
         "get_form_dialog_definition",
-        "list_form_dialogs_for_doctype"
+        "list_form_dialogs_for_doctype",
+        "save_form_dialog_document"
       ],
       "private_helpers": [
         "_assert_doctype_in_wp_tables",
@@ -155,14 +156,15 @@
         "WP Tables validation",
         "Capture / rebuild frozen schema from frappe.get_meta",
         "Get frozen definition for V2 renderer",
-        "List dialogs filtered by target_doctype"
+        "List dialogs filtered by target_doctype",
+        "Save with server-side fetch_from writeback to linked records"
       ]
     }
   },
 
   "utils": {
     "nce_events/utils/writeback.py": {
-      "purpose": "Writeback utility for Form Dialogs — scans saved documents for editable fetched fields and writes their current values back to source documents when writeback_on_submit is enabled",
+      "purpose": "Optional writeback_fetched_fields for batch/server use. Panel dialog uses save_form_dialog_document instead.",
       "exports": ["writeback_fetched_fields"],
       "depends_on": [],
       "sections": [
@@ -325,7 +327,7 @@
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/composables/usePanelFormDialog.js": {
-      "purpose": "V2 composable — load Form Dialog definition, manage reactive doc state, validate mandatory fields, save/insert document, fetch_from via handleFetchFrom, writebackBeforeSave (linked doc set_value before save when writeback_on_submit). Used by PanelFormDialog.vue.",
+      "purpose": "V2 composable — load Form Dialog definition, manage reactive doc state, validate mandatory fields, save/insert (uses save_form_dialog_document when writeback_on_submit), fetch_from via handleFetchFrom. Used by PanelFormDialog.vue.",
       "exports": ["usePanelFormDialog"],
       "depends_on": [
         "utils/parseLayout.js",
@@ -393,7 +395,7 @@
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue": {
-      "purpose": "V2 form dialog rendered from frozen Form Dialog definition. Shows Frappe-layout tabs/sections/columns. Handles save/insert; when writeback_on_submit, runs writebackBeforeSave on the composable before save so fetch_from edits propagate to linked docs. Opened from a panel row when panel.form_dialog is set.",
+      "purpose": "V2 form dialog rendered from frozen Form Dialog definition. Shows Frappe-layout tabs/sections/columns. Save goes through composable (server writeback when writeback_on_submit). Opened from a panel row when panel.form_dialog is set.",
       "exports": [],
       "depends_on": [
         "composables/usePanelFormDialog.js",
