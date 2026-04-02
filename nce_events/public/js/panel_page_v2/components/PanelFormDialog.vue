@@ -154,24 +154,25 @@ function onCancel() {
 
 async function onSubmit() {
   try {
-    // Writeback BEFORE save: push user-edited fetch_from values to source
-    // documents first, so Frappe's server-side re-fetch picks them up.
     const defn = form.definition.value;
     let writtenBack = 0;
+    // Must run BEFORE save: server save re-runs fetch_from and would overwrite
+    // user edits on this doc; post-save Python writeback then sees stale values.
     if (defn && defn.writeback_on_submit) {
       writtenBack = await form.writebackBeforeSave();
     }
 
     const result = await form.save();
-    emit("saved", result);
-    emit("close");
 
     if (writtenBack > 0) {
       frappe.show_alert({
-        message: writtenBack + " field(s) written back",
+        message: writtenBack + " field(s) written back to linked record(s)",
         indicator: "green",
       });
     }
+
+    emit("saved", result);
+    emit("close");
   } catch {
     // validationError is set by the composable — stay open
   }

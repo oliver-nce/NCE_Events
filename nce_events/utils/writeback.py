@@ -10,6 +10,12 @@ def writeback_fetched_fields(doctype: str, name: str) -> dict:
 	"""
 	Write back values of editable fetched fields to their source documents.
 
+	Note: For interactive saves, the Vue Panel Form Dialog uses client-side
+	writeback *before* frappe.client.save, because Document.save() re-runs
+	fetch_from and would overwrite user edits on the child doc — a post-save
+	read of the document then sees stale values. This method remains useful
+	for server-side / batch callers that pass a doc whose values are trusted.
+
 	When a document is saved, scan all fields for `fetch_from` patterns.
 	For each editable fetched field (read_only == 0), read the current value
 	from the source field on the linked document and write it back.
