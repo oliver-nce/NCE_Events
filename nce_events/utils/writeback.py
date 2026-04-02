@@ -73,8 +73,8 @@ def _writeback_root_fields(doc, meta) -> int:
 	updated_count = 0
 
 	for field in meta.fields:
-		# Only process fields with fetch_from and that are editable
-		if not field.fetch_from or field.read_only:
+		# fetch_from fields are often read_only on the parent; still write back when values differ
+		if not field.fetch_from:
 			continue
 
 		try:

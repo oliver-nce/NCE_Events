@@ -247,9 +247,13 @@ def save_form_dialog_document(doc, writeback_fetches: int | str | None = None) -
 	"""
 	Save a document from the panel Form Dialog.
 
-	When writeback_fetches is truthy: for each editable meta field with fetch_from,
+	When writeback_fetches is truthy: for each meta field with fetch_from,
 	push the submitted value to the linked document *before* saving this document,
 	so Document.save()'s fetch logic reads the updated source (same as Desk).
+
+	We intentionally do NOT skip read_only fields: Frappe marks most fetch_from
+	fields read_only on the parent DocType, but the dialog still submits edits;
+	skipping them prevented any writeback (e.g. People.rating from Enrollments).
 
 	Client-side frappe.client.set_value + save is unreliable (empty API responses,
 	permission noise, and ordering). This runs everything server-side with normal
@@ -276,7 +280,7 @@ def save_form_dialog_document(doc, writeback_fetches: int | str | None = None) -
 		pending: dict[tuple[str, str], dict[str, object]] = {}
 
 		for df in meta.fields:
-			if not df.fetch_from or df.read_only:
+			if not df.fetch_from:
 				continue
 			parts = df.fetch_from.split(".", 1)
 			if len(parts) != 2:
