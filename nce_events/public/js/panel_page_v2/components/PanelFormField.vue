@@ -50,18 +50,26 @@
       />
     </div>
 
-    <!-- Link -->
-    <div v-else-if="field.fieldtype === 'Link'" class="ppv2-fd-link-wrap">
-      <input
-        type="text"
-        :value="modelValue || ''"
-        :required="mandatory"
-        :disabled="readOnly"
-        :placeholder="field.options ? 'Link to ' + field.options : ''"
-        class="ppv2-fd-input"
-        @change="onLinkChange($event.target.value)"
-      />
-    </div>
+    <!-- Link — Frappe ControlLink (search + title), same as Desk -->
+    <PanelFormLinkField
+      v-else-if="field.fieldtype === 'Link'"
+      :field="field"
+      :model-value="modelValue"
+      :read-only="readOnly"
+      :mandatory="mandatory"
+      @change="onChange"
+      @link-change="onLinkChangePayload"
+    />
+
+    <!-- Date / Datetime — Frappe datepicker, same as Desk -->
+    <PanelFormDateTimeField
+      v-else-if="field.fieldtype === 'Date' || field.fieldtype === 'Datetime'"
+      :field="field"
+      :model-value="modelValue"
+      :read-only="readOnly"
+      :mandatory="mandatory"
+      @change="onChange"
+    />
 
     <!-- Textarea types -->
     <textarea
@@ -98,6 +106,8 @@
 <script setup>
 import { computed } from "vue";
 import { getComponentConfig } from "../utils/fieldTypeMap.js";
+import PanelFormLinkField from "./PanelFormLinkField.vue";
+import PanelFormDateTimeField from "./PanelFormDateTimeField.vue";
 
 const props = defineProps({
   field: { type: Object, required: true },
@@ -127,9 +137,9 @@ function onChange(value) {
   emit("change", { fieldname: props.field.fieldname, value });
 }
 
-function onLinkChange(value) {
-  emit("change", { fieldname: props.field.fieldname, value });
-  emit("link-change", { fieldname: props.field.fieldname, value });
+function onLinkChangePayload(payload) {
+  emit("change", payload);
+  emit("link-change", payload);
 }
 </script>
 
@@ -202,9 +212,6 @@ function onLinkChange(value) {
 .ppv2-fd-muted {
   color: var(--text-muted);
   font-style: italic;
-}
-.ppv2-fd-link-wrap {
-  position: relative;
 }
 /* Bold field style — mirrors Desk's bold:1 treatment */
 .ppv2-fd-field-bold .ppv2-fd-label {

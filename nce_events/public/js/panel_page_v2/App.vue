@@ -128,8 +128,14 @@
 			:definition-name="formDialogDefinition"
 			:doctype="formDialogDoctype"
 			:doc-name="formDialogDocName"
+			:row-nav-enabled="formDialogNavInfo.total > 1"
+			:can-navigate-prev="formDialogNavInfo.canPrev"
+			:can-navigate-next="formDialogNavInfo.canNext"
+			:row-nav-label="formDialogNavLabel"
 			@close="onFormDialogClose"
 			@saved="onFormDialogSaved"
+			@nav-prev="onFormDialogNavPrev"
+			@nav-next="onFormDialogNavNext"
 		/>
 	</div>
 </template>
@@ -168,6 +174,41 @@ const showFormDialog = ref(false);
 const formDialogDocName = ref(null);
 const formDialogDefinition = ref(null);
 const formDialogDoctype = ref(null);
+/** Panel float that opened the form dialog — used for prev/next over visible table rows. */
+const formDialogSourcePanelId = ref(null);
+
+/** Live row array from a panel (`_panelRows` ref may unwrap on reactive panel). */
+function panelRowArray(p) {
+	if (!p) return [];
+	const r = p._panelRows;
+	if (r == null) return Array.isArray(p.rows) ? p.rows : [];
+	if (Array.isArray(r)) return r;
+	if (typeof r === "object" && Array.isArray(r.value)) return r.value;
+	return [];
+}
+
+const formDialogNavInfo = computed(() => {
+	if (!showFormDialog.value || formDialogSourcePanelId.value == null || !formDialogDocName.value) {
+		return { canPrev: false, canNext: false, index: -1, total: 0 };
+	}
+	const p = openPanels.find((x) => x.id === formDialogSourcePanelId.value);
+	if (!p) return { canPrev: false, canNext: false, index: -1, total: 0 };
+	const list = panelRowArray(p);
+	const idx = list.findIndex((row) => row && row.name === formDialogDocName.value);
+	const total = list.length;
+	return {
+		canPrev: idx > 0,
+		canNext: idx >= 0 && idx < total - 1,
+		index: idx,
+		total,
+	};
+});
+
+const formDialogNavLabel = computed(() => {
+	const { index, total } = formDialogNavInfo.value;
+	if (total <= 1 || index < 0) return "";
+	return `${index + 1} / ${total}`;
+});
 
 const cardStack = reactive([]);
 let cardCounter = 0;
@@ -211,6 +252,7 @@ function onKeyDown(e) {
 		if (!dropStack.length) return;
 		e.preventDefault();
 		undoDrop();
+		return;
 	}
 }
 
@@ -377,6 +419,7 @@ function onDrilledRowClick(p, row) {
 		formDialogDefinition.value = p.config.form_dialog;
 		formDialogDoctype.value = p.doctype;
 		formDialogDocName.value = row.name;
+		formDialogSourcePanelId.value = p.id;
 		showFormDialog.value = true;
 		return;
 	}
@@ -390,14 +433,34 @@ function onDrilledRowClick(p, row) {
 function onFormDialogClose() {
 	showFormDialog.value = false;
 	formDialogDocName.value = null;
+	formDialogSourcePanelId.value = null;
+}
+
+function onFormDialogNavPrev() {
+	const p = openPanels.find((x) => x.id === formDialogSourcePanelId.value);
+	if (!p) return;
+	const list = panelRowArray(p);
+	const idx = list.findIndex((row) => row && row.name === formDialogDocName.value);
+	if (idx <= 0) return;
+	formDialogDocName.value = list[idx - 1].name;
+}
+
+function onFormDialogNavNext() {
+	const p = openPanels.find((x) => x.id === formDialogSourcePanelId.value);
+	if (!p) return;
+	const list = panelRowArray(p);
+	const idx = list.findIndex((row) => row && row.name === formDialogDocName.value);
+	if (idx < 0 || idx >= list.length - 1) return;
+	formDialogDocName.value = list[idx + 1].name;
 }
 
 function onFormDialogSaved(doc) {
+	const doctype = formDialogDoctype.value;
 	showFormDialog.value = false;
 	formDialogDocName.value = null;
+	formDialogSourcePanelId.value = null;
 	// Refresh the panel that opened the dialog
-	// Find the panel whose doctype matches and reload it
-	const panel = openPanels.find((p) => p.doctype === formDialogDoctype.value);
+	const panel = openPanels.find((p) => p.doctype === doctype);
 	if (panel && panel._reload) {
 		panel._reload();
 	}

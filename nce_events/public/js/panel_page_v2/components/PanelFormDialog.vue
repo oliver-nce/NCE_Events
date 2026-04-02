@@ -3,7 +3,32 @@
     <div class="ppv2-form-dialog" :class="'ppv2-fd-size-' + form.dialogSize.value">
       <!-- Header -->
       <div class="ppv2-fd-header">
-        <span class="ppv2-fd-title">{{ form.dialogTitle.value }}</span>
+        <div class="ppv2-fd-header-main">
+          <div v-if="rowNavEnabled" class="ppv2-fd-nav" @mousedown.stop>
+            <button
+              type="button"
+              class="ppv2-fd-nav-btn"
+              :disabled="!canNavigatePrev"
+              title="Previous record (panel list) — Alt+←"
+              aria-label="Previous record"
+              @click="onNavPrevClick"
+            >
+              <i class="fa fa-chevron-left"></i>
+            </button>
+            <span v-if="rowNavLabel" class="ppv2-fd-nav-pos">{{ rowNavLabel }}</span>
+            <button
+              type="button"
+              class="ppv2-fd-nav-btn"
+              :disabled="!canNavigateNext"
+              title="Next record (panel list) — Alt+→"
+              aria-label="Next record"
+              @click="onNavNextClick"
+            >
+              <i class="fa fa-chevron-right"></i>
+            </button>
+          </div>
+          <span class="ppv2-fd-title">{{ form.dialogTitle.value }}</span>
+        </div>
         <button class="ppv2-fd-close" @click="onCancel">&times;</button>
       </div>
 
@@ -105,18 +130,27 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch, onUnmounted } from "vue";
 import PanelFormField from "./PanelFormField.vue";
 import { usePanelFormDialog } from "../composables/usePanelFormDialog.js";
+
+function __(t) {
+	return typeof window.__ === "function" ? window.__(t) : t;
+}
 
 const props = defineProps({
   open: { type: Boolean, default: false },
   definitionName: { type: String, required: true },
   doctype: { type: String, required: true },
   docName: { type: String, default: null },
+  /** Prev/next within the panel table row list (not child tables). */
+  rowNavEnabled: { type: Boolean, default: false },
+  canNavigatePrev: { type: Boolean, default: false },
+  canNavigateNext: { type: Boolean, default: false },
+  rowNavLabel: { type: String, default: "" },
 });
 
-const emit = defineEmits(["close", "saved"]);
+const emit = defineEmits(["close", "saved", "nav-prev", "nav-next"]);
 
 const activeTab = ref(0);
 
@@ -126,17 +160,39 @@ const form = usePanelFormDialog({
   docName: props.docName,
 });
 
-// Load when dialog opens
+function confirmDiscardIfDirty(proceed) {
+	if (!form.isDirty.value) {
+		proceed();
+		return;
+	}
+	const msg = __(
+		"You have unsaved changes. Discard them and continue?",
+	);
+	if (typeof frappe !== "undefined" && frappe.confirm) {
+		frappe.confirm(msg, () => proceed(), () => {});
+	} else if (window.confirm(msg)) {
+		proceed();
+	}
+}
+
+// Load when dialog opens; Alt+←/→ for row nav (with unsaved guard)
 watch(
-  () => props.open,
-  (isOpen) => {
-    if (isOpen) {
-      activeTab.value = 0;
-      form.load();
-    }
-  },
-  { immediate: true }
+	() => props.open,
+	(isOpen) => {
+		if (isOpen) {
+			activeTab.value = 0;
+			form.load();
+			window.addEventListener("keydown", onFormDialogKeydown, true);
+		} else {
+			window.removeEventListener("keydown", onFormDialogKeydown, true);
+		}
+	},
+	{ immediate: true },
 );
+
+onUnmounted(() => {
+	window.removeEventListener("keydown", onFormDialogKeydown, true);
+});
 
 function onFieldChange({ fieldname, value }) {
   form.formData[fieldname] = value;
@@ -148,8 +204,32 @@ async function onLinkChange({ fieldname, value }) {
 }
 
 function onCancel() {
-  form.revert();
-  emit("close");
+	confirmDiscardIfDirty(() => {
+		form.revert();
+		emit("close");
+	});
+}
+
+function onNavPrevClick() {
+	if (!props.canNavigatePrev) return;
+	confirmDiscardIfDirty(() => emit("nav-prev"));
+}
+
+function onNavNextClick() {
+	if (!props.canNavigateNext) return;
+	confirmDiscardIfDirty(() => emit("nav-next"));
+}
+
+function onFormDialogKeydown(e) {
+	if (!props.open) return;
+	if (!e.altKey || (e.key !== "ArrowLeft" && e.key !== "ArrowRight")) return;
+	if (e.key === "ArrowLeft" && props.canNavigatePrev) {
+		e.preventDefault();
+		onNavPrevClick();
+	} else if (e.key === "ArrowRight" && props.canNavigateNext) {
+		e.preventDefault();
+		onNavNextClick();
+	}
 }
 
 async function onSubmit() {
@@ -203,11 +283,57 @@ function onPlaceholderButton(btn) {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   flex-shrink: 0;
+}
+.ppv2-fd-header-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1;
+}
+.ppv2-fd-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.ppv2-fd-nav-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid color-mix(in srgb, var(--text-header) 28%, transparent);
+  border-radius: var(--border-radius-sm, 4px);
+  background: color-mix(in srgb, var(--text-header) 10%, transparent);
+  color: var(--text-header);
+  cursor: pointer;
+  font-size: 12px;
+}
+.ppv2-fd-nav-btn:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--text-header) 18%, transparent);
+}
+.ppv2-fd-nav-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.ppv2-fd-nav-pos {
+  font-size: 12px;
+  font-weight: var(--font-weight-bold, 600);
+  opacity: 0.95;
+  min-width: 3.2em;
+  text-align: center;
+  user-select: none;
 }
 .ppv2-fd-title {
   font-weight: var(--font-weight-bold);
   font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .ppv2-fd-close {
   background: none;
@@ -247,19 +373,19 @@ function onPlaceholderButton(btn) {
   border-bottom: 1px solid var(--border-color);
 }
 .ppv2-fd-tab-btn {
-  padding: 4px 12px;
+  padding: 6px 14px;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-sm, 4px);
   background: var(--bg-card);
   color: var(--text-color);
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-base, 14px);
+  font-weight: var(--font-weight-bold, 600);
   cursor: pointer;
 }
 .ppv2-fd-tab-active {
   background: var(--bg-header);
   color: var(--text-header);
   border-color: var(--bg-header);
-  font-weight: var(--font-weight-bold);
 }
 .ppv2-fd-tab-panels {
   display: grid;

@@ -1,4 +1,4 @@
-import { ref, reactive, computed } from "vue";
+import { ref, reactive, computed, toRaw } from "vue";
 import { parseLayout } from "../utils/parseLayout.js";
 
 /**
@@ -51,6 +51,18 @@ function isLayoutField(fieldtype) {
 	return LAYOUT_FIELDTYPES.includes(fieldtype);
 }
 
+/** Stable JSON for dirty-checking reactive form state vs loaded snapshot. */
+function snapshotForCompare(data) {
+	const raw = toRaw(data) || {};
+	const sorted = {};
+	for (const k of Object.keys(raw).sort()) {
+		let v = raw[k];
+		if (v === undefined) v = null;
+		sorted[k] = v;
+	}
+	return JSON.stringify(sorted);
+}
+
 /**
  * Composable for managing a Panel Form Dialog.
  *
@@ -78,6 +90,11 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 		return `Edit ${doctype}: ${docName}`;
 	});
 	const dialogSize = computed(() => definition.value?.dialog_size || "xl");
+
+	const isDirty = computed(() => {
+		if (loading.value) return false;
+		return snapshotForCompare(formData) !== snapshotForCompare(originalData.value);
+	});
 
 	/**
 	 * Load the frozen definition + document data.
@@ -195,6 +212,7 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 				writeback_fetches: wb ? 1 : 0,
 			});
 			Object.assign(formData, result);
+			originalData.value = JSON.parse(JSON.stringify(formData));
 			return result;
 		} catch (err) {
 			const msg = err?.message || err?._server_messages || "Failed to save";
@@ -307,6 +325,7 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 		tabs,
 		allFields,
 		formData,
+		isDirty,
 		loading,
 		saving,
 		error,
