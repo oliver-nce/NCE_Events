@@ -1173,27 +1173,28 @@ function _build_dialogs_tab_html(frm, $container, dialogs) {
 		frappe.confirm(
 			"Delete Form Dialog <strong>" + frappe.utils.escape_html(name) + "</strong>? This cannot be undone.",
 			function () {
-				// If deleting the active dialog, unlink it first
+				function doDelete() {
+					frappe.call({
+						method: "frappe.client.delete",
+						args: { doctype: "Form Dialog", name: name },
+						freeze: true,
+						freeze_message: "Deleting…",
+						callback: function () {
+							frappe.show_alert({ message: "Deleted: " + name, indicator: "orange" });
+							_render_dialogs_tab(frm);
+						},
+					});
+				}
+
+				// If deleting the active dialog, unlink and save first
+				// so Frappe doesn't block the delete due to the link.
 				if (name === current) {
 					frm.set_value("form_dialog", "");
 					frm.dirty();
+					frm.save().then(doDelete);
+				} else {
+					doDelete();
 				}
-				frappe.call({
-					method: "frappe.client.delete",
-					args: { doctype: "Form Dialog", name: name },
-					freeze: true,
-					freeze_message: "Deleting…",
-					callback: function () {
-						frappe.show_alert({ message: "Deleted: " + name, indicator: "orange" });
-						if (name === current) {
-							frm.save().then(function () {
-								_render_dialogs_tab(frm);
-							});
-						} else {
-							_render_dialogs_tab(frm);
-						}
-					},
-				});
 			},
 		);
 	});
