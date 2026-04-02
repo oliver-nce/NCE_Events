@@ -186,19 +186,14 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 
 		saving.value = true;
 		try {
-			const useWriteback = !!definition.value?.writeback_on_submit;
-			const method = useWriteback
-				? "nce_events.api.form_dialog_api.save_form_dialog_document"
-				: isNew.value
-					? "frappe.client.insert"
-					: "frappe.client.save";
-			const args = useWriteback
-				? {
-						doc: { doctype: doctype, ...formData },
-						writeback_fetches: 1,
-					}
-				: { doc: { doctype: doctype, ...formData } };
-			const result = await frappeCall(method, args);
+			// Always use server save_form_dialog_document for the panel dialog (WP Tables,
+			// one code path). writeback_fetches only when Form Dialog has the checkbox set;
+			// otherwise frappe.client.save never pushed fetch_from values to linked docs.
+			const wb = Number(definition.value?.writeback_on_submit) === 1;
+			const result = await frappeCall("nce_events.api.form_dialog_api.save_form_dialog_document", {
+				doc: { doctype: doctype, ...formData },
+				writeback_fetches: wb ? 1 : 0,
+			});
 			Object.assign(formData, result);
 			return result;
 		} catch (err) {

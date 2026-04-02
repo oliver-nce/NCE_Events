@@ -251,9 +251,8 @@ def save_form_dialog_document(doc, writeback_fetches: int | str | None = None) -
 	push the submitted value to the linked document *before* saving this document,
 	so Document.save()'s fetch logic reads the updated source (same as Desk).
 
-	We intentionally do NOT skip read_only fields: Frappe marks most fetch_from
-	fields read_only on the parent DocType, but the dialog still submits edits;
-	skipping them prevented any writeback (e.g. People.rating from Enrollments).
+	We do not skip read_only on the parent field: many sites mark fetch_from
+	fields read_only even when the dialog allows edits; skipping them broke writeback.
 
 	Client-side frappe.client.set_value + save is unreliable (empty API responses,
 	permission noise, and ordering). This runs everything server-side with normal
