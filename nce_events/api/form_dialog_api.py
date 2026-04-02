@@ -146,6 +146,7 @@ def get_form_dialog_definition(name: str) -> dict:
 		"dialog_size": doc.dialog_size or "xl",
 		"frozen_meta": frozen,
 		"buttons": buttons,
+		"writeback_on_submit": doc.writeback_on_submit or 0,
 	}
 
 

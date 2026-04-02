@@ -1,1 +1,103 @@
-{"actions":[],"autoname":"field:title","creation":"2026-04-01 00:00:00.000000","doctype":"DocType","engine":"InnoDB","field_order":["title","target_doctype","frozen_meta_json","captured_at","dialog_size","is_active","buttons"],"fields":[{"fieldname":"title","fieldtype":"Data","in_list_view":1,"label":"Title","reqd":1,"unique":1},{"description":"The Frappe DocType this dialog edits. Must exist in WP Tables.","fieldname":"target_doctype","fieldtype":"Link","in_list_view":1,"label":"Target DocType","options":"DocType","reqd":1},{"description":"Frozen field schema captured from Desk. JSON object with shape: { \"fields\": [...] }","fieldname":"frozen_meta_json","fieldtype":"Code","label":"Frozen Meta JSON","options":"JSON"},{"fieldname":"captured_at","fieldtype":"Datetime","label":"Captured At","read_only":1},{"default":"xl","fieldname":"dialog_size","fieldtype":"Select","in_list_view":1,"label":"Dialog Size","options":"sm\nmd\nlg\nxl\n2xl\n3xl"},{"default":"1","fieldname":"is_active","fieldtype":"Check","in_list_view":1,"label":"Is Active"},{"fieldname":"buttons","fieldtype":"Table","label":"Buttons","options":"Form Dialog Button"}],"index_web_pages_for_search":0,"istable":0,"links":[],"modified":"2026-04-01 00:00:00.000000","modified_by":"Administrator","module":"NCE Events","name":"Form Dialog","naming_rule":"By fieldname","owner":"Administrator","permissions":[{"create":1,"delete":1,"email":1,"export":1,"print":1,"read":1,"report":1,"role":"System Manager","share":1,"write":1}],"sort_field":"creation","sort_order":"DESC","states":[],"track_changes":1}
+{
+  "actions": [],
+  "autoname": "field:title",
+  "creation": "2026-04-01 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "title",
+    "target_doctype",
+    "frozen_meta_json",
+    "captured_at",
+    "dialog_size",
+    "is_active",
+    "writeback_on_submit",
+    "buttons"
+  ],
+  "fields": [
+    {
+      "fieldname": "title",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Title",
+      "reqd": 1,
+      "unique": 1
+    },
+    {
+      "description": "The Frappe DocType this dialog edits. Must exist in WP Tables.",
+      "fieldname": "target_doctype",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Target DocType",
+      "options": "DocType",
+      "reqd": 1
+    },
+    {
+      "description": "Frozen field schema captured from Desk. JSON object with shape: { \"fields\": [...] }",
+      "fieldname": "frozen_meta_json",
+      "fieldtype": "Code",
+      "label": "Frozen Meta JSON",
+      "options": "JSON"
+    },
+    {
+      "fieldname": "captured_at",
+      "fieldtype": "Datetime",
+      "label": "Captured At",
+      "read_only": 1
+    },
+    {
+      "default": "xl",
+      "fieldname": "dialog_size",
+      "fieldtype": "Select",
+      "in_list_view": 1,
+      "label": "Dialog Size",
+      "options": "sm\nmd\nlg\nxl\n2xl\n3xl"
+    },
+    {
+      "default": "1",
+      "fieldname": "is_active",
+      "fieldtype": "Check",
+      "in_list_view": 1,
+      "label": "Is Active"
+    },
+    {
+      "default": "0",
+      "fieldname": "writeback_on_submit",
+      "fieldtype": "Check",
+      "label": "Writeback Fetched Fields on Submit"
+    },
+    {
+      "fieldname": "buttons",
+      "fieldtype": "Table",
+      "label": "Buttons",
+      "options": "Form Dialog Button"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "istable": 0,
+  "links": [],
+  "modified": "2026-04-01 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "NCE Events",
+  "name": "Form Dialog",
+  "naming_rule": "By fieldname",
+  "owner": "Administrator",
+  "permissions": [
+    {
+      "create": 1,
+      "delete": 1,
+      "email": 1,
+      "export": 1,
+      "print": 1,
+      "read": 1,
+      "report": 1,
+      "role": "System Manager",
+      "share": 1,
+      "write": 1
+    }
+  ],
+  "sort_field": "creation",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 1
+}

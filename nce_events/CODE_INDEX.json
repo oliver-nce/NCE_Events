@@ -150,14 +150,24 @@
         "_assert_doctype_in_wp_tables",
         "_require_system_manager"
       ],
-      "depends_on": [
-        "nce_events/nce_events/doctype/form_dialog/"
-      ],
+      "depends_on": ["nce_events/nce_events/doctype/form_dialog/"],
       "sections": [
         "WP Tables validation",
         "Capture / rebuild frozen schema from frappe.get_meta",
         "Get frozen definition for V2 renderer",
         "List dialogs filtered by target_doctype"
+      ]
+    }
+  },
+
+  "utils": {
+    "nce_events/utils/writeback.py": {
+      "purpose": "Writeback utility for Form Dialogs — scans saved documents for editable fetched fields and writes their current values back to source documents when writeback_on_submit is enabled",
+      "exports": ["writeback_fetched_fields"],
+      "depends_on": [],
+      "sections": [
+        "Main writeback_fetched_fields function",
+        "_writeback_root_fields helper"
       ]
     }
   },
@@ -215,7 +225,7 @@
       "depends_on": []
     },
     "nce_events/nce_events/doctype/form_dialog/": {
-      "purpose": "Frozen Desk form definition for V2 dialog rendering. One record per named dialog. Stores frozen_meta_json (fields array snapshot from frappe.get_meta), dialog_size, is_active, and child buttons table. Only DocTypes in WP Tables are allowed as target_doctype.",
+      "purpose": "Frozen Desk form definition for V2 dialog rendering. One record per named dialog. Stores frozen_meta_json (fields array snapshot from frappe.get_meta), dialog_size, is_active, writeback_on_submit, and child buttons table. Only DocTypes in WP Tables are allowed as target_doctype.",
       "key_fields": [
         "title",
         "target_doctype",
@@ -223,18 +233,14 @@
         "captured_at",
         "dialog_size",
         "is_active",
+        "writeback_on_submit",
         "buttons"
       ],
       "depends_on": ["form_dialog_button"]
     },
     "nce_events/nce_events/doctype/form_dialog_button/": {
       "purpose": "Child table of Form Dialog. Each row is an action button shown in the V2 dialog. Stores a copied button_script (JS) and sort_order. Scripts are copied from Desk Client Scripts manually; rebuild updates them.",
-      "key_fields": [
-        "label",
-        "button_script",
-        "sort_order",
-        "source_note"
-      ],
+      "key_fields": ["label", "button_script", "sort_order", "source_note"],
       "depends_on": []
     }
   },
@@ -397,9 +403,7 @@
     "nce_events/public/js/panel_page_v2/components/PanelFormField.vue": {
       "purpose": "Single field renderer inside PanelFormDialog. Maps Frappe fieldtype → control element (FormControl, checkbox, select, Link placeholder, etc.). Respects hidden/read_only/reqd and depends_on eval expressions.",
       "exports": [],
-      "depends_on": [
-        "utils/fieldTypeMap.js"
-      ]
+      "depends_on": ["utils/fieldTypeMap.js"]
     },
     "nce_events/public/js/panel_page_v2/utils/parseLayout.js": {
       "purpose": "Utility: parse a flat Frappe DocField array into a nested Tabs→Sections→Columns→Fields tree. Used by usePanelFormDialog to render frozen_meta_json layout.",

@@ -157,6 +157,26 @@ async function onSubmit() {
     const result = await form.save();
     emit("saved", result);
     emit("close");
+
+    // Call writeback_fetched_fields if writeback_on_submit is enabled
+    const defn = form.definition.value;
+    if (defn && defn.writeback_on_submit) {
+      frappe.call({
+        method: "nce_events.utils.writeback.writeback_fetched_fields",
+        args: {
+          doctype: props.doctype,
+          name: props.docName || result.name,
+        },
+        callback: function(r) {
+          if (r.message && r.message.updated_count > 0) {
+            frappe.show_alert({
+              message: r.message.updated_count + " field(s) written back",
+              indicator: "green"
+            });
+          }
+        }
+      });
+    }
   } catch {
     // validationError is set by the composable — stay open
   }
