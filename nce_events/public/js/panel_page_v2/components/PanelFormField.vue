@@ -17,7 +17,7 @@
   <span v-else-if="config?.layout === 'button'" />
 
   <!-- Data entry fields -->
-  <div v-else-if="config?.component" v-show="visible" class="ppv2-fd-field">
+  <div v-else-if="config?.component" v-show="visible" class="ppv2-fd-field" :class="{ 'ppv2-fd-field-bold': field.bold }">
     <label class="ppv2-fd-label">
       {{ field.label }}
       <span v-if="mandatory" class="ppv2-fd-reqd">*</span>
@@ -205,5 +205,12 @@ function onLinkChange(value) {
 }
 .ppv2-fd-link-wrap {
   position: relative;
+}
+/* Bold field style — mirrors Desk's bold:1 treatment */
+.ppv2-fd-field-bold .ppv2-fd-label {
+  font-weight: 700;
+}
+.ppv2-fd-field-bold .ppv2-fd-input {
+  font-weight: 600;
 }
 </style>
