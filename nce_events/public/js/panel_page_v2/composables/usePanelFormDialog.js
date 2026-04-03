@@ -1,4 +1,4 @@
-import { ref, reactive, computed, toRaw } from "vue";
+import { ref, reactive, computed, toRaw, unref } from "vue";
 import { parseLayout } from "../utils/parseLayout.js";
 
 /**
@@ -69,7 +69,9 @@ function snapshotForCompare(data) {
  * @param {Object} options
  * @param {string} options.definitionName - Name of the Form Dialog document
  * @param {string} options.doctype - Target DocType
- * @param {string|null} options.docName - Document name to edit (null = create new)
+ * @param {import('vue').Ref<string>|string} options.definitionName - Form Dialog document name
+ * @param {import('vue').Ref<string>|string} options.doctype - Target DocType
+ * @param {import('vue').Ref<string|null>|string|null} options.docName - Document name (null = new)
  */
 export function usePanelFormDialog({ definitionName, doctype, docName }) {
 	const definition = ref(null);
@@ -82,12 +84,15 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 	const error = ref(null);
 	const validationError = ref(null);
 	const buttons = ref([]);
+	let loadSeq = 0;
 
-	const isNew = computed(() => !docName);
+	const isNew = computed(() => !unref(docName));
 	const dialogTitle = computed(() => {
 		if (!definition.value) return "";
-		if (isNew.value) return `New ${doctype}`;
-		return `Edit ${doctype}: ${docName}`;
+		const dt = unref(doctype);
+		const dn = unref(docName);
+		if (isNew.value) return `New ${dt}`;
+		return `Edit ${dt}: ${dn}`;
 	});
 	const dialogSize = computed(() => definition.value?.dialog_size || "xl");
 
@@ -101,16 +106,23 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 	 * Call this when the dialog opens.
 	 */
 	async function load() {
+		const mySeq = ++loadSeq;
 		loading.value = true;
 		error.value = null;
 		validationError.value = null;
+
+		const defnName = unref(definitionName);
+		const dt = unref(doctype);
+		const dn = unref(docName);
 
 		try {
 			// 1. Load frozen definition
 			const defn = await frappeCall(
 				"nce_events.api.form_dialog_api.get_form_dialog_definition",
-				{ name: definitionName },
+				{ name: defnName },
 			);
+			if (mySeq !== loadSeq) return;
+
 			definition.value = defn;
 			buttons.value = defn.buttons || [];
 
@@ -120,6 +132,9 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 			tabs.value = parseLayout(fields);
 
 			// 3. Initialize formData with defaults from frozen schema
+			for (const key of Object.keys(formData)) {
+				delete formData[key];
+			}
 			for (const field of fields) {
 				if (field.fieldname && !isLayoutField(field.fieldtype)) {
 					formData[field.fieldname] = field.default || null;
@@ -127,30 +142,32 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 			}
 
 			// 4. If editing, load the live document data
-			if (docName) {
+			if (dn) {
 				const doc = await frappeCall("frappe.client.get", {
-					doctype: doctype,
-					name: docName,
+					doctype: dt,
+					name: dn,
 				});
+				if (mySeq !== loadSeq) return;
 				Object.assign(formData, doc);
 			}
 
 			// 5. Auto-resolve fetch_from fields — fetch live values from linked records
-			//    so that "display related value" fields always show the current linked
-			//    value, not a stale (or empty) stored copy.
 			const linkFields = fields.filter(
 				(f) => f.fieldtype === "Link" && f.options && formData[f.fieldname],
 			);
 			await Promise.all(
 				linkFields.map((lf) => handleFetchFrom(lf.fieldname, formData[lf.fieldname])),
 			);
+			if (mySeq !== loadSeq) return;
 
-			// Store original data for cancel/revert
 			originalData.value = JSON.parse(JSON.stringify(formData));
 		} catch (err) {
+			if (mySeq !== loadSeq) return;
 			error.value = err?.message || err?.toString() || "Failed to load form";
 		} finally {
-			loading.value = false;
+			if (mySeq === loadSeq) {
+				loading.value = false;
+			}
 		}
 	}
 
@@ -208,7 +225,7 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 			// otherwise frappe.client.save never pushed fetch_from values to linked docs.
 			const wb = Number(definition.value?.writeback_on_submit) === 1;
 			const result = await frappeCall("nce_events.api.form_dialog_api.save_form_dialog_document", {
-				doc: { doctype: doctype, ...formData },
+				doc: { doctype: unref(doctype), ...formData },
 				writeback_fetches: wb ? 1 : 0,
 			});
 			Object.assign(formData, result);

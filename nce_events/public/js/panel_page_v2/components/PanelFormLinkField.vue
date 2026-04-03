@@ -87,18 +87,43 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
+/* Awesomplete anchors to this box so the list matches the input width (grid columns). */
 .ppv2-fd-link-frappe {
 	width: 100%;
+	position: relative;
+	z-index: 5;
+	overflow: visible;
 }
 .ppv2-fd-link-frappe :deep(.frappe-control) {
 	width: 100%;
 	max-width: 100%;
+	overflow: visible;
+}
+.ppv2-fd-link-frappe :deep(.control-input),
+.ppv2-fd-link-frappe :deep(.control-value) {
+	overflow: visible;
 }
 .ppv2-fd-link-frappe :deep(.link-field) {
 	width: 100%;
+	position: relative;
 }
 .ppv2-fd-link-frappe :deep(.link-field .form-control) {
 	width: 100%;
 	box-sizing: border-box;
+}
+.ppv2-fd-link-frappe :deep(.awesomplete) {
+	display: block;
+	width: 100%;
+}
+.ppv2-fd-link-frappe :deep(.awesomplete > ul) {
+	position: absolute;
+	left: 0 !important;
+	right: 0 !important;
+	width: 100% !important;
+	min-width: 100% !important;
+	max-width: 100%;
+	box-sizing: border-box;
+	margin: 2px 0 0;
+	z-index: 100;
 }
 </style>

@@ -120,10 +120,10 @@
 			@close="closeTopCard"
 		/>
 
-		<!-- Form Dialog — key forces remount when row or definition changes so composable re-initialises with fresh docName -->
+		<!-- Form Dialog — key only on definition; doc changes reload inside dialog (avoids full remount flash). -->
 		<PanelFormDialog
 			v-if="formDialogDefinition"
-			:key="formDialogDefinition + '|' + formDialogDocName"
+			:key="formDialogDefinition"
 			:open="showFormDialog"
 			:definition-name="formDialogDefinition"
 			:doctype="formDialogDoctype"

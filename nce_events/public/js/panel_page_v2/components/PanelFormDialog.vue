@@ -111,15 +111,17 @@
           <button
             v-for="btn in form.buttons.value"
             :key="btn.label"
-            class="ppv2-fd-btn ppv2-fd-btn-default"
+            type="button"
+            class="ppv2-fd-tab-btn"
             @click="onPlaceholderButton(btn)"
           >{{ btn.label }}</button>
         </div>
 
         <div class="ppv2-fd-action-buttons">
-          <button class="ppv2-fd-btn ppv2-fd-btn-default" @click="onCancel">Cancel</button>
+          <button type="button" class="ppv2-fd-tab-btn" @click="onCancel">Cancel</button>
           <button
-            class="ppv2-fd-btn ppv2-fd-btn-primary"
+            type="button"
+            class="ppv2-fd-tab-btn ppv2-fd-tab-active"
             :disabled="form.saving.value"
             @click="onSubmit"
           >{{ form.saving.value ? 'Saving…' : 'Submit' }}</button>
@@ -130,7 +132,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onUnmounted } from "vue";
+import { ref, watch, onUnmounted, toRef } from "vue";
 import PanelFormField from "./PanelFormField.vue";
 import { usePanelFormDialog } from "../composables/usePanelFormDialog.js";
 
@@ -155,9 +157,9 @@ const emit = defineEmits(["close", "saved", "nav-prev", "nav-next"]);
 const activeTab = ref(0);
 
 const form = usePanelFormDialog({
-  definitionName: props.definitionName,
-  doctype: props.doctype,
-  docName: props.docName,
+	definitionName: toRef(props, "definitionName"),
+	doctype: toRef(props, "doctype"),
+	docName: toRef(props, "docName"),
 });
 
 function confirmDiscardIfDirty(proceed) {
@@ -175,16 +177,34 @@ function confirmDiscardIfDirty(proceed) {
 	}
 }
 
-// Load when dialog opens; Alt+←/→ for row nav (with unsaved guard)
+// Open/close, doc row, or definition change → load (no full remount on row nav)
 watch(
-	() => props.open,
-	(isOpen) => {
-		if (isOpen) {
-			activeTab.value = 0;
-			form.load();
-			window.addEventListener("keydown", onFormDialogKeydown, true);
-		} else {
+	() => ({
+		open: props.open,
+		docName: props.docName,
+		definitionName: props.definitionName,
+		doctype: props.doctype,
+	}),
+	(cur, prev) => {
+		if (!cur.open) {
 			window.removeEventListener("keydown", onFormDialogKeydown, true);
+			return;
+		}
+		window.removeEventListener("keydown", onFormDialogKeydown, true);
+		window.addEventListener("keydown", onFormDialogKeydown, true);
+
+		const wasOpen = prev?.open;
+		const opening = !wasOpen;
+		const contextChanged =
+			opening ||
+			cur.docName !== prev?.docName ||
+			cur.definitionName !== prev?.definitionName ||
+			cur.doctype !== prev?.doctype;
+		if (contextChanged) {
+			if (opening || cur.docName !== prev?.docName) {
+				activeTab.value = 0;
+			}
+			form.load();
 		}
 	},
 	{ immediate: true },
@@ -351,6 +371,7 @@ function onPlaceholderButton(btn) {
 .ppv2-fd-body {
   flex: 1 1 auto;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 16px;
 }
 .ppv2-fd-loading {
@@ -389,11 +410,13 @@ function onPlaceholderButton(btn) {
 }
 .ppv2-fd-tab-panels {
   display: grid;
+  overflow: visible;
 }
 .ppv2-fd-tab-panel {
   grid-area: 1 / 1;
   visibility: hidden;
   pointer-events: none;
+  overflow: visible;
 }
 .ppv2-fd-tab-panel-active {
   visibility: visible;
@@ -416,6 +439,11 @@ function onPlaceholderButton(btn) {
 .ppv2-fd-columns {
   display: grid;
   gap: 12px;
+  overflow: visible;
+}
+.ppv2-fd-columns > div {
+  min-width: 0;
+  overflow: visible;
 }
 .ppv2-fd-validation-error {
   margin-top: 8px;
@@ -444,28 +472,8 @@ function onPlaceholderButton(btn) {
   gap: 6px;
   margin-left: auto;
 }
-.ppv2-fd-btn {
-  padding: 5px 14px;
-  font-size: var(--font-size-sm);
-  font-family: var(--font-family);
-  border-radius: var(--border-radius-sm, 4px);
-  cursor: pointer;
-  border: 1px solid var(--border-color);
-}
-.ppv2-fd-btn:disabled {
+.ppv2-fd-action-buttons .ppv2-fd-tab-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-}
-.ppv2-fd-btn-default {
-  background: var(--bg-card);
-  color: var(--text-color);
-}
-.ppv2-fd-btn-primary {
-  background: var(--primary);
-  color: #ffffff;
-  border-color: var(--primary);
-}
-.ppv2-fd-btn-primary:hover:not(:disabled) {
-  opacity: 0.9;
 }
 </style>

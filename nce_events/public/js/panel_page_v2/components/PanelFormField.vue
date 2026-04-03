@@ -146,6 +146,8 @@ function onLinkChangePayload(payload) {
 <style scoped>
 .ppv2-fd-field {
   margin-bottom: 10px;
+  overflow: visible;
+  position: relative;
 }
 .ppv2-fd-label {
   display: block;
