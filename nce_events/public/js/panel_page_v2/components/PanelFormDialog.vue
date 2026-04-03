@@ -1,5 +1,30 @@
 <template>
 	<div v-if="open" class="ppv2-form-dialog-backdrop" @click.self="onCancel">
+		<div
+			v-if="showFdLoadDebug"
+			class="ppv2-fd-load-debug"
+			@click.stop
+		>
+			<div class="ppv2-fd-load-debug-inner">
+				<div class="ppv2-fd-load-debug-hd">
+					Form load debug
+					<span class="ppv2-fd-load-debug-hint">localStorage {{ FD_LOAD_DEBUG_STORAGE_KEY }}=1</span>
+				</div>
+				<div class="ppv2-fd-load-debug-body">
+					<div
+						v-for="(row, i) in loadDebugRows"
+						:key="i"
+						class="ppv2-fd-load-debug-row"
+						:class="{ 'ppv2-fd-load-debug-ok': row.ok, 'ppv2-fd-load-debug-bad': !row.ok }"
+					>
+						<span class="ppv2-fd-load-debug-t">{{ (row.t || "").slice(11, 23) }}</span>
+						<span class="ppv2-fd-load-debug-s">{{ row.step }}</span>
+						<span class="ppv2-fd-load-debug-d">{{ row.detail }}</span>
+						<span v-if="row.err" class="ppv2-fd-load-debug-e">{{ row.err }}</span>
+					</div>
+				</div>
+			</div>
+		</div>
 		<div class="ppv2-form-dialog" :class="'ppv2-fd-size-' + form.dialogSize.value">
 			<PanelFormDialogHeader
 				:row-nav-enabled="rowNavEnabled"
@@ -37,7 +62,11 @@
 </template>
 
 <script setup>
-import { ref, watch, onUnmounted, toRef } from "vue";
+import { ref, watch, onUnmounted, toRef, computed } from "vue";
+import {
+	isFdLoadDebugEnabled,
+	FD_LOAD_DEBUG_STORAGE_KEY,
+} from "../utils/formDialogLoadDebug.js";
 import PanelFormDialogHeader from "./PanelFormDialogHeader.vue";
 import PanelFormDialogBody from "./PanelFormDialogBody.vue";
 import PanelFormDialogFooter from "./PanelFormDialogFooter.vue";
@@ -67,6 +96,17 @@ const form = usePanelFormDialog({
 	doctype: toRef(props, "doctype"),
 	docName: toRef(props, "docName"),
 });
+
+const showFdLoadDebug = ref(false);
+watch(
+	() => props.open,
+	(o) => {
+		if (o) showFdLoadDebug.value = isFdLoadDebugEnabled();
+	},
+	{ immediate: true },
+);
+
+const loadDebugRows = computed(() => form.loadDebugLog.value);
 
 function onCancel() {
 	confirmDiscardIfDirty(() => form.isDirty.value, () => {
@@ -193,5 +233,82 @@ function onPlaceholderButton(btn) {
 }
 .ppv2-fd-size-3xl {
 	width: 1100px;
+}
+/* Load debug overlay — enable with localStorage nce_fd_load_debug = "1" */
+.ppv2-fd-load-debug {
+	position: fixed;
+	right: 12px;
+	bottom: 12px;
+	z-index: 1060;
+	max-width: min(420px, 92vw);
+	max-height: 45vh;
+	font-size: 11px;
+	font-family: ui-monospace, monospace;
+	pointer-events: auto;
+}
+.ppv2-fd-load-debug-inner {
+	background: #1a1d24;
+	color: #e8eaed;
+	border: 1px solid #3d4450;
+	border-radius: 6px;
+	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+	display: flex;
+	flex-direction: column;
+	overflow: hidden;
+}
+.ppv2-fd-load-debug-hd {
+	padding: 8px 10px;
+	background: #252830;
+	font-weight: 600;
+	display: flex;
+	flex-wrap: wrap;
+	align-items: baseline;
+	gap: 8px;
+}
+.ppv2-fd-load-debug-hint {
+	font-weight: 400;
+	opacity: 0.75;
+	font-size: 10px;
+}
+.ppv2-fd-load-debug-body {
+	overflow-y: auto;
+	padding: 6px 8px 8px;
+	max-height: 38vh;
+}
+.ppv2-fd-load-debug-row {
+	display: grid;
+	grid-template-columns: 5.5em 1fr;
+	gap: 2px 8px;
+	padding: 4px 0;
+	border-bottom: 1px solid #2e323c;
+	word-break: break-word;
+}
+.ppv2-fd-load-debug-row:last-child {
+	border-bottom: none;
+}
+.ppv2-fd-load-debug-t {
+	grid-column: 1;
+	opacity: 0.65;
+}
+.ppv2-fd-load-debug-s {
+	grid-column: 2;
+	font-weight: 600;
+}
+.ppv2-fd-load-debug-d {
+	grid-column: 2;
+	opacity: 0.9;
+	font-size: 10px;
+}
+.ppv2-fd-load-debug-e {
+	grid-column: 1 / -1;
+	color: #ff8b8b;
+	font-size: 10px;
+	margin-top: 2px;
+}
+.ppv2-fd-load-debug-ok .ppv2-fd-load-debug-s {
+	color: #7dcea0;
+}
+.ppv2-fd-load-debug-bad .ppv2-fd-load-debug-s {
+	color: #f5b7b1;
 }
 </style>

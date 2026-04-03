@@ -30,6 +30,8 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 	const buttons = ref([]);
 	/** True while load() is pushing doc defaults / get / fetch_from into formData — mutes Frappe control change() echo. */
 	const syncingFromLoad = ref(false);
+	/** When localStorage nce_fd_load_debug=1, each load() appends step rows for the debug overlay. */
+	const loadDebugLog = ref([]);
 
 	const handleFetchFrom = createHandleFetchFrom(allFields, formData);
 
@@ -48,6 +50,7 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 		buttons,
 		handleFetchFrom,
 		syncingFromLoad,
+		loadDebugLog,
 	});
 
 	const isNew = computed(() => !unref(docName));
@@ -123,5 +126,6 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 		isFieldMandatory,
 		isFieldReadOnly,
 		handleFetchFrom,
+		loadDebugLog,
 	};
 }

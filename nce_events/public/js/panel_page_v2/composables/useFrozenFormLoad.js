@@ -2,6 +2,7 @@ import { unref, nextTick } from "vue";
 import { frappeCall } from "../utils/frappeCall.js";
 import { isLayoutField } from "../utils/frappeFieldExpr.js";
 import { parseLayout } from "../utils/parseLayout.js";
+import { isFdLoadDebugEnabled } from "../utils/formDialogLoadDebug.js";
 
 /**
  * Load sequence + reset + load for frozen Panel Form Dialog meta/doc.
@@ -24,9 +25,21 @@ export function createFrozenFormLoad(ctx) {
 		buttons,
 		handleFetchFrom,
 		syncingFromLoad,
+		loadDebugLog,
 	} = ctx;
 
 	let loadSeq = 0;
+
+	function pushDebug(step, ok, detail = "", errMsg = null) {
+		if (!isFdLoadDebugEnabled() || !loadDebugLog) return;
+		loadDebugLog.value.push({
+			t: new Date().toISOString(),
+			step,
+			ok,
+			detail: detail || "",
+			err: errMsg ? String(errMsg) : null,
+		});
+	}
 
 	function resetWhenClosed() {
 		loadSeq += 1;
@@ -42,6 +55,9 @@ export function createFrozenFormLoad(ctx) {
 			delete formData[key];
 		}
 		originalData.value = {};
+		if (isFdLoadDebugEnabled() && loadDebugLog) {
+			loadDebugLog.value = [];
+		}
 	}
 
 	async function load() {
@@ -55,12 +71,27 @@ export function createFrozenFormLoad(ctx) {
 		const dt = unref(doctype);
 		const dn = unref(docName);
 
+		if (isFdLoadDebugEnabled() && loadDebugLog) {
+			loadDebugLog.value = [];
+		}
+		pushDebug("start", true, `seq=${mySeq} doctype=${dt} docName=${dn ?? "(new)"} definition=${defnName}`);
+
 		try {
-			const defn = await frappeCall(
-				"nce_events.api.form_dialog_api.get_form_dialog_definition",
-				{ name: defnName },
-			);
-			if (mySeq !== loadSeq) return;
+			let defn;
+			try {
+				defn = await frappeCall(
+					"nce_events.api.form_dialog_api.get_form_dialog_definition",
+					{ name: defnName },
+				);
+			} catch (e) {
+				pushDebug("get_form_dialog_definition", false, defnName, e?.message || e);
+				throw e;
+			}
+			if (mySeq !== loadSeq) {
+				pushDebug("aborted", false, "stale seq after get_form_dialog_definition");
+				return;
+			}
+			pushDebug("get_form_dialog_definition", true, `ok dialog_size=${defn?.dialog_size ?? "?"}`);
 
 			definition.value = defn;
 			buttons.value = defn.buttons || [];
@@ -68,8 +99,10 @@ export function createFrozenFormLoad(ctx) {
 			const fields = defn.frozen_meta?.fields || [];
 			allFields.value = fields;
 			tabs.value = parseLayout(fields);
+			pushDebug("parseLayout", true, `fields=${fields.length} tabs=${tabs.value.length}`);
 
 			syncingFromLoad.value = true;
+			pushDebug("syncingFromLoad", true, "true (formData write + fetch_from)");
 
 			for (const key of Object.keys(formData)) {
 				delete formData[key];
@@ -79,14 +112,27 @@ export function createFrozenFormLoad(ctx) {
 					formData[field.fieldname] = field.default || null;
 				}
 			}
+			pushDebug("formData seed", true, `defaults from meta`);
 
 			if (dn) {
-				const doc = await frappeCall("frappe.client.get", {
-					doctype: dt,
-					name: dn,
-				});
-				if (mySeq !== loadSeq) return;
+				let doc;
+				try {
+					doc = await frappeCall("frappe.client.get", {
+						doctype: dt,
+						name: dn,
+					});
+				} catch (e) {
+					pushDebug("frappe.client.get", false, `${dt}/${dn}`, e?.message || e);
+					throw e;
+				}
+				if (mySeq !== loadSeq) {
+					pushDebug("aborted", false, "stale seq after client.get");
+					return;
+				}
 				Object.assign(formData, doc);
+				pushDebug("frappe.client.get", true, `${dt}/${dn} keys=${Object.keys(doc || {}).length}`);
+			} else {
+				pushDebug("frappe.client.get", true, "(skipped — new doc)");
 			}
 
 			const linkFields = fields.filter(
@@ -95,21 +141,30 @@ export function createFrozenFormLoad(ctx) {
 			await Promise.all(
 				linkFields.map((lf) => handleFetchFrom(lf.fieldname, formData[lf.fieldname])),
 			);
-			if (mySeq !== loadSeq) return;
+			if (mySeq !== loadSeq) {
+				pushDebug("aborted", false, "stale seq after fetch_from");
+				return;
+			}
+			pushDebug("fetch_from batch", true, `${linkFields.length} link field(s)`);
 
 			originalData.value = JSON.parse(JSON.stringify(formData));
+			pushDebug("originalData snapshot", true, `keys=${Object.keys(formData).length}`);
 		} catch (err) {
-			if (mySeq !== loadSeq) return;
-			error.value = err?.message || err?.toString() || "Failed to load form";
+			if (mySeq !== loadSeq) {
+				pushDebug("catch (ignored)", false, "stale seq", err?.message || err);
+				return;
+			}
+			const msg = err?.message || err?.toString() || "Failed to load form";
+			error.value = msg;
+			pushDebug("load failed", false, "", msg);
 		} finally {
 			if (mySeq === loadSeq) {
 				loading.value = false;
 			}
-			// After the loading gate hides, Frappe controls mount and watchers call set_value;
-			// keep syncing true through a couple ticks so df.change does not echo into Vue.
 			await nextTick();
 			await nextTick();
 			syncingFromLoad.value = false;
+			pushDebug("done", mySeq === loadSeq, mySeq === loadSeq ? "loading=false syncingFromLoad=false" : "stale — skipped UI reset");
 		}
 	}
 
