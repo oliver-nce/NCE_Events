@@ -1,4 +1,4 @@
-import { ref, reactive, computed, unref } from "vue";
+import { ref, reactive, computed, unref, watch } from "vue";
 import { snapshotForCompare } from "../utils/formDialogSnapshot.js";
 import { createHandleFetchFrom } from "./formDialogFetchFrom.js";
 import {
@@ -99,6 +99,22 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 		return isFieldReadOnlyRule(field, formData);
 	}
 
+	/** Resolves when no load() work is in progress (spinner + post-load Frappe sync). */
+	function waitUntilLoadSettled() {
+		return new Promise((resolve) => {
+			const stop = watch(
+				[loading, syncingFromLoad],
+				() => {
+					if (!loading.value && !syncingFromLoad.value) {
+						stop();
+						resolve();
+					}
+				},
+				{ immediate: true },
+			);
+		});
+	}
+
 	return {
 		definition,
 		tabs,
@@ -123,5 +139,6 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 		isFieldMandatory,
 		isFieldReadOnly,
 		handleFetchFrom,
+		waitUntilLoadSettled,
 	};
 }

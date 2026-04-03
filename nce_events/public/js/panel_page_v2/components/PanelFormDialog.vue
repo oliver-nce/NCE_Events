@@ -37,7 +37,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onUnmounted, toRef } from "vue";
+import { ref, watch, onUnmounted, toRef, nextTick } from "vue";
 import PanelFormDialogHeader from "./PanelFormDialogHeader.vue";
 import PanelFormDialogBody from "./PanelFormDialogBody.vue";
 import PanelFormDialogFooter from "./PanelFormDialogFooter.vue";
@@ -68,6 +68,24 @@ const form = usePanelFormDialog({
 	docName: toRef(props, "docName"),
 });
 
+/** Serialize prev/next: each waits for prior reload (load + syncingFromLoad) to finish. */
+let rowNavChain = Promise.resolve();
+
+function enqueueRowNav(direction) {
+	rowNavChain = rowNavChain
+		.then(async () => {
+			await form.waitUntilLoadSettled();
+			if (direction === "prev" && !props.canNavigatePrev) return;
+			if (direction === "next" && !props.canNavigateNext) return;
+			confirmDiscardIfDirty(() => form.isDirty.value, () =>
+				emit(direction === "prev" ? "nav-prev" : "nav-next"),
+			);
+			await nextTick();
+			await form.waitUntilLoadSettled();
+		})
+		.catch(() => {});
+}
+
 function onCancel() {
 	confirmDiscardIfDirty(() => form.isDirty.value, () => {
 		form.revert();
@@ -76,13 +94,11 @@ function onCancel() {
 }
 
 function onNavPrevClick() {
-	if (!props.canNavigatePrev) return;
-	confirmDiscardIfDirty(() => form.isDirty.value, () => emit("nav-prev"));
+	enqueueRowNav("prev");
 }
 
 function onNavNextClick() {
-	if (!props.canNavigateNext) return;
-	confirmDiscardIfDirty(() => form.isDirty.value, () => emit("nav-next"));
+	enqueueRowNav("next");
 }
 
 const onFormDialogKeydown = createRowNavKeydownHandler({
@@ -103,6 +119,7 @@ watch(
 	(cur, prev) => {
 		if (!cur.open) {
 			window.removeEventListener("keydown", onFormDialogKeydown, true);
+			rowNavChain = Promise.resolve();
 			form.resetWhenClosed();
 			return;
 		}
@@ -128,6 +145,7 @@ watch(
 
 onUnmounted(() => {
 	window.removeEventListener("keydown", onFormDialogKeydown, true);
+	rowNavChain = Promise.resolve();
 	form.resetWhenClosed();
 });
 
