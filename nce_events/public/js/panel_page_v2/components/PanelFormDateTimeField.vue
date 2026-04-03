@@ -3,18 +3,19 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted, onBeforeUnmount, nextTick } from "vue";
+import { ref, watch, onMounted, onBeforeUnmount, nextTick, inject } from "vue";
 
 const props = defineProps({
 	field: { type: Object, required: true },
 	modelValue: { default: null },
 	readOnly: { type: Boolean, default: false },
 	mandatory: { type: Boolean, default: false },
-	/** When true, ignore Frappe df.change (programmatic set_value during panel load). */
-	syncingFromLoad: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(["change"]);
+
+// Injected directly from PanelFormDialog — raw ref, no prop cycle delay.
+const fdSyncingFromLoad = inject("fdSyncingFromLoad", null);
 
 const hostRef = ref(null);
 let control = null;
@@ -34,7 +35,7 @@ function buildDf() {
 		reqd: props.mandatory ? 1 : 0,
 		hidden: 0,
 		change() {
-			if (props.syncingFromLoad) return;
+			if (fdSyncingFromLoad?.value) return;
 			const v = this.get_value();
 			emit("change", { fieldname: fn, value: v });
 		},

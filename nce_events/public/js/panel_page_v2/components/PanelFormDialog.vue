@@ -39,7 +39,6 @@
 			<PanelFormDialogBody
 				:loading="form.loading.value"
 				:error="form.error.value"
-				:syncing-from-load="form.syncingFromLoad.value"
 				:tabs="form.tabs.value"
 				:validation-error="form.validationError.value"
 				:form-data="form.formData"
@@ -62,7 +61,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onUnmounted, toRef, computed } from "vue";
+import { ref, watch, onUnmounted, toRef, computed, provide } from "vue";
 import {
 	isFdLoadDebugEnabled,
 	FD_LOAD_DEBUG_STORAGE_KEY,
@@ -96,6 +95,10 @@ const form = usePanelFormDialog({
 	doctype: toRef(props, "doctype"),
 	docName: toRef(props, "docName"),
 });
+
+// Provide the raw ref so Date/Link controls can read .value synchronously
+// in their Frappe df.change() callback — bypasses Vue prop propagation delay.
+provide("fdSyncingFromLoad", form.syncingFromLoad);
 
 const showFdLoadDebug = ref(false);
 watch(
