@@ -440,12 +440,35 @@
       "exports": [],
       "depends_on": []
     },
+    "nce_events/public/js/panel_page_v2/composables/useFormDialogChrome.js": {
+      "purpose": "confirmDiscardIfDirty + createRowNavKeydownHandler for Panel Form Dialog shell.",
+      "exports": ["confirmDiscardIfDirty", "createRowNavKeydownHandler"],
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogHeader.vue": {
+      "purpose": "Form dialog header — title, row nav, close.",
+      "exports": [],
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue": {
+      "purpose": "Form dialog body — tabs, sections, PanelFormField grid; v-model:activeTab.",
+      "exports": [],
+      "depends_on": ["components/PanelFormField.vue"]
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogFooter.vue": {
+      "purpose": "Form dialog footer — custom buttons, Cancel/Submit.",
+      "exports": [],
+      "depends_on": []
+    },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue": {
-      "purpose": "V2 form dialog rendered from frozen Form Dialog definition. Shows Frappe-layout tabs/sections/columns. Save goes through composable (server writeback when writeback_on_submit). Opened from a panel row when panel.form_dialog is set.",
+      "purpose": "V2 form dialog root — composes Header/Body/Footer, usePanelFormDialog + useFormDialogChrome. Opened from panel when form_dialog is set.",
       "exports": [],
       "depends_on": [
         "composables/usePanelFormDialog.js",
-        "components/PanelFormField.vue"
+        "composables/useFormDialogChrome.js",
+        "components/PanelFormDialogHeader.vue",
+        "components/PanelFormDialogBody.vue",
+        "components/PanelFormDialogFooter.vue"
       ]
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormField.vue": {
