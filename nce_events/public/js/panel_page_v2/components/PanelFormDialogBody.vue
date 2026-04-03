@@ -1,6 +1,7 @@
 <template>
 	<div class="ppv2-fd-body">
-		<div v-if="error" class="ppv2-fd-error">{{ error }}</div>
+		<div v-if="loading" class="ppv2-fd-loading">Loading…</div>
+		<div v-else-if="error" class="ppv2-fd-error">{{ error }}</div>
 		<template v-else-if="tabs.length">
 			<div v-if="tabs.length > 1" class="ppv2-fd-tab-bar">
 				<button
@@ -67,6 +68,7 @@
 import PanelFormField from "./PanelFormField.vue";
 
 defineProps({
+	loading: { type: Boolean, default: false },
 	error: { type: String, default: null },
 	tabs: { type: Array, default: () => [] },
 	validationError: { type: String, default: null },
@@ -87,6 +89,12 @@ const activeTab = defineModel("activeTab", { type: Number, required: true });
 	overflow-y: auto;
 	overflow-x: hidden;
 	padding: 16px;
+}
+.ppv2-fd-loading {
+	text-align: center;
+	padding: 32px;
+	color: var(--text-muted);
+	font-size: var(--font-size-base);
 }
 .ppv2-fd-error {
 	text-align: center;
