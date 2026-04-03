@@ -12,7 +12,6 @@
 				@nav-next="onNavNextClick"
 			/>
 			<PanelFormDialogBody
-				:loading="form.loading.value"
 				:error="form.error.value"
 				:tabs="form.tabs.value"
 				:validation-error="form.validationError.value"
