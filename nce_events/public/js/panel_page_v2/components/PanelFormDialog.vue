@@ -34,13 +34,11 @@
 
       <!-- Body -->
       <div class="ppv2-fd-body">
-        <!-- Loading -->
-        <div v-if="form.loading.value" class="ppv2-fd-loading">Loading…</div>
-
         <!-- Error -->
-        <div v-else-if="form.error.value" class="ppv2-fd-error">{{ form.error.value }}</div>
+        <div v-if="form.error.value" class="ppv2-fd-error">{{ form.error.value }}</div>
 
-        <!-- Form content -->
+        <!-- Form: shown as soon as tabs are available, even while reloading a new row.
+             Fields are read-only mid-load so no accidental edits. -->
         <template v-else-if="form.tabs.value.length">
           <!-- Tab bar (only if multiple tabs) -->
           <div v-if="form.tabs.value.length > 1" class="ppv2-fd-tab-bar">
@@ -87,7 +85,7 @@
                     :model-value="form.formData[field.fieldname]"
                     :visible="form.isFieldVisible(field)"
                     :mandatory="form.isFieldMandatory(field)"
-                    :read-only="form.isFieldReadOnly(field)"
+                    :read-only="form.isFieldReadOnly(field) || form.loading.value"
                     @change="onFieldChange"
                     @link-change="onLinkChange"
                   />
@@ -102,6 +100,9 @@
             {{ form.validationError.value }}
           </div>
         </template>
+
+        <!-- First open: tabs not loaded yet -->
+        <div v-else-if="form.loading.value" class="ppv2-fd-loading">Loading…</div>
       </div>
 
       <!-- Footer -->
