@@ -116,16 +116,10 @@ watch(
 			cur.definitionName !== prev?.definitionName ||
 			cur.doctype !== prev?.doctype;
 		if (contextChanged) {
-			const docNameOnly =
-				!opening &&
-				cur.docName !== prev?.docName &&
-				cur.definitionName === prev?.definitionName &&
-				cur.doctype === prev?.doctype;
-			// Keep tab when only switching records (prev/next); layout unchanged, no full reload flash.
-			if (opening || cur.definitionName !== prev?.definitionName || cur.doctype !== prev?.doctype) {
+			if (opening || cur.docName !== prev?.docName) {
 				activeTab.value = 0;
 			}
-			form.load(docNameOnly ? { documentOnly: true } : {});
+			form.load();
 		}
 	},
 	{ immediate: true },

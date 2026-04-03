@@ -42,49 +42,29 @@ export function createFrozenFormLoad(ctx) {
 		originalData.value = {};
 	}
 
-	/**
-	 * @param {{ documentOnly?: boolean }} opts
-	 *   documentOnly: same frozen definition + doctype, only docName changed (row prev/next).
-	 *   Skips definition fetch and loading spinner so layout/size stays stable.
-	 */
-	async function load(opts = {}) {
-		const documentOnly = opts.documentOnly === true;
+	async function load() {
 		const mySeq = ++loadSeq;
+		loading.value = true;
+		error.value = null;
+		validationError.value = null;
 
 		const defnName = unref(definitionName);
 		const dt = unref(doctype);
 		const dn = unref(docName);
 
-		if (documentOnly && (!definition.value || !allFields.value?.length)) {
-			await load({ documentOnly: false });
-			return;
-		}
-
-		if (!documentOnly) {
-			loading.value = true;
-		}
-		error.value = null;
-		validationError.value = null;
-
 		try {
-			let fields;
+			const defn = await frappeCall(
+				"nce_events.api.form_dialog_api.get_form_dialog_definition",
+				{ name: defnName },
+			);
+			if (mySeq !== loadSeq) return;
 
-			if (!documentOnly) {
-				const defn = await frappeCall(
-					"nce_events.api.form_dialog_api.get_form_dialog_definition",
-					{ name: defnName },
-				);
-				if (mySeq !== loadSeq) return;
+			definition.value = defn;
+			buttons.value = defn.buttons || [];
 
-				definition.value = defn;
-				buttons.value = defn.buttons || [];
-
-				fields = defn.frozen_meta?.fields || [];
-				allFields.value = fields;
-				tabs.value = parseLayout(fields);
-			} else {
-				fields = allFields.value;
-			}
+			const fields = defn.frozen_meta?.fields || [];
+			allFields.value = fields;
+			tabs.value = parseLayout(fields);
 
 			for (const key of Object.keys(formData)) {
 				delete formData[key];
@@ -117,7 +97,7 @@ export function createFrozenFormLoad(ctx) {
 			if (mySeq !== loadSeq) return;
 			error.value = err?.message || err?.toString() || "Failed to load form";
 		} finally {
-			if (mySeq === loadSeq && !documentOnly) {
+			if (mySeq === loadSeq) {
 				loading.value = false;
 			}
 		}
