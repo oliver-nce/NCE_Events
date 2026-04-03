@@ -1,15 +1,5 @@
 import { ref, shallowRef } from "vue";
-
-function frappeCall(method, args) {
-	return new Promise((resolve, reject) => {
-		frappe.call({
-			method,
-			args,
-			callback: (r) => (r.message ? resolve(r.message) : reject("Empty response")),
-			error: reject,
-		});
-	});
-}
+import { frappeCall } from "../utils/frappeCall.js";
 
 function getDoc(doctype, name) {
 	return new Promise((resolve, reject) => {

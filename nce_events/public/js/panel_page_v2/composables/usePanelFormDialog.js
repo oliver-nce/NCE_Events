@@ -1,20 +1,6 @@
 import { ref, reactive, computed, toRaw, unref } from "vue";
+import { frappeCall } from "../utils/frappeCall.js";
 import { parseLayout } from "../utils/parseLayout.js";
-
-/**
- * Helper: wrap frappe.call in a Promise.
- * This matches the pattern in usePanel.js.
- */
-function frappeCall(method, args) {
-	return new Promise((resolve, reject) => {
-		frappe.call({
-			method,
-			args,
-			callback: (r) => (r.message != null ? resolve(r.message) : reject("Empty response")),
-			error: reject,
-		});
-	});
-}
 
 /**
  * Evaluate a Frappe depends_on expression.
