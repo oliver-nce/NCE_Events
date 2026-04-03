@@ -1,5 +1,11 @@
 import { evaluateExpression, isLayoutField } from "../utils/frappeFieldExpr.js";
 
+/** Frappe Virtual DocField — computed, not stored; always read-only on Desk. */
+export function isVirtualDocField(field) {
+	if (!field) return false;
+	return Number(field.is_virtual) === 1 || field.is_virtual === true;
+}
+
 /**
  * Validate mandatory fields on a frozen form.
  * @param {Array} allFields — DocField-like dicts
@@ -12,6 +18,7 @@ export function validateFrozenForm(allFields, formData) {
 	for (const field of allFields) {
 		if (isLayoutField(field.fieldtype)) continue;
 		if (field.hidden) continue;
+		if (isVirtualDocField(field)) continue;
 
 		if (field.depends_on && !evaluateExpression(field.depends_on, formData)) continue;
 
@@ -48,6 +55,9 @@ export function isFieldMandatory(field, formData) {
 }
 
 export function isFieldReadOnly(field, formData) {
+	if (isVirtualDocField(field)) {
+		return true;
+	}
 	if (field.read_only_depends_on) {
 		return evaluateExpression(field.read_only_depends_on, formData);
 	}

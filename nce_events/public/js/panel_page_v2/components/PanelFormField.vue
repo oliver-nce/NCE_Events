@@ -71,7 +71,11 @@
       @change="onChange"
     />
 
-    <!-- Textarea types -->
+    <!-- Textarea types — virtual / read-only: static text (no focus, resize, or edits) -->
+    <div
+      v-else-if="isTextarea && readOnly"
+      class="ppv2-fd-input ppv2-fd-textarea ppv2-fd-readonly-plain"
+    >{{ modelValue || "" }}</div>
     <textarea
       v-else-if="isTextarea"
       :value="modelValue || ''"
@@ -84,6 +88,10 @@
     />
 
     <!-- All other fields: text/number/date/time/etc -->
+    <div
+      v-else-if="readOnly"
+      class="ppv2-fd-input ppv2-fd-readonly-plain"
+    >{{ modelValue ?? "" }}</div>
     <input
       v-else
       :type="config.props?.type || 'text'"
@@ -182,6 +190,19 @@ function onLinkChangePayload(payload) {
 }
 .ppv2-fd-textarea {
   resize: vertical;
+}
+.ppv2-fd-readonly-plain {
+  white-space: pre-wrap;
+  word-break: break-word;
+  min-height: 2.5em;
+  cursor: default;
+  user-select: text;
+  background: var(--bg-surface);
+  color: var(--text-color);
+}
+.ppv2-fd-readonly-plain:focus {
+  outline: none;
+  box-shadow: none;
 }
 .ppv2-fd-select {
   appearance: auto;

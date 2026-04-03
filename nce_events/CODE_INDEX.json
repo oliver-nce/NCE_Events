@@ -345,8 +345,8 @@
       "depends_on": ["utils/frappeCall.js"]
     },
     "nce_events/public/js/panel_page_v2/composables/frozenFormValidate.js": {
-      "purpose": "validateFrozenForm + isFieldVisible/Mandatory/ReadOnly rules for frozen meta + reactive doc.",
-      "exports": ["validateFrozenForm", "isFieldVisible", "isFieldMandatory", "isFieldReadOnly"],
+      "purpose": "validateFrozenForm + isFieldVisible/Mandatory/ReadOnly; isVirtualDocField (Frappe is_virtual) forces read-only and skips mandatory checks.",
+      "exports": ["validateFrozenForm", "isFieldVisible", "isFieldMandatory", "isFieldReadOnly", "isVirtualDocField"],
       "depends_on": ["utils/frappeFieldExpr.js"]
     },
     "nce_events/public/js/panel_page_v2/composables/frozenFormSave.js": {
