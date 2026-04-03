@@ -337,14 +337,35 @@
       "exports": ["useCardForm"],
       "depends_on": ["utils/frappeCall.js"]
     },
+    "nce_events/public/js/panel_page_v2/composables/formDialogFetchFrom.js": {
+      "purpose": "createHandleFetchFrom(allFields, formData) — Link change fetch_from resolution for Panel Form Dialog.",
+      "exports": ["createHandleFetchFrom"],
+      "depends_on": ["utils/frappeCall.js"]
+    },
+    "nce_events/public/js/panel_page_v2/composables/frozenFormValidate.js": {
+      "purpose": "validateFrozenForm + isFieldVisible/Mandatory/ReadOnly rules for frozen meta + reactive doc.",
+      "exports": ["validateFrozenForm", "isFieldVisible", "isFieldMandatory", "isFieldReadOnly"],
+      "depends_on": ["utils/frappeFieldExpr.js"]
+    },
+    "nce_events/public/js/panel_page_v2/composables/frozenFormSave.js": {
+      "purpose": "saveFrozenFormDocument — server save_form_dialog_document + writeback_fetches flag.",
+      "exports": ["saveFrozenFormDocument"],
+      "depends_on": ["utils/frappeCall.js", "nce_events/api/form_dialog_api.py"]
+    },
+    "nce_events/public/js/panel_page_v2/composables/useFrozenFormLoad.js": {
+      "purpose": "createFrozenFormLoad — load seq, resetWhenClosed, load definition + doc + initial fetch_from batch.",
+      "exports": ["createFrozenFormLoad"],
+      "depends_on": ["utils/frappeCall.js", "utils/frappeFieldExpr.js", "utils/parseLayout.js", "nce_events/api/form_dialog_api.py"]
+    },
     "nce_events/public/js/panel_page_v2/composables/usePanelFormDialog.js": {
-      "purpose": "V2 composable — load Form Dialog definition, manage reactive doc state, validate mandatory fields, save/insert (uses save_form_dialog_document when writeback_on_submit), fetch_from via handleFetchFrom. Used by PanelFormDialog.vue.",
+      "purpose": "V2 composable — facade for Panel Form Dialog: composes createFrozenFormLoad, createHandleFetchFrom, frozenFormValidate/Save, formDialogSnapshot. Used by PanelFormDialog.vue.",
       "exports": ["usePanelFormDialog"],
       "depends_on": [
-        "utils/frappeCall.js",
-        "utils/frappeFieldExpr.js",
-        "utils/parseLayout.js",
-        "nce_events/api/form_dialog_api.py"
+        "utils/formDialogSnapshot.js",
+        "composables/formDialogFetchFrom.js",
+        "composables/frozenFormValidate.js",
+        "composables/frozenFormSave.js",
+        "composables/useFrozenFormLoad.js"
       ]
     },
     "nce_events/public/js/panel_page_v2/components/PanelTable.vue": {
@@ -428,6 +449,11 @@
     "nce_events/public/js/panel_page_v2/utils/frappeFieldExpr.js": {
       "purpose": "Utility: Frappe-style depends_on / *_depends_on evaluation and layout fieldtype list for frozen form meta.",
       "exports": ["evaluateExpression", "isLayoutField", "LAYOUT_FIELDTYPES"],
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/utils/formDialogSnapshot.js": {
+      "purpose": "Utility: snapshotForCompare for dirty detection on frozen form reactive state.",
+      "exports": ["snapshotForCompare"],
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/utils/parseLayout.js": {
