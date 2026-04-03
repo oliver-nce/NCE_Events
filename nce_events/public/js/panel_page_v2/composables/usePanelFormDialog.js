@@ -134,18 +134,20 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 		const dn = unref(docName);
 
 		try {
-			// 1. Load frozen definition
-			const defn = await frappeCall(
-				"nce_events.api.form_dialog_api.get_form_dialog_definition",
-				{ name: defnName },
-			);
-			if (mySeq !== loadSeq) return;
+			// 1. Load frozen definition only on first open (resetWhenClosed nulls it).
+			//    On row navigation the definition is unchanged — skip the server round-trip.
+			if (!definition.value) {
+				const defn = await frappeCall(
+					"nce_events.api.form_dialog_api.get_form_dialog_definition",
+					{ name: defnName },
+				);
+				if (mySeq !== loadSeq) return;
+				definition.value = defn;
+				buttons.value = defn.buttons || [];
+			}
 
-			definition.value = defn;
-			buttons.value = defn.buttons || [];
-
-			// 2. Parse the frozen fields into layout tree
-			const fields = defn.frozen_meta?.fields || [];
+			// 2. Parse the frozen fields into layout tree (fast, in-memory)
+			const fields = definition.value.frozen_meta?.fields || [];
 			allFields.value = fields;
 			tabs.value = parseLayout(fields);
 
