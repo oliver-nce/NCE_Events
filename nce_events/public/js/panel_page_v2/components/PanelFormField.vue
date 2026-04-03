@@ -23,10 +23,10 @@
       <span v-if="mandatory" class="ppv2-fd-reqd">*</span>
     </label>
 
-    <!-- Select -->
+    <!-- Select + Autocomplete with newline options (same static list format as Desk Select) -->
     <select
-      v-if="field.fieldtype === 'Select'"
-      :value="modelValue"
+      v-if="useNativeSelectUi"
+      :value="modelValue ?? ''"
       :required="mandatory"
       :disabled="readOnly"
       class="ppv2-fd-input ppv2-fd-select"
@@ -50,9 +50,9 @@
       />
     </div>
 
-    <!-- Link — Frappe ControlLink (search + title), same as Desk -->
+    <!-- Link — Frappe ControlLink; Autocomplete with single-line options = target DocType -->
     <PanelFormLinkField
-      v-else-if="field.fieldtype === 'Link'"
+      v-else-if="field.fieldtype === 'Link' || isAutocompleteLink"
       :field="field"
       :model-value="modelValue"
       :read-only="readOnly"
@@ -129,16 +129,38 @@ const emit = defineEmits(["change", "link-change"]);
 
 const config = computed(() => getComponentConfig(props.field));
 
+function normFieldtype(field) {
+	return String(field?.fieldtype ?? "").trim();
+}
+
+/** Select, or Autocomplete whose options are a newline-separated static list (Desk pattern). */
+const useNativeSelectUi = computed(() => {
+	const ft = normFieldtype(props.field).toLowerCase();
+	if (ft === "select") return true;
+	if (ft === "autocomplete" && (props.field.options || "").includes("\n")) return true;
+	return false;
+});
+
+/** Autocomplete with one line (no newlines) — options hold target DocType name, like Link. */
+const isAutocompleteLink = computed(() => {
+	const ft = normFieldtype(props.field).toLowerCase();
+	if (ft !== "autocomplete") return false;
+	const o = (props.field.options || "").trim();
+	if (!o || o.includes("\n")) return false;
+	return true;
+});
+
 const isTextarea = computed(() => {
-  const t = config.value?.props?.type;
-  return t === "textarea";
+	const t = config.value?.props?.type;
+	return t === "textarea";
 });
 
 const selectOptions = computed(() => {
-  if (props.field.fieldtype === "Select" && props.field.options) {
-    return props.field.options.split("\n").filter(Boolean);
-  }
-  return [];
+	if (!useNativeSelectUi.value || !props.field.options) return [];
+	return props.field.options
+		.split("\n")
+		.map((s) => s.trim())
+		.filter(Boolean);
 });
 
 function onChange(value) {
@@ -206,6 +228,10 @@ function onLinkChangePayload(payload) {
 }
 .ppv2-fd-select {
   appearance: auto;
+  -webkit-appearance: menulist;
+  -moz-appearance: menulist;
+  min-height: 2.25em;
+  cursor: pointer;
 }
 .ppv2-fd-check-row {
   display: flex;
