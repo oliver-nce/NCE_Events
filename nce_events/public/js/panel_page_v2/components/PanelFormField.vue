@@ -57,6 +57,7 @@
       :model-value="modelValue"
       :read-only="readOnly"
       :mandatory="mandatory"
+      :syncing-from-load="syncingFromLoad"
       @change="onChange"
       @link-change="onLinkChangePayload"
     />
@@ -68,6 +69,7 @@
       :model-value="modelValue"
       :read-only="readOnly"
       :mandatory="mandatory"
+      :syncing-from-load="syncingFromLoad"
       @change="onChange"
     />
 
@@ -120,6 +122,7 @@ import PanelFormDateTimeField from "./PanelFormDateTimeField.vue";
 const props = defineProps({
   field: { type: Object, required: true },
   modelValue: { default: null },
+  syncingFromLoad: { type: Boolean, default: false },
   visible: { type: Boolean, default: true },
   mandatory: { type: Boolean, default: false },
   readOnly: { type: Boolean, default: false },

@@ -28,6 +28,8 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 	const error = ref(null);
 	const validationError = ref(null);
 	const buttons = ref([]);
+	/** True while load() is pushing doc defaults / get / fetch_from into formData — mutes Frappe control change() echo. */
+	const syncingFromLoad = ref(false);
 
 	const handleFetchFrom = createHandleFetchFrom(allFields, formData);
 
@@ -45,6 +47,7 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 		validationError,
 		buttons,
 		handleFetchFrom,
+		syncingFromLoad,
 	});
 
 	const isNew = computed(() => !unref(docName));
@@ -102,6 +105,7 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 		allFields,
 		formData,
 		isDirty,
+		syncingFromLoad,
 		loading,
 		saving,
 		error,

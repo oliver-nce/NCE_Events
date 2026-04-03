@@ -45,6 +45,7 @@
 									:key="field.fieldname"
 									:field="field"
 									:model-value="formData[field.fieldname]"
+									:syncing-from-load="syncingFromLoad"
 									:visible="isFieldVisible(field)"
 									:mandatory="isFieldMandatory(field)"
 									:read-only="isFieldReadOnly(field)"
@@ -69,6 +70,7 @@ import PanelFormField from "./PanelFormField.vue";
 
 defineProps({
 	loading: { type: Boolean, default: false },
+	syncingFromLoad: { type: Boolean, default: false },
 	error: { type: String, default: null },
 	tabs: { type: Array, default: () => [] },
 	validationError: { type: String, default: null },

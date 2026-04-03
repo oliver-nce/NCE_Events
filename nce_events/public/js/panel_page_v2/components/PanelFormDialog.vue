@@ -14,6 +14,7 @@
 			<PanelFormDialogBody
 				:loading="form.loading.value"
 				:error="form.error.value"
+				:syncing-from-load="form.syncingFromLoad.value"
 				:tabs="form.tabs.value"
 				:validation-error="form.validationError.value"
 				:form-data="form.formData"

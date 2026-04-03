@@ -10,6 +10,8 @@ const props = defineProps({
 	modelValue: { default: null },
 	readOnly: { type: Boolean, default: false },
 	mandatory: { type: Boolean, default: false },
+	/** When true, ignore Frappe df.change (programmatic set_value during panel load). */
+	syncingFromLoad: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(["change"]);
@@ -32,6 +34,7 @@ function buildDf() {
 		reqd: props.mandatory ? 1 : 0,
 		hidden: 0,
 		change() {
+			if (props.syncingFromLoad) return;
 			const v = this.get_value();
 			emit("change", { fieldname: fn, value: v });
 		},
