@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Machine-readable index of every module in the NCE Events Frappe app. Read this file FIRST before exploring the codebase. See also AGENTS.md at the project root for contributor conventions.",
-    "generated": "2026-04-01",
+    "generated": "2026-04-03",
     "usage": "Find the module whose 'purpose' matches your task, then read only that file and its 'depends_on' entries. AGENTS.md lists reusable helpers — check there before adding new code."
   },
 
@@ -474,7 +474,21 @@
     "nce_events/public/js/panel_page_v2/components/PanelFormField.vue": {
       "purpose": "Single field renderer inside PanelFormDialog. Maps Frappe fieldtype → control element (FormControl, checkbox, select, Link placeholder, etc.). Respects hidden/read_only/reqd and depends_on eval expressions.",
       "exports": [],
-      "depends_on": ["utils/fieldTypeMap.js"]
+      "depends_on": [
+        "utils/fieldTypeMap.js",
+        "components/PanelFormLinkField.vue",
+        "components/PanelFormDateTimeField.vue"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDateTimeField.vue": {
+      "purpose": "Panel Form Dialog control — mounts Frappe Date/Time/Datetime control in a div host; v-model sync and read_only/reqd from frozen meta.",
+      "exports": [],
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormLinkField.vue": {
+      "purpose": "Panel Form Dialog control — mounts Frappe Link control in a div host; emits change + link-change for fetch_from; v-model sync.",
+      "exports": [],
+      "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/utils/frappeCall.js": {
       "purpose": "Utility: Promise wrapper for frappe.call (shared by usePanel, usePanelFormDialog stack, nce_cards/useCardForm).",
