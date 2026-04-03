@@ -142,7 +142,7 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted } from "vue";
-import { useFormDialogRecordNav } from "./composables/useFormDialogRecordNav.js";
+import { usePanelFormDialogHost } from "./composables/usePanelFormDialogHost.js";
 import { usePanel } from "./composables/usePanel.js";
 import PanelFloat from "./components/PanelFloat.vue";
 import PanelTable from "./components/PanelTable.vue";
@@ -170,25 +170,19 @@ const tagFinderDoctype = ref("");
 const tagFinderX = ref(0);
 const tagFinderY = ref(80);
 
-// Form dialog state
-const showFormDialog = ref(false);
-const formDialogDocName = ref(null);
-const formDialogDefinition = ref(null);
-const formDialogDoctype = ref(null);
-/** Panel float that opened the form dialog — used for prev/next over visible table rows. */
-const formDialogSourcePanelId = ref(null);
-
 const {
+	showFormDialog,
+	formDialogDocName,
+	formDialogDefinition,
+	formDialogDoctype,
 	formDialogNavInfo,
 	formDialogNavLabel,
 	onFormDialogNavPrev,
 	onFormDialogNavNext,
-} = useFormDialogRecordNav({
-	openPanels,
-	showFormDialog,
-	sourcePanelId: formDialogSourcePanelId,
-	docName: formDialogDocName,
-});
+	openFormDialogFromPanelRow,
+	onFormDialogClose,
+	onFormDialogSaved,
+} = usePanelFormDialogHost(openPanels);
 
 const cardStack = reactive([]);
 let cardCounter = 0;
@@ -394,13 +388,7 @@ async function onDrill(ev, parentPanel) {
 function onDrilledRowClick(p, row) {
 	if (!row?.name) return;
 
-	// If panel has a form_dialog configured, open the dialog instead of a new tab
-	if (p.config?.form_dialog) {
-		formDialogDefinition.value = p.config.form_dialog;
-		formDialogDoctype.value = p.doctype;
-		formDialogDocName.value = row.name;
-		formDialogSourcePanelId.value = p.id;
-		showFormDialog.value = true;
+	if (openFormDialogFromPanelRow(p, row)) {
 		return;
 	}
 
@@ -408,24 +396,6 @@ function onDrilledRowClick(p, row) {
 	const slug = p.doctype.toLowerCase().replace(/ /g, "-");
 	const url = `${window.location.origin}/app/${slug}/${encodeURIComponent(row.name)}`;
 	window.open(url, "_blank");
-}
-
-function onFormDialogClose() {
-	showFormDialog.value = false;
-	formDialogDocName.value = null;
-	formDialogSourcePanelId.value = null;
-}
-
-function onFormDialogSaved(doc) {
-	const doctype = formDialogDoctype.value;
-	showFormDialog.value = false;
-	formDialogDocName.value = null;
-	formDialogSourcePanelId.value = null;
-	// Refresh the panel that opened the dialog
-	const panel = openPanels.find((p) => p.doctype === doctype);
-	if (panel && panel._reload) {
-		panel._reload();
-	}
 }
 
 function onFilterChange(panel, userFilters) {

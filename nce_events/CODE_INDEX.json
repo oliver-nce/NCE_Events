@@ -303,7 +303,7 @@
       "exports": [],
       "depends_on": [
         "composables/usePanel.js",
-        "composables/useFormDialogRecordNav.js",
+        "composables/usePanelFormDialogHost.js",
         "components/PanelTable.vue",
         "components/TabBar.vue",
         "components/PanelFormDialog.vue",
@@ -316,6 +316,11 @@
       "purpose": "V2 composable — form dialog prev/next over the source panel's visible row list; exported panelRowArray for reuse.",
       "exports": ["useFormDialogRecordNav", "panelRowArray"],
       "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js": {
+      "purpose": "V2 composable — panel integration for Panel Form Dialog: refs, open from row, close/save + panel reload; composes useFormDialogRecordNav.",
+      "exports": ["usePanelFormDialogHost"],
+      "depends_on": ["composables/useFormDialogRecordNav.js"]
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js": {
       "purpose": "V2 composable — load panel config and data, refetch with user_filters",
