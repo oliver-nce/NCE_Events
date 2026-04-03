@@ -42,17 +42,53 @@ export function createFrozenFormLoad(ctx) {
 		originalData.value = {};
 	}
 
-	async function load() {
-		const mySeq = ++loadSeq;
-		loading.value = true;
-		error.value = null;
-		validationError.value = null;
-
+	/**
+	 * @param {object} [options]
+	 * @param {boolean} [options.navOnly] — same dialog/doctype, new doc only: skip definition + layout rebuild and loading gate
+	 */
+	async function load(options = {}) {
+		let navOnly = options.navOnly === true;
 		const defnName = unref(definitionName);
 		const dt = unref(doctype);
 		const dn = unref(docName);
 
+		if (navOnly && (!dn || !allFields.value.length)) {
+			navOnly = false;
+		}
+
+		const mySeq = ++loadSeq;
+		const showLoading = !navOnly;
+
+		if (showLoading) {
+			loading.value = true;
+			error.value = null;
+			validationError.value = null;
+		} else {
+			validationError.value = null;
+		}
+
 		try {
+			if (navOnly) {
+				const doc = await frappeCall("frappe.client.get", {
+					doctype: dt,
+					name: dn,
+				});
+				if (mySeq !== loadSeq) return;
+				Object.assign(formData, doc);
+
+				const fields = allFields.value;
+				const linkFields = fields.filter(
+					(f) => f.fieldtype === "Link" && f.options && formData[f.fieldname],
+				);
+				await Promise.all(
+					linkFields.map((lf) => handleFetchFrom(lf.fieldname, formData[lf.fieldname])),
+				);
+				if (mySeq !== loadSeq) return;
+
+				originalData.value = JSON.parse(JSON.stringify(formData));
+				return;
+			}
+
 			const defn = await frappeCall(
 				"nce_events.api.form_dialog_api.get_form_dialog_definition",
 				{ name: defnName },
@@ -97,7 +133,7 @@ export function createFrozenFormLoad(ctx) {
 			if (mySeq !== loadSeq) return;
 			error.value = err?.message || err?.toString() || "Failed to load form";
 		} finally {
-			if (mySeq === loadSeq) {
+			if (mySeq === loadSeq && showLoading) {
 				loading.value = false;
 			}
 		}

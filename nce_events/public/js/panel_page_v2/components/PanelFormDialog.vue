@@ -119,7 +119,13 @@ watch(
 			if (opening || cur.docName !== prev?.docName) {
 				activeTab.value = 0;
 			}
-			form.load();
+			const isNavOnly =
+				wasOpen &&
+				cur.open &&
+				cur.docName !== prev?.docName &&
+				cur.definitionName === prev?.definitionName &&
+				cur.doctype === prev?.doctype;
+			form.load(isNavOnly ? { navOnly: true } : {});
 		}
 	},
 	{ immediate: true },
