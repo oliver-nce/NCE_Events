@@ -77,8 +77,6 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 	const formData = reactive({});
 	const originalData = ref({});
 	const loading = ref(false);
-	/** True after first successful load in this open cycle; keeps form hidden until doc+schema ready (avoids Frappe control mount during in-flight calls). Stays true during row nav so the form stays mounted (no flash). */
-	const hasLoaded = ref(false);
 	const saving = ref(false);
 	const error = ref(null);
 	const validationError = ref(null);
@@ -102,7 +100,6 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 			delete formData[key];
 		}
 		originalData.value = {};
-		hasLoaded.value = false;
 	}
 
 	const isNew = computed(() => !unref(docName));
@@ -134,20 +131,18 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 		const dn = unref(docName);
 
 		try {
-			// 1. Load frozen definition only on first open (resetWhenClosed nulls it).
-			//    On row navigation the definition is unchanged — skip the server round-trip.
-			if (!definition.value) {
-				const defn = await frappeCall(
-					"nce_events.api.form_dialog_api.get_form_dialog_definition",
-					{ name: defnName },
-				);
-				if (mySeq !== loadSeq) return;
-				definition.value = defn;
-				buttons.value = defn.buttons || [];
-			}
+			// 1. Load frozen definition
+			const defn = await frappeCall(
+				"nce_events.api.form_dialog_api.get_form_dialog_definition",
+				{ name: defnName },
+			);
+			if (mySeq !== loadSeq) return;
 
-			// 2. Parse the frozen fields into layout tree (fast, in-memory)
-			const fields = definition.value.frozen_meta?.fields || [];
+			definition.value = defn;
+			buttons.value = defn.buttons || [];
+
+			// 2. Parse the frozen fields into layout tree
+			const fields = defn.frozen_meta?.fields || [];
 			allFields.value = fields;
 			tabs.value = parseLayout(fields);
 
@@ -187,9 +182,6 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 		} finally {
 			if (mySeq === loadSeq) {
 				loading.value = false;
-				if (!error.value) {
-					hasLoaded.value = true;
-				}
 			}
 		}
 	}
@@ -367,7 +359,6 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 		formData,
 		isDirty,
 		loading,
-		hasLoaded,
 		saving,
 		error,
 		validationError,

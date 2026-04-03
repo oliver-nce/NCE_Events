@@ -34,11 +34,14 @@
 
       <!-- Body -->
       <div class="ppv2-fd-body">
-        <!-- Error -->
-        <div v-if="form.error.value" class="ppv2-fd-error">{{ form.error.value }}</div>
+        <!-- Loading -->
+        <div v-if="form.loading.value" class="ppv2-fd-loading">Loading…</div>
 
-        <!-- Form: only after first full load (doc + schema); then stays mounted on row nav (no flash). Mid-nav: read-only while loading. -->
-        <template v-else-if="form.tabs.value.length && form.hasLoaded.value">
+        <!-- Error -->
+        <div v-else-if="form.error.value" class="ppv2-fd-error">{{ form.error.value }}</div>
+
+        <!-- Form content -->
+        <template v-else-if="form.tabs.value.length">
           <!-- Tab bar (only if multiple tabs) -->
           <div v-if="form.tabs.value.length > 1" class="ppv2-fd-tab-bar">
             <button
@@ -84,7 +87,7 @@
                     :model-value="form.formData[field.fieldname]"
                     :visible="form.isFieldVisible(field)"
                     :mandatory="form.isFieldMandatory(field)"
-                    :read-only="form.isFieldReadOnly(field) || form.loading.value"
+                    :read-only="form.isFieldReadOnly(field)"
                     @change="onFieldChange"
                     @link-change="onLinkChange"
                   />
@@ -99,9 +102,6 @@
             {{ form.validationError.value }}
           </div>
         </template>
-
-        <!-- Initial open (no tabs yet) or first full load (tabs exist, doc/fetch still in flight) -->
-        <div v-else-if="form.loading.value" class="ppv2-fd-loading">Loading…</div>
       </div>
 
       <!-- Footer -->
