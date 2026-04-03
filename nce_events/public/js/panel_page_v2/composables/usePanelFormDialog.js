@@ -1,41 +1,7 @@
 import { ref, reactive, computed, toRaw, unref } from "vue";
 import { frappeCall } from "../utils/frappeCall.js";
+import { evaluateExpression, isLayoutField } from "../utils/frappeFieldExpr.js";
 import { parseLayout } from "../utils/parseLayout.js";
-
-/**
- * Evaluate a Frappe depends_on expression.
- *
- * Formats:
- *   "eval:doc.status=='Open'"  — JS expression with doc in scope
- *   "fieldname"                 — truthy check on field value
- *   ""                          — always true
- */
-function evaluateExpression(expr, doc) {
-	if (!expr) return true;
-	if (expr.startsWith("eval:")) {
-		try {
-			const code = expr.slice(5);
-			return new Function("doc", `return (${code})`)(doc);
-		} catch {
-			return true;
-		}
-	}
-	return !!doc[expr];
-}
-
-const LAYOUT_FIELDTYPES = [
-	"Tab Break",
-	"Section Break",
-	"Column Break",
-	"Heading",
-	"HTML",
-	"Image",
-	"Fold",
-];
-
-function isLayoutField(fieldtype) {
-	return LAYOUT_FIELDTYPES.includes(fieldtype);
-}
 
 /** Stable JSON for dirty-checking reactive form state vs loaded snapshot. */
 function snapshotForCompare(data) {

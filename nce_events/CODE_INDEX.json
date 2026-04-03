@@ -331,6 +331,7 @@
       "exports": ["usePanelFormDialog"],
       "depends_on": [
         "utils/frappeCall.js",
+        "utils/frappeFieldExpr.js",
         "utils/parseLayout.js",
         "nce_events/api/form_dialog_api.py"
       ]
@@ -411,6 +412,11 @@
     "nce_events/public/js/panel_page_v2/utils/frappeCall.js": {
       "purpose": "Utility: Promise wrapper for frappe.call (shared by usePanel, usePanelFormDialog, useCardForm).",
       "exports": ["frappeCall"],
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/utils/frappeFieldExpr.js": {
+      "purpose": "Utility: Frappe-style depends_on / *_depends_on evaluation and layout fieldtype list for frozen form meta.",
+      "exports": ["evaluateExpression", "isLayoutField", "LAYOUT_FIELDTYPES"],
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/utils/parseLayout.js": {
