@@ -299,13 +299,15 @@
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/App.vue": {
-      "purpose": "V2 root component — panel orchestration, tab management, panel switching, form dialog open/close from row action",
+      "purpose": "V2 root component — panel orchestration, card stack (nce_cards + useNceCardStack), form dialog host, window._nce_open_card",
       "exports": [],
       "depends_on": [
         "composables/usePanel.js",
+        "composables/useNceCardStack.js",
         "composables/usePanelFormDialogHost.js",
         "components/PanelTable.vue",
         "components/TabBar.vue",
+        "nce_cards/CardModal.vue",
         "components/PanelFormDialog.vue",
         "shared/sms_dialog.js",
         "shared/email_dialog.js",
@@ -332,10 +334,10 @@
       "exports": ["useTagFinder"],
       "depends_on": []
     },
-    "nce_events/public/js/panel_page_v2/composables/useCardForm.js": {
-      "purpose": "V2 composable — card form state and submission",
-      "exports": ["useCardForm"],
-      "depends_on": ["utils/frappeCall.js"]
+    "nce_events/public/js/panel_page_v2/composables/useNceCardStack.js": {
+      "purpose": "V2 composable — stacked Card modals; parseOpenCardOpts for window._nce_open_card. Panel drill calls openCardModal.",
+      "exports": ["useNceCardStack", "parseOpenCardOpts"],
+      "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/composables/formDialogFetchFrom.js": {
       "purpose": "createHandleFetchFrom(allFields, formData) — Link change fetch_from resolution for Panel Form Dialog.",
@@ -398,15 +400,25 @@
       "exports": [],
       "depends_on": []
     },
-    "nce_events/public/js/panel_page_v2/components/CardModal.vue": {
-      "purpose": "Modal wrapper for card display/editing",
-      "exports": [],
-      "depends_on": ["CardForm.vue"]
+    "nce_events/public/js/panel_page_v2/nce_cards/useCardForm.js": {
+      "purpose": "Card core — load Card Definition + record, hop paths, saveField/refresh (uses frappe.db + frappeCall).",
+      "exports": ["useCardForm"],
+      "depends_on": ["utils/frappeCall.js"]
     },
-    "nce_events/public/js/panel_page_v2/components/CardForm.vue": {
-      "purpose": "Card definition form renderer within modal",
+    "nce_events/public/js/panel_page_v2/nce_cards/CardForm.vue": {
+      "purpose": "Card core — renders a Card Definition (tabs, WidgetGrid, ActionsPanel).",
       "exports": [],
-      "depends_on": ["useCardForm.js"]
+      "depends_on": [
+        "nce_cards/useCardForm.js",
+        "components/ActionsPanel.vue",
+        "components/TabBar.vue",
+        "components/WidgetGrid.vue"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/nce_cards/CardModal.vue": {
+      "purpose": "Card core — Teleport modal shell wrapping CardForm.",
+      "exports": [],
+      "depends_on": ["nce_cards/CardForm.vue"]
     },
     "nce_events/public/js/panel_page_v2/components/DisplayWidget.vue": {
       "purpose": "Read-only display widget for card fields",
@@ -442,7 +454,7 @@
       "depends_on": ["utils/fieldTypeMap.js"]
     },
     "nce_events/public/js/panel_page_v2/utils/frappeCall.js": {
-      "purpose": "Utility: Promise wrapper for frappe.call (shared by usePanel, usePanelFormDialog, useCardForm).",
+      "purpose": "Utility: Promise wrapper for frappe.call (shared by usePanel, usePanelFormDialog stack, nce_cards/useCardForm).",
       "exports": ["frappeCall"],
       "depends_on": []
     },

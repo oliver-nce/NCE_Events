@@ -142,12 +142,13 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted, onUnmounted } from "vue";
+import { useNceCardStack, parseOpenCardOpts } from "./composables/useNceCardStack.js";
 import { usePanelFormDialogHost } from "./composables/usePanelFormDialogHost.js";
 import { usePanel } from "./composables/usePanel.js";
 import PanelFloat from "./components/PanelFloat.vue";
 import PanelTable from "./components/PanelTable.vue";
 import TagFinder from "./components/TagFinder.vue";
-import CardModal from "./components/CardModal.vue";
+import CardModal from "./nce_cards/CardModal.vue";
 import PanelFormDialog from "./components/PanelFormDialog.vue";
 
 const rootPanel = usePanel("WP Tables");
@@ -184,25 +185,7 @@ const {
 	onFormDialogSaved,
 } = usePanelFormDialogHost(openPanels);
 
-const cardStack = reactive([]);
-let cardCounter = 0;
-
-function openCardModal(cardDefName, doctype, recordName) {
-	cardStack.push({
-		id: ++cardCounter,
-		cardDefName,
-		doctype,
-		recordName,
-	});
-}
-
-function closeTopCard() {
-	cardStack.pop();
-}
-
-function onOpenCard(cfg) {
-	openCardModal(cfg.cardDefName, cfg.doctype, cfg.name);
-}
+const { cardStack, openCardModal, closeTopCard, onOpenCard } = useNceCardStack();
 
 function onRowDrop(panel, row) {
 	const arr = panel ? panel.rows : rows.value;
@@ -240,12 +223,23 @@ onMounted(() => {
 		tagFinderDoctype.value = dt;
 	};
 	window._nce_close_tag_finder = () => { tagFinderDoctype.value = ""; };
+	window._nce_open_card = (opts) => {
+		const parsed = parseOpenCardOpts(opts);
+		if (parsed) {
+			openCardModal(parsed.cardDefName, parsed.doctype, parsed.recordName);
+		}
+	};
+	window._nce_close_top_card = () => {
+		closeTopCard();
+	};
 });
 
 onUnmounted(() => {
 	window.removeEventListener('keydown', onKeyDown);
 	delete window._nce_open_tag_finder;
 	delete window._nce_close_tag_finder;
+	delete window._nce_open_card;
+	delete window._nce_close_top_card;
 });
 
 /** Child float header: "Enrollments" or "Enrollments for {parent title}" when drilled with context. */

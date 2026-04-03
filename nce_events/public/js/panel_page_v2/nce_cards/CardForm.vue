@@ -41,10 +41,10 @@
 
 <script setup>
 import { ref, computed, watch, onMounted } from "vue";
-import { useCardForm } from "../composables/useCardForm.js";
-import ActionsPanel from "./ActionsPanel.vue";
-import TabBar from "./TabBar.vue";
-import WidgetGrid from "./WidgetGrid.vue";
+import { useCardForm } from "./useCardForm.js";
+import ActionsPanel from "../components/ActionsPanel.vue";
+import TabBar from "../components/TabBar.vue";
+import WidgetGrid from "../components/WidgetGrid.vue";
 
 const props = defineProps({
 	cardDefName: { type: String, required: true },
