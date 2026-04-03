@@ -32,91 +32,76 @@
         <button class="ppv2-fd-close" @click="onCancel">&times;</button>
       </div>
 
-      <!-- Body: keep layout on row-to-row load (overlay); min-height + transition -->
-      <div class="ppv2-fd-body" :style="bodyMinHeightStyle">
+      <!-- Body -->
+      <div class="ppv2-fd-body">
+        <!-- Loading -->
+        <div v-if="form.loading.value" class="ppv2-fd-loading">Loading…</div>
+
         <!-- Error -->
-        <div v-if="form.error.value" class="ppv2-fd-error">{{ form.error.value }}</div>
+        <div v-else-if="form.error.value" class="ppv2-fd-error">{{ form.error.value }}</div>
 
-        <!-- Form (shown while refreshing too — overlay covers stale row until new data ready) -->
+        <!-- Form content -->
         <template v-else-if="form.tabs.value.length">
-          <div ref="bodyInnerRef" class="ppv2-fd-body-stack">
+          <!-- Tab bar (only if multiple tabs) -->
+          <div v-if="form.tabs.value.length > 1" class="ppv2-fd-tab-bar">
+            <button
+              v-for="(tab, ti) in form.tabs.value"
+              :key="ti"
+              class="ppv2-fd-tab-btn"
+              :class="{ 'ppv2-fd-tab-active': activeTab === ti }"
+              @click="activeTab = ti"
+            >{{ tab.label }}</button>
+          </div>
+
+          <!-- Tab content — all tabs stay rendered to maintain stable height -->
+          <div class="ppv2-fd-tab-panels">
+          <div
+            v-for="(tab, ti) in form.tabs.value"
+            :key="ti"
+            class="ppv2-fd-tab-panel"
+            :class="{ 'ppv2-fd-tab-panel-active': form.tabs.value.length === 1 || activeTab === ti }"
+          >
+            <!-- Sections -->
             <div
-              class="ppv2-fd-form-surface"
-              :class="{ 'ppv2-fd-form-surface--dim': form.loading.value }"
+              v-for="(section, si) in tab.sections"
+              :key="si"
+              class="ppv2-fd-section"
             >
-              <!-- Tab bar (only if multiple tabs) -->
-              <div v-if="form.tabs.value.length > 1" class="ppv2-fd-tab-bar">
-                <button
-                  v-for="(tab, ti) in form.tabs.value"
-                  :key="ti"
-                  type="button"
-                  class="ppv2-fd-tab-btn"
-                  :class="{ 'ppv2-fd-tab-active': activeTab === ti }"
-                  @click="activeTab = ti"
-                >{{ tab.label }}</button>
-              </div>
+              <h3 v-if="section.label" class="ppv2-fd-section-label">
+                {{ section.label }}
+              </h3>
+              <p v-if="section.description" class="ppv2-fd-section-desc">
+                {{ section.description }}
+              </p>
 
-              <div class="ppv2-fd-tab-panels">
-                <div
-                  v-for="(tab, ti) in form.tabs.value"
-                  :key="ti"
-                  class="ppv2-fd-tab-panel"
-                  :class="{ 'ppv2-fd-tab-panel-active': form.tabs.value.length === 1 || activeTab === ti }"
-                >
-                  <div
-                    v-for="(section, si) in tab.sections"
-                    :key="si"
-                    class="ppv2-fd-section"
-                  >
-                    <h3 v-if="section.label" class="ppv2-fd-section-label">
-                      {{ section.label }}
-                    </h3>
-                    <p v-if="section.description" class="ppv2-fd-section-desc">
-                      {{ section.description }}
-                    </p>
-
-                    <div
-                      class="ppv2-fd-columns"
-                      :style="{ gridTemplateColumns: 'repeat(' + section.columns.length + ', 1fr)' }"
-                    >
-                      <div v-for="(col, ci) in section.columns" :key="ci">
-                        <PanelFormField
-                          v-for="field in col.fields"
-                          :key="field.fieldname"
-                          :field="field"
-                          :model-value="form.formData[field.fieldname]"
-                          :visible="form.isFieldVisible(field)"
-                          :mandatory="form.isFieldMandatory(field)"
-                          :read-only="form.isFieldReadOnly(field) || !!form.loading.value"
-                          @change="onFieldChange"
-                          @link-change="onLinkChange"
-                        />
-                      </div>
-                    </div>
-                  </div>
+              <!-- Columns as CSS grid -->
+              <div
+                class="ppv2-fd-columns"
+                :style="{ gridTemplateColumns: 'repeat(' + section.columns.length + ', 1fr)' }"
+              >
+                <div v-for="(col, ci) in section.columns" :key="ci">
+                  <PanelFormField
+                    v-for="field in col.fields"
+                    :key="field.fieldname"
+                    :field="field"
+                    :model-value="form.formData[field.fieldname]"
+                    :visible="form.isFieldVisible(field)"
+                    :mandatory="form.isFieldMandatory(field)"
+                    :read-only="form.isFieldReadOnly(field)"
+                    @change="onFieldChange"
+                    @link-change="onLinkChange"
+                  />
                 </div>
               </div>
-
-              <div v-if="form.validationError.value" class="ppv2-fd-validation-error">
-                {{ form.validationError.value }}
-              </div>
-            </div>
-
-            <div
-              v-if="form.loading.value"
-              class="ppv2-fd-loading-overlay"
-              aria-busy="true"
-              aria-live="polite"
-            >
-              <span class="ppv2-fd-loading-label">Loading…</span>
             </div>
           </div>
-        </template>
 
-        <!-- First open: no schema yet -->
-        <div v-else-if="form.loading.value" class="ppv2-fd-loading ppv2-fd-loading--initial">
-          Loading…
-        </div>
+          </div>
+          <!-- Validation error -->
+          <div v-if="form.validationError.value" class="ppv2-fd-validation-error">
+            {{ form.validationError.value }}
+          </div>
+        </template>
       </div>
 
       <!-- Footer -->
@@ -147,7 +132,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onUnmounted, toRef, nextTick, computed } from "vue";
+import { ref, watch, onUnmounted, toRef } from "vue";
 import PanelFormField from "./PanelFormField.vue";
 import { usePanelFormDialog } from "../composables/usePanelFormDialog.js";
 
@@ -177,46 +162,6 @@ const form = usePanelFormDialog({
 	docName: toRef(props, "docName"),
 });
 
-/** Keeps body height stable across loads; transitions when content height changes. */
-const bodyInnerRef = ref(null);
-const bodyMinHeightPx = ref(0);
-
-const bodyMinHeightStyle = computed(() => {
-	if (bodyMinHeightPx.value > 0) {
-		return { minHeight: `${bodyMinHeightPx.value}px` };
-	}
-	return {};
-});
-
-function measureBodyMinHeight() {
-	const el = bodyInnerRef.value;
-	if (!el) return;
-	const h = Math.ceil(el.getBoundingClientRect().height);
-	if (h > 0) {
-		bodyMinHeightPx.value = Math.max(300, h);
-	}
-}
-
-watch(
-	() => props.open,
-	(open) => {
-		if (!open) {
-			bodyMinHeightPx.value = 0;
-		}
-	},
-);
-
-watch(
-	() => [form.loading.value, form.error.value, form.tabs.value.length],
-	async () => {
-		if (form.loading.value || form.error.value || !form.tabs.value.length) return;
-		await nextTick();
-		requestAnimationFrame(() => {
-			measureBodyMinHeight();
-		});
-	},
-);
-
 function confirmDiscardIfDirty(proceed) {
 	if (!form.isDirty.value) {
 		proceed();
@@ -243,6 +188,7 @@ watch(
 	(cur, prev) => {
 		if (!cur.open) {
 			window.removeEventListener("keydown", onFormDialogKeydown, true);
+			form.resetWhenClosed();
 			return;
 		}
 		window.removeEventListener("keydown", onFormDialogKeydown, true);
@@ -267,6 +213,7 @@ watch(
 
 onUnmounted(() => {
 	window.removeEventListener("keydown", onFormDialogKeydown, true);
+	form.resetWhenClosed();
 });
 
 function onFieldChange({ fieldname, value }) {
@@ -333,7 +280,6 @@ function onPlaceholderButton(btn) {
   align-items: center;
   justify-content: center;
   z-index: 1050;
-  transition: background-color 0.22s ease;
 }
 .ppv2-form-dialog {
   background: var(--bg-card);
@@ -343,10 +289,6 @@ function onPlaceholderButton(btn) {
   flex-direction: column;
   max-height: 90vh;
   overflow: hidden;
-  transition:
-    width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow 0.25s ease;
 }
 /* Size variants */
 .ppv2-fd-size-sm  { width: 400px; }
@@ -433,54 +375,12 @@ function onPlaceholderButton(btn) {
   overflow-y: auto;
   overflow-x: hidden;
   padding: 16px;
-  min-height: min(400px, 48vh);
-  transition: min-height 0.32s cubic-bezier(0.4, 0, 0.2, 1);
-  box-sizing: border-box;
-}
-.ppv2-fd-body-stack {
-  position: relative;
-  min-height: 0;
-}
-.ppv2-fd-form-surface {
-  transition: opacity 0.22s ease;
-}
-.ppv2-fd-form-surface--dim {
-  opacity: 0.42;
-  pointer-events: none;
-}
-.ppv2-fd-loading-overlay {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 3;
-  background: color-mix(in srgb, var(--bg-card) 82%, transparent);
-  backdrop-filter: blur(2px);
-  border-radius: var(--border-radius-sm, 4px);
-  transition: opacity 0.2s ease;
-}
-.ppv2-fd-loading-label {
-  font-size: var(--font-size-base);
-  font-weight: var(--font-weight-bold, 600);
-  color: var(--text-color);
-  animation: ppv2-fd-loading-pulse 0.9s ease-in-out infinite;
-}
-@keyframes ppv2-fd-loading-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.45; }
 }
 .ppv2-fd-loading {
   text-align: center;
   padding: 32px;
   color: var(--text-muted);
   font-size: var(--font-size-base);
-}
-.ppv2-fd-loading--initial {
-  min-height: min(360px, 45vh);
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 .ppv2-fd-error {
   text-align: center;

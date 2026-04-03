@@ -66,12 +66,9 @@ function snapshotForCompare(data) {
 /**
  * Composable for managing a Panel Form Dialog.
  *
- * @param {Object} options
- * @param {string} options.definitionName - Name of the Form Dialog document
- * @param {string} options.doctype - Target DocType
- * @param {import('vue').Ref<string>|string} options.definitionName - Form Dialog document name
- * @param {import('vue').Ref<string>|string} options.doctype - Target DocType
- * @param {import('vue').Ref<string|null>|string|null} options.docName - Document name (null = new)
+ * @param {import('vue').Ref<string>|string} options.definitionName
+ * @param {import('vue').Ref<string>|string} options.doctype
+ * @param {import('vue').Ref<string|null>|string|null} options.docName
  */
 export function usePanelFormDialog({ definitionName, doctype, docName }) {
 	const definition = ref(null);
@@ -86,12 +83,30 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 	const buttons = ref([]);
 	let loadSeq = 0;
 
+	/**
+	 * When the dialog closes: invalidate in-flight loads (so their `finally` does not own `loading`)
+	 * and clear tabs/form state so the next open is never “ghost form + stuck overlay”.
+	 */
+	function resetWhenClosed() {
+		loadSeq += 1;
+		loading.value = false;
+		error.value = null;
+		validationError.value = null;
+		tabs.value = [];
+		allFields.value = [];
+		definition.value = null;
+		buttons.value = [];
+		for (const key of Object.keys(formData)) {
+			delete formData[key];
+		}
+		originalData.value = {};
+	}
+
 	const isNew = computed(() => !unref(docName));
 	const dialogTitle = computed(() => {
-		if (!definition.value) return "";
 		const dt = unref(doctype);
 		const dn = unref(docName);
-		if (isNew.value) return `New ${dt}`;
+		if (!dn) return `New ${dt}`;
 		return `Edit ${dt}: ${dn}`;
 	});
 	const dialogSize = computed(() => definition.value?.dialog_size || "xl");
@@ -351,6 +366,7 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 		isNew,
 		dialogTitle,
 		dialogSize,
+		resetWhenClosed,
 		load,
 		validate,
 		save,
