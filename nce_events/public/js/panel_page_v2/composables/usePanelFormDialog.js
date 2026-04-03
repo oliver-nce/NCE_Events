@@ -77,6 +77,8 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 	const formData = reactive({});
 	const originalData = ref({});
 	const loading = ref(false);
+	/** True after first successful load in this open cycle; keeps form hidden until doc+schema ready (avoids Frappe control mount during in-flight calls). Stays true during row nav so the form stays mounted (no flash). */
+	const hasLoaded = ref(false);
 	const saving = ref(false);
 	const error = ref(null);
 	const validationError = ref(null);
@@ -100,6 +102,7 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 			delete formData[key];
 		}
 		originalData.value = {};
+		hasLoaded.value = false;
 	}
 
 	const isNew = computed(() => !unref(docName));
@@ -182,6 +185,9 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 		} finally {
 			if (mySeq === loadSeq) {
 				loading.value = false;
+				if (!error.value) {
+					hasLoaded.value = true;
+				}
 			}
 		}
 	}
@@ -359,6 +365,7 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 		formData,
 		isDirty,
 		loading,
+		hasLoaded,
 		saving,
 		error,
 		validationError,

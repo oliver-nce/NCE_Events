@@ -37,9 +37,8 @@
         <!-- Error -->
         <div v-if="form.error.value" class="ppv2-fd-error">{{ form.error.value }}</div>
 
-        <!-- Form: shown as soon as tabs are available, even while reloading a new row.
-             Fields are read-only mid-load so no accidental edits. -->
-        <template v-else-if="form.tabs.value.length">
+        <!-- Form: only after first full load (doc + schema); then stays mounted on row nav (no flash). Mid-nav: read-only while loading. -->
+        <template v-else-if="form.tabs.value.length && form.hasLoaded.value">
           <!-- Tab bar (only if multiple tabs) -->
           <div v-if="form.tabs.value.length > 1" class="ppv2-fd-tab-bar">
             <button
@@ -101,7 +100,7 @@
           </div>
         </template>
 
-        <!-- First open: tabs not loaded yet -->
+        <!-- Initial open (no tabs yet) or first full load (tabs exist, doc/fetch still in flight) -->
         <div v-else-if="form.loading.value" class="ppv2-fd-loading">Loading…</div>
       </div>
 
