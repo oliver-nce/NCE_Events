@@ -1,18 +1,34 @@
 // ── DocType field cache ───────────────────────────────────────────────────────
 const _dt_field_cache = {};
 
+/** API returns { fields, doctype_title_field } (or legacy list). */
+function _unpack_doctype_fields_message(msg) {
+	if (msg && Array.isArray(msg.fields)) {
+		return {
+			fields: msg.fields,
+			doctype_title_field: (msg.doctype_title_field || "").trim(),
+		};
+	}
+	return {
+		fields: Array.isArray(msg) ? msg : [],
+		doctype_title_field: "",
+	};
+}
+
+/** @param {(fields: object[], pack: {fields: object[], doctype_title_field: string}) => void} callback */
 function _get_doctype_fields(doctype, callback) {
 	if (_dt_field_cache[doctype]) {
-		callback(_dt_field_cache[doctype]);
+		const c = _dt_field_cache[doctype];
+		callback(c.fields, c);
 		return;
 	}
 	frappe.call({
 		method: "nce_events.api.panel_api.get_doctype_fields",
 		args: { root_doctype: doctype },
 		callback: function (r) {
-			const fields = (r && r.message) || [];
-			_dt_field_cache[doctype] = fields;
-			callback(fields);
+			const unpacked = _unpack_doctype_fields_message(r && r.message);
+			_dt_field_cache[doctype] = unpacked;
+			callback(unpacked.fields, unpacked);
 		},
 	});
 }
@@ -172,7 +188,7 @@ function _render_display(frm) {
 		return;
 	}
 
-	_get_doctype_fields(frm.doc.root_doctype, function (root_fields) {
+	_get_doctype_fields(frm.doc.root_doctype, function (root_fields, rootPack) {
 		const link_fields = root_fields.filter(function (f) {
 			return f.fieldtype === "Link" && f.options;
 		});
@@ -182,7 +198,7 @@ function _render_display(frm) {
 
 		function _build_once_ready() {
 			$container.empty();
-			_build_display_tabs(frm, $container, root_fields, link_fields, linked_data);
+			_build_display_tabs(frm, $container, root_fields, link_fields, linked_data, rootPack);
 		}
 
 		if (!pending) {
@@ -231,7 +247,22 @@ function _get_related_fields(frm) {
 		});
 }
 
-function _build_display_tabs(frm, $container, root_fields, link_fields, linked_data) {
+/** Move one root field row to the top of the list (Display matrix / col_order sync order). */
+function _move_root_field_first(fields, fieldname) {
+	const idx = fields.findIndex(function (f) {
+		return f.fieldname === fieldname && !f._computed && !f._related;
+	});
+	if (idx <= 0) return fields;
+	const copy = fields.slice();
+	const row = copy.splice(idx, 1)[0];
+	copy.unshift(row);
+	return copy;
+}
+
+function _build_display_tabs(frm, $container, root_fields, link_fields, linked_data, rootPack) {
+	rootPack = rootPack || { doctype_title_field: "" };
+	const dtTitle = (rootPack.doctype_title_field || "").trim();
+
 	const root_names = {};
 	root_fields.forEach(function (f) {
 		root_names[f.fieldname] = true;
@@ -240,7 +271,10 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		return !root_names[cf.fieldname];
 	});
 	const related_fields = _get_related_fields(frm);
-	const root_with_computed = root_fields.concat(computed_fields).concat(related_fields);
+	let root_with_computed = root_fields.concat(computed_fields).concat(related_fields);
+	if (dtTitle && root_names[dtTitle]) {
+		root_with_computed = _move_root_field_first(root_with_computed, dtTitle);
+	}
 
 	const saved = {
 		column_order: _parse_csv(frm.doc.column_order),
@@ -249,6 +283,9 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		gender_tint: _parse_csv(frm.doc.gender_color_fields),
 		title_field: (frm.doc.title_field || "").trim(),
 	};
+	if (!saved.title_field && dtTitle && root_names[dtTitle]) {
+		saved.title_field = dtTitle;
+	}
 
 	// Merge computed column field_names into column_order so new ones appear in Display
 	computed_fields.forEach(function (cf) {
@@ -383,7 +420,8 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		});
 
 		if (sub_id === "_order") {
-			_render_order_tab($sub_content, uid, sub_tabs, matrices, saved, _sync_all);
+			const orderTitleKey = (saved.title_field || dtTitle || "").trim();
+			_render_order_tab($sub_content, uid, sub_tabs, matrices, saved, _sync_all, orderTitleKey);
 			return;
 		}
 
@@ -534,7 +572,7 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set, matrix_opts)
 }
 
 // ── Order tab — drag-reorder union of all selected fields ─────────────────────
-function _render_order_tab($sub_content, uid, sub_tabs, matrices, saved, _sync_all) {
+function _render_order_tab($sub_content, uid, sub_tabs, matrices, saved, _sync_all, orderTitleKey) {
 	// Gather all currently selected fields across all matrices
 	let selected = [];
 	sub_tabs.forEach(function (st) {
@@ -548,6 +586,15 @@ function _render_order_tab($sub_content, uid, sub_tabs, matrices, saved, _sync_a
 			selected.push({ key: key, label: label, source: st.label });
 		});
 	});
+
+	// No saved order yet: put DocType title field first (matches Display matrix row order)
+	if (!saved.column_order.length && orderTitleKey) {
+		selected.sort(function (a, b) {
+			if (a.key === orderTitleKey) return -1;
+			if (b.key === orderTitleKey) return 1;
+			return 0;
+		});
+	}
 
 	// Apply saved column_order for initial ordering
 	if (saved.column_order.length) {
@@ -970,7 +1017,9 @@ function _render_default_filters_now(frm) {
 	}
 
 	if (doctype) {
-		_get_doctype_fields(doctype, _build);
+		_get_doctype_fields(doctype, function (fields) {
+			_build(fields);
+		});
 	} else {
 		_build([]);
 	}
@@ -1231,6 +1280,19 @@ frappe.ui.form.on("Page Panel", {
 		frm.set_value("gender_color_fields", "");
 		frm.set_value("title_field", "");
 		_render_default_filters(frm);
+		if (frm.doc.root_doctype) {
+			frappe.call({
+				method: "nce_events.api.panel_api.get_doctype_fields",
+				args: { root_doctype: frm.doc.root_doctype },
+				callback: function (r) {
+					const u = _unpack_doctype_fields_message(r && r.message);
+					const tf = u.doctype_title_field;
+					if (tf && u.fields.some(function (f) { return f.fieldname === tf; })) {
+						frm.set_value("title_field", tf);
+					}
+				},
+			});
+		}
 		const $layout = $(frm.layout.wrapper);
 		if ($layout.data("pp-active-tab") === "display") {
 			_render_display(frm);

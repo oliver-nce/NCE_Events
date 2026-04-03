@@ -716,10 +716,14 @@ def debug_child_lookup(root_doctype: str) -> dict[str, Any]:
 
 
 @frappe.whitelist()
-def get_doctype_fields(root_doctype: str) -> list[dict[str, str]]:
+def get_doctype_fields(root_doctype: str) -> dict[str, Any]:
 	"""Return data-bearing fields for a DocType (excludes layout and system fields).
 
 	Link fields include an 'options' key with the target DocType name.
+
+	Response shape: ``{ "fields": [...], "doctype_title_field": "<fieldname or ''>" }``
+	``doctype_title_field`` is the root DocType's ``title_field`` when it names a field
+	we expose (same list as ``fields``), else empty string.
 	"""
 	meta = frappe.get_meta(root_doctype)
 	result: list[dict[str, str]] = [
@@ -736,7 +740,12 @@ def get_doctype_fields(root_doctype: str) -> list[dict[str, str]]:
 		if f.fieldtype == "Link" and f.options:
 			entry["options"] = f.options
 		result.append(entry)
-	return result
+
+	exposed = {row["fieldname"] for row in result}
+	raw_title = (getattr(meta, "title_field", None) or "").strip()
+	doctype_title_field = raw_title if raw_title in exposed else ""
+
+	return {"fields": result, "doctype_title_field": doctype_title_field}
 
 
 def _get_link_fieldnames(doctype: str) -> list[str]:

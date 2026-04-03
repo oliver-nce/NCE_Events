@@ -38,7 +38,7 @@
       ]
     },
     "nce_events/api/panel_api.py": {
-      "purpose": "Core panel data API: fetch panel config, fetch paginated/filtered panel data, export CSV, save SQL filter, child doctype discovery, field metadata",
+      "purpose": "Core panel data API: fetch panel config, fetch paginated/filtered panel data, export CSV, save SQL filter, child doctype discovery, field metadata. get_doctype_fields returns { fields, doctype_title_field } for Page Panel Display defaults.",
       "exports": [
         "get_panel_config",
         "get_panel_data",
