@@ -23,37 +23,47 @@
 					class="ppv2-fd-tab-panel"
 					:class="{ 'ppv2-fd-tab-panel-active': tabs.length === 1 || activeTab === ti }"
 				>
-					<div
-						v-for="(section, si) in tab.sections"
-						:key="si"
-						class="ppv2-fd-section"
-					>
-						<h3 v-if="section.label" class="ppv2-fd-section-label">
-							{{ section.label }}
-						</h3>
-						<p v-if="section.description" class="ppv2-fd-section-desc">
-							{{ section.description }}
+					<!-- Related-DocType placeholder tab -->
+					<div v-if="tab._related" class="ppv2-fd-related-placeholder">
+						<p class="ppv2-fd-related-placeholder-text">
+							{{ tab._related.label || tab._related.doctype }} — coming soon
 						</p>
+					</div>
 
+					<!-- Normal frozen-schema tab -->
+					<template v-else>
 						<div
-							class="ppv2-fd-columns"
-							:style="{ gridTemplateColumns: 'repeat(' + section.columns.length + ', 1fr)' }"
+							v-for="(section, si) in tab.sections"
+							:key="si"
+							class="ppv2-fd-section"
 						>
-							<div v-for="(col, ci) in section.columns" :key="ci">
-								<PanelFormField
-									v-for="field in col.fields"
-									:key="field.fieldname"
-									:field="field"
-									:model-value="formData[field.fieldname]"
-									:visible="isFieldVisible(field)"
-									:mandatory="isFieldMandatory(field)"
-									:read-only="isFieldReadOnly(field)"
-									@change="(p) => $emit('field-change', p)"
-									@link-change="(p) => $emit('link-change', p)"
-								/>
+							<h3 v-if="section.label" class="ppv2-fd-section-label">
+								{{ section.label }}
+							</h3>
+							<p v-if="section.description" class="ppv2-fd-section-desc">
+								{{ section.description }}
+							</p>
+
+							<div
+								class="ppv2-fd-columns"
+								:style="{ gridTemplateColumns: 'repeat(' + section.columns.length + ', 1fr)' }"
+							>
+								<div v-for="(col, ci) in section.columns" :key="ci">
+									<PanelFormField
+										v-for="field in col.fields"
+										:key="field.fieldname"
+										:field="field"
+										:model-value="formData[field.fieldname]"
+										:visible="isFieldVisible(field)"
+										:mandatory="isFieldMandatory(field)"
+										:read-only="isFieldReadOnly(field)"
+										@change="(p) => $emit('field-change', p)"
+										@link-change="(p) => $emit('link-change', p)"
+									/>
+								</div>
 							</div>
 						</div>
-					</div>
+					</template>
 				</div>
 			</div>
 
@@ -162,12 +172,23 @@ const activeTab = defineModel("activeTab", { type: Number, required: true });
 	overflow: visible;
 }
 .ppv2-fd-validation-error {
-	margin-top: 8px;
-	padding: 8px 12px;
-	background: #fef0f0;
-	border: 1px solid #e74c3c;
-	border-radius: var(--border-radius-sm, 4px);
-	color: #c0392b;
-	font-size: var(--font-size-sm);
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: #fef0f0;
+    border: 1px solid #e74c3c;
+    border-radius: var(--border-radius-sm, 4px);
+    color: #c0392b;
+    font-size: var(--font-size-sm);
+}
+.ppv2-fd-related-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 120px;
+    color: var(--text-muted);
+}
+.ppv2-fd-related-placeholder-text {
+    font-size: var(--font-size-base);
+    font-style: italic;
 }
 </style>

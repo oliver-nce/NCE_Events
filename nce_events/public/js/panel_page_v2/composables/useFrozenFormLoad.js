@@ -74,7 +74,11 @@ export function createFrozenFormLoad(ctx) {
 		if (isFdLoadDebugEnabled() && loadDebugLog) {
 			loadDebugLog.value = [];
 		}
-		pushDebug("start", true, `seq=${mySeq} doctype=${dt} docName=${dn ?? "(new)"} definition=${defnName}`);
+		pushDebug(
+			"start",
+			true,
+			`seq=${mySeq} doctype=${dt} docName=${dn ?? "(new)"} definition=${defnName}`,
+		);
 
 		try {
 			let defn;
@@ -91,7 +95,11 @@ export function createFrozenFormLoad(ctx) {
 				pushDebug("aborted", false, "stale seq after get_form_dialog_definition");
 				return;
 			}
-			pushDebug("get_form_dialog_definition", true, `ok dialog_size=${defn?.dialog_size ?? "?"}`);
+			pushDebug(
+				"get_form_dialog_definition",
+				true,
+				`ok dialog_size=${defn?.dialog_size ?? "?"}`,
+			);
 
 			definition.value = defn;
 			buttons.value = defn.buttons || [];
@@ -99,7 +107,22 @@ export function createFrozenFormLoad(ctx) {
 			const fields = defn.frozen_meta?.fields || [];
 			allFields.value = fields;
 			tabs.value = parseLayout(fields);
-			pushDebug("parseLayout", true, `fields=${fields.length} tabs=${tabs.value.length}`);
+
+			// Append placeholder tabs for related DocTypes
+			const relatedDoctypes = defn.related_doctypes || [];
+			for (const rel of relatedDoctypes) {
+				tabs.value.push({
+					label: rel.label || rel.doctype,
+					sections: [],
+					_related: rel,
+				});
+			}
+
+			pushDebug(
+				"parseLayout",
+				true,
+				`fields=${fields.length} tabs=${tabs.value.length} (incl ${relatedDoctypes.length} related)`,
+			);
 
 			syncingFromLoad.value = true;
 			pushDebug("syncingFromLoad", true, "true (formData write + fetch_from)");
@@ -130,7 +153,11 @@ export function createFrozenFormLoad(ctx) {
 					return;
 				}
 				Object.assign(formData, doc);
-				pushDebug("frappe.client.get", true, `${dt}/${dn} keys=${Object.keys(doc || {}).length}`);
+				pushDebug(
+					"frappe.client.get",
+					true,
+					`${dt}/${dn} keys=${Object.keys(doc || {}).length}`,
+				);
 			} else {
 				pushDebug("frappe.client.get", true, "(skipped — new doc)");
 			}
@@ -164,7 +191,13 @@ export function createFrozenFormLoad(ctx) {
 			await nextTick();
 			await nextTick();
 			syncingFromLoad.value = false;
-			pushDebug("done", mySeq === loadSeq, mySeq === loadSeq ? "loading=false syncingFromLoad=false" : "stale — skipped UI reset");
+			pushDebug(
+				"done",
+				mySeq === loadSeq,
+				mySeq === loadSeq
+					? "loading=false syncingFromLoad=false"
+					: "stale — skipped UI reset",
+			);
 		}
 	}
 
