@@ -93,19 +93,30 @@ def _enrich_fetch_from_fields(fields_list: list[dict], meta) -> list[dict]:
 
 
 @frappe.whitelist()
-def capture_form_dialog_from_desk(doctype: str, title: str | None = None) -> str:
+def capture_form_dialog_from_desk(
+	doctype: str, title: str | None = None, related_doctypes: str | list | None = None
+) -> str:
 	"""
 	Create or update a Form Dialog by capturing the live DocType schema from Desk.
 
 	Args:
 	    doctype: The Frappe DocType to capture (must be in WP Tables).
 	    title: Optional title for the Form Dialog. Defaults to "{doctype} — dialog".
+	    related_doctypes: Optional JSON string or list of selected related DocTypes.
 
 	Returns:
 	    The name of the created/updated Form Dialog document.
 	"""
 	_require_system_manager()
 	_assert_doctype_in_wp_tables(doctype)
+
+	# Normalize related_doctypes to a JSON string (or None)
+	_related_json = None
+	if related_doctypes is not None:
+		if isinstance(related_doctypes, str):
+			_related_json = related_doctypes  # already JSON
+		else:
+			_related_json = json.dumps(related_doctypes, default=str)
 
 	meta = frappe.get_meta(doctype)
 	fields_list = []
@@ -125,6 +136,8 @@ def capture_form_dialog_from_desk(doctype: str, title: str | None = None) -> str
 		doc.target_doctype = doctype
 		doc.frozen_meta_json = frozen_json
 		doc.captured_at = frappe.utils.now_datetime()
+		if _related_json is not None:
+			doc.related_doctypes = _related_json
 		doc.save(ignore_permissions=True)
 	else:
 		doc = frappe.get_doc(
@@ -136,6 +149,7 @@ def capture_form_dialog_from_desk(doctype: str, title: str | None = None) -> str
 				"captured_at": frappe.utils.now_datetime(),
 				"dialog_size": "xl",
 				"is_active": 1,
+				"related_doctypes": _related_json or "[]",
 			}
 		)
 		doc.insert(ignore_permissions=True)
@@ -145,7 +159,7 @@ def capture_form_dialog_from_desk(doctype: str, title: str | None = None) -> str
 
 
 @frappe.whitelist()
-def rebuild_form_dialog(name: str) -> dict:
+def rebuild_form_dialog(name: str, related_doctypes: str | list | None = None) -> dict:
 	"""
 	Re-capture the DocType schema from Desk and overwrite the frozen snapshot.
 
@@ -153,14 +167,23 @@ def rebuild_form_dialog(name: str) -> dict:
 
 	Args:
 	    name: The name (title) of the Form Dialog document.
+	    related_doctypes: Optional JSON string or list of selected related DocTypes.
 
 	Returns:
-	    Dict with name, target_doctype, and captured_at.
+	    Dict with name, target_doctype, captured_at, and related_doctypes.
 	"""
 	_require_system_manager()
 
 	doc = frappe.get_doc("Form Dialog", name)
 	_assert_doctype_in_wp_tables(doc.target_doctype)
+
+	# Normalize related_doctypes to a JSON string (or None)
+	_related_json = None
+	if related_doctypes is not None:
+		if isinstance(related_doctypes, str):
+			_related_json = related_doctypes  # already JSON
+		else:
+			_related_json = json.dumps(related_doctypes, default=str)
 
 	meta = frappe.get_meta(doc.target_doctype)
 	fields_list = []
@@ -170,6 +193,8 @@ def rebuild_form_dialog(name: str) -> dict:
 	fields_list = _enrich_fetch_from_fields(fields_list, meta)
 	doc.frozen_meta_json = json.dumps({"fields": fields_list}, default=str, indent=None)
 	doc.captured_at = frappe.utils.now_datetime()
+	if _related_json is not None:
+		doc.related_doctypes = _related_json
 	doc.save(ignore_permissions=True)
 	frappe.db.commit()
 
@@ -177,6 +202,7 @@ def rebuild_form_dialog(name: str) -> dict:
 		"name": doc.name,
 		"target_doctype": doc.target_doctype,
 		"captured_at": str(doc.captured_at),
+		"related_doctypes": json.loads(doc.related_doctypes or "[]"),
 	}
 
 
@@ -217,6 +243,7 @@ def get_form_dialog_definition(name: str) -> dict:
 		"frozen_meta": frozen,
 		"buttons": buttons,
 		"writeback_on_submit": doc.writeback_on_submit or 0,
+		"related_doctypes": json.loads(doc.related_doctypes or "[]"),
 	}
 
 

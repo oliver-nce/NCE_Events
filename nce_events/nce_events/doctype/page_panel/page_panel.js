@@ -421,7 +421,15 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 
 		if (sub_id === "_order") {
 			const orderTitleKey = (saved.title_field || dtTitle || "").trim();
-			_render_order_tab($sub_content, uid, sub_tabs, matrices, saved, _sync_all, orderTitleKey);
+			_render_order_tab(
+				$sub_content,
+				uid,
+				sub_tabs,
+				matrices,
+				saved,
+				_sync_all,
+				orderTitleKey,
+			);
 			return;
 		}
 
@@ -572,7 +580,15 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set, matrix_opts)
 }
 
 // ── Order tab — drag-reorder union of all selected fields ─────────────────────
-function _render_order_tab($sub_content, uid, sub_tabs, matrices, saved, _sync_all, orderTitleKey) {
+function _render_order_tab(
+	$sub_content,
+	uid,
+	sub_tabs,
+	matrices,
+	saved,
+	_sync_all,
+	orderTitleKey,
+) {
 	// Gather all currently selected fields across all matrices
 	let selected = [];
 	sub_tabs.forEach(function (st) {
@@ -1057,6 +1073,50 @@ $("<style>")
 	)
 	.appendTo("head");
 
+// ── Related DocTypes picker ───────────────────────────────────────────────────
+function _show_related_picker(available, preselected, callback) {
+	if (!available || !available.length) {
+		callback([]);
+		return;
+	}
+
+	const preselected_set = new Set(
+		(preselected || []).map(function (r) {
+			return r.doctype;
+		}),
+	);
+
+	const fields = available.map(function (c) {
+		return {
+			label: c.label || c.doctype,
+			fieldname: "sel__" + c.doctype.replace(/ /g, "_"),
+			fieldtype: "Check",
+			default: preselected_set.has(c.doctype) ? 1 : 0,
+		};
+	});
+
+	const d = new frappe.ui.Dialog({
+		title: __("Add tabs to display related tables?"),
+		fields: fields,
+		size: "small",
+		primary_action_label: __("OK"),
+		secondary_action_label: __("Skip"),
+		primary_action: function (values) {
+			const selected = available.filter(function (c) {
+				const key = "sel__" + c.doctype.replace(/ /g, "_");
+				return values[key];
+			});
+			d.hide();
+			callback(selected);
+		},
+		secondary_action: function () {
+			d.hide();
+			callback([]);
+		},
+	});
+	d.show();
+}
+
 // ── Dialogs tab ──────────────────────────────────────────────────────────────
 function _render_dialogs_tab(frm) {
 	const $container = $(frm.layout.wrapper).find(".pp-dialogs-wrap");
@@ -1159,23 +1219,37 @@ function _build_dialogs_tab_html(frm, $container, dialogs) {
 				default: doctype + " — dialog",
 			},
 			function (values) {
+				// Fetch related DocTypes, then show picker, then capture
 				frappe.call({
-					method: "nce_events.api.form_dialog_api.capture_form_dialog_from_desk",
-					args: { doctype: doctype, title: values.title },
-					freeze: true,
-					freeze_message: "Capturing schema from Desk…",
+					method: "nce_events.api.panel_api.get_child_doctypes",
+					args: { root_doctype: frm.doc.root_doctype },
 					callback: function (r) {
-						if (r && r.message) {
-							frm.set_value("form_dialog", r.message);
-							frm.dirty();
-							frm.save().then(function () {
-								_render_dialogs_tab(frm);
+						const children = (r && r.message) || [];
+						_show_related_picker(children, [], function (selected) {
+							frappe.call({
+								method: "nce_events.api.form_dialog_api.capture_form_dialog_from_desk",
+								args: {
+									doctype: doctype,
+									title: values.title,
+									related_doctypes: JSON.stringify(selected),
+								},
+								freeze: true,
+								freeze_message: "Capturing schema from Desk…",
+								callback: function (r) {
+									if (r && r.message) {
+										frm.set_value("form_dialog", r.message);
+										frm.dirty();
+										frm.save().then(function () {
+											_render_dialogs_tab(frm);
+										});
+										frappe.show_alert({
+											message: "Dialog captured: " + r.message,
+											indicator: "green",
+										});
+									}
+								},
 							});
-							frappe.show_alert({
-								message: "Dialog captured: " + r.message,
-								indicator: "green",
-							});
-						}
+						});
 					},
 				});
 			},
@@ -1189,14 +1263,47 @@ function _build_dialogs_tab_html(frm, $container, dialogs) {
 		frappe.confirm(
 			"This will overwrite the frozen schema with the current Desk definition. Continue?",
 			function () {
+				// 1. Get current definition (for pre-populated selection)
 				frappe.call({
-					method: "nce_events.api.form_dialog_api.rebuild_form_dialog",
+					method: "nce_events.api.form_dialog_api.get_form_dialog_definition",
 					args: { name: current },
-					freeze: true,
-					freeze_message: "Rebuilding schema…",
-					callback: function () {
-						frappe.show_alert({ message: "Schema rebuilt.", indicator: "green" });
-						_render_dialogs_tab(frm);
+					callback: function (defn_r) {
+						const current_related =
+							(defn_r && defn_r.message && defn_r.message.related_doctypes) || [];
+
+						// 2. Get available child doctypes
+						frappe.call({
+							method: "nce_events.api.panel_api.get_child_doctypes",
+							args: { root_doctype: frm.doc.root_doctype },
+							callback: function (r) {
+								const children = (r && r.message) || [];
+
+								// 3. Show picker with pre-selection
+								_show_related_picker(
+									children,
+									current_related,
+									function (selected) {
+										// 4. Rebuild with selection
+										frappe.call({
+											method: "nce_events.api.form_dialog_api.rebuild_form_dialog",
+											args: {
+												name: current,
+												related_doctypes: JSON.stringify(selected),
+											},
+											freeze: true,
+											freeze_message: "Rebuilding schema…",
+											callback: function () {
+												frappe.show_alert({
+													message: "Schema rebuilt.",
+													indicator: "green",
+												});
+												_render_dialogs_tab(frm);
+											},
+										});
+									},
+								);
+							},
+						});
 					},
 				});
 			},
@@ -1220,7 +1327,9 @@ function _build_dialogs_tab_html(frm, $container, dialogs) {
 	$container.on("click", ".pp-dialog-delete", function () {
 		const name = $(this).data("name");
 		frappe.confirm(
-			"Delete Form Dialog <strong>" + frappe.utils.escape_html(name) + "</strong>? This cannot be undone.",
+			"Delete Form Dialog <strong>" +
+				frappe.utils.escape_html(name) +
+				"</strong>? This cannot be undone.",
 			function () {
 				function doDelete() {
 					frappe.call({
@@ -1229,7 +1338,10 @@ function _build_dialogs_tab_html(frm, $container, dialogs) {
 						freeze: true,
 						freeze_message: "Deleting…",
 						callback: function () {
-							frappe.show_alert({ message: "Deleted: " + name, indicator: "orange" });
+							frappe.show_alert({
+								message: "Deleted: " + name,
+								indicator: "orange",
+							});
 							_render_dialogs_tab(frm);
 						},
 					});
@@ -1287,7 +1399,12 @@ frappe.ui.form.on("Page Panel", {
 				callback: function (r) {
 					const u = _unpack_doctype_fields_message(r && r.message);
 					const tf = u.doctype_title_field;
-					if (tf && u.fields.some(function (f) { return f.fieldname === tf; })) {
+					if (
+						tf &&
+						u.fields.some(function (f) {
+							return f.fieldname === tf;
+						})
+					) {
 						frm.set_value("title_field", tf);
 					}
 				},
