@@ -47,14 +47,30 @@ export function usePanelFormDialogHost(openPanels) {
 	function onFormDialogClose() {
 		showFormDialog.value = false;
 		formDialogDocName.value = null;
+		formDialogDefinition.value = null;
+		formDialogDoctype.value = null;
 		formDialogSourcePanelId.value = null;
+		// Clear any in-flight pending nav
+		formDialogPendingDocName.value = null;
+		formDialogPendingDefinition.value = null;
+		formDialogPendingDoctype.value = null;
+		formDialogDissolving.value = false;
+		formDialogDissolveOpacity.value = 1;
 	}
 
 	function onFormDialogSaved() {
 		const doctype = formDialogDoctype.value;
 		showFormDialog.value = false;
 		formDialogDocName.value = null;
+		formDialogDefinition.value = null;
+		formDialogDoctype.value = null;
 		formDialogSourcePanelId.value = null;
+		// Clear any in-flight pending nav
+		formDialogPendingDocName.value = null;
+		formDialogPendingDefinition.value = null;
+		formDialogPendingDoctype.value = null;
+		formDialogDissolving.value = false;
+		formDialogDissolveOpacity.value = 1;
 		const panel = openPanels.find((x) => x.doctype === doctype);
 		if (panel && panel._reload) {
 			panel._reload();
