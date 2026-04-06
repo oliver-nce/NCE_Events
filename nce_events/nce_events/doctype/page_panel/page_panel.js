@@ -310,9 +310,7 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		}
 	});
 	const has_links = link_fields.length > 0;
-	if (has_links) {
-		sub_tabs.push({ id: "_order", label: "Order", prefix: "" });
-	}
+	sub_tabs.push({ id: "_order", label: "Order", prefix: "" });
 
 	// Sub-tab bar
 	const $sub_bar = $('<div style="display:flex;gap:4px;padding:0 0 8px;flex-wrap:wrap;"></div>');
@@ -369,29 +367,27 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		}
 
 		// Reorder col_order by Order tab if it exists
-		if (has_links) {
-			const $order_body = $sub_content.find(".pp-order-matrix tbody");
-			if ($order_body.length) {
-				const order_keys = [];
-				$order_body.find("tr").each(function () {
-					order_keys.push($(this).data("key"));
-				});
-				const in_order = {};
-				col_order.forEach(function (k) {
-					in_order[k] = true;
-				});
-				const reordered = [];
-				order_keys.forEach(function (k) {
-					if (in_order[k]) {
-						reordered.push(k);
-						delete in_order[k];
-					}
-				});
-				col_order.forEach(function (k) {
-					if (in_order[k]) reordered.push(k);
-				});
-				col_order = reordered;
-			}
+		const $order_body = $sub_content.find(".pp-order-matrix tbody");
+		if ($order_body.length) {
+			const order_keys = [];
+			$order_body.find("tr").each(function () {
+				order_keys.push($(this).data("key"));
+			});
+			const in_order = {};
+			col_order.forEach(function (k) {
+				in_order[k] = true;
+			});
+			const reordered = [];
+			order_keys.forEach(function (k) {
+				if (in_order[k]) {
+					reordered.push(k);
+					delete in_order[k];
+				}
+			});
+			col_order.forEach(function (k) {
+				if (in_order[k]) reordered.push(k);
+			});
+			col_order = reordered;
 		}
 
 		frm.set_value("column_order", col_order.join(", "));
