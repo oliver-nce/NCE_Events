@@ -120,11 +120,11 @@
 			@close="closeTopCard"
 		/>
 
-		<!-- Form Dialog — key only on definition; doc changes reload inside dialog (avoids full remount flash). -->
+		<!-- Form Dialog — dual-slot dissolve transition for flicker-free nav -->
+		<!-- Slot 0 active -->
 		<PanelFormDialog
-			v-if="formDialogDefinition"
-			:key="formDialogDefinition"
-			:open="showFormDialog"
+			v-if="formDialogSlot === 0 && formDialogDefinition"
+			:open="true"
 			:definition-name="formDialogDefinition"
 			:doctype="formDialogDoctype"
 			:doc-name="formDialogDocName"
@@ -132,6 +132,66 @@
 			:can-navigate-prev="formDialogNavInfo.canPrev"
 			:can-navigate-next="formDialogNavInfo.canNext"
 			:row-nav-label="formDialogNavLabel"
+			:dissolve-opacity="formDialogSlot === 0 && formDialogDissolving ? formDialogDissolveOpacity : 1"
+			:style="{
+				zIndex: formDialogSlot === 0 ? 1050 : 1048,
+			}"
+			@close="onFormDialogClose"
+			@saved="onFormDialogSaved"
+			@nav-prev="onFormDialogNavPrev"
+			@nav-next="onFormDialogNavNext"
+		/>
+		<!-- Slot 1 pending (behind) -->
+		<PanelFormDialog
+			v-if="formDialogSlot === 0 && formDialogPendingDefinition"
+			:open="true"
+			:definition-name="formDialogPendingDefinition"
+			:doctype="formDialogPendingDoctype"
+			:doc-name="formDialogPendingDocName"
+			:row-nav-enabled="false"
+			:can-navigate-prev="false"
+			:can-navigate-next="false"
+			:row-nav-label="''"
+			:dissolve-opacity="1"
+			:style="{ zIndex: 1048 }"
+			@close="onFormDialogClose"
+			@saved="onFormDialogSaved"
+			@nav-prev="onFormDialogNavPrev"
+			@nav-next="onFormDialogNavNext"
+		/>
+		<!-- Slot 1 active -->
+		<PanelFormDialog
+			v-if="formDialogSlot === 1 && formDialogDefinition"
+			:open="true"
+			:definition-name="formDialogDefinition"
+			:doctype="formDialogDoctype"
+			:doc-name="formDialogDocName"
+			:row-nav-enabled="formDialogNavInfo.total > 1"
+			:can-navigate-prev="formDialogNavInfo.canPrev"
+			:can-navigate-next="formDialogNavInfo.canNext"
+			:row-nav-label="formDialogNavLabel"
+			:dissolve-opacity="formDialogSlot === 1 && formDialogDissolving ? formDialogDissolveOpacity : 1"
+			:style="{
+				zIndex: formDialogSlot === 1 ? 1050 : 1048,
+			}"
+			@close="onFormDialogClose"
+			@saved="onFormDialogSaved"
+			@nav-prev="onFormDialogNavPrev"
+			@nav-next="onFormDialogNavNext"
+		/>
+		<!-- Slot 0 pending (behind) -->
+		<PanelFormDialog
+			v-if="formDialogSlot === 1 && formDialogPendingDefinition"
+			:open="true"
+			:definition-name="formDialogPendingDefinition"
+			:doctype="formDialogPendingDoctype"
+			:doc-name="formDialogPendingDocName"
+			:row-nav-enabled="false"
+			:can-navigate-prev="false"
+			:can-navigate-next="false"
+			:row-nav-label="''"
+			:dissolve-opacity="1"
+			:style="{ zIndex: 1048 }"
 			@close="onFormDialogClose"
 			@saved="onFormDialogSaved"
 			@nav-prev="onFormDialogNavPrev"
@@ -183,6 +243,13 @@ const {
 	openFormDialogFromPanelRow,
 	onFormDialogClose,
 	onFormDialogSaved,
+	// Dual-slot dissolve
+	formDialogSlot,
+	formDialogPendingDocName,
+	formDialogPendingDefinition,
+	formDialogPendingDoctype,
+	formDialogDissolving,
+	formDialogDissolveOpacity,
 } = usePanelFormDialogHost(openPanels);
 
 const { cardStack, openCardModal, closeTopCard, onOpenCard } = useNceCardStack();

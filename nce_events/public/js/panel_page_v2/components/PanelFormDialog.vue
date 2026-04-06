@@ -1,5 +1,5 @@
 <template>
-	<div v-if="open" class="ppv2-form-dialog-backdrop" @click.self="onCancel">
+	<div v-if="open" class="ppv2-form-dialog-backdrop" :style="{ opacity: dissolveOpacity }" @click.self="onCancel">
 		<div
 			v-if="showFdLoadDebug"
 			class="ppv2-fd-load-debug"
@@ -84,6 +84,7 @@ const props = defineProps({
 	canNavigatePrev: { type: Boolean, default: false },
 	canNavigateNext: { type: Boolean, default: false },
 	rowNavLabel: { type: String, default: "" },
+	dissolveOpacity: { type: Number, default: 1 },
 });
 
 const emit = defineEmits(["close", "saved", "nav-prev", "nav-next"]);
@@ -208,7 +209,7 @@ function onPlaceholderButton(btn) {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	z-index: 1050;
+	transition: opacity 0.3s ease;
 }
 .ppv2-form-dialog {
 	background: var(--bg-card);

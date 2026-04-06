@@ -1,8 +1,9 @@
 import { ref } from "vue";
-import { useFormDialogRecordNav } from "./useFormDialogRecordNav.js";
+import { useFormDialogRecordNav, panelRowArray } from "./useFormDialogRecordNav.js";
 
 /**
  * Panel Page V2: form dialog state, row navigation, open from panel row, close/save + panel refresh.
+ * Uses a dual-slot dissolve transition for flicker-free prev/next navigation.
  * Core dialog UI lives in PanelFormDialog.vue + usePanelFormDialog.
  *
  * @param {import('vue').Reactive<Array>} openPanels — same reactive array as App.vue floats
@@ -14,11 +15,17 @@ export function usePanelFormDialogHost(openPanels) {
 	const formDialogDoctype = ref(null);
 	const formDialogSourcePanelId = ref(null);
 
+	// Dual-slot state for dissolve transitions
+	const formDialogSlot = ref(0);
+	const formDialogPendingDocName = ref(null);
+	const formDialogPendingDefinition = ref(null);
+	const formDialogPendingDoctype = ref(null);
+	const formDialogDissolving = ref(false);
+	const formDialogDissolveOpacity = ref(1);
+
 	const {
 		formDialogNavInfo,
 		formDialogNavLabel,
-		onFormDialogNavPrev,
-		onFormDialogNavNext,
 	} = useFormDialogRecordNav({
 		openPanels,
 		showFormDialog,
@@ -54,6 +61,79 @@ export function usePanelFormDialogHost(openPanels) {
 		}
 	}
 
+	// --- Dual-slot dissolve navigation ---
+
+	function _getPanelForNav() {
+		return openPanels.find((x) => x.id === formDialogSourcePanelId.value);
+	}
+
+	function _findRowIndex(rowName) {
+		const p = _getPanelForNav();
+		if (!p) return -1;
+		const list = panelRowArray(p);
+		return list.findIndex((row) => row && row.name === rowName);
+	}
+
+	function _targetRowName(direction) {
+		const list = panelRowArray(_getPanelForNav());
+		const idx = list.findIndex((row) => row && row.name === formDialogDocName.value);
+		if (idx < 0) return null;
+		const targetIdx = idx + (direction === "prev" ? -1 : 1);
+		if (targetIdx < 0 || targetIdx >= list.length) return null;
+		return list[targetIdx].name;
+	}
+
+	function preparePendingNav(direction) {
+		const targetName = _targetRowName(direction);
+		if (!targetName) return;
+		formDialogPendingDocName.value = targetName;
+		formDialogPendingDefinition.value = formDialogDefinition.value;
+		formDialogPendingDoctype.value = formDialogDoctype.value;
+	}
+
+	function commitPendingNav() {
+		formDialogDissolving.value = true;
+		formDialogDissolveOpacity.value = 1;
+
+		const start = performance.now();
+		const duration = 300;
+
+		function step(now) {
+			const elapsed = now - start;
+			const progress = Math.min(elapsed / duration, 1);
+			// ease-out quad
+			formDialogDissolveOpacity.value = 1 - progress * progress;
+			if (progress < 1) {
+				requestAnimationFrame(step);
+			} else {
+				// Dissolve complete — swap slots
+				formDialogSlot.value = 1 - formDialogSlot.value;
+				formDialogDocName.value = formDialogPendingDocName.value;
+				formDialogDefinition.value = formDialogPendingDefinition.value;
+				formDialogDoctype.value = formDialogPendingDoctype.value;
+				formDialogPendingDocName.value = null;
+				formDialogPendingDefinition.value = null;
+				formDialogPendingDoctype.value = null;
+				formDialogDissolveOpacity.value = 1;
+				formDialogDissolving.value = false;
+			}
+		}
+
+		requestAnimationFrame(step);
+	}
+
+	function onFormDialogNavPrev() {
+		if (!formDialogNavInfo.value.canPrev) return;
+		preparePendingNav("prev");
+		setTimeout(commitPendingNav, 300);
+	}
+
+	function onFormDialogNavNext() {
+		if (!formDialogNavInfo.value.canNext) return;
+		preparePendingNav("next");
+		setTimeout(commitPendingNav, 300);
+	}
+
 	return {
 		showFormDialog,
 		formDialogDocName,
@@ -67,5 +147,12 @@ export function usePanelFormDialogHost(openPanels) {
 		openFormDialogFromPanelRow,
 		onFormDialogClose,
 		onFormDialogSaved,
+		// Dual-slot
+		formDialogSlot,
+		formDialogPendingDocName,
+		formDialogPendingDefinition,
+		formDialogPendingDoctype,
+		formDialogDissolving,
+		formDialogDissolveOpacity,
 	};
 }
