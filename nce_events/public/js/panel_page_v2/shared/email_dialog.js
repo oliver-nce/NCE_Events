@@ -595,67 +595,77 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 
 	_review_send_all() {
 		const me = this;
-		const panel = me._review_el;
-		if (!panel || !me._review_queue.length) return;
+		if (!me._review_queue || !me._review_queue.length) return;
 
-		panel.find(".send-review-send-btn, .send-review-skip-btn").prop("disabled", true);
-		panel
-			.find(".send-review-sendall-btn")
-			.prop("disabled", true)
-			.html('<i class="fa fa-spinner fa-spin"></i> Sending...');
-		panel.find(".send-review-stop-btn").prop("disabled", false);
-		me._review_sending_all = true;
+		const queue = me._review_queue.slice();
+		const totalToSend = queue.length;
+		const alreadySent = me._review_sent || 0;
+		const grandTotal = me._review_total || totalToSend;
+		const doctype = me.doctype;
+		const recipientField = me.config.email_field;
+		const body = me._review_body;
+		const subject = me._review_subject;
+		const fromEmail = me._review_from;
+
+		me.close();
+
+		frappe.show_alert({
+			message: __("Queueing {0} emails in background...", [totalToSend]),
+			indicator: "blue",
+		});
+
+		let sent = alreadySent;
+		let errors = 0;
+		let idx = 0;
 
 		function sendNext() {
-			if (!me._review_sending_all || !me._review_queue.length) {
-				me._review_sending_all = false;
-				me._review_finish(false);
+			if (idx >= queue.length) {
+				frappe.show_alert({
+					message: __("Done. {0} of {1} queued.", [sent, grandTotal]),
+					indicator: "green",
+				});
 				return;
 			}
 
-			const row_name = me._review_queue[0];
-			const done = me._review_total - me._review_queue.length;
-			if (panel) {
-				panel
-					.find(".send-review-progress")
-					.text(
-						`Sending ${done + 1} of ${me._review_total} — sent: ${me._review_sent}, skipped: ${me._review_skipped}`,
-					);
-			}
+			const row_name = queue[idx];
+			idx++;
 
 			frappe.call({
 				method: "nce_events.api.messaging.send_one_email",
 				args: {
-					root_doctype: me.doctype,
+					root_doctype: doctype,
 					row_name: row_name,
-					recipient_field: me.config.email_field,
-					body: me._review_body,
-					subject: me._review_subject,
-					from_email: me._review_from,
+					recipient_field: recipientField,
+					body: body,
+					subject: subject,
+					from_email: fromEmail,
 				},
 				callback: function (r) {
 					if (r.message && r.message.sent) {
-						me._review_sent++;
-					} else if (r.message && r.message.error) {
-						me._review_skipped++;
+						sent++;
+					} else {
+						errors++;
 					}
-					me._review_queue.shift();
+					if (idx % 100 === 0) {
+						frappe.show_alert({
+							message: __("Queued {0} / {1}...", [idx, totalToSend]),
+							indicator: "blue",
+						});
+					}
 					sendNext();
 				},
 				error: function () {
-					me._review_skipped++;
-					me._review_queue.shift();
+					errors++;
+					if (idx % 100 === 0) {
+						frappe.show_alert({
+							message: __("Queued {0} / {1}... ({2} errors)", [idx, totalToSend, errors]),
+							indicator: "orange",
+						});
+					}
 					sendNext();
 				},
 			});
 		}
-
-		// Override stop to abort the bulk loop
-		const origStop = panel.find(".send-review-stop-btn");
-		origStop.off("click").on("click", function () {
-			me._review_sending_all = false;
-			me._review_finish(true);
-		});
 
 		sendNext();
 	}
