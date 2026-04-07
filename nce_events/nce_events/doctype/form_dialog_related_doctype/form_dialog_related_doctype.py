@@ -1,5 +1,5 @@
 from frappe.model.document import Document
 
 
-class TestChildTable(Document):
+class FormDialogRelatedDoctype(Document):
 	pass

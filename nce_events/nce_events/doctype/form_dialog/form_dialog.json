@@ -14,7 +14,7 @@
     "writeback_on_submit",
     "related_doctypes",
     "buttons",
-    "test_rows"
+    "related_doctypes"
   ],
   "fields": [
     {
@@ -82,10 +82,10 @@
       "options": "Form Dialog Button"
     },
     {
-      "fieldname": "test_rows",
+      "fieldname": "related_doctypes",
       "fieldtype": "Table",
-      "label": "Test Rows",
-      "options": "Test Child Table"
+      "label": "Related DocTypes",
+      "options": "Form Dialog Related DocType"
     }
   ],
   "index_web_pages_for_search": 0,
