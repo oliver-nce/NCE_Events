@@ -512,9 +512,10 @@ function _openSendDialog(p, mode) {
 		frappe.msgprint(__("No {0} field configured for this panel.", [mode === "sms" ? "SMS" : "Email"]));
 		return;
 	}
-	// Use the live filtered ref — p.rows is a stale snapshot taken at load time;
-	// p._panelRows is the ref itself (auto-unwrapped in templates but needs .value here).
-	const currentRows = p._panelRows?.value ?? p.rows;
+	// p._panelRows is a ref auto-unwrapped by Vue's reactive proxy — gives
+	// the current filtered array directly (no .value needed). p.rows is a
+	// stale snapshot from load time that doesn't update when filters change.
+	const currentRows = p._panelRows || p.rows;
 	if (!currentRows.length) { frappe.msgprint(__("No rows.")); return; }
 
 	if (_sendDialog) { _sendDialog.close(); _sendDialog = null; }
