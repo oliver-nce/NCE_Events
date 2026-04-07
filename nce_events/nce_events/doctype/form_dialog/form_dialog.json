@@ -13,8 +13,7 @@
     "is_active",
     "writeback_on_submit",
     "related_doctypes",
-    "buttons",
-    "related_doctypes"
+    "buttons"
   ],
   "fields": [
     {
@@ -70,22 +69,15 @@
     },
     {
       "fieldname": "related_doctypes",
-      "fieldtype": "Code",
+      "fieldtype": "Table",
       "label": "Related DocTypes",
-      "options": "JSON",
-      "description": "JSON array of selected related DocTypes. Shape: [{\"doctype\":\"...\",\"link_field\":\"...\",\"label\":\"...\"}]. Populated by the picker dialog during capture/rebuild."
+      "options": "Form Dialog Related DocType"
     },
     {
       "fieldname": "buttons",
       "fieldtype": "Table",
       "label": "Buttons",
       "options": "Form Dialog Button"
-    },
-    {
-      "fieldname": "related_doctypes",
-      "fieldtype": "Table",
-      "label": "Related DocTypes",
-      "options": "Form Dialog Related DocType"
     }
   ],
   "index_web_pages_for_search": 0,
