@@ -450,6 +450,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 				<div class="send-review-body"></div>
 				<div class="send-review-actions">
 					<button class="btn btn-xs btn-default send-review-skip-btn">Skip</button>
+					<button class="btn btn-xs btn-default send-review-sendall-btn">Send All Remaining</button>
 					<button class="btn btn-xs btn-primary send-review-send-btn"><i class="fa fa-paper-plane"></i> Send</button>
 				</div>
 			</div>
@@ -482,6 +483,9 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 		});
 		panel.find(".send-review-send-btn").on("click", function () {
 			me._review_do_send();
+		});
+		panel.find(".send-review-sendall-btn").on("click", function () {
+			me._review_send_all();
 		});
 	}
 
@@ -587,6 +591,73 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 				panel.find(".send-review-skip-btn").prop("disabled", false);
 			},
 		});
+	}
+
+	_review_send_all() {
+		const me = this;
+		const panel = me._review_el;
+		if (!panel || !me._review_queue.length) return;
+
+		panel.find(".send-review-send-btn, .send-review-skip-btn").prop("disabled", true);
+		panel
+			.find(".send-review-sendall-btn")
+			.prop("disabled", true)
+			.html('<i class="fa fa-spinner fa-spin"></i> Sending...');
+		panel.find(".send-review-stop-btn").prop("disabled", false);
+		me._review_sending_all = true;
+
+		function sendNext() {
+			if (!me._review_sending_all || !me._review_queue.length) {
+				me._review_sending_all = false;
+				me._review_finish(false);
+				return;
+			}
+
+			const row_name = me._review_queue[0];
+			const done = me._review_total - me._review_queue.length;
+			if (panel) {
+				panel
+					.find(".send-review-progress")
+					.text(
+						`Sending ${done + 1} of ${me._review_total} — sent: ${me._review_sent}, skipped: ${me._review_skipped}`,
+					);
+			}
+
+			frappe.call({
+				method: "nce_events.api.messaging.send_one_email",
+				args: {
+					root_doctype: me.doctype,
+					row_name: row_name,
+					recipient_field: me.config.email_field,
+					body: me._review_body,
+					subject: me._review_subject,
+					from_email: me._review_from,
+				},
+				callback: function (r) {
+					if (r.message && r.message.sent) {
+						me._review_sent++;
+					} else if (r.message && r.message.error) {
+						me._review_skipped++;
+					}
+					me._review_queue.shift();
+					sendNext();
+				},
+				error: function () {
+					me._review_skipped++;
+					me._review_queue.shift();
+					sendNext();
+				},
+			});
+		}
+
+		// Override stop to abort the bulk loop
+		const origStop = panel.find(".send-review-stop-btn");
+		origStop.off("click").on("click", function () {
+			me._review_sending_all = false;
+			me._review_finish(true);
+		});
+
+		sendNext();
 	}
 
 	_review_finish(stopped) {
