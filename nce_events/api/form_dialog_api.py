@@ -13,6 +13,30 @@ import frappe
 from frappe import _
 from frappe.utils import cint, cstr
 
+# Debug wrapper to capture SQL queries for troubleshooting
+_original_db_sql = None
+
+
+def _enable_sql_debugging():
+	"""Wrap frappe.db.sql to log queries before execution."""
+	global _original_db_sql
+	if _original_db_sql is None:
+		_original_db_sql = frappe.db.sql
+
+		def _debug_sql(query, values=None, *args, **kwargs):
+			try:
+				result = _original_db_sql(query, values, *args, **kwargs)
+				return result
+			except Exception as e:
+				# Log the query when an error occurs
+				frappe.log_error(
+					f"SQL Error in Form Dialog loading:\nQuery: {query}\nValues: {values}\nError: {e}",
+					"form_dialog_sql_error",
+				)
+				raise
+
+		frappe.db.sql = _debug_sql
+
 
 def _assert_doctype_in_wp_tables(doctype: str) -> None:
 	"""Raise if the DocType is not listed in WP Tables (nce_sync)."""
@@ -219,6 +243,9 @@ def get_form_dialog_definition(name: str) -> dict:
 	    and buttons (list of dicts with label, sort_order).
 	"""
 	_require_system_manager()
+
+	# Enable SQL debugging to capture the error
+	_enable_sql_debugging()
 
 	doc = frappe.get_doc("Form Dialog", name)
 
