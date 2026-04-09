@@ -29,10 +29,16 @@ def _enable_sql_debugging():
 				return result
 			except Exception as e:
 				# Log the query when an error occurs
-				frappe.log_error(
-					f"SQL Error in Form Dialog loading:\nQuery: {query}\nValues: {values}\nError: {e}",
-					"form_dialog_sql_error",
-				)
+				error_msg = f"SQL Error in Form Dialog loading:\nQuery: {query}\nValues: {values}\nError: {e}"
+				frappe.log_error(error_msg, "form_dialog_sql_error")
+				# Also print to console for immediate visibility
+				print(f"\n{'=' * 60}")
+				print("FORM DIALOG DEBUG - SQL ERROR")
+				print(f"{'=' * 60}")
+				print(f"Query: {query}")
+				print(f"Values: {values}")
+				print(f"Error: {e}")
+				print(f"{'=' * 60}\n")
 				raise
 
 		frappe.db.sql = _debug_sql
