@@ -11,9 +11,7 @@
     "captured_at",
     "dialog_size",
     "is_active",
-    "writeback_on_submit",
-    "related_doctypes",
-    "buttons"
+    "writeback_on_submit"
   ],
   "fields": [
     {
@@ -66,18 +64,6 @@
       "fieldname": "writeback_on_submit",
       "fieldtype": "Check",
       "label": "Writeback Fetched Fields on Submit"
-    },
-    {
-      "fieldname": "related_doctypes",
-      "fieldtype": "Table",
-      "label": "Related DocTypes",
-      "options": "DocType"
-    },
-    {
-      "fieldname": "buttons",
-      "fieldtype": "Table",
-      "label": "Buttons",
-      "options": "Form Dialog Button"
     }
   ],
   "index_web_pages_for_search": 0,

@@ -140,14 +140,6 @@ def capture_form_dialog_from_desk(
 	_require_system_manager()
 	_assert_doctype_in_wp_tables(doctype)
 
-	# Normalize related_doctypes to a JSON string (or None)
-	_related_json = None
-	if related_doctypes is not None:
-		if isinstance(related_doctypes, str):
-			_related_json = related_doctypes  # already JSON
-		else:
-			_related_json = json.dumps(related_doctypes, default=str)
-
 	meta = frappe.get_meta(doctype)
 	fields_list = []
 	for f in meta.fields:
@@ -166,8 +158,6 @@ def capture_form_dialog_from_desk(
 		doc.target_doctype = doctype
 		doc.frozen_meta_json = frozen_json
 		doc.captured_at = frappe.utils.now_datetime()
-		if _related_json is not None:
-			doc.related_doctypes = _related_json
 		doc.save(ignore_permissions=True)
 	else:
 		doc = frappe.get_doc(
@@ -179,7 +169,6 @@ def capture_form_dialog_from_desk(
 				"captured_at": frappe.utils.now_datetime(),
 				"dialog_size": "xl",
 				"is_active": 1,
-				"related_doctypes": _related_json or "[]",
 			}
 		)
 		doc.insert(ignore_permissions=True)
@@ -207,14 +196,6 @@ def rebuild_form_dialog(name: str, related_doctypes: str | list | None = None) -
 	doc = frappe.get_doc("Form Dialog", name)
 	_assert_doctype_in_wp_tables(doc.target_doctype)
 
-	# Normalize related_doctypes to a JSON string (or None)
-	_related_json = None
-	if related_doctypes is not None:
-		if isinstance(related_doctypes, str):
-			_related_json = related_doctypes  # already JSON
-		else:
-			_related_json = json.dumps(related_doctypes, default=str)
-
 	meta = frappe.get_meta(doc.target_doctype)
 	fields_list = []
 	for f in meta.fields:
@@ -223,8 +204,6 @@ def rebuild_form_dialog(name: str, related_doctypes: str | list | None = None) -
 	fields_list = _enrich_fetch_from_fields(fields_list, meta)
 	doc.frozen_meta_json = json.dumps({"fields": fields_list}, default=str, indent=None)
 	doc.captured_at = frappe.utils.now_datetime()
-	if _related_json is not None:
-		doc.related_doctypes = _related_json
 	doc.save(ignore_permissions=True)
 	frappe.db.commit()
 
@@ -232,21 +211,19 @@ def rebuild_form_dialog(name: str, related_doctypes: str | list | None = None) -
 		"name": doc.name,
 		"target_doctype": doc.target_doctype,
 		"captured_at": str(doc.captured_at),
-		"related_doctypes": json.loads(doc.related_doctypes or "[]"),
 	}
 
 
 @frappe.whitelist()
 def get_form_dialog_definition(name: str) -> dict:
 	"""
-	Return the frozen schema, button rows, and dialog size for the Vue renderer.
+	Return the frozen schema and dialog size for the Vue renderer.
 
 	Args:
 	    name: The name (title) of the Form Dialog document.
 
 	Returns:
-	    Dict with: name, title, target_doctype, dialog_size, frozen_meta_json (as parsed dict),
-	    and buttons (list of dicts with label, sort_order).
+	    Dict with: name, title, target_doctype, dialog_size, frozen_meta_json (as parsed dict).
 	"""
 	_require_system_manager()
 
@@ -259,24 +236,13 @@ def get_form_dialog_definition(name: str) -> dict:
 	if doc.frozen_meta_json:
 		frozen = json.loads(doc.frozen_meta_json)
 
-	buttons = []
-	for row in sorted(doc.buttons or [], key=lambda r: r.sort_order or 0):
-		buttons.append(
-			{
-				"label": row.label,
-				"sort_order": row.sort_order,
-			}
-		)
-
 	return {
 		"name": doc.name,
 		"title": doc.title,
 		"target_doctype": doc.target_doctype,
 		"dialog_size": doc.dialog_size or "xl",
 		"frozen_meta": frozen,
-		"buttons": buttons,
 		"writeback_on_submit": doc.writeback_on_submit or 0,
-		"related_doctypes": json.loads(doc.related_doctypes or "[]"),
 	}
 
 
