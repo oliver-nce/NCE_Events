@@ -71,7 +71,7 @@
       "fieldname": "related_doctypes",
       "fieldtype": "Table",
       "label": "Related DocTypes",
-      "options": "Form Dialog Related DocType"
+      "options": "DocType"
     },
     {
       "fieldname": "buttons",
