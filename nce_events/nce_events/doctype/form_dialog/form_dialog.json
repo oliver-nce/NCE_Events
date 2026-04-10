@@ -11,7 +11,9 @@
     "captured_at",
     "dialog_size",
     "is_active",
-    "writeback_on_submit"
+    "writeback_on_submit",
+    "buttons",
+    "related_doctypes"
   ],
   "fields": [
     {
@@ -64,12 +66,24 @@
       "fieldname": "writeback_on_submit",
       "fieldtype": "Check",
       "label": "Writeback Fetched Fields on Submit"
+    },
+    {
+      "fieldname": "buttons",
+      "fieldtype": "Table",
+      "label": "Buttons",
+      "options": "Form Dialog Button"
+    },
+    {
+      "fieldname": "related_doctypes",
+      "fieldtype": "Table",
+      "label": "Related DocTypes",
+      "options": "Form Dialog Related DocType"
     }
   ],
   "index_web_pages_for_search": 0,
   "istable": 0,
   "links": [],
-  "modified": "2026-04-07 12:00:00.000000",
+  "modified": "2026-04-09 22:00:00.000000",
   "modified_by": "Administrator",
   "module": "NCE Events",
   "name": "Form Dialog",
