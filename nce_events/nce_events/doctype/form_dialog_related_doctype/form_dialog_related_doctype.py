@@ -1,5 +1,5 @@
 from frappe.model.document import Document
 
 
-class FormDialogRelatedDoctype(Document):
+class FormDialogRelatedDocType(Document):
 	pass
