@@ -1,5 +1,7 @@
 // ── DocType field cache ───────────────────────────────────────────────────────
 const _dt_field_cache = {};
+let _pp_dialogs_container_bound = false;
+let _pp_rebuild_pending = false;
 
 /** API returns { fields, doctype_title_field } (or legacy list). */
 function _unpack_doctype_fields_message(msg) {
@@ -1113,7 +1115,7 @@ function _show_related_picker(available, preselected, callback) {
 	d.show();
 }
 
-// ── Dialogs tab ──────────────────────────────────────────────────────────────
+// ── Dialogs tab ───────────────────────────────────────────────────────────
 function _render_dialogs_tab(frm) {
 	const $container = $(frm.layout.wrapper).find(".pp-dialogs-wrap");
 	if (!$container.length) return;
@@ -1126,6 +1128,7 @@ function _render_dialogs_tab(frm) {
 	}
 
 	$container.html('<p style="color:#8d949a;font-size:12px;padding:8px 0;">Loading dialogs…</p>');
+	_bind_dialogs_click_handlers(frm);
 
 	frappe.call({
 		method: "nce_events.api.form_dialog_api.list_form_dialogs_for_doctype",
@@ -1139,6 +1142,170 @@ function _render_dialogs_tab(frm) {
 				'<p style="color:#c0392b;font-size:12px;padding:8px 0;">Failed to load dialogs.</p>',
 			);
 		},
+	});
+}
+
+// ── Dialogs tab click handlers (event delegation) ────────────────────────
+function _bind_dialogs_click_handlers(frm) {
+	if (_pp_dialogs_container_bound) return;
+	_pp_dialogs_container_bound = true;
+
+	const $wrapper = $(frm.layout.wrapper);
+	$wrapper.on("click", ".pp-dialog-rebuild", function () {
+		if (_pp_rebuild_pending) return;
+		_pp_rebuild_pending = true;
+
+		const current = frm.doc.form_dialog || "";
+		const doctype = frm.doc.root_doctype;
+		if (!current) {
+			_pp_rebuild_pending = false;
+			return;
+		}
+
+		frappe.confirm(
+			"This will overwrite the frozen schema with the current Desk definition. Continue?",
+			function () {
+				frappe.call({
+					method: "nce_events.api.form_dialog_api.get_form_dialog_definition",
+					args: { name: current },
+					callback: function (defn_r) {
+						const current_related =
+							(defn_r && defn_r.message && defn_r.message.related_doctypes) || [];
+
+						frappe.call({
+							method: "nce_events.api.panel_api.get_child_doctypes",
+							args: { root_doctype: doctype },
+							callback: function (r) {
+								const children = (r && r.message) || [];
+
+								_show_related_picker(
+									children,
+									current_related,
+									function (selected) {
+										frappe.call({
+											method: "nce_events.api.form_dialog_api.rebuild_form_dialog",
+											args: {
+												name: current,
+												related_doctypes: JSON.stringify(selected),
+											},
+											freeze: true,
+											freeze_message: "Rebuilding schema…",
+											callback: function () {
+												frappe.show_alert({
+													message: "Schema rebuilt.",
+													indicator: "green",
+												});
+												_render_dialogs_tab(frm);
+											},
+										});
+									},
+								);
+							},
+						});
+					},
+				});
+			},
+			function () {
+				_pp_rebuild_pending = false;
+			},
+		);
+	});
+
+	$wrapper.on("click", ".pp-dialog-create", function () {
+		frappe.prompt(
+			{
+				label: "Dialog title",
+				fieldname: "title",
+				fieldtype: "Data",
+				reqd: 1,
+				default: doctype + " — dialog",
+			},
+			function (values) {
+				frappe.call({
+					method: "nce_events.api.panel_api.get_child_doctypes",
+					args: { root_doctype: frm.doc.root_doctype },
+					callback: function (r) {
+						const children = (r && r.message) || [];
+						_show_related_picker(children, [], function (selected) {
+							frappe.call({
+								method: "nce_events.api.form_dialog_api.capture_form_dialog_from_desk",
+								args: {
+									doctype: doctype,
+									title: values.title,
+									related_doctypes: JSON.stringify(selected),
+								},
+								freeze: true,
+								freeze_message: "Capturing schema from Desk…",
+								callback: function (r) {
+									if (r && r.message) {
+										frm.set_value("form_dialog", r.message);
+										frm.dirty();
+										frm.save().then(function () {
+											_render_dialogs_tab(frm);
+										});
+										frappe.show_alert({
+											message: "Dialog captured: " + r.message,
+											indicator: "green",
+										});
+									}
+								},
+							});
+						});
+					},
+				});
+			},
+			"Create Form Dialog",
+			"Create",
+		);
+	});
+
+	$wrapper.on("click", ".pp-dialog-open", function () {
+		const current = frm.doc.form_dialog || "";
+		if (!current) return;
+		window.open(frappe.utils.get_form_link("Form Dialog", current), "_blank");
+	});
+
+	$wrapper.on("click", ".pp-dialog-select", function () {
+		const name = $(this).data("name");
+		frm.set_value("form_dialog", name);
+		frm.dirty();
+		frm.save().then(function () {
+			_render_dialogs_tab(frm);
+		});
+	});
+
+	$wrapper.on("click", ".pp-dialog-delete", function () {
+		const name = $(this).data("name");
+		frappe.confirm(
+			"Delete Form Dialog <strong>" +
+				frappe.utils.escape_html(name) +
+				"</strong>? This cannot be undone.",
+			function () {
+				function doDelete() {
+					frappe.call({
+						method: "frappe.client.delete",
+						args: { doctype: "Form Dialog", name: name },
+						freeze: true,
+						freeze_message: "Deleting…",
+						callback: function () {
+							frappe.show_alert({
+								message: "Deleted: " + name,
+								indicator: "orange",
+							});
+							_render_dialogs_tab(frm);
+						},
+					});
+				}
+
+				if (name === current) {
+					frm.set_value("form_dialog", "");
+					frm.dirty();
+					frm.save().then(doDelete);
+				} else {
+					doDelete();
+				}
+			},
+		);
 	});
 }
 
@@ -1202,161 +1369,7 @@ function _build_dialogs_tab_html(frm, $container, dialogs) {
 		</div>`;
 
 	$container.html(current_html + list_html + create_html);
-
-	// ── Event handlers ──
-
-	$container.on("click", ".pp-dialog-create", function () {
-		frappe.prompt(
-			{
-				label: "Dialog title",
-				fieldname: "title",
-				fieldtype: "Data",
-				reqd: 1,
-				default: doctype + " — dialog",
-			},
-			function (values) {
-				// Fetch related DocTypes, then show picker, then capture
-				frappe.call({
-					method: "nce_events.api.panel_api.get_child_doctypes",
-					args: { root_doctype: frm.doc.root_doctype },
-					callback: function (r) {
-						const children = (r && r.message) || [];
-						_show_related_picker(children, [], function (selected) {
-							frappe.call({
-								method: "nce_events.api.form_dialog_api.capture_form_dialog_from_desk",
-								args: {
-									doctype: doctype,
-									title: values.title,
-									related_doctypes: JSON.stringify(selected),
-								},
-								freeze: true,
-								freeze_message: "Capturing schema from Desk…",
-								callback: function (r) {
-									if (r && r.message) {
-										frm.set_value("form_dialog", r.message);
-										frm.dirty();
-										frm.save().then(function () {
-											_render_dialogs_tab(frm);
-										});
-										frappe.show_alert({
-											message: "Dialog captured: " + r.message,
-											indicator: "green",
-										});
-									}
-								},
-							});
-						});
-					},
-				});
-			},
-			"Create Form Dialog",
-			"Create",
-		);
-	});
-
-	$container.on("click", ".pp-dialog-rebuild", function () {
-		if (!current) return;
-		frappe.confirm(
-			"This will overwrite the frozen schema with the current Desk definition. Continue?",
-			function () {
-				// 1. Get current definition (for pre-populated selection)
-				frappe.call({
-					method: "nce_events.api.form_dialog_api.get_form_dialog_definition",
-					args: { name: current },
-					callback: function (defn_r) {
-						const current_related =
-							(defn_r && defn_r.message && defn_r.message.related_doctypes) || [];
-
-						// 2. Get available child doctypes
-						frappe.call({
-							method: "nce_events.api.panel_api.get_child_doctypes",
-							args: { root_doctype: frm.doc.root_doctype },
-							callback: function (r) {
-								const children = (r && r.message) || [];
-
-								// 3. Show picker with pre-selection
-								_show_related_picker(
-									children,
-									current_related,
-									function (selected) {
-										// 4. Rebuild with selection
-										frappe.call({
-											method: "nce_events.api.form_dialog_api.rebuild_form_dialog",
-											args: {
-												name: current,
-												related_doctypes: JSON.stringify(selected),
-											},
-											freeze: true,
-											freeze_message: "Rebuilding schema…",
-											callback: function () {
-												frappe.show_alert({
-													message: "Schema rebuilt.",
-													indicator: "green",
-												});
-												_render_dialogs_tab(frm);
-											},
-										});
-									},
-								);
-							},
-						});
-					},
-				});
-			},
-		);
-	});
-
-	$container.on("click", ".pp-dialog-open", function () {
-		if (!current) return;
-		window.open(frappe.utils.get_form_link("Form Dialog", current), "_blank");
-	});
-
-	$container.on("click", ".pp-dialog-select", function () {
-		const name = $(this).data("name");
-		frm.set_value("form_dialog", name);
-		frm.dirty();
-		frm.save().then(function () {
-			_render_dialogs_tab(frm);
-		});
-	});
-
-	$container.on("click", ".pp-dialog-delete", function () {
-		const name = $(this).data("name");
-		frappe.confirm(
-			"Delete Form Dialog <strong>" +
-				frappe.utils.escape_html(name) +
-				"</strong>? This cannot be undone.",
-			function () {
-				function doDelete() {
-					frappe.call({
-						method: "frappe.client.delete",
-						args: { doctype: "Form Dialog", name: name },
-						freeze: true,
-						freeze_message: "Deleting…",
-						callback: function () {
-							frappe.show_alert({
-								message: "Deleted: " + name,
-								indicator: "orange",
-							});
-							_render_dialogs_tab(frm);
-						},
-					});
-				}
-
-				// If deleting the active dialog, unlink and save first
-				// so Frappe doesn't block the delete due to the link.
-				if (name === current) {
-					frm.set_value("form_dialog", "");
-					frm.dirty();
-					frm.save().then(doDelete);
-				} else {
-					doDelete();
-				}
-			},
-		);
-	});
 }
-
 // ── Page Panel form events ────────────────────────────────────────────────────
 frappe.ui.form.on("Page Panel", {
 	refresh: function (frm) {
