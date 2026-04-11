@@ -23,11 +23,53 @@
 					class="ppv2-fd-tab-panel"
 					:class="{ 'ppv2-fd-tab-panel-active': tabs.length === 1 || activeTab === ti }"
 				>
-					<!-- Related-DocType placeholder tab -->
-					<div v-if="tab._related" class="ppv2-fd-related-placeholder">
-						<p class="ppv2-fd-related-placeholder-text">
-							{{ tab._related.label || tab._related.doctype }} — coming soon
+					<!-- Related DocType tab: layout from row `info` (read-only field list) -->
+					<div
+						v-if="tab._related && tab.sections && tab.sections.length"
+						class="ppv2-fd-related-preview"
+					>
+						<p class="ppv2-fd-related-meta">
+							{{ tab._related.doctype }}
+							<span v-if="tab._related.link_field" class="ppv2-fd-related-meta-link">
+								· {{ tab._related.link_field }}
+							</span>
 						</p>
+						<p v-if="tab._related.captureError" class="ppv2-fd-related-warn">
+							Schema note: {{ tab._related.captureError }}
+						</p>
+						<div
+							v-for="(section, si) in tab.sections"
+							:key="'rs' + si"
+							class="ppv2-fd-section"
+						>
+							<h3 v-if="section.label" class="ppv2-fd-section-label">{{ section.label }}</h3>
+							<div
+								class="ppv2-fd-columns"
+								:style="{ gridTemplateColumns: 'repeat(' + Math.max(section.columns.length, 1) + ', 1fr)' }"
+							>
+								<div v-for="(col, ci) in section.columns" :key="'rc' + ci">
+									<div
+										v-for="field in col.fields"
+										:key="field.fieldname"
+										class="ppv2-fd-related-field-row"
+									>
+										<span class="ppv2-fd-related-fn">{{ field.label || field.fieldname }}</span>
+										<span class="ppv2-fd-related-ft">{{ field.fieldtype }}</span>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Related tab without usable layout in info -->
+					<div v-else-if="tab._related" class="ppv2-fd-related-placeholder">
+						<p class="ppv2-fd-related-placeholder-text">
+							{{ tab._related.label || tab._related.doctype }}
+						</p>
+						<p v-if="tab._related.captureError" class="ppv2-fd-related-warn">
+							{{ tab._related.captureError }}
+						</p>
+						<p v-else class="ppv2-fd-related-placeholder-sub">No field layout stored for this tab.</p>
 					</div>
 
 					<!-- Normal frozen-schema tab -->
@@ -189,6 +231,44 @@ const activeTab = defineModel("activeTab", { type: Number, required: true });
 }
 .ppv2-fd-related-placeholder-text {
     font-size: var(--font-size-base);
-    font-style: italic;
+    font-weight: var(--font-weight-bold, 600);
+}
+.ppv2-fd-related-placeholder-sub {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin-top: 8px;
+}
+.ppv2-fd-related-preview {
+    padding: 4px 0 12px;
+}
+.ppv2-fd-related-meta {
+    font-size: var(--font-size-sm);
+    color: var(--text-muted);
+    margin: 0 0 12px;
+}
+.ppv2-fd-related-meta-link {
+    font-weight: normal;
+}
+.ppv2-fd-related-warn {
+    font-size: var(--font-size-sm);
+    color: #a67c00;
+    margin: 0 0 12px;
+}
+.ppv2-fd-related-field-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 6px 8px;
+    margin-bottom: 4px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-sm, 4px);
+    font-size: var(--font-size-sm);
+}
+.ppv2-fd-related-fn {
+    color: var(--text-color);
+}
+.ppv2-fd-related-ft {
+    color: var(--text-muted);
+    flex-shrink: 0;
 }
 </style>

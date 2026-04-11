@@ -124,15 +124,46 @@ def _parse_related_doctypes_argument(related_doctypes: str | list | None) -> lis
 	return out
 
 
+def _build_related_child_row_dict(spec: dict[str, str]) -> dict[str, str]:
+	"""One child row with frozen field list JSON in info; never raises."""
+	child_dt = spec["doctype"]
+	link_f = spec["link_field"]
+	tab_l = spec["label"]
+	info_obj: dict = {
+		"doctype": child_dt,
+		"link_field": link_f,
+		"label": tab_l,
+	}
+	try:
+		_assert_doctype_in_wp_tables(child_dt)
+		child_meta = frappe.get_meta(child_dt)
+		child_fields = [f.as_dict() for f in child_meta.fields]
+		child_fields = _enrich_fetch_from_fields(child_fields, child_meta)
+		info_obj["fields"] = child_fields
+	except Exception as e:
+		info_obj["capture_error"] = cstr(e)[:500]
+	try:
+		info_str = json.dumps(info_obj, default=str)
+	except Exception as e:
+		info_str = json.dumps(
+			{
+				"doctype": child_dt,
+				"link_field": link_f,
+				"label": tab_l,
+				"capture_error": cstr(e)[:300],
+			},
+			default=str,
+		)
+	return {
+		"child_doctype": child_dt,
+		"link_field": link_f,
+		"tab_label": tab_l,
+		"info": info_str,
+	}
+
+
 def _related_doctype_child_rows(related_doctypes: str | list | None) -> list[dict[str, str]]:
-	return [
-		{
-			"child_doctype": r["doctype"],
-			"link_field": r["link_field"],
-			"tab_label": r["label"],
-		}
-		for r in _parse_related_doctypes_argument(related_doctypes)
-	]
+	return [_build_related_child_row_dict(r) for r in _parse_related_doctypes_argument(related_doctypes)]
 
 
 def _sync_related_doctypes(doc, related_doctypes: str | list | None) -> None:
@@ -142,7 +173,7 @@ def _sync_related_doctypes(doc, related_doctypes: str | list | None) -> None:
 
 
 def _related_rows_for_vue_api(doc) -> list[dict[str, str]]:
-	"""Map child table (child_doctype, tab_label) to keys the V2 client expects (doctype, label)."""
+	"""Child rows for V2: doctype, label, link_field, and raw info JSON for tab rendering."""
 	out: list[dict[str, str]] = []
 	for r in doc.related_doctypes or []:
 		d = r.as_dict()
@@ -151,7 +182,11 @@ def _related_rows_for_vue_api(doc) -> list[dict[str, str]]:
 			continue
 		lb = cstr(d.get("tab_label") or "").strip() or dt
 		lf = cstr(d.get("link_field") or "").strip()
-		out.append({"doctype": dt, "label": lb, "link_field": lf})
+		row: dict[str, str] = {"doctype": dt, "label": lb, "link_field": lf}
+		info_val = d.get("info")
+		if info_val is not None and cstr(info_val).strip():
+			row["info"] = cstr(info_val)
+		out.append(row)
 	return out
 
 

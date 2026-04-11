@@ -108,20 +108,60 @@ export function createFrozenFormLoad(ctx) {
 			allFields.value = fields;
 			tabs.value = parseLayout(fields);
 
-			// Append placeholder tabs for related DocTypes
-			const relatedDoctypes = defn.related_doctypes || [];
-			for (const rel of relatedDoctypes) {
-				tabs.value.push({
-					label: rel.label || rel.doctype,
-					sections: [],
-					_related: rel,
-				});
+			// Related DocType tabs: only from child rows; parse `info` JSON per row (try/catch).
+			let relatedAdded = 0;
+			try {
+				const relatedDoctypes = defn.related_doctypes || [];
+				for (const rel of relatedDoctypes) {
+					try {
+						if (!rel || typeof rel !== "object") continue;
+						const dt = rel.doctype || rel.child_doctype;
+						if (!dt) continue;
+						let parsed = null;
+						if (rel.info != null && String(rel.info).trim()) {
+							try {
+								parsed = typeof rel.info === "string" ? JSON.parse(rel.info) : rel.info;
+							} catch {
+								parsed = null;
+							}
+						}
+						const label =
+							(parsed && parsed.label) || rel.label || rel.tab_label || dt;
+						let sections = [];
+						if (parsed && Array.isArray(parsed.fields) && parsed.fields.length) {
+							try {
+								const layoutTabs = parseLayout(parsed.fields);
+								if (layoutTabs.length && layoutTabs[0].sections) {
+									sections = layoutTabs[0].sections;
+								}
+							} catch {
+								sections = [];
+							}
+						}
+						tabs.value.push({
+							label,
+							sections,
+							_related: {
+								doctype: (parsed && parsed.doctype) || dt,
+								link_field: (parsed && parsed.link_field) || rel.link_field || "",
+								label,
+								captureError: parsed && parsed.capture_error,
+								hasLayout: sections.length > 0,
+							},
+						});
+						relatedAdded += 1;
+					} catch {
+						/* skip broken row — main dialog still loads */
+					}
+				}
+			} catch {
+				/* ignore whole related block */
 			}
 
 			pushDebug(
 				"parseLayout",
 				true,
-				`fields=${fields.length} tabs=${tabs.value.length} (incl ${relatedDoctypes.length} related)`,
+				`fields=${fields.length} tabs=${tabs.value.length} (incl ${relatedAdded} related)`,
 			);
 
 			syncingFromLoad.value = true;
