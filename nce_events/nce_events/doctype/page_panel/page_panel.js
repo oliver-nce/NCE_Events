@@ -1,6 +1,5 @@
 // ── DocType field cache ───────────────────────────────────────────────────────
 const _dt_field_cache = {};
-let _pp_dialogs_container_bound = false;
 let _pp_rebuild_pending = false;
 
 /** API returns { fields, doctype_title_field } (or legacy list). */
@@ -1146,12 +1145,12 @@ function _render_dialogs_tab(frm) {
 }
 
 // ── Dialogs tab click handlers (event delegation) ────────────────────────
+// Rebind on every Dialogs-tab render: a global "bind once" flag would freeze
+// the first Page Panel's `frm` and mutate the wrong document on other panels.
 function _bind_dialogs_click_handlers(frm) {
-	if (_pp_dialogs_container_bound) return;
-	_pp_dialogs_container_bound = true;
-
 	const $wrapper = $(frm.layout.wrapper);
-	$wrapper.on("click", ".pp-dialog-rebuild", function () {
+	$wrapper.off("click.ppFormDialogs");
+	$wrapper.on("click.ppFormDialogs", ".pp-dialog-rebuild", function () {
 		if (_pp_rebuild_pending) return;
 		_pp_rebuild_pending = true;
 
@@ -1212,7 +1211,7 @@ function _bind_dialogs_click_handlers(frm) {
 		);
 	});
 
-	$wrapper.on("click", ".pp-dialog-create", function () {
+	$wrapper.on("click.ppFormDialogs", ".pp-dialog-create", function () {
 		const doctype = frm.doc.root_doctype;
 		frappe.prompt(
 			{
@@ -1261,13 +1260,13 @@ function _bind_dialogs_click_handlers(frm) {
 		);
 	});
 
-	$wrapper.on("click", ".pp-dialog-open", function () {
+	$wrapper.on("click.ppFormDialogs", ".pp-dialog-open", function () {
 		const current = frm.doc.form_dialog || "";
 		if (!current) return;
 		window.open(frappe.utils.get_form_link("Form Dialog", current), "_blank");
 	});
 
-	$wrapper.on("click", ".pp-dialog-select", function () {
+	$wrapper.on("click.ppFormDialogs", ".pp-dialog-select", function () {
 		const name = $(this).data("name");
 		frm.set_value("form_dialog", name);
 		frm.dirty();
@@ -1276,7 +1275,7 @@ function _bind_dialogs_click_handlers(frm) {
 		});
 	});
 
-	$wrapper.on("click", ".pp-dialog-delete", function () {
+	$wrapper.on("click.ppFormDialogs", ".pp-dialog-delete", function () {
 		const name = $(this).data("name");
 		const current = frm.doc.form_dialog || "";
 		frappe.confirm(
