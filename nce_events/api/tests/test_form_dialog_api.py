@@ -276,5 +276,154 @@ class TestParseRelatedDoctypes(unittest.TestCase):
 		self.assertEqual(rows, [])
 
 
+class TestFiltersForRelatedRows(unittest.TestCase):
+	def test_direct_one_hop(self):
+		from nce_events.api.form_dialog_api import _filters_for_related_rows
+
+		filters, force_empty = _filters_for_related_rows("ROOT", "People", "event", [])
+		self.assertFalse(force_empty)
+		self.assertEqual(filters, {"event": "ROOT"})
+
+	@patch("nce_events.api.form_dialog_api._hop_walk_final_identifiers")
+	def test_multihop_no_bridge_rows_force_empty(self, mock_hop):
+		from nce_events.api.form_dialog_api import _filters_for_related_rows
+
+		mock_hop.return_value = None
+		hc = [{"bridge": "Enrollment", "parent_link": "event", "child_link": "person"}]
+		filters, force_empty = _filters_for_related_rows("ROOT", "People", "name", hc)
+		self.assertTrue(force_empty)
+		self.assertEqual(filters, {})
+
+	@patch("nce_events.api.form_dialog_api._hop_walk_final_identifiers")
+	def test_multihop_in_filter(self, mock_hop):
+		from nce_events.api.form_dialog_api import _filters_for_related_rows
+
+		mock_hop.return_value = ["A", "B"]
+		hc = [{"bridge": "Enrollment", "parent_link": "event", "child_link": "person"}]
+		filters, force_empty = _filters_for_related_rows("ROOT", "People", "name", hc)
+		self.assertFalse(force_empty)
+		self.assertEqual(filters, {"name": ["in", ["A", "B"]]})
+
+	@patch("nce_events.api.form_dialog_api._hop_walk_final_identifiers")
+	def test_multihop_single_final_id(self, mock_hop):
+		from nce_events.api.form_dialog_api import _filters_for_related_rows
+
+		mock_hop.return_value = ["OnlyOne"]
+		hc = [{"bridge": "Enrollment", "parent_link": "event", "child_link": "person"}]
+		filters, force_empty = _filters_for_related_rows("ROOT", "People", "name", hc)
+		self.assertFalse(force_empty)
+		self.assertEqual(filters, {"name": "OnlyOne"})
+
+
+class TestHopWalkFinalIdentifiers(unittest.TestCase):
+	@patch("nce_events.api.form_dialog_api.frappe.get_list")
+	def test_single_step_collects_child_link(self, mock_gl):
+		from nce_events.api.form_dialog_api import _hop_walk_final_identifiers
+
+		mock_gl.return_value = [
+			{"name": "en1", "person": "P1"},
+			{"name": "en2", "person": "P2"},
+		]
+		hc = [{"bridge": "Enrollment", "parent_link": "event", "child_link": "person"}]
+		out = _hop_walk_final_identifiers("EVT1", hc)
+		self.assertEqual(out, ["P1", "P2"])
+		self.assertEqual(len(mock_gl.call_args_list), 1)
+		args0, kwargs0 = mock_gl.call_args_list[0]
+		self.assertEqual(args0, ("Enrollment",))
+		self.assertEqual(
+			kwargs0,
+			{
+				"filters": {"event": "EVT1"},
+				"fields": ["name", "person"],
+				"limit_page_length": 5000,
+			},
+		)
+
+	@patch("nce_events.api.form_dialog_api.frappe.get_list")
+	def test_two_steps_passes_bridge_names_then_final_ids(self, mock_gl):
+		from nce_events.api.form_dialog_api import _hop_walk_final_identifiers
+
+		mock_gl.side_effect = [
+			[{"name": "en1", "middle": "M1"}],
+			[{"name": "M1", "person": "P9"}],
+		]
+		hc = [
+			{"bridge": "Enrollment", "parent_link": "event", "child_link": "middle"},
+			{"bridge": "Middle", "parent_link": "enrollment", "child_link": "person"},
+		]
+		out = _hop_walk_final_identifiers("EVT1", hc)
+		self.assertEqual(out, ["P9"])
+		self.assertEqual(mock_gl.call_count, 2)
+		args0, kwargs0 = mock_gl.call_args_list[0]
+		self.assertEqual(args0, ("Enrollment",))
+		self.assertEqual(kwargs0["filters"], {"event": "EVT1"})
+		args1, kwargs1 = mock_gl.call_args_list[1]
+		self.assertEqual(args1, ("Middle",))
+		self.assertEqual(kwargs1["filters"], {"enrollment": ["in", ["en1"]]})
+
+
+class TestGetFormDialogRelatedRows(FrappeTestCase):
+	"""Whitelist read for related tab rows."""
+
+	def test_guest_rejected(self):
+		from nce_events.api.form_dialog_api import get_form_dialog_related_rows
+
+		mock_session = MagicMock()
+		mock_session.user = "Guest"
+		with patch("nce_events.api.form_dialog_api.frappe.session", mock_session):
+			with self.assertRaises(frappe.PermissionError):
+				get_form_dialog_related_rows("FD", "row1", "Event", "E1")
+
+	def test_wrong_root_doctype_rejected(self):
+		from nce_events.api.form_dialog_api import get_form_dialog_related_rows
+
+		mock_doc = MagicMock()
+		mock_doc.is_active = 1
+		mock_doc.target_doctype = "Event"
+		mock_doc.related_doctypes = []
+
+		with patch("nce_events.api.form_dialog_api.frappe.session.user", "Administrator"):
+			with patch("nce_events.api.form_dialog_api.frappe.get_doc", return_value=mock_doc):
+				with self.assertRaises(frappe.PermissionError):
+					get_form_dialog_related_rows("FD", "row1", "User", "x")
+
+	def test_direct_hop_calls_get_list(self):
+		from nce_events.api.form_dialog_api import get_form_dialog_related_rows
+
+		mock_row = MagicMock()
+		mock_row.name = "RELROW1"
+		mock_row.child_doctype = "User"
+		mock_row.link_field = "owner"
+		mock_row.hop_chain = []
+		mock_row.portal_field_config = None
+		mock_row.info = json.dumps(
+			{"fields": [{"fieldname": "name", "fieldtype": "Data", "label": "ID"}]}
+		)
+
+		mock_doc = MagicMock()
+		mock_doc.is_active = 1
+		mock_doc.target_doctype = "DocType"
+		mock_doc.related_doctypes = [mock_row]
+
+		with patch("nce_events.api.form_dialog_api.frappe.session.user", "Administrator"):
+			with patch("nce_events.api.form_dialog_api._assert_doctype_in_wp_tables"):
+				with patch("nce_events.api.form_dialog_api.frappe.get_doc", return_value=mock_doc):
+					with patch("nce_events.api.form_dialog_api.frappe.has_permission", return_value=True):
+						with patch(
+							"nce_events.api.form_dialog_api.frappe.get_list",
+							return_value=[{"name": "u1"}],
+						) as mock_list:
+							out = get_form_dialog_related_rows(
+								"FD1", "RELROW1", "DocType", "DocType", limit=50
+							)
+
+		self.assertEqual(out["rows"], [{"name": "u1"}])
+		self.assertEqual(out["child_doctype"], "User")
+		mock_list.assert_called_once()
+		kw = mock_list.call_args.kwargs
+		self.assertEqual(kw["filters"], {"owner": "DocType"})
+		self.assertEqual(kw["limit_page_length"], 50)
+
+
 if __name__ == "__main__":
 	unittest.main()

@@ -140,11 +140,12 @@
       "sections": ["Translation helpers"]
     },
     "nce_events/api/form_dialog_api.py": {
-      "purpose": "CRUD and schema-capture API for Form Dialog DocType. Validates DocType is in WP Tables. Capture freezes live Desk meta. save_form_dialog_document updates linked docs for fetch_from then saves (used when writeback_on_submit).",
+      "purpose": "CRUD and schema-capture API for Form Dialog DocType. Validates DocType is in WP Tables. Capture freezes live Desk meta. save_form_dialog_document updates linked docs for fetch_from then saves (used when writeback_on_submit). get_form_dialog_related_rows returns related-tab rows (portal columns, hop_chain-aware) for V2.",
       "exports": [
         "capture_form_dialog_from_desk",
         "rebuild_form_dialog",
         "get_form_dialog_definition",
+        "get_form_dialog_related_rows",
         "list_form_dialogs_for_doctype",
         "get_related_portal_field_editor",
         "save_related_portal_field_config",
@@ -159,6 +160,7 @@
         "WP Tables validation",
         "Capture / rebuild frozen schema from frappe.get_meta",
         "Get frozen definition for V2 renderer",
+        "Related-tab row fetch (whitelist read)",
         "List dialogs filtered by target_doctype",
         "Save with server-side fetch_from writeback to linked records"
       ]

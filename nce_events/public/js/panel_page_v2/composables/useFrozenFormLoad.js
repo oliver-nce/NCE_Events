@@ -166,6 +166,7 @@ export function createFrozenFormLoad(ctx) {
 								link_field: (parsed && parsed.link_field) || rel.link_field || "",
 								label,
 								hop_chain,
+								child_row_name: rel.child_row_name || rel.name || "",
 								captureError: parsed && parsed.capture_error,
 								hasLayout: sections.length > 0,
 							},

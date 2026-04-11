@@ -1,9 +1,9 @@
 """
 Server API for Form Dialog CRUD and frozen schema capture.
 
-Capture, rebuild, and list require System Manager. get_form_dialog_definition is
-readable by any logged-in user for active dialogs (V2 panel). save uses normal
-DocType create/write permission on the target record.
+Capture, rebuild, and list require System Manager. get_form_dialog_definition and
+get_form_dialog_related_rows are readable by any logged-in user for active dialogs
+(V2 panel). save uses normal DocType create/write permission on the target record.
 """
 
 from __future__ import annotations
@@ -354,7 +354,7 @@ def _normalize_portal_field_config_for_save(
 
 
 def _related_rows_for_vue_api(doc) -> list[dict[str, Any]]:
-	"""Child rows for V2: doctype, label, link_field, hop_chain, and raw info JSON for tab rendering."""
+	"""Child rows for V2: doctype, label, link_field, hop_chain, child_row_name, portal_field_config, info."""
 	out: list[dict[str, Any]] = []
 	for r in doc.related_doctypes or []:
 		d = r.as_dict()
@@ -363,13 +363,176 @@ def _related_rows_for_vue_api(doc) -> list[dict[str, Any]]:
 			continue
 		lb = cstr(d.get("tab_label") or "").strip() or dt
 		lf = cstr(d.get("link_field") or "").strip()
-		row: dict[str, Any] = {"doctype": dt, "label": lb, "link_field": lf}
+		crn = cstr(d.get("name") or getattr(r, "name", None) or "").strip()
+		row: dict[str, Any] = {
+			"doctype": dt,
+			"label": lb,
+			"link_field": lf,
+			"child_row_name": crn,
+		}
 		hc_raw = d.get("hop_chain") or getattr(r, "hop_chain", None)
 		row["hop_chain"] = _normalize_hop_chain_value(hc_raw)
+		pfc = d.get("portal_field_config") or getattr(r, "portal_field_config", None)
+		if pfc is not None and cstr(pfc).strip():
+			row["portal_field_config"] = cstr(pfc)
 		info_val = d.get("info")
 		if info_val is not None and cstr(info_val).strip():
 			row["info"] = cstr(info_val)
 		out.append(row)
+	return out
+
+
+def _hop_walk_final_identifiers(root_name: str, hop_chain: list[dict[str, str]]) -> list[str] | None:
+	"""
+	Walk hop_chain using permission-aware get_list.
+
+	- Non-last hop: pass bridge row ``name`` values to the next filter.
+	- Last hop: return distinct ``child_link`` values (final DocType keys).
+
+	Returns:
+	    ``None`` if an intermediate hop matched no rows (caller should return empty rows).
+	    A (possibly empty) list of final DocType identifiers otherwise.
+	"""
+	prev_values: list[str] = [cstr(root_name or "").strip()]
+	if not prev_values[0]:
+		return None
+
+	for i, step in enumerate(hop_chain):
+		bridge = cstr(step.get("bridge") or "").strip()
+		parent_link = cstr(step.get("parent_link") or "").strip()
+		child_link = cstr(step.get("child_link") or "").strip()
+		if not bridge or not parent_link or not child_link:
+			frappe.throw(_("Invalid hop_chain step"))
+
+		is_last = i == len(hop_chain) - 1
+		flt: dict[str, Any]
+		if len(prev_values) == 1:
+			flt = {parent_link: prev_values[0]}
+		else:
+			flt = {parent_link: ["in", prev_values]}
+
+		bridge_rows = frappe.get_list(
+			bridge,
+			filters=flt,
+			fields=["name", child_link],
+			limit_page_length=5000,
+		)
+		if not bridge_rows:
+			return None
+
+		if is_last:
+			seen: set[str] = set()
+			out: list[str] = []
+			for br in bridge_rows:
+				v = br.get(child_link)
+				if v is None or v == "":
+					continue
+				s = cstr(v).strip()
+				if s and s not in seen:
+					seen.add(s)
+					out.append(s)
+			return out
+
+		seen_n: set[str] = set()
+		next_names: list[str] = []
+		for br in bridge_rows:
+			nm = br.get("name")
+			if nm is None or nm == "":
+				continue
+			s = cstr(nm).strip()
+			if s and s not in seen_n:
+				seen_n.add(s)
+				next_names.append(s)
+		prev_values = next_names
+
+	raise RuntimeError("hop_chain walk did not return")  # pragma: no cover
+
+
+def _related_list_columns_from_child_row(row) -> tuple[list[dict[str, Any]], str]:
+	"""
+	Build column metadata and order_by for related-row list fetch.
+
+	Uses portal_field_config when present (show=1 columns, in editor order);
+	otherwise ``name`` only.
+	"""
+	info: dict[str, Any] = {}
+	if row.info:
+		try:
+			info = json.loads(row.info)
+		except json.JSONDecodeError:
+			info = {}
+	meta_fields = info.get("fields") if isinstance(info.get("fields"), list) else []
+	portal_raw = cstr(getattr(row, "portal_field_config", None) or "").strip()
+	portal_entries = _parse_portal_field_config_entries(portal_raw)
+	editor_rows = _build_portal_editor_rows(meta_fields, portal_entries)
+
+	shown = [r for r in editor_rows if cint(r.get("show")) == 1]
+	if not shown:
+		return ([{"fieldname": "name", "label": _("ID"), "fieldtype": "Data"}], "name asc")
+
+	columns: list[dict[str, Any]] = []
+	for r in shown:
+		columns.append(
+			{
+				"fieldname": cstr(r.get("fieldname") or "").strip(),
+				"label": cstr(r.get("label") or "").strip(),
+				"fieldtype": cstr(r.get("fieldtype") or "").strip(),
+				"editable": cint(r.get("editable")),
+			}
+		)
+
+	sort_parts: list[str] = []
+	for r in shown:
+		fn = cstr(r.get("fieldname") or "").strip()
+		if not fn or not cint(r.get("sort_rank", 0)):
+			continue
+		sd = cstr(r.get("sort_dir") or "asc").strip().lower()
+		if sd not in ("asc", "desc"):
+			sd = "asc"
+		sort_parts.append((cint(r.get("sort_rank")), f"{fn} {sd.upper()}"))
+	sort_parts.sort(key=lambda x: x[0])
+	order_by = ", ".join(p[1] for p in sort_parts) if sort_parts else "name asc"
+
+	return (columns, order_by)
+
+
+def _filters_for_related_rows(
+	root_name: str,
+	child_doctype: str,
+	link_field: str,
+	hop_chain: list[dict[str, str]],
+) -> tuple[dict[str, Any], bool]:
+	"""
+	Build get_list filters for the final related DocType.
+
+	Returns ``(filters, force_empty)``. When ``force_empty`` is True, the caller
+	must not call get_list and should return zero rows (hop miss or empty keys).
+	"""
+	if not hop_chain:
+		return ({link_field: root_name}, False)
+
+	final_ids = _hop_walk_final_identifiers(root_name, hop_chain)
+	if final_ids is None:
+		return ({}, True)
+	if not final_ids:
+		return ({}, True)
+
+	if len(final_ids) == 1:
+		return ({link_field: final_ids[0]}, False)
+	return ({link_field: ["in", final_ids]}, False)
+
+
+def _sanitize_get_list_fields(child_doctype: str, fieldnames: list[str]) -> list[str]:
+	"""Restrict to fields that exist on the DocType; always include ``name`` first."""
+	meta = frappe.get_meta(child_doctype)
+	valid = {f.fieldname for f in meta.fields} | {"name"}
+	out: list[str] = []
+	for fn in fieldnames:
+		fn = cstr(fn).strip()
+		if fn and fn in valid and fn not in out:
+			out.append(fn)
+	if "name" not in out:
+		out.insert(0, "name")
 	return out
 
 
@@ -532,6 +695,109 @@ def get_form_dialog_definition(name: str) -> dict:
 		"writeback_on_submit": doc.writeback_on_submit or 0,
 		"buttons": buttons,
 		"related_doctypes": related_doctypes,
+	}
+
+
+@frappe.whitelist()
+def get_form_dialog_related_rows(
+	definition: str,
+	related_row_name: str,
+	root_doctype: str,
+	root_name: str,
+	limit: int | str = 500,
+) -> dict[str, Any]:
+	"""
+	Fetch rows for one Form Dialog related tab (panel V2).
+
+	Whitelisted for any logged-in user. Validates that ``root_doctype`` matches
+	the Form Dialog target, that the related child row belongs to this dialog,
+	and that the caller may read the root document. Row fetches use
+	``frappe.get_list`` so DocType permissions apply to the child DocType and
+	each hop bridge DocType.
+
+	Args:
+	    definition: Form Dialog document name (same as ``get_form_dialog_definition``).
+	    related_row_name: ``name`` of the ``Form Dialog Related DocType`` child row.
+	    root_doctype: Must equal the Form Dialog's ``target_doctype``.
+	    root_name: Primary key of the root document open in the dialog.
+	    limit: Max rows (1–2000, default 500).
+
+	Returns:
+	    ``{ child_doctype, columns, rows, order_by }`` — columns from portal config
+	    (show=1); if none, only ``name`` is returned.
+	"""
+	if frappe.session.user == "Guest":
+		frappe.throw(_("Login required"), frappe.PermissionError)
+
+	definition = cstr(definition or "").strip()
+	related_row_name = cstr(related_row_name or "").strip()
+	root_doctype = cstr(root_doctype or "").strip()
+	root_name = cstr(root_name or "").strip()
+	if not definition or not related_row_name or not root_doctype or not root_name:
+		frappe.throw(_("Missing parameters"))
+
+	limit_n = cint(limit)
+	if limit_n < 1:
+		limit_n = 500
+	if limit_n > 2000:
+		limit_n = 2000
+
+	prev = frappe.flags.ignore_permissions
+	frappe.flags.ignore_permissions = True
+	try:
+		doc = frappe.get_doc("Form Dialog", definition)
+	finally:
+		frappe.flags.ignore_permissions = prev
+
+	if not cint(doc.is_active):
+		frappe.throw(_("This Form Dialog is not active."), frappe.PermissionError)
+
+	if cstr(doc.target_doctype or "").strip() != root_doctype:
+		frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+	if not frappe.has_permission(root_doctype, "read", doc=root_name):
+		frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+	row = None
+	for r in doc.related_doctypes or []:
+		if cstr(r.name) == related_row_name:
+			row = r
+			break
+	if not row:
+		frappe.throw(_("Related DocType row not found"))
+
+	child_dt = cstr(row.child_doctype or "").strip()
+	link_f = cstr(row.link_field or "").strip()
+	if not child_dt or not link_f:
+		frappe.throw(_("Invalid related row configuration"))
+
+	_assert_doctype_in_wp_tables(child_dt)
+
+	hc = _normalize_hop_chain_value(row.hop_chain or getattr(row, "hop_chain", None))
+	filters, force_empty = _filters_for_related_rows(root_name, child_dt, link_f, hc)
+	columns, order_by = _related_list_columns_from_child_row(row)
+	field_list = _sanitize_get_list_fields(child_dt, [cstr(c.get("fieldname") or "") for c in columns])
+
+	if force_empty:
+		return {
+			"child_doctype": child_dt,
+			"columns": columns,
+			"rows": [],
+			"order_by": order_by,
+		}
+
+	rows = frappe.get_list(
+		child_dt,
+		filters=filters,
+		fields=field_list,
+		order_by=order_by,
+		limit_page_length=limit_n,
+	)
+	return {
+		"child_doctype": child_dt,
+		"columns": columns,
+		"rows": rows,
+		"order_by": order_by,
 	}
 
 
