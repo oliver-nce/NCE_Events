@@ -172,6 +172,89 @@ def _sync_related_doctypes(doc, related_doctypes: str | list | None) -> None:
 		doc.append("related_doctypes", row)
 
 
+# Fieldtypes excluded from the related-table portal field editor (layout / non-data).
+_PORTAL_EDITOR_SKIP_FIELDTYPES: frozenset[str] = frozenset(
+	{
+		"Tab Break",
+		"Section Break",
+		"Column Break",
+		"Heading",
+		"HTML",
+		"Image",
+		"Fold",
+		"Table",
+		"Button",
+	}
+)
+
+
+def _portal_meta_field_eligible_for_editor(f: dict) -> bool:
+	fn = cstr(f.get("fieldname") or "").strip()
+	if not fn:
+		return False
+	if cint(f.get("hidden")):
+		return False
+	ft = cstr(f.get("fieldtype") or "").strip()
+	return ft not in _PORTAL_EDITOR_SKIP_FIELDTYPES
+
+
+def _parse_portal_field_config_entries(raw: str | None) -> list[dict]:
+	if not raw or not cstr(raw).strip():
+		return []
+	try:
+		data = json.loads(raw)
+	except json.JSONDecodeError:
+		return []
+	if not isinstance(data, list):
+		return []
+	return [x for x in data if isinstance(x, dict)]
+
+
+def _build_portal_editor_rows(
+	meta_fields: list[dict], portal_entries: list[dict]
+) -> list[dict[str, str | int]]:
+	eligible = [f for f in meta_fields if _portal_meta_field_eligible_for_editor(f)]
+	by_fn: dict[str, dict] = {}
+	for f in eligible:
+		fn = cstr(f.get("fieldname") or "").strip()
+		by_fn[fn] = f
+
+	out: list[dict[str, str | int]] = []
+	seen: set[str] = set()
+
+	for entry in portal_entries:
+		fn = cstr(entry.get("fieldname") or "").strip()
+		if not fn or fn not in by_fn or fn in seen:
+			continue
+		f = by_fn[fn]
+		seen.add(fn)
+		out.append(
+			{
+				"fieldname": fn,
+				"label": cstr(f.get("label") or "").strip() or fn,
+				"fieldtype": cstr(f.get("fieldtype") or ""),
+				"show": 1 if cint(entry.get("show")) else 0,
+				"editable": 1 if cint(entry.get("editable")) else 0,
+			}
+		)
+
+	for f in eligible:
+		fn = cstr(f.get("fieldname") or "").strip()
+		if fn in seen:
+			continue
+		seen.add(fn)
+		out.append(
+			{
+				"fieldname": fn,
+				"label": cstr(f.get("label") or "").strip() or fn,
+				"fieldtype": cstr(f.get("fieldtype") or ""),
+				"show": 0,
+				"editable": 0,
+			}
+		)
+	return out
+
+
 def _related_rows_for_vue_api(doc) -> list[dict[str, str]]:
 	"""Child rows for V2: doctype, label, link_field, and raw info JSON for tab rendering."""
 	out: list[dict[str, str]] = []
@@ -363,7 +446,7 @@ def list_form_dialogs_for_doctype(doctype: str) -> list[dict]:
 
 	Returns:
 	    List of dicts with: name, title, target_doctype, dialog_size, captured_at, is_active,
-	    and related_doctypes (list of {doctype, label, link_field} per child row, no info JSON).
+	    and related_doctypes (list of {doctype, label, link_field, child_row_name} per child row, no info JSON).
 	"""
 	_require_system_manager()
 
@@ -384,7 +467,7 @@ def list_form_dialogs_for_doctype(doctype: str) -> list[dict]:
 			"parenttype": "Form Dialog",
 			"parentfield": "related_doctypes",
 		},
-		fields=["parent", "child_doctype", "link_field", "tab_label", "idx"],
+		fields=["name", "parent", "child_doctype", "link_field", "tab_label", "idx"],
 		order_by="parent asc, idx asc",
 	)
 	by_parent: dict[str, list[dict[str, str]]] = {}
@@ -397,14 +480,117 @@ def list_form_dialogs_for_doctype(doctype: str) -> list[dict]:
 		pid = cstr(r.get("parent") or "").strip()
 		if not pid:
 			continue
+		crn = cstr(r.get("name") or "").strip()
 		by_parent.setdefault(pid, []).append(
-			{"doctype": dt, "label": lb, "link_field": lf},
+			{
+				"doctype": dt,
+				"label": lb,
+				"link_field": lf,
+				"child_row_name": crn,
+			},
 		)
 
 	for d in dialogs:
 		d["related_doctypes"] = by_parent.get(d["name"], [])
 
 	return dialogs
+
+
+@frappe.whitelist()
+def get_related_portal_field_editor(form_dialog: str, child_row_name: str) -> dict:
+	"""Desk Page Panel: load rows for the floating portal-field editor (System Manager)."""
+	_require_system_manager()
+
+	doc = frappe.get_doc("Form Dialog", form_dialog)
+	row = None
+	for r in doc.related_doctypes or []:
+		if cstr(r.name) == cstr(child_row_name).strip():
+			row = r
+			break
+	if not row:
+		frappe.throw(_("Related DocType row not found"))
+
+	info: dict = {}
+	if row.info:
+		try:
+			info = json.loads(row.info)
+		except json.JSONDecodeError:
+			info = {}
+
+	meta_fields = info.get("fields") if isinstance(info.get("fields"), list) else []
+	portal_raw = cstr(getattr(row, "portal_field_config", None) or "").strip()
+	portal_entries = _parse_portal_field_config_entries(portal_raw)
+	rows = _build_portal_editor_rows(meta_fields, portal_entries)
+
+	return {
+		"form_dialog": doc.name,
+		"child_row_name": row.name,
+		"child_doctype": row.child_doctype,
+		"tab_label": cstr(row.tab_label or "").strip() or row.child_doctype,
+		"rows": rows,
+		"capture_error": info.get("capture_error"),
+	}
+
+
+@frappe.whitelist()
+def save_related_portal_field_config(
+	form_dialog: str, child_row_name: str, portal_field_config: str | list
+) -> dict:
+	"""Desk Page Panel: persist portal_field_config JSON on a Form Dialog Related DocType row."""
+	_require_system_manager()
+
+	if isinstance(portal_field_config, str):
+		s = portal_field_config.strip()
+		if not s:
+			portal_field_config = []
+		else:
+			try:
+				portal_field_config = json.loads(s)
+			except json.JSONDecodeError:
+				frappe.throw(_("Invalid portal_field_config JSON"))
+	if not isinstance(portal_field_config, list):
+		frappe.throw(_("portal_field_config must be a list"))
+
+	doc = frappe.get_doc("Form Dialog", form_dialog)
+	row = None
+	for r in doc.related_doctypes or []:
+		if cstr(r.name) == cstr(child_row_name).strip():
+			row = r
+			break
+	if not row:
+		frappe.throw(_("Related DocType row not found"))
+
+	info: dict = {}
+	if row.info:
+		try:
+			info = json.loads(row.info)
+		except json.JSONDecodeError:
+			info = {}
+	meta_fields = info.get("fields") if isinstance(info.get("fields"), list) else []
+	allowed = {cstr(f.get("fieldname") or "").strip() for f in meta_fields if _portal_meta_field_eligible_for_editor(f)}
+
+	normalized: list[dict[str, int | str]] = []
+	seen: set[str] = set()
+	for entry in portal_field_config:
+		if not isinstance(entry, dict):
+			continue
+		fn = cstr(entry.get("fieldname") or "").strip()
+		if not fn or fn not in allowed or fn in seen:
+			continue
+		seen.add(fn)
+		normalized.append(
+			{
+				"fieldname": fn,
+				"show": 1 if cint(entry.get("show")) else 0,
+				"editable": 1 if cint(entry.get("editable")) else 0,
+			}
+		)
+
+	row.portal_field_config = json.dumps(normalized, indent=None)
+	doc.save(ignore_permissions=True)
+	frappe.db.commit()
+
+	return {"ok": 1, "portal_field_config": normalized}
 
 
 @frappe.whitelist()

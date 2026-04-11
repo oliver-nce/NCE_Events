@@ -3,7 +3,7 @@
   "creation": "2026-04-07 00:00:00.000000",
   "doctype": "DocType",
   "engine": "InnoDB",
-  "field_order": ["child_doctype", "link_field", "tab_label", "info"],
+  "field_order": ["child_doctype", "link_field", "tab_label", "info", "portal_field_config"],
   "fields": [
     {
       "description": "DocType that links to the Form Dialog target (e.g. child table).",
@@ -34,6 +34,12 @@
       "fieldname": "info",
       "fieldtype": "Long Text",
       "label": "Tab render JSON"
+    },
+    {
+      "description": "JSON array: [{\"fieldname\",\"show\",\"editable\"}, …] display order for related-table portal. Empty until configured in Page Panel → Dialogs.",
+      "fieldname": "portal_field_config",
+      "fieldtype": "Long Text",
+      "label": "Portal field config"
     }
   ],
   "index_web_pages_for_search": 0,

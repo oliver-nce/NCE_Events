@@ -145,6 +145,8 @@
         "rebuild_form_dialog",
         "get_form_dialog_definition",
         "list_form_dialogs_for_doctype",
+        "get_related_portal_field_editor",
+        "save_related_portal_field_config",
         "save_form_dialog_document"
       ],
       "private_helpers": [

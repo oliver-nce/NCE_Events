@@ -140,6 +140,58 @@ class TestListFormDialogsForDoctype(FrappeTestCase):
 		self.assertEqual(rd0["label"], "Users tab")
 		self.assertEqual(rd0["link_field"], "owner")
 		self.assertNotIn("info", rd0)
+		self.assertTrue(rd0.get("child_row_name"))
+
+		frappe.delete_doc("Form Dialog", title, force=True)
+		frappe.db.commit()
+
+
+class TestRelatedPortalFieldEditor(FrappeTestCase):
+	"""get_related_portal_field_editor + save_related_portal_field_config."""
+
+	@patch("nce_events.api.form_dialog_api._require_system_manager")
+	def test_save_persists_portal_field_config(self, mock_sm):
+		from nce_events.api.form_dialog_api import (
+			get_related_portal_field_editor,
+			save_related_portal_field_config,
+		)
+
+		title = "Portal Ed " + frappe.generate_hash(length=8)
+		doc = frappe.get_doc(
+			{
+				"doctype": "Form Dialog",
+				"title": title,
+				"target_doctype": "DocType",
+				"frozen_meta_json": '{"fields": []}',
+				"captured_at": frappe.utils.now_datetime(),
+				"is_active": 1,
+				"related_doctypes": [
+					{"child_doctype": "User", "link_field": "owner", "tab_label": "Staff"},
+				],
+			}
+		)
+		doc.insert(ignore_permissions=True)
+		frappe.db.commit()
+
+		child_name = doc.related_doctypes[0].name
+		data = get_related_portal_field_editor(title, child_name)
+		self.assertIn("rows", data)
+		self.assertGreater(len(data["rows"]), 0)
+		fn0 = data["rows"][0]["fieldname"]
+
+		save_related_portal_field_config(
+			title,
+			child_name,
+			[{"fieldname": fn0, "show": 1, "editable": 1}],
+		)
+
+		doc.reload()
+		raw = doc.related_doctypes[0].portal_field_config or "[]"
+		cfg = json.loads(raw)
+		self.assertEqual(len(cfg), 1)
+		self.assertEqual(cfg[0]["fieldname"], fn0)
+		self.assertEqual(cfg[0]["show"], 1)
+		self.assertEqual(cfg[0]["editable"], 1)
 
 		frappe.delete_doc("Form Dialog", title, force=True)
 		frappe.db.commit()

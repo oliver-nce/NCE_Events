@@ -1070,6 +1070,229 @@ $("<style>")
 	)
 	.appendTo("head");
 
+// ── Related portal field editor (floating panel, Desk) ───────────────────────
+if (!$("head").find("#pp-portal-float-css").length) {
+	$("<style>")
+		.attr("id", "pp-portal-float-css")
+		.text(
+			`
+		.pp-portal-float-backdrop { font-family: inherit; }
+		.pp-portal-float-panel .table > tbody > tr > td { vertical-align: middle; }
+		.pp-portal-float-panel tr[draggable="true"]:hover { background: #fafafa; }
+	`,
+		)
+		.appendTo("head");
+}
+
+let _pp_portal_float_cleanup = null;
+
+function _close_related_portal_float() {
+	if (typeof _pp_portal_float_cleanup === "function") {
+		_pp_portal_float_cleanup();
+		_pp_portal_float_cleanup = null;
+	}
+}
+
+function _open_related_portal_float(frm, opts) {
+	const form_dialog = opts.form_dialog;
+	const child_row_name = opts.child_row_name;
+	const titleHint = opts.tab_label || __("Related table");
+
+	if (!form_dialog || !child_row_name) {
+		frappe.show_alert({ message: __("Missing dialog or row id"), indicator: "orange" });
+		return;
+	}
+
+	_close_related_portal_float();
+
+	const $backdrop = $(
+		'<div class="pp-portal-float-backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:2000;"></div>',
+	);
+	const $panel = $(
+		'<div class="pp-portal-float-panel" style="position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(720px,92vw);max-height:85vh;display:flex;flex-direction:column;background:#fff;border-radius:8px;box-shadow:0 12px 40px rgba(0,0,0,0.2);z-index:2001;font-size:12px;"></div>',
+	);
+	const $header = $(
+		'<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #e8e8e8;"><strong class="pp-portal-float-title"></strong><button type="button" class="btn btn-default btn-xs pp-portal-float-close" aria-label="Close">×</button></div>',
+	);
+	const $body = $(
+		'<div class="pp-portal-float-body" style="flex:1;overflow:hidden;display:flex;flex-direction:column;padding:10px 16px 16px;"><p class="text-muted" style="margin:0;">' +
+			__("Loading…") +
+			"</p></div>",
+	);
+	$panel.append($header).append($body);
+	$backdrop.append($panel);
+	$("body").append($backdrop);
+
+	function onKey(ev) {
+		if (ev.key === "Escape") {
+			_close_related_portal_float();
+		}
+	}
+	$(document).on("keydown.ppPortalFloat", onKey);
+
+	_pp_portal_float_cleanup = function () {
+		$(document).off("keydown.ppPortalFloat", onKey);
+		$backdrop.remove();
+	};
+
+	$backdrop.on("click", function (e) {
+		if (e.target === $backdrop[0]) {
+			_close_related_portal_float();
+		}
+	});
+	$panel.on("click", function (e) {
+		e.stopPropagation();
+	});
+	$panel.find(".pp-portal-float-close").on("click", function () {
+		_close_related_portal_float();
+	});
+
+	frappe.call({
+		method: "nce_events.api.form_dialog_api.get_related_portal_field_editor",
+		args: { form_dialog: form_dialog, child_row_name: child_row_name },
+		freeze: true,
+		freeze_message: __("Loading fields…"),
+		callback: function (r) {
+			if (!r || r.exc || !r.message) {
+				$body.html('<p class="text-danger" style="margin:0;">' + __("Could not load editor.") + "</p>");
+				return;
+			}
+			const msg = r.message;
+			$panel.find(".pp-portal-float-title").text(
+				titleHint + " — " + (msg.tab_label || "") + " (" + (msg.child_doctype || "") + ")",
+			);
+
+			let warn = "";
+			if (msg.capture_error) {
+				const errTxt = String(msg.capture_error).substring(0, 500);
+				warn =
+					'<div class="alert alert-warning" style="margin-bottom:10px;padding:8px;font-size:11px;">' +
+					frappe.utils.escape_html(errTxt) +
+					"</div>";
+			}
+
+			const rows = msg.rows || [];
+			let tableHtml =
+				warn +
+				'<div style="overflow-y:auto;max-height:55vh;border:1px solid #d1d8dd;border-radius:4px;">' +
+				'<table class="table table-bordered" style="margin:0;font-size:12px;">' +
+				'<thead style="position:sticky;top:0;background:#f7fafc;z-index:1;"><tr>' +
+				'<th style="width:36px;"></th><th>' +
+				__("Field") +
+				'</th><th style="width:70px;">' +
+				__("Show") +
+				'</th><th style="width:90px;">' +
+				__("Editable") +
+				"</th></tr></thead><tbody class=\"pp-portal-field-tbody\">";
+
+			rows.forEach(function (row) {
+				const fn = row.fieldname || "";
+				const sh = row.show ? " checked" : "";
+				const ed = row.editable ? " checked" : "";
+				tableHtml +=
+					'<tr draggable="true" data-fieldname="' +
+					frappe.utils.escape_html(fn) +
+					'">' +
+					'<td class="text-muted pp-portal-drag" title="' +
+					__("Drag to reorder") +
+					'" style="cursor:grab;text-align:center;user-select:none;">⠿</td>' +
+					"<td>" +
+					frappe.utils.escape_html(row.label || fn) +
+					' <span class="text-muted">(' +
+					frappe.utils.escape_html(row.fieldtype || "") +
+					")</span></td>" +
+					'<td class="text-center"><input type="checkbox" class="pp-portal-show"' +
+					sh +
+					" /></td>" +
+					'<td class="text-center"><input type="checkbox" class="pp-portal-editable"' +
+					ed +
+					" /></td></tr>";
+			});
+
+			tableHtml += "</tbody></table></div>";
+			tableHtml +=
+				'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">' +
+				'<button type="button" class="btn btn-default btn-sm pp-portal-float-cancel">' +
+				__("Close") +
+				"</button>" +
+				'<button type="button" class="btn btn-primary btn-sm pp-portal-float-save">' +
+				__("Save") +
+				"</button></div>";
+
+			$body.empty().html(tableHtml);
+
+			const $tbody = $body.find(".pp-portal-field-tbody");
+			let $dragRow = null;
+
+			$tbody.on("dragstart", "tr", function (e) {
+				$dragRow = $(this);
+				$(this).css("opacity", "0.65");
+				try {
+					e.originalEvent.dataTransfer.effectAllowed = "move";
+					e.originalEvent.dataTransfer.setData("text/plain", "row");
+				} catch (e) {
+					void e;
+				}
+			});
+			$tbody.on("dragend", "tr", function () {
+				$(this).css("opacity", "");
+				$dragRow = null;
+			});
+			$tbody.on("dragover", "tr", function (e) {
+				e.preventDefault();
+				if (!$dragRow || !$dragRow.length || $dragRow[0] === this) {
+					return;
+				}
+				const $target = $(this);
+				const mid = $target.offset().top + $target.outerHeight() / 2;
+				const y = e.originalEvent.pageY;
+				if (y < mid) {
+					$dragRow.insertBefore($target);
+				} else {
+					$dragRow.insertAfter($target);
+				}
+			});
+
+			$body.find(".pp-portal-float-cancel").on("click", function () {
+				_close_related_portal_float();
+			});
+
+			$body.find(".pp-portal-float-save").on("click", function () {
+				const payload = [];
+				$tbody.find("tr").each(function () {
+					const fn = $(this).attr("data-fieldname");
+					if (!fn) {
+						return;
+					}
+					payload.push({
+						fieldname: fn,
+						show: $(this).find(".pp-portal-show").prop("checked") ? 1 : 0,
+						editable: $(this).find(".pp-portal-editable").prop("checked") ? 1 : 0,
+					});
+				});
+				frappe.call({
+					method: "nce_events.api.form_dialog_api.save_related_portal_field_config",
+					args: {
+						form_dialog: form_dialog,
+						child_row_name: child_row_name,
+						portal_field_config: JSON.stringify(payload),
+					},
+					freeze: true,
+					freeze_message: __("Saving…"),
+					callback: function (sv) {
+						if (sv && sv.exc) {
+							return;
+						}
+						frappe.show_alert({ message: __("Portal field config saved"), indicator: "green" });
+						_close_related_portal_float();
+						_render_dialogs_tab(frm);
+					},
+				});
+			});
+		},
+	});
+}
+
 // ── Related DocTypes picker ───────────────────────────────────────────────────
 function _show_related_picker(available, preselected, callback) {
 	if (!available || !available.length) {
@@ -1275,6 +1498,25 @@ function _bind_dialogs_click_handlers(frm) {
 		});
 	});
 
+	$wrapper.on("click.ppFormDialogs", ".pp-dialog-related-tab", function (ev) {
+		ev.preventDefault();
+		const $btn = $(this);
+		const dialogName = $btn.attr("data-dialog-name") || "";
+		const childRow = $btn.attr("data-child-row-name") || "";
+		if (!childRow) {
+			frappe.show_alert({
+				message: __("Reload this form after migrate: missing related row id."),
+				indicator: "orange",
+			});
+			return;
+		}
+		_open_related_portal_float(frm, {
+			form_dialog: dialogName,
+			child_row_name: childRow,
+			tab_label: ($btn.text() || "").trim(),
+		});
+	});
+
 	$wrapper.on("click.ppFormDialogs", ".pp-dialog-delete", function () {
 		const name = $(this).data("name");
 		const current = frm.doc.form_dialog || "";
@@ -1365,7 +1607,8 @@ function _build_dialogs_tab_html(frm, $container, dialogs) {
 					const lab = row.label || row.doctype || "Tab";
 					const dt = row.doctype || "";
 					const lf = row.link_field || "";
-					rel_btns += `<button type="button" class="btn btn-xs btn-default pp-dialog-related-tab" style="margin:2px 4px 2px 0;" data-pp-related-idx="${idx}" data-dialog-name="${frappe.utils.escape_html(d.name)}" data-child-doctype="${frappe.utils.escape_html(dt)}" data-link-field="${frappe.utils.escape_html(lf)}">${frappe.utils.escape_html(lab)}</button>`;
+					const crn = row.child_row_name || "";
+					rel_btns += `<button type="button" class="btn btn-xs btn-default pp-dialog-related-tab" style="margin:2px 4px 2px 0;" data-pp-related-idx="${idx}" data-dialog-name="${frappe.utils.escape_html(d.name)}" data-child-row-name="${frappe.utils.escape_html(crn)}" data-child-doctype="${frappe.utils.escape_html(dt)}" data-link-field="${frappe.utils.escape_html(lf)}">${frappe.utils.escape_html(lab)}</button>`;
 				});
 				list_html += `<tr style="border-bottom:1px solid #ededed;${row_bg}"><td colspan="4" style="padding:4px 8px 8px 20px;background:#fafbfc;font-size:11px;">
 					<div style="color:#8d99a6;margin-bottom:4px;">${__("Related table tabs (preview)")}</div>
