@@ -1213,6 +1213,7 @@ function _bind_dialogs_click_handlers(frm) {
 	});
 
 	$wrapper.on("click", ".pp-dialog-create", function () {
+		const doctype = frm.doc.root_doctype;
 		frappe.prompt(
 			{
 				label: "Dialog title",
@@ -1277,6 +1278,7 @@ function _bind_dialogs_click_handlers(frm) {
 
 	$wrapper.on("click", ".pp-dialog-delete", function () {
 		const name = $(this).data("name");
+		const current = frm.doc.form_dialog || "";
 		frappe.confirm(
 			"Delete Form Dialog <strong>" +
 				frappe.utils.escape_html(name) +
