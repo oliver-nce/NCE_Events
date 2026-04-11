@@ -1,8 +1,9 @@
 """
 Server API for Form Dialog CRUD and frozen schema capture.
 
-Capture/rebuild/list/get require System Manager.
-save_form_dialog_document uses normal DocType create/write permission.
+Capture, rebuild, and list require System Manager. get_form_dialog_definition is
+readable by any logged-in user for active dialogs (V2 panel). save uses normal
+DocType create/write permission on the target record.
 """
 
 from __future__ import annotations
@@ -12,36 +13,6 @@ import json
 import frappe
 from frappe import _
 from frappe.utils import cint, cstr
-
-# Debug wrapper to capture SQL queries for troubleshooting
-_original_db_sql = None
-
-
-def _enable_sql_debugging():
-	"""Wrap frappe.db.sql to log queries before execution."""
-	global _original_db_sql
-	if _original_db_sql is None:
-		_original_db_sql = frappe.db.sql
-
-		def _debug_sql(query, values=None, *args, **kwargs):
-			try:
-				result = _original_db_sql(query, values, *args, **kwargs)
-				return result
-			except Exception as e:
-				# Log the query when an error occurs
-				error_msg = f"SQL Error in Form Dialog loading:\nQuery: {query}\nValues: {values}\nError: {e}"
-				frappe.log_error(error_msg, "form_dialog_sql_error")
-				# Also print to console for immediate visibility
-				print(f"\n{'=' * 60}")
-				print("FORM DIALOG DEBUG - SQL ERROR")
-				print(f"{'=' * 60}")
-				print(f"Query: {query}")
-				print(f"Values: {values}")
-				print(f"Error: {e}")
-				print(f"{'=' * 60}\n")
-				raise
-
-		frappe.db.sql = _debug_sql
 
 
 def _assert_doctype_in_wp_tables(doctype: str) -> None:
@@ -219,22 +190,54 @@ def get_form_dialog_definition(name: str) -> dict:
 	"""
 	Return the frozen schema and dialog size for the Vue renderer.
 
+	Any logged-in user may read an *active* Form Dialog definition so the V2
+	panel form can load; the Form Dialog DocType itself stays SM-only for Desk.
+	Guests are rejected.
+
 	Args:
 	    name: The name (title) of the Form Dialog document.
 
 	Returns:
-	    Dict with: name, title, target_doctype, dialog_size, frozen_meta_json (as parsed dict).
+	    Dict with: name, title, target_doctype, dialog_size, frozen_meta (parsed),
+	    writeback_on_submit, buttons (sorted), related_doctypes.
 	"""
-	_require_system_manager()
+	if not (name or "").strip():
+		frappe.throw(_("Missing name"))
 
-	# Enable SQL debugging to capture the error
-	_enable_sql_debugging()
+	if frappe.session.user == "Guest":
+		frappe.throw(_("Login required"), frappe.PermissionError)
 
-	doc = frappe.get_doc("Form Dialog", name)
+	prev = frappe.flags.ignore_permissions
+	frappe.flags.ignore_permissions = True
+	try:
+		doc = frappe.get_doc("Form Dialog", name)
+	finally:
+		frappe.flags.ignore_permissions = prev
 
-	frozen = {}
-	if doc.frozen_meta_json:
-		frozen = json.loads(doc.frozen_meta_json)
+	if not cint(doc.is_active):
+		frappe.throw(_("This Form Dialog is not active."), frappe.PermissionError)
+
+	frozen: dict = {}
+	raw = doc.frozen_meta_json
+	if raw and str(raw).strip():
+		try:
+			frozen = json.loads(raw)
+		except json.JSONDecodeError as err:
+			frappe.log_error(
+				message=f"Form Dialog {name!r}: {err}\n{str(raw)[:2000]!r}",
+				title="form_dialog_invalid_json",
+			)
+			frappe.throw(
+				_(
+					"Form Dialog schema is invalid. Open this Form Dialog in Desk and use Rebuild or re-capture from Desk."
+				)
+			)
+
+	buttons = sorted(
+		[b.as_dict() for b in (doc.buttons or [])],
+		key=lambda b: (cint(b.get("sort_order")), cint(b.get("idx")), cstr(b.get("name") or "")),
+	)
+	related_doctypes = [r.as_dict() for r in (doc.related_doctypes or [])]
 
 	return {
 		"name": doc.name,
@@ -243,6 +246,8 @@ def get_form_dialog_definition(name: str) -> dict:
 		"dialog_size": doc.dialog_size or "xl",
 		"frozen_meta": frozen,
 		"writeback_on_submit": doc.writeback_on_submit or 0,
+		"buttons": buttons,
+		"related_doctypes": related_doctypes,
 	}
 
 

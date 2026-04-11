@@ -73,8 +73,7 @@ class TestCaptureFormDialog(FrappeTestCase):
 class TestGetFormDialogDefinition(FrappeTestCase):
 	"""Test that get_form_dialog_definition returns buttons in sort_order."""
 
-	@patch("nce_events.api.form_dialog_api._require_system_manager")
-	def test_buttons_returned_in_sort_order(self, mock_role):
+	def test_buttons_returned_in_sort_order(self):
 		"""Buttons must be returned sorted by sort_order ascending."""
 		from nce_events.api.form_dialog_api import get_form_dialog_definition
 
