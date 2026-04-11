@@ -228,15 +228,22 @@ def _build_portal_editor_rows(
 			continue
 		f = by_fn[fn]
 		seen.add(fn)
-		out.append(
-			{
-				"fieldname": fn,
-				"label": cstr(f.get("label") or "").strip() or fn,
-				"fieldtype": cstr(f.get("fieldtype") or ""),
-				"show": 1 if cint(entry.get("show")) else 0,
-				"editable": 1 if cint(entry.get("editable")) else 0,
-			}
-		)
+		show_b = 1 if cint(entry.get("show")) else 0
+		row_out: dict[str, str | int] = {
+			"fieldname": fn,
+			"label": cstr(f.get("label") or "").strip() or fn,
+			"fieldtype": cstr(f.get("fieldtype") or ""),
+			"show": show_b,
+			"editable": 1 if cint(entry.get("editable")) else 0,
+		}
+		sr = cint(entry.get("sort_rank")) if show_b else 0
+		sd = cstr(entry.get("sort_dir") or "").strip().lower()
+		if sd not in ("asc", "desc"):
+			sd = "asc"
+		if sr > 0 and show_b:
+			row_out["sort_rank"] = sr
+			row_out["sort_dir"] = sd
+		out.append(row_out)
 
 	for f in eligible:
 		fn = cstr(f.get("fieldname") or "").strip()
@@ -253,6 +260,55 @@ def _build_portal_editor_rows(
 			}
 		)
 	return out
+
+
+def _normalize_portal_field_config_for_save(
+	portal_field_config: list, allowed: set[str]
+) -> list[dict[str, int | str]]:
+	"""Validate fieldnames, strip sort when Show≠1, renumber sort_rank 1..n."""
+	parsed: list[dict[str, int | str]] = []
+	seen: set[str] = set()
+	for entry in portal_field_config:
+		if not isinstance(entry, dict):
+			continue
+		fn = cstr(entry.get("fieldname") or "").strip()
+		if not fn or fn not in allowed or fn in seen:
+			continue
+		seen.add(fn)
+		show_b = 1 if cint(entry.get("show")) else 0
+		sd = cstr(entry.get("sort_dir") or "").strip().lower()
+		if sd not in ("asc", "desc"):
+			sd = "asc"
+		sr = cint(entry.get("sort_rank")) if show_b else 0
+		if sr < 0:
+			sr = 0
+		rec: dict[str, int | str] = {
+			"fieldname": fn,
+			"show": show_b,
+			"editable": 1 if cint(entry.get("editable")) else 0,
+		}
+		if show_b and sr > 0:
+			rec["sort_rank"] = sr
+			rec["sort_dir"] = sd
+		parsed.append(rec)
+
+	indexed = [
+		(i, r)
+		for i, r in enumerate(parsed)
+		if cint(r.get("show")) == 1 and cint(r.get("sort_rank", 0)) > 0
+	]
+	indexed.sort(key=lambda x: (cint(x[1].get("sort_rank", 0)), x[0]))
+	for new_rank, (_, r) in enumerate(indexed, start=1):
+		r["sort_rank"] = new_rank
+
+	for r in parsed:
+		if cint(r.get("show")) != 1 or cint(r.get("sort_rank", 0)) <= 0:
+			r.pop("sort_rank", None)
+			r.pop("sort_dir", None)
+		elif cstr(r.get("sort_dir") or "").strip().lower() not in ("asc", "desc"):
+			r["sort_dir"] = "asc"
+
+	return parsed
 
 
 def _related_rows_for_vue_api(doc) -> list[dict[str, str]]:
@@ -569,22 +625,7 @@ def save_related_portal_field_config(
 	meta_fields = info.get("fields") if isinstance(info.get("fields"), list) else []
 	allowed = {cstr(f.get("fieldname") or "").strip() for f in meta_fields if _portal_meta_field_eligible_for_editor(f)}
 
-	normalized: list[dict[str, int | str]] = []
-	seen: set[str] = set()
-	for entry in portal_field_config:
-		if not isinstance(entry, dict):
-			continue
-		fn = cstr(entry.get("fieldname") or "").strip()
-		if not fn or fn not in allowed or fn in seen:
-			continue
-		seen.add(fn)
-		normalized.append(
-			{
-				"fieldname": fn,
-				"show": 1 if cint(entry.get("show")) else 0,
-				"editable": 1 if cint(entry.get("editable")) else 0,
-			}
-		)
+	normalized = _normalize_portal_field_config_for_save(portal_field_config, allowed)
 
 	row.portal_field_config = json.dumps(normalized, indent=None)
 	doc.save(ignore_permissions=True)

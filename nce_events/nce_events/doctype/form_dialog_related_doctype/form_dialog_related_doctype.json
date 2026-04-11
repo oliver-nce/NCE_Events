@@ -36,7 +36,7 @@
       "label": "Tab render JSON"
     },
     {
-      "description": "JSON array: [{\"fieldname\",\"show\",\"editable\"}, …] display order for related-table portal. Empty until configured in Page Panel → Dialogs.",
+      "description": "JSON array: [{fieldname, show, editable, optional sort_rank, sort_dir asc|desc}, …] column order + portal list sort (sort only when show=1). Empty until configured in Page Panel → Dialogs.",
       "fieldname": "portal_field_config",
       "fieldtype": "Long Text",
       "label": "Portal field config"

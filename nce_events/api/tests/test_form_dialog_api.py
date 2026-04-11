@@ -193,8 +193,39 @@ class TestRelatedPortalFieldEditor(FrappeTestCase):
 		self.assertEqual(cfg[0]["show"], 1)
 		self.assertEqual(cfg[0]["editable"], 1)
 
+		save_related_portal_field_config(
+			title,
+			child_name,
+			[{"fieldname": fn0, "show": 1, "editable": 0, "sort_rank": 1, "sort_dir": "desc"}],
+		)
+		doc.reload()
+		cfg2 = json.loads(doc.related_doctypes[0].portal_field_config or "[]")
+		self.assertEqual(cfg2[0].get("sort_rank"), 1)
+		self.assertEqual(cfg2[0].get("sort_dir"), "desc")
+
 		frappe.delete_doc("Form Dialog", title, force=True)
 		frappe.db.commit()
+
+
+class TestNormalizePortalFieldConfig(unittest.TestCase):
+	def test_strips_sort_when_show_off(self):
+		from nce_events.api.form_dialog_api import _normalize_portal_field_config_for_save
+
+		out = _normalize_portal_field_config_for_save(
+			[
+				{
+					"fieldname": "status",
+					"show": 0,
+					"editable": 0,
+					"sort_rank": 2,
+					"sort_dir": "desc",
+				},
+			],
+			{"status"},
+		)
+		self.assertEqual(len(out), 1)
+		self.assertNotIn("sort_rank", out[0])
+		self.assertNotIn("sort_dir", out[0])
 
 
 class TestParseRelatedDoctypes(unittest.TestCase):

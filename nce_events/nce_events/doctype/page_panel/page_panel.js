@@ -1079,6 +1079,8 @@ if (!$("head").find("#pp-portal-float-css").length) {
 		.pp-portal-float-backdrop { font-family: inherit; }
 		.pp-portal-float-panel .table > tbody > tr > td { vertical-align: middle; }
 		.pp-portal-float-panel tr[draggable="true"]:hover { background: #fafafa; }
+		.pp-portal-float-panel .pp-sort-up.btn-primary,
+		.pp-portal-float-panel .pp-sort-down.btn-primary { color: #fff; }
 	`,
 		)
 		.appendTo("head");
@@ -1109,7 +1111,7 @@ function _open_related_portal_float(frm, opts) {
 		'<div class="pp-portal-float-backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:2000;"></div>',
 	);
 	const $panel = $(
-		'<div class="pp-portal-float-panel" style="position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(720px,92vw);max-height:85vh;display:flex;flex-direction:column;background:#fff;border-radius:8px;box-shadow:0 12px 40px rgba(0,0,0,0.2);z-index:2001;font-size:12px;"></div>',
+		'<div class="pp-portal-float-panel" style="position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(880px,94vw);max-height:85vh;display:flex;flex-direction:column;background:#fff;border-radius:8px;box-shadow:0 12px 40px rgba(0,0,0,0.2);z-index:2001;font-size:12px;"></div>',
 	);
 	const $header = $(
 		'<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #e8e8e8;"><strong class="pp-portal-float-title"></strong><button type="button" class="btn btn-default btn-xs pp-portal-float-close" aria-label="Close">×</button></div>',
@@ -1174,6 +1176,12 @@ function _open_related_portal_float(frm, opts) {
 			const rows = msg.rows || [];
 			let tableHtml =
 				warn +
+				'<div class="pp-portal-sort-toolbar" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px;">' +
+				"<strong>" +
+				__("Sort by") +
+				'</strong><button type="button" class="btn btn-default btn-xs pp-portal-sort-clear">' +
+				__("Clear sort") +
+				"</button></div>" +
 				'<div style="overflow-y:auto;max-height:55vh;border:1px solid #d1d8dd;border-radius:4px;">' +
 				'<table class="table table-bordered" style="margin:0;font-size:12px;">' +
 				'<thead style="position:sticky;top:0;background:#f7fafc;z-index:1;"><tr>' +
@@ -1183,18 +1191,33 @@ function _open_related_portal_float(frm, opts) {
 				__("Show") +
 				'</th><th style="width:90px;">' +
 				__("Editable") +
+				'</th><th style="min-width:108px;">' +
+				__("Sort") +
 				"</th></tr></thead><tbody class=\"pp-portal-field-tbody\">";
 
 			rows.forEach(function (row) {
 				const fn = row.fieldname || "";
 				const sh = row.show ? " checked" : "";
 				const ed = row.editable ? " checked" : "";
+				const srRaw = parseInt(row.sort_rank, 10) || 0;
+				const sdRaw = row.sort_dir === "desc" ? "desc" : "asc";
+				const showOn = !!row.show && Number(row.show) !== 0;
+				const effSr = showOn && srRaw > 0 ? srRaw : 0;
+				const effSd = effSr > 0 ? sdRaw : "asc";
+				const rankLabel = effSr > 0 ? String(effSr) : "—";
+				const upPrim = effSr > 0 && effSd === "asc" ? " btn-primary" : "";
+				const dnPrim = effSr > 0 && effSd === "desc" ? " btn-primary" : "";
+				const btnDis = effSr <= 0 ? " disabled" : "";
 				tableHtml +=
 					'<tr draggable="true" data-fieldname="' +
 					frappe.utils.escape_html(fn) +
+					'" data-sort-rank="' +
+					effSr +
+					'" data-sort-dir="' +
+					effSd +
 					'">' +
 					'<td class="text-muted pp-portal-drag" title="' +
-					__("Drag to reorder") +
+					__("Drag to reorder columns") +
 					'" style="cursor:grab;text-align:center;user-select:none;">⠿</td>' +
 					"<td>" +
 					frappe.utils.escape_html(row.label || fn) +
@@ -1206,7 +1229,26 @@ function _open_related_portal_float(frm, opts) {
 					" /></td>" +
 					'<td class="text-center"><input type="checkbox" class="pp-portal-editable"' +
 					ed +
-					" /></td></tr>";
+					' /></td><td class="text-center pp-portal-sort-cell" style="white-space:nowrap;">' +
+					'<span class="pp-portal-sort-rank" style="display:inline-block;min-width:18px;font-weight:600;cursor:pointer;margin-right:4px;" title="' +
+					__("Click to add or remove from sort (Show must be on)") +
+					'">' +
+					rankLabel +
+					'</span><span class="btn-group" role="group">' +
+					'<button type="button" class="btn btn-xs btn-default pp-sort-up' +
+					upPrim +
+					'" title="' +
+					__("Ascending") +
+					'"' +
+					btnDis +
+					">↑</button>" +
+					'<button type="button" class="btn btn-xs btn-default pp-sort-down' +
+					dnPrim +
+					'" title="' +
+					__("Descending") +
+					'"' +
+					btnDis +
+					">↓</button></span></td></tr>";
 			});
 
 			tableHtml += "</tbody></table></div>";
@@ -1222,16 +1264,89 @@ function _open_related_portal_float(frm, opts) {
 			$body.empty().html(tableHtml);
 
 			const $tbody = $body.find(".pp-portal-field-tbody");
+
+			function ppMaxSortRank($tb) {
+				let m = 0;
+				$tb.find("tr").each(function () {
+					const r = parseInt($(this).attr("data-sort-rank") || "0", 10) || 0;
+					if (r > m) {
+						m = r;
+					}
+				});
+				return m;
+			}
+
+			function ppApplySortUI($tr) {
+				const show = $tr.find(".pp-portal-show").prop("checked");
+				let sr = parseInt($tr.attr("data-sort-rank") || "0", 10) || 0;
+				let sd = $tr.attr("data-sort-dir") === "desc" ? "desc" : "asc";
+				if (!show) {
+					sr = 0;
+					sd = "asc";
+					$tr.attr("data-sort-rank", "0");
+					$tr.attr("data-sort-dir", "asc");
+				}
+				const $rk = $tr.find(".pp-portal-sort-rank");
+				const $up = $tr.find(".pp-sort-up");
+				const $dn = $tr.find(".pp-sort-down");
+				if (!show || sr <= 0) {
+					$rk.text("—");
+					$up.removeClass("btn-primary").prop("disabled", true);
+					$dn.removeClass("btn-primary").prop("disabled", true);
+					return;
+				}
+				$rk.text(String(sr));
+				$up.prop("disabled", false);
+				$dn.prop("disabled", false);
+				$up.toggleClass("btn-primary", sd === "asc");
+				$dn.toggleClass("btn-primary", sd === "desc");
+			}
+
+			function ppRefreshAllSortUI($tb) {
+				$tb.find("tr").each(function () {
+					ppApplySortUI($(this));
+				});
+			}
+
+			function ppRenumberSortRanks($tb) {
+				const ranked = [];
+				$tb.find("tr").each(function () {
+					const $tr = $(this);
+					const sr = parseInt($tr.attr("data-sort-rank") || "0", 10) || 0;
+					if ($tr.find(".pp-portal-show").prop("checked") && sr > 0) {
+						ranked.push({ $tr: $tr, sr: sr });
+					}
+				});
+				ranked.sort(function (a, b) {
+					return a.sr - b.sr;
+				});
+				ranked.forEach(function (item, idx) {
+					item.$tr.attr("data-sort-rank", String(idx + 1));
+				});
+				$tb.find("tr").each(function () {
+					const $tr = $(this);
+					if (!$tr.find(".pp-portal-show").prop("checked")) {
+						$tr.attr("data-sort-rank", "0");
+						$tr.attr("data-sort-dir", "asc");
+					}
+				});
+				ppRefreshAllSortUI($tb);
+			}
+
 			let $dragRow = null;
 
 			$tbody.on("dragstart", "tr", function (e) {
+				if (!$(e.target).closest(".pp-portal-drag").length) {
+					e.preventDefault();
+					return false;
+				}
 				$dragRow = $(this);
 				$(this).css("opacity", "0.65");
 				try {
 					e.originalEvent.dataTransfer.effectAllowed = "move";
 					e.originalEvent.dataTransfer.setData("text/plain", "row");
-				} catch (e) {
-					void e;
+				} catch (ex) {
+					void ex;
 				}
 			});
 			$tbody.on("dragend", "tr", function () {
@@ -1253,6 +1368,66 @@ function _open_related_portal_float(frm, opts) {
 				}
 			});
 
+			$body.on("change", ".pp-portal-show", function () {
+				const $tr = $(this).closest("tr");
+				if (!$(this).prop("checked")) {
+					$tr.attr("data-sort-rank", "0");
+					$tr.attr("data-sort-dir", "asc");
+				}
+				ppRenumberSortRanks($tbody);
+			});
+
+			$body.on("click", ".pp-portal-sort-rank", function (e) {
+				e.preventDefault();
+				const $tr = $(this).closest("tr");
+				if (!$tr.find(".pp-portal-show").prop("checked")) {
+					return;
+				}
+				const cur = parseInt($tr.attr("data-sort-rank") || "0", 10) || 0;
+				if (cur > 0) {
+					$tr.attr("data-sort-rank", "0");
+					$tr.attr("data-sort-dir", "asc");
+				} else {
+					const mx = ppMaxSortRank($tbody);
+					$tr.attr("data-sort-rank", String(mx + 1));
+					$tr.attr("data-sort-dir", "asc");
+				}
+				ppRenumberSortRanks($tbody);
+			});
+
+			$body.on("click", ".pp-sort-up", function (e) {
+				e.preventDefault();
+				e.stopPropagation();
+				const $tr = $(this).closest("tr");
+				const sr = parseInt($tr.attr("data-sort-rank") || "0", 10) || 0;
+				if (sr <= 0 || !$tr.find(".pp-portal-show").prop("checked")) {
+					return;
+				}
+				$tr.attr("data-sort-dir", "asc");
+				ppApplySortUI($tr);
+			});
+
+			$body.on("click", ".pp-sort-down", function (e) {
+				e.preventDefault();
+				e.stopPropagation();
+				const $tr = $(this).closest("tr");
+				const sr = parseInt($tr.attr("data-sort-rank") || "0", 10) || 0;
+				if (sr <= 0 || !$tr.find(".pp-portal-show").prop("checked")) {
+					return;
+				}
+				$tr.attr("data-sort-dir", "desc");
+				ppApplySortUI($tr);
+			});
+
+			$body.on("click", ".pp-portal-sort-clear", function (e) {
+				e.preventDefault();
+				$tbody.find("tr").each(function () {
+					$(this).attr("data-sort-rank", "0");
+					$(this).attr("data-sort-dir", "asc");
+				});
+				ppRefreshAllSortUI($tbody);
+			});
+
 			$body.find(".pp-portal-float-cancel").on("click", function () {
 				_close_related_portal_float();
 			});
@@ -1264,11 +1439,19 @@ function _open_related_portal_float(frm, opts) {
 					if (!fn) {
 						return;
 					}
-					payload.push({
+					const show = $(this).find(".pp-portal-show").prop("checked") ? 1 : 0;
+					const sr = parseInt($(this).attr("data-sort-rank") || "0", 10) || 0;
+					const sd = $(this).attr("data-sort-dir") === "desc" ? "desc" : "asc";
+					const o = {
 						fieldname: fn,
-						show: $(this).find(".pp-portal-show").prop("checked") ? 1 : 0,
+						show: show,
 						editable: $(this).find(".pp-portal-editable").prop("checked") ? 1 : 0,
-					});
+					};
+					if (show && sr > 0) {
+						o.sort_rank = sr;
+						o.sort_dir = sd;
+					}
+					payload.push(o);
 				});
 				frappe.call({
 					method: "nce_events.api.form_dialog_api.save_related_portal_field_config",
