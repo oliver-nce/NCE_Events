@@ -1191,6 +1191,7 @@ function _bind_dialogs_click_handlers(frm) {
 											freeze: true,
 											freeze_message: "Rebuilding schema…",
 											callback: function () {
+												_pp_rebuild_pending = false;
 												frappe.show_alert({
 													message: "Schema rebuilt.",
 													indicator: "green",
