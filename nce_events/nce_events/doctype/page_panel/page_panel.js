@@ -1585,31 +1585,66 @@ function _bind_dialogs_click_handlers(frm) {
 		frappe.confirm(
 			"This will overwrite the frozen schema with the current Desk definition. Continue?",
 			function () {
-				frappe.call({
-					method: "nce_events.api.form_dialog_api.get_form_dialog_definition",
-					args: { name: current },
-					callback: function (defn_r) {
-						const current_related =
-							(defn_r && defn_r.message && defn_r.message.related_doctypes) || [];
+				// Defer follow-up modals: opening frappe.ui.Dialog in the same turn as
+				// frappe.confirm closes fails in many Desk builds (related picker never appears).
+				setTimeout(function () {
+					frappe.call({
+						method: "nce_events.api.form_dialog_api.get_form_dialog_definition",
+						args: { name: current },
+						error: function () {
+							_pp_rebuild_pending = false;
+							frappe.msgprint({
+								title: __("Error"),
+								message: __("Could not load the Form Dialog definition."),
+								indicator: "red",
+							});
+						},
+						callback: function (defn_r) {
+							if (!defn_r || defn_r.exc) {
+								_pp_rebuild_pending = false;
+								if (defn_r && defn_r.exc) {
+									frappe.msgprint({
+										title: __("Error"),
+										message: __("Could not load the Form Dialog definition."),
+										indicator: "red",
+									});
+								}
+								return;
+							}
+							const current_related =
+								(defn_r.message && defn_r.message.related_doctypes) || [];
 
-						frappe.call({
-							method: "nce_events.api.panel_api.get_child_doctypes",
-							args: { root_doctype: doctype },
-							callback: function (r) {
-								const children = (r && r.message) || [];
+							frappe.call({
+								method: "nce_events.api.panel_api.get_child_doctypes",
+								args: { root_doctype: doctype },
+								error: function () {
+									_pp_rebuild_pending = false;
+									frappe.msgprint({
+										title: __("Error"),
+										message: __("Could not load related DocTypes."),
+										indicator: "red",
+									});
+								},
+								callback: function (r) {
+									const children = (r && r.message) || [];
 
-								_show_related_picker(
-									children,
-									current_related,
-									function (selected) {
+									function _run_rebuild_with_related(selected) {
 										frappe.call({
 											method: "nce_events.api.form_dialog_api.rebuild_form_dialog",
 											args: {
 												name: current,
-												related_doctypes: JSON.stringify(selected),
+												related_doctypes: JSON.stringify(selected || []),
 											},
 											freeze: true,
 											freeze_message: "Rebuilding schema…",
+											error: function () {
+												_pp_rebuild_pending = false;
+												frappe.msgprint({
+													title: __("Error"),
+													message: __("Rebuild failed."),
+													indicator: "red",
+												});
+											},
 											callback: function () {
 												_pp_rebuild_pending = false;
 												frappe.show_alert({
@@ -1619,12 +1654,38 @@ function _bind_dialogs_click_handlers(frm) {
 												_render_dialogs_tab(frm);
 											},
 										});
-									},
-								);
-							},
-						});
-					},
-				});
+									}
+
+									if (!children.length) {
+										frappe.confirm(
+											__(
+												"No related DocTypes link to {0}. Rebuild will clear extra tabs. Continue?",
+												[doctype],
+											),
+											function () {
+												_run_rebuild_with_related([]);
+											},
+											function () {
+												_pp_rebuild_pending = false;
+											},
+										);
+										return;
+									}
+
+									setTimeout(function () {
+										_show_related_picker(
+											children,
+											current_related,
+											function (selected) {
+												_run_rebuild_with_related(selected);
+											},
+										);
+									}, 0);
+								},
+							});
+						},
+					});
+				}, 200);
 			},
 			function () {
 				_pp_rebuild_pending = false;
@@ -1643,38 +1704,77 @@ function _bind_dialogs_click_handlers(frm) {
 				default: doctype + " — dialog",
 			},
 			function (values) {
-				frappe.call({
-					method: "nce_events.api.panel_api.get_child_doctypes",
-					args: { root_doctype: frm.doc.root_doctype },
-					callback: function (r) {
-						const children = (r && r.message) || [];
-						_show_related_picker(children, [], function (selected) {
-							frappe.call({
-								method: "nce_events.api.form_dialog_api.capture_form_dialog_from_desk",
-								args: {
-									doctype: doctype,
-									title: values.title,
-									related_doctypes: JSON.stringify(selected),
-								},
-								freeze: true,
-								freeze_message: "Capturing schema from Desk…",
-								callback: function (r) {
-									if (r && r.message) {
-										frm.set_value("form_dialog", r.message);
-										frm.dirty();
-										frm.save().then(function () {
-											_render_dialogs_tab(frm);
-										});
-										frappe.show_alert({
-											message: "Dialog captured: " + r.message,
-											indicator: "green",
-										});
-									}
-								},
+				setTimeout(function () {
+					frappe.call({
+						method: "nce_events.api.panel_api.get_child_doctypes",
+						args: { root_doctype: frm.doc.root_doctype },
+						error: function () {
+							frappe.msgprint({
+								title: __("Error"),
+								message: __("Could not load related DocTypes."),
+								indicator: "red",
 							});
-						});
-					},
-				});
+						},
+						callback: function (r) {
+							const children = (r && r.message) || [];
+
+							function _run_capture_with_related(selected) {
+								frappe.call({
+									method: "nce_events.api.form_dialog_api.capture_form_dialog_from_desk",
+									args: {
+										doctype: doctype,
+										title: values.title,
+										related_doctypes: JSON.stringify(selected || []),
+									},
+									freeze: true,
+									freeze_message: "Capturing schema from Desk…",
+									error: function () {
+										frappe.msgprint({
+											title: __("Error"),
+											message: __("Capture failed."),
+											indicator: "red",
+										});
+									},
+									callback: function (cap_r) {
+										if (cap_r && cap_r.message) {
+											frm.set_value("form_dialog", cap_r.message);
+											frm.dirty();
+											frm.save().then(function () {
+												_render_dialogs_tab(frm);
+											});
+											frappe.show_alert({
+												message: "Dialog captured: " + cap_r.message,
+												indicator: "green",
+											});
+										}
+									},
+								});
+							}
+
+							if (!children.length) {
+								frappe.confirm(
+									__(
+										"No related DocTypes link to {0}. Create dialog without extra tabs?",
+										[doctype],
+									),
+									function () {
+										_run_capture_with_related([]);
+									},
+									function () {
+										// cancelled
+									},
+								);
+								return;
+							}
+
+							setTimeout(function () {
+								_show_related_picker(children, [], function (selected) {
+									_run_capture_with_related(selected);
+								});
+							}, 0);
+						},
+					});
+				}, 200);
 			},
 			"Create Form Dialog",
 			"Create",
