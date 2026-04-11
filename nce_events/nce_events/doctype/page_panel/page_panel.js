@@ -1141,7 +1141,9 @@ function _open_related_portal_float(frm, opts) {
 		$(document).off("keydown.ppPortalFloat", onKey);
 		$(document).off("mousemove.ppPortalRowSort mouseup.ppPortalRowSort");
 		if (ppPortalRowDrag && ppPortalRowDrag.$tr) {
-			ppPortalRowDrag.$tr.removeClass("pp-portal-row-dragging").css("opacity", "");
+			ppPortalRowDrag.$tr
+				.removeClass("pp-portal-row-dragging")
+				.css({ opacity: "", "pointer-events": "" });
 		}
 		ppPortalRowDrag = null;
 		$panel.find("tr.pp-portal-drag-over").removeClass("pp-portal-drag-over");
@@ -1349,29 +1351,46 @@ function _open_related_portal_float(frm, opts) {
 			function ppPortalRowSortCleanup() {
 				$(document).off("mousemove.ppPortalRowSort mouseup.ppPortalRowSort");
 				if (ppPortalRowDrag && ppPortalRowDrag.$tr) {
-					ppPortalRowDrag.$tr.css("opacity", "");
 					ppPortalRowDrag.$tr.removeClass("pp-portal-row-dragging");
+					ppPortalRowDrag.$tr.css({ opacity: "", "pointer-events": "" });
 				}
 				ppPortalRowDrag = null;
 				$tbody.find("tr").removeClass("pp-portal-drag-over");
 				$("body").css("cursor", "");
 			}
 
+			/** elementFromPoint often hits the row being dragged; fall back to nearest row by Y. */
+			function ppPortalRowResolveTarget(clientX, clientY, $src) {
+				const el = document.elementFromPoint(clientX, clientY);
+				let $t = el ? $(el).closest("tr") : $();
+				if ($t.length && $tbody[0].contains($t[0]) && $t[0] !== $src[0]) {
+					return $t;
+				}
+				let best = null;
+				let bestDist = 1e9;
+				$tbody.find("tr").each(function () {
+					if (this === $src[0]) {
+						return;
+					}
+					const r = this.getBoundingClientRect();
+					const mid = r.top + r.height / 2;
+					const d = Math.abs(clientY - mid);
+					if (d < bestDist) {
+						bestDist = d;
+						best = $(this);
+					}
+				});
+				return best;
+			}
+
 			function ppPortalRowMouseMove(e) {
 				if (!ppPortalRowDrag) {
 					return;
 				}
-				const el = document.elementFromPoint(e.clientX, e.clientY);
-				if (!el) {
-					return;
-				}
-				const $target = $(el).closest("tr");
+				const $src = ppPortalRowDrag.$tr;
+				const $target = ppPortalRowResolveTarget(e.clientX, e.clientY, $src);
 				$tbody.find("tr").removeClass("pp-portal-drag-over");
-				if (
-					$target.length &&
-					$tbody[0].contains($target[0]) &&
-					$target[0] !== ppPortalRowDrag.$tr[0]
-				) {
+				if ($target && $target.length) {
 					$target.addClass("pp-portal-drag-over");
 				}
 			}
@@ -1381,21 +1400,14 @@ function _open_related_portal_float(frm, opts) {
 					return;
 				}
 				const $src = ppPortalRowDrag.$tr;
-				const el = document.elementFromPoint(e.clientX, e.clientY);
-				if (el) {
-					const $target = $(el).closest("tr");
-					if (
-						$target.length &&
-						$tbody[0].contains($target[0]) &&
-						$target[0] !== $src[0]
-					) {
-						const mid = $target.offset().top + $target.outerHeight() / 2;
-						const y = e.pageY != null ? e.pageY : e.clientY + ($(window).scrollTop() || 0);
-						if (y < mid) {
-							$src.insertBefore($target);
-						} else {
-							$src.insertAfter($target);
-						}
+				const $target = ppPortalRowResolveTarget(e.clientX, e.clientY, $src);
+				if ($target && $target.length) {
+					const r = $target[0].getBoundingClientRect();
+					const mid = r.top + r.height / 2;
+					if (e.clientY < mid) {
+						$src.insertBefore($target);
+					} else {
+						$src.insertAfter($target);
 					}
 				}
 				ppPortalRowSortCleanup();
@@ -1410,7 +1422,7 @@ function _open_related_portal_float(frm, opts) {
 				const $tr = $(this).closest("tr");
 				ppPortalRowDrag = { $tr: $tr };
 				$tr.addClass("pp-portal-row-dragging");
-				$tr.css("opacity", "0.55");
+				$tr.css({ opacity: "0.55", "pointer-events": "none" });
 				$("body").css("cursor", "grabbing");
 				$(document).on("mousemove.ppPortalRowSort", ppPortalRowMouseMove);
 				$(document).on("mouseup.ppPortalRowSort", ppPortalRowMouseUp);
