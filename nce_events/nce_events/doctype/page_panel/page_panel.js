@@ -1079,7 +1079,6 @@ if (!$("head").find("#pp-portal-float-css").length) {
 		.pp-portal-float-backdrop { font-family: inherit; }
 		.pp-portal-float-panel .table > tbody > tr > td { vertical-align: middle; }
 		.pp-portal-float-panel td.pp-portal-drag:hover { background: #f0f4f8; }
-		.pp-portal-float-panel tr.pp-portal-row-dragging { opacity: 0.55; }
 		.pp-portal-float-panel tr.pp-portal-drag-over { outline: 2px solid #2490ef; outline-offset: -2px; }
 		.pp-portal-float-panel .pp-sort-up.btn-primary,
 		.pp-portal-float-panel .pp-sort-down.btn-primary { color: #fff; }
@@ -1109,9 +1108,6 @@ function _open_related_portal_float(frm, opts) {
 
 	_close_related_portal_float();
 
-	/** Grip row-drag state (hoisted so float cleanup can clear listeners + row style). */
-	let ppPortalRowDrag = null;
-
 	const $backdrop = $(
 		'<div class="pp-portal-float-backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:2000;"></div>',
 	);
@@ -1139,15 +1135,6 @@ function _open_related_portal_float(frm, opts) {
 
 	_pp_portal_float_cleanup = function () {
 		$(document).off("keydown.ppPortalFloat", onKey);
-		$(document).off("mousemove.ppPortalRowSort mouseup.ppPortalRowSort");
-		if (ppPortalRowDrag && ppPortalRowDrag.$tr) {
-			ppPortalRowDrag.$tr
-				.removeClass("pp-portal-row-dragging")
-				.css({ opacity: "", "pointer-events": "" });
-		}
-		ppPortalRowDrag = null;
-		$panel.find("tr.pp-portal-drag-over").removeClass("pp-portal-drag-over");
-		$("body").css("cursor", "");
 		$backdrop.remove();
 	};
 
@@ -1223,7 +1210,7 @@ function _open_related_portal_float(frm, opts) {
 				const dnPrim = effSr > 0 && effSd === "desc" ? " btn-primary" : "";
 				const btnDis = effSr <= 0 ? " disabled" : "";
 				tableHtml +=
-					'<tr data-fieldname="' +
+					'<tr draggable="true" data-fieldname="' +
 					frappe.utils.escape_html(fn) +
 					'" data-sort-rank="' +
 					effSr +
@@ -1231,32 +1218,32 @@ function _open_related_portal_float(frm, opts) {
 					effSd +
 					'">' +
 					'<td class="text-muted pp-portal-drag" title="' +
-					__("Drag handle — click and drag to reorder rows") +
-					'" style="cursor:grab;text-align:center;user-select:none;-webkit-user-select:none;">⠿</td>' +
+					__("Drag row (same as Display → Order tab)") +
+					'" style="cursor:grab;text-align:center;user-select:none;-webkit-user-select:none;"><span class="pp-portal-drag-handle" style="color:#b7babe;">&#x2630;</span></td>' +
 					"<td>" +
 					frappe.utils.escape_html(row.label || fn) +
 					' <span class="text-muted">(' +
 					frappe.utils.escape_html(row.fieldtype || "") +
 					")</span></td>" +
-					'<td class="text-center"><input type="checkbox" class="pp-portal-show"' +
+					'<td class="text-center"><input type="checkbox" class="pp-portal-show" draggable="false"' +
 					sh +
 					" /></td>" +
-					'<td class="text-center"><input type="checkbox" class="pp-portal-editable"' +
+					'<td class="text-center"><input type="checkbox" class="pp-portal-editable" draggable="false"' +
 					ed +
 					' /></td><td class="text-center pp-portal-sort-cell" style="white-space:nowrap;">' +
-					'<span class="pp-portal-sort-rank" style="display:inline-block;min-width:18px;font-weight:600;cursor:pointer;margin-right:4px;" title="' +
+					'<span class="pp-portal-sort-rank" draggable="false" style="display:inline-block;min-width:18px;font-weight:600;cursor:pointer;margin-right:4px;" title="' +
 					__("Click to add or remove from sort (Show must be on)") +
 					'">' +
 					rankLabel +
-					'</span><span class="btn-group" role="group">' +
-					'<button type="button" class="btn btn-xs btn-default pp-sort-up' +
+					'</span><span class="btn-group" role="group" draggable="false">' +
+					'<button type="button" class="btn btn-xs btn-default pp-sort-up" draggable="false"' +
 					upPrim +
 					'" title="' +
 					__("Ascending") +
 					'"' +
 					btnDis +
 					">↑</button>" +
-					'<button type="button" class="btn btn-xs btn-default pp-sort-down' +
+					'<button type="button" class="btn btn-xs btn-default pp-sort-down" draggable="false"' +
 					dnPrim +
 					'" title="' +
 					__("Descending") +
@@ -1347,86 +1334,40 @@ function _open_related_portal_float(frm, opts) {
 				ppRefreshAllSortUI($tb);
 			}
 
-			// Row reorder: pointer-driven (HTML5 drag on <tr> is unreliable inside <table>).
-			function ppPortalRowSortCleanup() {
-				$(document).off("mousemove.ppPortalRowSort mouseup.ppPortalRowSort");
-				if (ppPortalRowDrag && ppPortalRowDrag.$tr) {
-					ppPortalRowDrag.$tr.removeClass("pp-portal-row-dragging");
-					ppPortalRowDrag.$tr.css({ opacity: "", "pointer-events": "" });
-				}
-				ppPortalRowDrag = null;
-				$tbody.find("tr").removeClass("pp-portal-drag-over");
-				$("body").css("cursor", "");
-			}
-
-			/** elementFromPoint often hits the row being dragged; fall back to nearest row by Y. */
-			function ppPortalRowResolveTarget(clientX, clientY, $src) {
-				const el = document.elementFromPoint(clientX, clientY);
-				let $t = el ? $(el).closest("tr") : $();
-				if ($t.length && $tbody[0].contains($t[0]) && $t[0] !== $src[0]) {
-					return $t;
-				}
-				let best = null;
-				let bestDist = 1e9;
-				$tbody.find("tr").each(function () {
-					if (this === $src[0]) {
+			// Row reorder: same native HTML5 pattern as Display → Order tab (_render_order_tab).
+			let ppPortalDnD_src = null;
+			$tbody
+				.find("tr")
+				.on("dragstart", function (e) {
+					ppPortalDnD_src = this;
+					$(this).css("opacity", "0.4");
+					e.originalEvent.dataTransfer.effectAllowed = "move";
+					e.originalEvent.dataTransfer.setData("text/plain", "");
+				})
+				.on("dragend", function () {
+					$(this).css("opacity", "");
+					$tbody.find("tr").removeClass("pp-portal-drag-over");
+				})
+				.on("dragover", function (e) {
+					e.preventDefault();
+					e.originalEvent.dataTransfer.dropEffect = "move";
+					$tbody.find("tr").removeClass("pp-portal-drag-over");
+					$(this).addClass("pp-portal-drag-over");
+				})
+				.on("drop", function (e) {
+					e.preventDefault();
+					if (!ppPortalDnD_src || ppPortalDnD_src === this) {
 						return;
 					}
-					const r = this.getBoundingClientRect();
-					const mid = r.top + r.height / 2;
-					const d = Math.abs(clientY - mid);
-					if (d < bestDist) {
-						bestDist = d;
-						best = $(this);
-					}
-				});
-				return best;
-			}
-
-			function ppPortalRowMouseMove(e) {
-				if (!ppPortalRowDrag) {
-					return;
-				}
-				const $src = ppPortalRowDrag.$tr;
-				const $target = ppPortalRowResolveTarget(e.clientX, e.clientY, $src);
-				$tbody.find("tr").removeClass("pp-portal-drag-over");
-				if ($target && $target.length) {
-					$target.addClass("pp-portal-drag-over");
-				}
-			}
-
-			function ppPortalRowMouseUp(e) {
-				if (!ppPortalRowDrag) {
-					return;
-				}
-				const $src = ppPortalRowDrag.$tr;
-				const $target = ppPortalRowResolveTarget(e.clientX, e.clientY, $src);
-				if ($target && $target.length) {
-					const r = $target[0].getBoundingClientRect();
-					const mid = r.top + r.height / 2;
-					if (e.clientY < mid) {
-						$src.insertBefore($target);
+					const $target = $(this);
+					const $src = $(ppPortalDnD_src);
+					if ($src.index() < $target.index()) {
+						$target.after($src);
 					} else {
-						$src.insertAfter($target);
+						$target.before($src);
 					}
-				}
-				ppPortalRowSortCleanup();
-			}
-
-			$tbody.on("mousedown", ".pp-portal-drag", function (e) {
-				if (e.button !== 0) {
-					return;
-				}
-				e.preventDefault();
-				ppPortalRowSortCleanup();
-				const $tr = $(this).closest("tr");
-				ppPortalRowDrag = { $tr: $tr };
-				$tr.addClass("pp-portal-row-dragging");
-				$tr.css({ opacity: "0.55", "pointer-events": "none" });
-				$("body").css("cursor", "grabbing");
-				$(document).on("mousemove.ppPortalRowSort", ppPortalRowMouseMove);
-				$(document).on("mouseup.ppPortalRowSort", ppPortalRowMouseUp);
-			});
+					$tbody.find("tr").removeClass("pp-portal-drag-over");
+				});
 
 			$body.on("change", ".pp-portal-show", function () {
 				const $tr = $(this).closest("tr");
