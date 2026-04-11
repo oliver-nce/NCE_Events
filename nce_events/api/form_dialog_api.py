@@ -9,6 +9,7 @@ DocType create/write permission on the target record.
 from __future__ import annotations
 
 import json
+from typing import Any
 
 import frappe
 from frappe import _
@@ -93,8 +94,38 @@ def _enrich_fetch_from_fields(fields_list: list[dict], meta) -> list[dict]:
 	return fields_list
 
 
-def _parse_related_doctypes_argument(related_doctypes: str | list | None) -> list[dict[str, str]]:
-	"""Normalize Desk JSON string or list of {doctype, link_field, label} from get_child_doctypes."""
+def _normalize_hop_chain_value(raw: object) -> list[dict[str, str]]:
+	"""Parse hop_chain from JSON string or list; return validated step dicts."""
+	if raw is None:
+		return []
+	if isinstance(raw, str):
+		s = raw.strip()
+		if not s:
+			return []
+		try:
+			raw = json.loads(s)
+		except json.JSONDecodeError:
+			return []
+	if not isinstance(raw, list):
+		return []
+	out: list[dict[str, str]] = []
+	for step in raw:
+		if not isinstance(step, dict):
+			continue
+		bridge = cstr(step.get("bridge") or "").strip()
+		pl = cstr(step.get("parent_link") or "").strip()
+		cl = cstr(step.get("child_link") or "").strip()
+		if bridge and pl and cl:
+			out.append({"bridge": bridge, "parent_link": pl, "child_link": cl})
+	return out
+
+
+def _related_row_signature(doctype: str, hop_chain: list[dict[str, str]]) -> str:
+	return f"{doctype}\0{json.dumps(hop_chain, separators=(',', ':'))}"
+
+
+def _parse_related_doctypes_argument(related_doctypes: str | list | None) -> list[dict[str, Any]]:
+	"""Normalize JSON from the Page Panel picker: doctype, link_field, label, optional hop_chain."""
 	if related_doctypes is None:
 		return []
 	if isinstance(related_doctypes, str):
@@ -107,32 +138,42 @@ def _parse_related_doctypes_argument(related_doctypes: str | list | None) -> lis
 			return []
 	if not isinstance(related_doctypes, list):
 		return []
-	out: list[dict[str, str]] = []
+	out: list[dict[str, Any]] = []
 	seen: set[str] = set()
 	for item in related_doctypes:
 		if not isinstance(item, dict):
 			continue
 		dt = cstr(item.get("doctype") or "").strip()
-		if not dt or dt in seen:
+		if not dt:
 			continue
 		lf = cstr(item.get("link_field") or "").strip()
 		if not lf:
 			continue
-		seen.add(dt)
+		hc = _normalize_hop_chain_value(item.get("hop_chain"))
+		sig = _related_row_signature(dt, hc)
+		if sig in seen:
+			continue
+		seen.add(sig)
 		lb = cstr(item.get("label") or "").strip() or dt
-		out.append({"doctype": dt, "link_field": lf, "label": lb})
+		out.append({"doctype": dt, "link_field": lf, "label": lb, "hop_chain": hc})
 	return out
 
 
-def _build_related_child_row_dict(spec: dict[str, str]) -> dict[str, str]:
+def _build_related_child_row_dict(spec: dict[str, Any]) -> dict[str, str]:
 	"""One child row with frozen field list JSON in info; never raises."""
-	child_dt = spec["doctype"]
-	link_f = spec["link_field"]
-	tab_l = spec["label"]
-	info_obj: dict = {
+	child_dt = cstr(spec.get("doctype") or "").strip()
+	link_f = cstr(spec.get("link_field") or "").strip()
+	tab_l = cstr(spec.get("label") or "").strip() or child_dt
+	hc_norm = _normalize_hop_chain_value(spec.get("hop_chain"))
+	try:
+		hop_chain_json = json.dumps(hc_norm, indent=None)
+	except Exception:
+		hop_chain_json = "[]"
+	info_obj: dict[str, Any] = {
 		"doctype": child_dt,
 		"link_field": link_f,
 		"label": tab_l,
+		"hop_chain": hc_norm,
 	}
 	try:
 		_assert_doctype_in_wp_tables(child_dt)
@@ -158,11 +199,12 @@ def _build_related_child_row_dict(spec: dict[str, str]) -> dict[str, str]:
 		"child_doctype": child_dt,
 		"link_field": link_f,
 		"tab_label": tab_l,
+		"hop_chain": hop_chain_json,
 		"info": info_str,
 	}
 
 
-def _related_doctype_child_rows(related_doctypes: str | list | None) -> list[dict[str, str]]:
+def _related_doctype_child_rows(related_doctypes: str | list | None) -> list[dict[str, Any]]:
 	return [_build_related_child_row_dict(r) for r in _parse_related_doctypes_argument(related_doctypes)]
 
 
@@ -311,9 +353,9 @@ def _normalize_portal_field_config_for_save(
 	return parsed
 
 
-def _related_rows_for_vue_api(doc) -> list[dict[str, str]]:
-	"""Child rows for V2: doctype, label, link_field, and raw info JSON for tab rendering."""
-	out: list[dict[str, str]] = []
+def _related_rows_for_vue_api(doc) -> list[dict[str, Any]]:
+	"""Child rows for V2: doctype, label, link_field, hop_chain, and raw info JSON for tab rendering."""
+	out: list[dict[str, Any]] = []
 	for r in doc.related_doctypes or []:
 		d = r.as_dict()
 		dt = cstr(d.get("child_doctype") or "").strip()
@@ -321,7 +363,9 @@ def _related_rows_for_vue_api(doc) -> list[dict[str, str]]:
 			continue
 		lb = cstr(d.get("tab_label") or "").strip() or dt
 		lf = cstr(d.get("link_field") or "").strip()
-		row: dict[str, str] = {"doctype": dt, "label": lb, "link_field": lf}
+		row: dict[str, Any] = {"doctype": dt, "label": lb, "link_field": lf}
+		hc_raw = d.get("hop_chain") or getattr(r, "hop_chain", None)
+		row["hop_chain"] = _normalize_hop_chain_value(hc_raw)
 		info_val = d.get("info")
 		if info_val is not None and cstr(info_val).strip():
 			row["info"] = cstr(info_val)
@@ -502,7 +546,7 @@ def list_form_dialogs_for_doctype(doctype: str) -> list[dict]:
 
 	Returns:
 	    List of dicts with: name, title, target_doctype, dialog_size, captured_at, is_active,
-	    and related_doctypes (list of {doctype, label, link_field, child_row_name} per child row, no info JSON).
+	    and related_doctypes (list of {doctype, label, link_field, hop_chain, child_row_name} per child row, no info JSON).
 	"""
 	_require_system_manager()
 
@@ -523,10 +567,10 @@ def list_form_dialogs_for_doctype(doctype: str) -> list[dict]:
 			"parenttype": "Form Dialog",
 			"parentfield": "related_doctypes",
 		},
-		fields=["name", "parent", "child_doctype", "link_field", "tab_label", "idx"],
+		fields=["name", "parent", "child_doctype", "link_field", "tab_label", "hop_chain", "idx"],
 		order_by="parent asc, idx asc",
 	)
-	by_parent: dict[str, list[dict[str, str]]] = {}
+	by_parent: dict[str, list[dict[str, Any]]] = {}
 	for r in child_rows:
 		dt = cstr(r.get("child_doctype") or "").strip()
 		if not dt:
@@ -537,12 +581,14 @@ def list_form_dialogs_for_doctype(doctype: str) -> list[dict]:
 		if not pid:
 			continue
 		crn = cstr(r.get("name") or "").strip()
+		hc = _normalize_hop_chain_value(r.get("hop_chain"))
 		by_parent.setdefault(pid, []).append(
 			{
 				"doctype": dt,
 				"label": lb,
 				"link_field": lf,
 				"child_row_name": crn,
+				"hop_chain": hc,
 			},
 		)
 

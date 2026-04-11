@@ -1478,37 +1478,116 @@ function _open_related_portal_float(frm, opts) {
 }
 
 // ── Related DocTypes picker ───────────────────────────────────────────────────
-function _show_related_picker(available, preselected, callback) {
-	if (!available || !available.length) {
+function _normalizeHopChainForPickerKey(hc) {
+	if (!Array.isArray(hc)) {
+		return [];
+	}
+	return hc.map(function (s) {
+		return {
+			bridge: (s && s.bridge) || "",
+			parent_link: (s && s.parent_link) || "",
+			child_link: (s && s.child_link) || "",
+		};
+	});
+}
+
+function _relatedPickerFingerprint(row) {
+	const dt = row && row.doctype ? String(row.doctype).trim() : "";
+	let hc = row && row.hop_chain;
+	if (typeof hc === "string") {
+		try {
+			hc = JSON.parse(hc || "[]");
+		} catch (e) {
+			hc = [];
+		}
+	}
+	return dt + "\0" + JSON.stringify(_normalizeHopChainForPickerKey(hc));
+}
+
+function _htmlEscAttr(s) {
+	return String(s ?? "")
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/"/g, "&quot;");
+}
+
+/** @param buckets {{ "1_hop": object[], "2_hop": object[], "3_hop": object[] }} from get_multi_hop_children */
+function _show_related_picker(buckets, preselected, callback) {
+	const b = buckets || {};
+	const one = b["1_hop"] || [];
+	const two = b["2_hop"] || [];
+	const three = b["3_hop"] || [];
+	const allRowsFlat = one.concat(two, three);
+	if (!allRowsFlat.length) {
 		callback([]);
 		return;
 	}
 
-	const preselected_set = new Set(
-		(preselected || []).map(function (r) {
-			return r.doctype;
-		}),
-	);
+	const preselected_set = new Set((preselected || []).map(_relatedPickerFingerprint));
 
-	const fields = available.map(function (c) {
-		return {
-			label: c.label || c.doctype,
-			fieldname: "sel__" + c.doctype.replace(/ /g, "_"),
-			fieldtype: "Check",
-			default: preselected_set.has(c.doctype) ? 1 : 0,
-		};
-	});
+	function colHtml(title, rows, idxOffset) {
+		let h =
+			'<div class="pp-related-picker-col" style="flex:1;min-width:0;max-height:360px;overflow-y:auto;padding:10px;border:1px solid #eef0f2;border-radius:6px;background:#fafbfc;">';
+		h +=
+			'<div style="font-size:11px;font-weight:600;color:#74808b;text-transform:uppercase;margin:0 0 10px;">' +
+			_htmlEscAttr(title) +
+			"</div>";
+		if (!rows.length) {
+			h += '<div style="color:#b9c0c7;font-size:12px;">' + _htmlEscAttr(__("None")) + "</div>";
+		} else {
+			rows.forEach(function (row, j) {
+				const idx = idxOffset + j;
+				const id = "pp-related-sel-" + idx;
+				const lab = row.label || row.doctype || "";
+				const checked = preselected_set.has(_relatedPickerFingerprint(row)) ? " checked" : "";
+				h += '<div style="margin:0 0 8px;display:flex;align-items:flex-start;gap:8px;">';
+				h +=
+					'<input type="checkbox" class="pp-related-cb" id="' +
+					id +
+					'" data-idx="' +
+					idx +
+					'" style="margin-top:2px;"' +
+					checked +
+					"/>";
+				h +=
+					'<label for="' +
+					id +
+					'" style="margin:0;font-weight:400;cursor:pointer;line-height:1.35;">' +
+					_htmlEscAttr(lab) +
+					"</label>";
+				h += "</div>";
+			});
+		}
+		h += "</div>";
+		return h;
+	}
+
+	const bodyHtml =
+		'<div class="pp-related-picker-wrap" style="display:flex;gap:12px;align-items:stretch;">' +
+		colHtml(__("1-hop"), one, 0) +
+		colHtml(__("2-hop"), two, one.length) +
+		colHtml(__("3-hop"), three, one.length + two.length) +
+		"</div>";
 
 	const d = new frappe.ui.Dialog({
 		title: __("Add tabs to display related tables?"),
-		fields: fields,
-		size: "small",
+		fields: [{ fieldname: "pp_related_picker_body", fieldtype: "HTML", options: bodyHtml }],
+		size: "large",
 		primary_action_label: __("OK"),
 		secondary_action_label: __("Skip"),
-		primary_action: function (values) {
-			const selected = available.filter(function (c) {
-				const key = "sel__" + c.doctype.replace(/ /g, "_");
-				return values[key];
+		primary_action: function () {
+			const selected = [];
+			d.$wrapper.find(".pp-related-cb:checked").each(function () {
+				const idx = parseInt($(this).attr("data-idx"), 10);
+				if (!Number.isNaN(idx) && allRowsFlat[idx]) {
+					const src = allRowsFlat[idx];
+					selected.push({
+						doctype: src.doctype,
+						link_field: src.link_field,
+						label: src.label || src.doctype,
+						hop_chain: src.hop_chain || [],
+					});
+				}
 			});
 			d.hide();
 			callback(selected);
@@ -1601,7 +1680,7 @@ function _bind_dialogs_click_handlers(frm) {
 								(defn_r.message && defn_r.message.related_doctypes) || [];
 
 							frappe.call({
-								method: "nce_events.api.panel_api.get_child_doctypes",
+								method: "nce_events.api.panel_api.get_multi_hop_children",
 								args: { root_doctype: doctype },
 								error: function () {
 									_pp_rebuild_pending = false;
@@ -1612,7 +1691,11 @@ function _bind_dialogs_click_handlers(frm) {
 									});
 								},
 								callback: function (r) {
-									const children = (r && r.message) || [];
+									const buckets = (r && r.message) || {};
+									const c1 = buckets["1_hop"] || [];
+									const c2 = buckets["2_hop"] || [];
+									const c3 = buckets["3_hop"] || [];
+									const total = c1.length + c2.length + c3.length;
 
 									function _run_rebuild_with_related(selected) {
 										frappe.call({
@@ -1642,7 +1725,7 @@ function _bind_dialogs_click_handlers(frm) {
 										});
 									}
 
-									if (!children.length) {
+									if (!total) {
 										frappe.confirm(
 											__(
 												"No related DocTypes link to {0}. Rebuild will clear extra tabs. Continue?",
@@ -1660,7 +1743,7 @@ function _bind_dialogs_click_handlers(frm) {
 
 									setTimeout(function () {
 										_show_related_picker(
-											children,
+											buckets,
 											current_related,
 											function (selected) {
 												_run_rebuild_with_related(selected);
@@ -1692,7 +1775,7 @@ function _bind_dialogs_click_handlers(frm) {
 			function (values) {
 				setTimeout(function () {
 					frappe.call({
-						method: "nce_events.api.panel_api.get_child_doctypes",
+						method: "nce_events.api.panel_api.get_multi_hop_children",
 						args: { root_doctype: frm.doc.root_doctype },
 						error: function () {
 							frappe.msgprint({
@@ -1702,7 +1785,11 @@ function _bind_dialogs_click_handlers(frm) {
 							});
 						},
 						callback: function (r) {
-							const children = (r && r.message) || [];
+							const buckets = (r && r.message) || {};
+							const c1 = buckets["1_hop"] || [];
+							const c2 = buckets["2_hop"] || [];
+							const c3 = buckets["3_hop"] || [];
+							const total = c1.length + c2.length + c3.length;
 
 							function _run_capture_with_related(selected) {
 								frappe.call({
@@ -1737,7 +1824,7 @@ function _bind_dialogs_click_handlers(frm) {
 								});
 							}
 
-							if (!children.length) {
+							if (!total) {
 								frappe.confirm(
 									__(
 										"No related DocTypes link to {0}. Create dialog without extra tabs?",
@@ -1754,7 +1841,7 @@ function _bind_dialogs_click_handlers(frm) {
 							}
 
 							setTimeout(function () {
-								_show_related_picker(children, [], function (selected) {
+								_show_related_picker(buckets, [], function (selected) {
 									_run_capture_with_related(selected);
 								});
 							}, 0);

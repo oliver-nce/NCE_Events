@@ -229,7 +229,7 @@ class TestNormalizePortalFieldConfig(unittest.TestCase):
 
 
 class TestParseRelatedDoctypes(unittest.TestCase):
-	"""related_doctypes JSON from Page Panel Desk (get_child_doctypes shape)."""
+	"""related_doctypes JSON from Page Panel Desk (picker shape with optional hop_chain)."""
 
 	def test_json_string_roundtrip(self):
 		from nce_events.api.form_dialog_api import _parse_related_doctypes_argument
@@ -242,8 +242,9 @@ class TestParseRelatedDoctypes(unittest.TestCase):
 		self.assertEqual(rows[0]["doctype"], "People")
 		self.assertEqual(rows[0]["link_field"], "family")
 		self.assertEqual(rows[0]["label"], "People")
+		self.assertEqual(rows[0].get("hop_chain"), [])
 
-	def test_dedupes_by_doctype(self):
+	def test_dedupes_same_doctype_same_hop_chain(self):
 		from nce_events.api.form_dialog_api import _parse_related_doctypes_argument
 
 		rows = _parse_related_doctypes_argument(
@@ -254,6 +255,19 @@ class TestParseRelatedDoctypes(unittest.TestCase):
 		)
 		self.assertEqual(len(rows), 1)
 		self.assertEqual(rows[0]["link_field"], "a")
+
+	def test_keeps_same_doctype_different_hop_chain(self):
+		from nce_events.api.form_dialog_api import _parse_related_doctypes_argument
+
+		hc1 = [{"bridge": "Enrollment", "parent_link": "event", "child_link": "person"}]
+		hc2 = [{"bridge": "Ticket", "parent_link": "event", "child_link": "person"}]
+		rows = _parse_related_doctypes_argument(
+			[
+				{"doctype": "People", "link_field": "name", "label": "Via A", "hop_chain": hc1},
+				{"doctype": "People", "link_field": "name", "label": "Via B", "hop_chain": hc2},
+			]
+		)
+		self.assertEqual(len(rows), 2)
 
 	def test_skips_missing_link_field(self):
 		from nce_events.api.form_dialog_api import _parse_related_doctypes_argument

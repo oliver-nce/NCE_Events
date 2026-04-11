@@ -3,7 +3,7 @@
   "creation": "2026-04-07 00:00:00.000000",
   "doctype": "DocType",
   "engine": "InnoDB",
-  "field_order": ["child_doctype", "link_field", "tab_label", "info", "portal_field_config"],
+  "field_order": ["child_doctype", "link_field", "tab_label", "hop_chain", "info", "portal_field_config"],
   "fields": [
     {
       "description": "DocType that links to the Form Dialog target (e.g. child table).",
@@ -28,6 +28,12 @@
       "fieldtype": "Data",
       "in_list_view": 1,
       "label": "Tab Label"
+    },
+    {
+      "description": "JSON array of hop steps [{bridge, parent_link, child_link}, …]. Empty for direct (1-hop) child.",
+      "fieldname": "hop_chain",
+      "fieldtype": "Long Text",
+      "label": "Hop chain"
     },
     {
       "description": "JSON: label, doctype, link_field, optional fields[] (frozen meta), optional capture_error.",

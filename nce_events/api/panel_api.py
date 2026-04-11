@@ -10,7 +10,7 @@ from typing import Any
 
 import frappe
 from frappe import _
-from frappe.utils import cint
+from frappe.utils import cint, cstr
 
 MALE_HEX: str = "#0000FF"
 FEMALE_HEX: str = "#c700e6"
@@ -680,8 +680,154 @@ def get_child_doctypes(root_doctype: str) -> list[dict[str, str]]:
 				break
 
 	result.sort(key=lambda r: r["label"])
-	frappe.logger().info(f"get_child_doctypes({root_doctype}): wp_doctypes={wp_doctypes}, result={result}")
 	return result
+
+
+def _wp_doctype_label_map() -> tuple[set[str], dict[str, str]]:
+	wp_rows = frappe.get_all(
+		"WP Tables",
+		filters={"frappe_doctype": ["is", "set"]},
+		fields=["frappe_doctype", "nce_name", "table_name"],
+	)
+	label_map: dict[str, str] = {}
+	wp_doctypes: set[str] = set()
+	for row in wp_rows:
+		dt = row.get("frappe_doctype")
+		if dt:
+			wp_doctypes.add(dt)
+			label_map[dt] = row.get("nce_name") or row.get("table_name") or dt
+	return wp_doctypes, label_map
+
+
+@frappe.whitelist()
+def get_multi_hop_children(root_doctype: str) -> dict[str, list[dict[str, object]]]:
+	"""Related tables for Form Dialog picker: 1-hop, 2-hop, 3-hop (WP Tables only).
+
+	Each item: doctype, link_field (use ``name`` for multi-hop), label, hop_chain (list or []).
+
+	hop_chain step: ``{bridge, parent_link, child_link}`` — on ``bridge`` DocType,
+	``parent_link`` points toward the root side, ``child_link`` toward the next level.
+	"""
+	root_doctype = cstr(root_doctype or "").strip()
+	if not root_doctype:
+		return {"1_hop": [], "2_hop": [], "3_hop": []}
+
+	wp_doctypes, label_map = _wp_doctype_label_map()
+
+	one_hop: list[dict[str, object]] = []
+	for dt in sorted(wp_doctypes):
+		if dt == root_doctype:
+			continue
+		try:
+			meta = frappe.get_meta(dt)
+		except Exception:
+			continue
+		for field in meta.fields:
+			if field.fieldtype == "Link" and field.options == root_doctype:
+				one_hop.append(
+					{
+						"doctype": dt,
+						"link_field": field.fieldname,
+						"label": label_map.get(dt, dt),
+						"hop_chain": [],
+					}
+				)
+				break
+	one_hop.sort(key=lambda r: cstr(r.get("label") or r.get("doctype")))
+
+	two_hop: list[dict[str, object]] = []
+	seen2: set[str] = set()
+	for m1 in one_hop:
+		b1 = cstr(m1.get("doctype") or "").strip()
+		l1r = cstr(m1.get("link_field") or "").strip()
+		if not b1 or not l1r:
+			continue
+		try:
+			meta_b1 = frappe.get_meta(b1)
+		except Exception:
+			continue
+		for f_down in meta_b1.fields:
+			if f_down.fieldtype != "Link" or not f_down.options:
+				continue
+			if f_down.options == root_doctype:
+				continue
+			t_fin = cstr(f_down.options).strip()
+			if t_fin not in wp_doctypes or t_fin == b1:
+				continue
+			hop_chain = [
+				{"bridge": b1, "parent_link": l1r, "child_link": f_down.fieldname},
+			]
+			key = f"{t_fin}::{json.dumps(hop_chain, sort_keys=True)}"
+			if key in seen2:
+				continue
+			seen2.add(key)
+			two_hop.append(
+				{
+					"doctype": t_fin,
+					"link_field": "name",
+					"label": _("{0} (via {1})").format(label_map.get(t_fin, t_fin), label_map.get(b1, b1)),
+					"hop_chain": hop_chain,
+				}
+			)
+	two_hop.sort(key=lambda r: cstr(r.get("label") or r.get("doctype")))
+
+	three_hop: list[dict[str, object]] = []
+	seen3: set[str] = set()
+	for m1 in one_hop:
+		b1 = cstr(m1.get("doctype") or "").strip()
+		l1r = cstr(m1.get("link_field") or "").strip()
+		if not b1:
+			continue
+		try:
+			meta_b1 = frappe.get_meta(b1)
+		except Exception:
+			continue
+		for f_b1_m2 in meta_b1.fields:
+			if f_b1_m2.fieldtype != "Link" or not f_b1_m2.options:
+				continue
+			if f_b1_m2.options == root_doctype:
+				continue
+			m2 = cstr(f_b1_m2.options).strip()
+			if m2 not in wp_doctypes or m2 == b1:
+				continue
+			f_m2_b1 = _find_link_field(m2, b1)
+			if not f_m2_b1:
+				continue
+			try:
+				meta_m2 = frappe.get_meta(m2)
+			except Exception:
+				continue
+			for f_t in meta_m2.fields:
+				if f_t.fieldtype != "Link" or not f_t.options:
+					continue
+				if f_t.options in (root_doctype, b1, m2):
+					continue
+				t_fin = cstr(f_t.options).strip()
+				if t_fin not in wp_doctypes:
+					continue
+				hop_chain = [
+					{"bridge": b1, "parent_link": l1r, "child_link": f_b1_m2.fieldname},
+					{"bridge": m2, "parent_link": f_m2_b1, "child_link": f_t.fieldname},
+				]
+				key = f"{t_fin}::{json.dumps(hop_chain, sort_keys=True)}"
+				if key in seen3 or key in seen2:
+					continue
+				seen3.add(key)
+				three_hop.append(
+					{
+						"doctype": t_fin,
+						"link_field": "name",
+						"label": _("{0} (via {1} → {2})").format(
+							label_map.get(t_fin, t_fin),
+							label_map.get(b1, b1),
+							label_map.get(m2, m2),
+						),
+						"hop_chain": hop_chain,
+					}
+				)
+	three_hop.sort(key=lambda r: cstr(r.get("label") or r.get("doctype")))
+
+	return {"1_hop": one_hop, "2_hop": two_hop, "3_hop": three_hop}
 
 
 @frappe.whitelist()

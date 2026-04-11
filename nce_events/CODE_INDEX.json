@@ -45,6 +45,7 @@
         "export_panel_data",
         "save_panel_sql",
         "get_child_doctypes",
+        "get_multi_hop_children",
         "debug_child_lookup",
         "get_doctype_fields"
       ],
