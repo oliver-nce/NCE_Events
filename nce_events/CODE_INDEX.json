@@ -456,9 +456,9 @@
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue": {
-      "purpose": "Form dialog body — tabs, sections, PanelFormField grid; v-model:activeTab.",
+      "purpose": "Form dialog body — tabs, sections, PanelFormField grid; related tabs call get_form_dialog_related_rows (scrollable table, Select as disabled dropdown from meta options); v-model:activeTab.",
       "exports": [],
-      "depends_on": ["components/PanelFormField.vue"]
+      "depends_on": ["components/PanelFormField.vue", "utils/frappeCall.js"]
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogFooter.vue": {
       "purpose": "Form dialog footer — custom buttons, Cancel/Submit.",

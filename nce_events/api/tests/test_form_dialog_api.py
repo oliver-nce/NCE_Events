@@ -315,6 +315,37 @@ class TestFiltersForRelatedRows(unittest.TestCase):
 		self.assertEqual(filters, {"name": "OnlyOne"})
 
 
+class TestRelatedListColumnsOptions(unittest.TestCase):
+	def test_columns_merge_options_from_meta(self):
+		from types import SimpleNamespace
+
+		from nce_events.api.form_dialog_api import _related_list_columns_from_child_row
+
+		info = {
+			"fields": [
+				{
+					"fieldname": "status",
+					"fieldtype": "Select",
+					"options": "Open\nClosed",
+					"label": "Status",
+				},
+				{"fieldname": "name", "fieldtype": "Data", "label": "ID"},
+			]
+		}
+		portal = [
+			{"fieldname": "status", "show": 1},
+			{"fieldname": "name", "show": 1},
+		]
+		row = SimpleNamespace(
+			info=json.dumps(info),
+			portal_field_config=json.dumps(portal),
+		)
+		columns, _ob = _related_list_columns_from_child_row(row)
+		by_fn = {c["fieldname"]: c for c in columns}
+		self.assertEqual(by_fn["status"]["options"], "Open\nClosed")
+		self.assertEqual(by_fn["status"]["fieldtype"], "Select")
+
+
 class TestHopWalkFinalIdentifiers(unittest.TestCase):
 	@patch("nce_events.api.form_dialog_api.frappe.get_list")
 	def test_single_step_collects_child_link(self, mock_gl):

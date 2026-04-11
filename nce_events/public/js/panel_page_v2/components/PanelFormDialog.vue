@@ -38,6 +38,8 @@
 			/>
 			<PanelFormDialogBody
 				:definition-name="definitionName"
+				:root-doctype="doctype"
+				:root-doc-name="docName"
 				:loading="form.loading.value"
 				:error="form.error.value"
 				:tabs="form.tabs.value"

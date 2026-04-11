@@ -23,12 +23,8 @@
 					class="ppv2-fd-tab-panel"
 					:class="{ 'ppv2-fd-tab-panel-active': tabs.length === 1 || activeTab === ti }"
 				>
-					<!-- Related DocType tab: layout from row `info` (read-only field list) -->
-					<div
-						v-if="tab._related && tab.sections && tab.sections.length"
-						class="ppv2-fd-related-preview"
-						:style="{ '--ppv2-fd-rel-lbl': relatedLabelColPx(ti) + 'px' }"
-					>
+					<!-- Related DocType tab: data table + optional field-metadata details -->
+					<div v-if="tab._related" class="ppv2-fd-related-root">
 						<p class="ppv2-fd-related-meta">
 							{{ tab._related.doctype }}
 							<span v-if="tab._related.link_field" class="ppv2-fd-related-meta-link">
@@ -41,66 +37,152 @@
 								· {{ tab._related.hop_chain.length }}-hop
 							</span>
 						</p>
-						<div
-							class="ppv2-fd-related-sizer-row"
-							title="Drag to resize the label column"
-						>
-							<span class="ppv2-fd-related-sizer-spacer" :style="{ width: relatedLabelColPx(ti) + 'px' }" />
-							<button
-								type="button"
-								class="ppv2-fd-related-sizer-grip"
-								aria-label="Resize label column"
-								@mousedown.prevent="onRelatedLabelResizeDown(ti, $event)"
-							/>
-						</div>
 						<p v-if="tab._related.captureError" class="ppv2-fd-related-warn">
 							Schema note: {{ tab._related.captureError }}
 						</p>
-						<div
-							v-for="(section, si) in tab.sections"
-							:key="'rs' + si"
-							class="ppv2-fd-section"
-						>
-							<h3 v-if="section.label" class="ppv2-fd-section-label">{{ section.label }}</h3>
+
+						<p v-if="!tab._related.child_row_name" class="ppv2-fd-related-hint">
+							Related tab is missing a server row id. Re-save the Form Dialog from Desk.
+						</p>
+						<p v-else-if="!rootDocName" class="ppv2-fd-related-hint">
+							Save the document to load related rows.
+						</p>
+						<template v-else>
+							<div v-if="relatedState[ti]?.loading" class="ppv2-fd-related-rows-loading">
+								Loading related rows…
+							</div>
+							<div v-else-if="relatedState[ti]?.error" class="ppv2-fd-related-rows-err">
+								{{ relatedState[ti].error }}
+							</div>
 							<div
-								class="ppv2-fd-columns"
-								:style="{ gridTemplateColumns: 'repeat(' + Math.max(section.columns.length, 1) + ', 1fr)' }"
+								v-else-if="(relatedState[ti]?.columns || []).length"
+								class="ppv2-fd-related-table-wrap"
 							>
-								<div v-for="(col, ci) in section.columns" :key="'rc' + ci">
+								<table class="ppv2-fd-related-table">
+									<thead>
+										<tr>
+											<th
+												v-for="col in relatedState[ti].columns"
+												:key="col.fieldname"
+												class="ppv2-fd-related-th"
+											>
+												{{ col.label || col.fieldname }}
+											</th>
+										</tr>
+									</thead>
+									<tbody>
+										<tr
+											v-for="(rw, ri) in relatedState[ti].rows || []"
+											:key="String(rw.name != null ? rw.name : ri)"
+										>
+											<td
+												v-for="col in relatedState[ti].columns"
+												:key="col.fieldname"
+												class="ppv2-fd-related-td"
+											>
+												<select
+													v-if="isSelectColumn(col)"
+													class="ppv2-fd-related-select"
+													:value="String(relatedCellRaw(rw, col) ?? '')"
+													disabled
+													:aria-label="col.label || col.fieldname"
+												>
+													<option value="">—</option>
+													<option
+														v-for="opt in selectOptionsForCell(col, rw)"
+														:key="opt"
+														:value="opt"
+													>
+														{{ opt }}
+													</option>
+												</select>
+												<input
+													v-else-if="col.fieldtype === 'Check'"
+													type="checkbox"
+													class="ppv2-fd-related-check"
+													disabled
+													:checked="relatedCellTruthy(rw, col)"
+												/>
+												<span v-else class="ppv2-fd-related-cell-text">{{
+													formatRelatedCell(rw, col)
+												}}</span>
+											</td>
+										</tr>
+									</tbody>
+								</table>
+								<p
+									v-if="!(relatedState[ti].rows || []).length"
+									class="ppv2-fd-related-empty"
+								>
+									No related records.
+								</p>
+							</div>
+						</template>
+
+						<details
+							v-if="tab.sections && tab.sections.length"
+							class="ppv2-fd-related-schema"
+						>
+							<summary class="ppv2-fd-related-schema-sum">Field metadata</summary>
+							<div
+								class="ppv2-fd-related-preview"
+								:style="{ '--ppv2-fd-rel-lbl': relatedLabelColPx(ti) + 'px' }"
+							>
+								<div
+									class="ppv2-fd-related-sizer-row"
+									title="Drag to resize the label column"
+								>
+									<span
+										class="ppv2-fd-related-sizer-spacer"
+										:style="{ width: relatedLabelColPx(ti) + 'px' }"
+									/>
+									<button
+										type="button"
+										class="ppv2-fd-related-sizer-grip"
+										aria-label="Resize label column"
+										@mousedown.prevent="onRelatedLabelResizeDown(ti, $event)"
+									/>
+								</div>
+								<div
+									v-for="(section, si) in tab.sections"
+									:key="'rs' + si"
+									class="ppv2-fd-section"
+								>
+									<h3 v-if="section.label" class="ppv2-fd-section-label">{{ section.label }}</h3>
 									<div
-										v-for="field in col.fields"
-										:key="field.fieldname"
-										class="ppv2-fd-related-field-row"
+										class="ppv2-fd-columns"
+										:style="{
+											gridTemplateColumns:
+												'repeat(' + Math.max(section.columns.length, 1) + ', 1fr)',
+										}"
 									>
-										<span class="ppv2-fd-related-fn">{{ field.label || field.fieldname }}</span>
-										<span class="ppv2-fd-related-ft">{{ field.fieldtype }}</span>
+										<div v-for="(col, ci) in section.columns" :key="'rc' + ci">
+											<div
+												v-for="field in col.fields"
+												:key="field.fieldname"
+												class="ppv2-fd-related-field-row"
+											>
+												<span class="ppv2-fd-related-fn">{{
+													field.label || field.fieldname
+												}}</span>
+												<span class="ppv2-fd-related-ft">{{ field.fieldtype }}</span>
+											</div>
+										</div>
 									</div>
 								</div>
 							</div>
+						</details>
+						<div
+							v-else
+							class="ppv2-fd-related-placeholder ppv2-fd-related-placeholder-compact"
+						>
+							<p class="ppv2-fd-related-placeholder-text">
+								{{ tab._related.label || tab._related.doctype }}
+							</p>
+							<p v-if="!tab._related.captureError" class="ppv2-fd-related-placeholder-sub">
+								No field layout stored for this tab.
+							</p>
 						</div>
-					</div>
-
-					<!-- Related tab without usable layout in info -->
-					<div v-else-if="tab._related" class="ppv2-fd-related-placeholder">
-						<p class="ppv2-fd-related-meta ppv2-fd-related-placeholder-meta">
-							{{ tab._related.doctype }}
-							<span v-if="tab._related.link_field" class="ppv2-fd-related-meta-link">
-								· {{ tab._related.link_field }}
-							</span>
-							<span
-								v-if="tab._related.hop_chain && tab._related.hop_chain.length"
-								class="ppv2-fd-related-meta-link"
-							>
-								· {{ tab._related.hop_chain.length }}-hop
-							</span>
-						</p>
-						<p class="ppv2-fd-related-placeholder-text">
-							{{ tab._related.label || tab._related.doctype }}
-						</p>
-						<p v-if="tab._related.captureError" class="ppv2-fd-related-warn">
-							{{ tab._related.captureError }}
-						</p>
-						<p v-else class="ppv2-fd-related-placeholder-sub">No field layout stored for this tab.</p>
 					</div>
 
 					<!-- Normal frozen-schema tab -->
@@ -150,9 +232,12 @@
 <script setup>
 import { reactive, watch, onUnmounted } from "vue";
 import PanelFormField from "./PanelFormField.vue";
+import { frappeCall } from "../utils/frappeCall.js";
 
 const props = defineProps({
 	definitionName: { type: String, default: "" },
+	rootDoctype: { type: String, default: "" },
+	rootDocName: { type: String, default: null },
 	loading: { type: Boolean, default: false },
 	error: { type: String, default: null },
 	tabs: { type: Array, default: () => [] },
@@ -166,6 +251,11 @@ const props = defineProps({
 defineEmits(["field-change", "link-change"]);
 
 const activeTab = defineModel("activeTab", { type: Number, required: true });
+
+/** @type {Record<number, { loading?: boolean, error?: string|null, rows?: object[], columns?: object[], fetchKey?: string }>} */
+const relatedState = reactive({});
+/** @type {Record<number, number>} */
+const relatedSeq = reactive({});
 
 /** @type {Record<number, number>} */
 const relatedLabelColByTab = reactive({});
@@ -237,6 +327,161 @@ watch(
 	},
 	{ deep: true, immediate: true },
 );
+
+function clearAllRelatedFetch() {
+	for (const k of Object.keys(relatedState)) {
+		delete relatedState[k];
+	}
+	for (const k of Object.keys(relatedSeq)) {
+		delete relatedSeq[k];
+	}
+}
+
+function relatedFetchKey() {
+	const d = (props.definitionName || "").trim();
+	const dt = (props.rootDoctype || "").trim();
+	const dn = String(props.rootDocName || "").trim();
+	return `${d}\0${dt}\0${dn}`;
+}
+
+async function fetchRelatedForTab(ti) {
+	const tabs = props.tabs || [];
+	const tab = tabs[ti];
+	if (
+		!tab?._related?.child_row_name ||
+		!props.rootDocName ||
+		!String(props.definitionName || "").trim() ||
+		!String(props.rootDoctype || "").trim()
+	) {
+		return;
+	}
+	const fk = relatedFetchKey();
+	const seq = (relatedSeq[ti] || 0) + 1;
+	relatedSeq[ti] = seq;
+	if (!relatedState[ti]) {
+		relatedState[ti] = {};
+	}
+	relatedState[ti].loading = true;
+	relatedState[ti].error = null;
+	try {
+		const msg = await frappeCall("nce_events.api.form_dialog_api.get_form_dialog_related_rows", {
+			definition: String(props.definitionName).trim(),
+			related_row_name: tab._related.child_row_name,
+			root_doctype: String(props.rootDoctype).trim(),
+			root_name: String(props.rootDocName).trim(),
+			limit: 500,
+		});
+		if (relatedSeq[ti] !== seq) {
+			return;
+		}
+		relatedState[ti].fetchKey = fk;
+		relatedState[ti].rows = Array.isArray(msg.rows) ? msg.rows : [];
+		relatedState[ti].columns = Array.isArray(msg.columns) ? msg.columns : [];
+	} catch (e) {
+		if (relatedSeq[ti] !== seq) {
+			return;
+		}
+		relatedState[ti].rows = [];
+		relatedState[ti].columns = [];
+		relatedState[ti].error = e?.message || String(e) || "Failed to load related rows";
+	} finally {
+		if (relatedSeq[ti] === seq) {
+			relatedState[ti].loading = false;
+		}
+	}
+}
+
+watch(
+	() => [props.loading, props.definitionName, props.rootDoctype, props.rootDocName, props.tabs],
+	() => {
+		if (props.loading) {
+			clearAllRelatedFetch();
+			return;
+		}
+		const tabs = props.tabs || [];
+		const fk = relatedFetchKey();
+		for (let ti = 0; ti < tabs.length; ti++) {
+			const tab = tabs[ti];
+			if (
+				!tab?._related?.child_row_name ||
+				!props.rootDocName ||
+				!String(props.definitionName || "").trim() ||
+				!String(props.rootDoctype || "").trim()
+			) {
+				delete relatedState[ti];
+				delete relatedSeq[ti];
+				continue;
+			}
+			const st = relatedState[ti];
+			if (st && st.fetchKey === fk && !st.loading && Array.isArray(st.rows)) {
+				continue;
+			}
+			fetchRelatedForTab(ti);
+		}
+		for (const key of Object.keys(relatedState)) {
+			const i = Number(key);
+			if (!Number.isInteger(i) || i < 0 || i >= tabs.length || !tabs[i]?._related) {
+				delete relatedState[key];
+				delete relatedSeq[key];
+			}
+		}
+	},
+	{ deep: true, immediate: true },
+);
+
+function parseSelectOptions(optionsStr) {
+	if (optionsStr == null || typeof optionsStr !== "string") {
+		return [];
+	}
+	return optionsStr
+		.split("\n")
+		.map((s) => s.trim())
+		.filter((s) => s.length > 0);
+}
+
+function isSelectColumn(col) {
+	return !!(col && col.fieldtype === "Select");
+}
+
+/** Options from DocType meta plus current row value if missing from the list. */
+function selectOptionsForCell(col, rw) {
+	const base = parseSelectOptions(col.options);
+	const cur = String(relatedCellRaw(rw, col) ?? "").trim();
+	if (cur && !base.includes(cur)) {
+		return [...base, cur];
+	}
+	if (base.length) {
+		return base;
+	}
+	return cur ? [cur] : [];
+}
+
+function relatedCellRaw(rw, col) {
+	if (!rw || !col) {
+		return null;
+	}
+	return rw[col.fieldname];
+}
+
+function relatedCellTruthy(rw, col) {
+	const v = relatedCellRaw(rw, col);
+	return v === 1 || v === true || v === "1" || v === "Yes";
+}
+
+function formatRelatedCell(rw, col) {
+	const v = relatedCellRaw(rw, col);
+	if (v == null || v === "") {
+		return "";
+	}
+	if (typeof v === "object") {
+		try {
+			return JSON.stringify(v);
+		} catch {
+			return String(v);
+		}
+	}
+	return String(v);
+}
 
 function relatedLabelColPx(ti) {
 	const w = relatedLabelColByTab[ti];
@@ -455,5 +700,91 @@ onUnmounted(() => {
 .ppv2-fd-related-placeholder-meta {
 	margin: 0 0 8px;
 	text-align: center;
+}
+.ppv2-fd-related-root {
+	min-height: 0;
+}
+.ppv2-fd-related-hint {
+	font-size: var(--font-size-sm);
+	color: var(--text-muted);
+	margin: 0 0 12px;
+}
+.ppv2-fd-related-rows-loading,
+.ppv2-fd-related-rows-err {
+	font-size: var(--font-size-sm);
+	margin: 0 0 12px;
+}
+.ppv2-fd-related-rows-err {
+	color: #c0392b;
+}
+.ppv2-fd-related-table-wrap {
+	max-height: min(52vh, 520px);
+	overflow: auto;
+	margin: 0 0 12px;
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-sm, 4px);
+}
+.ppv2-fd-related-table {
+	width: 100%;
+	border-collapse: collapse;
+	font-size: var(--font-size-sm, 13px);
+}
+.ppv2-fd-related-th {
+	text-align: left;
+	padding: 8px 10px;
+	background: var(--bg-header, #f0f4f8);
+	color: var(--text-header, #36414c);
+	font-weight: var(--font-weight-bold, 600);
+	border-bottom: 1px solid var(--border-color);
+	position: sticky;
+	top: 0;
+	z-index: 1;
+}
+.ppv2-fd-related-td {
+	padding: 6px 10px;
+	border-bottom: 1px solid var(--border-color);
+	vertical-align: middle;
+	min-width: 4rem;
+}
+.ppv2-fd-related-td:last-child {
+	border-right: none;
+}
+.ppv2-fd-related-cell-text {
+	color: var(--text-color);
+	word-break: break-word;
+}
+.ppv2-fd-related-select {
+	max-width: 100%;
+	min-width: 6rem;
+	padding: 4px 8px;
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-sm, 4px);
+	background: var(--bg-card);
+	color: var(--text-color);
+	font-size: inherit;
+}
+.ppv2-fd-related-check {
+	width: 1rem;
+	height: 1rem;
+	accent-color: var(--bg-header, #2490ef);
+}
+.ppv2-fd-related-empty {
+	margin: 10px 12px 12px;
+	font-size: var(--font-size-sm);
+	color: var(--text-muted);
+}
+.ppv2-fd-related-schema {
+	margin-top: 8px;
+	font-size: var(--font-size-sm);
+}
+.ppv2-fd-related-schema-sum {
+	cursor: pointer;
+	color: var(--text-muted);
+	font-weight: var(--font-weight-bold, 600);
+}
+.ppv2-fd-related-placeholder-compact {
+	min-height: 0;
+	flex-direction: column;
+	padding: 8px 0 0;
 }
 </style>

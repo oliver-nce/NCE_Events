@@ -466,19 +466,43 @@ def _related_list_columns_from_child_row(row) -> tuple[list[dict[str, Any]], str
 	portal_entries = _parse_portal_field_config_entries(portal_raw)
 	editor_rows = _build_portal_editor_rows(meta_fields, portal_entries)
 
+	by_fn: dict[str, dict] = {}
+	for f in meta_fields:
+		if not isinstance(f, dict):
+			continue
+		fn0 = cstr(f.get("fieldname") or "").strip()
+		if fn0:
+			by_fn[fn0] = f
+
 	shown = [r for r in editor_rows if cint(r.get("show")) == 1]
 	if not shown:
-		return ([{"fieldname": "name", "label": _("ID"), "fieldtype": "Data"}], "name asc")
+		meta_name = by_fn.get("name", {})
+		return (
+			[
+				{
+					"fieldname": "name",
+					"label": _("ID"),
+					"fieldtype": cstr(meta_name.get("fieldtype") or "Data"),
+					"options": cstr(meta_name.get("options") or "").strip(),
+					"editable": 0,
+				}
+			],
+			"name asc",
+		)
 
 	columns: list[dict[str, Any]] = []
 	for r in shown:
+		fn = cstr(r.get("fieldname") or "").strip()
+		meta_f = by_fn.get(fn, {})
+		ft = cstr(r.get("fieldtype") or "").strip() or cstr(meta_f.get("fieldtype") or "").strip()
 		columns.append(
 			{
-				"fieldname": cstr(r.get("fieldname") or "").strip(),
-				"label": cstr(r.get("label") or "").strip(),
-				"fieldtype": cstr(r.get("fieldtype") or "").strip(),
+				"fieldname": fn,
+				"label": cstr(r.get("label") or "").strip() or fn,
+				"fieldtype": ft,
+				"options": cstr(meta_f.get("options") or "").strip(),
 				"editable": cint(r.get("editable")),
-			}
+			},
 		)
 
 	sort_parts: list[str] = []
