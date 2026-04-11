@@ -55,7 +55,9 @@
 			<PanelFormDialogFooter
 				:buttons="form.buttons.value"
 				:saving="form.saving.value"
+				:is-dirty="form.isDirty.value"
 				@cancel="onCancel"
+				@revert="onRevert"
 				@submit="onSubmit"
 				@custom-button="onPlaceholderButton"
 			/>
@@ -120,6 +122,25 @@ function onCancel() {
 		form.revert();
 		emit("close");
 	});
+}
+
+function onRevert() {
+	if (!form.isDirty.value || form.saving.value) {
+		return;
+	}
+	const msg =
+		typeof window.__ === "function"
+			? window.__("Discard all changes and restore the last loaded values?")
+			: "Discard all changes and restore the last loaded values?";
+	const proceed = () => {
+		form.revert();
+		form.validationError.value = null;
+	};
+	if (typeof frappe !== "undefined" && frappe.confirm) {
+		frappe.confirm(msg, proceed, () => {});
+	} else if (window.confirm(msg)) {
+		proceed();
+	}
 }
 
 function onNavPrevClick() {

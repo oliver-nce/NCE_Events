@@ -461,7 +461,7 @@
       "depends_on": ["components/PanelFormField.vue", "utils/frappeCall.js"]
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogFooter.vue": {
-      "purpose": "Form dialog footer — custom buttons, Cancel/Submit.",
+      "purpose": "Form dialog footer — custom buttons, Cancel, Revert (discard unsaved), Submit.",
       "exports": [],
       "depends_on": []
     },

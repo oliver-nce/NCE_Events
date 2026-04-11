@@ -16,6 +16,14 @@
 			<button type="button" class="ppv2-fd-tab-btn" @click="$emit('cancel')">Cancel</button>
 			<button
 				type="button"
+				class="ppv2-fd-tab-btn"
+				:disabled="saving || !isDirty"
+				@click="$emit('revert')"
+			>
+				Revert
+			</button>
+			<button
+				type="button"
 				class="ppv2-fd-tab-btn ppv2-fd-tab-active"
 				:disabled="saving"
 				@click="$emit('submit')"
@@ -30,9 +38,10 @@
 defineProps({
 	buttons: { type: Array, default: () => [] },
 	saving: { type: Boolean, default: false },
+	isDirty: { type: Boolean, default: false },
 });
 
-defineEmits(["cancel", "submit", "custom-button"]);
+defineEmits(["cancel", "revert", "submit", "custom-button"]);
 </script>
 
 <style scoped>
