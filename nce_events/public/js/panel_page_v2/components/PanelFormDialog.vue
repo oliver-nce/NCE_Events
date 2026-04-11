@@ -46,6 +46,7 @@
 				:tabs="form.tabs.value"
 				:validation-error="form.validationError.value"
 				:form-data="form.formData"
+				:original-form-data="form.originalData.value"
 				:is-field-visible="form.isFieldVisible"
 				:is-field-mandatory="form.isFieldMandatory"
 				:is-field-read-only="form.isFieldReadOnly"

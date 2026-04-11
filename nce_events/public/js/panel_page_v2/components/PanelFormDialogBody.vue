@@ -79,6 +79,10 @@
 												v-for="col in relatedState[ti].columns"
 												:key="col.fieldname"
 												class="ppv2-fd-related-td"
+												:class="{
+													'ppv2-fd-related-td--editable': isRelatedColEditable(col),
+													'ppv2-fd-related-td--dirty': isRelatedCellDirty(ti, rw, col),
+												}"
 											>
 												<select
 													v-if="isSelectColumn(col)"
@@ -242,6 +246,9 @@
 										:visible="isFieldVisible(field)"
 										:mandatory="isFieldMandatory(field)"
 										:read-only="isFieldReadOnly(field)"
+										:field-dirty="
+											!isFieldReadOnly(field) && isRootFieldDirty(field.fieldname)
+										"
 										@change="(p) => $emit('field-change', p)"
 										@link-change="(p) => $emit('link-change', p)"
 									/>
@@ -273,6 +280,8 @@ const props = defineProps({
 	tabs: { type: Array, default: () => [] },
 	validationError: { type: String, default: null },
 	formData: { type: Object, required: true },
+	/** Snapshot after load; used for dirty highlighting on main tabs. */
+	originalFormData: { type: Object, default: null },
 	isFieldVisible: { type: Function, required: true },
 	isFieldMandatory: { type: Function, required: true },
 	isFieldReadOnly: { type: Function, required: true },
@@ -545,6 +554,34 @@ function isRelatedNumberField(col) {
 
 function isRelatedLongText(col) {
 	return col?.fieldtype === "Text" || col?.fieldtype === "Long Text";
+}
+
+function isRootFieldDirty(fieldname) {
+	const o = props.originalFormData;
+	const fd = props.formData;
+	if (o == null || fd == null || fieldname == null || fieldname === "") {
+		return false;
+	}
+	return !valuesEqual(fd[fieldname], o[fieldname]);
+}
+
+function baselineRowForRelated(ti, name) {
+	const st = relatedState[ti];
+	if (!st?.baseline || name == null || name === "") {
+		return null;
+	}
+	return st.baseline.find((b) => b.name === name) ?? null;
+}
+
+function isRelatedCellDirty(ti, rw, col) {
+	if (!isRelatedColEditable(col) || rw?.name == null || rw.name === "") {
+		return false;
+	}
+	const base = baselineRowForRelated(ti, rw.name);
+	if (!base) {
+		return false;
+	}
+	return !valuesEqual(rw[col.fieldname], base[col.fieldname]);
 }
 
 function valuesEqual(a, b) {
@@ -1017,6 +1054,21 @@ onUnmounted(() => {
 }
 .ppv2-fd-related-td:last-child {
 	border-right: none;
+}
+.ppv2-fd-related-td--editable .ppv2-fd-related-select,
+.ppv2-fd-related-td--editable .ppv2-fd-related-inp,
+.ppv2-fd-related-td--editable .ppv2-fd-related-textarea,
+.ppv2-fd-related-td--editable .ppv2-fd-related-cell-text {
+	font-weight: var(--font-weight-bold, 600);
+}
+.ppv2-fd-related-td--dirty .ppv2-fd-related-select,
+.ppv2-fd-related-td--dirty .ppv2-fd-related-inp,
+.ppv2-fd-related-td--dirty .ppv2-fd-related-textarea,
+.ppv2-fd-related-td--dirty .ppv2-fd-related-cell-text {
+	color: #c0392b;
+}
+.ppv2-fd-related-td--dirty .ppv2-fd-related-check {
+	accent-color: #c0392b;
 }
 .ppv2-fd-related-cell-text {
 	font-size: var(--font-size-base);

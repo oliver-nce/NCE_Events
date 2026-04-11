@@ -17,7 +17,16 @@
   <span v-else-if="config?.layout === 'button'" />
 
   <!-- Data entry fields -->
-  <div v-else-if="config?.component" v-show="visible" class="ppv2-fd-field" :class="{ 'ppv2-fd-field-bold': field.bold }">
+  <div
+    v-else-if="config?.component"
+    v-show="visible"
+    class="ppv2-fd-field"
+    :class="{
+      'ppv2-fd-field-bold': field.bold,
+      'ppv2-fd-field-editable': !readOnly,
+      'ppv2-fd-field-dirty': fieldDirty && !readOnly,
+    }"
+  >
     <label class="ppv2-fd-label">
       {{ field.label }}
       <span v-if="mandatory" class="ppv2-fd-reqd">*</span>
@@ -123,6 +132,8 @@ const props = defineProps({
   visible: { type: Boolean, default: true },
   mandatory: { type: Boolean, default: false },
   readOnly: { type: Boolean, default: false },
+  /** True when current value differs from last loaded snapshot (until Submit). */
+  fieldDirty: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(["change", "link-change"]);
@@ -265,6 +276,31 @@ function onLinkChangePayload(payload) {
 /* Bold field style — mirrors Desk's bold:1 treatment */
 .ppv2-fd-field-bold .ppv2-fd-label {
   font-weight: 700;
+}
+.ppv2-fd-field-editable .ppv2-fd-input,
+.ppv2-fd-field-editable .ppv2-fd-select {
+  font-weight: var(--font-weight-bold, 600);
+}
+.ppv2-fd-field-editable .ppv2-fd-check-row {
+  font-weight: var(--font-weight-bold, 600);
+}
+.ppv2-fd-field-dirty .ppv2-fd-input,
+.ppv2-fd-field-dirty .ppv2-fd-select,
+.ppv2-fd-field-dirty .ppv2-fd-readonly-plain {
+  color: #c0392b;
+}
+.ppv2-fd-field-dirty .ppv2-fd-link-frappe :deep(.form-control),
+.ppv2-fd-field-dirty .ppv2-fd-link-frappe :deep(input) {
+  color: #c0392b !important;
+  font-weight: var(--font-weight-bold, 600);
+}
+.ppv2-fd-field-dirty .ppv2-fd-datetime-frappe :deep(.form-control),
+.ppv2-fd-field-dirty .ppv2-fd-datetime-frappe :deep(input) {
+  color: #c0392b !important;
+  font-weight: var(--font-weight-bold, 600);
+}
+.ppv2-fd-field-dirty .ppv2-fd-check-row input {
+  accent-color: #c0392b;
 }
 .ppv2-fd-field-bold .ppv2-fd-input {
   font-weight: 600;

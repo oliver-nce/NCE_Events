@@ -107,6 +107,7 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 		tabs,
 		allFields,
 		formData,
+		originalData,
 		isDirty,
 		syncingFromLoad,
 		loading,
