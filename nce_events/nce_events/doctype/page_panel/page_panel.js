@@ -1078,7 +1078,9 @@ if (!$("head").find("#pp-portal-float-css").length) {
 			`
 		.pp-portal-float-backdrop { font-family: inherit; }
 		.pp-portal-float-panel .table > tbody > tr > td { vertical-align: middle; }
-		.pp-portal-float-panel tr[draggable="true"]:hover { background: #fafafa; }
+		.pp-portal-float-panel td.pp-portal-drag:hover { background: #f0f4f8; }
+		.pp-portal-float-panel tr.pp-portal-row-dragging { opacity: 0.55; }
+		.pp-portal-float-panel tr.pp-portal-drag-over { outline: 2px solid #2490ef; outline-offset: -2px; }
 		.pp-portal-float-panel .pp-sort-up.btn-primary,
 		.pp-portal-float-panel .pp-sort-down.btn-primary { color: #fff; }
 	`,
@@ -1107,6 +1109,9 @@ function _open_related_portal_float(frm, opts) {
 
 	_close_related_portal_float();
 
+	/** Grip row-drag state (hoisted so float cleanup can clear listeners + row style). */
+	let ppPortalRowDrag = null;
+
 	const $backdrop = $(
 		'<div class="pp-portal-float-backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:2000;"></div>',
 	);
@@ -1134,6 +1139,13 @@ function _open_related_portal_float(frm, opts) {
 
 	_pp_portal_float_cleanup = function () {
 		$(document).off("keydown.ppPortalFloat", onKey);
+		$(document).off("mousemove.ppPortalRowSort mouseup.ppPortalRowSort");
+		if (ppPortalRowDrag && ppPortalRowDrag.$tr) {
+			ppPortalRowDrag.$tr.removeClass("pp-portal-row-dragging").css("opacity", "");
+		}
+		ppPortalRowDrag = null;
+		$panel.find("tr.pp-portal-drag-over").removeClass("pp-portal-drag-over");
+		$("body").css("cursor", "");
 		$backdrop.remove();
 	};
 
@@ -1209,7 +1221,7 @@ function _open_related_portal_float(frm, opts) {
 				const dnPrim = effSr > 0 && effSd === "desc" ? " btn-primary" : "";
 				const btnDis = effSr <= 0 ? " disabled" : "";
 				tableHtml +=
-					'<tr draggable="true" data-fieldname="' +
+					'<tr data-fieldname="' +
 					frappe.utils.escape_html(fn) +
 					'" data-sort-rank="' +
 					effSr +
@@ -1217,8 +1229,8 @@ function _open_related_portal_float(frm, opts) {
 					effSd +
 					'">' +
 					'<td class="text-muted pp-portal-drag" title="' +
-					__("Drag to reorder columns") +
-					'" style="cursor:grab;text-align:center;user-select:none;">⠿</td>' +
+					__("Drag handle — click and drag to reorder rows") +
+					'" style="cursor:grab;text-align:center;user-select:none;-webkit-user-select:none;">⠿</td>' +
 					"<td>" +
 					frappe.utils.escape_html(row.label || fn) +
 					' <span class="text-muted">(' +
@@ -1333,54 +1345,75 @@ function _open_related_portal_float(frm, opts) {
 				ppRefreshAllSortUI($tb);
 			}
 
-			// Row reorder: same pattern as Display Order matrix — reorder on `drop` only.
-			// Reordering on every `dragover` breaks native drag in several browsers.
-			let ppPortalDragSrc = null;
-
-			function _pp_portal_drag_eligible_target(t) {
-				const el = t && t.nodeType === 3 ? t.parentElement : t;
-				return $(el).closest("td.pp-portal-drag").length > 0;
+			// Row reorder: pointer-driven (HTML5 drag on <tr> is unreliable inside <table>).
+			function ppPortalRowSortCleanup() {
+				$(document).off("mousemove.ppPortalRowSort mouseup.ppPortalRowSort");
+				if (ppPortalRowDrag && ppPortalRowDrag.$tr) {
+					ppPortalRowDrag.$tr.css("opacity", "");
+					ppPortalRowDrag.$tr.removeClass("pp-portal-row-dragging");
+				}
+				ppPortalRowDrag = null;
+				$tbody.find("tr").removeClass("pp-portal-drag-over");
+				$("body").css("cursor", "");
 			}
 
-			$tbody.on("dragstart", "tr", function (e) {
-				if (!_pp_portal_drag_eligible_target(e.target)) {
-					e.preventDefault();
-					return false;
-				}
-				ppPortalDragSrc = this;
-				$(this).css("opacity", "0.65");
-				try {
-					e.originalEvent.dataTransfer.effectAllowed = "move";
-					e.originalEvent.dataTransfer.setData("text/plain", "");
-				} catch (ex) {
-					void ex;
-				}
-			});
-			$tbody.on("dragend", "tr", function () {
-				$(this).css("opacity", "");
-				ppPortalDragSrc = null;
-			});
-			$tbody.on("dragover", "tr", function (e) {
-				e.preventDefault();
-				try {
-					e.originalEvent.dataTransfer.dropEffect = "move";
-				} catch (ex2) {
-					void ex2;
-				}
-			});
-			$tbody.on("drop", "tr", function (e) {
-				e.preventDefault();
-				e.stopPropagation();
-				if (!ppPortalDragSrc || ppPortalDragSrc === this) {
+			function ppPortalRowMouseMove(e) {
+				if (!ppPortalRowDrag) {
 					return;
 				}
-				const $target = $(this);
-				const $src = $(ppPortalDragSrc);
-				if ($src.index() < $target.index()) {
-					$target.after($src);
-				} else {
-					$target.before($src);
+				const el = document.elementFromPoint(e.clientX, e.clientY);
+				if (!el) {
+					return;
 				}
+				const $target = $(el).closest("tr");
+				$tbody.find("tr").removeClass("pp-portal-drag-over");
+				if (
+					$target.length &&
+					$tbody[0].contains($target[0]) &&
+					$target[0] !== ppPortalRowDrag.$tr[0]
+				) {
+					$target.addClass("pp-portal-drag-over");
+				}
+			}
+
+			function ppPortalRowMouseUp(e) {
+				if (!ppPortalRowDrag) {
+					return;
+				}
+				const $src = ppPortalRowDrag.$tr;
+				const el = document.elementFromPoint(e.clientX, e.clientY);
+				if (el) {
+					const $target = $(el).closest("tr");
+					if (
+						$target.length &&
+						$tbody[0].contains($target[0]) &&
+						$target[0] !== $src[0]
+					) {
+						const mid = $target.offset().top + $target.outerHeight() / 2;
+						const y = e.pageY != null ? e.pageY : e.clientY + ($(window).scrollTop() || 0);
+						if (y < mid) {
+							$src.insertBefore($target);
+						} else {
+							$src.insertAfter($target);
+						}
+					}
+				}
+				ppPortalRowSortCleanup();
+			}
+
+			$tbody.on("mousedown", ".pp-portal-drag", function (e) {
+				if (e.button !== 0) {
+					return;
+				}
+				e.preventDefault();
+				ppPortalRowSortCleanup();
+				const $tr = $(this).closest("tr");
+				ppPortalRowDrag = { $tr: $tr };
+				$tr.addClass("pp-portal-row-dragging");
+				$tr.css("opacity", "0.55");
+				$("body").css("cursor", "grabbing");
+				$(document).on("mousemove.ppPortalRowSort", ppPortalRowMouseMove);
+				$(document).on("mouseup.ppPortalRowSort", ppPortalRowMouseUp);
 			});
 
 			$body.on("change", ".pp-portal-show", function () {
