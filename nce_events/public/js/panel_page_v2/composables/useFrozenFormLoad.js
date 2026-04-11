@@ -4,6 +4,25 @@ import { isLayoutField } from "../utils/frappeFieldExpr.js";
 import { parseLayout } from "../utils/parseLayout.js";
 import { isFdLoadDebugEnabled } from "../utils/formDialogLoadDebug.js";
 
+/** @param {unknown} raw */
+function normalizeHopChainForRelated(raw) {
+	if (Array.isArray(raw)) {
+		return raw;
+	}
+	if (raw == null || raw === "") {
+		return [];
+	}
+	if (typeof raw === "string" && String(raw).trim()) {
+		try {
+			const p = JSON.parse(raw);
+			return Array.isArray(p) ? p : [];
+		} catch {
+			return [];
+		}
+	}
+	return [];
+}
+
 /**
  * Load sequence + reset + load for frozen Panel Form Dialog meta/doc.
  *
@@ -127,6 +146,7 @@ export function createFrozenFormLoad(ctx) {
 						}
 						const label =
 							(parsed && parsed.label) || rel.label || rel.tab_label || dt;
+						const hop_chain = normalizeHopChainForRelated(rel.hop_chain);
 						let sections = [];
 						if (parsed && Array.isArray(parsed.fields) && parsed.fields.length) {
 							try {
@@ -145,6 +165,7 @@ export function createFrozenFormLoad(ctx) {
 								doctype: (parsed && parsed.doctype) || dt,
 								link_field: (parsed && parsed.link_field) || rel.link_field || "",
 								label,
+								hop_chain,
 								captureError: parsed && parsed.capture_error,
 								hasLayout: sections.length > 0,
 							},

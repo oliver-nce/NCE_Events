@@ -37,6 +37,7 @@
 				@nav-next="onNavNextClick"
 			/>
 			<PanelFormDialogBody
+				:definition-name="definitionName"
 				:loading="form.loading.value"
 				:error="form.error.value"
 				:tabs="form.tabs.value"
