@@ -1333,38 +1333,53 @@ function _open_related_portal_float(frm, opts) {
 				ppRefreshAllSortUI($tb);
 			}
 
-			let $dragRow = null;
+			// Row reorder: same pattern as Display Order matrix — reorder on `drop` only.
+			// Reordering on every `dragover` breaks native drag in several browsers.
+			let ppPortalDragSrc = null;
+
+			function _pp_portal_drag_eligible_target(t) {
+				const el = t && t.nodeType === 3 ? t.parentElement : t;
+				return $(el).closest("td.pp-portal-drag").length > 0;
+			}
 
 			$tbody.on("dragstart", "tr", function (e) {
-				if (!$(e.target).closest(".pp-portal-drag").length) {
+				if (!_pp_portal_drag_eligible_target(e.target)) {
 					e.preventDefault();
 					return false;
 				}
-				$dragRow = $(this);
+				ppPortalDragSrc = this;
 				$(this).css("opacity", "0.65");
 				try {
 					e.originalEvent.dataTransfer.effectAllowed = "move";
-					e.originalEvent.dataTransfer.setData("text/plain", "row");
+					e.originalEvent.dataTransfer.setData("text/plain", "");
 				} catch (ex) {
 					void ex;
 				}
 			});
 			$tbody.on("dragend", "tr", function () {
 				$(this).css("opacity", "");
-				$dragRow = null;
+				ppPortalDragSrc = null;
 			});
 			$tbody.on("dragover", "tr", function (e) {
 				e.preventDefault();
-				if (!$dragRow || !$dragRow.length || $dragRow[0] === this) {
+				try {
+					e.originalEvent.dataTransfer.dropEffect = "move";
+				} catch (ex2) {
+					void ex2;
+				}
+			});
+			$tbody.on("drop", "tr", function (e) {
+				e.preventDefault();
+				e.stopPropagation();
+				if (!ppPortalDragSrc || ppPortalDragSrc === this) {
 					return;
 				}
 				const $target = $(this);
-				const mid = $target.offset().top + $target.outerHeight() / 2;
-				const y = e.originalEvent.pageY;
-				if (y < mid) {
-					$dragRow.insertBefore($target);
+				const $src = $(ppPortalDragSrc);
+				if ($src.index() < $target.index()) {
+					$target.after($src);
 				} else {
-					$dragRow.insertAfter($target);
+					$target.before($src);
 				}
 			});
 
