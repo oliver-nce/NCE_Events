@@ -93,6 +93,68 @@ def _enrich_fetch_from_fields(fields_list: list[dict], meta) -> list[dict]:
 	return fields_list
 
 
+def _parse_related_doctypes_argument(related_doctypes: str | list | None) -> list[dict[str, str]]:
+	"""Normalize Desk JSON string or list of {doctype, link_field, label} from get_child_doctypes."""
+	if related_doctypes is None:
+		return []
+	if isinstance(related_doctypes, str):
+		s = related_doctypes.strip()
+		if not s:
+			return []
+		try:
+			related_doctypes = json.loads(s)
+		except json.JSONDecodeError:
+			return []
+	if not isinstance(related_doctypes, list):
+		return []
+	out: list[dict[str, str]] = []
+	seen: set[str] = set()
+	for item in related_doctypes:
+		if not isinstance(item, dict):
+			continue
+		dt = cstr(item.get("doctype") or "").strip()
+		if not dt or dt in seen:
+			continue
+		lf = cstr(item.get("link_field") or "").strip()
+		if not lf:
+			continue
+		seen.add(dt)
+		lb = cstr(item.get("label") or "").strip() or dt
+		out.append({"doctype": dt, "link_field": lf, "label": lb})
+	return out
+
+
+def _related_doctype_child_rows(related_doctypes: str | list | None) -> list[dict[str, str]]:
+	return [
+		{
+			"child_doctype": r["doctype"],
+			"link_field": r["link_field"],
+			"tab_label": r["label"],
+		}
+		for r in _parse_related_doctypes_argument(related_doctypes)
+	]
+
+
+def _sync_related_doctypes(doc, related_doctypes: str | list | None) -> None:
+	doc.related_doctypes = []
+	for row in _related_doctype_child_rows(related_doctypes):
+		doc.append("related_doctypes", row)
+
+
+def _related_rows_for_vue_api(doc) -> list[dict[str, str]]:
+	"""Map child table (child_doctype, tab_label) to keys the V2 client expects (doctype, label)."""
+	out: list[dict[str, str]] = []
+	for r in doc.related_doctypes or []:
+		d = r.as_dict()
+		dt = cstr(d.get("child_doctype") or "").strip()
+		if not dt:
+			continue
+		lb = cstr(d.get("tab_label") or "").strip() or dt
+		lf = cstr(d.get("link_field") or "").strip()
+		out.append({"doctype": dt, "label": lb, "link_field": lf})
+	return out
+
+
 @frappe.whitelist()
 def capture_form_dialog_from_desk(
 	doctype: str, title: str | None = None, related_doctypes: str | list | None = None
@@ -129,6 +191,7 @@ def capture_form_dialog_from_desk(
 		doc.target_doctype = doctype
 		doc.frozen_meta_json = frozen_json
 		doc.captured_at = frappe.utils.now_datetime()
+		_sync_related_doctypes(doc, related_doctypes)
 		doc.save(ignore_permissions=True)
 	else:
 		doc = frappe.get_doc(
@@ -140,6 +203,7 @@ def capture_form_dialog_from_desk(
 				"captured_at": frappe.utils.now_datetime(),
 				"dialog_size": "xl",
 				"is_active": 1,
+				"related_doctypes": _related_doctype_child_rows(related_doctypes),
 			}
 		)
 		doc.insert(ignore_permissions=True)
@@ -175,6 +239,7 @@ def rebuild_form_dialog(name: str, related_doctypes: str | list | None = None) -
 	fields_list = _enrich_fetch_from_fields(fields_list, meta)
 	doc.frozen_meta_json = json.dumps({"fields": fields_list}, default=str, indent=None)
 	doc.captured_at = frappe.utils.now_datetime()
+	_sync_related_doctypes(doc, related_doctypes)
 	doc.save(ignore_permissions=True)
 	frappe.db.commit()
 
@@ -182,6 +247,7 @@ def rebuild_form_dialog(name: str, related_doctypes: str | list | None = None) -
 		"name": doc.name,
 		"target_doctype": doc.target_doctype,
 		"captured_at": str(doc.captured_at),
+		"related_doctypes": _related_rows_for_vue_api(doc),
 	}
 
 
@@ -237,7 +303,7 @@ def get_form_dialog_definition(name: str) -> dict:
 		[b.as_dict() for b in (doc.buttons or [])],
 		key=lambda b: (cint(b.get("sort_order")), cint(b.get("idx")), cstr(b.get("name") or "")),
 	)
-	related_doctypes = [r.as_dict() for r in (doc.related_doctypes or [])]
+	related_doctypes = _related_rows_for_vue_api(doc)
 
 	return {
 		"name": doc.name,

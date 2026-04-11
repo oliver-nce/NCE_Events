@@ -107,5 +107,39 @@ class TestGetFormDialogDefinition(FrappeTestCase):
 		frappe.delete_doc("Form Dialog", doc.name, force=True)
 
 
+class TestParseRelatedDoctypes(unittest.TestCase):
+	"""related_doctypes JSON from Page Panel Desk (get_child_doctypes shape)."""
+
+	def test_json_string_roundtrip(self):
+		from nce_events.api.form_dialog_api import _parse_related_doctypes_argument
+
+		payload = json.dumps(
+			[{"doctype": "People", "link_field": "family", "label": "People"}]
+		)
+		rows = _parse_related_doctypes_argument(payload)
+		self.assertEqual(len(rows), 1)
+		self.assertEqual(rows[0]["doctype"], "People")
+		self.assertEqual(rows[0]["link_field"], "family")
+		self.assertEqual(rows[0]["label"], "People")
+
+	def test_dedupes_by_doctype(self):
+		from nce_events.api.form_dialog_api import _parse_related_doctypes_argument
+
+		rows = _parse_related_doctypes_argument(
+			[
+				{"doctype": "People", "link_field": "a", "label": "A"},
+				{"doctype": "People", "link_field": "b", "label": "B"},
+			]
+		)
+		self.assertEqual(len(rows), 1)
+		self.assertEqual(rows[0]["link_field"], "a")
+
+	def test_skips_missing_link_field(self):
+		from nce_events.api.form_dialog_api import _parse_related_doctypes_argument
+
+		rows = _parse_related_doctypes_argument([{"doctype": "People", "label": "P"}])
+		self.assertEqual(rows, [])
+
+
 if __name__ == "__main__":
 	unittest.main()
