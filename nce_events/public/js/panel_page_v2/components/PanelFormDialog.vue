@@ -37,6 +37,7 @@
 				@nav-next="onNavNextClick"
 			/>
 			<PanelFormDialogBody
+				ref="fdBodyRef"
 				:definition-name="definitionName"
 				:root-doctype="doctype"
 				:root-doc-name="docName"
@@ -51,11 +52,12 @@
 				v-model:active-tab="activeTab"
 				@field-change="onFieldChange"
 				@link-change="onLinkChange"
+				@related-dirty="onRelatedDirty"
 			/>
 			<PanelFormDialogFooter
 				:buttons="form.buttons.value"
 				:saving="form.saving.value"
-				:is-dirty="form.isDirty.value"
+				:is-dirty="footerIsDirty"
 				@cancel="onCancel"
 				@revert="onRevert"
 				@submit="onSubmit"
@@ -95,6 +97,8 @@ const props = defineProps({
 const emit = defineEmits(["close", "saved", "nav-prev", "nav-next"]);
 
 const activeTab = ref(0);
+const fdBodyRef = ref(null);
+const relatedDirty = ref(false);
 
 const form = usePanelFormDialog({
 	definitionName: toRef(props, "definitionName"),
@@ -117,24 +121,36 @@ watch(
 
 const loadDebugRows = computed(() => form.loadDebugLog.value);
 
+const footerIsDirty = computed(() => form.isDirty.value || relatedDirty.value);
+
+function onRelatedDirty(v) {
+	relatedDirty.value = !!v;
+}
+
 function onCancel() {
-	confirmDiscardIfDirty(() => form.isDirty.value, () => {
+	confirmDiscardIfDirty(() => footerIsDirty.value, () => {
 		form.revert();
+		fdBodyRef.value?.resetRelatedToBaseline?.();
+		relatedDirty.value = false;
 		emit("close");
 	});
 }
 
 function onRevert() {
-	if (!form.isDirty.value || form.saving.value) {
+	if (!footerIsDirty.value || form.saving.value) {
 		return;
 	}
 	const msg =
 		typeof window.__ === "function"
-			? window.__("Discard all changes and restore the last loaded values?")
-			: "Discard all changes and restore the last loaded values?";
+			? window.__(
+					"Discard all changes to this form and related rows and restore the last loaded values?",
+				)
+			: "Discard all changes to this form and related rows and restore the last loaded values?";
 	const proceed = () => {
 		form.revert();
 		form.validationError.value = null;
+		fdBodyRef.value?.resetRelatedToBaseline?.();
+		relatedDirty.value = false;
 	};
 	if (typeof frappe !== "undefined" && frappe.confirm) {
 		frappe.confirm(msg, proceed, () => {});
@@ -145,12 +161,12 @@ function onRevert() {
 
 function onNavPrevClick() {
 	if (!props.canNavigatePrev) return;
-	confirmDiscardIfDirty(() => form.isDirty.value, () => emit("nav-prev"));
+	confirmDiscardIfDirty(() => footerIsDirty.value, () => emit("nav-prev"));
 }
 
 function onNavNextClick() {
 	if (!props.canNavigateNext) return;
-	confirmDiscardIfDirty(() => form.isDirty.value, () => emit("nav-next"));
+	confirmDiscardIfDirty(() => footerIsDirty.value, () => emit("nav-next"));
 }
 
 const onFormDialogKeydown = createRowNavKeydownHandler({
@@ -211,10 +227,23 @@ async function onLinkChange({ fieldname, value }) {
 async function onSubmit() {
 	try {
 		const result = await form.save();
+		try {
+			await fdBodyRef.value?.saveAllRelatedRows?.();
+		} catch (relErr) {
+			const m = relErr?.message || String(relErr) || "Failed to save related rows";
+			if (typeof frappe !== "undefined" && frappe.msgprint) {
+				frappe.msgprint({
+					title: "Related rows",
+					message: m,
+					indicator: "red",
+				});
+			}
+			throw relErr;
+		}
 		emit("saved", result);
 		emit("close");
 	} catch {
-		// validationError is set by the composable — stay open
+		// validationError (root) or related save error — stay open
 	}
 }
 

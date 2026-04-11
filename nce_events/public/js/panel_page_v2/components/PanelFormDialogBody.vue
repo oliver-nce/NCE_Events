@@ -84,8 +84,9 @@
 													v-if="isSelectColumn(col)"
 													class="ppv2-fd-related-select"
 													:value="String(relatedCellRaw(rw, col) ?? '')"
-													disabled
+													:disabled="!isRelatedColEditable(col)"
 													:aria-label="col.label || col.fieldname"
+													@change="onRelatedSelectChange(rw, col, $event)"
 												>
 													<option value="">—</option>
 													<option
@@ -100,8 +101,37 @@
 													v-else-if="col.fieldtype === 'Check'"
 													type="checkbox"
 													class="ppv2-fd-related-check"
-													disabled
+													:disabled="!isRelatedColEditable(col)"
 													:checked="relatedCellTruthy(rw, col)"
+													@change="onRelatedCheckChange(rw, col, $event)"
+												/>
+												<input
+													v-else-if="isRelatedColEditable(col) && isRelatedNumberField(col)"
+													type="number"
+													class="ppv2-fd-related-inp"
+													:value="relatedNumberInputValue(rw, col)"
+													@input="onRelatedNumberInput(rw, col, $event)"
+												/>
+												<input
+													v-else-if="isRelatedColEditable(col) && col.fieldtype === 'Date'"
+													type="date"
+													class="ppv2-fd-related-inp"
+													:value="relatedDateInputValue(rw, col)"
+													@input="onRelatedDateInput(rw, col, $event)"
+												/>
+												<textarea
+													v-else-if="isRelatedColEditable(col) && isRelatedLongText(col)"
+													class="ppv2-fd-related-textarea"
+													rows="2"
+													:value="String(relatedCellRaw(rw, col) ?? '')"
+													@input="onRelatedTextInput(rw, col, $event)"
+												/>
+												<input
+													v-else-if="isRelatedColEditable(col)"
+													type="text"
+													class="ppv2-fd-related-inp"
+													:value="String(relatedCellRaw(rw, col) ?? '')"
+													@input="onRelatedTextInput(rw, col, $event)"
 												/>
 												<span v-else class="ppv2-fd-related-cell-text">{{
 													formatRelatedCell(rw, col)
@@ -230,7 +260,7 @@
 </template>
 
 <script setup>
-import { reactive, watch, onUnmounted } from "vue";
+import { reactive, watch, onUnmounted, nextTick } from "vue";
 import PanelFormField from "./PanelFormField.vue";
 import { frappeCall } from "../utils/frappeCall.js";
 
@@ -248,7 +278,7 @@ const props = defineProps({
 	isFieldReadOnly: { type: Function, required: true },
 });
 
-defineEmits(["field-change", "link-change"]);
+const emit = defineEmits(["field-change", "link-change", "related-dirty"]);
 
 const activeTab = defineModel("activeTab", { type: Number, required: true });
 
@@ -375,13 +405,17 @@ async function fetchRelatedForTab(ti) {
 			return;
 		}
 		relatedState[ti].fetchKey = fk;
-		relatedState[ti].rows = Array.isArray(msg.rows) ? msg.rows : [];
+		const rawRows = Array.isArray(msg.rows) ? msg.rows : [];
+		relatedState[ti].baseline = JSON.parse(JSON.stringify(rawRows));
+		relatedState[ti].rows = rawRows.map((r) => ({ ...r }));
 		relatedState[ti].columns = Array.isArray(msg.columns) ? msg.columns : [];
+		emit("related-dirty", false);
 	} catch (e) {
 		if (relatedSeq[ti] !== seq) {
 			return;
 		}
 		relatedState[ti].rows = [];
+		relatedState[ti].baseline = [];
 		relatedState[ti].columns = [];
 		relatedState[ti].error = e?.message || String(e) || "Failed to load related rows";
 	} finally {
@@ -482,6 +516,239 @@ function formatRelatedCell(rw, col) {
 	}
 	return String(v);
 }
+
+const RELATED_GRID_NON_EDITABLE_TYPES = new Set([
+	"Link",
+	"Dynamic Link",
+	"Table",
+	"Attach",
+	"Attach Image",
+	"HTML",
+	"Read Only",
+	"Button",
+	"Barcode",
+	"Geolocation",
+]);
+
+function isRelatedColEditable(col) {
+	if (!col || !(Number(col.editable) === 1 || col.editable === true)) {
+		return false;
+	}
+	const ft = col.fieldtype;
+	return !RELATED_GRID_NON_EDITABLE_TYPES.has(ft);
+}
+
+function isRelatedNumberField(col) {
+	const ft = col?.fieldtype;
+	return ft === "Int" || ft === "Float" || ft === "Currency";
+}
+
+function isRelatedLongText(col) {
+	return col?.fieldtype === "Text" || col?.fieldtype === "Long Text";
+}
+
+function valuesEqual(a, b) {
+	if (a === b) {
+		return true;
+	}
+	if (a == null && b == null) {
+		return true;
+	}
+	if (a == null || b == null) {
+		return false;
+	}
+	if (
+		(a === 0 || a === "0" || a === false) &&
+		(b === 0 || b === "0" || b === false)
+	) {
+		return true;
+	}
+	if (
+		(a === 1 || a === "1" || a === true) &&
+		(b === 1 || b === "1" || b === true)
+	) {
+		return true;
+	}
+	return String(a) === String(b);
+}
+
+function hasRelatedDirtyAny() {
+	for (const k of Object.keys(relatedState)) {
+		const ti = Number(k);
+		if (!Number.isInteger(ti)) {
+			continue;
+		}
+		if (relatedRowsDirty(ti)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+let relatedDirtyEmitScheduled = false;
+function scheduleRelatedDirtyEmit() {
+	if (relatedDirtyEmitScheduled) {
+		return;
+	}
+	relatedDirtyEmitScheduled = true;
+	nextTick(() => {
+		relatedDirtyEmitScheduled = false;
+		emit("related-dirty", hasRelatedDirtyAny());
+	});
+}
+
+function relatedRowsDirty(ti) {
+	const st = relatedState[ti];
+	if (!st?.rows || !st.baseline) {
+		return false;
+	}
+	const cols = (st.columns || []).filter(isRelatedColEditable);
+	if (!cols.length) {
+		return false;
+	}
+	for (const rw of st.rows) {
+		const name = rw.name;
+		if (!name) {
+			continue;
+		}
+		const base = st.baseline.find((b) => b.name === name);
+		if (!base) {
+			continue;
+		}
+		for (const c of cols) {
+			if (!valuesEqual(rw[c.fieldname], base[c.fieldname])) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+function buildRelatedUpdates(ti) {
+	const st = relatedState[ti];
+	if (!st?.rows?.length || !st.baseline?.length) {
+		return [];
+	}
+	const cols = (st.columns || []).filter(isRelatedColEditable);
+	if (!cols.length) {
+		return [];
+	}
+	const updates = [];
+	for (const rw of st.rows) {
+		const name = rw.name;
+		if (!name) {
+			continue;
+		}
+		const base = st.baseline.find((b) => b.name === name);
+		if (!base) {
+			continue;
+		}
+		const values = {};
+		for (const c of cols) {
+			const fn = c.fieldname;
+			if (!valuesEqual(rw[fn], base[fn])) {
+				values[fn] = rw[fn];
+			}
+		}
+		if (Object.keys(values).length) {
+			updates.push({ name, values });
+		}
+	}
+	return updates;
+}
+
+function onRelatedSelectChange(rw, col, ev) {
+	rw[col.fieldname] = ev.target.value;
+	scheduleRelatedDirtyEmit();
+}
+
+function onRelatedCheckChange(rw, col, ev) {
+	rw[col.fieldname] = ev.target.checked ? 1 : 0;
+	scheduleRelatedDirtyEmit();
+}
+
+function relatedNumberInputValue(rw, col) {
+	const v = relatedCellRaw(rw, col);
+	if (v == null || v === "") {
+		return "";
+	}
+	return Number(v);
+}
+
+function onRelatedNumberInput(rw, col, ev) {
+	const s = ev.target.value;
+	rw[col.fieldname] = s === "" ? null : Number(s);
+	scheduleRelatedDirtyEmit();
+}
+
+function relatedDateInputValue(rw, col) {
+	const v = relatedCellRaw(rw, col);
+	if (v == null || v === "") {
+		return "";
+	}
+	return String(v).slice(0, 10);
+}
+
+function onRelatedDateInput(rw, col, ev) {
+	rw[col.fieldname] = ev.target.value || null;
+	scheduleRelatedDirtyEmit();
+}
+
+function onRelatedTextInput(rw, col, ev) {
+	rw[col.fieldname] = ev.target.value;
+	scheduleRelatedDirtyEmit();
+}
+
+function resetRelatedToBaseline() {
+	for (const k of Object.keys(relatedState)) {
+		const ti = Number(k);
+		const st = relatedState[ti];
+		if (!st?.baseline || !Array.isArray(st.rows)) {
+			continue;
+		}
+		const copy = JSON.parse(JSON.stringify(st.baseline));
+		st.rows.splice(0, st.rows.length);
+		for (const r of copy) {
+			st.rows.push({ ...r });
+		}
+	}
+	emit("related-dirty", false);
+}
+
+async function saveAllRelatedRows() {
+	const dn = String(props.rootDocName || "").trim();
+	const defn = String(props.definitionName || "").trim();
+	const dt = String(props.rootDoctype || "").trim();
+	if (!dn || !defn || !dt) {
+		return;
+	}
+	const tabs = props.tabs || [];
+	for (let ti = 0; ti < tabs.length; ti++) {
+		const tab = tabs[ti];
+		const crn = tab?._related?.child_row_name;
+		if (!crn) {
+			continue;
+		}
+		const updates = buildRelatedUpdates(ti);
+		if (!updates.length) {
+			continue;
+		}
+		await frappeCall("nce_events.api.form_dialog_api.save_form_dialog_related_rows", {
+			definition: defn,
+			related_row_name: crn,
+			root_doctype: dt,
+			root_name: dn,
+			updates,
+		});
+		const st = relatedState[ti];
+		if (st?.rows) {
+			st.baseline = JSON.parse(JSON.stringify(st.rows));
+		}
+	}
+	emit("related-dirty", false);
+}
+
+defineExpose({ saveAllRelatedRows, resetRelatedToBaseline });
 
 function relatedLabelColPx(ti) {
 	const w = relatedLabelColByTab[ti];
@@ -762,6 +1029,23 @@ onUnmounted(() => {
 	background: var(--bg-card);
 	color: var(--text-color);
 	font-size: inherit;
+}
+.ppv2-fd-related-inp,
+.ppv2-fd-related-textarea {
+	max-width: 100%;
+	width: 100%;
+	box-sizing: border-box;
+	padding: 4px 8px;
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-sm, 4px);
+	background: var(--bg-card);
+	color: var(--text-color);
+	font-size: inherit;
+	font-family: inherit;
+}
+.ppv2-fd-related-textarea {
+	resize: vertical;
+	min-height: 2.5rem;
 }
 .ppv2-fd-related-check {
 	width: 1rem;

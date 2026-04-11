@@ -3,7 +3,8 @@ Server API for Form Dialog CRUD and frozen schema capture.
 
 Capture, rebuild, and list require System Manager. get_form_dialog_definition and
 get_form_dialog_related_rows are readable by any logged-in user for active dialogs
-(V2 panel). save uses normal DocType create/write permission on the target record.
+(V2 panel). save_form_dialog_related_rows writes child rows allowed by the related portal
+editor (editable fields). save uses normal DocType create/write permission on the target record.
 """
 
 from __future__ import annotations
@@ -823,6 +824,167 @@ def get_form_dialog_related_rows(
 		"rows": rows,
 		"order_by": order_by,
 	}
+
+
+# Fieldtypes not editable through the related grid (use Desk for links / files / tables).
+_RELATED_SAVE_SKIP_FIELDTYPES: frozenset[str] = frozenset(
+	{
+		"Link",
+		"Dynamic Link",
+		"Table",
+		"Attach",
+		"Attach Image",
+		"HTML",
+		"Read Only",
+		"Button",
+		"Barcode",
+		"Geolocation",
+	}
+)
+
+
+def _editable_related_fieldnames_for_save(row, child_dt: str) -> set[str]:
+	"""Portal columns with show=1, editable=1, and safe fieldtypes on ``child_dt``."""
+	columns, _ob = _related_list_columns_from_child_row(row)
+	meta = frappe.get_meta(child_dt)
+	out: set[str] = set()
+	for c in columns:
+		if not cint(c.get("editable")):
+			continue
+		fn = cstr(c.get("fieldname") or "").strip()
+		if not fn or fn == "name":
+			continue
+		df = meta.get_field(fn)
+		if not df:
+			continue
+		if getattr(df, "read_only", 0):
+			continue
+		ft = cstr(df.fieldtype or "").strip()
+		if ft in _RELATED_SAVE_SKIP_FIELDTYPES:
+			continue
+		out.add(fn)
+	return out
+
+
+def _allowed_child_names_for_related_tab(
+	root_name: str,
+	child_dt: str,
+	link_f: str,
+	hc: list[dict[str, str]],
+) -> set[str]:
+	filters, force_empty = _filters_for_related_rows(root_name, child_dt, link_f, hc)
+	if force_empty:
+		return set()
+	names = frappe.get_all(child_dt, filters=filters, pluck="name", limit=5000)
+	return {cstr(n).strip() for n in (names or []) if cstr(n).strip()}
+
+
+@frappe.whitelist()
+def save_form_dialog_related_rows(
+	definition: str,
+	related_row_name: str,
+	root_doctype: str,
+	root_name: str,
+	updates: str | list | None,
+) -> dict[str, Any]:
+	"""
+	Persist field changes on related-tab rows (panel V2).
+
+	Only fieldnames marked editable in the related portal config are accepted.
+	Each document must appear in the same filtered set as ``get_form_dialog_related_rows``.
+	Root document must be writable (same session contract as ``save_form_dialog_document``).
+
+	Args:
+	    definition: Form Dialog document name.
+	    related_row_name: ``Form Dialog Related DocType`` child row ``name``.
+	    root_doctype: Must match Form Dialog ``target_doctype``.
+	    root_name: Root document primary key.
+	    updates: JSON list of ``{ "name": "<child docname>", "values": { "<field>": <value>, ... } }``.
+
+	Returns:
+	    ``{ "ok": 1, "saved": <int> }`` — number of child documents saved (0 if updates empty).
+	"""
+	if frappe.session.user == "Guest":
+		frappe.throw(_("Login required"), frappe.PermissionError)
+
+	definition = cstr(definition or "").strip()
+	related_row_name = cstr(related_row_name or "").strip()
+	root_doctype = cstr(root_doctype or "").strip()
+	root_name = cstr(root_name or "").strip()
+	if not definition or not related_row_name or not root_doctype or not root_name:
+		frappe.throw(_("Missing parameters"))
+
+	updates = frappe.parse_json(updates) if isinstance(updates, str) else updates
+	if updates is None:
+		updates = []
+	if not isinstance(updates, list):
+		frappe.throw(_("updates must be a list"))
+
+	prev = frappe.flags.ignore_permissions
+	frappe.flags.ignore_permissions = True
+	try:
+		doc = frappe.get_doc("Form Dialog", definition)
+	finally:
+		frappe.flags.ignore_permissions = prev
+
+	if not cint(doc.is_active):
+		frappe.throw(_("This Form Dialog is not active."), frappe.PermissionError)
+
+	if cstr(doc.target_doctype or "").strip() != root_doctype:
+		frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+	if not frappe.has_permission(root_doctype, "write", doc=root_name):
+		frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+	row = None
+	for r in doc.related_doctypes or []:
+		if cstr(r.name) == related_row_name:
+			row = r
+			break
+	if not row:
+		frappe.throw(_("Related DocType row not found"))
+
+	child_dt = cstr(row.child_doctype or "").strip()
+	link_f = cstr(row.link_field or "").strip()
+	if not child_dt or not link_f:
+		frappe.throw(_("Invalid related row configuration"))
+
+	_assert_doctype_in_wp_tables(child_dt)
+
+	hc = _normalize_hop_chain_value(row.hop_chain or getattr(row, "hop_chain", None))
+	allowed_names = _allowed_child_names_for_related_tab(root_name, child_dt, link_f, hc)
+	allowed_fields = _editable_related_fieldnames_for_save(row, child_dt)
+
+	if not updates:
+		return {"ok": 1, "saved": 0}
+
+	saved = 0
+	for item in updates:
+		if not isinstance(item, dict):
+			frappe.throw(_("Each update must be an object"))
+		cname = cstr(item.get("name") or "").strip()
+		if not cname:
+			frappe.throw(_("Each update needs a name"))
+		if cname not in allowed_names:
+			frappe.throw(_("Not permitted to update this row"), frappe.PermissionError)
+		values = item.get("values")
+		if not isinstance(values, dict):
+			frappe.throw(_("values must be an object"))
+		if not values:
+			continue
+		if not frappe.has_permission(child_dt, "write", doc=cname):
+			frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+		child = frappe.get_doc(child_dt, cname)
+		for fn, raw_val in values.items():
+			fn = cstr(fn).strip()
+			if not fn or fn not in allowed_fields:
+				frappe.throw(_("Field '{0}' is not editable in this related tab").format(fn))
+			child.set(fn, raw_val)
+		child.save()
+		saved += 1
+
+	return {"ok": 1, "saved": saved}
 
 
 @frappe.whitelist()

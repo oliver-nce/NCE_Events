@@ -393,6 +393,60 @@ class TestHopWalkFinalIdentifiers(unittest.TestCase):
 		self.assertEqual(kwargs1["filters"], {"enrollment": ["in", ["en1"]]})
 
 
+class TestSaveFormDialogRelatedRows(FrappeTestCase):
+	"""save_form_dialog_related_rows validates and saves child docs (mocked)."""
+
+	def test_guest_rejected(self):
+		from nce_events.api.form_dialog_api import save_form_dialog_related_rows
+
+		mock_session = MagicMock()
+		mock_session.user = "Guest"
+		with patch("nce_events.api.form_dialog_api.frappe.session", mock_session):
+			with self.assertRaises(frappe.PermissionError):
+				save_form_dialog_related_rows("FD", "r1", "Event", "E1", [])
+
+	@patch("nce_events.api.form_dialog_api._assert_doctype_in_wp_tables")
+	@patch("nce_events.api.form_dialog_api._allowed_child_names_for_related_tab", return_value={"P1"})
+	@patch("nce_events.api.form_dialog_api._editable_related_fieldnames_for_save", return_value={"rating"})
+	def test_save_calls_child_save(
+		self, mock_editable, mock_allowed, mock_wp
+	):
+		from nce_events.api.form_dialog_api import save_form_dialog_related_rows
+
+		mock_row = MagicMock()
+		mock_row.name = "REL1"
+		mock_row.child_doctype = "People"
+		mock_row.link_field = "event"
+		mock_row.hop_chain = []
+
+		mock_doc = MagicMock()
+		mock_doc.is_active = 1
+		mock_doc.target_doctype = "Event"
+		mock_doc.related_doctypes = [mock_row]
+
+		mock_child = MagicMock()
+
+		mock_session = MagicMock()
+		mock_session.user = "Administrator"
+		with patch("nce_events.api.form_dialog_api.frappe.session", mock_session):
+			with patch(
+				"nce_events.api.form_dialog_api.frappe.get_doc",
+				side_effect=[mock_doc, mock_child],
+			):
+				with patch("nce_events.api.form_dialog_api.frappe.has_permission", return_value=True):
+					out = save_form_dialog_related_rows(
+						"FD",
+						"REL1",
+						"Event",
+						"EVT1",
+						[{"name": "P1", "values": {"rating": "5"}}],
+					)
+
+		self.assertEqual(out.get("saved"), 1)
+		mock_child.set.assert_called_once_with("rating", "5")
+		mock_child.save.assert_called_once()
+
+
 class TestGetFormDialogRelatedRows(FrappeTestCase):
 	"""Whitelist read for related tab rows."""
 
