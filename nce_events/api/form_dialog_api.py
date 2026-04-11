@@ -362,16 +362,49 @@ def list_form_dialogs_for_doctype(doctype: str) -> list[dict]:
 	    doctype: The target DocType to filter by.
 
 	Returns:
-	    List of dicts with: name, title, target_doctype, dialog_size, captured_at, is_active.
+	    List of dicts with: name, title, target_doctype, dialog_size, captured_at, is_active,
+	    and related_doctypes (list of {doctype, label, link_field} per child row, no info JSON).
 	"""
 	_require_system_manager()
 
-	return frappe.get_all(
+	dialogs = frappe.get_all(
 		"Form Dialog",
 		filters={"target_doctype": doctype, "is_active": 1},
 		fields=["name", "title", "target_doctype", "dialog_size", "captured_at", "is_active"],
 		order_by="title asc",
 	)
+	if not dialogs:
+		return []
+
+	names = [d["name"] for d in dialogs]
+	child_rows = frappe.get_all(
+		"Form Dialog Related DocType",
+		filters={
+			"parent": ("in", names),
+			"parenttype": "Form Dialog",
+			"parentfield": "related_doctypes",
+		},
+		fields=["parent", "child_doctype", "link_field", "tab_label", "idx"],
+		order_by="parent asc, idx asc",
+	)
+	by_parent: dict[str, list[dict[str, str]]] = {}
+	for r in child_rows:
+		dt = cstr(r.get("child_doctype") or "").strip()
+		if not dt:
+			continue
+		lb = cstr(r.get("tab_label") or "").strip() or dt
+		lf = cstr(r.get("link_field") or "").strip()
+		pid = cstr(r.get("parent") or "").strip()
+		if not pid:
+			continue
+		by_parent.setdefault(pid, []).append(
+			{"doctype": dt, "label": lb, "link_field": lf},
+		)
+
+	for d in dialogs:
+		d["related_doctypes"] = by_parent.get(d["name"], [])
+
+	return dialogs
 
 
 @frappe.whitelist()

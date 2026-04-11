@@ -1358,6 +1358,20 @@ function _build_dialogs_tab_html(frm, $container, dialogs) {
 					<button class="btn btn-xs btn-default pp-dialog-delete" data-name="${frappe.utils.escape_html(d.name)}" style="margin-left:4px;color:#c0392b;">Delete</button>
 				</td>
 			</tr>`;
+			const rel = Array.isArray(d.related_doctypes) ? d.related_doctypes : [];
+			if (rel.length) {
+				let rel_btns = "";
+				rel.forEach(function (row, idx) {
+					const lab = row.label || row.doctype || "Tab";
+					const dt = row.doctype || "";
+					const lf = row.link_field || "";
+					rel_btns += `<button type="button" class="btn btn-xs btn-default pp-dialog-related-tab" style="margin:2px 4px 2px 0;" data-pp-related-idx="${idx}" data-dialog-name="${frappe.utils.escape_html(d.name)}" data-child-doctype="${frappe.utils.escape_html(dt)}" data-link-field="${frappe.utils.escape_html(lf)}">${frappe.utils.escape_html(lab)}</button>`;
+				});
+				list_html += `<tr style="border-bottom:1px solid #ededed;${row_bg}"><td colspan="4" style="padding:4px 8px 8px 20px;background:#fafbfc;font-size:11px;">
+					<div style="color:#8d99a6;margin-bottom:4px;">${__("Related table tabs (preview)")}</div>
+					<div style="display:flex;flex-wrap:wrap;align-items:center;gap:2px;">${rel_btns}</div>
+				</td></tr>`;
+			}
 		});
 		list_html += `</tbody></table>`;
 	} else {

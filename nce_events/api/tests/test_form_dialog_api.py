@@ -107,6 +107,44 @@ class TestGetFormDialogDefinition(FrappeTestCase):
 		frappe.delete_doc("Form Dialog", doc.name, force=True)
 
 
+class TestListFormDialogsForDoctype(FrappeTestCase):
+	"""list_form_dialogs_for_doctype attaches related_doctypes (desk summary, no info)."""
+
+	@patch("nce_events.api.form_dialog_api._require_system_manager")
+	def test_list_includes_related_doctypes(self, mock_sm):
+		from nce_events.api.form_dialog_api import list_form_dialogs_for_doctype
+
+		title = "List Related Test FD " + frappe.generate_hash(length=8)
+		doc = frappe.get_doc(
+			{
+				"doctype": "Form Dialog",
+				"title": title,
+				"target_doctype": "DocType",
+				"frozen_meta_json": '{"fields": []}',
+				"captured_at": frappe.utils.now_datetime(),
+				"is_active": 1,
+				"related_doctypes": [
+					{"child_doctype": "User", "link_field": "owner", "tab_label": "Users tab"},
+				],
+			}
+		)
+		doc.insert(ignore_permissions=True)
+		frappe.db.commit()
+
+		rows = list_form_dialogs_for_doctype("DocType")
+		mine = next((r for r in rows if r.get("name") == title), None)
+		self.assertIsNotNone(mine)
+		self.assertEqual(len(mine["related_doctypes"]), 1)
+		rd0 = mine["related_doctypes"][0]
+		self.assertEqual(rd0["doctype"], "User")
+		self.assertEqual(rd0["label"], "Users tab")
+		self.assertEqual(rd0["link_field"], "owner")
+		self.assertNotIn("info", rd0)
+
+		frappe.delete_doc("Form Dialog", title, force=True)
+		frappe.db.commit()
+
+
 class TestParseRelatedDoctypes(unittest.TestCase):
 	"""related_doctypes JSON from Page Panel Desk (get_child_doctypes shape)."""
 
