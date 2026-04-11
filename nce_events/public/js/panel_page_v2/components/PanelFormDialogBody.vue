@@ -994,13 +994,15 @@ onUnmounted(() => {
 .ppv2-fd-related-table {
 	width: 100%;
 	border-collapse: collapse;
-	font-size: var(--font-size-sm, 13px);
+	font-size: var(--font-size-base);
+	color: var(--text-color);
 }
 .ppv2-fd-related-th {
 	text-align: left;
-	padding: 8px 10px;
+	padding: 6px 8px;
 	background: var(--bg-header, #f0f4f8);
 	color: var(--text-header, #36414c);
+	font-size: var(--font-size-base);
 	font-weight: var(--font-weight-bold, 600);
 	border-bottom: 1px solid var(--border-color);
 	position: sticky;
@@ -1008,7 +1010,7 @@ onUnmounted(() => {
 	z-index: 1;
 }
 .ppv2-fd-related-td {
-	padding: 6px 10px;
+	padding: 4px 8px;
 	border-bottom: 1px solid var(--border-color);
 	vertical-align: middle;
 	min-width: 4rem;
@@ -1017,39 +1019,43 @@ onUnmounted(() => {
 	border-right: none;
 }
 .ppv2-fd-related-cell-text {
+	font-size: var(--font-size-base);
 	color: var(--text-color);
 	word-break: break-word;
 }
 .ppv2-fd-related-select {
 	max-width: 100%;
 	min-width: 6rem;
-	padding: 4px 8px;
+	min-height: 2.25em;
+	padding: 5px 8px;
 	border: 1px solid var(--border-color);
 	border-radius: var(--border-radius-sm, 4px);
 	background: var(--bg-card);
 	color: var(--text-color);
-	font-size: inherit;
+	font-size: var(--font-size-base);
+	font-family: var(--font-family, inherit);
+	box-sizing: border-box;
 }
 .ppv2-fd-related-inp,
 .ppv2-fd-related-textarea {
 	max-width: 100%;
 	width: 100%;
 	box-sizing: border-box;
-	padding: 4px 8px;
+	padding: 5px 8px;
 	border: 1px solid var(--border-color);
 	border-radius: var(--border-radius-sm, 4px);
 	background: var(--bg-card);
 	color: var(--text-color);
-	font-size: inherit;
-	font-family: inherit;
+	font-size: var(--font-size-base);
+	font-family: var(--font-family, inherit);
 }
 .ppv2-fd-related-textarea {
 	resize: vertical;
-	min-height: 2.5rem;
+	min-height: 2.25em;
 }
 .ppv2-fd-related-check {
-	width: 1rem;
-	height: 1rem;
+	width: 1.1rem;
+	height: 1.1rem;
 	accent-color: var(--bg-header, #2490ef);
 }
 .ppv2-fd-related-empty {
