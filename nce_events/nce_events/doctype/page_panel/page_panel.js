@@ -166,6 +166,82 @@ function _parse_csv(val) {
 		.filter(Boolean);
 }
 
+/** Clear cached get_doctype_fields results so the next fetch sees current DocType meta. */
+function _clear_doctype_field_cache() {
+	Object.keys(_dt_field_cache).forEach(function (k) {
+		delete _dt_field_cache[k];
+	});
+}
+
+/** Keys that exist as rows on the Display matrices after a fresh meta fetch. */
+function _collect_valid_display_keys(root_fields, link_fields, linked_data, frm) {
+	const valid = {};
+	root_fields.forEach(function (f) {
+		valid[f.fieldname] = true;
+	});
+	_get_computed_fields(frm).forEach(function (f) {
+		if (f.fieldname) valid[f.fieldname] = true;
+	});
+	_get_related_fields(frm).forEach(function (f) {
+		if (f.fieldname) valid[f.fieldname] = true;
+	});
+	link_fields.forEach(function (lf) {
+		const ld = linked_data[lf.fieldname];
+		if (!ld || !ld.fields) return;
+		const p = lf.fieldname + ".";
+		ld.fields.forEach(function (f) {
+			valid[p + f.fieldname] = true;
+		});
+	});
+	return valid;
+}
+
+/** Drop column_order / bold / gender / title entries that no longer match any field row. */
+function _prune_stale_display_keys(frm, valid) {
+	function keep(csv) {
+		return _parse_csv(csv).filter(function (k) {
+			return valid[k];
+		});
+	}
+	const col = keep(frm.doc.column_order);
+	const bold = keep(frm.doc.bold_fields);
+	const tint = keep(frm.doc.gender_color_fields);
+	const gcRaw = (frm.doc.gender_column || "").trim();
+	const gc = gcRaw && valid[gcRaw] ? gcRaw : "";
+	const tfRaw = (frm.doc.title_field || "").trim();
+	const tf = tfRaw && valid[tfRaw] ? tfRaw : "";
+
+	const nextCol = col.join(", ");
+	const nextBold = bold.join(", ");
+	const nextTint = tint.join(", ");
+	if (nextCol !== (frm.doc.column_order || "").trim()) frm.set_value("column_order", nextCol);
+	if (nextBold !== (frm.doc.bold_fields || "").trim()) frm.set_value("bold_fields", nextBold);
+	if (nextTint !== (frm.doc.gender_color_fields || "").trim()) frm.set_value("gender_color_fields", nextTint);
+	if (gc !== gcRaw) frm.set_value("gender_column", gc);
+	if (tf !== tfRaw) frm.set_value("title_field", tf);
+}
+
+/**
+ * True if any saved Display / Order key references a field row that no longer exists
+ * (e.g. root Link removed, or linked DocType field removed). Used implicitly via prune
+ * whenever Display is built from current meta.
+ */
+function _display_has_orphan_keys(frm, valid) {
+	function listHasOrphan(csv) {
+		return _parse_csv(csv).some(function (k) {
+			return !valid[k];
+		});
+	}
+	if (listHasOrphan(frm.doc.column_order)) return true;
+	if (listHasOrphan(frm.doc.bold_fields)) return true;
+	if (listHasOrphan(frm.doc.gender_color_fields)) return true;
+	const gc = (frm.doc.gender_column || "").trim();
+	if (gc && !valid[gc]) return true;
+	const tf = (frm.doc.title_field || "").trim();
+	if (tf && !valid[tf]) return true;
+	return false;
+}
+
 function _title_case(name) {
 	return name.replace(/_/g, " ").replace(/\b\w/g, function (c) {
 		return c.toUpperCase();
@@ -261,6 +337,14 @@ function _move_root_field_first(fields, fieldname) {
 }
 
 function _build_display_tabs(frm, $container, root_fields, link_fields, linked_data, rootPack) {
+	// Drop keys for removed root Links / removed linked fields / removed related columns.
+	// Sub-tabs follow current link_fields only; stale "link.field" tokens must leave column_order
+	// so the Order tab and saved doc stay consistent (avoids dirtying when nothing is stale).
+	const valid = _collect_valid_display_keys(root_fields, link_fields, linked_data, frm);
+	if (_display_has_orphan_keys(frm, valid)) {
+		_prune_stale_display_keys(frm, valid);
+	}
+
 	rootPack = rootPack || { doctype_title_field: "" };
 	const dtTitle = (rootPack.doctype_title_field || "").trim();
 
@@ -314,12 +398,25 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 	sub_tabs.push({ id: "_order", label: "Order", prefix: "" });
 
 	// Sub-tab bar
-	const $sub_bar = $('<div style="display:flex;gap:4px;padding:0 0 8px;flex-wrap:wrap;"></div>');
+	const $sub_bar = $(
+		'<div style="display:flex;gap:4px;padding:0 0 8px;flex-wrap:wrap;align-items:center;"></div>',
+	);
 	sub_tabs.forEach(function (st) {
 		$sub_bar.append(
 			`<button class="btn btn-xs btn-default pp-sub-btn" data-sub="${st.id}" style="padding:2px 12px;border-radius:4px;font-size:11px;">${frappe.utils.escape_html(st.label)}</button>`,
 		);
 	});
+	const $reloadWrap = $('<span style="margin-left:auto;"></span>');
+	const $reloadFields = $(
+		`<a href="#" class="pp-reload-doctype-fields" style="font-size:12px;color:#4198F0;">${frappe.utils.escape_html(__("Reload fields"))}</a>`,
+	);
+	$reloadFields.on("click", function (e) {
+		e.preventDefault();
+		_clear_doctype_field_cache();
+		_render_display(frm);
+	});
+	$reloadWrap.append($reloadFields);
+	$sub_bar.append($reloadWrap);
 	$container.append($sub_bar);
 
 	// Sub-tab content area
