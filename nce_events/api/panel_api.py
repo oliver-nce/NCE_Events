@@ -49,6 +49,7 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 	"""Fetch display configuration for a single Page Panel."""
 	if not frappe.db.exists("Page Panel", root_doctype):
 		auto_email, auto_sms = _auto_detect_contact_fields(root_doctype)
+		meta_reqd = _meta_reqd_root_fieldnames(root_doctype)
 		return {
 			"root_doctype": root_doctype,
 			"header_text": root_doctype,
@@ -59,6 +60,7 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 			"gender_column": "",
 			"gender_color_fields": [],
 			"title_field": "",
+			"required_fields": meta_reqd,
 			"tint_by_gender": {},
 			"computed_columns": [],
 			"show_filter": 1,
@@ -92,6 +94,9 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 		if not sms_field:
 			sms_field = auto_sms
 	bold_fields = _parse_csv(doc.bold_fields)
+	required_fields = _parse_csv(getattr(doc, "required_fields", None))
+	meta_reqd = _meta_reqd_root_fieldnames(doc.root_doctype)
+	required_fields = list(dict.fromkeys(required_fields + meta_reqd))
 	gender_color_fields = _parse_csv(doc.gender_color_fields)
 	# Add computed columns with tint_by_row so they tint based on row's gender_column
 	for cc in computed_columns:
@@ -141,6 +146,7 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 		"gender_column": (doc.gender_column or "").strip(),
 		"gender_color_fields": gender_color_fields,
 		"title_field": title_field,
+		"required_fields": required_fields,
 		"tint_by_gender": tint_by_gender,
 		"computed_columns": computed_columns,
 		"show_filter": doc.show_filter,
@@ -215,20 +221,18 @@ def get_panel_data(
 	# V2: always fetch all rows — core_filter is sent to the client and applied in JS
 	total_count = frappe.db.count(root_doctype, filters=filters)
 
-	# Use stored SQL if available; otherwise build it now and save for next time.
-	# When a drill-down filter is active we always rebuild (filter changes the WHERE).
+	# panel_sql is always kept current by PagePanel.after_save.
+	# get_panel_data reads it but never writes it.
+	# When a drill-down filter is active, always rebuild (filter changes the WHERE).
+	parsed_filters: dict[str, Any] = filters if isinstance(filters, dict) else {}
 	stored_sql: str = ""
-	if not filters and frappe.db.exists("Page Panel", root_doctype):
+	if not parsed_filters and frappe.db.exists("Page Panel", root_doctype):
 		stored_sql = (frappe.db.get_value("Page Panel", root_doctype, "panel_sql") or "").strip()
 
-	parsed_filters: dict[str, Any] = filters if isinstance(filters, dict) else {}
 	if stored_sql:
 		rows = frappe.db.sql(stored_sql, as_dict=True)
 	else:
 		sql, params = _build_panel_sql(root_doctype, filters=parsed_filters)
-		if not parsed_filters and frappe.db.exists("Page Panel", root_doctype):
-			frappe.db.set_value("Page Panel", root_doctype, "panel_sql", sql)
-			frappe.db.commit()
 		rows = frappe.db.sql(sql, params, as_dict=True)
 
 	child_doctypes = get_child_doctypes(root_doctype)
@@ -872,16 +876,17 @@ def get_doctype_fields(root_doctype: str) -> dict[str, Any]:
 	we expose (same list as ``fields``), else empty string.
 	"""
 	meta = frappe.get_meta(root_doctype)
-	result: list[dict[str, str]] = [
-		{"fieldname": "name", "label": "ID", "fieldtype": "Data"},
+	result: list[dict[str, Any]] = [
+		{"fieldname": "name", "label": "ID", "fieldtype": "Data", "reqd": 0},
 	]
 	for f in meta.fields:
 		if f.fieldtype in _SKIP_FIELDTYPES or f.fieldname in _SKIP_FIELDNAMES:
 			continue
-		entry: dict[str, str] = {
+		entry: dict[str, Any] = {
 			"fieldname": f.fieldname,
 			"label": f.label or _title_case(f.fieldname),
 			"fieldtype": f.fieldtype,
+			"reqd": cint(f.reqd),
 		}
 		if f.fieldtype == "Link" and f.options:
 			entry["options"] = f.options
@@ -930,6 +935,21 @@ def _get_gender_field_key(root_doctype: str) -> str | None:
 	except Exception:
 		pass
 	return None
+
+
+def _meta_reqd_root_fieldnames(root_doctype: str) -> list[str]:
+	"""Fieldnames on root DocType with Mandatory (reqd) set — same field scope as get_doctype_fields."""
+	try:
+		meta = frappe.get_meta(root_doctype)
+	except Exception:
+		return []
+	out: list[str] = []
+	for f in meta.fields:
+		if f.fieldtype in _SKIP_FIELDTYPES or f.fieldname in _SKIP_FIELDNAMES:
+			continue
+		if cint(f.reqd):
+			out.append(f.fieldname)
+	return out
 
 
 def _parse_csv(value: str | None) -> list[str]:

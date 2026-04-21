@@ -16,6 +16,7 @@
     "gender_column",
     "gender_color_fields",
     "title_field",
+    "required_fields",
     "section_break_widgets",
     "show_filter",
     "show_sheets",
@@ -107,6 +108,13 @@
       "fieldtype": "Small Text",
       "hidden": 1,
       "label": "Title Field"
+    },
+    {
+      "description": "Comma-delimited fields that must be filled before Form Dialog save (Display tab). Same key notation as Bold (root fieldname or link_field.fieldname).",
+      "fieldname": "required_fields",
+      "fieldtype": "Small Text",
+      "hidden": 1,
+      "label": "Required Fields"
     },
     {
       "fieldname": "section_break_widgets",

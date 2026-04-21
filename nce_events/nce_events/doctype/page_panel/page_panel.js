@@ -69,6 +69,7 @@ const MATRIX_FIELDS = [
 	"gender_column",
 	"gender_color_fields",
 	"title_field",
+	"required_fields",
 ];
 const BREAK_FIELDS = [
 	"section_break_widgets",
@@ -205,6 +206,7 @@ function _prune_stale_display_keys(frm, valid) {
 	}
 	const col = keep(frm.doc.column_order);
 	const bold = keep(frm.doc.bold_fields);
+	const req = keep(frm.doc.required_fields);
 	const tint = keep(frm.doc.gender_color_fields);
 	const gcRaw = (frm.doc.gender_column || "").trim();
 	const gc = gcRaw && valid[gcRaw] ? gcRaw : "";
@@ -213,9 +215,11 @@ function _prune_stale_display_keys(frm, valid) {
 
 	const nextCol = col.join(", ");
 	const nextBold = bold.join(", ");
+	const nextReq = req.join(", ");
 	const nextTint = tint.join(", ");
 	if (nextCol !== (frm.doc.column_order || "").trim()) frm.set_value("column_order", nextCol);
 	if (nextBold !== (frm.doc.bold_fields || "").trim()) frm.set_value("bold_fields", nextBold);
+	if (nextReq !== (frm.doc.required_fields || "").trim()) frm.set_value("required_fields", nextReq);
 	if (nextTint !== (frm.doc.gender_color_fields || "").trim()) frm.set_value("gender_color_fields", nextTint);
 	if (gc !== gcRaw) frm.set_value("gender_column", gc);
 	if (tf !== tfRaw) frm.set_value("title_field", tf);
@@ -234,6 +238,7 @@ function _display_has_orphan_keys(frm, valid) {
 	}
 	if (listHasOrphan(frm.doc.column_order)) return true;
 	if (listHasOrphan(frm.doc.bold_fields)) return true;
+	if (listHasOrphan(frm.doc.required_fields)) return true;
 	if (listHasOrphan(frm.doc.gender_color_fields)) return true;
 	const gc = (frm.doc.gender_column || "").trim();
 	if (gc && !valid[gc]) return true;
@@ -252,7 +257,7 @@ function _title_case(name) {
 //
 // column_order stores: "fieldname, fieldname, link_field.fieldname, ..."
 // Root fields: bare fieldname.  Linked fields: link_field.fieldname.
-// bold_fields, gender_column, gender_color_fields use the same dot notation.
+// bold_fields, required_fields, gender_column, gender_color_fields use the same dot notation.
 
 function _render_display(frm) {
 	const $container = $(frm.layout.wrapper).find(".pp-matrix-wrap");
@@ -336,6 +341,11 @@ function _move_root_field_first(fields, fieldname) {
 	return copy;
 }
 
+/** DocType Mandatory (reqd) — drives Required column auto-check on Display matrix. */
+function _isDocfieldMetaReqd(f) {
+	return !!(f && (Number(f.reqd) === 1 || f.reqd === true || f.reqd === "1"));
+}
+
 function _build_display_tabs(frm, $container, root_fields, link_fields, linked_data, rootPack) {
 	// Drop keys for removed root Links / removed linked fields / removed related columns.
 	// Sub-tabs follow current link_fields only; stale "link.field" tokens must leave column_order
@@ -364,6 +374,7 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 	const saved = {
 		column_order: _parse_csv(frm.doc.column_order),
 		bold: _parse_csv(frm.doc.bold_fields),
+		required: _parse_csv(frm.doc.required_fields),
 		gender_col: (frm.doc.gender_column || "").trim(),
 		gender_tint: _parse_csv(frm.doc.gender_color_fields),
 		title_field: (frm.doc.title_field || "").trim(),
@@ -381,6 +392,26 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 	const shown_set = {};
 	saved.column_order.forEach(function (k) {
 		shown_set[k] = true;
+	});
+
+	// Keys where underlying DocType marks the field Mandatory (reqd) — Required column on + persisted in _sync_all
+	const metaReqdKeys = {};
+	function _registerMetaReqd(fields, prefix) {
+		(fields || []).forEach(function (f) {
+			if (f._computed || f._related) {
+				return;
+			}
+			if (_isDocfieldMetaReqd(f)) {
+				metaReqdKeys[prefix + f.fieldname] = true;
+			}
+		});
+	}
+	_registerMetaReqd(root_with_computed, "");
+	link_fields.forEach(function (lf) {
+		const ld = linked_data[lf.fieldname];
+		if (ld && ld.fields) {
+			_registerMetaReqd(ld.fields, lf.fieldname + ".");
+		}
 	});
 
 	// Build sub-tab list: root + each link + optional Order tab
@@ -433,6 +464,7 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		const prefix = st.prefix;
 		matrices[st.id] = _build_field_matrix(fields, prefix, uid, saved, shown_set, {
 			showTitleColumn: st.id === "_root",
+			metaReqdKeys: metaReqdKeys,
 		});
 	});
 
@@ -440,6 +472,7 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 	function _sync_all() {
 		let col_order = [],
 			nb = [],
+			nr = [],
 			nt = [],
 			ngc = "",
 			ntf = "";
@@ -452,6 +485,7 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 				const $r = m.$matrix.find(`input[data-key="${key}"]`);
 				if ($r.filter('[data-role="show"]').prop("checked")) col_order.push(key);
 				if ($r.filter('[data-role="bold"]').prop("checked")) nb.push(key);
+				if ($r.filter('[data-role="required"]').prop("checked")) nr.push(key);
 				if ($r.filter('[data-role="tint"]').prop("checked")) nt.push(key);
 			});
 		});
@@ -488,8 +522,15 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 			col_order = reordered;
 		}
 
+		Object.keys(metaReqdKeys).forEach(function (k) {
+			if (metaReqdKeys[k] && nr.indexOf(k) === -1) {
+				nr.push(k);
+			}
+		});
+
 		frm.set_value("column_order", col_order.join(", "));
 		frm.set_value("bold_fields", nb.join(", "));
+		frm.set_value("required_fields", nr.join(", "));
 		frm.set_value("gender_column", ngc);
 		frm.set_value("gender_color_fields", nt.join(", "));
 		frm.set_value("title_field", ntf);
@@ -614,11 +655,13 @@ tr[draggable="true"]:active .matrix-drag-handle { cursor: grabbing; }
 
 	// Start on root sub-tab
 	_show_sub("_root");
+	_sync_all();
 }
 
 // ── Build a single field-selection matrix ─────────────────────────────────────
 function _build_field_matrix(fields, prefix, uid, saved, shown_set, matrix_opts) {
 	matrix_opts = matrix_opts || {};
+	const metaReqdKeys = matrix_opts.metaReqdKeys || {};
 	const showTitleColumn = !!matrix_opts.showTitleColumn;
 	const th_style =
 		'style="text-align:center;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;"';
@@ -630,6 +673,7 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set, matrix_opts)
 			<th ${th_left}>Label</th>
 			<th ${th_style}>Show</th>
 			<th ${th_style}>Bold</th>
+			<th ${th_style}>Required</th>
 			<th ${th_style}>Gender</th>
 			<th ${th_style}>Tint</th>`;
 	if (showTitleColumn) {
@@ -658,11 +702,18 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set, matrix_opts)
 				title_cell = `<td ${td} style="background:#f0f0f0;"></td>`;
 			}
 		}
+		const metaReqd = !!metaReqdKeys[key];
+		const reqChecked = saved.required.indexOf(key) !== -1 || metaReqd;
+		const reqDisabled = metaReqd ? " disabled" : "";
+		const reqTitle = metaReqd
+			? ' title="' + frappe.utils.escape_html(__("Mandatory on DocType")) + '"'
+			: "";
 		html += `<tr data-key="${esc_key}"${bg}>
 			<td style="padding:4px 8px;color:#8d949a;font-size:11px;">${fn_display}</td>
 			<td style="padding:4px 8px;color:#4c5a67;">${frappe.utils.escape_html(label)}</td>
 			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="show"${shown_set[key] ? " checked" : ""}></td>
 			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="bold"${saved.bold.indexOf(key) !== -1 ? " checked" : ""}></td>
+			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="required"${reqChecked ? " checked" : ""}${reqDisabled}${reqTitle}></td>
 			<td ${td}><input type="radio"    data-key="${esc_key}" name="gender_col_${uid}"${saved.gender_col === key ? " checked" : ""}></td>
 			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="tint"${saved.gender_tint.indexOf(key) !== -1 ? " checked" : ""}></td>
 			${title_cell}
@@ -2124,6 +2175,7 @@ frappe.ui.form.on("Page Panel", {
 		}
 		frm.set_value("column_order", "");
 		frm.set_value("bold_fields", "");
+		frm.set_value("required_fields", "");
 		frm.set_value("gender_column", "");
 		frm.set_value("gender_color_fields", "");
 		frm.set_value("title_field", "");

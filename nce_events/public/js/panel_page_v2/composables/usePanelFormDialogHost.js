@@ -14,6 +14,8 @@ export function usePanelFormDialogHost(openPanels) {
 	const formDialogDefinition = ref(null);
 	const formDialogDoctype = ref(null);
 	const formDialogSourcePanelId = ref(null);
+	/** Root fieldnames from Page Panel `required_fields` (Form Dialog validation). */
+	const formDialogRequiredFields = ref([]);
 
 	// Dual-slot state for dissolve transitions
 	const formDialogSlot = ref(0);
@@ -40,12 +42,15 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogDoctype.value = panel.doctype;
 		formDialogDocName.value = row.name;
 		formDialogSourcePanelId.value = panel.id;
+		const rf = panel.config?.required_fields;
+		formDialogRequiredFields.value = Array.isArray(rf) ? rf.slice() : [];
 		showFormDialog.value = true;
 		return true;
 	}
 
 	function onFormDialogClose() {
 		showFormDialog.value = false;
+		formDialogRequiredFields.value = [];
 		formDialogDocName.value = null;
 		formDialogDefinition.value = null;
 		formDialogDoctype.value = null;
@@ -61,6 +66,7 @@ export function usePanelFormDialogHost(openPanels) {
 	function onFormDialogSaved() {
 		const doctype = formDialogDoctype.value;
 		showFormDialog.value = false;
+		formDialogRequiredFields.value = [];
 		formDialogDocName.value = null;
 		formDialogDefinition.value = null;
 		formDialogDoctype.value = null;
@@ -155,6 +161,7 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogDocName,
 		formDialogDefinition,
 		formDialogDoctype,
+		formDialogRequiredFields,
 		formDialogSourcePanelId,
 		formDialogNavInfo,
 		formDialogNavLabel,

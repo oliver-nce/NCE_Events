@@ -16,6 +16,19 @@ import frappe
 from frappe import _
 from frappe.utils import cint, cstr
 
+from nce_events.api.panel_api import _meta_reqd_root_fieldnames, _parse_csv
+
+
+def _panel_required_value_empty(val: object) -> bool:
+	"""Match client validatePanelRequiredFields / isMandatoryValueEmpty for root fields."""
+	if val is None:
+		return True
+	if val == "":
+		return True
+	if val == 0:
+		return True
+	return False
+
 
 def _assert_doctype_in_wp_tables(doctype: str) -> None:
 	"""Raise if the DocType is not listed in WP Tables (nce_sync)."""
@@ -1160,6 +1173,18 @@ def save_form_dialog_document(doc, writeback_fetches: int | str | None = None) -
 	else:
 		if not frappe.has_permission(doctype, "create"):
 			frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+	required_keys: list[str] = []
+	if frappe.db.exists("Page Panel", doctype):
+		pp = frappe.get_doc("Page Panel", doctype)
+		required_keys = _parse_csv(getattr(pp, "required_fields", None) or "")
+	required_keys = list(dict.fromkeys(required_keys + _meta_reqd_root_fieldnames(doctype)))
+	for fn in required_keys:
+		if "." in fn:
+			continue
+		val = doc.get(fn)
+		if _panel_required_value_empty(val):
+			frappe.throw(_("Missing value for required field: {0}").format(fn))
 
 	if cint(writeback_fetches):
 		meta = frappe.get_meta(doctype)

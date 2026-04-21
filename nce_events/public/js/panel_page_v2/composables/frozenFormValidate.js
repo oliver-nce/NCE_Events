@@ -1,5 +1,10 @@
 import { evaluateExpression, isLayoutField } from "../utils/frappeFieldExpr.js";
 
+/** Same emptiness rule as mandatory DocField validation in validateFrozenForm. */
+export function isMandatoryValueEmpty(value) {
+	return value === null || value === undefined || value === "" || value === 0;
+}
+
 /** Frappe Virtual DocField — computed, not stored; always read-only on Desk. */
 export function isVirtualDocField(field) {
 	if (!field) return false;
@@ -28,7 +33,7 @@ export function validateFrozenForm(allFields, formData) {
 
 		if (isMandatory) {
 			const value = formData[field.fieldname];
-			if (value === null || value === undefined || value === "" || value === 0) {
+			if (isMandatoryValueEmpty(value)) {
 				errors.push({
 					fieldname: field.fieldname,
 					label: field.label,
@@ -38,6 +43,51 @@ export function validateFrozenForm(allFields, formData) {
 		}
 	}
 
+	return errors;
+}
+
+/**
+ * Page Panel Display "Required" keys (root fieldnames only; dotted link keys skipped).
+ * @param {Array} allFields — DocField-like dicts
+ * @param {object} formData
+ * @param {string[]|null|undefined} requiredFieldnames
+ */
+export function validatePanelRequiredFields(allFields, formData, requiredFieldnames) {
+	const errors = [];
+	if (!Array.isArray(requiredFieldnames) || !requiredFieldnames.length) {
+		return errors;
+	}
+	const fieldMap = new Map((allFields || []).map((f) => [f.fieldname, f]));
+	for (const raw of requiredFieldnames) {
+		const key = String(raw || "").trim();
+		if (!key || key.includes(".")) {
+			continue;
+		}
+		const field = fieldMap.get(key);
+		if (!field) {
+			continue;
+		}
+		if (isLayoutField(field.fieldtype)) {
+			continue;
+		}
+		if (field.hidden) {
+			continue;
+		}
+		if (isVirtualDocField(field)) {
+			continue;
+		}
+		if (field.depends_on && !evaluateExpression(field.depends_on, formData)) {
+			continue;
+		}
+		const value = formData[field.fieldname];
+		if (isMandatoryValueEmpty(value)) {
+			errors.push({
+				fieldname: field.fieldname,
+				label: field.label,
+				message: `${field.label} is required`,
+			});
+		}
+	}
 	return errors;
 }
 

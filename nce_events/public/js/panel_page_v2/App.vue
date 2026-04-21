@@ -128,6 +128,7 @@
 			:definition-name="formDialogDefinition"
 			:doctype="formDialogDoctype"
 			:doc-name="formDialogDocName"
+			:required-fields="formDialogRequiredFields"
 			:row-nav-enabled="formDialogNavInfo.total > 1"
 			:can-navigate-prev="formDialogNavInfo.canPrev"
 			:can-navigate-next="formDialogNavInfo.canNext"
@@ -148,6 +149,7 @@
 			:definition-name="formDialogPendingDefinition"
 			:doctype="formDialogPendingDoctype"
 			:doc-name="formDialogPendingDocName"
+			:required-fields="formDialogRequiredFields"
 			:row-nav-enabled="false"
 			:can-navigate-prev="false"
 			:can-navigate-next="false"
@@ -166,6 +168,7 @@
 			:definition-name="formDialogDefinition"
 			:doctype="formDialogDoctype"
 			:doc-name="formDialogDocName"
+			:required-fields="formDialogRequiredFields"
 			:row-nav-enabled="formDialogNavInfo.total > 1"
 			:can-navigate-prev="formDialogNavInfo.canPrev"
 			:can-navigate-next="formDialogNavInfo.canNext"
@@ -186,6 +189,7 @@
 			:definition-name="formDialogPendingDefinition"
 			:doctype="formDialogPendingDoctype"
 			:doc-name="formDialogPendingDocName"
+			:required-fields="formDialogRequiredFields"
 			:row-nav-enabled="false"
 			:can-navigate-prev="false"
 			:can-navigate-next="false"
@@ -236,6 +240,7 @@ const {
 	formDialogDocName,
 	formDialogDefinition,
 	formDialogDoctype,
+	formDialogRequiredFields,
 	formDialogNavInfo,
 	formDialogNavLabel,
 	onFormDialogNavPrev,

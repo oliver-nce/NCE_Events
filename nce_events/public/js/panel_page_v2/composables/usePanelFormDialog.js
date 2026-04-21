@@ -3,6 +3,7 @@ import { snapshotForCompare } from "../utils/formDialogSnapshot.js";
 import { createHandleFetchFrom } from "./formDialogFetchFrom.js";
 import {
 	validateFrozenForm,
+	validatePanelRequiredFields,
 	isFieldVisible as isFieldVisibleRule,
 	isFieldMandatory as isFieldMandatoryRule,
 	isFieldReadOnly as isFieldReadOnlyRule,
@@ -16,8 +17,10 @@ import { createFrozenFormLoad } from "./useFrozenFormLoad.js";
  * @param {import('vue').Ref<string>|string} options.definitionName
  * @param {import('vue').Ref<string>|string} options.doctype
  * @param {import('vue').Ref<string|null>|string|null} options.docName
+ * @param {import('vue').Ref<string[]>|import('vue').ComputedRef<string[]>|undefined} options.requiredFields — Page Panel root fieldnames
  */
-export function usePanelFormDialog({ definitionName, doctype, docName }) {
+export function usePanelFormDialog({ definitionName, doctype, docName, requiredFields }) {
+	const panelRequiredFields = requiredFields;
 	const definition = ref(null);
 	const tabs = ref([]);
 	const allFields = ref([]);
@@ -68,7 +71,21 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 	});
 
 	function validate() {
-		return validateFrozenForm(allFields.value, formData);
+		const base = validateFrozenForm(allFields.value, formData);
+		const extra = validatePanelRequiredFields(
+			allFields.value,
+			formData,
+			panelRequiredFields ? unref(panelRequiredFields) : [],
+		);
+		const seen = new Set(base.map((e) => e.fieldname));
+		const out = base.slice();
+		for (const e of extra) {
+			if (!seen.has(e.fieldname)) {
+				seen.add(e.fieldname);
+				out.push(e);
+			}
+		}
+		return out;
 	}
 
 	async function save() {
@@ -95,7 +112,15 @@ export function usePanelFormDialog({ definitionName, doctype, docName }) {
 	}
 
 	function isFieldMandatory(field) {
-		return isFieldMandatoryRule(field, formData);
+		if (isFieldMandatoryRule(field, formData)) {
+			return true;
+		}
+		const keys = panelRequiredFields ? unref(panelRequiredFields) : [];
+		if (!Array.isArray(keys) || !keys.length) {
+			return false;
+		}
+		const fn = field.fieldname;
+		return keys.some((k) => String(k || "").trim() === fn && !String(k).includes("."));
 	}
 
 	function isFieldReadOnly(field) {

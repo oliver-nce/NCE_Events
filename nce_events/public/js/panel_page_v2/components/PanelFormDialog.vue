@@ -93,6 +93,8 @@ const props = defineProps({
 	canNavigateNext: { type: Boolean, default: false },
 	rowNavLabel: { type: String, default: "" },
 	dissolveOpacity: { type: Number, default: 1 },
+	/** Page Panel Display — root fieldnames required before save */
+	requiredFields: { type: Array, default: () => [] },
 });
 
 const emit = defineEmits(["close", "saved", "nav-prev", "nav-next"]);
@@ -105,6 +107,7 @@ const form = usePanelFormDialog({
 	definitionName: toRef(props, "definitionName"),
 	doctype: toRef(props, "doctype"),
 	docName: toRef(props, "docName"),
+	requiredFields: toRef(props, "requiredFields"),
 });
 
 // Provide the raw ref so Date/Link controls can read .value synchronously
