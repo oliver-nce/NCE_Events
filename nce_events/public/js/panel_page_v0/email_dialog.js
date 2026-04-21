@@ -50,7 +50,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 					<label class="send-field-label">Subject</label>
 					<input class="send-field send-subject-input" type="text">
 					<div class="send-message-section">
-						<label class="send-field-label">Message</label>
+						<label class="send-field-label send-field-label-required">Message</label>
 						<div class="send-message-editor-wrap"></div>
 					</div>
 				</div>
@@ -94,9 +94,12 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 				</div>
 				<div class="send-preview-subject"></div>
 				<div class="send-preview-body"></div>
-				<div class="send-test-row">
-					<input class="send-field send-test-input" type="text" placeholder="Test email address...">
-					<button class="btn btn-xs btn-default send-test-btn"><i class="fa fa-paper-plane"></i> Send Test</button>
+				<div class="send-test-row-stack">
+					<label class="send-field-label send-field-label-required">Test email address</label>
+					<div class="send-test-row-inner">
+						<input class="send-field send-test-input" type="text" placeholder="you@example.com">
+						<button class="btn btn-xs btn-default send-test-btn"><i class="fa fa-paper-plane"></i> Send Test</button>
+					</div>
 				</div>
 				<div class="send-panel-resize-handle"></div>
 			</div>

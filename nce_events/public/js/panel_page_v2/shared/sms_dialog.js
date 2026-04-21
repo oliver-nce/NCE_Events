@@ -44,7 +44,7 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 						<input class="send-field send-template-input" type="text" placeholder="Pick template to load into message below...">
 					</div>
 					<div class="send-message-section">
-						<label class="send-field-label">Message</label>
+						<label class="send-field-label send-field-label-required">Message</label>
 						<textarea class="send-field send-message-input" placeholder="Jinja2 tags supported. Sent to all ${count} rows."></textarea>
 					</div>
 				</div>
@@ -64,9 +64,12 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 						<button class="send-preview-close" title="Close preview">&times;</button>
 					</div>
 					<div class="send-preview-body"></div>
-					<div class="send-test-row">
-						<input class="send-field send-test-input" type="text" placeholder="Test phone number...">
-						<button class="btn btn-xs btn-default send-test-btn"><i class="fa fa-paper-plane"></i> Send Test</button>
+					<div class="send-test-row-stack">
+						<label class="send-field-label send-field-label-required">Test phone number</label>
+						<div class="send-test-row-inner">
+							<input class="send-field send-test-input" type="text" placeholder="+1…">
+							<button class="btn btn-xs btn-default send-test-btn"><i class="fa fa-paper-plane"></i> Send Test</button>
+						</div>
 					</div>
 				</div>
 			</div>

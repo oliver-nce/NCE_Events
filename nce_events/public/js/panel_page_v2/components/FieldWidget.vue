@@ -164,6 +164,7 @@ function onCheckChange(e) {
 .field-label.required::after {
 	content: " *";
 	color: red;
+	font-weight: 700;
 }
 .field-input {
 	flex: 1;

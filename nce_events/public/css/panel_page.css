@@ -744,6 +744,28 @@ body.panel-float-dragging * {
 	margin-top: 0;
 }
 
+/* Required field marker (compose + preview test rows) */
+.send-field-label.send-field-label-required::after {
+	content: " *";
+	color: red;
+	font-weight: 700;
+}
+
+.send-test-row-stack {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	padding: 8px 12px;
+	border-top: 1px solid var(--border-color);
+	background: var(--bg-surface);
+	flex-shrink: 0;
+}
+.send-test-row-inner {
+	display: flex;
+	gap: 6px;
+	align-items: center;
+}
+
 .send-field {
 	width: 100%;
 	font-size: var(--font-size-base);

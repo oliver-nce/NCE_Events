@@ -66,7 +66,14 @@
 												:key="col.fieldname"
 												class="ppv2-fd-related-th"
 											>
-												{{ col.label || col.fieldname }}
+												{{ col.label || col.fieldname
+												}}<span
+													v-if="relatedColumnMandatory(col)"
+													class="ppv2-fd-reqd"
+													aria-hidden="true"
+												>
+													*
+												</span>
 											</th>
 										</tr>
 									</thead>
@@ -196,9 +203,16 @@
 												:key="field.fieldname"
 												class="ppv2-fd-related-field-row"
 											>
-												<span class="ppv2-fd-related-fn">{{
-													field.label || field.fieldname
-												}}</span>
+												<span class="ppv2-fd-related-fn">
+													{{ field.label || field.fieldname
+													}}<span
+														v-if="relatedColumnMandatory(field)"
+														class="ppv2-fd-reqd"
+														aria-hidden="true"
+													>
+														*
+													</span>
+												</span>
 												<span class="ppv2-fd-related-ft">{{ field.fieldtype }}</span>
 											</div>
 										</div>
@@ -290,6 +304,14 @@ const props = defineProps({
 const emit = defineEmits(["field-change", "link-change", "related-dirty"]);
 
 const activeTab = defineModel("activeTab", { type: Number, required: true });
+
+/** Related table column: show red asterisk when child DocType marks field mandatory (`reqd`). */
+function relatedColumnMandatory(col) {
+	if (!col || col.reqd == null) {
+		return false;
+	}
+	return Number(col.reqd) === 1 || col.reqd === true || col.reqd === "1";
+}
 
 /** @type {Record<number, { loading?: boolean, error?: string|null, rows?: object[], columns?: object[], fetchKey?: string }>} */
 const relatedState = reactive({});
@@ -994,6 +1016,10 @@ onUnmounted(() => {
 	overflow-wrap: anywhere;
 	word-break: break-word;
 }
+.ppv2-fd-related-fn .ppv2-fd-reqd {
+	color: red;
+	font-weight: 700;
+}
 .ppv2-fd-related-ft {
 	color: var(--text-muted);
 	min-width: 0;
@@ -1045,6 +1071,10 @@ onUnmounted(() => {
 	position: sticky;
 	top: 0;
 	z-index: 1;
+}
+.ppv2-fd-related-th .ppv2-fd-reqd {
+	color: red;
+	font-weight: 700;
 }
 .ppv2-fd-related-td {
 	padding: 4px 8px;
