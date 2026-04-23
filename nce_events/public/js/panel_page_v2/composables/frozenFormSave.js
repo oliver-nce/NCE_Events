@@ -1,6 +1,16 @@
 import { unref } from "vue";
 import { frappeCall } from "../utils/frappeCall.js";
 
+export function extractServerMessage(err) {
+	try {
+		const msgs = JSON.parse(err?._server_messages || "[]");
+		if (msgs.length) {
+			return msgs.map((m) => (typeof m === "object" ? m.message : m)).join(" ");
+		}
+	} catch (_) {}
+	return err?.message || "Failed to save";
+}
+
 /**
  * Save via save_form_dialog_document; updates formData + originalData on success.
  *
@@ -41,8 +51,7 @@ export async function saveFrozenFormDocument({
 		originalData.value = JSON.parse(JSON.stringify(formData));
 		return result;
 	} catch (err) {
-		const msg = err?.message || err?._server_messages || "Failed to save";
-		validationError.value = msg;
+		validationError.value = extractServerMessage(err);
 		throw err;
 	} finally {
 		saving.value = false;

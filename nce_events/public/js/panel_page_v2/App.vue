@@ -129,6 +129,7 @@
 			:doctype="formDialogDoctype"
 			:doc-name="formDialogDocName"
 			:required-fields="formDialogRequiredFields"
+			:reload-panel-after-publish="reloadPanelForFormDialogDoctype"
 			:row-nav-enabled="formDialogNavInfo.total > 1"
 			:can-navigate-prev="formDialogNavInfo.canPrev"
 			:can-navigate-next="formDialogNavInfo.canNext"
@@ -150,6 +151,7 @@
 			:doctype="formDialogPendingDoctype"
 			:doc-name="formDialogPendingDocName"
 			:required-fields="formDialogRequiredFields"
+			:reload-panel-after-publish="reloadPanelForFormDialogDoctype"
 			:row-nav-enabled="false"
 			:can-navigate-prev="false"
 			:can-navigate-next="false"
@@ -169,6 +171,7 @@
 			:doctype="formDialogDoctype"
 			:doc-name="formDialogDocName"
 			:required-fields="formDialogRequiredFields"
+			:reload-panel-after-publish="reloadPanelForFormDialogDoctype"
 			:row-nav-enabled="formDialogNavInfo.total > 1"
 			:can-navigate-prev="formDialogNavInfo.canPrev"
 			:can-navigate-next="formDialogNavInfo.canNext"
@@ -190,6 +193,7 @@
 			:doctype="formDialogPendingDoctype"
 			:doc-name="formDialogPendingDocName"
 			:required-fields="formDialogRequiredFields"
+			:reload-panel-after-publish="reloadPanelForFormDialogDoctype"
 			:row-nav-enabled="false"
 			:can-navigate-prev="false"
 			:can-navigate-next="false"
@@ -248,6 +252,7 @@ const {
 	openFormDialogFromPanelRow,
 	onFormDialogClose,
 	onFormDialogSaved,
+	reloadPanelForFormDialogDoctype,
 	// Dual-slot dissolve
 	formDialogSlot,
 	formDialogPendingDocName,

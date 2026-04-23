@@ -30,3 +30,10 @@ add_to_apps_screen = [
 		"route": "/app/page-view",
 	}
 ]
+
+# After ``Events`` is published to WooCommerce (``nce_events.api.events_publish.publish_events_to_website``),
+# other apps (e.g. nce_sync) may register in their hooks.py::
+#
+#   after_events_publish_to_woocommerce = ["my.module.handler"]
+#
+# Each callable is invoked as ``frappe.call(fn, doctype="Events", name=<new name>)``.

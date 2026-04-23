@@ -89,14 +89,3 @@ def execute_product_exchange(enrollment_name: str, new_product_id: int | str) ->
         frappe.throw(_("Exchange failed: {0}").format(str(msg)))
 
     return data
-```
-
-```
-{
- "doctype": "Enrollments",
- "name": "Enrollments",
- "module": "NCE Events",
- "custom": 1,
- "actions": [],
- "fields": []
-}

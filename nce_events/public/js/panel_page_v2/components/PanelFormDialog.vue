@@ -78,6 +78,8 @@ import PanelFormDialogHeader from "./PanelFormDialogHeader.vue";
 import PanelFormDialogBody from "./PanelFormDialogBody.vue";
 import PanelFormDialogFooter from "./PanelFormDialogFooter.vue";
 import { usePanelFormDialog } from "../composables/usePanelFormDialog.js";
+import { extractServerMessage } from "../composables/frozenFormSave.js";
+import { frappeCall } from "../utils/frappeCall.js";
 import {
 	confirmDiscardIfDirty,
 	createRowNavKeydownHandler,
@@ -95,6 +97,8 @@ const props = defineProps({
 	dissolveOpacity: { type: Number, default: 1 },
 	/** Page Panel Display — root fieldnames required before save */
 	requiredFields: { type: Array, default: () => [] },
+	/** Refetch open panel for this doctype after WC publish (Form Dialog Button script). */
+	reloadPanelAfterPublish: { type: Function, default: null },
 });
 
 const emit = defineEmits(["close", "saved", "nav-prev", "nav-next"]);
@@ -234,7 +238,7 @@ async function onSubmit() {
 		try {
 			await fdBodyRef.value?.saveAllRelatedRows?.();
 		} catch (relErr) {
-			const m = relErr?.message || String(relErr) || "Failed to save related rows";
+			const m = extractServerMessage(relErr);
 			if (typeof frappe !== "undefined" && frappe.msgprint) {
 				frappe.msgprint({
 					title: "Related rows",
@@ -251,7 +255,44 @@ async function onSubmit() {
 	}
 }
 
-function onPlaceholderButton(btn) {
+async function onPlaceholderButton(btn) {
+	const script = String(btn?.button_script || "").trim();
+	if (props.doctype === "Events" && script === "publish_events_to_website") {
+		form.validationError.value = null;
+		const errors = form.validate();
+		if (errors.length) {
+			form.validationError.value = errors.map((e) => e.message).join(", ");
+			if (typeof frappe !== "undefined" && frappe.msgprint) {
+				frappe.msgprint({
+					title: "Validation",
+					message: form.validationError.value,
+					indicator: "red",
+				});
+			}
+			return;
+		}
+		try {
+			const doc = { doctype: props.doctype, ...form.formData };
+			const r = await frappeCall("nce_events.api.events_publish.publish_events_to_website", { doc });
+			if (typeof props.reloadPanelAfterPublish === "function") {
+				await props.reloadPanelAfterPublish();
+			}
+			if (typeof frappe !== "undefined" && frappe.msgprint) {
+				frappe.msgprint({
+					title: "Published",
+					message: `Event ${r?.name || ""} created on the site.`,
+					indicator: "green",
+				});
+			}
+		} catch (e) {
+			const msg = e?.message || String(e) || "Publish failed";
+			form.validationError.value = msg;
+			if (typeof frappe !== "undefined" && frappe.msgprint) {
+				frappe.msgprint({ title: "Publish", message: msg, indicator: "red" });
+			}
+		}
+		return;
+	}
 	if (typeof frappe !== "undefined" && frappe.show_alert) {
 		frappe.show_alert({ message: `Button "${btn.label}" — scripts coming soon`, indicator: "blue" });
 	}

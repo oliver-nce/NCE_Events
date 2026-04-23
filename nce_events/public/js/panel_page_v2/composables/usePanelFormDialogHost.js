@@ -156,6 +156,16 @@ export function usePanelFormDialogHost(openPanels) {
 		setTimeout(commitPendingNav, 300);
 	}
 
+	/** Reload the open panel whose doctype matches the current form dialog (e.g. after WC publish). */
+	function reloadPanelForFormDialogDoctype() {
+		const doctype = formDialogDoctype.value;
+		if (!doctype) return;
+		const panel = openPanels.find((x) => x.doctype === doctype);
+		if (panel && panel._reload) {
+			panel._reload();
+		}
+	}
+
 	return {
 		showFormDialog,
 		formDialogDocName,
@@ -170,6 +180,7 @@ export function usePanelFormDialogHost(openPanels) {
 		openFormDialogFromPanelRow,
 		onFormDialogClose,
 		onFormDialogSaved,
+		reloadPanelForFormDialogDoctype,
 		// Dual-slot
 		formDialogSlot,
 		formDialogPendingDocName,
