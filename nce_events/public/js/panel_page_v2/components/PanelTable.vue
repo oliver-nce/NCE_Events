@@ -47,7 +47,7 @@
 						<th
 							v-for="(col, ci) in dataCols"
 							:key="col.fieldname"
-							:style="{ width: colWidths[ci] ? colWidths[ci] + 'px' : 'auto', minWidth: '40px', position: 'relative' }"
+							:style="{ width: colWidths[ci] ? colWidths[ci] + 'px' : 'auto', minWidth: '40px' }"
 						>
 							{{ col.label }}
 							<div class="ppv2-col-resize" @mousedown.prevent="startColResize($event, ci)" />
@@ -500,7 +500,9 @@ function startColResize(e, ci) {
 
 .ppv2-table {
 	width: 100%;
-	border-collapse: collapse;
+	/* separate + spacing 0: sticky thead works reliably (collapse breaks sticky in WebKit/Chromium). */
+	border-collapse: separate;
+	border-spacing: 0;
 	font-size: 12px;
 	font-family: Arial, sans-serif;
 	table-layout: fixed;
@@ -509,6 +511,7 @@ function startColResize(e, ci) {
 .ppv2-table th {
 	position: sticky;
 	top: 0;
+	z-index: 2;
 	background: var(--column-header-bg);
 	color: var(--column-header-text);
 	font-weight: var(--font-weight-bold);
