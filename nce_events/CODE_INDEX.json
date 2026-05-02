@@ -67,44 +67,145 @@
         "Exchange logic"
       ]
     },
-    "nce_events/api/form_dialog_api.py": {
-      "exports": [
-        "capture_form_dialog_from_desk",
-        "get_form_dialog_definition",
-        "get_form_dialog_related_rows",
-        "get_related_portal_field_editor",
-        "list_form_dialogs_for_doctype",
-        "rebuild_form_dialog",
-        "save_form_dialog_document",
-        "save_form_dialog_related_rows",
-        "save_related_portal_field_config"
-      ],
-      "whitelist_endpoints": [
-        "capture_form_dialog_from_desk",
-        "get_form_dialog_definition",
-        "get_form_dialog_related_rows",
-        "get_related_portal_field_editor",
-        "list_form_dialogs_for_doctype",
-        "rebuild_form_dialog",
-        "save_form_dialog_document",
-        "save_form_dialog_related_rows",
-        "save_related_portal_field_config"
-      ],
-      "purpose": "CRUD and schema-capture API for Form Dialog DocType. Validates DocType is in WP Tables. Capture freezes live Desk meta. save_form_dialog_document updates linked docs for fetch_from then saves (used when writeback_on_submit). get_form_dialog_related_rows returns related-tab rows (portal columns, hop_chain-aware) for V2.",
-      "private_helpers": [
-        "_assert_doctype_in_wp_tables",
-        "_require_system_manager"
-      ],
+    "nce_events/api/form_dialog/__init__.py": {
+      "purpose": "Form Dialog API package — Phase 4 split of the original 1233-LOC form_dialog_api.py. Re-exports submodule public + underscore-prefixed names so the legacy shim has a single source of truth.",
       "depends_on": [
         "nce_events/nce_events/doctype/form_dialog/"
       ],
       "sections": [
-        "WP Tables validation",
-        "Capture / rebuild frozen schema from frappe.get_meta",
-        "Get frozen definition for V2 renderer",
-        "Related-tab row fetch (whitelist read)",
-        "List dialogs filtered by target_doctype",
-        "Save with server-side fetch_from writeback to linked records"
+        "Helpers re-export (_helpers.py)",
+        "Capture endpoints re-export (capture.py)",
+        "Portal-field editor re-export (portal_fields.py)",
+        "Related-rows endpoints re-export (related_rows.py)",
+        "Save endpoint re-export (save.py)",
+        "__all__ for clarity"
+      ]
+    },
+    "nce_events/api/form_dialog/_helpers.py": {
+      "purpose": "Internal helpers shared by the form_dialog package: WP Tables validation, System Manager guard, hop-chain normalization/walk, related-row filter/column derivation, fetch_from enrichment, related-doctypes argument parsing, panel required-value emptiness check, get_list field sanitization.",
+      "private_helpers": [
+        "_assert_doctype_in_wp_tables",
+        "_require_system_manager",
+        "_normalize_hop_chain_value",
+        "_hop_walk_final_identifiers",
+        "_filters_for_related_rows",
+        "_related_list_columns_from_child_row",
+        "_enrich_fetch_from_fields",
+        "_parse_related_doctypes_argument",
+        "_panel_required_value_empty",
+        "_sanitize_get_list_fields",
+        "_related_doctype_child_rows",
+        "_related_row_signature",
+        "_sync_related_doctypes",
+        "_build_related_child_row_dict"
+      ],
+      "depends_on": [],
+      "sections": [
+        "WP Tables validation + role guard",
+        "Hop-chain normalization and walk",
+        "Related-row filters and column derivation",
+        "fetch_from enrichment",
+        "Related-doctypes argument parsing and child-row sync"
+      ]
+    },
+    "nce_events/api/form_dialog/capture.py": {
+      "exports": [
+        "capture_form_dialog_from_desk",
+        "get_form_dialog_definition",
+        "list_form_dialogs_for_doctype",
+        "rebuild_form_dialog"
+      ],
+      "whitelist_endpoints": [
+        "capture_form_dialog_from_desk",
+        "get_form_dialog_definition",
+        "list_form_dialogs_for_doctype",
+        "rebuild_form_dialog"
+      ],
+      "purpose": "Form Dialog schema-capture endpoints: capture/rebuild a Form Dialog by freezing the live DocType meta from Desk, get_form_dialog_definition for the V2 panel renderer, and list_form_dialogs_for_doctype for the Desk Page Panel Dialogs tab.",
+      "depends_on": [
+        "nce_events/api/form_dialog/_helpers.py",
+        "nce_events/api/form_dialog/related_rows.py"
+      ],
+      "sections": [
+        "capture_form_dialog_from_desk (System Manager)",
+        "rebuild_form_dialog (System Manager)",
+        "get_form_dialog_definition (logged-in users; active only)",
+        "list_form_dialogs_for_doctype (System Manager)"
+      ]
+    },
+    "nce_events/api/form_dialog/portal_fields.py": {
+      "exports": [
+        "get_related_portal_field_editor",
+        "save_related_portal_field_config"
+      ],
+      "whitelist_endpoints": [
+        "get_related_portal_field_editor",
+        "save_related_portal_field_config"
+      ],
+      "purpose": "Portal-field editor endpoints for Form Dialog Related DocType rows: build the editor row list from frozen child meta and persist user-curated portal_field_config (show/editable/sort_rank/sort_dir).",
+      "private_helpers": [
+        "_portal_meta_field_eligible_for_editor",
+        "_parse_portal_field_config_entries",
+        "_build_portal_editor_rows",
+        "_normalize_portal_field_config_for_save"
+      ],
+      "depends_on": [
+        "nce_events/api/form_dialog/_helpers.py"
+      ],
+      "sections": [
+        "Skip fieldtypes set",
+        "get_related_portal_field_editor (System Manager)",
+        "save_related_portal_field_config (System Manager)"
+      ]
+    },
+    "nce_events/api/form_dialog/related_rows.py": {
+      "exports": [
+        "get_form_dialog_related_rows",
+        "save_form_dialog_related_rows"
+      ],
+      "whitelist_endpoints": [
+        "get_form_dialog_related_rows",
+        "save_form_dialog_related_rows"
+      ],
+      "purpose": "Related-rows endpoints for the panel-V2 Form Dialog: fetch and save child-DocType rows shown in related tabs, gated by the portal_field_config persisted on the Form Dialog Related DocType row.",
+      "private_helpers": [
+        "_related_rows_for_vue_api",
+        "_editable_related_fieldnames_for_save",
+        "_allowed_child_names_for_related_tab"
+      ],
+      "depends_on": [
+        "nce_events/api/form_dialog/_helpers.py"
+      ],
+      "sections": [
+        "Skip fieldtypes set",
+        "_related_rows_for_vue_api child-row shape",
+        "get_form_dialog_related_rows (logged-in users)",
+        "save_form_dialog_related_rows (logged-in users)"
+      ]
+    },
+    "nce_events/api/form_dialog/save.py": {
+      "exports": [
+        "save_form_dialog_document"
+      ],
+      "whitelist_endpoints": [
+        "save_form_dialog_document"
+      ],
+      "purpose": "Server-side Form Dialog document save (save_form_dialog_document) with optional fetch_from writeback. Honours per-DocType + Page Panel required_fields, then optionally pushes fetch_from values back into linked source records before saving.",
+      "depends_on": [
+        "nce_events/api/form_dialog/_helpers.py",
+        "nce_events/api/panel_api.py"
+      ],
+      "sections": [
+        "save_form_dialog_document (logged-in users; per-DocType perms)"
+      ]
+    },
+    "nce_events/api/form_dialog_api.py": {
+      "purpose": "Deprecated re-export shim: re-exports every public + private name from nce_events.api.form_dialog so existing frappe.call({method: 'nce_events.api.form_dialog_api.<fn>'}) sites and unittest.mock.patch paths keep resolving. New code imports from nce_events.api.form_dialog directly.",
+      "depends_on": [
+        "nce_events/api/form_dialog/"
+      ],
+      "sections": [
+        "Re-export of form_dialog package public + underscore-prefixed names"
       ]
     },
     "nce_events/api/hierarchy_explorer.py": {

@@ -19,7 +19,7 @@ class TestAssertDoctypeInWPTables(FrappeTestCase):
 		"""Should raise ValidationError if DocType is not in WP Tables."""
 		from nce_events.api.form_dialog_api import _assert_doctype_in_wp_tables
 
-		with patch("nce_events.api.form_dialog_api.frappe.get_all", return_value=[]):
+		with patch("nce_events.api.form_dialog._helpers.frappe.get_all", return_value=[]):
 			with self.assertRaises(frappe.ValidationError):
 				_assert_doctype_in_wp_tables("Nonexistent DocType")
 
@@ -28,7 +28,7 @@ class TestAssertDoctypeInWPTables(FrappeTestCase):
 		from nce_events.api.form_dialog_api import _assert_doctype_in_wp_tables
 
 		with patch(
-			"nce_events.api.form_dialog_api.frappe.get_all",
+			"nce_events.api.form_dialog._helpers.frappe.get_all",
 			return_value=[{"name": "WP-001"}],
 		):
 			# Should not raise
@@ -38,8 +38,8 @@ class TestAssertDoctypeInWPTables(FrappeTestCase):
 class TestCaptureFormDialog(FrappeTestCase):
 	"""Test that capture stores expected keys in frozen_meta_json."""
 
-	@patch("nce_events.api.form_dialog_api._require_system_manager")
-	@patch("nce_events.api.form_dialog_api._assert_doctype_in_wp_tables")
+	@patch("nce_events.api.form_dialog.capture._require_system_manager")
+	@patch("nce_events.api.form_dialog.capture._assert_doctype_in_wp_tables")
 	def test_capture_stores_fields_key(self, mock_validate, mock_role):
 		"""frozen_meta_json must contain a top-level 'fields' key that is a list."""
 		from nce_events.api.form_dialog_api import capture_form_dialog_from_desk
@@ -54,7 +54,7 @@ class TestCaptureFormDialog(FrappeTestCase):
 		mock_meta = MagicMock()
 		mock_meta.fields = [mock_field]
 
-		with patch("nce_events.api.form_dialog_api.frappe.get_meta", return_value=mock_meta):
+		with patch("nce_events.api.form_dialog.capture.frappe.get_meta", return_value=mock_meta):
 			name = capture_form_dialog_from_desk(doctype="Test DocType", title="Test Capture")
 
 		# Verify the document was created with correct JSON shape
@@ -110,7 +110,7 @@ class TestGetFormDialogDefinition(FrappeTestCase):
 class TestListFormDialogsForDoctype(FrappeTestCase):
 	"""list_form_dialogs_for_doctype attaches related_doctypes (desk summary, no info)."""
 
-	@patch("nce_events.api.form_dialog_api._require_system_manager")
+	@patch("nce_events.api.form_dialog.capture._require_system_manager")
 	def test_list_includes_related_doctypes(self, mock_sm):
 		from nce_events.api.form_dialog_api import list_form_dialogs_for_doctype
 
@@ -149,7 +149,7 @@ class TestListFormDialogsForDoctype(FrappeTestCase):
 class TestRelatedPortalFieldEditor(FrappeTestCase):
 	"""get_related_portal_field_editor + save_related_portal_field_config."""
 
-	@patch("nce_events.api.form_dialog_api._require_system_manager")
+	@patch("nce_events.api.form_dialog.portal_fields._require_system_manager")
 	def test_save_persists_portal_field_config(self, mock_sm):
 		from nce_events.api.form_dialog_api import (
 			get_related_portal_field_editor,
@@ -234,9 +234,7 @@ class TestParseRelatedDoctypes(unittest.TestCase):
 	def test_json_string_roundtrip(self):
 		from nce_events.api.form_dialog_api import _parse_related_doctypes_argument
 
-		payload = json.dumps(
-			[{"doctype": "People", "link_field": "family", "label": "People"}]
-		)
+		payload = json.dumps([{"doctype": "People", "link_field": "family", "label": "People"}])
 		rows = _parse_related_doctypes_argument(payload)
 		self.assertEqual(len(rows), 1)
 		self.assertEqual(rows[0]["doctype"], "People")
@@ -284,7 +282,7 @@ class TestFiltersForRelatedRows(unittest.TestCase):
 		self.assertFalse(force_empty)
 		self.assertEqual(filters, {"event": "ROOT"})
 
-	@patch("nce_events.api.form_dialog_api._hop_walk_final_identifiers")
+	@patch("nce_events.api.form_dialog._helpers._hop_walk_final_identifiers")
 	def test_multihop_no_bridge_rows_force_empty(self, mock_hop):
 		from nce_events.api.form_dialog_api import _filters_for_related_rows
 
@@ -294,7 +292,7 @@ class TestFiltersForRelatedRows(unittest.TestCase):
 		self.assertTrue(force_empty)
 		self.assertEqual(filters, {})
 
-	@patch("nce_events.api.form_dialog_api._hop_walk_final_identifiers")
+	@patch("nce_events.api.form_dialog._helpers._hop_walk_final_identifiers")
 	def test_multihop_in_filter(self, mock_hop):
 		from nce_events.api.form_dialog_api import _filters_for_related_rows
 
@@ -304,7 +302,7 @@ class TestFiltersForRelatedRows(unittest.TestCase):
 		self.assertFalse(force_empty)
 		self.assertEqual(filters, {"name": ["in", ["A", "B"]]})
 
-	@patch("nce_events.api.form_dialog_api._hop_walk_final_identifiers")
+	@patch("nce_events.api.form_dialog._helpers._hop_walk_final_identifiers")
 	def test_multihop_single_final_id(self, mock_hop):
 		from nce_events.api.form_dialog_api import _filters_for_related_rows
 
@@ -347,7 +345,7 @@ class TestRelatedListColumnsOptions(unittest.TestCase):
 
 
 class TestHopWalkFinalIdentifiers(unittest.TestCase):
-	@patch("nce_events.api.form_dialog_api.frappe.get_list")
+	@patch("nce_events.api.form_dialog._helpers.frappe.get_list")
 	def test_single_step_collects_child_link(self, mock_gl):
 		from nce_events.api.form_dialog_api import _hop_walk_final_identifiers
 
@@ -370,7 +368,7 @@ class TestHopWalkFinalIdentifiers(unittest.TestCase):
 			},
 		)
 
-	@patch("nce_events.api.form_dialog_api.frappe.get_list")
+	@patch("nce_events.api.form_dialog._helpers.frappe.get_list")
 	def test_two_steps_passes_bridge_names_then_final_ids(self, mock_gl):
 		from nce_events.api.form_dialog_api import _hop_walk_final_identifiers
 
@@ -401,16 +399,19 @@ class TestSaveFormDialogRelatedRows(FrappeTestCase):
 
 		mock_session = MagicMock()
 		mock_session.user = "Guest"
-		with patch("nce_events.api.form_dialog_api.frappe.session", mock_session):
+		with patch("nce_events.api.form_dialog.related_rows.frappe.session", mock_session):
 			with self.assertRaises(frappe.PermissionError):
 				save_form_dialog_related_rows("FD", "r1", "Event", "E1", [])
 
-	@patch("nce_events.api.form_dialog_api._assert_doctype_in_wp_tables")
-	@patch("nce_events.api.form_dialog_api._allowed_child_names_for_related_tab", return_value={"P1"})
-	@patch("nce_events.api.form_dialog_api._editable_related_fieldnames_for_save", return_value={"rating"})
-	def test_save_calls_child_save(
-		self, mock_editable, mock_allowed, mock_wp
-	):
+	@patch("nce_events.api.form_dialog.related_rows._assert_doctype_in_wp_tables")
+	@patch(
+		"nce_events.api.form_dialog.related_rows._allowed_child_names_for_related_tab", return_value={"P1"}
+	)
+	@patch(
+		"nce_events.api.form_dialog.related_rows._editable_related_fieldnames_for_save",
+		return_value={"rating"},
+	)
+	def test_save_calls_child_save(self, mock_editable, mock_allowed, mock_wp):
 		from nce_events.api.form_dialog_api import save_form_dialog_related_rows
 
 		mock_row = MagicMock()
@@ -428,12 +429,14 @@ class TestSaveFormDialogRelatedRows(FrappeTestCase):
 
 		mock_session = MagicMock()
 		mock_session.user = "Administrator"
-		with patch("nce_events.api.form_dialog_api.frappe.session", mock_session):
+		with patch("nce_events.api.form_dialog.related_rows.frappe.session", mock_session):
 			with patch(
-				"nce_events.api.form_dialog_api.frappe.get_doc",
+				"nce_events.api.form_dialog.related_rows.frappe.get_doc",
 				side_effect=[mock_doc, mock_child],
 			):
-				with patch("nce_events.api.form_dialog_api.frappe.has_permission", return_value=True):
+				with patch(
+					"nce_events.api.form_dialog.related_rows.frappe.has_permission", return_value=True
+				):
 					out = save_form_dialog_related_rows(
 						"FD",
 						"REL1",
@@ -455,7 +458,7 @@ class TestGetFormDialogRelatedRows(FrappeTestCase):
 
 		mock_session = MagicMock()
 		mock_session.user = "Guest"
-		with patch("nce_events.api.form_dialog_api.frappe.session", mock_session):
+		with patch("nce_events.api.form_dialog.related_rows.frappe.session", mock_session):
 			with self.assertRaises(frappe.PermissionError):
 				get_form_dialog_related_rows("FD", "row1", "Event", "E1")
 
@@ -467,8 +470,8 @@ class TestGetFormDialogRelatedRows(FrappeTestCase):
 		mock_doc.target_doctype = "Event"
 		mock_doc.related_doctypes = []
 
-		with patch("nce_events.api.form_dialog_api.frappe.session.user", "Administrator"):
-			with patch("nce_events.api.form_dialog_api.frappe.get_doc", return_value=mock_doc):
+		with patch("nce_events.api.form_dialog.related_rows.frappe.session.user", "Administrator"):
+			with patch("nce_events.api.form_dialog.related_rows.frappe.get_doc", return_value=mock_doc):
 				with self.assertRaises(frappe.PermissionError):
 					get_form_dialog_related_rows("FD", "row1", "User", "x")
 
@@ -481,21 +484,21 @@ class TestGetFormDialogRelatedRows(FrappeTestCase):
 		mock_row.link_field = "owner"
 		mock_row.hop_chain = []
 		mock_row.portal_field_config = None
-		mock_row.info = json.dumps(
-			{"fields": [{"fieldname": "name", "fieldtype": "Data", "label": "ID"}]}
-		)
+		mock_row.info = json.dumps({"fields": [{"fieldname": "name", "fieldtype": "Data", "label": "ID"}]})
 
 		mock_doc = MagicMock()
 		mock_doc.is_active = 1
 		mock_doc.target_doctype = "DocType"
 		mock_doc.related_doctypes = [mock_row]
 
-		with patch("nce_events.api.form_dialog_api.frappe.session.user", "Administrator"):
-			with patch("nce_events.api.form_dialog_api._assert_doctype_in_wp_tables"):
-				with patch("nce_events.api.form_dialog_api.frappe.get_doc", return_value=mock_doc):
-					with patch("nce_events.api.form_dialog_api.frappe.has_permission", return_value=True):
+		with patch("nce_events.api.form_dialog.related_rows.frappe.session.user", "Administrator"):
+			with patch("nce_events.api.form_dialog.related_rows._assert_doctype_in_wp_tables"):
+				with patch("nce_events.api.form_dialog.related_rows.frappe.get_doc", return_value=mock_doc):
+					with patch(
+						"nce_events.api.form_dialog.related_rows.frappe.has_permission", return_value=True
+					):
 						with patch(
-							"nce_events.api.form_dialog_api.frappe.get_list",
+							"nce_events.api.form_dialog.related_rows.frappe.get_list",
 							return_value=[{"name": "u1"}],
 						) as mock_list:
 							out = get_form_dialog_related_rows(
