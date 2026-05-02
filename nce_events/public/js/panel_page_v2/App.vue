@@ -2,21 +2,36 @@
 	<div class="ppv2-root">
 		<PanelFloat :init-x="40" :init-y="60" :init-w="900" :init-h="550">
 			<template #header>
-				<span class="ppv2-title">{{ config?.header_text || 'NCE Tables' }}</span>
+				<span class="ppv2-title">{{ config?.header_text || "NCE Tables" }}</span>
 				<div class="ppv2-header-right" @mousedown.stop>
-				<span v-if="config?.open_card_on_click" class="ppv2-click-hint">Click row for details · Ctrl-click to remove</span>
-				<div class="ppv2-header-controls">
-					<button class="ppv2-hdr-btn" :class="{ 'ppv2-hdr-btn--refreshing': loading }" title="Refresh" @click="onRefreshRoot">
-						<i class="fa fa-refresh"></i>
-					</button>
-					<button class="ppv2-hdr-btn" title="Filter" @click="rootPanelShowFilter = !rootPanelShowFilter">
-						<i class="fa fa-filter"></i>
-					</button>
-					<button class="ppv2-hdr-btn" title="Export to Sheets" @click="onSheets({ doctype: 'WP Tables', parentFilter: {}, rows })">
-						<i class="fa fa-table"></i>
-					</button>
-					<span class="ppv2-count">{{ rows.length }} / {{ fullTotal }} records</span>
-				</div>
+					<span v-if="config?.open_card_on_click" class="ppv2-click-hint"
+						>Click row for details · Ctrl-click to remove</span
+					>
+					<div class="ppv2-header-controls">
+						<button
+							class="ppv2-hdr-btn"
+							:class="{ 'ppv2-hdr-btn--refreshing': loading }"
+							title="Refresh"
+							@click="onRefreshRoot"
+						>
+							<i class="fa fa-refresh"></i>
+						</button>
+						<button
+							class="ppv2-hdr-btn"
+							title="Filter"
+							@click="rootPanelShowFilter = !rootPanelShowFilter"
+						>
+							<i class="fa fa-filter"></i>
+						</button>
+						<button
+							class="ppv2-hdr-btn"
+							title="Export to Sheets"
+							@click="onSheets({ doctype: 'WP Tables', parentFilter: {}, rows })"
+						>
+							<i class="fa fa-table"></i>
+						</button>
+						<span class="ppv2-count">{{ rows.length }} / {{ fullTotal }} records</span>
+					</div>
 				</div>
 			</template>
 			<PanelTable
@@ -36,7 +51,7 @@
 				@refresh="onRefreshRoot"
 				@show-filter="rootPanelShowFilter = true"
 			/>
-			<template #footer>{{ config?.header_text || 'NCE Tables' }}</template>
+			<template #footer>{{ config?.header_text || "NCE Tables" }}</template>
 		</PanelFloat>
 
 		<PanelFloat
@@ -50,26 +65,56 @@
 			<template #header>
 				<span class="ppv2-title">{{ floatedPanelTitle(p) }}</span>
 				<div class="ppv2-header-right" @mousedown.stop>
-				<span v-if="p.config?.open_card_on_click" class="ppv2-click-hint">Click row for details · Ctrl-click to remove</span>
-				<div class="ppv2-header-controls">
-					<button class="ppv2-hdr-btn" :class="{ 'ppv2-hdr-btn--refreshing': p.loading }" title="Refresh" @click="onRefreshPanel(p)">
-						<i class="fa fa-refresh"></i>
-					</button>
-					<button class="ppv2-hdr-btn" title="Filter" @click="p._showFilter = !p._showFilter">
-						<i class="fa fa-filter"></i>
-					</button>
-					<button class="ppv2-hdr-btn" title="Export to Sheets" @click="onSheets(p)">
-						<i class="fa fa-table"></i>
-					</button>
-					<button v-if="p.config?.email_field" class="ppv2-hdr-btn" title="Email" @click="onEmail(p)">
-						<i class="fa fa-envelope"></i>
-					</button>
-					<button v-if="p.config?.sms_field" class="ppv2-hdr-btn" title="SMS" @click="onSms(p)">
-						<i class="fa fa-comment"></i>
-					</button>
-					<span class="ppv2-count">{{ (p._panelRows || p.rows).length }} / {{ p.fullTotal }} records</span>
-					<button class="ppv2-hdr-btn ppv2-close-btn" title="Close" @click="closePanel(p.id)">&times;</button>
-				</div>
+					<span v-if="p.config?.open_card_on_click" class="ppv2-click-hint"
+						>Click row for details · Ctrl-click to remove</span
+					>
+					<div class="ppv2-header-controls">
+						<button
+							class="ppv2-hdr-btn"
+							:class="{ 'ppv2-hdr-btn--refreshing': p.loading }"
+							title="Refresh"
+							@click="onRefreshPanel(p)"
+						>
+							<i class="fa fa-refresh"></i>
+						</button>
+						<button
+							class="ppv2-hdr-btn"
+							title="Filter"
+							@click="p._showFilter = !p._showFilter"
+						>
+							<i class="fa fa-filter"></i>
+						</button>
+						<button class="ppv2-hdr-btn" title="Export to Sheets" @click="onSheets(p)">
+							<i class="fa fa-table"></i>
+						</button>
+						<button
+							v-if="p.config?.email_field"
+							class="ppv2-hdr-btn"
+							title="Email"
+							@click="onEmail(p)"
+						>
+							<i class="fa fa-envelope"></i>
+						</button>
+						<button
+							v-if="p.config?.sms_field"
+							class="ppv2-hdr-btn"
+							title="SMS"
+							@click="onSms(p)"
+						>
+							<i class="fa fa-comment"></i>
+						</button>
+						<span class="ppv2-count"
+							>{{ (p._panelRows || p.rows).length }} /
+							{{ p.fullTotal }} records</span
+						>
+						<button
+							class="ppv2-hdr-btn ppv2-close-btn"
+							title="Close"
+							@click="closePanel(p.id)"
+						>
+							&times;
+						</button>
+					</div>
 				</div>
 			</template>
 			<PanelTable
@@ -81,8 +126,8 @@
 				:error="p.error"
 				:config="p.config || {}"
 				:default-filters="p.config?.default_filters || []"
-				:show-email="!!(p.config?.email_field)"
-				:show-sms="!!(p.config?.sms_field)"
+				:show-email="!!p.config?.email_field"
+				:show-sms="!!p.config?.sms_field"
 				:show-filter="p._showFilter"
 				@close="closePanel(p.id)"
 				@row-click="(row) => onDrilledRowClick(p, row)"
@@ -134,7 +179,9 @@
 			:can-navigate-prev="formDialogNavInfo.canPrev"
 			:can-navigate-next="formDialogNavInfo.canNext"
 			:row-nav-label="formDialogNavLabel"
-			:dissolve-opacity="formDialogSlot === 0 && formDialogDissolving ? formDialogDissolveOpacity : 1"
+			:dissolve-opacity="
+				formDialogSlot === 0 && formDialogDissolving ? formDialogDissolveOpacity : 1
+			"
 			:style="{
 				zIndex: formDialogSlot === 0 ? 1050 : 1048,
 			}"
@@ -176,7 +223,9 @@
 			:can-navigate-prev="formDialogNavInfo.canPrev"
 			:can-navigate-next="formDialogNavInfo.canNext"
 			:row-nav-label="formDialogNavLabel"
-			:dissolve-opacity="formDialogSlot === 1 && formDialogDissolving ? formDialogDissolveOpacity : 1"
+			:dissolve-opacity="
+				formDialogSlot === 1 && formDialogDissolving ? formDialogDissolveOpacity : 1
+			"
 			:style="{
 				zIndex: formDialogSlot === 1 ? 1050 : 1048,
 			}"
@@ -220,7 +269,17 @@ import CardModal from "./nce_cards/CardModal.vue";
 import PanelFormDialog from "./components/PanelFormDialog.vue";
 
 const rootPanel = usePanel("WP Tables");
-const { config, columns: rawColumns, rows, total, fullTotal, loading, error, load, reload } = rootPanel;
+const {
+	config,
+	columns: rawColumns,
+	rows,
+	total,
+	fullTotal,
+	loading,
+	error,
+	load,
+	reload,
+} = rootPanel;
 const rootPanelShowFilter = ref(false);
 
 // Hide nce_name — it duplicates frappe_doctype in the root panel.
@@ -228,8 +287,8 @@ const rootPanelShowFilter = ref(false);
 // rather than navigating to the Frappe desk form view.
 const columns = computed(() =>
 	(rawColumns.value || [])
-		.filter(c => c.fieldname !== "nce_name")
-		.map(c => c.fieldname === "frappe_doctype" ? { ...c, is_link: false } : c)
+		.filter((c) => c.fieldname !== "nce_name")
+		.map((c) => (c.fieldname === "frappe_doctype" ? { ...c, is_link: false } : c))
 );
 
 const openPanels = reactive([]);
@@ -266,7 +325,7 @@ const { cardStack, openCardModal, closeTopCard, onOpenCard } = useNceCardStack()
 
 function onRowDrop(panel, row) {
 	const arr = panel ? panel.rows : rows.value;
-	const idx = arr.findIndex(r => r.name === row.name);
+	const idx = arr.findIndex((r) => r.name === row.name);
 	if (idx >= 0) {
 		arr.splice(idx, 1);
 		dropStack.push({ panel, row, idx });
@@ -282,7 +341,7 @@ function undoDrop() {
 }
 
 function onKeyDown(e) {
-	if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+	if ((e.ctrlKey || e.metaKey) && e.key === "z") {
 		if (!dropStack.length) return;
 		e.preventDefault();
 		undoDrop();
@@ -292,14 +351,16 @@ function onKeyDown(e) {
 
 onMounted(() => {
 	load();
-	window.addEventListener('keydown', onKeyDown);
+	window.addEventListener("keydown", onKeyDown);
 	window._nce_open_tag_finder = (dt, x, y) => {
 		if (!dt) return;
 		if (typeof x === "number") tagFinderX.value = x;
 		if (typeof y === "number") tagFinderY.value = y;
 		tagFinderDoctype.value = dt;
 	};
-	window._nce_close_tag_finder = () => { tagFinderDoctype.value = ""; };
+	window._nce_close_tag_finder = () => {
+		tagFinderDoctype.value = "";
+	};
 	window._nce_open_card = (opts) => {
 		const parsed = parseOpenCardOpts(opts);
 		if (parsed) {
@@ -312,7 +373,7 @@ onMounted(() => {
 });
 
 onUnmounted(() => {
-	window.removeEventListener('keydown', onKeyDown);
+	window.removeEventListener("keydown", onKeyDown);
 	delete window._nce_open_tag_finder;
 	delete window._nce_close_tag_finder;
 	delete window._nce_open_card;
@@ -391,12 +452,20 @@ async function openPanel(doctype, parentFilter = {}, parentId = null, parentCont
 			// They update reactively when _applyFilters is called
 		};
 		p._reload = async () => {
-			console.log("[PanelReload] starting reload for", p.doctype, "p.loading before:", p.loading);
+			console.log(
+				"[PanelReload] starting reload for",
+				p.doctype,
+				"p.loading before:",
+				p.loading
+			);
 			p.loading = true;
 			console.log("[PanelReload] p.loading set to true");
 			try {
 				await panel.reload();
-				console.log("[PanelReload] panel.reload() complete, panel.loading.value:", panel.loading.value);
+				console.log(
+					"[PanelReload] panel.reload() complete, panel.loading.value:",
+					panel.loading.value
+				);
 				p.config = panel.config.value;
 				p.columns = panel.columns.value;
 				p.rows = panel.rows.value;
@@ -440,7 +509,8 @@ async function onDrill(ev, parentPanel) {
 				.then((val) => resolve(val))
 				.catch(() => resolve(null));
 		});
-		const cardDefName = typeof r === "object" && r?.name ? r.name : typeof r === "string" ? r : null;
+		const cardDefName =
+			typeof r === "object" && r?.name ? r.name : typeof r === "string" ? r : null;
 		if (cardDefName && ev.rowName) {
 			openCardModal(cardDefName, ev.doctype, ev.rowName);
 			return;
@@ -470,11 +540,11 @@ function onDrilledRowClick(p, row) {
 }
 
 function onFilterChange(panel, userFilters) {
-    if (!panel) {
-        rootPanel.setFilters(userFilters);
-    } else if (panel._setFilters) {
-        panel._setFilters(userFilters);
-    }
+	if (!panel) {
+		rootPanel.setFilters(userFilters);
+	} else if (panel._setFilters) {
+		panel._setFilters(userFilters);
+	}
 }
 
 function onRefreshRoot() {
@@ -483,7 +553,12 @@ function onRefreshRoot() {
 }
 
 function onRefreshPanel(panel) {
-	console.log("[PanelReload] onRefreshPanel called for", panel.doctype, "has _reload:", !!panel._reload);
+	console.log(
+		"[PanelReload] onRefreshPanel called for",
+		panel.doctype,
+		"has _reload:",
+		!!panel._reload
+	);
 	if (panel._reload) {
 		panel._reload();
 	}
@@ -503,10 +578,16 @@ function onSheets(p) {
 			const formula = `=IMPORTDATA("${url}")`;
 			if (navigator.clipboard && navigator.clipboard.writeText) {
 				navigator.clipboard.writeText(formula).then(() => {
-					frappe.show_alert({ message: __("Link copied — paste in Google Sheets"), indicator: "green" });
+					frappe.show_alert({
+						message: __("Link copied — paste in Google Sheets"),
+						indicator: "green",
+					});
 				});
 			} else {
-				frappe.show_alert({ message: __("Exported {0} rows", [r.message.rows_exported]), indicator: "green" });
+				frappe.show_alert({
+					message: __("Exported {0} rows", [r.message.rows_exported]),
+					indicator: "green",
+				});
 			}
 		},
 	});
@@ -519,41 +600,59 @@ function _openSendDialog(p, mode) {
 	if (!cfg) return;
 	const recipientField = mode === "sms" ? cfg.sms_field : cfg.email_field;
 	if (!recipientField) {
-		frappe.msgprint(__("No {0} field configured for this panel.", [mode === "sms" ? "SMS" : "Email"]));
+		frappe.msgprint(
+			__("No {0} field configured for this panel.", [mode === "sms" ? "SMS" : "Email"])
+		);
 		return;
 	}
 	// p._panelRows is a ref auto-unwrapped by Vue's reactive proxy — gives
 	// the current filtered array directly (no .value needed). p.rows is a
 	// stale snapshot from load time that doesn't update when filters change.
 	const currentRows = p._panelRows || p.rows;
-	if (!currentRows.length) { frappe.msgprint(__("No rows.")); return; }
+	if (!currentRows.length) {
+		frappe.msgprint(__("No rows."));
+		return;
+	}
 
-	if (_sendDialog) { _sendDialog.close(); _sendDialog = null; }
+	if (_sendDialog) {
+		_sendDialog.close();
+		_sendDialog = null;
+	}
 
-	frappe.require([
-		"/assets/nce_events/js/panel_page_v2/shared/ai_tools.js",
-		"/assets/nce_events/js/panel_page_v2/shared/sms_dialog.js",
-		"/assets/nce_events/js/panel_page_v2/shared/email_dialog.js",
-		"/assets/nce_events/css/panel_page.css",
-	], () => {
-		const DialogClass = mode === "sms"
-			? nce_events.panel_page.SmsDialog
-			: nce_events.panel_page.EmailDialog;
-		_sendDialog = new DialogClass({
-			doctype: p.doctype,
-			config: cfg,
-			row_names: currentRows.map(r => r.name),
-			row_count: currentRows.length,
-			z_index: 9999,
-			init_left: (p.x || 40) + 60,
-			init_top: (p.y || 60) + 20,
-			on_close() { _sendDialog = null; },
-		});
-	});
+	frappe.require(
+		[
+			"/assets/nce_events/js/panel_page_v2/legacy_dialogs/ai_tools.js",
+			"/assets/nce_events/js/panel_page_v2/legacy_dialogs/sms_dialog.js",
+			"/assets/nce_events/js/panel_page_v2/legacy_dialogs/email_dialog.js",
+			"/assets/nce_events/css/panel_page.css",
+		],
+		() => {
+			const DialogClass =
+				mode === "sms"
+					? nce_events.panel_page.SmsDialog
+					: nce_events.panel_page.EmailDialog;
+			_sendDialog = new DialogClass({
+				doctype: p.doctype,
+				config: cfg,
+				row_names: currentRows.map((r) => r.name),
+				row_count: currentRows.length,
+				z_index: 9999,
+				init_left: (p.x || 40) + 60,
+				init_top: (p.y || 60) + 20,
+				on_close() {
+					_sendDialog = null;
+				},
+			});
+		}
+	);
 }
 
-function onEmail(p) { _openSendDialog(p, "email"); }
-function onSms(p) { _openSendDialog(p, "sms"); }
+function onEmail(p) {
+	_openSendDialog(p, "email");
+}
+function onSms(p) {
+	_openSendDialog(p, "sms");
+}
 
 function _openSendDialogOne(p, mode, row) {
 	const cfg = p.config;
@@ -561,32 +660,45 @@ function _openSendDialogOne(p, mode, row) {
 	const recipientField = mode === "sms" ? cfg.sms_field : cfg.email_field;
 	if (!recipientField) return;
 
-	if (_sendDialog) { _sendDialog.close(); _sendDialog = null; }
+	if (_sendDialog) {
+		_sendDialog.close();
+		_sendDialog = null;
+	}
 
-	frappe.require([
-		"/assets/nce_events/js/panel_page_v2/shared/ai_tools.js",
-		"/assets/nce_events/js/panel_page_v2/shared/sms_dialog.js",
-		"/assets/nce_events/js/panel_page_v2/shared/email_dialog.js",
-		"/assets/nce_events/css/panel_page.css",
-	], () => {
-		const DialogClass = mode === "sms"
-			? nce_events.panel_page.SmsDialog
-			: nce_events.panel_page.EmailDialog;
-		_sendDialog = new DialogClass({
-			doctype: p.doctype,
-			config: cfg,
-			row_names: [row.name],
-			row_count: 1,
-			z_index: 9999,
-			init_left: (p.x || 40) + 60,
-			init_top: (p.y || 60) + 20,
-			on_close() { _sendDialog = null; },
-		});
-	});
+	frappe.require(
+		[
+			"/assets/nce_events/js/panel_page_v2/legacy_dialogs/ai_tools.js",
+			"/assets/nce_events/js/panel_page_v2/legacy_dialogs/sms_dialog.js",
+			"/assets/nce_events/js/panel_page_v2/legacy_dialogs/email_dialog.js",
+			"/assets/nce_events/css/panel_page.css",
+		],
+		() => {
+			const DialogClass =
+				mode === "sms"
+					? nce_events.panel_page.SmsDialog
+					: nce_events.panel_page.EmailDialog;
+			_sendDialog = new DialogClass({
+				doctype: p.doctype,
+				config: cfg,
+				row_names: [row.name],
+				row_count: 1,
+				z_index: 9999,
+				init_left: (p.x || 40) + 60,
+				init_top: (p.y || 60) + 20,
+				on_close() {
+					_sendDialog = null;
+				},
+			});
+		}
+	);
 }
 
-function onEmailOne(p, row) { _openSendDialogOne(p, "email", row); }
-function onSmsOne(p, row) { _openSendDialogOne(p, "sms", row); }
+function onEmailOne(p, row) {
+	_openSendDialogOne(p, "email", row);
+}
+function onSmsOne(p, row) {
+	_openSendDialogOne(p, "sms", row);
+}
 </script>
 
 <style scoped>

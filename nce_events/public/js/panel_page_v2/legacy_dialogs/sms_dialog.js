@@ -405,7 +405,7 @@ nce_events.panel_page.SmsDialog = class SmsDialog {
 		function start_drag(e) {
 			if (
 				$(e.target).closest(
-					"button, input, textarea, select, .send-template-list, .send-panel-footer",
+					"button, input, textarea, select, .send-template-list, .send-panel-footer"
 				).length
 			)
 				return;

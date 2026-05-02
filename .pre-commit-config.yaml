@@ -60,7 +60,8 @@ repos:
                 .*node_modules.*|
                 .*boilerplate.*|
                 template/templates/includes/.*|
-                template/public/js/lib/.*
+                template/public/js/lib/.*|
+                nce_events/public/js/panel_page_v2_dist/.*
             )$
 
 ci:

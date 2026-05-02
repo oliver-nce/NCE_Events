@@ -375,7 +375,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 						return;
 					}
 					pv.find(".send-preview-subject").text(
-						r.message.rendered_subject || "(No subject)",
+						r.message.rendered_subject || "(No subject)"
 					);
 					pv.find(".send-preview-body").html(r.message.rendered_body || "");
 					const rect = el[0].getBoundingClientRect();
@@ -507,7 +507,9 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 		panel
 			.find(".send-review-progress")
 			.text(
-				`${done + 1} of ${me._review_total} — sent: ${me._review_sent}, skipped: ${me._review_skipped}`,
+				`${done + 1} of ${me._review_total} — sent: ${me._review_sent}, skipped: ${
+					me._review_skipped
+				}`
 			);
 		panel.find(".send-review-to").text("Loading...");
 		panel.find(".send-review-subject").text("");
@@ -661,7 +663,11 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 					errors++;
 					if (idx % 100 === 0) {
 						frappe.show_alert({
-							message: __("Queued {0} / {1}... ({2} errors)", [idx, totalToSend, errors]),
+							message: __("Queued {0} / {1}... ({2} errors)", [
+								idx,
+								totalToSend,
+								errors,
+							]),
 							indicator: "orange",
 						});
 					}
@@ -723,16 +729,20 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 		const resolvedHtml = resolved.length
 			? resolved
 					.map(function (r) {
-						return `<div class="recip-row recip-ok"><span class="recip-name">${frappe.utils.escape_html(r.name)}</span><span class="recip-addr">${frappe.utils.escape_html(r.address)}</span></div>`;
+						return `<div class="recip-row recip-ok"><span class="recip-name">${frappe.utils.escape_html(
+							r.name
+						)}</span><span class="recip-addr">${frappe.utils.escape_html(r.address)}</span></div>`;
 					})
 					.join("")
 			: `<div class="recip-empty">No resolved addresses.</div>`;
 
 		const skippedHtml = skipped.length
 			? `<div class="recip-skipped-header">Skipped — no address (${skipped.length}):</div>` +
-				skipped
+			  skipped
 					.map(function (r) {
-						return `<div class="recip-row recip-skip"><span class="recip-name">${frappe.utils.escape_html(r.name)}</span><span class="recip-addr recip-none">—</span></div>`;
+						return `<div class="recip-row recip-skip"><span class="recip-name">${frappe.utils.escape_html(
+							r.name
+						)}</span><span class="recip-addr recip-none">—</span></div>`;
 					})
 					.join("")
 			: "";
@@ -951,7 +961,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 		function start_drag(e) {
 			if (
 				$(e.target).closest(
-					"button, input, textarea, select, .send-template-list, .ql-editor, .ql-toolbar, .send-message-editor-wrap, .send-panel-footer",
+					"button, input, textarea, select, .send-template-list, .ql-editor, .ql-toolbar, .send-message-editor-wrap, .send-panel-footer"
 				).length
 			)
 				return;

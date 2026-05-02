@@ -8,7 +8,6 @@ frappe.provide("nce_events.panel_page");
  *   dialog must implement: _ai_get_body(), _ai_set_body(html_or_text), _ai_is_html()
  */
 nce_events.panel_page.ai_tools = {
-
 	MAX_UNDO: 4,
 
 	SYSTEM_SPELLING: [
@@ -46,10 +45,18 @@ nce_events.panel_page.ai_tools = {
 		const bar = dialog.el.find(".send-ai-bar");
 		if (!bar.length) return;
 
-		bar.on("click", ".send-ai-clear", function () { me._do_clear(dialog); });
-		bar.on("click", ".send-ai-undo", function () { me._do_undo(dialog); });
-		bar.on("click", ".send-ai-spelling", function () { me._do_ai(dialog, "spelling"); });
-		bar.on("click", ".send-ai-mild", function () { me._do_ai(dialog, "mild"); });
+		bar.on("click", ".send-ai-clear", function () {
+			me._do_clear(dialog);
+		});
+		bar.on("click", ".send-ai-undo", function () {
+			me._do_undo(dialog);
+		});
+		bar.on("click", ".send-ai-spelling", function () {
+			me._do_ai(dialog, "spelling");
+		});
+		bar.on("click", ".send-ai-mild", function () {
+			me._do_ai(dialog, "mild");
+		});
 	},
 
 	_push_history(dialog, body) {
@@ -90,7 +97,9 @@ nce_events.panel_page.ai_tools = {
 		const is_html = dialog._ai_is_html();
 		let prompt = body;
 		if (is_html) {
-			prompt = "The following message is HTML. Preserve the HTML structure and formatting.\n\n" + body;
+			prompt =
+				"The following message is HTML. Preserve the HTML structure and formatting.\n\n" +
+				body;
 		}
 
 		me._push_history(dialog, body);
@@ -127,7 +136,10 @@ nce_events.panel_page.ai_tools = {
 			btns.prop("disabled", false);
 			bar.find(".send-ai-spelling").html("✓ Spelling &amp; Grammar");
 			bar.find(".send-ai-mild").html("≈ Mild Rewrite");
-			bar.find(".send-ai-undo").prop("disabled", !dialog._ai_history || !dialog._ai_history.length);
+			bar.find(".send-ai-undo").prop(
+				"disabled",
+				!dialog._ai_history || !dialog._ai_history.length
+			);
 		}
 	},
 };
