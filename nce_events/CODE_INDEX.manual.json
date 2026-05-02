@@ -28,28 +28,131 @@
       ]
     },
     "nce_events/api/panel_api.py": {
-      "purpose": "Core panel data API: fetch panel config, fetch paginated/filtered panel data, export CSV, save SQL filter, child doctype discovery, field metadata. get_doctype_fields returns { fields, doctype_title_field } for Page Panel Display defaults.",
-      "private_helpers": [
-        "_build_core_filter_where",
-        "_auto_detect_contact_fields",
-        "_find_link_field",
-        "_get_link_fields_with_target",
-        "_evaluate_computed_columns",
-        "_apply_user_filters",
-        "_title_case"
+      "purpose": "Deprecated re-export shim: re-exports every public + private name from nce_events.api.panel_api_pkg so existing frappe.call({method: 'nce_events.api.panel_api.<fn>'}) sites and unittest.mock.patch paths keep resolving. New code imports from nce_events.api.panel_api_pkg directly.",
+      "depends_on": [
+        "nce_events/api/panel_api_pkg/"
       ],
+      "sections": [
+        "Re-export of panel_api_pkg package public + underscore-prefixed names"
+      ]
+    },
+    "nce_events/api/panel_api_pkg/__init__.py": {
+      "purpose": "Panel API package — Phase 5 split of the original 1093-LOC panel_api.py. Re-exports submodule public + underscore-prefixed names so the legacy shim has a single source of truth.",
       "depends_on": [
         "nce_events/nce_events/doctype/page_panel/",
         "nce_events/nce_events/doctype/page_panel_computed_column/"
       ],
       "sections": [
+        "Helpers re-export (_helpers.py)",
+        "Core filters re-export (core_filters.py)",
+        "Computed columns re-export (computed_columns.py)",
+        "SQL builder re-export (sql.py)",
+        "Panel data endpoints re-export (panel_data.py)",
+        "Child doctype discovery re-export (discovery.py)",
+        "__all__ for clarity"
+      ]
+    },
+    "nce_events/api/panel_api_pkg/_helpers.py": {
+      "purpose": "Internal helpers shared by the panel_api package: auto-detect email/SMS fields, find link fields, title case conversion, safe filename generation, WP Tables label map, link field extraction, gender field detection, required fieldnames extraction, CSV parsing.",
+      "private_helpers": [
+        "_auto_detect_contact_fields",
+        "_find_link_field",
+        "_title_case",
+        "_safe_filename",
+        "_wp_doctype_label_map",
+        "_get_link_fieldnames",
+        "_get_link_fields_with_target",
+        "_get_gender_field_key",
+        "_meta_reqd_root_fieldnames",
+        "_parse_csv"
+      ],
+      "depends_on": [],
+      "sections": [
+        "Email/SMS field auto-detection",
+        "Link field helpers",
+        "String formatting helpers",
+        "Metadata extraction"
+      ]
+    },
+    "nce_events/api/panel_api_pkg/core_filters.py": {
+      "purpose": "Core filter SQL building — WHERE clause construction with raw SQL expressions, query execution with core filters, user filter application (field, op, value conditions), and SQL table-name prefix normalization.",
+      "private_helpers": [
+        "_build_core_filter_where",
+        "_count_with_core_filter",
+        "_query_with_core_filter",
+        "_ensure_tab_prefix",
+        "_apply_user_filters"
+      ],
+      "depends_on": [
+        "nce_events/api/panel_api_pkg/_helpers.py"
+      ],
+      "sections": [
+        "WHERE clause construction",
+        "Count with core filter",
+        "Query with core filter",
+        "SQL table prefix normalization",
+        "User filter application"
+      ]
+    },
+    "nce_events/api/panel_api_pkg/computed_columns.py": {
+      "purpose": "Computed columns — extract unstored SQL-expression fields from Page Panel config, evaluate expressions per row with {fieldname} substitution, and execute custom SQL expressions.",
+      "private_helpers": [
+        "_get_computed_columns",
+        "_evaluate_computed_columns",
+        "_run_computed_sql"
+      ],
+      "depends_on": [
+        "nce_events/api/panel_api_pkg/_helpers.py",
+        "nce_events/api/panel_api_pkg/core_filters.py"
+      ],
+      "sections": [
+        "Extract computed columns from config",
+        "Evaluate expressions per row",
+        "Run custom SQL expressions"
+      ]
+    },
+    "nce_events/api/panel_api_pkg/sql.py": {
+      "purpose": "Panel SQL generation — build SELECT [LEFT JOIN...] queries for a panel with field selection and link field resolution, generate and save panel SQL for inspection, persist core filter and order_by on Page Panel records.",
+      "private_helpers": [
+        "_build_panel_sql"
+      ],
+      "depends_on": [
+        "nce_events/api/panel_api_pkg/_helpers.py",
+        "nce_events/api/panel_api_pkg/core_filters.py",
+        "nce_events/api/panel_api_pkg/panel_data.py"
+      ],
+      "sections": [
+        "_build_panel_sql internal helper",
+        "build_panel_sql public endpoint",
+        "save_panel_sql public endpoint"
+      ]
+    },
+    "nce_events/api/panel_api_pkg/panel_data.py": {
+      "purpose": "Panel data endpoints — get_panel_config for Page Panel settings, get_panel_data for paginated/filtered panel rows with computed columns and child doctype counts, export_panel_data for CSV export to public files.",
+      "depends_on": [
+        "nce_events/api/panel_api_pkg/_helpers.py",
+        "nce_events/api/panel_api_pkg/computed_columns.py",
+        "nce_events/api/panel_api_pkg/core_filters.py",
+        "nce_events/api/panel_api_pkg/sql.py",
+        "nce_events/api/panel_api_pkg/discovery.py",
+        "nce_events/nce_events/doctype/page_panel/"
+      ],
+      "sections": [
         "Panel config fetch",
         "Panel data fetch with filters/pagination",
-        "CSV export",
-        "SQL filter save",
-        "Child doctype discovery",
-        "Field metadata",
-        "Internal query helpers"
+        "CSV export"
+      ]
+    },
+    "nce_events/api/panel_api_pkg/discovery.py": {
+      "purpose": "Child doctype discovery — find direct-child DocTypes with Link fields pointing to a root, multi-hop child discovery (1/2/3-hop) for Form Dialog picker, field metadata extraction (fieldname, label, fieldtype, Link options), and diagnostic child lookup.",
+      "depends_on": [
+        "nce_events/api/panel_api_pkg/_helpers.py"
+      ],
+      "sections": [
+        "Child doctype discovery (1-hop)",
+        "Multi-hop child discovery (2-hop, 3-hop)",
+        "Field metadata extraction",
+        "Diagnostic child lookup"
       ]
     },
     "nce_events/api/messaging.py": {
