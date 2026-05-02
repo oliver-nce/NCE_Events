@@ -64,6 +64,25 @@ repos:
                 nce_events/public/js/panel_page_v2_dist/.*
             )$
 
+  - repo: local
+    hooks:
+      - id: build-code-index
+        name: build-code-index (auto-generated CODE_INDEX.json must be in sync)
+        entry: python3 scripts/build_code_index.py --check
+        language: system
+        pass_filenames: false
+        # Run only when source files in scope, the manual overlay, or the
+        # script itself change. Other commits do not need a check.
+        files: |
+            (?x)^(
+                nce_events/.*\.py|
+                nce_events/.*\.js|
+                nce_events/.*\.vue|
+                nce_events/nce_events/doctype/.*|
+                nce_events/CODE_INDEX\.manual\.json|
+                scripts/build_code_index\.py
+            )$
+
 ci:
     autoupdate_schedule: weekly
     skip: []

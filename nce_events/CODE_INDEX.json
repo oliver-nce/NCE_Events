@@ -1,10 +1,10 @@
 {
   "_meta": {
-    "description": "Machine-readable index of every module in the NCE Events Frappe app. Read this file FIRST before exploring the codebase. See also AGENTS.md at the project root for contributor conventions.",
-    "generated": "2026-04-03",
-    "usage": "Find the module whose 'purpose' matches your task, then read only that file and its 'depends_on' entries. AGENTS.md lists reusable helpers — check there before adding new code."
+    "description": "Manual overlay merged into CODE_INDEX.json by scripts/build_code_index.py. Edit per-file entries here; the generator preserves your curated 'purpose', 'sections', 'private_helpers', 'key_fields', and 'depends_on'.",
+    "generated": "2026-05-02",
+    "generator": "scripts/build_code_index.py",
+    "usage": "Run `python scripts/build_code_index.py --write` to regenerate CODE_INDEX.json after editing this file or after adding/renaming/deleting source files. The pre-commit hook runs `--check` and blocks commits whose code changes have not been regenerated."
   },
-
   "architecture": {
     "overview": "NCE Events is a Frappe app that renders configurable multi-panel data explorer pages. It has a Python API layer and two frontend generations: V1 (vanilla JS class-based) and V2 (Vue 3 SFC with Vite build). Both share SMS/Email dialogs from V1. Depends on nce_sync app. V2 supports optional frozen Form Dialogs for editing panel rows without leaving the panel page.",
     "data_flow": "Frappe Page (panel_page / panel_page_v2) → JS/Vue → frappe.call() → api/panel_api.py, api/messaging.py, api/tags.py, api/reports.py, api/form_dialog_api.py → Frappe ORM → MariaDB",
@@ -18,37 +18,185 @@
       "Form Dialog buttons: script text is copied from Desk at capture/rebuild time — not live-linked. Rebuild is manual."
     ]
   },
-
   "backend": {
-    "nce_events/hooks.py": {
-      "purpose": "App config: metadata, required_apps (nce_sync), global JS/CSS includes, doctype_js overrides, apps screen entry",
+    "nce_events/__init__.py": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/api/__init__.py": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/api/credentials.py": {
       "exports": [
-        "app_name",
-        "required_apps",
-        "app_include_js",
-        "app_include_css",
-        "doctype_js"
+        "get_credentials"
+      ],
+      "purpose": "Read credential_config JSON from API Connector doctype — returns auth_pattern, base_url, required credential values",
+      "depends_on": [],
+      "sections": [
+        "Credential lookup from API Connector"
+      ]
+    },
+    "nce_events/api/derived_fields.py": {
+      "exports": [
+        "apply_derived_fields_to_doc",
+        "evaluate_derived_fields",
+        "get_derived_field_specs"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/api/events_publish.py": {
+      "exports": [
+        "build_woocommerce_product_payload",
+        "publish_events_to_website",
+        "slugify_product_slug"
+      ],
+      "whitelist_endpoints": [
+        "publish_events_to_website"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/api/exchange.py": {
+      "exports": [
+        "execute_product_exchange"
+      ],
+      "whitelist_endpoints": [
+        "execute_product_exchange"
+      ],
+      "purpose": "Data exchange/import functionality for enrollments",
+      "depends_on": [],
+      "sections": [
+        "Exchange logic"
+      ]
+    },
+    "nce_events/api/form_dialog_api.py": {
+      "exports": [
+        "capture_form_dialog_from_desk",
+        "get_form_dialog_definition",
+        "get_form_dialog_related_rows",
+        "get_related_portal_field_editor",
+        "list_form_dialogs_for_doctype",
+        "rebuild_form_dialog",
+        "save_form_dialog_document",
+        "save_form_dialog_related_rows",
+        "save_related_portal_field_config"
+      ],
+      "whitelist_endpoints": [
+        "capture_form_dialog_from_desk",
+        "get_form_dialog_definition",
+        "get_form_dialog_related_rows",
+        "get_related_portal_field_editor",
+        "list_form_dialogs_for_doctype",
+        "rebuild_form_dialog",
+        "save_form_dialog_document",
+        "save_form_dialog_related_rows",
+        "save_related_portal_field_config"
+      ],
+      "purpose": "CRUD and schema-capture API for Form Dialog DocType. Validates DocType is in WP Tables. Capture freezes live Desk meta. save_form_dialog_document updates linked docs for fetch_from then saves (used when writeback_on_submit). get_form_dialog_related_rows returns related-tab rows (portal columns, hop_chain-aware) for V2.",
+      "private_helpers": [
+        "_assert_doctype_in_wp_tables",
+        "_require_system_manager"
+      ],
+      "depends_on": [
+        "nce_events/nce_events/doctype/form_dialog/"
+      ],
+      "sections": [
+        "WP Tables validation",
+        "Capture / rebuild frozen schema from frappe.get_meta",
+        "Get frozen definition for V2 renderer",
+        "Related-tab row fetch (whitelist read)",
+        "List dialogs filtered by target_doctype",
+        "Save with server-side fetch_from writeback to linked records"
+      ]
+    },
+    "nce_events/api/hierarchy_explorer.py": {
+      "exports": [
+        "export_pane_data",
+        "get_pane_data"
+      ],
+      "whitelist_endpoints": [
+        "export_pane_data",
+        "get_pane_data"
+      ],
+      "purpose": "Hierarchy explorer backend — tree traversal for hierarchical doctypes",
+      "depends_on": [],
+      "sections": [
+        "Hierarchy data fetch"
+      ]
+    },
+    "nce_events/api/llm.py": {
+      "exports": [
+        "llm_send_prompt",
+        "send_prompt_to_llm"
+      ],
+      "whitelist_endpoints": [
+        "llm_send_prompt"
+      ],
+      "purpose": "LLM/AI integration helpers for AI tools panel feature",
+      "depends_on": [],
+      "sections": [
+        "LLM call wrappers"
+      ]
+    },
+    "nce_events/api/messaging.py": {
+      "exports": [
+        "get_email_accounts",
+        "get_recipients",
+        "preview_one_email",
+        "preview_panel_message",
+        "send_one_email",
+        "send_panel_message",
+        "send_test_email",
+        "send_test_sms"
+      ],
+      "whitelist_endpoints": [
+        "get_email_accounts",
+        "get_recipients",
+        "preview_one_email",
+        "preview_panel_message",
+        "send_one_email",
+        "send_panel_message",
+        "send_test_email",
+        "send_test_sms"
+      ],
+      "purpose": "Email and SMS messaging: preview Jinja-rendered message, send bulk panel message, get email accounts",
+      "private_helpers": [
+        "_render_body",
+        "_enrich_row_context",
+        "_send_sms",
+        "_send_email"
       ],
       "depends_on": [],
       "sections": [
-        "App Metadata",
-        "Global JS/CSS",
-        "DocType JS Overrides",
-        "Apps Screen"
+        "Jinja body rendering",
+        "Row context enrichment",
+        "Email account list",
+        "Test send",
+        "Bulk panel send"
       ]
     },
     "nce_events/api/panel_api.py": {
-      "purpose": "Core panel data API: fetch panel config, fetch paginated/filtered panel data, export CSV, save SQL filter, child doctype discovery, field metadata. get_doctype_fields returns { fields, doctype_title_field } for Page Panel Display defaults.",
       "exports": [
+        "build_panel_sql",
+        "debug_child_lookup",
+        "export_panel_data",
+        "get_child_doctypes",
+        "get_doctype_fields",
+        "get_multi_hop_children",
         "get_panel_config",
         "get_panel_data",
-        "export_panel_data",
-        "save_panel_sql",
-        "get_child_doctypes",
-        "get_multi_hop_children",
-        "debug_child_lookup",
-        "get_doctype_fields"
+        "save_panel_sql"
       ],
+      "whitelist_endpoints": [
+        "build_panel_sql",
+        "debug_child_lookup",
+        "export_panel_data",
+        "get_child_doctypes",
+        "get_doctype_fields",
+        "get_multi_hop_children",
+        "get_panel_config",
+        "get_panel_data",
+        "save_panel_sql"
+      ],
+      "purpose": "Core panel data API: fetch panel config, fetch paginated/filtered panel data, export CSV, save SQL filter, child doctype discovery, field metadata. get_doctype_fields returns { fields, doctype_title_field } for Page Panel Display defaults.",
       "private_helpers": [
         "_build_core_filter_where",
         "_auto_detect_contact_fields",
@@ -72,106 +220,185 @@
         "Internal query helpers"
       ]
     },
-    "nce_events/api/messaging.py": {
-      "purpose": "Email and SMS messaging: preview Jinja-rendered message, send bulk panel message, get email accounts",
+    "nce_events/api/reports.py": {
       "exports": [
-        "get_email_accounts",
-        "send_test_email",
-        "send_test_sms",
-        "preview_panel_message",
-        "send_panel_message"
+        "create_or_update_report",
+        "get_report_columns"
       ],
-      "private_helpers": [
-        "_render_body",
-        "_enrich_row_context",
-        "_send_sms",
-        "_send_email"
+      "whitelist_endpoints": [
+        "create_or_update_report",
+        "get_report_columns"
       ],
-      "depends_on": [],
+      "purpose": "Report generation — panel data as structured report output",
+      "depends_on": [
+        "nce_events/api/panel_api.py"
+      ],
       "sections": [
-        "Jinja body rendering",
-        "Row context enrichment",
-        "Email account list",
-        "Test send",
-        "Bulk panel send"
+        "Report data fetch and formatting"
       ]
     },
+    "nce_events/api/sql_eval.py": {
+      "exports": [
+        "evaluate_sql_expressions",
+        "evaluate_sql_expressions_api",
+        "get_substitution_token_allowlist",
+        "split_sql_code_and_string_literals",
+        "substitution_token_allowlist_for_doctype"
+      ],
+      "whitelist_endpoints": [
+        "evaluate_sql_expressions_api",
+        "get_substitution_token_allowlist"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/api/tags.py": {
+      "exports": [
+        "get_pronoun_tags_for_doctype"
+      ],
+      "whitelist_endpoints": [
+        "get_pronoun_tags_for_doctype"
+      ],
       "purpose": "Jinja tag generation for email/SMS templates — pronoun tags, gender-conditional values",
-      "exports": ["get_pronoun_tags_for_doctype"],
-      "private_helpers": ["_compute_jinja_tag"],
+      "private_helpers": [
+        "_compute_jinja_tag"
+      ],
       "depends_on": [],
-      "sections": ["Pronoun tag computation"]
+      "sections": [
+        "Pronoun tag computation"
+      ]
     },
-    "nce_events/api/reports.py": {
-      "purpose": "Report generation — panel data as structured report output",
-      "exports": [],
-      "depends_on": ["nce_events/api/panel_api.py"],
-      "sections": ["Report data fetch and formatting"]
+    "nce_events/api/tests/__init__.py": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
-    "nce_events/api/credentials.py": {
-      "purpose": "Read credential_config JSON from API Connector doctype — returns auth_pattern, base_url, required credential values",
-      "exports": ["get_credentials"],
-      "depends_on": [],
-      "sections": ["Credential lookup from API Connector"]
+    "nce_events/api/tests/test_core_functions.py": {
+      "exports": [
+        "TestApplyUserFilters",
+        "TestBuildCoreFilterWhere",
+        "TestComputeJinjaTag",
+        "TestEnsureTabPrefix",
+        "TestTranslateWpQuery"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
-    "nce_events/api/exchange.py": {
-      "purpose": "Data exchange/import functionality for enrollments",
-      "exports": [],
-      "depends_on": [],
-      "sections": ["Exchange logic"]
+    "nce_events/api/tests/test_derived_fields.py": {
+      "exports": [
+        "TestApplyDerivedFieldsToDoc",
+        "TestEvaluateDerivedFields",
+        "TestGetDerivedFieldSpecs",
+        "TestSplitSqlLiterals"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
-    "nce_events/api/hierarchy_explorer.py": {
-      "purpose": "Hierarchy explorer backend — tree traversal for hierarchical doctypes",
-      "exports": [],
-      "depends_on": [],
-      "sections": ["Hierarchy data fetch"]
+    "nce_events/api/tests/test_events_publish.py": {
+      "exports": [
+        "TestBuildWooCommerceProductPayload",
+        "TestPublishEventsToWebsite",
+        "TestSlugifyProductSlug"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
-    "nce_events/api/llm.py": {
-      "purpose": "LLM/AI integration helpers for AI tools panel feature",
-      "exports": [],
-      "depends_on": [],
-      "sections": ["LLM call wrappers"]
+    "nce_events/api/tests/test_form_dialog_api.py": {
+      "exports": [
+        "TestAssertDoctypeInWPTables",
+        "TestCaptureFormDialog",
+        "TestFiltersForRelatedRows",
+        "TestGetFormDialogDefinition",
+        "TestGetFormDialogRelatedRows",
+        "TestHopWalkFinalIdentifiers",
+        "TestListFormDialogsForDoctype",
+        "TestNormalizePortalFieldConfig",
+        "TestParseRelatedDoctypes",
+        "TestRelatedListColumnsOptions",
+        "TestRelatedPortalFieldEditor",
+        "TestSaveFormDialogRelatedRows"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/api/tests/test_sql_eval.py": {
+      "exports": [
+        "TestEvaluateSqlExpressions",
+        "TestEvaluateSqlExpressionsApi",
+        "TestSplitSqlLiterals",
+        "TestSubstitutionTokenAllowlist"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/api/tests/test_woocommerce_client.py": {
+      "exports": [
+        "TestWooCommerceClient"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/api/tests/test_wp_tables_mapping.py": {
+      "exports": [
+        "TestDerivedSqlSpecsFromColumnMapping",
+        "TestGetDerivedSqlSpecs"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
     "nce_events/api/translator.py": {
-      "purpose": "Translation/localisation utilities",
-      "exports": [],
-      "depends_on": [],
-      "sections": ["Translation helpers"]
-    },
-    "nce_events/api/form_dialog_api.py": {
-      "purpose": "CRUD and schema-capture API for Form Dialog DocType. Validates DocType is in WP Tables. Capture freezes live Desk meta. save_form_dialog_document updates linked docs for fetch_from then saves (used when writeback_on_submit). get_form_dialog_related_rows returns related-tab rows (portal columns, hop_chain-aware) for V2.",
       "exports": [
-        "capture_form_dialog_from_desk",
-        "rebuild_form_dialog",
-        "get_form_dialog_definition",
-        "get_form_dialog_related_rows",
-        "save_form_dialog_related_rows",
-        "list_form_dialogs_for_doctype",
-        "get_related_portal_field_editor",
-        "save_related_portal_field_config",
-        "save_form_dialog_document"
+        "translate_wp_query"
       ],
-      "private_helpers": [
-        "_assert_doctype_in_wp_tables",
-        "_require_system_manager"
+      "whitelist_endpoints": [
+        "translate_wp_query"
       ],
-      "depends_on": ["nce_events/nce_events/doctype/form_dialog/"],
+      "purpose": "Translation/localisation utilities",
+      "depends_on": [],
       "sections": [
-        "WP Tables validation",
-        "Capture / rebuild frozen schema from frappe.get_meta",
-        "Get frozen definition for V2 renderer",
-        "Related-tab row fetch (whitelist read)",
-        "List dialogs filtered by target_doctype",
-        "Save with server-side fetch_from writeback to linked records"
+        "Translation helpers"
+      ]
+    },
+    "nce_events/api/woocommerce_client.py": {
+      "exports": [
+        "wc_request"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/api/wp_tables_mapping.py": {
+      "exports": [
+        "derived_sql_specs_from_column_mapping",
+        "get_derived_sql_specs",
+        "get_derived_sql_specs_api",
+        "get_wp_tables_column_mapping",
+        "get_wp_tables_column_mapping_api"
+      ],
+      "whitelist_endpoints": [
+        "get_derived_sql_specs_api",
+        "get_wp_tables_column_mapping_api"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/hooks.py": {
+      "purpose": "App config: metadata, required_apps (nce_sync), global JS/CSS includes, doctype_js overrides, apps screen entry",
+      "depends_on": [],
+      "sections": [
+        "App Metadata",
+        "Global JS/CSS",
+        "DocType JS Overrides",
+        "Apps Screen"
       ]
     }
   },
-
   "utils": {
+    "nce_events/utils/__init__.py": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/utils/version.py": {
+      "exports": [
+        "get_frappe_major_version",
+        "is_v16_or_later"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/utils/writeback.py": {
+      "exports": [
+        "writeback_fetched_fields"
+      ],
+      "whitelist_endpoints": [
+        "writeback_fetched_fields"
+      ],
       "purpose": "Optional writeback_fetched_fields for batch/server use. Panel dialog uses save_form_dialog_document instead.",
-      "exports": ["writeback_fetched_fields"],
       "depends_on": [],
       "sections": [
         "Main writeback_fetched_fields function",
@@ -179,31 +406,16 @@
       ]
     }
   },
-
   "doctypes": {
-    "nce_events/nce_events/doctype/page_panel/": {
-      "purpose": "Core config doctype — one record per root DocType being displayed. Stores column order, filters, gender config, email/SMS fields, computed columns, and optional link to a Form Dialog for V2 row editing.",
-      "key_fields": [
-        "root_doctype",
-        "header_text",
-        "core_filter",
-        "order_by",
-        "column_order",
-        "gender_column",
-        "email_field",
-        "sms_field",
-        "form_dialog"
-      ],
-      "depends_on": ["page_panel_computed_column", "form_dialog"]
-    },
-    "nce_events/nce_events/doctype/page_panel_computed_column/": {
-      "purpose": "Child table for SQL-expression computed columns on a panel",
-      "key_fields": ["column_name", "expression"],
-      "depends_on": []
+    "nce_events/nce_events/doctype/card_action/": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
     "nce_events/nce_events/doctype/card_definition/": {
       "purpose": "Card layout definition — composite display card with tabs, fields, actions, graphics",
-      "key_fields": ["title", "target_doctype"],
+      "key_fields": [
+        "title",
+        "target_doctype"
+      ],
       "depends_on": [
         "card_tab",
         "card_field",
@@ -217,18 +429,47 @@
         "card_pivot_table"
       ]
     },
+    "nce_events/nce_events/doctype/card_display/": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/nce_events/doctype/card_field/": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/nce_events/doctype/card_graphic/": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/nce_events/doctype/card_pivot_table/": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/nce_events/doctype/card_portal/": {
       "purpose": "Portal page definition — ordered columns of cards",
-      "key_fields": ["title"],
-      "depends_on": ["card_portal_column"]
+      "key_fields": [
+        "title"
+      ],
+      "depends_on": [
+        "card_portal_column"
+      ]
+    },
+    "nce_events/nce_events/doctype/card_portal_column/": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/nce_events/doctype/card_script/": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/nce_events/doctype/card_tab/": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/nce_events/doctype/card_text_block/": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/nce_events/doctype/card_video/": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/nce_events/doctype/card_web_viewer/": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
     "nce_events/nce_events/doctype/display_settings/": {
       "purpose": "Global display settings singleton for NCE Events UI",
-      "key_fields": [],
-      "depends_on": []
-    },
-    "nce_events/nce_events/doctype/settings/": {
-      "purpose": "App-level settings singleton",
       "key_fields": [],
       "depends_on": []
     },
@@ -244,69 +485,81 @@
         "writeback_on_submit",
         "buttons"
       ],
-      "depends_on": ["form_dialog_button"]
+      "depends_on": [
+        "form_dialog_button"
+      ]
     },
     "nce_events/nce_events/doctype/form_dialog_button/": {
       "purpose": "Child table of Form Dialog. Each row is an action button shown in the V2 dialog. Stores a copied button_script (JS) and sort_order. Scripts are copied from Desk Client Scripts manually; rebuild updates them.",
-      "key_fields": ["label", "button_script", "sort_order", "source_note"],
+      "key_fields": [
+        "label",
+        "button_script",
+        "sort_order",
+        "source_note"
+      ],
+      "depends_on": []
+    },
+    "nce_events/nce_events/doctype/form_dialog_related_doctype/": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/nce_events/doctype/page_panel/": {
+      "purpose": "Core config doctype — one record per root DocType being displayed. Stores column order, filters, gender config, email/SMS fields, computed columns, and optional link to a Form Dialog for V2 row editing.",
+      "key_fields": [
+        "root_doctype",
+        "header_text",
+        "core_filter",
+        "order_by",
+        "column_order",
+        "gender_column",
+        "email_field",
+        "sms_field",
+        "form_dialog"
+      ],
+      "depends_on": [
+        "page_panel_computed_column",
+        "form_dialog"
+      ]
+    },
+    "nce_events/nce_events/doctype/page_panel_computed_column/": {
+      "purpose": "Child table for SQL-expression computed columns on a panel",
+      "key_fields": [
+        "column_name",
+        "expression"
+      ],
+      "depends_on": []
+    },
+    "nce_events/nce_events/doctype/page_panel_default_filter/": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/nce_events/doctype/settings/": {
+      "purpose": "App-level settings singleton",
+      "key_fields": [],
       "depends_on": []
     }
   },
-
-  "frontend_v0": {
-    "note": "Renamed from panel_page to panel_page_v0. Any reference to the old /js/panel_page/ path will 404 — use this to surface stale references. Pending deletion after V2 validation.",
-    "nce_events/public/js/panel_page_v0/ui.js": {
-      "purpose": "V0 Explorer class — renders panel table, handles pagination, column toggle, row click (defunct — pending deletion)",
-      "exports": ["nce_events.Explorer"],
-      "depends_on": ["panel_page_v0/store.js"]
-    },
-    "nce_events/public/js/panel_page_v0/store.js": {
-      "purpose": "V0 Store class — state management for V0 panel (defunct — pending deletion)",
-      "exports": ["nce_events.Store"],
-      "depends_on": []
-    },
-    "nce_events/public/js/schema_explorer.js": {
-      "purpose": "Tag Finder V1 — DocType field browser for building Jinja template tags",
-      "exports": ["nce_events.schema_explorer"],
+  "frontend_legacy_global": {
+    "nce_events/public/js/api_connector_tags.js": {
+      "purpose": "DocType JS extension for API Connector — tag generation helpers",
       "depends_on": []
     },
     "nce_events/public/js/email_template_tags.js": {
       "purpose": "DocType JS extension for Email Template — adds Tag Finder button",
-      "exports": [],
-      "depends_on": ["schema_explorer.js"]
-    },
-    "nce_events/public/js/api_connector_tags.js": {
-      "purpose": "DocType JS extension for API Connector — tag generation helpers",
-      "exports": [],
-      "depends_on": []
+      "depends_on": [
+        "schema_explorer.js"
+      ]
     },
     "nce_events/public/js/enrollments_exchange.js": {
       "purpose": "Enrollments data exchange UI — globally included",
-      "exports": [],
+      "depends_on": []
+    },
+    "nce_events/public/js/schema_explorer.js": {
+      "purpose": "Tag Finder V1 — DocType field browser for building Jinja template tags",
       "depends_on": []
     }
   },
-
   "frontend_v2": {
-    "note": "V2 is a Vue 3 SFC app built with Vite. Source in public/js/panel_page_v2/, built output in public/js/panel_page_v2_dist/. Run update_v2.sh to build.",
-    "nce_events/public/js/panel_page_v2/shared/sms_dialog.js": {
-      "purpose": "SMS compose/send dialog — loaded at runtime by V2 via frappe.require()",
-      "exports": ["nce_events.panel_page.SmsDialog"],
-      "depends_on": []
-    },
-    "nce_events/public/js/panel_page_v2/shared/email_dialog.js": {
-      "purpose": "Email compose/send dialog — loaded at runtime by V2 via frappe.require()",
-      "exports": ["nce_events.panel_page.EmailDialog"],
-      "depends_on": []
-    },
-    "nce_events/public/js/panel_page_v2/shared/ai_tools.js": {
-      "purpose": "AI tools sidebar panel — loaded at runtime by V2 via frappe.require()",
-      "exports": ["nce_events.AiTools"],
-      "depends_on": []
-    },
     "nce_events/public/js/panel_page_v2/App.vue": {
       "purpose": "V2 root component — panel orchestration, card stack (nce_cards + useNceCardStack), form dialog host, window._nce_open_card",
-      "exports": [],
       "depends_on": [
         "composables/usePanel.js",
         "composables/useNceCardStack.js",
@@ -320,155 +573,41 @@
         "shared/ai_tools.js"
       ]
     },
-    "nce_events/public/js/panel_page_v2/composables/useFormDialogRecordNav.js": {
-      "purpose": "V2 composable — form dialog prev/next over the source panel's visible row list; exported panelRowArray for reuse.",
-      "exports": ["useFormDialogRecordNav", "panelRowArray"],
-      "depends_on": []
-    },
-    "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js": {
-      "purpose": "V2 composable — panel integration for Panel Form Dialog: refs, open from row, close/save + panel reload; composes useFormDialogRecordNav.",
-      "exports": ["usePanelFormDialogHost"],
-      "depends_on": ["composables/useFormDialogRecordNav.js"]
-    },
-    "nce_events/public/js/panel_page_v2/composables/usePanel.js": {
-      "purpose": "V2 composable — load panel config and data, refetch with user_filters",
-      "exports": ["usePanel"],
-      "depends_on": ["utils/frappeCall.js"]
-    },
-    "nce_events/public/js/panel_page_v2/composables/useTagFinder.js": {
-      "purpose": "V2 composable — Tag Finder field loading and tag generation",
-      "exports": ["useTagFinder"],
-      "depends_on": []
-    },
-    "nce_events/public/js/panel_page_v2/composables/useNceCardStack.js": {
-      "purpose": "V2 composable — stacked Card modals; parseOpenCardOpts for window._nce_open_card. Panel drill calls openCardModal.",
-      "exports": ["useNceCardStack", "parseOpenCardOpts"],
-      "depends_on": []
-    },
-    "nce_events/public/js/panel_page_v2/composables/formDialogFetchFrom.js": {
-      "purpose": "createHandleFetchFrom(allFields, formData) — Link change fetch_from resolution for Panel Form Dialog.",
-      "exports": ["createHandleFetchFrom"],
-      "depends_on": ["utils/frappeCall.js"]
-    },
-    "nce_events/public/js/panel_page_v2/composables/frozenFormValidate.js": {
-      "purpose": "validateFrozenForm + isFieldVisible/Mandatory/ReadOnly; isVirtualDocField (Frappe is_virtual) forces read-only and skips mandatory checks.",
-      "exports": ["validateFrozenForm", "isFieldVisible", "isFieldMandatory", "isFieldReadOnly", "isVirtualDocField"],
-      "depends_on": ["utils/frappeFieldExpr.js"]
-    },
-    "nce_events/public/js/panel_page_v2/composables/frozenFormSave.js": {
-      "purpose": "saveFrozenFormDocument — server save_form_dialog_document + writeback_fetches flag.",
-      "exports": ["saveFrozenFormDocument"],
-      "depends_on": ["utils/frappeCall.js", "nce_events/api/form_dialog_api.py"]
-    },
-    "nce_events/public/js/panel_page_v2/composables/useFrozenFormLoad.js": {
-      "purpose": "createFrozenFormLoad — load seq, resetWhenClosed, load definition + doc + initial fetch_from batch.",
-      "exports": ["createFrozenFormLoad"],
-      "depends_on": ["utils/frappeCall.js", "utils/frappeFieldExpr.js", "utils/parseLayout.js", "nce_events/api/form_dialog_api.py"]
-    },
-    "nce_events/public/js/panel_page_v2/composables/usePanelFormDialog.js": {
-      "purpose": "V2 composable — facade for Panel Form Dialog: composes createFrozenFormLoad, createHandleFetchFrom, frozenFormValidate/Save, formDialogSnapshot. Used by PanelFormDialog.vue.",
-      "exports": ["usePanelFormDialog"],
-      "depends_on": [
-        "utils/formDialogSnapshot.js",
-        "composables/formDialogFetchFrom.js",
-        "composables/frozenFormValidate.js",
-        "composables/frozenFormSave.js",
-        "composables/useFrozenFormLoad.js"
-      ]
-    },
-    "nce_events/public/js/panel_page_v2/components/PanelTable.vue": {
-      "purpose": "Main data table component for V2 panel — columns, rows, pagination, sorting",
-      "exports": [],
-      "depends_on": ["usePanel.js"]
-    },
-    "nce_events/public/js/panel_page_v2/components/TabBar.vue": {
-      "purpose": "Tab navigation bar for switching between panels",
-      "exports": [],
-      "depends_on": []
-    },
-    "nce_events/public/js/panel_page_v2/components/TagFinder.vue": {
-      "purpose": "Tag Finder V2 — Vue port of schema_explorer.js for template tag building",
-      "exports": [],
-      "depends_on": ["useTagFinder.js"]
-    },
-    "nce_events/public/js/panel_page_v2/components/TagDialog.vue": {
-      "purpose": "Modal dialog wrapping TagFinder for in-context tag insertion",
-      "exports": [],
-      "depends_on": ["TagFinder.vue"]
-    },
-    "nce_events/public/js/panel_page_v2/components/TagColumn.vue": {
-      "purpose": "Table column cell renderer with tag highlighting",
-      "exports": [],
-      "depends_on": []
-    },
     "nce_events/public/js/panel_page_v2/components/ActionsPanel.vue": {
+      "vue": {
+        "uses_defineEmits": true
+      },
       "purpose": "Side panel showing available actions (email, SMS, AI tools) for selected rows",
-      "exports": [],
       "depends_on": []
-    },
-    "nce_events/public/js/panel_page_v2/nce_cards/useCardForm.js": {
-      "purpose": "Card core — load Card Definition + record, hop paths, saveField/refresh (uses frappe.db + frappeCall).",
-      "exports": ["useCardForm"],
-      "depends_on": ["utils/frappeCall.js"]
-    },
-    "nce_events/public/js/panel_page_v2/nce_cards/CardForm.vue": {
-      "purpose": "Card core — renders a Card Definition (tabs, WidgetGrid, ActionsPanel).",
-      "exports": [],
-      "depends_on": [
-        "nce_cards/useCardForm.js",
-        "components/ActionsPanel.vue",
-        "components/TabBar.vue",
-        "components/WidgetGrid.vue"
-      ]
-    },
-    "nce_events/public/js/panel_page_v2/nce_cards/CardModal.vue": {
-      "purpose": "Card core — Teleport modal shell wrapping CardForm.",
-      "exports": [],
-      "depends_on": ["nce_cards/CardForm.vue"]
     },
     "nce_events/public/js/panel_page_v2/components/DisplayWidget.vue": {
       "purpose": "Read-only display widget for card fields",
-      "exports": [],
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/components/FieldWidget.vue": {
+      "vue": {
+        "uses_defineEmits": true
+      },
       "purpose": "Editable field widget for card form inputs",
-      "exports": [],
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/components/PanelFloat.vue": {
       "purpose": "Floating overlay panel for contextual actions",
-      "exports": [],
       "depends_on": []
     },
-    "nce_events/public/js/panel_page_v2/components/WidgetGrid.vue": {
-      "purpose": "Grid layout container for card widgets",
-      "exports": [],
-      "depends_on": []
-    },
-    "nce_events/public/js/panel_page_v2/composables/useFormDialogChrome.js": {
-      "purpose": "confirmDiscardIfDirty + createRowNavKeydownHandler for Panel Form Dialog shell.",
-      "exports": ["confirmDiscardIfDirty", "createRowNavKeydownHandler"],
-      "depends_on": []
-    },
-    "nce_events/public/js/panel_page_v2/components/PanelFormDialogHeader.vue": {
-      "purpose": "Form dialog header — title, row nav, close.",
-      "exports": [],
-      "depends_on": []
-    },
-    "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue": {
-      "purpose": "Form dialog body — tabs, sections, PanelFormField grid; related tabs load get_form_dialog_related_rows (scrollable table; portal-editable cells: Select/Check/number/date/text; save_form_dialog_related_rows on Submit); v-model:activeTab.",
-      "exports": [],
-      "depends_on": ["components/PanelFormField.vue", "utils/frappeCall.js"]
-    },
-    "nce_events/public/js/panel_page_v2/components/PanelFormDialogFooter.vue": {
-      "purpose": "Form dialog footer — custom buttons, Cancel, Revert (discard unsaved), Submit.",
-      "exports": [],
+    "nce_events/public/js/panel_page_v2/components/PanelFormDateTimeField.vue": {
+      "vue": {
+        "uses_defineProps": true,
+        "uses_defineEmits": true
+      },
+      "purpose": "Panel Form Dialog control — mounts Frappe Date/Time/Datetime control in a div host; v-model sync and read_only/reqd from frozen meta.",
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue": {
+      "vue": {
+        "uses_defineEmits": true
+      },
       "purpose": "V2 form dialog root — composes Header/Body/Footer, usePanelFormDialog + useFormDialogChrome. Opened from panel when form_dialog is set.",
-      "exports": [],
       "depends_on": [
         "composables/usePanelFormDialog.js",
         "composables/useFormDialogChrome.js",
@@ -477,70 +616,337 @@
         "components/PanelFormDialogFooter.vue"
       ]
     },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue": {
+      "vue": {
+        "uses_defineEmits": true
+      },
+      "purpose": "Form dialog body — tabs, sections, PanelFormField grid; related tabs load get_form_dialog_related_rows (scrollable table; portal-editable cells: Select/Check/number/date/text; save_form_dialog_related_rows on Submit); v-model:activeTab.",
+      "depends_on": [
+        "components/PanelFormField.vue",
+        "utils/frappeCall.js"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogFooter.vue": {
+      "vue": {
+        "uses_defineEmits": true
+      },
+      "purpose": "Form dialog footer — custom buttons, Cancel, Revert (discard unsaved), Submit.",
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogHeader.vue": {
+      "vue": {
+        "uses_defineProps": true,
+        "uses_defineEmits": true
+      },
+      "purpose": "Form dialog header — title, row nav, close.",
+      "depends_on": []
+    },
     "nce_events/public/js/panel_page_v2/components/PanelFormField.vue": {
+      "vue": {
+        "uses_defineEmits": true
+      },
       "purpose": "Single field renderer inside PanelFormDialog. Maps Frappe fieldtype → control element (FormControl, checkbox, select, Link placeholder, etc.). Respects hidden/read_only/reqd and depends_on eval expressions.",
-      "exports": [],
       "depends_on": [
         "utils/fieldTypeMap.js",
         "components/PanelFormLinkField.vue",
         "components/PanelFormDateTimeField.vue"
       ]
     },
-    "nce_events/public/js/panel_page_v2/components/PanelFormDateTimeField.vue": {
-      "purpose": "Panel Form Dialog control — mounts Frappe Date/Time/Datetime control in a div host; v-model sync and read_only/reqd from frozen meta.",
-      "exports": [],
+    "nce_events/public/js/panel_page_v2/components/PanelFormLinkField.vue": {
+      "vue": {
+        "uses_defineProps": true,
+        "uses_defineEmits": true
+      },
+      "purpose": "Panel Form Dialog control — mounts Frappe Link control in a div host; emits change + link-change for fetch_from; v-model sync.",
       "depends_on": []
     },
-    "nce_events/public/js/panel_page_v2/components/PanelFormLinkField.vue": {
-      "purpose": "Panel Form Dialog control — mounts Frappe Link control in a div host; emits change + link-change for fetch_from; v-model sync.",
-      "exports": [],
+    "nce_events/public/js/panel_page_v2/components/PanelTable.vue": {
+      "vue": {
+        "uses_defineEmits": true
+      },
+      "purpose": "Main data table component for V2 panel — columns, rows, pagination, sorting",
+      "depends_on": [
+        "usePanel.js"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/components/TabBar.vue": {
+      "vue": {
+        "uses_defineEmits": true
+      },
+      "purpose": "Tab navigation bar for switching between panels",
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/components/TagColumn.vue": {
+      "vue": {
+        "uses_defineEmits": true
+      },
+      "purpose": "Table column cell renderer with tag highlighting",
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/components/TagDialog.vue": {
+      "vue": {
+        "uses_defineProps": true,
+        "uses_defineEmits": true
+      },
+      "purpose": "Modal dialog wrapping TagFinder for in-context tag insertion",
+      "depends_on": [
+        "TagFinder.vue"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/components/TagFinder.vue": {
+      "vue": {
+        "uses_defineProps": true,
+        "uses_defineEmits": true
+      },
+      "purpose": "Tag Finder V2 — Vue port of schema_explorer.js for template tag building",
+      "depends_on": [
+        "useTagFinder.js"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/components/WidgetGrid.vue": {
+      "vue": {
+        "uses_defineEmits": true
+      },
+      "purpose": "Grid layout container for card widgets",
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/composables/formDialogFetchFrom.js": {
+      "exports": [
+        "createHandleFetchFrom"
+      ],
+      "purpose": "createHandleFetchFrom(allFields, formData) — Link change fetch_from resolution for Panel Form Dialog.",
+      "depends_on": [
+        "utils/frappeCall.js"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/composables/frozenFormSave.js": {
+      "exports": [
+        "extractServerMessage",
+        "saveFrozenFormDocument"
+      ],
+      "purpose": "saveFrozenFormDocument — server save_form_dialog_document + writeback_fetches flag.",
+      "depends_on": [
+        "utils/frappeCall.js",
+        "nce_events/api/form_dialog_api.py"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/composables/frozenFormValidate.js": {
+      "exports": [
+        "isFieldMandatory",
+        "isFieldReadOnly",
+        "isFieldVisible",
+        "isMandatoryValueEmpty",
+        "isVirtualDocField",
+        "validateFrozenForm",
+        "validatePanelRequiredFields"
+      ],
+      "purpose": "validateFrozenForm + isFieldVisible/Mandatory/ReadOnly; isVirtualDocField (Frappe is_virtual) forces read-only and skips mandatory checks.",
+      "depends_on": [
+        "utils/frappeFieldExpr.js"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/composables/useFormDialogChrome.js": {
+      "exports": [
+        "confirmDiscardIfDirty",
+        "createRowNavKeydownHandler"
+      ],
+      "purpose": "confirmDiscardIfDirty + createRowNavKeydownHandler for Panel Form Dialog shell.",
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/composables/useFormDialogRecordNav.js": {
+      "exports": [
+        "panelRowArray",
+        "useFormDialogRecordNav"
+      ],
+      "purpose": "V2 composable — form dialog prev/next over the source panel's visible row list; exported panelRowArray for reuse.",
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/composables/useFrozenFormLoad.js": {
+      "exports": [
+        "createFrozenFormLoad"
+      ],
+      "purpose": "createFrozenFormLoad — load seq, resetWhenClosed, load definition + doc + initial fetch_from batch.",
+      "depends_on": [
+        "utils/frappeCall.js",
+        "utils/frappeFieldExpr.js",
+        "utils/parseLayout.js",
+        "nce_events/api/form_dialog_api.py"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/composables/useNceCardStack.js": {
+      "exports": [
+        "parseOpenCardOpts",
+        "useNceCardStack"
+      ],
+      "purpose": "V2 composable — stacked Card modals; parseOpenCardOpts for window._nce_open_card. Panel drill calls openCardModal.",
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/composables/usePanel.js": {
+      "exports": [
+        "usePanel"
+      ],
+      "purpose": "V2 composable — load panel config and data, refetch with user_filters",
+      "depends_on": [
+        "utils/frappeCall.js"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/composables/usePanelFormDialog.js": {
+      "exports": [
+        "usePanelFormDialog"
+      ],
+      "purpose": "V2 composable — facade for Panel Form Dialog: composes createFrozenFormLoad, createHandleFetchFrom, frozenFormValidate/Save, formDialogSnapshot. Used by PanelFormDialog.vue.",
+      "depends_on": [
+        "utils/formDialogSnapshot.js",
+        "composables/formDialogFetchFrom.js",
+        "composables/frozenFormValidate.js",
+        "composables/frozenFormSave.js",
+        "composables/useFrozenFormLoad.js"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js": {
+      "exports": [
+        "usePanelFormDialogHost"
+      ],
+      "purpose": "V2 composable — panel integration for Panel Form Dialog: refs, open from row, close/save + panel reload; composes useFormDialogRecordNav.",
+      "depends_on": [
+        "composables/useFormDialogRecordNav.js"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/composables/useTagFinder.js": {
+      "exports": [
+        "useTagFinder"
+      ],
+      "purpose": "V2 composable — Tag Finder field loading and tag generation",
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/legacy_dialogs/ai_tools.js": {
+      "provides": [
+        "nce_events.panel_page"
+      ],
+      "purpose": "AI tools sidebar panel — loaded at runtime by V2 via frappe.require()",
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/legacy_dialogs/email_dialog.js": {
+      "provides": [
+        "nce_events.panel_page"
+      ],
+      "purpose": "Email compose/send dialog — loaded at runtime by V2 via frappe.require()",
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/legacy_dialogs/sms_dialog.js": {
+      "provides": [
+        "nce_events.panel_page"
+      ],
+      "purpose": "SMS compose/send dialog — loaded at runtime by V2 via frappe.require()",
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/main.js": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/public/js/panel_page_v2/nce_cards/CardForm.vue": {
+      "vue": {
+        "uses_defineProps": true,
+        "uses_defineEmits": true
+      },
+      "purpose": "Card core — renders a Card Definition (tabs, WidgetGrid, ActionsPanel).",
+      "depends_on": [
+        "nce_cards/useCardForm.js",
+        "components/ActionsPanel.vue",
+        "components/TabBar.vue",
+        "components/WidgetGrid.vue"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/nce_cards/CardModal.vue": {
+      "vue": {
+        "uses_defineProps": true,
+        "uses_defineEmits": true
+      },
+      "purpose": "Card core — Teleport modal shell wrapping CardForm.",
+      "depends_on": [
+        "nce_cards/CardForm.vue"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/nce_cards/useCardForm.js": {
+      "exports": [
+        "useCardForm"
+      ],
+      "purpose": "Card core — load Card Definition + record, hop paths, saveField/refresh (uses frappe.db + frappeCall).",
+      "depends_on": [
+        "utils/frappeCall.js"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/utils/fieldTypeMap.js": {
+      "exports": [
+        "getComponentConfig"
+      ],
+      "purpose": "Utility: maps every Frappe fieldtype string to a { component, props } config (or { layout } for structural types). Single source of truth for fieldtype→control mapping in V2 dialogs.",
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/utils/formDialogLoadDebug.js": {
+      "exports": [
+        "FD_LOAD_DEBUG_STORAGE_KEY",
+        "isFdLoadDebugEnabled"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/public/js/panel_page_v2/utils/formDialogSnapshot.js": {
+      "exports": [
+        "snapshotForCompare"
+      ],
+      "purpose": "Utility: snapshotForCompare for dirty detection on frozen form reactive state.",
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/utils/frappeCall.js": {
+      "exports": [
+        "frappeCall"
+      ],
       "purpose": "Utility: Promise wrapper for frappe.call (shared by usePanel, usePanelFormDialog stack, nce_cards/useCardForm).",
-      "exports": ["frappeCall"],
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/utils/frappeFieldExpr.js": {
+      "exports": [
+        "LAYOUT_FIELDTYPES",
+        "evaluateExpression",
+        "isLayoutField"
+      ],
       "purpose": "Utility: Frappe-style depends_on / *_depends_on evaluation and layout fieldtype list for frozen form meta.",
-      "exports": ["evaluateExpression", "isLayoutField", "LAYOUT_FIELDTYPES"],
-      "depends_on": []
-    },
-    "nce_events/public/js/panel_page_v2/utils/formDialogSnapshot.js": {
-      "purpose": "Utility: snapshotForCompare for dirty detection on frozen form reactive state.",
-      "exports": ["snapshotForCompare"],
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/utils/parseLayout.js": {
+      "exports": [
+        "parseLayout"
+      ],
       "purpose": "Utility: parse a flat Frappe DocField array into a nested Tabs→Sections→Columns→Fields tree. Used by usePanelFormDialog to render frozen_meta_json layout.",
-      "exports": ["parseLayout"],
       "depends_on": []
     },
-    "nce_events/public/js/panel_page_v2/utils/fieldTypeMap.js": {
-      "purpose": "Utility: maps every Frappe fieldtype string to a { component, props } config (or { layout } for structural types). Single source of truth for fieldtype→control mapping in V2 dialogs.",
-      "exports": ["getComponentConfig"],
-      "depends_on": []
+    "nce_events/public/js/panel_page_v2/vite.config.js": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
     }
   },
-
   "hierarchy_explorer": {
+    "nce_events/public/js/hierarchy_explorer/config.js": {
+      "provides": [
+        "nce_events.hierarchy"
+      ],
+      "purpose": "Hierarchy Explorer configuration — which doctypes to show as hierarchies",
+      "depends_on": []
+    },
+    "nce_events/public/js/hierarchy_explorer/store.js": {
+      "provides": [
+        "nce_events.hierarchy"
+      ],
+      "purpose": "Hierarchy Explorer state — tree data, expansion state",
+      "depends_on": []
+    },
     "nce_events/public/js/hierarchy_explorer/ui.js": {
+      "provides": [
+        "nce_events.hierarchy"
+      ],
       "purpose": "Hierarchy Explorer UI — tree view rendering for hierarchical doctypes",
-      "exports": [],
       "depends_on": [
         "hierarchy_explorer/store.js",
         "hierarchy_explorer/config.js"
       ]
-    },
-    "nce_events/public/js/hierarchy_explorer/store.js": {
-      "purpose": "Hierarchy Explorer state — tree data, expansion state",
-      "exports": [],
-      "depends_on": []
-    },
-    "nce_events/public/js/hierarchy_explorer/config.js": {
-      "purpose": "Hierarchy Explorer configuration — which doctypes to show as hierarchies",
-      "exports": [],
-      "depends_on": []
     }
   }
 }
