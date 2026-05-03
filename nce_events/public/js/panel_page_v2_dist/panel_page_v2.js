@@ -30,7 +30,7 @@
 		jt = (e) => en(e) === "[object Set]",
 		Zo = (e) => en(e) === "[object Date]",
 		se = (e) => typeof e == "function",
-		_e = (e) => typeof e == "string",
+		be = (e) => typeof e == "string",
 		Ge = (e) => typeof e == "symbol",
 		ge = (e) => e !== null && typeof e == "object",
 		Qo = (e) => (ge(e) || se(e)) && se(e.then) && se(e.catch),
@@ -38,7 +38,7 @@
 		en = (e) => el.call(e),
 		mi = (e) => en(e).slice(8, -1),
 		tl = (e) => en(e) === "[object Object]",
-		Sn = (e) => _e(e) && e !== "NaN" && e[0] !== "-" && "" + parseInt(e, 10) === e,
+		Sn = (e) => be(e) && e !== "NaN" && e[0] !== "-" && "" + parseInt(e, 10) === e,
 		tn = ro(
 			",key,ref,ref_for,ref_key,onVnodeBeforeMount,onVnodeMounted,onVnodeBeforeUpdate,onVnodeUpdated,onVnodeBeforeUnmount,onVnodeUnmounted"
 		),
@@ -86,20 +86,20 @@
 			const t = {};
 			for (let n = 0; n < e.length; n++) {
 				const o = e[n],
-					l = _e(o) ? bi(o) : $e(o);
+					l = be(o) ? _i(o) : $e(o);
 				if (l) for (const s in l) t[s] = l[s];
 			}
 			return t;
-		} else if (_e(e) || ge(e)) return e;
+		} else if (be(e) || ge(e)) return e;
 	}
 	const vi = /;(?![^(]*\))/g,
 		yi = /:([^]+)/,
-		_i = /\/\*[^]*?\*\//g;
-	function bi(e) {
+		bi = /\/\*[^]*?\*\//g;
+	function _i(e) {
 		const t = {};
 		return (
 			e
-				.replace(_i, "")
+				.replace(bi, "")
 				.split(vi)
 				.forEach((n) => {
 					if (n) {
@@ -112,7 +112,7 @@
 	}
 	function Ie(e) {
 		let t = "";
-		if (_e(e)) t = e;
+		if (be(e)) t = e;
 		else if (ne(e))
 			for (let n = 0; n < e.length; n++) {
 				const o = Ie(e[n]);
@@ -156,7 +156,7 @@
 	}
 	const sl = (e) => !!(e && e.__v_isRef === !0),
 		G = (e) =>
-			_e(e)
+			be(e)
 				? e
 				: e == null
 				? ""
@@ -514,7 +514,7 @@
 	}
 	const Nn = new WeakMap(),
 		Tt = Symbol(""),
-		_o = Symbol(""),
+		bo = Symbol(""),
 		sn = Symbol("");
 	function Oe(e, t, n) {
 		if (Ze && ye) {
@@ -545,10 +545,10 @@
 			} else
 				switch (((n !== void 0 || i.has(void 0)) && r(i.get(n)), u && r(i.get(sn)), t)) {
 					case "add":
-						a ? u && r(i.get("length")) : (r(i.get(Tt)), Lt(e) && r(i.get(_o)));
+						a ? u && r(i.get("length")) : (r(i.get(Tt)), Lt(e) && r(i.get(bo)));
 						break;
 					case "delete":
-						a || (r(i.get(Tt)), Lt(e) && r(i.get(_o)));
+						a || (r(i.get(Tt)), Lt(e) && r(i.get(bo)));
 						break;
 					case "set":
 						Lt(e) && r(i.get(Tt));
@@ -574,13 +574,13 @@
 	const Di = {
 		__proto__: null,
 		[Symbol.iterator]() {
-			return bo(this, Symbol.iterator, (e) => st(this, e));
+			return _o(this, Symbol.iterator, (e) => st(this, e));
 		},
 		concat(...e) {
 			return Bt(this).concat(...e.map((t) => (ne(t) ? Bt(t) : t)));
 		},
 		entries() {
-			return bo(this, "entries", (e) => ((e[1] = st(this, e[1])), e));
+			return _o(this, "entries", (e) => ((e[1] = st(this, e[1])), e));
 		},
 		every(e, t) {
 			return gt(this, "every", e, t, void 0, arguments);
@@ -652,10 +652,10 @@
 			return rn(this, "unshift", e);
 		},
 		values() {
-			return bo(this, "values", (e) => st(this, e));
+			return _o(this, "values", (e) => st(this, e));
 		},
 	};
-	function bo(e, t, n) {
+	function _o(e, t, n) {
 		const o = En(e),
 			l = o[t]();
 		return (
@@ -763,7 +763,7 @@
 			return ge(r) ? (l ? So(r) : Te(r)) : r;
 		}
 	}
-	class _l extends yl {
+	class bl extends yl {
 		constructor(t = !1) {
 			super(!1, t);
 		}
@@ -793,7 +793,7 @@
 			return Oe(t, "iterate", ne(t) ? "length" : Tt), Reflect.ownKeys(t);
 		}
 	}
-	class bl extends yl {
+	class _l extends yl {
 		constructor(t = !1) {
 			super(!0, t);
 		}
@@ -804,10 +804,10 @@
 			return !0;
 		}
 	}
-	const Ri = new _l(),
-		Oi = new bl(),
-		Pi = new _l(!0),
-		Ai = new bl(!0),
+	const Ri = new bl(),
+		Oi = new _l(),
+		Pi = new bl(!0),
+		Ai = new _l(!0),
 		xo = (e) => e,
 		Rn = (e) => Reflect.getPrototypeOf(e);
 	function Mi(e, t, n) {
@@ -820,7 +820,7 @@
 				u = l[e](...o),
 				c = n ? xo : t ? Ht : Qe;
 			return (
-				!t && Oe(s, "iterate", a ? _o : Tt),
+				!t && Oe(s, "iterate", a ? bo : Tt),
 				De(Object.create(u), {
 					next() {
 						const { value: f, done: h } = u.next();
@@ -1360,7 +1360,7 @@
 		);
 	}
 	function Dl(e, t, n) {
-		return _e(t)
+		return be(t)
 			? ((t = JSON.stringify(t)), n ? t : [`${e}=${t}`])
 			: typeof t == "number" || typeof t == "boolean" || t == null
 			? n
@@ -1430,7 +1430,7 @@
 		Wt = 0;
 	const Tl = Promise.resolve();
 	let Bn = null;
-	function _t(e) {
+	function bt(e) {
 		const t = Bn || Tl;
 		return e ? t.then(this ? e.bind(this) : e) : t;
 	}
@@ -1618,7 +1618,7 @@
 	}
 	function pr(e, t, n) {
 		const o = this.proxy,
-			l = _e(e) ? (e.includes(".") ? Ml(o, e) : () => o[e]) : e.bind(o, o);
+			l = be(e) ? (e.includes(".") ? Ml(o, e) : () => o[e]) : e.bind(o, o);
 		let s;
 		se(t) ? (s = t) : ((s = t.handler), (n = t));
 		const i = vn(this),
@@ -1641,7 +1641,7 @@
 		Vl = (e) => typeof MathMLElement == "function" && e instanceof MathMLElement,
 		Fo = (e, t) => {
 			const n = e && e.to;
-			return _e(n) ? (t ? t(n) : null) : n;
+			return be(n) ? (t ? t(n) : null) : n;
 		},
 		Bl = {
 			name: "Teleport",
@@ -1848,7 +1848,7 @@
 			g = f === pe ? Go : (S) => (Ul(c, S) ? !1 : me(h, S)),
 			w = (S, N) => !(N && Ul(c, N));
 		if (u != null && u !== a) {
-			if ((Wl(t), _e(u))) (c[u] = null), g(u) && (f[u] = null);
+			if ((Wl(t), be(u))) (c[u] = null), g(u) && (f[u] = null);
 			else if (Se(u)) {
 				const S = t;
 				w(u, S.k) && (u.value = null), S.k && (c[S.k] = null);
@@ -1856,7 +1856,7 @@
 		}
 		if (se(a)) qt(a, r, 12, [i, c]);
 		else {
-			const S = _e(a),
+			const S = be(a),
 				N = Se(a);
 			if (S || N) {
 				const C = () => {
@@ -1909,10 +1909,10 @@
 			});
 		if ((Kn(t, o, n), n)) {
 			let l = n.parent;
-			for (; l && l.parent; ) Kl(l.parent.vnode) && _r(o, t, n, l), (l = l.parent);
+			for (; l && l.parent; ) Kl(l.parent.vnode) && br(o, t, n, l), (l = l.parent);
 		}
 	}
-	function _r(e, t, n, o) {
+	function br(e, t, n, o) {
 		const l = Kn(t, e, o, !0);
 		Yt(() => {
 			co(o[t], l);
@@ -1932,27 +1932,27 @@
 			return o ? l.unshift(s) : l.push(s), s;
 		}
 	}
-	const bt =
+	const _t =
 			(e) =>
 			(t, n = Ae) => {
 				(!yn || e === "sp") && Kn(e, (...o) => t(...o), n);
 			},
-		br = bt("bm"),
-		Pt = bt("m"),
-		wr = bt("bu"),
-		xr = bt("u"),
-		No = bt("bum"),
-		Yt = bt("um"),
-		Sr = bt("sp"),
-		$r = bt("rtg"),
-		Cr = bt("rtc");
+		_r = _t("bm"),
+		Pt = _t("m"),
+		wr = _t("bu"),
+		xr = _t("u"),
+		No = _t("bum"),
+		Yt = _t("um"),
+		Sr = _t("sp"),
+		$r = _t("rtg"),
+		Cr = _t("rtc");
 	function kr(e, t = Ae) {
 		Kn("ec", e, t);
 	}
 	const Fr = "components",
 		Yl = Symbol.for("v-ndc");
 	function Dr(e) {
-		return _e(e) ? Tr(Fr, e, !1) || e : e || Yl;
+		return be(e) ? Tr(Fr, e, !1) || e : e || Yl;
 	}
 	function Tr(e, t, n = !0, o = !1) {
 		const l = Ne || Ae;
@@ -1973,7 +1973,7 @@
 		let l;
 		const s = n,
 			i = ne(e);
-		if (i || _e(e)) {
+		if (i || be(e)) {
 			const r = i && Nt(e);
 			let a = !1,
 				u = !1;
@@ -2000,11 +2000,11 @@
 		if (Ne.ce || (Ne.parent && zt(Ne.parent) && Ne.parent.ce)) {
 			const u = Object.keys(n).length > 0;
 			return (
-				t !== "default" && (n.name = t), b(), xe(oe, null, [we("slot", n, o)], u ? -2 : 64)
+				t !== "default" && (n.name = t), _(), xe(oe, null, [we("slot", n, o)], u ? -2 : 64)
 			);
 		}
 		let s = e[t];
-		s && s._c && (s._d = !1), b();
+		s && s._c && (s._d = !1), _();
 		const i = s && Xl(s(n)),
 			r = n.key || (i && i.key),
 			a = xe(
@@ -2039,7 +2039,7 @@
 				(e.f = () => {
 					Co(e.update);
 				}),
-			$nextTick: (e) => e.n || (e.n = _t.bind(e.proxy)),
+			$nextTick: (e) => e.n || (e.n = bt.bind(e.proxy)),
 			$watch: (e) => pr.bind(e),
 		}),
 		Oo = (e, t) => e !== pe && !e.__isScriptSetup && me(e, t),
@@ -2203,7 +2203,7 @@
 			ne(ee) ? ee.forEach((de) => Y(de.bind(n))) : ee && Y(ee.bind(n));
 		}
 		if (
-			(J(br, f),
+			(J(_r, f),
 			J(Pt, h),
 			J(wr, g),
 			J(xr, w),
@@ -2258,7 +2258,7 @@
 	}
 	function Ql(e, t, n, o) {
 		let l = o.includes(".") ? Ml(n, o) : () => n[o];
-		if (_e(e)) {
+		if (be(e)) {
 			const s = t[e];
 			se(s) && Be(l, s);
 		} else if (se(e)) Be(l, e.bind(n));
@@ -2522,7 +2522,7 @@
 		let l = n;
 		const s = t.startsWith("update:"),
 			i = s && ls(o, t.slice(7));
-		i && (i.trim && (l = n.map((c) => (_e(c) ? c.trim() : c))), i.number && (l = n.map(Fn)));
+		i && (i.trim && (l = n.map((c) => (be(c) ? c.trim() : c))), i.number && (l = n.map(Fn)));
 		let r,
 			a = o[(r = uo(t))] || o[(r = uo(Ee(t)))];
 		!a && s && (a = o[(r = uo(mt(t)))]), a && it(a, e, 6, l);
@@ -2888,14 +2888,14 @@
 				v,
 				d,
 				m = null,
-				_ = null,
+				b = null,
 				P = null,
 				q = void 0,
 				A = null,
 				H = !!v.dynamicChildren
 			) => {
 				if (p === v) return;
-				p && !gn(p, v) && ((m = Xe(p)), ke(p, _, P, !0), (p = null)),
+				p && !gn(p, v) && ((m = Xe(p)), ke(p, b, P, !0), (p = null)),
 					v.patchFlag === -2 && ((H = !1), (v.dynamicChildren = null));
 				const { type: T, ref: D, shapeFlag: O } = v;
 				switch (T) {
@@ -2909,24 +2909,24 @@
 						p == null && y(v, d, m, q);
 						break;
 					case oe:
-						re(p, v, d, m, _, P, q, A, H);
+						re(p, v, d, m, b, P, q, A, H);
 						break;
 					default:
 						O & 1
-							? x(p, v, d, m, _, P, q, A, H)
+							? x(p, v, d, m, b, P, q, A, H)
 							: O & 6
-							? B(p, v, d, m, _, P, q, A, H)
-							: (O & 64 || O & 128) && T.process(p, v, d, m, _, P, q, A, H, Ke);
+							? B(p, v, d, m, b, P, q, A, H)
+							: (O & 64 || O & 128) && T.process(p, v, d, m, b, P, q, A, H, Ke);
 				}
-				D != null && _
+				D != null && b
 					? fn(D, p && p.ref, P, v || p, !v)
 					: D == null && p && p.ref != null && fn(p.ref, null, P, p, !0);
 			},
 			N = (p, v, d, m) => {
 				if (p == null) o((v.el = r(v.children)), d, m);
 				else {
-					const _ = (v.el = p.el);
-					v.children !== p.children && u(_, v.children);
+					const b = (v.el = p.el);
+					v.children !== p.children && u(b, v.children);
 				}
 			},
 			C = (p, v, d, m) => {
@@ -2936,8 +2936,8 @@
 				[p.el, p.anchor] = w(p.children, v, d, m, p.el, p.anchor);
 			},
 			M = ({ el: p, anchor: v }, d, m) => {
-				let _;
-				for (; p && p !== v; ) (_ = h(p)), o(p, d, m), (p = _);
+				let b;
+				for (; p && p !== v; ) (b = h(p)), o(p, d, m), (p = b);
 				o(v, d, m);
 			},
 			$ = ({ el: p, anchor: v }) => {
@@ -2945,29 +2945,29 @@
 				for (; p && p !== v; ) (d = h(p)), l(p), (p = d);
 				l(v);
 			},
-			x = (p, v, d, m, _, P, q, A, H) => {
+			x = (p, v, d, m, b, P, q, A, H) => {
 				if (
 					(v.type === "svg" ? (q = "svg") : v.type === "math" && (q = "mathml"),
 					p == null)
 				)
-					k(v, d, m, _, P, q, A, H);
+					k(v, d, m, b, P, q, A, H);
 				else {
 					const T = p.el && p.el._isVueCE ? p.el : null;
 					try {
-						T && T._beginPatch(), V(p, v, _, P, q, A, H);
+						T && T._beginPatch(), V(p, v, b, P, q, A, H);
 					} finally {
 						T && T._endPatch();
 					}
 				}
 			},
-			k = (p, v, d, m, _, P, q, A) => {
+			k = (p, v, d, m, b, P, q, A) => {
 				let H, T;
 				const { props: D, shapeFlag: O, transition: E, dirs: K } = p;
 				if (
 					((H = p.el = i(p.type, P, D && D.is, D)),
 					O & 8
 						? c(H, p.children)
-						: O & 16 && U(p.children, H, null, m, _, jo(p, P), q, A),
+						: O & 16 && U(p.children, H, null, m, b, jo(p, P), q, A),
 					K && Ot(p, null, m, "created"),
 					L(H, p, p.scopeId, q, m),
 					D)
@@ -2977,31 +2977,31 @@
 						(T = D.onVnodeBeforeMount) && ct(T, m, p);
 				}
 				K && Ot(p, null, m, "beforeMount");
-				const Q = Qr(_, E);
+				const Q = Qr(b, E);
 				Q && E.beforeEnter(H),
 					o(H, v, d),
 					((T = D && D.onVnodeMounted) || Q || K) &&
 						Pe(() => {
 							T && ct(T, m, p), Q && E.enter(H), K && Ot(p, null, m, "mounted");
-						}, _);
+						}, b);
 			},
-			L = (p, v, d, m, _) => {
+			L = (p, v, d, m, b) => {
 				if ((d && g(p, d), m)) for (let P = 0; P < m.length; P++) g(p, m[P]);
-				if (_) {
-					let P = _.subTree;
+				if (b) {
+					let P = b.subTree;
 					if (v === P || (ws(P.type) && (P.ssContent === v || P.ssFallback === v))) {
-						const q = _.vnode;
-						L(p, q, q.scopeId, q.slotScopeIds, _.parent);
+						const q = b.vnode;
+						L(p, q, q.scopeId, q.slotScopeIds, b.parent);
 					}
 				}
 			},
-			U = (p, v, d, m, _, P, q, A, H = 0) => {
+			U = (p, v, d, m, b, P, q, A, H = 0) => {
 				for (let T = H; T < p.length; T++) {
 					const D = (p[T] = A ? xt(p[T]) : at(p[T]));
-					S(null, D, v, d, m, _, P, q, A);
+					S(null, D, v, d, m, b, P, q, A);
 				}
 			},
-			V = (p, v, d, m, _, P, q) => {
+			V = (p, v, d, m, b, P, q) => {
 				const A = (v.el = p.el);
 				let { patchFlag: H, dynamicChildren: T, dirs: D } = v;
 				H |= p.patchFlag & 16;
@@ -3017,14 +3017,14 @@
 						(O.textContent && E.textContent == null)) &&
 						c(A, ""),
 					T
-						? z(p.dynamicChildren, T, A, d, m, jo(v, _), P)
-						: q || ee(p, v, A, null, d, m, jo(v, _), P, !1),
+						? z(p.dynamicChildren, T, A, d, m, jo(v, b), P)
+						: q || ee(p, v, A, null, d, m, jo(v, b), P, !1),
 					H > 0)
 				) {
-					if (H & 16) te(A, O, E, d, _);
+					if (H & 16) te(A, O, E, d, b);
 					else if (
-						(H & 2 && O.class !== E.class && s(A, "class", null, E.class, _),
-						H & 4 && s(A, "style", O.style, E.style, _),
+						(H & 2 && O.class !== E.class && s(A, "class", null, E.class, b),
+						H & 4 && s(A, "style", O.style, E.style, b),
 						H & 8)
 					) {
 						const Q = v.dynamicProps;
@@ -3032,17 +3032,17 @@
 							const Z = Q[ce],
 								ae = O[Z],
 								ue = E[Z];
-							(ue !== ae || Z === "value") && s(A, Z, ae, ue, _, d);
+							(ue !== ae || Z === "value") && s(A, Z, ae, ue, b, d);
 						}
 					}
 					H & 1 && p.children !== v.children && c(A, v.children);
-				} else !q && T == null && te(A, O, E, d, _);
+				} else !q && T == null && te(A, O, E, d, b);
 				((K = E.onVnodeUpdated) || D) &&
 					Pe(() => {
 						K && ct(K, d, v, p), D && Ot(v, p, d, "updated");
 					}, m);
 			},
-			z = (p, v, d, m, _, P, q) => {
+			z = (p, v, d, m, b, P, q) => {
 				for (let A = 0; A < v.length; A++) {
 					const H = p[A],
 						T = v[A],
@@ -3050,54 +3050,54 @@
 							H.el && (H.type === oe || !gn(H, T) || H.shapeFlag & 198)
 								? f(H.el)
 								: d;
-					S(H, T, D, null, m, _, P, q, !0);
+					S(H, T, D, null, m, b, P, q, !0);
 				}
 			},
-			te = (p, v, d, m, _) => {
+			te = (p, v, d, m, b) => {
 				if (v !== d) {
 					if (v !== pe)
-						for (const P in v) !tn(P) && !(P in d) && s(p, P, v[P], null, _, m);
+						for (const P in v) !tn(P) && !(P in d) && s(p, P, v[P], null, b, m);
 					for (const P in d) {
 						if (tn(P)) continue;
 						const q = d[P],
 							A = v[P];
-						q !== A && P !== "value" && s(p, P, A, q, _, m);
+						q !== A && P !== "value" && s(p, P, A, q, b, m);
 					}
-					"value" in d && s(p, "value", v.value, d.value, _);
+					"value" in d && s(p, "value", v.value, d.value, b);
 				}
 			},
-			re = (p, v, d, m, _, P, q, A, H) => {
+			re = (p, v, d, m, b, P, q, A, H) => {
 				const T = (v.el = p ? p.el : r("")),
 					D = (v.anchor = p ? p.anchor : r(""));
 				let { patchFlag: O, dynamicChildren: E, slotScopeIds: K } = v;
 				K && (A = A ? A.concat(K) : K),
 					p == null
-						? (o(T, d, m), o(D, d, m), U(v.children || [], d, D, _, P, q, A, H))
+						? (o(T, d, m), o(D, d, m), U(v.children || [], d, D, b, P, q, A, H))
 						: O > 0 &&
 						  O & 64 &&
 						  E &&
 						  p.dynamicChildren &&
 						  p.dynamicChildren.length === E.length
-						? (z(p.dynamicChildren, E, d, _, P, q, A),
-						  (v.key != null || (_ && v === _.subTree)) && Vo(p, v, !0))
-						: ee(p, v, d, D, _, P, q, A, H);
+						? (z(p.dynamicChildren, E, d, b, P, q, A),
+						  (v.key != null || (b && v === b.subTree)) && Vo(p, v, !0))
+						: ee(p, v, d, D, b, P, q, A, H);
 			},
-			B = (p, v, d, m, _, P, q, A, H) => {
+			B = (p, v, d, m, b, P, q, A, H) => {
 				(v.slotScopeIds = A),
 					p == null
 						? v.shapeFlag & 512
-							? _.ctx.activate(v, d, m, q, H)
-							: I(v, d, m, _, P, q, H)
+							? b.ctx.activate(v, d, m, q, H)
+							: I(v, d, m, b, P, q, H)
 						: W(p, v, H);
 			},
-			I = (p, v, d, m, _, P, q) => {
-				const A = (p.component = aa(p, m, _));
+			I = (p, v, d, m, b, P, q) => {
+				const A = (p.component = aa(p, m, b));
 				if ((Kl(p) && (A.ctx.renderer = Ke), ca(A, !1, q), A.asyncDep)) {
-					if ((_ && _.registerDep(A, J, q), !p.el)) {
+					if ((b && b.registerDep(A, J, q), !p.el)) {
 						const H = (A.subTree = we(wt));
 						C(null, H, v, d), (p.placeholder = H.el);
 					}
-				} else J(A, p, v, d, _, P, q);
+				} else J(A, p, v, d, b, P, q);
 			},
 			W = (p, v, d) => {
 				const m = (v.component = p.component);
@@ -3108,7 +3108,7 @@
 					} else (m.next = v), m.update();
 				else (v.el = p.el), (m.vnode = v);
 			},
-			J = (p, v, d, m, _, P, q) => {
+			J = (p, v, d, m, b, P, q) => {
 				const A = () => {
 					if (p.isMounted) {
 						let { next: O, bu: E, u: K, parent: Q, vnode: ce } = p;
@@ -3119,7 +3119,7 @@
 									dt.asyncDep.then(() => {
 										Pe(() => {
 											p.isUnmounted || T();
-										}, _);
+										}, b);
 									});
 								return;
 							}
@@ -3134,12 +3134,12 @@
 						const ue = is(p),
 							qe = p.subTree;
 						(p.subTree = ue),
-							S(qe, ue, f(qe.el), Xe(qe), p, _, P),
+							S(qe, ue, f(qe.el), Xe(qe), p, b, P),
 							(O.el = ue.el),
 							Z === null && Ur(p, ue.el),
-							K && Pe(K, _),
+							K && Pe(K, b),
 							(ae = O.props && O.props.onVnodeUpdated) &&
-								Pe(() => ct(ae, Q, O, ce), _);
+								Pe(() => ct(ae, Q, O, ce), b);
 					} else {
 						let O;
 						const { el: E, props: K } = v,
@@ -3154,15 +3154,15 @@
 								ae.ce._hasShadowRoot() &&
 								ae.ce._injectChildStyle(ue, p.parent ? p.parent.type : void 0);
 							const dt = (p.subTree = is(p));
-							S(null, dt, d, m, p, _, P), (v.el = dt.el);
+							S(null, dt, d, m, p, b, P), (v.el = dt.el);
 						}
-						if ((ce && Pe(ce, _), !qe && (O = K && K.onVnodeMounted))) {
+						if ((ce && Pe(ce, b), !qe && (O = K && K.onVnodeMounted))) {
 							const dt = v;
-							Pe(() => ct(O, Z, dt), _);
+							Pe(() => ct(O, Z, dt), b);
 						}
 						(v.shapeFlag & 256 || (Z && zt(Z.vnode) && Z.vnode.shapeFlag & 256)) &&
 							p.a &&
-							Pe(p.a, _),
+							Pe(p.a, b),
 							(p.isMounted = !0),
 							(v = d = m = null);
 					}
@@ -3185,29 +3185,29 @@
 					El(p),
 					lt();
 			},
-			ee = (p, v, d, m, _, P, q, A, H = !1) => {
+			ee = (p, v, d, m, b, P, q, A, H = !1) => {
 				const T = p && p.children,
 					D = p ? p.shapeFlag : 0,
 					O = v.children,
 					{ patchFlag: E, shapeFlag: K } = v;
 				if (E > 0) {
 					if (E & 128) {
-						ve(T, O, d, m, _, P, q, A, H);
+						ve(T, O, d, m, b, P, q, A, H);
 						return;
 					} else if (E & 256) {
-						de(T, O, d, m, _, P, q, A, H);
+						de(T, O, d, m, b, P, q, A, H);
 						return;
 					}
 				}
 				K & 8
-					? (D & 16 && Je(T, _, P), O !== T && c(d, O))
+					? (D & 16 && Je(T, b, P), O !== T && c(d, O))
 					: D & 16
 					? K & 16
-						? ve(T, O, d, m, _, P, q, A, H)
-						: Je(T, _, P, !0)
-					: (D & 8 && c(d, ""), K & 16 && U(O, d, m, _, P, q, A, H));
+						? ve(T, O, d, m, b, P, q, A, H)
+						: Je(T, b, P, !0)
+					: (D & 8 && c(d, ""), K & 16 && U(O, d, m, b, P, q, A, H));
 			},
-			de = (p, v, d, m, _, P, q, A, H) => {
+			de = (p, v, d, m, b, P, q, A, H) => {
 				(p = p || It), (v = v || It);
 				const T = p.length,
 					D = v.length,
@@ -3215,11 +3215,11 @@
 				let E;
 				for (E = 0; E < O; E++) {
 					const K = (v[E] = H ? xt(v[E]) : at(v[E]));
-					S(p[E], K, d, null, _, P, q, A, H);
+					S(p[E], K, d, null, b, P, q, A, H);
 				}
-				T > D ? Je(p, _, P, !0, !1, O) : U(v, d, m, _, P, q, A, H, O);
+				T > D ? Je(p, b, P, !0, !1, O) : U(v, d, m, b, P, q, A, H, O);
 			},
-			ve = (p, v, d, m, _, P, q, A, H) => {
+			ve = (p, v, d, m, b, P, q, A, H) => {
 				let T = 0;
 				const D = v.length;
 				let O = p.length - 1,
@@ -3227,14 +3227,14 @@
 				for (; T <= O && T <= E; ) {
 					const K = p[T],
 						Q = (v[T] = H ? xt(v[T]) : at(v[T]));
-					if (gn(K, Q)) S(K, Q, d, null, _, P, q, A, H);
+					if (gn(K, Q)) S(K, Q, d, null, b, P, q, A, H);
 					else break;
 					T++;
 				}
 				for (; T <= O && T <= E; ) {
 					const K = p[O],
 						Q = (v[E] = H ? xt(v[E]) : at(v[E]));
-					if (gn(K, Q)) S(K, Q, d, null, _, P, q, A, H);
+					if (gn(K, Q)) S(K, Q, d, null, b, P, q, A, H);
 					else break;
 					O--, E--;
 				}
@@ -3243,9 +3243,9 @@
 						const K = E + 1,
 							Q = K < D ? v[K].el : m;
 						for (; T <= E; )
-							S(null, (v[T] = H ? xt(v[T]) : at(v[T])), d, Q, _, P, q, A, H), T++;
+							S(null, (v[T] = H ? xt(v[T]) : at(v[T])), d, Q, b, P, q, A, H), T++;
 					}
-				} else if (T > E) for (; T <= O; ) ke(p[T], _, P, !0), T++;
+				} else if (T > E) for (; T <= O; ) ke(p[T], b, P, !0), T++;
 				else {
 					const K = T,
 						Q = T,
@@ -3264,7 +3264,7 @@
 					for (T = K; T <= O; T++) {
 						const ze = p[T];
 						if (ae >= ue) {
-							ke(ze, _, P, !0);
+							ke(ze, b, P, !0);
 							continue;
 						}
 						let pt;
@@ -3276,10 +3276,10 @@
 									break;
 								}
 						pt === void 0
-							? ke(ze, _, P, !0)
+							? ke(ze, b, P, !0)
 							: ((wn[pt - Q] = T + 1),
 							  pt >= dt ? (dt = pt) : (qe = !0),
-							  S(ze, v[pt], d, null, _, P, q, A, H),
+							  S(ze, v[pt], d, null, b, P, q, A, H),
 							  ae++);
 					}
 					const ui = qe ? ea(wn) : It;
@@ -3287,14 +3287,14 @@
 						const ze = Q + T,
 							pt = v[ze],
 							fi = v[ze + 1],
-							di = ze + 1 < D ? fi.el || bs(fi) : m;
+							di = ze + 1 < D ? fi.el || _s(fi) : m;
 						wn[T] === 0
-							? S(null, pt, d, di, _, P, q, A, H)
+							? S(null, pt, d, di, b, P, q, A, H)
 							: qe && (Z < 0 || T !== ui[Z] ? Me(pt, d, di, 2) : Z--);
 					}
 				}
 			},
-			Me = (p, v, d, m, _ = null) => {
+			Me = (p, v, d, m, b = null) => {
 				const { el: P, type: q, transition: A, children: H, shapeFlag: T } = p;
 				if (T & 6) {
 					Me(p.component.subTree, v, d, m);
@@ -3319,7 +3319,7 @@
 					return;
 				}
 				if (m !== 2 && T & 1 && A)
-					if (m === 0) A.beforeEnter(P), o(P, v, d), Pe(() => A.enter(P), _);
+					if (m === 0) A.beforeEnter(P), o(P, v, d), Pe(() => A.enter(P), b);
 					else {
 						const { leave: O, delayLeave: E, afterLeave: K } = A,
 							Q = () => {
@@ -3335,7 +3335,7 @@
 					}
 				else o(P, v, d);
 			},
-			ke = (p, v, d, m = !1, _ = !1) => {
+			ke = (p, v, d, m = !1, b = !1) => {
 				const {
 					type: P,
 					props: q,
@@ -3348,7 +3348,7 @@
 					cacheIndex: K,
 				} = p;
 				if (
-					(O === -2 && (_ = !1),
+					(O === -2 && (b = !1),
 					A != null && (ot(), fn(A, null, d, p, !0), lt()),
 					K != null && (v.renderCache[K] = void 0),
 					D & 256)
@@ -3371,7 +3371,7 @@
 							? p.type.remove(p, v, d, Ke, m)
 							: T && !T.hasOnce && (P !== oe || (O > 0 && O & 64))
 							? Je(T, v, d, !1, !0)
-							: ((P === oe && O & 384) || (!_ && D & 16)) && Je(H, v, d),
+							: ((P === oe && O & 384) || (!b && D & 16)) && Je(H, v, d),
 						m && tt(p);
 				}
 				((ce && (Z = q && q.onVnodeUnmounted)) || Q) &&
@@ -3380,7 +3380,7 @@
 					}, d);
 			},
 			tt = (p) => {
-				const { type: v, el: d, anchor: m, transition: _ } = p;
+				const { type: v, el: d, anchor: m, transition: b } = p;
 				if (v === oe) {
 					Fe(d, m);
 					return;
@@ -3390,10 +3390,10 @@
 					return;
 				}
 				const P = () => {
-					l(d), _ && !_.persisted && _.afterLeave && _.afterLeave();
+					l(d), b && !b.persisted && b.afterLeave && b.afterLeave();
 				};
-				if (p.shapeFlag & 1 && _ && !_.persisted) {
-					const { leave: q, delayLeave: A } = _,
+				if (p.shapeFlag & 1 && b && !b.persisted) {
+					const { leave: q, delayLeave: A } = b,
 						H = () => q(d, P);
 					A ? A(p.el, P, H) : H();
 				} else P();
@@ -3404,19 +3404,19 @@
 				l(v);
 			},
 			He = (p, v, d) => {
-				const { bum: m, scope: _, job: P, subTree: q, um: A, m: H, a: T } = p;
-				_s(H),
-					_s(T),
+				const { bum: m, scope: b, job: P, subTree: q, um: A, m: H, a: T } = p;
+				bs(H),
+					bs(T),
 					m && kn(m),
-					_.stop(),
+					b.stop(),
 					P && ((P.flags |= 8), ke(q, p, v, d)),
 					A && Pe(A, v),
 					Pe(() => {
 						p.isUnmounted = !0;
 					}, v);
 			},
-			Je = (p, v, d, m = !1, _ = !1, P = 0) => {
-				for (let q = P; q < p.length; q++) ke(p[q], v, d, m, _);
+			Je = (p, v, d, m = !1, b = !1, P = 0) => {
+				for (let q = P; q < p.length; q++) ke(p[q], v, d, m, b);
 			},
 			Xe = (p) => {
 				if (p.shapeFlag & 6) return Xe(p.component.subTree);
@@ -3493,13 +3493,13 @@
 		const t = e.subTree.component;
 		if (t) return t.asyncDep && !t.asyncResolved ? t : ys(t);
 	}
-	function _s(e) {
+	function bs(e) {
 		if (e) for (let t = 0; t < e.length; t++) e[t].flags |= 8;
 	}
-	function bs(e) {
+	function _s(e) {
 		if (e.placeholder) return e.placeholder;
 		const t = e.component;
-		return t ? bs(t.subTree) : null;
+		return t ? _s(t.subTree) : null;
 	}
 	const ws = (e) => e.__isSuspense;
 	function ta(e, t) {
@@ -3511,7 +3511,7 @@
 		Bo = Symbol.for("v-stc"),
 		mn = [];
 	let We = null;
-	function b(e = !1) {
+	function _(e = !1) {
 		mn.push((We = e ? null : []));
 	}
 	function na() {
@@ -3539,7 +3539,7 @@
 	const $s = ({ key: e }) => e ?? null,
 		Gn = ({ ref: e, ref_key: t, ref_for: n }) => (
 			typeof e == "number" && (e = "" + e),
-			e != null ? (_e(e) || Se(e) || se(e) ? { i: Ne, r: e, k: t, f: !!n } : e) : null
+			e != null ? (be(e) || Se(e) || se(e) ? { i: Ne, r: e, k: t, f: !!n } : e) : null
 		);
 	function j(e, t = null, n = null, o = 0, l = null, s = e === oe ? 0 : 1, i = !1, r = !1) {
 		const a = {
@@ -3572,7 +3572,7 @@
 			ctx: Ne,
 		};
 		return (
-			r ? (qo(a, n), s & 128 && e.normalize(a)) : n && (a.shapeFlag |= _e(n) ? 8 : 16),
+			r ? (qo(a, n), s & 128 && e.normalize(a)) : n && (a.shapeFlag |= be(n) ? 8 : 16),
 			hn > 0 && !i && We && (a.patchFlag > 0 || s & 6) && a.patchFlag !== 32 && We.push(a),
 			a
 		);
@@ -3591,10 +3591,10 @@
 		if ((ha(e) && (e = e.__vccOpts), t)) {
 			t = la(t);
 			let { class: r, style: a } = t;
-			r && !_e(r) && (t.class = Ie(r)),
+			r && !be(r) && (t.class = Ie(r)),
 				ge(a) && (Mn(a) && !ne(a) && (a = De({}, a)), (t.style = $e(a)));
 		}
-		const i = _e(e) ? 1 : ws(e) ? 128 : mr(e) ? 64 : ge(e) ? 4 : se(e) ? 2 : 0;
+		const i = be(e) ? 1 : ws(e) ? 128 : mr(e) ? 64 : ge(e) ? 4 : se(e) ? 2 : 0;
 		return j(e, t, n, o, l, i, s, !0);
 	}
 	function la(e) {
@@ -3640,7 +3640,7 @@
 		return we(Xn, null, e, t);
 	}
 	function le(e = "", t = !1) {
-		return t ? (b(), xe(wt, null, e)) : we(wt, null, e);
+		return t ? (_(), xe(wt, null, e)) : we(wt, null, e);
 	}
 	function at(e) {
 		return e == null || typeof e == "boolean"
@@ -3924,7 +3924,7 @@
 		ya = "http://www.w3.org/1998/Math/MathML",
 		St = typeof document < "u" ? document : null,
 		Ps = St && St.createElement("template"),
-		_a = {
+		ba = {
 			insert: (e, t, n) => {
 				t.insertBefore(e, n || null);
 			},
@@ -3986,9 +3986,9 @@
 				return [i ? i.nextSibling : t.firstChild, n ? n.previousSibling : t.lastChild];
 			},
 		},
-		ba = Symbol("_vtc");
+		_a = Symbol("_vtc");
 	function wa(e, t, n) {
-		const o = e[ba];
+		const o = e[_a];
 		o && (t = (t ? [t, ...o] : [...o]).join(" ")),
 			t == null
 				? e.removeAttribute("class")
@@ -4002,7 +4002,7 @@
 			name: "show",
 			beforeMount(e, { value: t }, { transition: n }) {
 				(e[eo] = e.style.display === "none" ? "" : e.style.display),
-					n && t ? n.beforeEnter(e) : _n(e, t);
+					n && t ? n.beforeEnter(e) : bn(e, t);
 			},
 			mounted(e, { value: t }, { transition: n }) {
 				n && t && n.enter(e);
@@ -4011,28 +4011,28 @@
 				!t != !n &&
 					(o
 						? t
-							? (o.beforeEnter(e), _n(e, !0), o.enter(e))
+							? (o.beforeEnter(e), bn(e, !0), o.enter(e))
 							: o.leave(e, () => {
-									_n(e, !1);
+									bn(e, !1);
 							  })
-						: _n(e, t));
+						: bn(e, t));
 			},
 			beforeUnmount(e, { value: t }) {
-				_n(e, t);
+				bn(e, t);
 			},
 		};
-	function _n(e, t) {
+	function bn(e, t) {
 		(e.style.display = t ? e[eo] : "none"), (e[As] = !t);
 	}
 	const Sa = Symbol(""),
 		$a = /(?:^|;)\s*display\s*:/;
 	function Ca(e, t, n) {
 		const o = e.style,
-			l = _e(n);
+			l = be(n);
 		let s = !1;
 		if (n && !l) {
 			if (t)
-				if (_e(t))
+				if (be(t))
 					for (const i of t.split(";")) {
 						const r = i.slice(0, i.indexOf(":")).trim();
 						n[r] == null && to(o, r, "");
@@ -4184,7 +4184,7 @@
 				  !e.tagName.includes("-") &&
 						(t === "value" || t === "checked" || t === "selected") &&
 						js(e, t, o, i, s, t !== "value"))
-				: e._isVueCE && (Ma(e, t) || (e._def.__asyncLoader && (/[A-Z]/.test(t) || !_e(o))))
+				: e._isVueCE && (Ma(e, t) || (e._def.__asyncLoader && (/[A-Z]/.test(t) || !be(o))))
 				? Vs(e, Ee(t), o, s, t)
 				: (t === "true-value"
 						? (e._trueValue = o)
@@ -4208,7 +4208,7 @@
 			const l = e.tagName;
 			if (l === "IMG" || l === "VIDEO" || l === "CANVAS" || l === "SOURCE") return !1;
 		}
-		return qs(t) && _e(n) ? !1 : t in e;
+		return qs(t) && be(n) ? !1 : t in e;
 	}
 	function Ma(e, t) {
 		const n = e._def.props;
@@ -4276,7 +4276,7 @@
 				(e[$t] = Gt(n)),
 					Dt(e, "change", () => {
 						const o = e._modelValue,
-							l = bn(e),
+							l = _n(e),
 							s = e.checked,
 							i = e[$t];
 						if (ne(o)) {
@@ -4316,10 +4316,10 @@
 			Dt(e, "change", () => {
 				const s = Array.prototype.filter
 					.call(e.options, (i) => i.selected)
-					.map((i) => (n ? Fn(bn(i)) : bn(i)));
+					.map((i) => (n ? Fn(_n(i)) : _n(i)));
 				e[$t](e.multiple ? (l ? new Set(s) : s) : s[0]),
 					(e._assigning = !0),
-					_t(() => {
+					bt(() => {
 						e._assigning = !1;
 					});
 			}),
@@ -4341,7 +4341,7 @@
 		if (!(n && !o && !jt(t))) {
 			for (let l = 0, s = e.options.length; l < s; l++) {
 				const i = e.options[l],
-					r = bn(i);
+					r = _n(i);
 				if (n)
 					if (o) {
 						const a = typeof r;
@@ -4349,7 +4349,7 @@
 							? (i.selected = t.some((u) => String(u) === String(r)))
 							: (i.selected = fo(t, r) > -1);
 					} else i.selected = t.has(r);
-				else if (Vt(bn(i), t)) {
+				else if (Vt(_n(i), t)) {
 					e.selectedIndex !== l && (e.selectedIndex = l);
 					return;
 				}
@@ -4357,7 +4357,7 @@
 			!n && e.selectedIndex !== -1 && (e.selectedIndex = -1);
 		}
 	}
-	function bn(e) {
+	function _n(e) {
 		return "_value" in e ? e._value : e.value;
 	}
 	function Js(e, t) {
@@ -4414,7 +4414,7 @@
 				})
 			);
 		},
-		Ha = De({ patchProp: Pa }, _a);
+		Ha = De({ patchProp: Pa }, ba);
 	let Xs;
 	function qa() {
 		return Xs || (Xs = Gr(Ha));
@@ -4444,7 +4444,7 @@
 		if (typeof MathMLElement == "function" && e instanceof MathMLElement) return "mathml";
 	}
 	function Ka(e) {
-		return _e(e) ? document.querySelector(e) : e;
+		return be(e) ? document.querySelector(e) : e;
 	}
 	function za() {
 		const e = Te([]);
@@ -4886,9 +4886,9 @@
 		ft && (ft.close(), (ft = null)),
 			frappe.require(
 				[
-					"/assets/nce_events/js/panel_page_v2/legacy_dialogs/ai_tools.js",
-					"/assets/nce_events/js/panel_page_v2/legacy_dialogs/sms_dialog.js",
-					"/assets/nce_events/js/panel_page_v2/legacy_dialogs/email_dialog.js",
+					"/assets/nce_events/js/js_dialogs/ai_tools.js",
+					"/assets/nce_events/js/js_dialogs/sms_dialog.js",
+					"/assets/nce_events/js/js_dialogs/email_dialog.js",
 					"/assets/nce_events/css/panel_page.css",
 				],
 				() => {
@@ -4918,9 +4918,9 @@
 			(ft && (ft.close(), (ft = null)),
 			frappe.require(
 				[
-					"/assets/nce_events/js/panel_page_v2/legacy_dialogs/ai_tools.js",
-					"/assets/nce_events/js/panel_page_v2/legacy_dialogs/sms_dialog.js",
-					"/assets/nce_events/js/panel_page_v2/legacy_dialogs/email_dialog.js",
+					"/assets/nce_events/js/js_dialogs/ai_tools.js",
+					"/assets/nce_events/js/js_dialogs/sms_dialog.js",
+					"/assets/nce_events/js/js_dialogs/email_dialog.js",
 					"/assets/nce_events/css/panel_page.css",
 				],
 				() => {
@@ -4959,7 +4959,7 @@
 			},
 		};
 	}
-	const be = (e, t) => {
+	const _e = (e, t) => {
 			const n = e.__vccOpts || e;
 			for (const [o, l] of t) n[o] = l;
 			return n;
@@ -4969,7 +4969,7 @@
 	function ei() {
 		return ++Qa;
 	}
-	const ti = be(
+	const ti = _e(
 			{
 				__name: "PanelFloat",
 				props: {
@@ -5057,7 +5057,7 @@
 							document.addEventListener("mouseup", U);
 					}
 					return (w, S) => (
-						b(),
+						_(),
 						F(
 							"div",
 							{
@@ -5112,7 +5112,7 @@
 		ic = ["value", "onInput"],
 		rc = ["onUpdate:modelValue"],
 		ac = ["onClick"],
-		cc = be(
+		cc = _e(
 			{
 				__name: "PanelTableFilterBar",
 				props: {
@@ -5203,16 +5203,16 @@
 					}
 					return (y, M) =>
 						n.showFilter
-							? (b(),
+							? (_(),
 							  F("div", ec, [
-									(b(!0),
+									(_(!0),
 									F(
 										oe,
 										null,
 										he(
 											i,
 											($, x) => (
-												b(),
+												_(),
 												F("div", { key: x, class: "ppv2-filter-row" }, [
 													et(
 														j(
@@ -5233,14 +5233,14 @@
 																		"— column —",
 																		-1
 																	)),
-																(b(!0),
+																(_(!0),
 																F(
 																	oe,
 																	null,
 																	he(
 																		e.columns,
 																		(k) => (
-																			b(),
+																			_(),
 																			F(
 																				"option",
 																				{
@@ -5262,16 +5262,16 @@
 														[[zs, $.field]]
 													),
 													$.field
-														? (b(),
+														? (_(),
 														  F("span", oc, [
-																(b(!0),
+																(_(!0),
 																F(
 																	oe,
 																	null,
 																	he(
 																		f($),
 																		(k) => (
-																			b(),
+																			_(),
 																			F(
 																				"button",
 																				{
@@ -5302,7 +5302,7 @@
 														  ]))
 														: le("", !0),
 													$.field && c($.field)
-														? (b(),
+														? (_(),
 														  F(
 																oe,
 																{ key: 1 },
@@ -5352,7 +5352,7 @@
 														  ))
 														: $.field
 														? et(
-																(b(),
+																(_(),
 																F(
 																	"input",
 																	{
@@ -5372,7 +5372,7 @@
 														  )
 														: le("", !0),
 													$.field
-														? (b(),
+														? (_(),
 														  F(
 																"button",
 																{
@@ -5418,11 +5418,11 @@
 		gc = ["onClick", "onContextmenu"],
 		vc = ["href"],
 		yc = ["onClick"],
-		_c = { key: 0, class: "ppv2-action-td" },
-		bc = ["onClick"],
+		bc = { key: 0, class: "ppv2-action-td" },
+		_c = ["onClick"],
 		wc = ["onClick"],
 		xc = ["onClick"],
-		ni = be(
+		ni = _e(
 			{
 				__name: "PanelTable",
 				props: {
@@ -5497,7 +5497,7 @@
 							var B;
 							(B = n.columns) != null &&
 								B.length &&
-								_t(() => {
+								bt(() => {
 									const I = s.value,
 										W =
 											(I == null ? void 0 : I.offsetWidth) ??
@@ -5610,7 +5610,7 @@
 							document.addEventListener("mouseup", de);
 					}
 					return (B, I) => (
-						b(),
+						_(),
 						F(
 							"div",
 							{ ref_key: "panelRef", ref: s, class: "ppv2-panel" },
@@ -5631,23 +5631,23 @@
 									["columns", "default-filters", "show-filter"]
 								),
 								e.loading
-									? (b(), F("div", uc, "Loading…"))
+									? (_(), F("div", uc, "Loading…"))
 									: e.error
-									? (b(), F("div", fc, G(e.error), 1))
+									? (_(), F("div", fc, G(e.error), 1))
 									: e.config
-									? (b(),
+									? (_(),
 									  F("div", dc, [
 											j("table", pc, [
 												j("thead", null, [
 													j("tr", null, [
-														(b(!0),
+														(_(!0),
 														F(
 															oe,
 															null,
 															he(
 																g.value,
 																(W, J) => (
-																	b(),
+																	_(),
 																	F(
 																		"th",
 																		{
@@ -5692,19 +5692,19 @@
 															128
 														)),
 														f.value || h.value
-															? (b(), F("th", hc))
+															? (_(), F("th", hc))
 															: le("", !0),
 													]),
 												]),
 												j("tbody", null, [
-													(b(!0),
+													(_(!0),
 													F(
 														oe,
 														null,
 														he(
 															e.rows,
 															(W, J) => (
-																b(),
+																_(),
 																F(
 																	"tr",
 																	{
@@ -5721,14 +5721,14 @@
 																			r(Y, W),
 																	},
 																	[
-																		(b(!0),
+																		(_(!0),
 																		F(
 																			oe,
 																			null,
 																			he(
 																				g.value,
 																				(Y) => (
-																					b(),
+																					_(),
 																					F(
 																						"td",
 																						{
@@ -5747,7 +5747,7 @@
 																								W,
 																								Y.fieldname
 																							)
-																								? (b(),
+																								? (_(),
 																								  F(
 																										"a",
 																										{
@@ -5779,7 +5779,7 @@
 																								  ))
 																								: Y.is_related_link &&
 																								  Y.related_doctype
-																								? (b(),
+																								? (_(),
 																								  F(
 																										"span",
 																										{
@@ -5817,7 +5817,7 @@
 																										9,
 																										yc
 																								  ))
-																								: (b(),
+																								: (_(),
 																								  F(
 																										oe,
 																										{
@@ -5844,10 +5844,10 @@
 																			128
 																		)),
 																		f.value || h.value
-																			? (b(),
-																			  F("td", _c, [
+																			? (_(),
+																			  F("td", bc, [
 																					f.value && L(W)
-																						? (b(),
+																						? (_(),
 																						  F(
 																								"button",
 																								{
@@ -5883,14 +5883,14 @@
 																											])),
 																								],
 																								8,
-																								bc
+																								_c
 																						  ))
 																						: le(
 																								"",
 																								!0
 																						  ),
 																					h.value && U(W)
-																						? (b(),
+																						? (_(),
 																						  F(
 																								"button",
 																								{
@@ -5932,7 +5932,7 @@
 																								!0
 																						  ),
 																					h.value && U(W)
-																						? (b(),
+																						? (_(),
 																						  F(
 																								"button",
 																								{
@@ -6015,7 +6015,7 @@
 			setup(e) {
 				const t = e;
 				return (n, o) => (
-					b(),
+					_(),
 					F(
 						"div",
 						{
@@ -6024,7 +6024,7 @@
 						},
 						[
 							t.showClickHint
-								? (b(),
+								? (_(),
 								  F("span", Sc, "Click row for details · Ctrl-click to remove"))
 								: le("", !0),
 							j("div", $c, [
@@ -6073,7 +6073,7 @@
 									]
 								),
 								t.showEmail
-									? (b(),
+									? (_(),
 									  F(
 											"button",
 											{
@@ -6096,7 +6096,7 @@
 									  ))
 									: le("", !0),
 								t.showSms
-									? (b(),
+									? (_(),
 									  F(
 											"button",
 											{
@@ -6120,7 +6120,7 @@
 									: le("", !0),
 								j("span", Cc, G(t.rowCount) + " / " + G(t.total) + " records", 1),
 								t.showClose
-									? (b(),
+									? (_(),
 									  F(
 											"button",
 											{
@@ -6352,7 +6352,7 @@
 		jc = { class: "tf-tile-meta" },
 		Vc = { class: "tf-tile-fieldname" },
 		Bc = { class: "tf-tile-badge" },
-		Hc = be(
+		Hc = _e(
 			{
 				__name: "TagColumn",
 				props: {
@@ -6396,21 +6396,21 @@
 							(a.is_link || a.is_table ? o("navigate", a) : o("select-field", a));
 					}
 					return (a, u) => (
-						b(),
+						_(),
 						F("div", Ec, [
 							j("div", Rc, [
 								Ye(G(e.col.doctype) + " ", 1),
 								j("span", Oc, G(e.col.fields.length) + " fields", 1),
 							]),
 							j("div", Pc, [
-								(b(!0),
+								(_(!0),
 								F(
 									oe,
 									null,
 									he(
 										e.col.fields,
 										(c) => (
-											b(),
+											_(),
 											F(
 												"div",
 												{
@@ -6425,7 +6425,7 @@
 													j("div", Mc, [
 														j("span", Ic, G(c.label), 1),
 														(c.is_link || c.is_table) && !l(c)
-															? (b(), F("span", Lc, "▶"))
+															? (_(), F("span", Lc, "▶"))
 															: le("", !0),
 													]),
 													j("div", jc, [
@@ -6451,7 +6451,7 @@
 		Uc = { class: "tf-actions" },
 		Wc = { class: "tf-check-label" },
 		Kc = { class: "tf-btn-group" },
-		zc = be(
+		zc = _e(
 			{
 				__name: "TagDialog",
 				props: {
@@ -6543,7 +6543,7 @@
 							document.addEventListener("mouseup", k);
 					}
 					return (N, C) => (
-						b(),
+						_(),
 						F(
 							"div",
 							{ class: "tf-tag-panel", style: $e(c.value), onMousedown: f },
@@ -6630,7 +6630,7 @@
 			},
 			[["__scopeId", "data-v-4770fb02"]]
 		),
-		Yc = be(
+		Yc = _e(
 			{
 				__name: "TagFinder",
 				props: {
@@ -6710,7 +6710,7 @@
 								N.is_table ? "Table" : "Link",
 								C + 1
 							),
-							await _t(),
+							await bt(),
 							l.value && (l.value.scrollLeft = l.value.scrollWidth),
 							a.value;
 					}
@@ -6725,7 +6725,7 @@
 						o.push({ field: N, baseTag: y, path: M });
 					}
 					return (N, C) => (
-						b(),
+						_(),
 						F(
 							"div",
 							{ class: "tf-float", style: $e(c.value), onMousedown: f },
@@ -6750,14 +6750,14 @@
 									"div",
 									{ ref_key: "bodyEl", ref: l, class: "tf-body" },
 									[
-										(b(!0),
+										(_(!0),
 										F(
 											oe,
 											null,
 											he(
 												R(n).columns,
 												(y, M) => (
-													b(),
+													_(),
 													xe(
 														Hc,
 														{
@@ -6797,16 +6797,16 @@
 									null,
 									32
 								),
-								(b(),
+								(_(),
 								xe(Hl, { to: "body" }, [
-									(b(!0),
+									(_(!0),
 									F(
 										oe,
 										null,
 										he(
 											o,
 											(y, M) => (
-												b(),
+												_(),
 												xe(
 													zc,
 													{
@@ -6938,7 +6938,7 @@
 	}
 	const Xc = { class: "actions-panel" },
 		Gc = ["onClick"],
-		Zc = be(
+		Zc = _e(
 			{
 				__name: "ActionsPanel",
 				props: {
@@ -7009,16 +7009,16 @@
 						}
 					}
 					return (a, u) => (
-						b(),
+						_(),
 						F("div", Xc, [
-							(b(!0),
+							(_(!0),
 							F(
 								oe,
 								null,
 								he(
 									l.value,
 									(c) => (
-										b(),
+										_(),
 										F(
 											"button",
 											{
@@ -7042,7 +7042,7 @@
 		),
 		Qc = { key: 0, class: "tab-bar" },
 		eu = ["onClick"],
-		tu = be(
+		tu = _e(
 			{
 				__name: "TabBar",
 				props: {
@@ -7066,16 +7066,16 @@
 						});
 					return (l, s) =>
 						o.value
-							? (b(),
+							? (_(),
 							  F("div", Qc, [
-									(b(!0),
+									(_(!0),
 									F(
 										oe,
 										null,
 										he(
 											n.value,
 											(i) => (
-												b(),
+												_(),
 												F(
 													"button",
 													{
@@ -7110,7 +7110,7 @@
 		au = ["value"],
 		cu = ["readonly"],
 		uu = ["readonly"],
-		fu = be(
+		fu = _e(
 			{
 				__name: "FieldWidget",
 				props: {
@@ -7207,7 +7207,7 @@
 					return (g, w) => {
 						var S, N;
 						return (
-							b(),
+							_(),
 							F("div", nu, [
 								j(
 									"label",
@@ -7222,7 +7222,7 @@
 								),
 								i.value === "text"
 									? et(
-											(b(),
+											(_(),
 											F(
 												"input",
 												{
@@ -7243,7 +7243,7 @@
 									  )
 									: i.value === "number"
 									? et(
-											(b(),
+											(_(),
 											F(
 												"input",
 												{
@@ -7265,7 +7265,7 @@
 									  )
 									: i.value === "date"
 									? et(
-											(b(),
+											(_(),
 											F(
 												"input",
 												{
@@ -7285,7 +7285,7 @@
 											[[Mt, c.value]]
 									  )
 									: i.value === "checkbox"
-									? (b(),
+									? (_(),
 									  F(
 											"input",
 											{
@@ -7302,7 +7302,7 @@
 									  ))
 									: i.value === "select"
 									? et(
-											(b(),
+											(_(),
 											F(
 												"select",
 												{
@@ -7321,14 +7321,14 @@
 															null,
 															-1
 														)),
-													(b(!0),
+													(_(!0),
 													F(
 														oe,
 														null,
 														he(
 															a.value,
 															(C) => (
-																b(),
+																_(),
 																F(
 																	"option",
 																	{ key: C, value: C },
@@ -7348,7 +7348,7 @@
 									  )
 									: i.value === "textarea"
 									? et(
-											(b(),
+											(_(),
 											F(
 												"textarea",
 												{
@@ -7367,7 +7367,7 @@
 											[[Mt, c.value]]
 									  )
 									: et(
-											(b(),
+											(_(),
 											F(
 												"input",
 												{
@@ -7396,7 +7396,7 @@
 		du = { class: "display-widget" },
 		pu = { class: "display-label" },
 		mu = { class: "display-value" },
-		hu = be(
+		hu = _e(
 			{
 				__name: "DisplayWidget",
 				props: {
@@ -7420,14 +7420,14 @@
 								.replace(/\b\w/g, (i) => i.toUpperCase());
 						});
 					return (l, s) => (
-						b(),
+						_(),
 						F("div", du, [j("label", pu, G(o.value), 1), j("span", mu, G(n.value), 1)])
 					);
 				},
 			},
 			[["__scopeId", "data-v-bb9316e1"]]
 		),
-		gu = be(
+		gu = _e(
 			{
 				__name: "WidgetGrid",
 				props: {
@@ -7458,19 +7458,19 @@
 						};
 					}
 					return (s, i) => (
-						b(),
+						_(),
 						F(
 							"div",
 							{ class: "widget-grid", style: $e(o.value) },
 							[
-								(b(!0),
+								(_(!0),
 								F(
 									oe,
 									null,
 									he(
 										e.widgets,
 										(r) => (
-											b(),
+											_(),
 											F(
 												"div",
 												{
@@ -7479,7 +7479,7 @@
 													style: $e(l(r)),
 												},
 												[
-													(b(),
+													(_(),
 													xe(
 														Dr(n[r.type]),
 														{
@@ -7524,12 +7524,12 @@
 		),
 		vu = { class: "card-form-header" },
 		yu = { class: "card-title" },
-		_u = { class: "card-record-name" },
-		bu = { key: 0, class: "card-loading" },
+		bu = { class: "card-record-name" },
+		_u = { key: 0, class: "card-loading" },
 		wu = { key: 1, class: "card-error" },
 		xu = { key: 2, class: "card-form-body" },
 		Su = { class: "card-form-content" },
-		$u = be(
+		$u = _e(
 			{
 				__name: "CardForm",
 				props: {
@@ -7628,7 +7628,7 @@
 						(y, M) => {
 							var $, x, k, L, U, V, z, te, re;
 							return (
-								b(),
+								_(),
 								F(
 									"div",
 									{ class: "card-form", style: $e(S.value) },
@@ -7643,7 +7643,7 @@
 												),
 												1
 											),
-											j("span", _u, G(e.recordName), 1),
+											j("span", bu, G(e.recordName), 1),
 											j(
 												"button",
 												{
@@ -7655,15 +7655,15 @@
 											),
 										]),
 										R(r)
-											? (b(), F("div", bu, "Loading…"))
+											? (_(), F("div", _u, "Loading…"))
 											: R(a)
-											? (b(), F("div", wu, G(R(a)), 1))
-											: (b(),
+											? (_(), F("div", wu, G(R(a)), 1))
+											: (_(),
 											  F("div", xu, [
 													(k =
 														(x = R(o)) == null ? void 0 : x.actions) !=
 														null && k.length
-														? (b(),
+														? (_(),
 														  xe(
 																Zc,
 																{
@@ -7690,7 +7690,7 @@
 															(L = R(o)) == null
 																? void 0
 																: L.tabs) != null && U.length
-															? (b(),
+															? (_(),
 															  xe(
 																	tu,
 																	{
@@ -7765,7 +7765,7 @@
 			[["__scopeId", "data-v-66c9291b"]]
 		),
 		Cu = { class: "card-modal" },
-		ku = be(
+		ku = _e(
 			{
 				__name: "CardModal",
 				props: {
@@ -7783,7 +7783,7 @@
 						Pt(() => document.addEventListener("keydown", o)),
 						Yt(() => document.removeEventListener("keydown", o)),
 						(l, s) => (
-							b(),
+							_(),
 							xe(Hl, { to: "body" }, [
 								j(
 									"div",
@@ -7835,7 +7835,7 @@
 		Nu = { key: 0, class: "ppv2-fd-nav-pos" },
 		Eu = ["disabled"],
 		Ru = { class: "ppv2-fd-title" },
-		Ou = be(
+		Ou = _e(
 			{
 				__name: "PanelFormDialogHeader",
 				props: {
@@ -7848,11 +7848,11 @@
 				emits: ["close", "nav-prev", "nav-next"],
 				setup(e) {
 					return (t, n) => (
-						b(),
+						_(),
 						F("div", Fu, [
 							j("div", Du, [
 								e.rowNavEnabled
-									? (b(),
+									? (_(),
 									  F(
 											"div",
 											{
@@ -7891,7 +7891,7 @@
 													Tu
 												),
 												e.rowNavLabel
-													? (b(), F("span", Nu, G(e.rowNavLabel), 1))
+													? (_(), F("span", Nu, G(e.rowNavLabel), 1))
 													: le("", !0),
 												j(
 													"button",
@@ -7996,7 +7996,7 @@
 			}[e.fieldtype] || { component: "FormControl", props: { type: "text" } }
 		);
 	}
-	const Au = be(
+	const Au = _e(
 			{
 				__name: "PanelFormLinkField",
 				props: {
@@ -8054,7 +8054,7 @@
 					}
 					return (
 						Pt(() => {
-							_t(() => u());
+							bt(() => u());
 						}),
 						Be(
 							() => n.modelValue,
@@ -8077,7 +8077,7 @@
 							i != null && i.$wrapper && i.$wrapper.remove(), (i = null);
 						}),
 						(c, f) => (
-							b(),
+							_(),
 							F(
 								"div",
 								{ ref_key: "hostRef", ref: s, class: "ppv2-fd-link-frappe" },
@@ -8090,7 +8090,7 @@
 			},
 			[["__scopeId", "data-v-ed82237d"]]
 		),
-		Mu = be(
+		Mu = _e(
 			{
 				__name: "PanelFormDateTimeField",
 				props: {
@@ -8149,7 +8149,7 @@
 					}
 					return (
 						Pt(() => {
-							_t(() => u());
+							bt(() => u());
 						}),
 						Be(
 							() => n.modelValue,
@@ -8172,7 +8172,7 @@
 							i != null && i.$wrapper && i.$wrapper.remove(), (i = null);
 						}),
 						(c, f) => (
-							b(),
+							_(),
 							F(
 								"div",
 								{ ref_key: "hostRef", ref: s, class: "ppv2-fd-datetime-frappe" },
@@ -8200,7 +8200,7 @@
 		Ju = { key: 6, class: "ppv2-fd-input ppv2-fd-readonly-plain" },
 		Xu = ["type", "value", "required", "disabled", "placeholder", "step", "min", "max"],
 		Gu = { key: 8, class: "ppv2-fd-desc" },
-		Zu = be(
+		Zu = _e(
 			{
 				__name: "PanelFormField",
 				props: {
@@ -8265,7 +8265,7 @@
 					return (h, g) => {
 						var w, S, N, C, y, M, $, x, k, L;
 						return ((w = l.value) == null ? void 0 : w.layout) === "table"
-							? (b(),
+							? (_(),
 							  F("div", Iu, [
 									j(
 										"span",
@@ -8286,14 +8286,14 @@
 										)),
 							  ]))
 							: ((S = l.value) == null ? void 0 : S.layout) === "heading"
-							? (b(), F("h4", Lu, G(e.field.label), 1))
+							? (_(), F("h4", Lu, G(e.field.label), 1))
 							: ((N = l.value) == null ? void 0 : N.layout) === "html"
-							? (b(), F("div", { key: 2, innerHTML: e.field.options }, null, 8, ju))
+							? (_(), F("div", { key: 2, innerHTML: e.field.options }, null, 8, ju))
 							: ((C = l.value) == null ? void 0 : C.layout) === "button"
-							? (b(), F("span", Vu))
+							? (_(), F("span", Vu))
 							: (y = l.value) != null && y.component
 							? et(
-									(b(),
+									(_(),
 									F(
 										"div",
 										{
@@ -8312,11 +8312,11 @@
 											j("label", Bu, [
 												Ye(G(e.field.label), 1),
 												e.mandatory
-													? (b(), F("span", Hu, " *"))
+													? (_(), F("span", Hu, " *"))
 													: le("", !0),
 											]),
 											i.value
-												? (b(),
+												? (_(),
 												  F(
 														"select",
 														{
@@ -8337,14 +8337,14 @@
 																	"— Select —",
 																	-1
 																)),
-															(b(!0),
+															(_(!0),
 															F(
 																oe,
 																null,
 																he(
 																	u.value,
 																	(U) => (
-																		b(),
+																		_(),
 																		F(
 																			"option",
 																			{ key: U, value: U },
@@ -8361,7 +8361,7 @@
 														qu
 												  ))
 												: e.field.fieldtype === "Check"
-												? (b(),
+												? (_(),
 												  F("div", Wu, [
 														j(
 															"input",
@@ -8384,7 +8384,7 @@
 														),
 												  ]))
 												: e.field.fieldtype === "Link" || r.value
-												? (b(),
+												? (_(),
 												  xe(
 														Au,
 														{
@@ -8407,7 +8407,7 @@
 												  ))
 												: e.field.fieldtype === "Date" ||
 												  e.field.fieldtype === "Datetime"
-												? (b(),
+												? (_(),
 												  xe(
 														Mu,
 														{
@@ -8428,9 +8428,9 @@
 														]
 												  ))
 												: a.value && e.readOnly
-												? (b(), F("div", zu, G(e.modelValue || ""), 1))
+												? (_(), F("div", zu, G(e.modelValue || ""), 1))
 												: a.value
-												? (b(),
+												? (_(),
 												  F(
 														"textarea",
 														{
@@ -8453,8 +8453,8 @@
 														Yu
 												  ))
 												: e.readOnly
-												? (b(), F("div", Ju, G(e.modelValue ?? ""), 1))
-												: (b(),
+												? (_(), F("div", Ju, G(e.modelValue ?? ""), 1))
+												: (_(),
 												  F(
 														"input",
 														{
@@ -8489,7 +8489,7 @@
 														Xu
 												  )),
 											e.field.description
-												? (b(), F("p", Gu, G(e.field.description), 1))
+												? (_(), F("p", Gu, G(e.field.description), 1))
 												: le("", !0),
 										],
 										2
@@ -8504,7 +8504,7 @@
 		),
 		Qu = { key: 0, class: "ppv2-fd-tab-bar" },
 		ef = ["onClick"],
-		tf = be(
+		tf = _e(
 			{
 				__name: "PanelFormDialogTabBar",
 				props: {
@@ -8515,16 +8515,16 @@
 				setup(e) {
 					return (t, n) =>
 						e.tabs.length > 1
-							? (b(),
+							? (_(),
 							  F("div", Qu, [
-									(b(!0),
+									(_(!0),
 									F(
 										oe,
 										null,
 										he(
 											e.tabs,
 											(o, l) => (
-												b(),
+												_(),
 												F(
 													"button",
 													{
@@ -8570,8 +8570,8 @@
 		gf = ["value"],
 		vf = ["disabled", "checked", "onChange"],
 		yf = ["value", "onInput"],
-		_f = ["value", "onInput"],
 		bf = ["value", "onInput"],
+		_f = ["value", "onInput"],
 		wf = ["value", "onInput"],
 		xf = { key: 6, class: "ppv2-fd-related-cell-text" },
 		Sf = { key: 0, class: "ppv2-fd-related-empty" },
@@ -8584,7 +8584,7 @@
 		Nf = { key: 5, class: "ppv2-fd-related-placeholder ppv2-fd-related-placeholder-compact" },
 		Ef = { class: "ppv2-fd-related-placeholder-text" },
 		Rf = { key: 0, class: "ppv2-fd-related-placeholder-sub" },
-		Of = be(
+		Of = _e(
 			{
 				__name: "PanelFormDialogRelatedTab",
 				props: {
@@ -8617,15 +8617,15 @@
 					function g(d) {
 						try {
 							const m = localStorage.getItem(h(d)),
-								_ = parseInt(String(m), 10);
-							if (Number.isFinite(_) && _ >= 72 && _ <= 640) return _;
+								b = parseInt(String(m), 10);
+							if (Number.isFinite(b) && b >= 72 && b <= 640) return b;
 						} catch {}
 						return null;
 					}
 					function w(d) {
 						let m = 8;
-						for (const _ of d.sections || [])
-							for (const P of _.columns || [])
+						for (const b of d.sections || [])
+							for (const P of b.columns || [])
 								for (const q of P.fields || []) {
 									const A = String(q.label || q.fieldname || "").length;
 									A > m && (m = A);
@@ -8654,8 +8654,8 @@
 					function C() {
 						const d = (o.definitionName || "").trim(),
 							m = (o.rootDoctype || "").trim(),
-							_ = String(o.rootDocName || "").trim();
-						return `${d}\0${m}\0${_}`;
+							b = String(o.rootDocName || "").trim();
+						return `${d}\0${m}\0${b}`;
 					}
 					async function y(d) {
 						var q;
@@ -8667,7 +8667,7 @@
 							!String(o.rootDoctype || "").trim()
 						)
 							return;
-						const _ = C(),
+						const b = C(),
 							P = (r[d] || 0) + 1;
 						(r[d] = P), i[d] || (i[d] = {}), (i[d].loading = !0), (i[d].error = null);
 						try {
@@ -8682,7 +8682,7 @@
 								}
 							);
 							if (r[d] !== P) return;
-							i[d].fetchKey = _;
+							i[d].fetchKey = b;
 							const H = Array.isArray(A.rows) ? A.rows : [];
 							(i[d].baseline = JSON.parse(JSON.stringify(H))),
 								(i[d].rows = H.map((T) => ({ ...T }))),
@@ -8716,27 +8716,27 @@
 						return !!(d && d.fieldtype === "Select");
 					}
 					function x(d, m) {
-						const _ = M(d.options),
+						const b = M(d.options),
 							P = String(k(m, d) ?? "").trim();
-						return P && !_.includes(P) ? [..._, P] : _.length ? _ : P ? [P] : [];
+						return P && !b.includes(P) ? [...b, P] : b.length ? b : P ? [P] : [];
 					}
 					function k(d, m) {
 						return !d || !m ? null : d[m.fieldname];
 					}
 					function L(d, m) {
-						const _ = k(d, m);
-						return _ === 1 || _ === !0 || _ === "1" || _ === "Yes";
+						const b = k(d, m);
+						return b === 1 || b === !0 || b === "1" || b === "Yes";
 					}
 					function U(d, m) {
-						const _ = k(d, m);
-						if (_ == null || _ === "") return "";
-						if (typeof _ == "object")
+						const b = k(d, m);
+						if (b == null || b === "") return "";
+						if (typeof b == "object")
 							try {
-								return JSON.stringify(_);
+								return JSON.stringify(b);
 							} catch {
-								return String(_);
+								return String(b);
 							}
-						return String(_);
+						return String(b);
 					}
 					const V = new Set([
 						"Link",
@@ -8766,16 +8766,16 @@
 						);
 					}
 					function B(d, m) {
-						const _ = i[d];
-						return !(_ != null && _.baseline) || m == null || m === ""
+						const b = i[d];
+						return !(b != null && b.baseline) || m == null || m === ""
 							? null
-							: _.baseline.find((P) => P.name === m) ?? null;
+							: b.baseline.find((P) => P.name === m) ?? null;
 					}
-					function I(d, m, _) {
-						if (!z(_) || (m == null ? void 0 : m.name) == null || m.name === "")
+					function I(d, m, b) {
+						if (!z(b) || (m == null ? void 0 : m.name) == null || m.name === "")
 							return !1;
 						const P = B(d, m.name);
-						return P ? !W(m[_.fieldname], P[_.fieldname]) : !1;
+						return P ? !W(m[b.fieldname], P[b.fieldname]) : !1;
 					}
 					function W(d, m) {
 						return d === m || (d == null && m == null)
@@ -8800,21 +8800,21 @@
 					function ee() {
 						Y ||
 							((Y = !0),
-							_t(() => {
+							bt(() => {
 								(Y = !1), l("related-dirty", J());
 							}));
 					}
 					function de(d) {
 						const m = i[d];
 						if (!(m != null && m.rows) || !m.baseline) return !1;
-						const _ = (m.columns || []).filter(z);
-						if (!_.length) return !1;
+						const b = (m.columns || []).filter(z);
+						if (!b.length) return !1;
 						for (const P of m.rows) {
 							const q = P.name;
 							if (!q) continue;
 							const A = m.baseline.find((H) => H.name === q);
 							if (A) {
-								for (const H of _)
+								for (const H of b)
 									if (!W(P[H.fieldname], A[H.fieldname])) return !0;
 							}
 						}
@@ -8828,8 +8828,8 @@
 							!((A = m.baseline) != null && A.length)
 						)
 							return [];
-						const _ = (m.columns || []).filter(z);
-						if (!_.length) return [];
+						const b = (m.columns || []).filter(z);
+						if (!b.length) return [];
 						const P = [];
 						for (const H of m.rows) {
 							const T = H.name;
@@ -8837,7 +8837,7 @@
 							const D = m.baseline.find((E) => E.name === T);
 							if (!D) continue;
 							const O = {};
-							for (const E of _) {
+							for (const E of b) {
 								const K = E.fieldname;
 								W(H[K], D[K]) || (O[K] = H[K]);
 							}
@@ -8845,38 +8845,38 @@
 						}
 						return P;
 					}
-					function Me(d, m, _) {
-						(d[m.fieldname] = _.target.value), ee();
+					function Me(d, m, b) {
+						(d[m.fieldname] = b.target.value), ee();
 					}
-					function ke(d, m, _) {
-						(d[m.fieldname] = _.target.checked ? 1 : 0), ee();
+					function ke(d, m, b) {
+						(d[m.fieldname] = b.target.checked ? 1 : 0), ee();
 					}
 					function tt(d, m) {
-						const _ = k(d, m);
-						return _ == null || _ === "" ? "" : Number(_);
+						const b = k(d, m);
+						return b == null || b === "" ? "" : Number(b);
 					}
-					function Fe(d, m, _) {
-						const P = _.target.value;
+					function Fe(d, m, b) {
+						const P = b.target.value;
 						(d[m.fieldname] = P === "" ? null : Number(P)), ee();
 					}
 					function He(d, m) {
-						const _ = k(d, m);
-						return _ == null || _ === "" ? "" : String(_).slice(0, 10);
+						const b = k(d, m);
+						return b == null || b === "" ? "" : String(b).slice(0, 10);
 					}
-					function Je(d, m, _) {
-						(d[m.fieldname] = _.target.value || null), ee();
+					function Je(d, m, b) {
+						(d[m.fieldname] = b.target.value || null), ee();
 					}
-					function Xe(d, m, _) {
-						(d[m.fieldname] = _.target.value), ee();
+					function Xe(d, m, b) {
+						(d[m.fieldname] = b.target.value), ee();
 					}
 					function Ct() {
 						for (const d of Object.keys(i)) {
 							const m = Number(d),
-								_ = i[m];
-							if (!(_ != null && _.baseline) || !Array.isArray(_.rows)) continue;
-							const P = JSON.parse(JSON.stringify(_.baseline));
-							_.rows.splice(0, _.rows.length);
-							for (const q of P) _.rows.push({ ...q });
+								b = i[m];
+							if (!(b != null && b.baseline) || !Array.isArray(b.rows)) continue;
+							const P = JSON.parse(JSON.stringify(b.baseline));
+							b.rows.splice(0, b.rows.length);
+							for (const q of P) b.rows.push({ ...q });
 						}
 						l("related-dirty", !1);
 					}
@@ -8884,8 +8884,8 @@
 						var T;
 						const d = String(o.rootDocName || "").trim(),
 							m = String(o.definitionName || "").trim(),
-							_ = String(o.rootDoctype || "").trim();
-						if (!d || !m || !_) return;
+							b = String(o.rootDoctype || "").trim();
+						if (!d || !m || !b) return;
 						const P = o.tab,
 							q =
 								(T = P == null ? void 0 : P._related) == null
@@ -8897,7 +8897,7 @@
 						await ut("nce_events.api.form_dialog_api.save_form_dialog_related_rows", {
 							definition: m,
 							related_row_name: q,
-							root_doctype: _,
+							root_doctype: b,
 							root_name: d,
 							updates: A,
 						});
@@ -8913,8 +8913,8 @@
 					function Qt(d) {
 						if (u == null) return;
 						const m = d.clientX - c,
-							_ = Math.min(640, Math.max(72, f + m));
-						a[u] = _;
+							b = Math.min(640, Math.max(72, f + m));
+						a[u] = b;
 					}
 					function p() {
 						if (u != null)
@@ -8938,14 +8938,14 @@
 								window.removeEventListener("mouseup", p);
 						}),
 						(d, m) => {
-							var _, P, q;
+							var b, P, q;
 							return e.tab._related
-								? (b(),
+								? (_(),
 								  F("div", nf, [
 										j("p", of, [
 											Ye(G(e.tab._related.doctype) + " ", 1),
 											e.tab._related.link_field
-												? (b(),
+												? (_(),
 												  F(
 														"span",
 														lf,
@@ -8955,7 +8955,7 @@
 												: le("", !0),
 											e.tab._related.hop_chain &&
 											e.tab._related.hop_chain.length
-												? (b(),
+												? (_(),
 												  F(
 														"span",
 														sf,
@@ -8967,7 +8967,7 @@
 												: le("", !0),
 										]),
 										e.tab._related.captureError
-											? (b(),
+											? (_(),
 											  F(
 													"p",
 													rf,
@@ -8978,20 +8978,20 @@
 											: le("", !0),
 										e.tab._related.child_row_name
 											? e.rootDocName
-												? (b(),
+												? (_(),
 												  F(
 														oe,
 														{ key: 3 },
 														[
-															(_ = i[e.ti]) != null && _.loading
-																? (b(),
+															(b = i[e.ti]) != null && b.loading
+																? (_(),
 																  F(
 																		"div",
 																		uf,
 																		" Loading related rows… "
 																  ))
 																: (P = i[e.ti]) != null && P.error
-																? (b(),
+																? (_(),
 																  F(
 																		"div",
 																		ff,
@@ -9003,12 +9003,12 @@
 																			? void 0
 																			: q.columns) || []
 																  ).length
-																? (b(),
+																? (_(),
 																  F("div", df, [
 																		j("table", pf, [
 																			j("thead", null, [
 																				j("tr", null, [
-																					(b(!0),
+																					(_(!0),
 																					F(
 																						oe,
 																						null,
@@ -9018,7 +9018,7 @@
 																							(
 																								A
 																							) => (
-																								b(),
+																								_(),
 																								F(
 																									"th",
 																									{
@@ -9036,7 +9036,7 @@
 																										s(
 																											A
 																										)
-																											? (b(),
+																											? (_(),
 																											  F(
 																													"span",
 																													mf,
@@ -9055,7 +9055,7 @@
 																				]),
 																			]),
 																			j("tbody", null, [
-																				(b(!0),
+																				(_(!0),
 																				F(
 																					oe,
 																					null,
@@ -9064,7 +9064,7 @@
 																							.rows ||
 																							[],
 																						(A, H) => (
-																							b(),
+																							_(),
 																							F(
 																								"tr",
 																								{
@@ -9076,7 +9076,7 @@
 																									),
 																								},
 																								[
-																									(b(
+																									(_(
 																										!0
 																									),
 																									F(
@@ -9091,7 +9091,7 @@
 																											(
 																												T
 																											) => (
-																												b(),
+																												_(),
 																												F(
 																													"td",
 																													{
@@ -9118,7 +9118,7 @@
 																														$(
 																															T
 																														)
-																															? (b(),
+																															? (_(),
 																															  F(
 																																	"select",
 																																	{
@@ -9159,7 +9159,7 @@
 																																					"—",
 																																					-1
 																																				)),
-																																		(b(
+																																		(_(
 																																			!0
 																																		),
 																																		F(
@@ -9173,7 +9173,7 @@
 																																				(
 																																					D
 																																				) => (
-																																					b(),
+																																					_(),
 																																					F(
 																																						"option",
 																																						{
@@ -9196,7 +9196,7 @@
 																															  ))
 																															: T.fieldtype ===
 																															  "Check"
-																															? (b(),
+																															? (_(),
 																															  F(
 																																	"input",
 																																	{
@@ -9232,7 +9232,7 @@
 																															  te(
 																																	T
 																															  )
-																															? (b(),
+																															? (_(),
 																															  F(
 																																	"input",
 																																	{
@@ -9262,7 +9262,7 @@
 																															  ) &&
 																															  T.fieldtype ===
 																																	"Date"
-																															? (b(),
+																															? (_(),
 																															  F(
 																																	"input",
 																																	{
@@ -9285,7 +9285,7 @@
 																																	},
 																																	null,
 																																	40,
-																																	_f
+																																	bf
 																															  ))
 																															: z(
 																																	T
@@ -9293,7 +9293,7 @@
 																															  re(
 																																	T
 																															  )
-																															? (b(),
+																															? (_(),
 																															  F(
 																																	"textarea",
 																																	{
@@ -9319,12 +9319,12 @@
 																																	},
 																																	null,
 																																	40,
-																																	bf
+																																	_f
 																															  ))
 																															: z(
 																																	T
 																															  )
-																															? (b(),
+																															? (_(),
 																															  F(
 																																	"input",
 																																	{
@@ -9352,7 +9352,7 @@
 																																	40,
 																																	wf
 																															  ))
-																															: (b(),
+																															: (_(),
 																															  F(
 																																	"span",
 																																	xf,
@@ -9381,7 +9381,7 @@
 																		]),
 																		(i[e.ti].rows || []).length
 																			? le("", !0)
-																			: (b(),
+																			: (_(),
 																			  F(
 																					"p",
 																					Sf,
@@ -9392,20 +9392,20 @@
 														],
 														64
 												  ))
-												: (b(),
+												: (_(),
 												  F(
 														"p",
 														cf,
 														" Save the document to load related rows. "
 												  ))
-											: (b(),
+											: (_(),
 											  F(
 													"p",
 													af,
 													" Related tab is missing a server row id. Re-save the Form Dialog from Desk. "
 											  )),
 										e.tab.sections && e.tab.sections.length
-											? (b(),
+											? (_(),
 											  F("details", $f, [
 													m[2] ||
 														(m[2] = j(
@@ -9456,14 +9456,14 @@
 																	32
 																),
 															]),
-															(b(!0),
+															(_(!0),
 															F(
 																oe,
 																null,
 																he(
 																	e.tab.sections,
 																	(A, H) => (
-																		b(),
+																		_(),
 																		F(
 																			"div",
 																			{
@@ -9472,7 +9472,7 @@
 																			},
 																			[
 																				A.label
-																					? (b(),
+																					? (_(),
 																					  F(
 																							"h3",
 																							kf,
@@ -9499,7 +9499,7 @@
 																						}),
 																					},
 																					[
-																						(b(!0),
+																						(_(!0),
 																						F(
 																							oe,
 																							null,
@@ -9509,7 +9509,7 @@
 																									T,
 																									D
 																								) => (
-																									b(),
+																									_(),
 																									F(
 																										"div",
 																										{
@@ -9518,7 +9518,7 @@
 																												D,
 																										},
 																										[
-																											(b(
+																											(_(
 																												!0
 																											),
 																											F(
@@ -9529,7 +9529,7 @@
 																													(
 																														O
 																													) => (
-																														b(),
+																														_(),
 																														F(
 																															"div",
 																															{
@@ -9551,7 +9551,7 @@
 																																		s(
 																																			O
 																																		)
-																																			? (b(),
+																																			? (_(),
 																																			  F(
 																																					"span",
 																																					Df,
@@ -9596,7 +9596,7 @@
 														4
 													),
 											  ]))
-											: (b(),
+											: (_(),
 											  F("div", Nf, [
 													j(
 														"p",
@@ -9609,7 +9609,7 @@
 													),
 													e.tab._related.captureError
 														? le("", !0)
-														: (b(),
+														: (_(),
 														  F(
 																"p",
 																Rf,
@@ -9631,7 +9631,7 @@
 		Lf = { key: 0, class: "ppv2-fd-section-label" },
 		jf = { key: 1, class: "ppv2-fd-section-desc" },
 		Vf = { key: 0, class: "ppv2-fd-validation-error" },
-		Bf = be(
+		Bf = _e(
 			{
 				__name: "PanelFormDialogBody",
 				props: Gl(
@@ -9690,14 +9690,14 @@
 					return (
 						t({ saveAllRelatedRows: a, resetRelatedToBaseline: u }),
 						(c, f) => (
-							b(),
+							_(),
 							F("div", Pf, [
 								e.loading
-									? (b(), F("div", Af, "Loading…"))
+									? (_(), F("div", Af, "Loading…"))
 									: e.error
-									? (b(), F("div", Mf, G(e.error), 1))
+									? (_(), F("div", Mf, G(e.error), 1))
 									: e.tabs.length
-									? (b(),
+									? (_(),
 									  F(
 											oe,
 											{ key: 2 },
@@ -9715,14 +9715,14 @@
 													["tabs", "active-tab"]
 												),
 												j("div", If, [
-													(b(!0),
+													(_(!0),
 													F(
 														oe,
 														null,
 														he(
 															e.tabs,
 															(h, g) => (
-																b(),
+																_(),
 																F(
 																	"div",
 																	{
@@ -9740,7 +9740,7 @@
 																	},
 																	[
 																		h._related
-																			? (b(),
+																			? (_(),
 																			  xe(
 																					Of,
 																					{
@@ -9786,14 +9786,14 @@
 																						"original-form-data",
 																					]
 																			  ))
-																			: (b(!0),
+																			: (_(!0),
 																			  F(
 																					oe,
 																					{ key: 1 },
 																					he(
 																						h.sections,
 																						(w, S) => (
-																							b(),
+																							_(),
 																							F(
 																								"div",
 																								{
@@ -9802,7 +9802,7 @@
 																								},
 																								[
 																									w.label
-																										? (b(),
+																										? (_(),
 																										  F(
 																												"h3",
 																												Lf,
@@ -9816,7 +9816,7 @@
 																												!0
 																										  ),
 																									w.description
-																										? (b(),
+																										? (_(),
 																										  F(
 																												"p",
 																												jf,
@@ -9845,7 +9845,7 @@
 																											),
 																										},
 																										[
-																											(b(
+																											(_(
 																												!0
 																											),
 																											F(
@@ -9857,14 +9857,14 @@
 																														N,
 																														C
 																													) => (
-																														b(),
+																														_(),
 																														F(
 																															"div",
 																															{
 																																key: C,
 																															},
 																															[
-																																(b(
+																																(_(
 																																	!0
 																																),
 																																F(
@@ -9875,7 +9875,7 @@
 																																		(
 																																			y
 																																		) => (
-																																			b(),
+																																			_(),
 																																			xe(
 																																				Zu,
 																																				{
@@ -9966,7 +9966,7 @@
 													)),
 												]),
 												e.validationError
-													? (b(), F("div", Vf, G(e.validationError), 1))
+													? (_(), F("div", Vf, G(e.validationError), 1))
 													: le("", !0),
 											],
 											64
@@ -9985,7 +9985,7 @@
 		Wf = { class: "ppv2-fd-action-buttons" },
 		Kf = ["disabled"],
 		zf = ["disabled"],
-		Yf = be(
+		Yf = _e(
 			{
 				__name: "PanelFormDialogFooter",
 				props: {
@@ -9996,17 +9996,17 @@
 				emits: ["cancel", "revert", "submit", "custom-button"],
 				setup(e) {
 					return (t, n) => (
-						b(),
+						_(),
 						F("div", Hf, [
 							j("div", qf, [
-								(b(!0),
+								(_(!0),
 								F(
 									oe,
 									null,
 									he(
 										e.buttons,
 										(o, l) => (
-											b(),
+											_(),
 											F(
 												"button",
 												{
@@ -10444,8 +10444,8 @@
 				(c.value = z), C("load failed", !1, "", z);
 			} finally {
 				$ === N && (u.value = !1),
-					await _t(),
-					await _t(),
+					await bt(),
+					await bt(),
 					(w.value = !1),
 					C(
 						"done",
@@ -10600,7 +10600,7 @@
 		pd = { class: "ppv2-fd-load-debug-s" },
 		md = { class: "ppv2-fd-load-debug-d" },
 		hd = { key: 0, class: "ppv2-fd-load-debug-e" },
-		io = be(
+		io = _e(
 			{
 				__name: "PanelFormDialog",
 				props: {
@@ -10818,7 +10818,7 @@
 					}
 					return (x, k) =>
 						e.open
-							? (b(),
+							? (_(),
 							  F(
 									"div",
 									{
@@ -10829,7 +10829,7 @@
 									},
 									[
 										a.value
-											? (b(),
+											? (_(),
 											  F(
 													"div",
 													{
@@ -10857,14 +10857,14 @@
 																),
 															]),
 															j("div", fd, [
-																(b(!0),
+																(_(!0),
 																F(
 																	oe,
 																	null,
 																	he(
 																		u.value,
 																		(L, U) => (
-																			b(),
+																			_(),
 																			F(
 																				"div",
 																				{
@@ -10909,7 +10909,7 @@
 																						1
 																					),
 																					L.err
-																						? (b(),
+																						? (_(),
 																						  F(
 																								"span",
 																								hd,
@@ -11039,8 +11039,8 @@
 		gd = { class: "ppv2-root" },
 		vd = { class: "ppv2-title" },
 		yd = { class: "ppv2-title" },
-		_d = Ua(
-			be(
+		bd = Ua(
+			_e(
 				{
 					__name: "App",
 					setup(e) {
@@ -11244,7 +11244,7 @@
 							const O = D.frappe_doctype || D.name;
 							O && v(O, {}, "root");
 						}
-						async function _(D, O) {
+						async function b(D, O) {
 							var ce;
 							const E = {};
 							D.linkField && D.rowName && (E[D.linkField] = D.rowName);
@@ -11346,7 +11346,7 @@
 							});
 						}
 						return (D, O) => (
-							b(),
+							_(),
 							F("div", gd, [
 								we(
 									ti,
@@ -11469,14 +11469,14 @@
 										_: 1,
 									}
 								),
-								(b(!0),
+								(_(!0),
 								F(
 									oe,
 									null,
 									he(
 										f,
 										(E) => (
-											b(),
+											_(),
 											xe(
 												ti,
 												{
@@ -11570,7 +11570,7 @@
 																	"show-filter": E._showFilter,
 																	onClose: (Z) => d(E.id),
 																	onRowClick: (Z) => P(E, Z),
-																	onDrill: (Z) => _(Z, E),
+																	onDrill: (Z) => b(Z, E),
 																	onSheets: (Z) => T(E),
 																	onEmail: (Z) => R(tt)(E),
 																	onSms: (Z) => R(Fe)(E),
@@ -11624,7 +11624,7 @@
 									128
 								)),
 								w.value
-									? (b(),
+									? (_(),
 									  xe(
 											Yc,
 											{
@@ -11639,14 +11639,14 @@
 											["root-doctype", "init-x", "init-y"]
 									  ))
 									: le("", !0),
-								(b(!0),
+								(_(!0),
 								F(
 									oe,
 									null,
 									he(
 										R(de),
 										(E, K) => (
-											b(),
+											_(),
 											xe(
 												ku,
 												{
@@ -11674,7 +11674,7 @@
 									128
 								)),
 								R(B) === 0 && R(y)
-									? (b(),
+									? (_(),
 									  xe(
 											io,
 											{
@@ -11718,7 +11718,7 @@
 									  ))
 									: le("", !0),
 								R(B) === 0 && R(W)
-									? (b(),
+									? (_(),
 									  xe(
 											io,
 											{
@@ -11756,7 +11756,7 @@
 									  ))
 									: le("", !0),
 								R(B) === 1 && R(y)
-									? (b(),
+									? (_(),
 									  xe(
 											io,
 											{
@@ -11800,7 +11800,7 @@
 									  ))
 									: le("", !0),
 								R(B) === 1 && R(W)
-									? (b(),
+									? (_(),
 									  xe(
 											io,
 											{
@@ -11846,7 +11846,7 @@
 		);
 	window.NCEPanelPageV2 = {
 		mount(e) {
-			return _d.mount(e);
+			return bd.mount(e);
 		},
 	};
 })();

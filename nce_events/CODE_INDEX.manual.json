@@ -449,20 +449,20 @@
       "purpose": "Enrollments data exchange UI — globally included",
       "depends_on": []
     },
-    "nce_events/public/js/panel_page_v2/legacy_dialogs/sms_dialog.js": {
-      "purpose": "SMS compose/send dialog — loaded at runtime by V2 via frappe.require()",
+    "nce_events/public/js/js_dialogs/sms_dialog.js": {
+      "purpose": "SMS compose/send dialog (plain JS, Frappe ui.Dialog) — loaded at runtime via frappe.require() from V2 and reusable from desk forms",
       "depends_on": []
     },
-    "nce_events/public/js/panel_page_v2/legacy_dialogs/email_dialog.js": {
-      "purpose": "Email compose/send dialog — loaded at runtime by V2 via frappe.require()",
+    "nce_events/public/js/js_dialogs/email_dialog.js": {
+      "purpose": "Email compose/send dialog (plain JS, Frappe ui.Dialog) — loaded at runtime via frappe.require() from V2 and reusable from desk forms",
       "depends_on": []
     },
-    "nce_events/public/js/panel_page_v2/legacy_dialogs/ai_tools.js": {
-      "purpose": "AI tools sidebar panel — loaded at runtime by V2 via frappe.require()",
+    "nce_events/public/js/js_dialogs/ai_tools.js": {
+      "purpose": "AI tools sidebar panel (plain JS) — loaded at runtime via frappe.require() from V2 and reusable from desk forms",
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/App.vue": {
-      "purpose": "V2 SPA root: composes PanelFloat + PanelTable for the root WP Tables panel and per-doctype drilled panels, hosts TagFinder/CardModal/PanelFormDialog overlays. Uses PanelHeaderToolbar for the float headers and useSendDialogs for the legacy email/SMS dialog launchers.",
+      "purpose": "V2 SPA root: composes PanelFloat + PanelTable for the root WP Tables panel and per-doctype drilled panels, hosts TagFinder/CardModal/PanelFormDialog overlays. Uses PanelHeaderToolbar for the float headers and useSendDialogs for the plain-JS email/SMS dialog launchers.",
       "depends_on": [
         "composables/usePanel.js",
         "composables/useNceCardStack.js",
@@ -555,10 +555,10 @@
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/composables/useSendDialogs.js": {
-      "purpose": "Composable wrapping the legacy frappe.require email/SMS dialog launchers (bulk + per-row). Owns the in-flight _sendDialog instance.",
+      "purpose": "Composable wrapping the plain-JS frappe.require email/SMS dialog launchers (bulk + per-row). Owns the in-flight _sendDialog instance.",
       "depends_on": [
-        "legacy_dialogs/email_dialog.js",
-        "legacy_dialogs/sms_dialog.js"
+        "../../js_dialogs/email_dialog.js",
+        "../../js_dialogs/sms_dialog.js"
       ]
     },
     "nce_events/public/js/panel_page_v2/components/TabBar.vue": {

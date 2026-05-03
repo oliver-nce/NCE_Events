@@ -4,7 +4,7 @@ Detailed step-by-step plan for **frozen Desk-derived forms** rendered as **Frapp
 
 **Do not treat this file as executed** until implementation is explicitly approved.
 
-**References:** `Docs/project_reference.md`, `AGENTS.md`, `frappe-ui-dynamic-form-from-desk-schema.md` (layout/parser concepts), `Docs/form_builder_coding_plan.md` (style of phases).
+**References:** `Docs/project_reference.md`, `AGENTS.md`, `Docs/archive/frappe-ui-dynamic-form-from-desk-schema.md` (layout/parser concepts), `Docs/form_builder_coding_plan.md` (style of phases).
 
 ---
 
@@ -167,7 +167,7 @@ If child row Link filter needs `root_doctype` from the same row, implement `get_
 ### 6.1 Load definition
 
 - When opening the dialog: `get_form_dialog_definition(name)`.
-- Parse `frozen_meta_json.fields` with a **shared** `parseLayout(fields)` (port from `frappe-ui-dynamic-form-from-desk-schema.md` or extract to `panel_page_v2/utils/parseLayout.js`).
+- Parse `frozen_meta_json.fields` with a **shared** `parseLayout(fields)` (port from `Docs/archive/frappe-ui-dynamic-form-from-desk-schema.md` or extract to `panel_page_v2/utils/parseLayout.js`).
 
 ### 6.2 Components
 

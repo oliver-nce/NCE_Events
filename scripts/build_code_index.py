@@ -71,6 +71,7 @@ GROUP_RULES: list[tuple[re.Pattern, str]] = [
 	(re.compile(r"^nce_events/utils/.*\.py$"), "utils"),
 	(re.compile(r"^nce_events/public/js/panel_page_v2/.*\.(js|vue)$"), "frontend_v2"),
 	(re.compile(r"^nce_events/public/js/hierarchy_explorer/.*\.js$"), "hierarchy_explorer"),
+	(re.compile(r"^nce_events/public/js/js_dialogs/.*\.js$"), "js_dialogs"),
 	(
 		re.compile(
 			r"^nce_events/public/js/(schema_explorer|email_template_tags|api_connector_tags|enrollments_exchange)\.js$"
@@ -286,6 +287,7 @@ def build_index(manual: dict) -> dict:
 		"doctypes": {},
 		"frontend_legacy_global": {},
 		"frontend_v2": {},
+		"js_dialogs": {},
 		"hierarchy_explorer": {},
 	}
 

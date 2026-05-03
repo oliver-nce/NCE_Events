@@ -26,9 +26,9 @@ function _openSendDialog(p, mode) {
 
 	frappe.require(
 		[
-			"/assets/nce_events/js/panel_page_v2/legacy_dialogs/ai_tools.js",
-			"/assets/nce_events/js/panel_page_v2/legacy_dialogs/sms_dialog.js",
-			"/assets/nce_events/js/panel_page_v2/legacy_dialogs/email_dialog.js",
+			"/assets/nce_events/js/js_dialogs/ai_tools.js",
+			"/assets/nce_events/js/js_dialogs/sms_dialog.js",
+			"/assets/nce_events/js/js_dialogs/email_dialog.js",
 			"/assets/nce_events/css/panel_page.css",
 		],
 		() => {
@@ -65,9 +65,9 @@ function _openSendDialogOne(p, mode, row) {
 
 	frappe.require(
 		[
-			"/assets/nce_events/js/panel_page_v2/legacy_dialogs/ai_tools.js",
-			"/assets/nce_events/js/panel_page_v2/legacy_dialogs/sms_dialog.js",
-			"/assets/nce_events/js/panel_page_v2/legacy_dialogs/email_dialog.js",
+			"/assets/nce_events/js/js_dialogs/ai_tools.js",
+			"/assets/nce_events/js/js_dialogs/sms_dialog.js",
+			"/assets/nce_events/js/js_dialogs/email_dialog.js",
 			"/assets/nce_events/css/panel_page.css",
 		],
 		() => {
