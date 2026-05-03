@@ -1,40 +1,12 @@
 <template>
 	<div ref="panelRef" class="ppv2-panel">
-
-		<div v-if="props.showFilter" class="ppv2-filter-widget">
-			<div v-for="(cond, i) in filters" :key="i" class="ppv2-filter-row">
-				<select v-model="cond.field" class="ppv2-filter-col" @change="onFilterFieldChange(cond); emitFilterChange()">
-					<option value="">— column —</option>
-					<option v-for="col in columns" :key="col.fieldname" :value="col.fieldname">{{ col.label }}</option>
-				</select>
-				<span v-if="cond.field" class="ppv2-filter-ops">
-					<button
-						v-for="op in opsForCond(cond)"
-						:key="op"
-						:class="['ppv2-op-btn', { active: cond.op === op }]"
-						@click="cond.op = op; emitFilterChange()"
-					>{{ op }}</button>
-				</span>
-				<!-- Date / Datetime column: two mutually-exclusive inputs -->
-				<template v-if="cond.field && isDateField(cond.field)">
-					<input
-						:value="cond._sqlDate || ''"
-						class="ppv2-filter-val"
-						placeholder="Enter a SQL date e.g. 1950-06-08"
-						@input="onDateSqlInput(cond, $event.target.value); emitFilterDebounced()"
-					>
-					<input
-						:value="cond._daysAgo || ''"
-						class="ppv2-filter-val"
-						placeholder="OR enter days ago e.g. 30"
-						@input="onDaysAgoInput(cond, $event.target.value); emitFilterDebounced()"
-					>
-				</template>
-				<input v-else-if="cond.field" v-model="cond.value" class="ppv2-filter-val" placeholder="value" @input="emitFilterDebounced">
-				<button v-if="cond.field" class="ppv2-filter-rm" @click="filters.splice(i, 1); emitFilterChange()">&times;</button>
-			</div>
-			<button class="ppv2-filter-add" @click="filters.push({ field: '', op: '>', value: '' })">Add Filter &#9660;</button>
-		</div>
+		<PanelTableFilterBar
+			:columns="columns"
+			:default-filters="defaultFilters"
+			:show-filter="showFilter"
+			@filter-change="(f) => $emit('filter-change', f)"
+			@show-filter="(v) => $emit('show-filter', v)"
+		/>
 
 		<div v-if="loading" class="ppv2-loading">Loading…</div>
 
@@ -47,10 +19,16 @@
 						<th
 							v-for="(col, ci) in dataCols"
 							:key="col.fieldname"
-							:style="{ width: colWidths[ci] ? colWidths[ci] + 'px' : 'auto', minWidth: '40px' }"
+							:style="{
+								width: colWidths[ci] ? colWidths[ci] + 'px' : 'auto',
+								minWidth: '40px',
+							}"
 						>
 							{{ col.label }}
-							<div class="ppv2-col-resize" @mousedown.prevent="startColResize($event, ci)" />
+							<div
+								class="ppv2-col-resize"
+								@mousedown.prevent="startColResize($event, ci)"
+							/>
 						</th>
 						<th v-if="hasEmailAction || hasPhoneAction" class="ppv2-action-th" />
 					</tr>
@@ -59,7 +37,10 @@
 					<tr
 						v-for="(row, ri) in rows"
 						:key="row.name || ri"
-						:class="{ 'ppv2-alt': ri % 2 === 1, 'ppv2-selected': selectedName === row.name }"
+						:class="{
+							'ppv2-alt': ri % 2 === 1,
+							'ppv2-selected': selectedName === row.name,
+						}"
 						@click="onRowClick($event, row)"
 						@contextmenu="onContextMenu($event, row)"
 					>
@@ -69,17 +50,28 @@
 							:style="cellStyle(row, col)"
 						>
 							<a
-								v-if="col.is_link && col.link_doctype && getVal(row, col.fieldname)"
+								v-if="
+									col.is_link && col.link_doctype && getVal(row, col.fieldname)
+								"
 								class="ppv2-link-val"
 								:href="formRoute(col.link_doctype, getVal(row, col.fieldname))"
 								target="_blank"
 								@click.stop
-							>{{ cellValue(row, col) }}</a>
+								>{{ cellValue(row, col) }}</a
+							>
 							<span
 								v-else-if="col.is_related_link && col.related_doctype"
 								class="ppv2-related-link"
-								@click.stop="$emit('drill', { doctype: col.related_doctype, linkField: col.related_link_field, rowName: row.name, parentRow: row })"
-							>{{ cellValue(row, col) }}</span>
+								@click.stop="
+									$emit('drill', {
+										doctype: col.related_doctype,
+										linkField: col.related_link_field,
+										rowName: row.name,
+										parentRow: row,
+									})
+								"
+								>{{ cellValue(row, col) }}</span
+							>
 							<template v-else>{{ cellValue(row, col) }}</template>
 						</td>
 						<td v-if="hasEmailAction || hasPhoneAction" class="ppv2-action-td">
@@ -88,19 +80,25 @@
 								class="ppv2-row-btn"
 								title="Send email"
 								@click.stop="$emit('email-one', row)"
-							><i class="fa fa-envelope"></i></button>
+							>
+								<i class="fa fa-envelope"></i>
+							</button>
 							<button
 								v-if="hasPhoneAction && rowHasPhone(row)"
 								class="ppv2-row-btn"
 								title="Call"
 								@click.stop="onCallRow(row)"
-							><i class="fa fa-phone"></i></button>
+							>
+								<i class="fa fa-phone"></i>
+							</button>
 							<button
 								v-if="hasPhoneAction && rowHasPhone(row)"
 								class="ppv2-row-btn"
 								title="Send SMS"
 								@click.stop="$emit('sms-one', row)"
-							><i class="fa fa-comment"></i></button>
+							>
+								<i class="fa fa-comment"></i>
+							</button>
 						</td>
 					</tr>
 				</tbody>
@@ -111,6 +109,7 @@
 
 <script setup>
 import { ref, reactive, computed, watch, nextTick } from "vue";
+import PanelTableFilterBar from "./PanelTableFilterBar.vue";
 
 const props = defineProps({
 	title: { type: String, default: "" },
@@ -128,23 +127,29 @@ const props = defineProps({
 });
 
 const emit = defineEmits([
-	"row-click", "row-drop", "close", "drill", "sheets", "email", "sms",
-	"filter-change", "email-one", "sms-one", "refresh", "show-filter",
+	"row-click",
+	"row-drop",
+	"close",
+	"drill",
+	"sheets",
+	"email",
+	"sms",
+	"filter-change",
+	"email-one",
+	"sms-one",
+	"refresh",
+	"show-filter",
 ]);
 
-const opsDefault = ["=", "!=", ">", "<", ">=", "<=", "like", "in"];
-const opsDate    = ["=", ">", "<"];
-const filters = reactive([]);
 const colWidths = reactive({});
 const panelRef = ref(null);
-let _filterTimer = null;
 
 function onRowClick(event, row) {
 	if (event.ctrlKey) {
 		event.preventDefault();
-		emit('row-drop', row);
+		emit("row-drop", row);
 	} else {
-		emit('row-click', row);
+		emit("row-click", row);
 	}
 }
 
@@ -152,11 +157,9 @@ function onContextMenu(event, row) {
 	// On Mac, Ctrl+Click fires contextmenu instead of click
 	if (event.ctrlKey) {
 		event.preventDefault();
-		emit('row-drop', row);
+		emit("row-drop", row);
 	}
 }
-
-
 
 function onRefresh() {
 	emit("refresh");
@@ -198,7 +201,9 @@ watch(
 			const el = panelRef.value;
 			const w = el?.offsetWidth ?? el?.clientWidth ?? 0;
 			const widths = calcColWidths(props.columns, props.rows || [], w);
-			widths.forEach((w, i) => { colWidths[i] = w; });
+			widths.forEach((w, i) => {
+				colWidths[i] = w;
+			});
 		});
 	},
 	{ immediate: true }
@@ -213,13 +218,17 @@ const dataCols = computed(() => props.columns);
 
 const boldSet = computed(() => {
 	const s = {};
-	(props.config.bold_fields || []).forEach((f) => { s[f.toLowerCase()] = true; });
+	(props.config.bold_fields || []).forEach((f) => {
+		s[f.toLowerCase()] = true;
+	});
 	return s;
 });
 
 const genderTintSet = computed(() => {
 	const s = {};
-	(props.config.gender_color_fields || []).forEach((f) => { s[f.toLowerCase()] = true; });
+	(props.config.gender_color_fields || []).forEach((f) => {
+		s[f.toLowerCase()] = true;
+	});
 	return s;
 });
 
@@ -227,98 +236,6 @@ const genderCol = computed(() => (props.config.gender_column || "").trim().toLow
 const maleHex = computed(() => (props.config.male_hex || "").trim());
 const femaleHex = computed(() => (props.config.female_hex || "").trim());
 const tintByGender = computed(() => props.config.tint_by_gender || {});
-
-const DATE_FIELDTYPES = new Set(["Date", "Datetime"]);
-
-function colByFieldname(fieldname) {
-	return props.columns.find((c) => c.fieldname === fieldname) || null;
-}
-
-function isDateField(fieldname) {
-	if (!fieldname) return false;
-	const col = colByFieldname(fieldname);
-	if (col && col.fieldtype) return DATE_FIELDTYPES.has(col.fieldtype);
-	// Heuristic fallback: common date-ish field name fragments
-	return /date|_at$/.test(fieldname.toLowerCase());
-}
-
-function opsForCond(cond) {
-	return isDateField(cond.field) ? opsDate : opsDefault;
-}
-
-function onFilterFieldChange(cond) {
-	// Clear stale value whenever the field changes
-	cond.value = "";
-	cond._sqlDate = "";
-	cond._daysAgo = "";
-	// When switching to a date field, default op to > (most common intent)
-	if (isDateField(cond.field) && !opsDate.includes(cond.op)) {
-		cond.op = ">";
-	}
-	// When switching to a non-date field, reset op to = if it was a date-only op
-	if (!isDateField(cond.field) && !opsDefault.includes(cond.op)) {
-		cond.op = "=";
-	}
-}
-
-function onDateSqlInput(cond, val) {
-	cond._sqlDate = val;
-	cond._daysAgo = "";
-	cond.value = val;
-}
-
-function onDaysAgoInput(cond, val) {
-	cond._daysAgo = val;
-	cond._sqlDate = "";
-	cond.value = val ? val + " days ago" : "";
-}
-
-function toggleFilter() {
-	// Filter visibility is now controlled by parent via showFilter prop
-	// This function is kept for backwards compatibility but does nothing
-}
-
-// When defaultFilters change (i.e. panel first loads with config), pre-populate
-// the filter widget and open it — only if the user hasn't already entered filters.
-watch(
-	() => props.defaultFilters,
-	(defs) => {
-		if (!defs || !defs.length) return;
-		// Only seed if user hasn't touched the filters yet
-		const hasUserFilters = filters.some((f) => f.field && String(f.value ?? "") !== "");
-		if (hasUserFilters) return;
-		filters.splice(0, filters.length, ...defs.map((f) => {
-			let _sqlDate = "";
-			let _daysAgo = "";
-			if (f.value) {
-				if (/days ago|month|today/i.test(f.value)) {
-					_daysAgo = f.value.replace(/\s*days ago$/i, "").trim();
-				} else {
-					_sqlDate = f.value;
-				}
-			}
-			return { field: f.field, op: f.op, value: f.value, _sqlDate, _daysAgo };
-		}));
-		emit("show-filter", true);
-		emitFilterChange();
-	},
-	{ immediate: true },
-);
-
-function activeFilters() {
-	return filters.filter((f) => f.field && String(f.value || "") !== "")
-		.map((f) => ({ field: f.field, op: f.op, value: f.value }));
-}
-
-function emitFilterChange() {
-	if (_filterTimer) clearTimeout(_filterTimer);
-	emit("filter-change", activeFilters());
-}
-
-function emitFilterDebounced() {
-	if (_filterTimer) clearTimeout(_filterTimer);
-	_filterTimer = setTimeout(() => emit("filter-change", activeFilters()), 1200);
-}
 
 function getVal(row, key) {
 	if (!key) return null;
@@ -415,88 +332,27 @@ function startColResize(e, ci) {
 	height: 100%;
 }
 
-
-/* ── Filter Widget ── */
-
-.ppv2-filter-widget {
-	padding: 6px 10px;
-	background: var(--primary-light);
-	border-bottom: 1px solid var(--border-color);
-	flex-shrink: 0;
-}
-
-.ppv2-filter-row {
-	display: flex;
-	align-items: center;
-	gap: var(--spacing-xs);
-	margin-bottom: var(--spacing-xs);
-}
-
-.ppv2-filter-col {
-	font-size: calc(var(--font-size-base) + 2px);
-	padding: 3px 6px;
-	border: 1px solid var(--border-color);
-	border-radius: var(--border-radius-sm);
-	min-width: 120px;
-}
-
-.ppv2-filter-ops { display: flex; gap: 1px; }
-
-.ppv2-op-btn {
-	font-size: calc(var(--font-size-base) + 2px);
-	padding: 3px 8px;
-	border: 1px solid var(--border-color);
-	background: var(--bg-card);
-	cursor: pointer;
-	border-radius: 2px;
-}
-.ppv2-op-btn.active {
-	background: var(--bg-header);
-	color: var(--text-header);
-	border-color: var(--bg-header);
-}
-
-.ppv2-filter-val {
-	font-size: calc(var(--font-size-base) + 2px);
-	padding: 3px 8px;
-	border: 1px solid var(--border-color);
-	border-radius: var(--border-radius-sm);
-	flex: 1;
-	min-width: 60px;
-}
-
-.ppv2-filter-rm {
-	background: none;
-	border: none;
-	color: #c0392b;
-	font-size: 14px;
-	cursor: pointer;
-	padding: 0 4px;
-}
-
-.ppv2-filter-add {
-	font-size: 10px;
-	padding: 2px 8px;
-	background: var(--bg-card);
-	border: 1px solid var(--border-color);
-	border-radius: var(--border-radius-sm);
-	cursor: pointer;
-	color: var(--color-primary);
-}
-
 /* ── Loading / Error ── */
 
-.ppv2-loading, .ppv2-error {
+.ppv2-loading,
+.ppv2-error {
 	padding: 24px;
 	text-align: center;
 	font-size: var(--font-size-base);
 }
-.ppv2-loading { color: var(--color-primary); }
-.ppv2-error { color: #e53e3e; }
+.ppv2-loading {
+	color: var(--color-primary);
+}
+.ppv2-error {
+	color: #e53e3e;
+}
 
 /* ── Table ── */
 
-.ppv2-body { flex: 1; overflow: auto; }
+.ppv2-body {
+	flex: 1;
+	overflow: auto;
+}
 
 .ppv2-table {
 	width: 100%;
@@ -526,7 +382,9 @@ function startColResize(e, ci) {
 	text-overflow: ellipsis;
 	border-right: 1px solid var(--border-color);
 }
-.ppv2-table th:last-child { border-right: none; }
+.ppv2-table th:last-child {
+	border-right: none;
+}
 
 .ppv2-action-th {
 	width: 110px;
@@ -542,23 +400,34 @@ function startColResize(e, ci) {
 	text-overflow: ellipsis;
 }
 
-.ppv2-table tbody tr:hover { background: var(--primary-light); cursor: pointer; }
-.ppv2-alt { background: var(--row-alt); }
-.ppv2-selected { background: var(--primary-light) !important; }
+.ppv2-table tbody tr:hover {
+	background: var(--primary-light);
+	cursor: pointer;
+}
+.ppv2-alt {
+	background: var(--row-alt);
+}
+.ppv2-selected {
+	background: var(--primary-light) !important;
+}
 
 .ppv2-link-val {
 	color: royalblue;
 	text-decoration: underline;
 	cursor: pointer;
 }
-.ppv2-link-val:hover { color: #1a3fb5; }
+.ppv2-link-val:hover {
+	color: #1a3fb5;
+}
 
 .ppv2-related-link {
 	color: royalblue;
 	text-decoration: underline;
 	cursor: pointer;
 }
-.ppv2-related-link:hover { color: #1a3fb5; }
+.ppv2-related-link:hover {
+	color: #1a3fb5;
+}
 
 /* ── Row action buttons ── */
 
@@ -587,7 +456,9 @@ function startColResize(e, ci) {
 	border-color: var(--border-color);
 	color: var(--text-color);
 }
-.ppv2-row-btn i { margin: 0; }
+.ppv2-row-btn i {
+	margin: 0;
+}
 
 /* ── Column resize handle ── */
 
@@ -600,5 +471,7 @@ function startColResize(e, ci) {
 	cursor: col-resize;
 	z-index: 2;
 }
-.ppv2-col-resize:hover { background: color-mix(in srgb, var(--color-primary) 30%, transparent); }
+.ppv2-col-resize:hover {
+	background: color-mix(in srgb, var(--color-primary) 30%, transparent);
+}
 </style>

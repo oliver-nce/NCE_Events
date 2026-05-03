@@ -771,12 +771,14 @@
   },
   "frontend_v2": {
     "nce_events/public/js/panel_page_v2/App.vue": {
-      "purpose": "V2 root component — panel orchestration, card stack (nce_cards + useNceCardStack), form dialog host, window._nce_open_card",
+      "purpose": "V2 SPA root: composes PanelFloat + PanelTable for the root WP Tables panel and per-doctype drilled panels, hosts TagFinder/CardModal/PanelFormDialog overlays. Uses PanelHeaderToolbar for the float headers and useSendDialogs for the legacy email/SMS dialog launchers.",
       "depends_on": [
         "composables/usePanel.js",
         "composables/useNceCardStack.js",
         "composables/usePanelFormDialogHost.js",
+        "composables/useSendDialogs.js",
         "components/PanelTable.vue",
+        "components/PanelHeaderToolbar.vue",
         "components/TabBar.vue",
         "nce_cards/CardModal.vue",
         "components/PanelFormDialog.vue",
@@ -890,14 +892,29 @@
       "purpose": "Panel Form Dialog control — mounts Frappe Link control in a div host; emits change + link-change for fetch_from; v-model sync.",
       "depends_on": []
     },
+    "nce_events/public/js/panel_page_v2/components/PanelHeaderToolbar.vue": {
+      "vue": {
+        "uses_defineProps": true,
+        "uses_defineEmits": true
+      },
+      "purpose": "Reusable header toolbar for PanelFloat: title, optional click-hint, refresh/filter/sheets/email/sms/close buttons, record count. Pure presentational.",
+      "depends_on": []
+    },
     "nce_events/public/js/panel_page_v2/components/PanelTable.vue": {
       "vue": {
         "uses_defineEmits": true
       },
-      "purpose": "Main data table component for V2 panel — columns, rows, pagination, sorting",
+      "purpose": "Scrollable data table with sortable-width columns, link/related-link cells, gender-tint and bold styling, optional per-row email/phone/sms action buttons. Filter widget delegated to PanelTableFilterBar.",
       "depends_on": [
-        "usePanel.js"
+        "components/PanelTableFilterBar.vue"
       ]
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelTableFilterBar.vue": {
+      "vue": {
+        "uses_defineEmits": true
+      },
+      "purpose": "Filter widget at the top of PanelTable: column dropdown, op chips, value/date/days-ago inputs, add/remove rows, default-filter seeding. Emits filter-change and show-filter.",
+      "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/components/TabBar.vue": {
       "vue": {
@@ -1040,6 +1057,16 @@
       "purpose": "V2 composable — panel integration for Panel Form Dialog: refs, open from row, close/save + panel reload; composes useFormDialogRecordNav.",
       "depends_on": [
         "composables/useFormDialogRecordNav.js"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/composables/useSendDialogs.js": {
+      "exports": [
+        "useSendDialogs"
+      ],
+      "purpose": "Composable wrapping the legacy frappe.require email/SMS dialog launchers (bulk + per-row). Owns the in-flight _sendDialog instance.",
+      "depends_on": [
+        "legacy_dialogs/email_dialog.js",
+        "legacy_dialogs/sms_dialog.js"
       ]
     },
     "nce_events/public/js/panel_page_v2/composables/useTagFinder.js": {

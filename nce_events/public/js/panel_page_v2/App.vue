@@ -3,36 +3,15 @@
 		<PanelFloat :init-x="40" :init-y="60" :init-w="900" :init-h="550">
 			<template #header>
 				<span class="ppv2-title">{{ config?.header_text || "NCE Tables" }}</span>
-				<div class="ppv2-header-right" @mousedown.stop>
-					<span v-if="config?.open_card_on_click" class="ppv2-click-hint"
-						>Click row for details · Ctrl-click to remove</span
-					>
-					<div class="ppv2-header-controls">
-						<button
-							class="ppv2-hdr-btn"
-							:class="{ 'ppv2-hdr-btn--refreshing': loading }"
-							title="Refresh"
-							@click="onRefreshRoot"
-						>
-							<i class="fa fa-refresh"></i>
-						</button>
-						<button
-							class="ppv2-hdr-btn"
-							title="Filter"
-							@click="rootPanelShowFilter = !rootPanelShowFilter"
-						>
-							<i class="fa fa-filter"></i>
-						</button>
-						<button
-							class="ppv2-hdr-btn"
-							title="Export to Sheets"
-							@click="onSheets({ doctype: 'WP Tables', parentFilter: {}, rows })"
-						>
-							<i class="fa fa-table"></i>
-						</button>
-						<span class="ppv2-count">{{ rows.length }} / {{ fullTotal }} records</span>
-					</div>
-				</div>
+				<PanelHeaderToolbar
+					:loading="loading"
+					:show-click-hint="!!config?.open_card_on_click"
+					:row-count="rows.length"
+					:total="fullTotal"
+					@refresh="onRefreshRoot"
+					@toggle-filter="rootPanelShowFilter = !rootPanelShowFilter"
+					@sheets="onSheets({ doctype: 'WP Tables', parentFilter: {}, rows })"
+				/>
 			</template>
 			<PanelTable
 				:title="config?.header_text || 'NCE Tables'"
@@ -64,58 +43,21 @@
 		>
 			<template #header>
 				<span class="ppv2-title">{{ floatedPanelTitle(p) }}</span>
-				<div class="ppv2-header-right" @mousedown.stop>
-					<span v-if="p.config?.open_card_on_click" class="ppv2-click-hint"
-						>Click row for details · Ctrl-click to remove</span
-					>
-					<div class="ppv2-header-controls">
-						<button
-							class="ppv2-hdr-btn"
-							:class="{ 'ppv2-hdr-btn--refreshing': p.loading }"
-							title="Refresh"
-							@click="onRefreshPanel(p)"
-						>
-							<i class="fa fa-refresh"></i>
-						</button>
-						<button
-							class="ppv2-hdr-btn"
-							title="Filter"
-							@click="p._showFilter = !p._showFilter"
-						>
-							<i class="fa fa-filter"></i>
-						</button>
-						<button class="ppv2-hdr-btn" title="Export to Sheets" @click="onSheets(p)">
-							<i class="fa fa-table"></i>
-						</button>
-						<button
-							v-if="p.config?.email_field"
-							class="ppv2-hdr-btn"
-							title="Email"
-							@click="onEmail(p)"
-						>
-							<i class="fa fa-envelope"></i>
-						</button>
-						<button
-							v-if="p.config?.sms_field"
-							class="ppv2-hdr-btn"
-							title="SMS"
-							@click="onSms(p)"
-						>
-							<i class="fa fa-comment"></i>
-						</button>
-						<span class="ppv2-count"
-							>{{ (p._panelRows || p.rows).length }} /
-							{{ p.fullTotal }} records</span
-						>
-						<button
-							class="ppv2-hdr-btn ppv2-close-btn"
-							title="Close"
-							@click="closePanel(p.id)"
-						>
-							&times;
-						</button>
-					</div>
-				</div>
+				<PanelHeaderToolbar
+					:loading="!!p.loading"
+					:show-click-hint="!!p.config?.open_card_on_click"
+					:row-count="(p._panelRows || p.rows).length"
+					:total="p.fullTotal"
+					:show-email="!!p.config?.email_field"
+					:show-sms="!!p.config?.sms_field"
+					show-close
+					@refresh="onRefreshPanel(p)"
+					@toggle-filter="p._showFilter = !p._showFilter"
+					@sheets="onSheets(p)"
+					@email="onEmail(p)"
+					@sms="onSms(p)"
+					@close="closePanel(p.id)"
+				/>
 			</template>
 			<PanelTable
 				:title="floatedPanelTitle(p)"
@@ -262,8 +204,10 @@ import { ref, reactive, computed, onMounted, onUnmounted } from "vue";
 import { useNceCardStack, parseOpenCardOpts } from "./composables/useNceCardStack.js";
 import { usePanelFormDialogHost } from "./composables/usePanelFormDialogHost.js";
 import { usePanel } from "./composables/usePanel.js";
+import { useSendDialogs } from "./composables/useSendDialogs.js";
 import PanelFloat from "./components/PanelFloat.vue";
 import PanelTable from "./components/PanelTable.vue";
+import PanelHeaderToolbar from "./components/PanelHeaderToolbar.vue";
 import TagFinder from "./components/TagFinder.vue";
 import CardModal from "./nce_cards/CardModal.vue";
 import PanelFormDialog from "./components/PanelFormDialog.vue";
@@ -322,6 +266,8 @@ const {
 } = usePanelFormDialogHost(openPanels);
 
 const { cardStack, openCardModal, closeTopCard, onOpenCard } = useNceCardStack();
+
+const { onEmail, onSms, onEmailOne, onSmsOne } = useSendDialogs();
 
 function onRowDrop(panel, row) {
 	const arr = panel ? panel.rows : rows.value;
@@ -591,113 +537,6 @@ function onSheets(p) {
 			}
 		},
 	});
-}
-
-let _sendDialog = null;
-
-function _openSendDialog(p, mode) {
-	const cfg = p.config;
-	if (!cfg) return;
-	const recipientField = mode === "sms" ? cfg.sms_field : cfg.email_field;
-	if (!recipientField) {
-		frappe.msgprint(
-			__("No {0} field configured for this panel.", [mode === "sms" ? "SMS" : "Email"])
-		);
-		return;
-	}
-	// p._panelRows is a ref auto-unwrapped by Vue's reactive proxy — gives
-	// the current filtered array directly (no .value needed). p.rows is a
-	// stale snapshot from load time that doesn't update when filters change.
-	const currentRows = p._panelRows || p.rows;
-	if (!currentRows.length) {
-		frappe.msgprint(__("No rows."));
-		return;
-	}
-
-	if (_sendDialog) {
-		_sendDialog.close();
-		_sendDialog = null;
-	}
-
-	frappe.require(
-		[
-			"/assets/nce_events/js/panel_page_v2/legacy_dialogs/ai_tools.js",
-			"/assets/nce_events/js/panel_page_v2/legacy_dialogs/sms_dialog.js",
-			"/assets/nce_events/js/panel_page_v2/legacy_dialogs/email_dialog.js",
-			"/assets/nce_events/css/panel_page.css",
-		],
-		() => {
-			const DialogClass =
-				mode === "sms"
-					? nce_events.panel_page.SmsDialog
-					: nce_events.panel_page.EmailDialog;
-			_sendDialog = new DialogClass({
-				doctype: p.doctype,
-				config: cfg,
-				row_names: currentRows.map((r) => r.name),
-				row_count: currentRows.length,
-				z_index: 9999,
-				init_left: (p.x || 40) + 60,
-				init_top: (p.y || 60) + 20,
-				on_close() {
-					_sendDialog = null;
-				},
-			});
-		}
-	);
-}
-
-function onEmail(p) {
-	_openSendDialog(p, "email");
-}
-function onSms(p) {
-	_openSendDialog(p, "sms");
-}
-
-function _openSendDialogOne(p, mode, row) {
-	const cfg = p.config;
-	if (!cfg) return;
-	const recipientField = mode === "sms" ? cfg.sms_field : cfg.email_field;
-	if (!recipientField) return;
-
-	if (_sendDialog) {
-		_sendDialog.close();
-		_sendDialog = null;
-	}
-
-	frappe.require(
-		[
-			"/assets/nce_events/js/panel_page_v2/legacy_dialogs/ai_tools.js",
-			"/assets/nce_events/js/panel_page_v2/legacy_dialogs/sms_dialog.js",
-			"/assets/nce_events/js/panel_page_v2/legacy_dialogs/email_dialog.js",
-			"/assets/nce_events/css/panel_page.css",
-		],
-		() => {
-			const DialogClass =
-				mode === "sms"
-					? nce_events.panel_page.SmsDialog
-					: nce_events.panel_page.EmailDialog;
-			_sendDialog = new DialogClass({
-				doctype: p.doctype,
-				config: cfg,
-				row_names: [row.name],
-				row_count: 1,
-				z_index: 9999,
-				init_left: (p.x || 40) + 60,
-				init_top: (p.y || 60) + 20,
-				on_close() {
-					_sendDialog = null;
-				},
-			});
-		}
-	);
-}
-
-function onEmailOne(p, row) {
-	_openSendDialogOne(p, "email", row);
-}
-function onSmsOne(p, row) {
-	_openSendDialogOne(p, "sms", row);
 }
 </script>
 

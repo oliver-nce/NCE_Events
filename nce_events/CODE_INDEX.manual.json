@@ -462,12 +462,14 @@
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/App.vue": {
-      "purpose": "V2 root component — panel orchestration, card stack (nce_cards + useNceCardStack), form dialog host, window._nce_open_card",
+      "purpose": "V2 SPA root: composes PanelFloat + PanelTable for the root WP Tables panel and per-doctype drilled panels, hosts TagFinder/CardModal/PanelFormDialog overlays. Uses PanelHeaderToolbar for the float headers and useSendDialogs for the legacy email/SMS dialog launchers.",
       "depends_on": [
         "composables/usePanel.js",
         "composables/useNceCardStack.js",
         "composables/usePanelFormDialogHost.js",
+        "composables/useSendDialogs.js",
         "components/PanelTable.vue",
+        "components/PanelHeaderToolbar.vue",
         "components/TabBar.vue",
         "nce_cards/CardModal.vue",
         "components/PanelFormDialog.vue",
@@ -539,9 +541,24 @@
       ]
     },
     "nce_events/public/js/panel_page_v2/components/PanelTable.vue": {
-      "purpose": "Main data table component for V2 panel — columns, rows, pagination, sorting",
+      "purpose": "Scrollable data table with sortable-width columns, link/related-link cells, gender-tint and bold styling, optional per-row email/phone/sms action buttons. Filter widget delegated to PanelTableFilterBar.",
       "depends_on": [
-        "usePanel.js"
+        "components/PanelTableFilterBar.vue"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelHeaderToolbar.vue": {
+      "purpose": "Reusable header toolbar for PanelFloat: title, optional click-hint, refresh/filter/sheets/email/sms/close buttons, record count. Pure presentational.",
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelTableFilterBar.vue": {
+      "purpose": "Filter widget at the top of PanelTable: column dropdown, op chips, value/date/days-ago inputs, add/remove rows, default-filter seeding. Emits filter-change and show-filter.",
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/composables/useSendDialogs.js": {
+      "purpose": "Composable wrapping the legacy frappe.require email/SMS dialog launchers (bulk + per-row). Owns the in-flight _sendDialog instance.",
+      "depends_on": [
+        "legacy_dialogs/email_dialog.js",
+        "legacy_dialogs/sms_dialog.js"
       ]
     },
     "nce_events/public/js/panel_page_v2/components/TabBar.vue": {
