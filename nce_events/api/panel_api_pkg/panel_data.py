@@ -268,13 +268,15 @@ def get_panel_data(
 		lf["fieldname"]: lf["options"] for lf in _get_link_fields_with_target(root_doctype)
 	}
 
-	# Build fieldtype map from meta for date/datetime awareness in the filter widget
+	# Build fieldtype + label maps from meta for filter widget and column headers
 	_fieldtype_map: dict[str, str] = {}
+	_meta_label_map: dict[str, str] = {"name": "ID"}
 	try:
 		_meta = frappe.get_meta(root_doctype)
 		for _f in _meta.fields:
 			if _f.fieldname:
 				_fieldtype_map[_f.fieldname] = _f.fieldtype or ""
+				_meta_label_map[_f.fieldname] = _f.label or _title_case(_f.fieldname)
 	except Exception:
 		pass
 
@@ -288,8 +290,8 @@ def get_panel_data(
 			label = computed_label_map[fn]
 			col: dict[str, Any] = {"fieldname": fn, "label": label}
 		else:
-			label = fn.split(".")[-1] if "." in fn else fn
-			label = _title_case(label)
+			bare = fn.split(".")[-1] if "." in fn else fn
+			label = _meta_label_map.get(fn) or _title_case(bare)
 			col = {"fieldname": fn, "label": label}
 		if fn in link_target_map:
 			col["is_link"] = True
