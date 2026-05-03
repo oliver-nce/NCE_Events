@@ -482,17 +482,45 @@
     "nce_events/api/tests/__init__.py": {
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
-    "nce_events/api/tests/test_core_functions.py": {
+    "nce_events/api/tests/api/__init__.py": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/api/tests/api/form_dialog/__init__.py": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/api/tests/api/form_dialog/test_capture.py": {
       "exports": [
-        "TestApplyUserFilters",
-        "TestBuildCoreFilterWhere",
-        "TestComputeJinjaTag",
-        "TestEnsureTabPrefix",
-        "TestTranslateWpQuery"
+        "TestCaptureFormDialog",
+        "TestGetFormDialogDefinition",
+        "TestListFormDialogsForDoctype"
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
-    "nce_events/api/tests/test_derived_fields.py": {
+    "nce_events/api/tests/api/form_dialog/test_helpers.py": {
+      "exports": [
+        "TestAssertDoctypeInWPTables",
+        "TestFiltersForRelatedRows",
+        "TestHopWalkFinalIdentifiers",
+        "TestParseRelatedDoctypes",
+        "TestRelatedListColumnsOptions"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/api/tests/api/form_dialog/test_portal_fields.py": {
+      "exports": [
+        "TestNormalizePortalFieldConfig",
+        "TestRelatedPortalFieldEditor"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/api/tests/api/form_dialog/test_related_rows.py": {
+      "exports": [
+        "TestGetFormDialogRelatedRows",
+        "TestSaveFormDialogRelatedRows"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/api/tests/api/test_derived_fields.py": {
       "exports": [
         "TestApplyDerivedFieldsToDoc",
         "TestEvaluateDerivedFields",
@@ -501,7 +529,7 @@
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
-    "nce_events/api/tests/test_events_publish.py": {
+    "nce_events/api/tests/api/test_events_publish.py": {
       "exports": [
         "TestBuildWooCommerceProductPayload",
         "TestPublishEventsToWebsite",
@@ -509,24 +537,7 @@
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
-    "nce_events/api/tests/test_form_dialog_api.py": {
-      "exports": [
-        "TestAssertDoctypeInWPTables",
-        "TestCaptureFormDialog",
-        "TestFiltersForRelatedRows",
-        "TestGetFormDialogDefinition",
-        "TestGetFormDialogRelatedRows",
-        "TestHopWalkFinalIdentifiers",
-        "TestListFormDialogsForDoctype",
-        "TestNormalizePortalFieldConfig",
-        "TestParseRelatedDoctypes",
-        "TestRelatedListColumnsOptions",
-        "TestRelatedPortalFieldEditor",
-        "TestSaveFormDialogRelatedRows"
-      ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
-    },
-    "nce_events/api/tests/test_sql_eval.py": {
+    "nce_events/api/tests/api/test_sql_eval.py": {
       "exports": [
         "TestEvaluateSqlExpressions",
         "TestEvaluateSqlExpressionsApi",
@@ -535,16 +546,26 @@
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
-    "nce_events/api/tests/test_woocommerce_client.py": {
+    "nce_events/api/tests/api/test_woocommerce_client.py": {
       "exports": [
         "TestWooCommerceClient"
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
-    "nce_events/api/tests/test_wp_tables_mapping.py": {
+    "nce_events/api/tests/api/test_wp_tables_mapping.py": {
       "exports": [
         "TestDerivedSqlSpecsFromColumnMapping",
         "TestGetDerivedSqlSpecs"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/api/tests/test_core_functions.py": {
+      "exports": [
+        "TestApplyUserFilters",
+        "TestBuildCoreFilterWhere",
+        "TestComputeJinjaTag",
+        "TestEnsureTabPrefix",
+        "TestTranslateWpQuery"
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
