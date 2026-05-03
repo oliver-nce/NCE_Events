@@ -43,7 +43,7 @@
 </template>
 
 <script setup>
-defineProps({
+const props = defineProps({
 	title: { type: String, default: "" },
 	loading: { type: Boolean, default: false },
 	showClickHint: { type: Boolean, default: false },

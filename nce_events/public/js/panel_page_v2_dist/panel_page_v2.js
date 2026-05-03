@@ -5382,7 +5382,7 @@
 																		i.splice(x, 1), N();
 																	},
 																},
-																"×",
+																" × ",
 																8,
 																ac
 														  ))
@@ -5401,13 +5401,13 @@
 												(M[0] = ($) =>
 													i.push({ field: "", op: ">", value: "" })),
 										},
-										"Add Filter ▼"
+										" Add Filter ▼ "
 									),
 							  ]))
 							: le("", !0);
 				},
 			},
-			[["__scopeId", "data-v-ca822b3f"]]
+			[["__scopeId", "data-v-5bb16726"]]
 		),
 		uc = { key: 0, class: "ppv2-loading" },
 		fc = { key: 1, class: "ppv2-error" },
@@ -5994,7 +5994,7 @@
 					);
 				},
 			},
-			[["__scopeId", "data-v-c4ff61de"]]
+			[["__scopeId", "data-v-e32e03b8"]]
 		),
 		Sc = { key: 0, class: "ppv2-click-hint" },
 		$c = { class: "ppv2-header-controls" },
@@ -6013,16 +6013,17 @@
 			},
 			emits: ["refresh", "toggle-filter", "sheets", "email", "sms", "close"],
 			setup(e) {
-				return (t, n) => (
+				const t = e;
+				return (n, o) => (
 					b(),
 					F(
 						"div",
 						{
 							class: "ppv2-header-right",
-							onMousedown: n[6] || (n[6] = Ce(() => {}, ["stop"])),
+							onMousedown: o[6] || (o[6] = Ce(() => {}, ["stop"])),
 						},
 						[
-							t.props.showClickHint
+							t.showClickHint
 								? (b(),
 								  F("span", Sc, "Click row for details · Ctrl-click to remove"))
 								: le("", !0),
@@ -6032,14 +6033,14 @@
 									{
 										class: Ie([
 											"ppv2-hdr-btn",
-											{ "ppv2-hdr-btn--refreshing": t.props.loading },
+											{ "ppv2-hdr-btn--refreshing": t.loading },
 										]),
 										title: "Refresh",
-										onClick: n[0] || (n[0] = (o) => t.$emit("refresh")),
+										onClick: o[0] || (o[0] = (l) => n.$emit("refresh")),
 									},
 									[
-										...(n[7] ||
-											(n[7] = [
+										...(o[7] ||
+											(o[7] = [
 												j("i", { class: "fa fa-refresh" }, null, -1),
 											])),
 									],
@@ -6050,11 +6051,11 @@
 									{
 										class: "ppv2-hdr-btn",
 										title: "Filter",
-										onClick: n[1] || (n[1] = (o) => t.$emit("toggle-filter")),
+										onClick: o[1] || (o[1] = (l) => n.$emit("toggle-filter")),
 									},
 									[
-										...(n[8] ||
-											(n[8] = [
+										...(o[8] ||
+											(o[8] = [
 												j("i", { class: "fa fa-filter" }, null, -1),
 											])),
 									]
@@ -6064,14 +6065,14 @@
 									{
 										class: "ppv2-hdr-btn",
 										title: "Export to Sheets",
-										onClick: n[2] || (n[2] = (o) => t.$emit("sheets")),
+										onClick: o[2] || (o[2] = (l) => n.$emit("sheets")),
 									},
 									[
-										...(n[9] ||
-											(n[9] = [j("i", { class: "fa fa-table" }, null, -1)])),
+										...(o[9] ||
+											(o[9] = [j("i", { class: "fa fa-table" }, null, -1)])),
 									]
 								),
-								t.props.showEmail
+								t.showEmail
 									? (b(),
 									  F(
 											"button",
@@ -6079,11 +6080,11 @@
 												key: 0,
 												class: "ppv2-hdr-btn",
 												title: "Email",
-												onClick: n[3] || (n[3] = (o) => t.$emit("email")),
+												onClick: o[3] || (o[3] = (l) => n.$emit("email")),
 											},
 											[
-												...(n[10] ||
-													(n[10] = [
+												...(o[10] ||
+													(o[10] = [
 														j(
 															"i",
 															{ class: "fa fa-envelope" },
@@ -6094,7 +6095,7 @@
 											]
 									  ))
 									: le("", !0),
-								t.props.showSms
+								t.showSms
 									? (b(),
 									  F(
 											"button",
@@ -6102,11 +6103,11 @@
 												key: 1,
 												class: "ppv2-hdr-btn",
 												title: "SMS",
-												onClick: n[4] || (n[4] = (o) => t.$emit("sms")),
+												onClick: o[4] || (o[4] = (l) => n.$emit("sms")),
 											},
 											[
-												...(n[11] ||
-													(n[11] = [
+												...(o[11] ||
+													(o[11] = [
 														j(
 															"i",
 															{ class: "fa fa-comment" },
@@ -6117,13 +6118,8 @@
 											]
 									  ))
 									: le("", !0),
-								j(
-									"span",
-									Cc,
-									G(t.props.rowCount) + " / " + G(t.props.total) + " records",
-									1
-								),
-								t.props.showClose
+								j("span", Cc, G(t.rowCount) + " / " + G(t.total) + " records", 1),
+								t.showClose
 									? (b(),
 									  F(
 											"button",
@@ -6131,7 +6127,7 @@
 												key: 2,
 												class: "ppv2-hdr-btn ppv2-close-btn",
 												title: "Close",
-												onClick: n[5] || (n[5] = (o) => t.$emit("close")),
+												onClick: o[5] || (o[5] = (l) => n.$emit("close")),
 											},
 											" × "
 									  ))
