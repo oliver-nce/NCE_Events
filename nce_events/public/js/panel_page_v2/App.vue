@@ -512,7 +512,7 @@ function onRefreshPanel(panel) {
 
 function onSheets(p) {
 	frappe.call({
-		method: "nce_events.api.panel_api.export_panel_data",
+		method: "nce_events.api.panel_api_pkg.panel_data.export_panel_data",
 		args: {
 			root_doctype: p.doctype,
 			filters: JSON.stringify(p.parentFilter || {}),

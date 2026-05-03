@@ -7,7 +7,7 @@ import frappe
 from frappe import _
 
 from nce_events.api.credentials import get_credentials
-from nce_events.api.panel_api import get_panel_data
+from nce_events.api.panel_api_pkg.panel_data import get_panel_data
 
 
 def _enrich_row_context(root_doctype: str, row: dict) -> dict[str, Any]:

@@ -328,7 +328,7 @@ async function fetchRelatedForTab(ti) {
 	relatedState[ti].error = null;
 	try {
 		const msg = await frappeCall(
-			"nce_events.api.form_dialog_api.get_form_dialog_related_rows",
+			"nce_events.api.form_dialog.related_rows.get_form_dialog_related_rows",
 			{
 				definition: String(props.definitionName).trim(),
 				related_row_name: tab._related.child_row_name,
@@ -642,7 +642,7 @@ async function saveAllRelatedRows() {
 	if (!updates.length) {
 		return;
 	}
-	await frappeCall("nce_events.api.form_dialog_api.save_form_dialog_related_rows", {
+	await frappeCall("nce_events.api.form_dialog.related_rows.save_form_dialog_related_rows", {
 		definition: defn,
 		related_row_name: crn,
 		root_doctype: dt,

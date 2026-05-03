@@ -7,7 +7,7 @@
   },
   "architecture": {
     "overview": "NCE Events is a Frappe app that renders configurable multi-panel data explorer pages. It has a Python API layer and two frontend generations: V1 (vanilla JS class-based) and V2 (Vue 3 SFC with Vite build). Both share SMS/Email dialogs from V1. Depends on nce_sync app. V2 supports optional frozen Form Dialogs for editing panel rows without leaving the panel page.",
-    "data_flow": "Frappe Page (panel_page / panel_page_v2) → JS/Vue → frappe.call() → api/panel_api.py, api/messaging.py, api/tags.py, api/reports.py, api/form_dialog_api.py → Frappe ORM → MariaDB",
+    "data_flow": "Frappe Page (panel_page / panel_page_v2) → JS/Vue → frappe.call() → api/panel_api_pkg/, api/messaging.py, api/tags.py, api/reports.py, api/form_dialog/ → Frappe ORM → MariaDB",
     "key_patterns": [
       "V2 Vue app built separately: npm run build in public/js/panel_page_v2/ then bench build",
       "V2 reuses V1 SmsDialog, EmailDialog, and ai_tools.js at runtime — do NOT duplicate",
@@ -68,7 +68,7 @@
       ]
     },
     "nce_events/api/form_dialog/__init__.py": {
-      "purpose": "Form Dialog API package — Phase 4 split of the original 1233-LOC form_dialog_api.py. Re-exports submodule public + underscore-prefixed names so the legacy shim has a single source of truth.",
+      "purpose": "Form Dialog API package — Phase 4 split of the original 1233-LOC form_dialog_api.py module (the deprecated shim was removed in Phase 12). Re-exports submodule public + underscore-prefixed names so callers can resolve them at the package root.",
       "depends_on": [
         "nce_events/nce_events/doctype/form_dialog/"
       ],
@@ -193,19 +193,10 @@
       "purpose": "Server-side Form Dialog document save (save_form_dialog_document) with optional fetch_from writeback. Honours per-DocType + Page Panel required_fields, then optionally pushes fetch_from values back into linked source records before saving.",
       "depends_on": [
         "nce_events/api/form_dialog/_helpers.py",
-        "nce_events/api/panel_api.py"
+        "nce_events/api/panel_api_pkg/_helpers.py"
       ],
       "sections": [
         "save_form_dialog_document (logged-in users; per-DocType perms)"
-      ]
-    },
-    "nce_events/api/form_dialog_api.py": {
-      "purpose": "Deprecated re-export shim: re-exports every public + private name from nce_events.api.form_dialog so existing frappe.call({method: 'nce_events.api.form_dialog_api.<fn>'}) sites and unittest.mock.patch paths keep resolving. New code imports from nce_events.api.form_dialog directly.",
-      "depends_on": [
-        "nce_events/api/form_dialog/"
-      ],
-      "sections": [
-        "Re-export of form_dialog package public + underscore-prefixed names"
       ]
     },
     "nce_events/api/hierarchy_explorer.py": {
@@ -274,17 +265,8 @@
         "Bulk panel send"
       ]
     },
-    "nce_events/api/panel_api.py": {
-      "purpose": "Deprecated re-export shim: re-exports every public + private name from nce_events.api.panel_api_pkg so existing frappe.call({method: 'nce_events.api.panel_api.<fn>'}) sites and unittest.mock.patch paths keep resolving. New code imports from nce_events.api.panel_api_pkg directly.",
-      "depends_on": [
-        "nce_events/api/panel_api_pkg/"
-      ],
-      "sections": [
-        "Re-export of panel_api_pkg package public + underscore-prefixed names"
-      ]
-    },
     "nce_events/api/panel_api_pkg/__init__.py": {
-      "purpose": "Panel API package — Phase 5 split of the original 1093-LOC panel_api.py. Re-exports submodule public + underscore-prefixed names so the legacy shim has a single source of truth.",
+      "purpose": "Panel API package — Phase 5 split of the original 1093-LOC panel_api.py module (the deprecated shim was removed in Phase 12). Re-exports submodule public + underscore-prefixed names so callers can resolve them at the package root.",
       "depends_on": [
         "nce_events/nce_events/doctype/page_panel/",
         "nce_events/nce_events/doctype/page_panel_computed_column/"
@@ -443,7 +425,7 @@
       ],
       "purpose": "Report generation — panel data as structured report output",
       "depends_on": [
-        "nce_events/api/panel_api.py"
+        "nce_events/api/panel_api_pkg/"
       ],
       "sections": [
         "Report data fetch and formatting"
@@ -995,7 +977,7 @@
       "purpose": "saveFrozenFormDocument — server save_form_dialog_document + writeback_fetches flag.",
       "depends_on": [
         "utils/frappeCall.js",
-        "nce_events/api/form_dialog_api.py"
+        "nce_events/api/form_dialog/save.py"
       ]
     },
     "nce_events/public/js/panel_page_v2/composables/frozenFormValidate.js": {
@@ -1038,7 +1020,7 @@
         "utils/frappeCall.js",
         "utils/frappeFieldExpr.js",
         "utils/parseLayout.js",
-        "nce_events/api/form_dialog_api.py"
+        "nce_events/api/form_dialog/capture.py"
       ]
     },
     "nce_events/public/js/panel_page_v2/composables/useNceCardStack.js": {

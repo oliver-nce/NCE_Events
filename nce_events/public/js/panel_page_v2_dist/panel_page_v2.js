@@ -4672,10 +4672,12 @@
 		const f = X([]);
 		let h = 0;
 		function g() {
-			return ut("nce_events.api.panel_api.get_panel_config", { root_doctype: e });
+			return ut("nce_events.api.panel_api_pkg.panel_data.get_panel_config", {
+				root_doctype: e,
+			});
 		}
 		function w(x = {}) {
-			return ut("nce_events.api.panel_api.get_panel_data", {
+			return ut("nce_events.api.panel_api_pkg.panel_data.get_panel_data", {
 				root_doctype: e,
 				filters: JSON.stringify({ ...t, ...x }),
 			});
@@ -8672,7 +8674,7 @@
 						(r[d] = P), i[d] || (i[d] = {}), (i[d].loading = !0), (i[d].error = null);
 						try {
 							const A = await ut(
-								"nce_events.api.form_dialog_api.get_form_dialog_related_rows",
+								"nce_events.api.form_dialog.related_rows.get_form_dialog_related_rows",
 								{
 									definition: String(o.definitionName).trim(),
 									related_row_name: m._related.child_row_name,
@@ -8894,13 +8896,16 @@
 						if (!q) return;
 						const A = ve(o.ti);
 						if (!A.length) return;
-						await ut("nce_events.api.form_dialog_api.save_form_dialog_related_rows", {
-							definition: m,
-							related_row_name: q,
-							root_doctype: b,
-							root_name: d,
-							updates: A,
-						});
+						await ut(
+							"nce_events.api.form_dialog.related_rows.save_form_dialog_related_rows",
+							{
+								definition: m,
+								related_row_name: q,
+								root_doctype: b,
+								root_name: d,
+								updates: A,
+							}
+						);
 						const H = i[o.ti];
 						H != null && H.rows && (H.baseline = JSON.parse(JSON.stringify(H.rows))),
 							l("related-dirty", !1);
@@ -9622,7 +9627,7 @@
 					);
 				},
 			},
-			[["__scopeId", "data-v-fd4326df"]]
+			[["__scopeId", "data-v-8d56334f"]]
 		),
 		Pf = { class: "ppv2-fd-body" },
 		Af = { key: 0, class: "ppv2-fd-loading" },
@@ -10208,7 +10213,7 @@
 		l.value = !0;
 		try {
 			const u = Number((a = n.value) == null ? void 0 : a.writeback_on_submit) === 1,
-				c = await ut("nce_events.api.form_dialog_api.save_form_dialog_document", {
+				c = await ut("nce_events.api.form_dialog.save.save_form_dialog_document", {
 					doc: { doctype: R(o), ...e },
 					writeback_fetches: u ? 1 : 0,
 				});
@@ -10320,7 +10325,7 @@
 			try {
 				let V;
 				try {
-					V = await ut("nce_events.api.form_dialog_api.get_form_dialog_definition", {
+					V = await ut("nce_events.api.form_dialog.capture.get_form_dialog_definition", {
 						name: x,
 					});
 				} catch (B) {
@@ -11316,7 +11321,7 @@
 						}
 						function T(D) {
 							frappe.call({
-								method: "nce_events.api.panel_api.export_panel_data",
+								method: "nce_events.api.panel_api_pkg.panel_data.export_panel_data",
 								args: {
 									root_doctype: D.doctype,
 									filters: JSON.stringify(D.parentFilter || {}),
@@ -11841,7 +11846,7 @@
 						);
 					},
 				},
-				[["__scopeId", "data-v-05585cde"]]
+				[["__scopeId", "data-v-322be134"]]
 			)
 		);
 	window.NCEPanelPageV2 = {

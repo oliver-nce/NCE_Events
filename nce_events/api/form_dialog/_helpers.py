@@ -3,9 +3,6 @@ Shared helpers for the form_dialog package.
 
 Imported by capture, related_rows, portal_fields, and save submodules. None of
 these helpers are part of the @frappe.whitelist surface; they are private API.
-The leading underscore on each name is preserved so that re-exports through
-the deprecated nce_events.api.form_dialog_api shim continue to match historical
-unit-test mock.patch paths.
 """
 
 from __future__ import annotations

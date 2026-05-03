@@ -96,15 +96,15 @@ export function createFrozenFormLoad(ctx) {
 		pushDebug(
 			"start",
 			true,
-			`seq=${mySeq} doctype=${dt} docName=${dn ?? "(new)"} definition=${defnName}`,
+			`seq=${mySeq} doctype=${dt} docName=${dn ?? "(new)"} definition=${defnName}`
 		);
 
 		try {
 			let defn;
 			try {
 				defn = await frappeCall(
-					"nce_events.api.form_dialog_api.get_form_dialog_definition",
-					{ name: defnName },
+					"nce_events.api.form_dialog.capture.get_form_dialog_definition",
+					{ name: defnName }
 				);
 			} catch (e) {
 				pushDebug("get_form_dialog_definition", false, defnName, e?.message || e);
@@ -117,7 +117,7 @@ export function createFrozenFormLoad(ctx) {
 			pushDebug(
 				"get_form_dialog_definition",
 				true,
-				`ok dialog_size=${defn?.dialog_size ?? "?"}`,
+				`ok dialog_size=${defn?.dialog_size ?? "?"}`
 			);
 
 			definition.value = defn;
@@ -139,13 +139,13 @@ export function createFrozenFormLoad(ctx) {
 						let parsed = null;
 						if (rel.info != null && String(rel.info).trim()) {
 							try {
-								parsed = typeof rel.info === "string" ? JSON.parse(rel.info) : rel.info;
+								parsed =
+									typeof rel.info === "string" ? JSON.parse(rel.info) : rel.info;
 							} catch {
 								parsed = null;
 							}
 						}
-						const label =
-							(parsed && parsed.label) || rel.label || rel.tab_label || dt;
+						const label = (parsed && parsed.label) || rel.label || rel.tab_label || dt;
 						const hop_chain = normalizeHopChainForRelated(rel.hop_chain);
 						let sections = [];
 						if (parsed && Array.isArray(parsed.fields) && parsed.fields.length) {
@@ -183,7 +183,7 @@ export function createFrozenFormLoad(ctx) {
 			pushDebug(
 				"parseLayout",
 				true,
-				`fields=${fields.length} tabs=${tabs.value.length} (incl ${relatedAdded} related)`,
+				`fields=${fields.length} tabs=${tabs.value.length} (incl ${relatedAdded} related)`
 			);
 
 			syncingFromLoad.value = true;
@@ -218,17 +218,17 @@ export function createFrozenFormLoad(ctx) {
 				pushDebug(
 					"frappe.client.get",
 					true,
-					`${dt}/${dn} keys=${Object.keys(doc || {}).length}`,
+					`${dt}/${dn} keys=${Object.keys(doc || {}).length}`
 				);
 			} else {
 				pushDebug("frappe.client.get", true, "(skipped — new doc)");
 			}
 
 			const linkFields = fields.filter(
-				(f) => f.fieldtype === "Link" && f.options && formData[f.fieldname],
+				(f) => f.fieldtype === "Link" && f.options && formData[f.fieldname]
 			);
 			await Promise.all(
-				linkFields.map((lf) => handleFetchFrom(lf.fieldname, formData[lf.fieldname])),
+				linkFields.map((lf) => handleFetchFrom(lf.fieldname, formData[lf.fieldname]))
 			);
 			if (mySeq !== loadSeq) {
 				pushDebug("aborted", false, "stale seq after fetch_from");
@@ -258,7 +258,7 @@ export function createFrozenFormLoad(ctx) {
 				mySeq === loadSeq,
 				mySeq === loadSeq
 					? "loading=false syncingFromLoad=false"
-					: "stale — skipped UI reset",
+					: "stale — skipped UI reset"
 			);
 		}
 	}

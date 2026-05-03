@@ -24,7 +24,7 @@ function _get_doctype_fields(doctype, callback) {
 		return;
 	}
 	frappe.call({
-		method: "nce_events.api.panel_api.get_doctype_fields",
+		method: "nce_events.api.panel_api_pkg.discovery.get_doctype_fields",
 		args: { root_doctype: doctype },
 		callback: function (r) {
 			const unpacked = _unpack_doctype_fields_message(r && r.message);
@@ -119,10 +119,10 @@ function _ensure_tab_bar(frm) {
 
 	const $tab_bar = $(tab_html);
 	const $matrix_wrap = $(
-		'<div class="pp-matrix-wrap" style="display:none;padding-bottom:8px;"></div>',
+		'<div class="pp-matrix-wrap" style="display:none;padding-bottom:8px;"></div>'
 	);
 	const $dialogs_wrap = $(
-		'<div class="pp-dialogs-wrap" style="display:none;padding-bottom:8px;"></div>',
+		'<div class="pp-dialogs-wrap" style="display:none;padding-bottom:8px;"></div>'
 	);
 
 	$(first_fd.$wrapper).before($tab_bar).before($matrix_wrap).before($dialogs_wrap);
@@ -146,7 +146,7 @@ function _refresh_query_tab(frm) {
 		fd.$wrapper.find(".control-value, .like-disabled-input").text("Generating…");
 	}
 	frappe.call({
-		method: "nce_events.api.panel_api.build_panel_sql",
+		method: "nce_events.api.panel_api_pkg.sql.build_panel_sql",
 		args: { root_doctype: frm.doc.root_doctype },
 		callback: function (r) {
 			if (r.message) {
@@ -219,8 +219,10 @@ function _prune_stale_display_keys(frm, valid) {
 	const nextTint = tint.join(", ");
 	if (nextCol !== (frm.doc.column_order || "").trim()) frm.set_value("column_order", nextCol);
 	if (nextBold !== (frm.doc.bold_fields || "").trim()) frm.set_value("bold_fields", nextBold);
-	if (nextReq !== (frm.doc.required_fields || "").trim()) frm.set_value("required_fields", nextReq);
-	if (nextTint !== (frm.doc.gender_color_fields || "").trim()) frm.set_value("gender_color_fields", nextTint);
+	if (nextReq !== (frm.doc.required_fields || "").trim())
+		frm.set_value("required_fields", nextReq);
+	if (nextTint !== (frm.doc.gender_color_fields || "").trim())
+		frm.set_value("gender_color_fields", nextTint);
 	if (gc !== gcRaw) frm.set_value("gender_column", gc);
 	if (tf !== tfRaw) frm.set_value("title_field", tf);
 }
@@ -265,7 +267,7 @@ function _render_display(frm) {
 
 	if (!frm.doc.root_doctype) {
 		$container.html(
-			'<p style="color:#8d949a;font-size:12px;padding:8px 0;">Select a DocType in the Config tab first.</p>',
+			'<p style="color:#8d949a;font-size:12px;padding:8px 0;">Select a DocType in the Config tab first.</p>'
 		);
 		return;
 	}
@@ -430,16 +432,22 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 
 	// Sub-tab bar
 	const $sub_bar = $(
-		'<div style="display:flex;gap:4px;padding:0 0 8px;flex-wrap:wrap;align-items:center;"></div>',
+		'<div style="display:flex;gap:4px;padding:0 0 8px;flex-wrap:wrap;align-items:center;"></div>'
 	);
 	sub_tabs.forEach(function (st) {
 		$sub_bar.append(
-			`<button class="btn btn-xs btn-default pp-sub-btn" data-sub="${st.id}" style="padding:2px 12px;border-radius:4px;font-size:11px;">${frappe.utils.escape_html(st.label)}</button>`,
+			`<button class="btn btn-xs btn-default pp-sub-btn" data-sub="${
+				st.id
+			}" style="padding:2px 12px;border-radius:4px;font-size:11px;">${frappe.utils.escape_html(
+				st.label
+			)}</button>`
 		);
 	});
 	const $reloadWrap = $('<span style="margin-left:auto;"></span>');
 	const $reloadFields = $(
-		`<a href="#" class="pp-reload-doctype-fields" style="font-size:12px;color:#4198F0;">${frappe.utils.escape_html(__("Reload fields"))}</a>`,
+		`<a href="#" class="pp-reload-doctype-fields" style="font-size:12px;color:#4198F0;">${frappe.utils.escape_html(
+			__("Reload fields")
+		)}</a>`
 	);
 	$reloadFields.on("click", function (e) {
 		e.preventDefault();
@@ -563,7 +571,7 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 				matrices,
 				saved,
 				_sync_all,
-				orderTitleKey,
+				orderTitleKey
 			);
 			return;
 		}
@@ -592,11 +600,11 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 
 		if (sub_id === "_root" && frm.doc.root_doctype) {
 			const $related_btn = $(
-				'<button class="btn btn-xs btn-default pp-add-related-btn" style="margin-left:auto;font-size:11px;padding:2px 10px;">Add Related DocTypes</button>',
+				'<button class="btn btn-xs btn-default pp-add-related-btn" style="margin-left:auto;font-size:11px;padding:2px 10px;">Add Related DocTypes</button>'
 			);
 			$related_btn.on("click", function () {
 				frappe.call({
-					method: "nce_events.api.panel_api.get_child_doctypes",
+					method: "nce_events.api.panel_api_pkg.discovery.get_child_doctypes",
 					args: { root_doctype: frm.doc.root_doctype },
 					callback: function (r) {
 						const children = (r && r.message) || [];
@@ -711,11 +719,21 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set, matrix_opts)
 		html += `<tr data-key="${esc_key}"${bg}>
 			<td style="padding:4px 8px;color:#8d949a;font-size:11px;">${fn_display}</td>
 			<td style="padding:4px 8px;color:#4c5a67;">${frappe.utils.escape_html(label)}</td>
-			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="show"${shown_set[key] ? " checked" : ""}></td>
-			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="bold"${saved.bold.indexOf(key) !== -1 ? " checked" : ""}></td>
-			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="required"${reqChecked ? " checked" : ""}${reqDisabled}${reqTitle}></td>
-			<td ${td}><input type="radio"    data-key="${esc_key}" name="gender_col_${uid}"${saved.gender_col === key ? " checked" : ""}></td>
-			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="tint"${saved.gender_tint.indexOf(key) !== -1 ? " checked" : ""}></td>
+			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="show"${
+			shown_set[key] ? " checked" : ""
+		}></td>
+			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="bold"${
+			saved.bold.indexOf(key) !== -1 ? " checked" : ""
+		}></td>
+			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="required"${
+			reqChecked ? " checked" : ""
+		}${reqDisabled}${reqTitle}></td>
+			<td ${td}><input type="radio"    data-key="${esc_key}" name="gender_col_${uid}"${
+			saved.gender_col === key ? " checked" : ""
+		}></td>
+			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="tint"${
+			saved.gender_tint.indexOf(key) !== -1 ? " checked" : ""
+		}></td>
 			${title_cell}
 		</tr>`;
 	});
@@ -732,7 +750,7 @@ function _render_order_tab(
 	matrices,
 	saved,
 	_sync_all,
-	orderTitleKey,
+	orderTitleKey
 ) {
 	// Gather all currently selected fields across all matrices
 	let selected = [];
@@ -778,7 +796,7 @@ function _render_order_tab(
 
 	if (!selected.length) {
 		$sub_content.html(
-			'<p style="color:#8d949a;font-size:12px;padding:8px 0;">No fields selected. Use the other tabs to select fields first.</p>',
+			'<p style="color:#8d949a;font-size:12px;padding:8px 0;">No fields selected. Use the other tabs to select fields first.</p>'
 		);
 		return;
 	}
@@ -802,7 +820,9 @@ function _render_order_tab(
 				<span class="matrix-drag-handle" style="color:#b7babe;font-size:14px;">&#x2630;</span></td>
 			<td style="padding:4px 8px;color:#8d949a;font-size:11px;">${esc}</td>
 			<td style="padding:4px 8px;color:#4c5a67;">${frappe.utils.escape_html(s.label)}</td>
-			<td style="padding:4px 8px;color:#8d949a;font-size:11px;">${frappe.utils.escape_html(s.source)}</td>
+			<td style="padding:4px 8px;color:#8d949a;font-size:11px;">${frappe.utils.escape_html(
+				s.source
+			)}</td>
 		</tr>`;
 	});
 	html += "</tbody></table>";
@@ -1005,7 +1025,9 @@ function _render_default_filters_now(frm) {
 							style="min-width:160px;max-width:200px;">
 							${_field_options_html(row.field)}
 						</select>
-						<span class="pp-df-ops" style="display:flex;gap:2px;${hasField ? "" : "display:none!"}">${ops_html}</span>
+						<span class="pp-df-ops" style="display:flex;gap:2px;${
+							hasField ? "" : "display:none!"
+						}">${ops_html}</span>
 						${hasField ? value_html : ""}
 						${
 							hasField
@@ -1020,8 +1042,8 @@ function _render_default_filters_now(frm) {
 			// Add filter button
 			$widget.append(
 				$(
-					'<button class="btn btn-xs btn-default pp-df-add" style="margin-top:4px;">+ Add Filter</button>',
-				),
+					'<button class="btn btn-xs btn-default pp-df-add" style="margin-top:4px;">+ Add Filter</button>'
+				)
 			);
 
 			_bind_events();
@@ -1064,7 +1086,7 @@ function _render_default_filters_now(frm) {
 						doctype: "Page Panel Default Filter",
 						parenttype: "Page Panel",
 						parentfield: "default_filters",
-					},
+					}
 				);
 			});
 			frm.dirty();
@@ -1214,7 +1236,7 @@ $("<style>")
 			border-radius: 3px;
 			height: 28px;
 		}
-	`,
+	`
 	)
 	.appendTo("head");
 
@@ -1230,7 +1252,7 @@ if (!$("head").find("#pp-portal-float-css").length) {
 		.pp-portal-float-panel tr.pp-portal-drag-over { outline: 2px solid #2490ef; outline-offset: -2px; }
 		.pp-portal-float-panel .pp-sort-up.btn-primary,
 		.pp-portal-float-panel .pp-sort-down.btn-primary { color: #fff; }
-	`,
+	`
 		)
 		.appendTo("head");
 }
@@ -1257,18 +1279,18 @@ function _open_related_portal_float(frm, opts) {
 	_close_related_portal_float();
 
 	const $backdrop = $(
-		'<div class="pp-portal-float-backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:2000;"></div>',
+		'<div class="pp-portal-float-backdrop" style="position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:2000;"></div>'
 	);
 	const $panel = $(
-		'<div class="pp-portal-float-panel" style="position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(880px,94vw);max-height:85vh;display:flex;flex-direction:column;background:#fff;border-radius:8px;box-shadow:0 12px 40px rgba(0,0,0,0.2);z-index:2001;font-size:12px;"></div>',
+		'<div class="pp-portal-float-panel" style="position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);width:min(880px,94vw);max-height:85vh;display:flex;flex-direction:column;background:#fff;border-radius:8px;box-shadow:0 12px 40px rgba(0,0,0,0.2);z-index:2001;font-size:12px;"></div>'
 	);
 	const $header = $(
-		'<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #e8e8e8;"><strong class="pp-portal-float-title"></strong><button type="button" class="btn btn-default btn-xs pp-portal-float-close" aria-label="Close">×</button></div>',
+		'<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #e8e8e8;"><strong class="pp-portal-float-title"></strong><button type="button" class="btn btn-default btn-xs pp-portal-float-close" aria-label="Close">×</button></div>'
 	);
 	const $body = $(
 		'<div class="pp-portal-float-body" style="flex:1;overflow:hidden;display:flex;flex-direction:column;padding:10px 16px 16px;"><p class="text-muted" style="margin:0;">' +
 			__("Loading…") +
-			"</p></div>",
+			"</p></div>"
 	);
 	$panel.append($header).append($body);
 	$backdrop.append($panel);
@@ -1299,19 +1321,30 @@ function _open_related_portal_float(frm, opts) {
 	});
 
 	frappe.call({
-		method: "nce_events.api.form_dialog_api.get_related_portal_field_editor",
+		method: "nce_events.api.form_dialog.portal_fields.get_related_portal_field_editor",
 		args: { form_dialog: form_dialog, child_row_name: child_row_name },
 		freeze: true,
 		freeze_message: __("Loading fields…"),
 		callback: function (r) {
 			if (!r || r.exc || !r.message) {
-				$body.html('<p class="text-danger" style="margin:0;">' + __("Could not load editor.") + "</p>");
+				$body.html(
+					'<p class="text-danger" style="margin:0;">' +
+						__("Could not load editor.") +
+						"</p>"
+				);
 				return;
 			}
 			const msg = r.message;
-			$panel.find(".pp-portal-float-title").text(
-				titleHint + " — " + (msg.tab_label || "") + " (" + (msg.child_doctype || "") + ")",
-			);
+			$panel
+				.find(".pp-portal-float-title")
+				.text(
+					titleHint +
+						" — " +
+						(msg.tab_label || "") +
+						" (" +
+						(msg.child_doctype || "") +
+						")"
+				);
 
 			let warn = "";
 			if (msg.capture_error) {
@@ -1342,7 +1375,7 @@ function _open_related_portal_float(frm, opts) {
 				__("Editable") +
 				'</th><th style="min-width:108px;">' +
 				__("Sort") +
-				"</th></tr></thead><tbody class=\"pp-portal-field-tbody\">";
+				'</th></tr></thead><tbody class="pp-portal-field-tbody">';
 
 			rows.forEach(function (row) {
 				const fn = row.fieldname || "";
@@ -1603,7 +1636,7 @@ function _open_related_portal_float(frm, opts) {
 					payload.push(o);
 				});
 				frappe.call({
-					method: "nce_events.api.form_dialog_api.save_related_portal_field_config",
+					method: "nce_events.api.form_dialog.portal_fields.save_related_portal_field_config",
 					args: {
 						form_dialog: form_dialog,
 						child_row_name: child_row_name,
@@ -1615,7 +1648,10 @@ function _open_related_portal_float(frm, opts) {
 						if (sv && sv.exc) {
 							return;
 						}
-						frappe.show_alert({ message: __("Portal field config saved"), indicator: "green" });
+						frappe.show_alert({
+							message: __("Portal field config saved"),
+							indicator: "green",
+						});
 						_close_related_portal_float();
 						_render_dialogs_tab(frm);
 					},
@@ -1681,13 +1717,18 @@ function _show_related_picker(buckets, preselected, callback) {
 			_htmlEscAttr(title) +
 			"</div>";
 		if (!rows.length) {
-			h += '<div style="color:#b9c0c7;font-size:12px;">' + _htmlEscAttr(__("None")) + "</div>";
+			h +=
+				'<div style="color:#b9c0c7;font-size:12px;">' +
+				_htmlEscAttr(__("None")) +
+				"</div>";
 		} else {
 			rows.forEach(function (row, j) {
 				const idx = idxOffset + j;
 				const id = "pp-related-sel-" + idx;
 				const lab = row.label || row.doctype || "";
-				const checked = preselected_set.has(_relatedPickerFingerprint(row)) ? " checked" : "";
+				const checked = preselected_set.has(_relatedPickerFingerprint(row))
+					? " checked"
+					: "";
 				h += '<div style="margin:0 0 8px;display:flex;align-items:flex-start;gap:8px;">';
 				h +=
 					'<input type="checkbox" class="pp-related-cb" id="' +
@@ -1755,7 +1796,7 @@ function _render_dialogs_tab(frm) {
 
 	if (!frm.doc.root_doctype) {
 		$container.html(
-			'<p style="color:#8d949a;font-size:12px;padding:8px 0;">Select a DocType in the Config tab first.</p>',
+			'<p style="color:#8d949a;font-size:12px;padding:8px 0;">Select a DocType in the Config tab first.</p>'
 		);
 		return;
 	}
@@ -1764,7 +1805,7 @@ function _render_dialogs_tab(frm) {
 	_bind_dialogs_click_handlers(frm);
 
 	frappe.call({
-		method: "nce_events.api.form_dialog_api.list_form_dialogs_for_doctype",
+		method: "nce_events.api.form_dialog.capture.list_form_dialogs_for_doctype",
 		args: { doctype: frm.doc.root_doctype },
 		callback: function (r) {
 			const dialogs = (r && r.message) || [];
@@ -1772,7 +1813,7 @@ function _render_dialogs_tab(frm) {
 		},
 		error: function () {
 			$container.html(
-				'<p style="color:#c0392b;font-size:12px;padding:8px 0;">Failed to load dialogs.</p>',
+				'<p style="color:#c0392b;font-size:12px;padding:8px 0;">Failed to load dialogs.</p>'
 			);
 		},
 	});
@@ -1802,7 +1843,7 @@ function _bind_dialogs_click_handlers(frm) {
 				// frappe.confirm closes fails in many Desk builds (related picker never appears).
 				setTimeout(function () {
 					frappe.call({
-						method: "nce_events.api.form_dialog_api.get_form_dialog_definition",
+						method: "nce_events.api.form_dialog.capture.get_form_dialog_definition",
 						args: { name: current },
 						error: function () {
 							_pp_rebuild_pending = false;
@@ -1828,7 +1869,7 @@ function _bind_dialogs_click_handlers(frm) {
 								(defn_r.message && defn_r.message.related_doctypes) || [];
 
 							frappe.call({
-								method: "nce_events.api.panel_api.get_multi_hop_children",
+								method: "nce_events.api.panel_api_pkg.discovery.get_multi_hop_children",
 								args: { root_doctype: doctype },
 								error: function () {
 									_pp_rebuild_pending = false;
@@ -1847,7 +1888,7 @@ function _bind_dialogs_click_handlers(frm) {
 
 									function _run_rebuild_with_related(selected) {
 										frappe.call({
-											method: "nce_events.api.form_dialog_api.rebuild_form_dialog",
+											method: "nce_events.api.form_dialog.capture.rebuild_form_dialog",
 											args: {
 												name: current,
 												related_doctypes: JSON.stringify(selected || []),
@@ -1877,14 +1918,14 @@ function _bind_dialogs_click_handlers(frm) {
 										frappe.confirm(
 											__(
 												"No related DocTypes link to {0}. Rebuild will clear extra tabs. Continue?",
-												[doctype],
+												[doctype]
 											),
 											function () {
 												_run_rebuild_with_related([]);
 											},
 											function () {
 												_pp_rebuild_pending = false;
-											},
+											}
 										);
 										return;
 									}
@@ -1895,7 +1936,7 @@ function _bind_dialogs_click_handlers(frm) {
 											current_related,
 											function (selected) {
 												_run_rebuild_with_related(selected);
-											},
+											}
 										);
 									}, 0);
 								},
@@ -1906,7 +1947,7 @@ function _bind_dialogs_click_handlers(frm) {
 			},
 			function () {
 				_pp_rebuild_pending = false;
-			},
+			}
 		);
 	});
 
@@ -1923,7 +1964,7 @@ function _bind_dialogs_click_handlers(frm) {
 			function (values) {
 				setTimeout(function () {
 					frappe.call({
-						method: "nce_events.api.panel_api.get_multi_hop_children",
+						method: "nce_events.api.panel_api_pkg.discovery.get_multi_hop_children",
 						args: { root_doctype: frm.doc.root_doctype },
 						error: function () {
 							frappe.msgprint({
@@ -1941,7 +1982,7 @@ function _bind_dialogs_click_handlers(frm) {
 
 							function _run_capture_with_related(selected) {
 								frappe.call({
-									method: "nce_events.api.form_dialog_api.capture_form_dialog_from_desk",
+									method: "nce_events.api.form_dialog.capture.capture_form_dialog_from_desk",
 									args: {
 										doctype: doctype,
 										title: values.title,
@@ -1976,14 +2017,14 @@ function _bind_dialogs_click_handlers(frm) {
 								frappe.confirm(
 									__(
 										"No related DocTypes link to {0}. Create dialog without extra tabs?",
-										[doctype],
+										[doctype]
 									),
 									function () {
 										_run_capture_with_related([]);
 									},
 									function () {
 										// cancelled
-									},
+									}
 								);
 								return;
 							}
@@ -1998,7 +2039,7 @@ function _bind_dialogs_click_handlers(frm) {
 				}, 200);
 			},
 			"Create Form Dialog",
-			"Create",
+			"Create"
 		);
 	});
 
@@ -2067,7 +2108,7 @@ function _bind_dialogs_click_handlers(frm) {
 				} else {
 					doDelete();
 				}
-			},
+			}
 		);
 	});
 }
@@ -2113,10 +2154,20 @@ function _build_dialogs_tab_html(frm, $container, dialogs) {
 			list_html += `<tr style="border-bottom:1px solid #ededed;${row_bg}">
 				<td style="padding:4px 8px;">${frappe.utils.escape_html(d.title)}</td>
 				<td style="padding:4px 8px;">${frappe.utils.escape_html(d.dialog_size || "xl")}</td>
-				<td style="padding:4px 8px;">${d.captured_at ? frappe.datetime.str_to_user(d.captured_at) : "—"}</td>
+				<td style="padding:4px 8px;">${
+					d.captured_at ? frappe.datetime.str_to_user(d.captured_at) : "—"
+				}</td>
 				<td style="padding:4px 8px;">
-					${is_current ? '<span style="color:#27ae60;font-weight:600;">Active</span>' : '<button class="btn btn-xs btn-default pp-dialog-select" data-name="' + frappe.utils.escape_html(d.name) + '">Set as active</button>'}
-					<button class="btn btn-xs btn-default pp-dialog-delete" data-name="${frappe.utils.escape_html(d.name)}" style="margin-left:4px;color:#c0392b;">Delete</button>
+					${
+						is_current
+							? '<span style="color:#27ae60;font-weight:600;">Active</span>'
+							: '<button class="btn btn-xs btn-default pp-dialog-select" data-name="' +
+							  frappe.utils.escape_html(d.name) +
+							  '">Set as active</button>'
+					}
+					<button class="btn btn-xs btn-default pp-dialog-delete" data-name="${frappe.utils.escape_html(
+						d.name
+					)}" style="margin-left:4px;color:#c0392b;">Delete</button>
 				</td>
 			</tr>`;
 			const rel = Array.isArray(d.related_doctypes) ? d.related_doctypes : [];
@@ -2127,7 +2178,15 @@ function _build_dialogs_tab_html(frm, $container, dialogs) {
 					const dt = row.doctype || "";
 					const lf = row.link_field || "";
 					const crn = row.child_row_name || "";
-					rel_btns += `<button type="button" class="btn btn-xs btn-default pp-dialog-related-tab" style="margin:2px 4px 2px 0;" data-pp-related-idx="${idx}" data-dialog-name="${frappe.utils.escape_html(d.name)}" data-child-row-name="${frappe.utils.escape_html(crn)}" data-child-doctype="${frappe.utils.escape_html(dt)}" data-link-field="${frappe.utils.escape_html(lf)}">${frappe.utils.escape_html(lab)}</button>`;
+					rel_btns += `<button type="button" class="btn btn-xs btn-default pp-dialog-related-tab" style="margin:2px 4px 2px 0;" data-pp-related-idx="${idx}" data-dialog-name="${frappe.utils.escape_html(
+						d.name
+					)}" data-child-row-name="${frappe.utils.escape_html(
+						crn
+					)}" data-child-doctype="${frappe.utils.escape_html(
+						dt
+					)}" data-link-field="${frappe.utils.escape_html(
+						lf
+					)}">${frappe.utils.escape_html(lab)}</button>`;
 				});
 				list_html += `<tr style="border-bottom:1px solid #ededed;${row_bg}"><td colspan="4" style="padding:4px 8px 8px 20px;background:#fafbfc;font-size:11px;">
 					<div style="color:#8d99a6;margin-bottom:4px;">${__("Related table tabs (preview)")}</div>
@@ -2137,7 +2196,9 @@ function _build_dialogs_tab_html(frm, $container, dialogs) {
 		});
 		list_html += `</tbody></table>`;
 	} else {
-		list_html = `<p style="color:#8d949a;font-size:12px;">No Form Dialogs exist for <strong>${frappe.utils.escape_html(doctype)}</strong> yet.</p>`;
+		list_html = `<p style="color:#8d949a;font-size:12px;">No Form Dialogs exist for <strong>${frappe.utils.escape_html(
+			doctype
+		)}</strong> yet.</p>`;
 	}
 
 	// ── Create button ──
@@ -2182,7 +2243,7 @@ frappe.ui.form.on("Page Panel", {
 		_render_default_filters(frm);
 		if (frm.doc.root_doctype) {
 			frappe.call({
-				method: "nce_events.api.panel_api.get_doctype_fields",
+				method: "nce_events.api.panel_api_pkg.discovery.get_doctype_fields",
 				args: { root_doctype: frm.doc.root_doctype },
 				callback: function (r) {
 					const u = _unpack_doctype_fields_message(r && r.message);

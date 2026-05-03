@@ -7,7 +7,9 @@ export function extractServerMessage(err) {
 		if (msgs.length) {
 			return msgs.map((m) => (typeof m === "object" ? m.message : m)).join(" ");
 		}
-	} catch (_) {}
+	} catch {
+		/* fall through to err.message */
+	}
 	return err?.message || "Failed to save";
 }
 
@@ -43,10 +45,13 @@ export async function saveFrozenFormDocument({
 	saving.value = true;
 	try {
 		const wb = Number(definition.value?.writeback_on_submit) === 1;
-		const result = await frappeCall("nce_events.api.form_dialog_api.save_form_dialog_document", {
-			doc: { doctype: unref(doctype), ...formData },
-			writeback_fetches: wb ? 1 : 0,
-		});
+		const result = await frappeCall(
+			"nce_events.api.form_dialog.save.save_form_dialog_document",
+			{
+				doc: { doctype: unref(doctype), ...formData },
+				writeback_fetches: wb ? 1 : 0,
+			}
+		);
 		Object.assign(formData, result);
 		originalData.value = JSON.parse(JSON.stringify(formData));
 		return result;

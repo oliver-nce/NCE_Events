@@ -5,22 +5,26 @@ Covers:
   - tags._compute_jinja_tag
   - translator.translate_wp_query  (mocked frappe.get_all)
 """
+
 from __future__ import annotations
 
 import json
 import unittest
 from unittest.mock import patch
 
-from nce_events.api.panel_api import _apply_user_filters, _build_core_filter_where, _ensure_tab_prefix
+from nce_events.api.panel_api_pkg.core_filters import (
+	_apply_user_filters,
+	_build_core_filter_where,
+	_ensure_tab_prefix,
+)
 from nce_events.api.tags import _compute_jinja_tag
-
 
 # ──────────────────────────────────────────────────────────
 # _build_core_filter_where
 # ──────────────────────────────────────────────────────────
 
-class TestBuildCoreFilterWhere(unittest.TestCase):
 
+class TestBuildCoreFilterWhere(unittest.TestCase):
 	def test_core_filter_only(self):
 		where, params = _build_core_filter_where("Event", None, "status='Open'")
 		self.assertEqual(where, "(status='Open')")
@@ -33,28 +37,36 @@ class TestBuildCoreFilterWhere(unittest.TestCase):
 
 	def test_simple_equality_filter(self):
 		where, params = _build_core_filter_where(
-			"Event", {"city": "Paris"}, "status='Open'",
+			"Event",
+			{"city": "Paris"},
+			"status='Open'",
 		)
 		self.assertEqual(where, "(status='Open') AND `city` = %s")
 		self.assertEqual(params, ["Paris"])
 
 	def test_operator_filter(self):
 		where, params = _build_core_filter_where(
-			"Event", {"age": [">=", 18]}, "1=1",
+			"Event",
+			{"age": [">=", 18]},
+			"1=1",
 		)
 		self.assertEqual(where, "(1=1) AND `age` >= %s")
 		self.assertEqual(params, [18])
 
 	def test_in_operator(self):
 		where, params = _build_core_filter_where(
-			"Event", {"color": ["in", ["red", "blue"]]}, "1=1",
+			"Event",
+			{"color": ["in", ["red", "blue"]]},
+			"1=1",
 		)
 		self.assertEqual(where, "(1=1) AND `color` IN (%s, %s)")
 		self.assertEqual(params, ["red", "blue"])
 
 	def test_in_with_tuple(self):
 		where, params = _build_core_filter_where(
-			"Event", {"id": ["in", (1, 2, 3)]}, "1=1",
+			"Event",
+			{"id": ["in", (1, 2, 3)]},
+			"1=1",
 		)
 		self.assertEqual(where, "(1=1) AND `id` IN (%s, %s, %s)")
 		self.assertEqual(params, [1, 2, 3])
@@ -73,7 +85,9 @@ class TestBuildCoreFilterWhere(unittest.TestCase):
 
 	def test_like_operator(self):
 		where, params = _build_core_filter_where(
-			"Event", {"name": ["like", "%test%"]}, "1=1",
+			"Event",
+			{"name": ["like", "%test%"]},
+			"1=1",
 		)
 		self.assertEqual(where, "(1=1) AND `name` like %s")
 		self.assertEqual(params, ["%test%"])
@@ -83,8 +97,8 @@ class TestBuildCoreFilterWhere(unittest.TestCase):
 # _apply_user_filters (computed column filters, slow path)
 # ──────────────────────────────────────────────────────────
 
-class TestApplyUserFilters(unittest.TestCase):
 
+class TestApplyUserFilters(unittest.TestCase):
 	def test_empty_filters_returns_all(self):
 		rows = [{"name": "a", "x": 1}, {"name": "b", "x": 2}]
 		self.assertEqual(_apply_user_filters(rows, []), rows)
@@ -114,8 +128,8 @@ class TestApplyUserFilters(unittest.TestCase):
 # _ensure_tab_prefix (computed column SQL)
 # ──────────────────────────────────────────────────────────
 
-class TestEnsureTabPrefix(unittest.TestCase):
 
+class TestEnsureTabPrefix(unittest.TestCase):
 	def test_bare_from(self):
 		sql = "SELECT name FROM Event WHERE name = %s"
 		self.assertIn("FROM tabEvent", _ensure_tab_prefix(sql))
@@ -140,8 +154,8 @@ class TestEnsureTabPrefix(unittest.TestCase):
 # _compute_jinja_tag
 # ──────────────────────────────────────────────────────────
 
-class TestComputeJinjaTag(unittest.TestCase):
 
+class TestComputeJinjaTag(unittest.TestCase):
 	def test_plain_field_no_gender(self):
 		result = _compute_jinja_tag("first_name", "", "", "gender")
 		self.assertEqual(result, "{{ first_name }}")
@@ -192,35 +206,40 @@ WP_TABLES_FIXTURE = [
 	{
 		"table_name": "wp_users",
 		"frappe_doctype": "User",
-		"column_mapping": json.dumps({
-			"user_email": "email",
-			"user_login": {"fieldname": "username", "is_name": False},
-			"ID": {"fieldname": "", "is_name": True},
-		}),
+		"column_mapping": json.dumps(
+			{
+				"user_email": "email",
+				"user_login": {"fieldname": "username", "is_name": False},
+				"ID": {"fieldname": "", "is_name": True},
+			}
+		),
 	},
 	{
 		"table_name": "wp_posts",
 		"frappe_doctype": "Blog Post",
-		"column_mapping": json.dumps({
-			"post_title": "title",
-			"post_author": "blogger",
-		}),
+		"column_mapping": json.dumps(
+			{
+				"post_title": "title",
+				"post_author": "blogger",
+			}
+		),
 	},
 ]
 
 
 class TestTranslateWpQuery(unittest.TestCase):
-
 	def _translate(self, query):
 		with patch("nce_events.api.translator.frappe") as mock_frappe:
 			mock_frappe.get_all.return_value = WP_TABLES_FIXTURE
 			from nce_events.api.translator import translate_wp_query
+
 			result = translate_wp_query.__wrapped__(query)
 		return result
 
 	def test_empty_query(self):
-		with patch("nce_events.api.translator.frappe") as mock_frappe:
+		with patch("nce_events.api.translator.frappe"):
 			from nce_events.api.translator import translate_wp_query
+
 			result = translate_wp_query.__wrapped__("")
 		self.assertEqual(result["translated"], "")
 		self.assertEqual(result["warnings"], [])
@@ -263,6 +282,7 @@ class TestTranslateWpQuery(unittest.TestCase):
 		with patch("nce_events.api.translator.frappe") as mock_frappe:
 			mock_frappe.get_all.return_value = bad_fixture
 			from nce_events.api.translator import translate_wp_query
+
 			result = translate_wp_query.__wrapped__("SELECT * FROM wp_bad")
 		self.assertTrue(len(result["warnings"]) > 0)
 		self.assertIn("wp_bad", result["warnings"][0])

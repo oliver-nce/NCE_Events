@@ -10,7 +10,7 @@ def writeback_fetched_fields(doctype: str, name: str) -> dict:
 	"""
 	Write back values of editable fetched fields to their source documents.
 
-	Note: The panel Form Dialog uses nce_events.api.form_dialog_api.
+	Note: The panel Form Dialog uses nce_events.api.form_dialog.save.
 	save_form_dialog_document(writeback_fetches=1) so linked records are
 	updated server-side before the main Document.save(). This standalone
 	method remains for batch/server callers that already hold a consistent

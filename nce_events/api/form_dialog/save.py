@@ -17,7 +17,7 @@ import frappe
 from frappe import _
 from frappe.utils import cint, cstr
 
-from nce_events.api.panel_api import _meta_reqd_root_fieldnames, _parse_csv
+from nce_events.api.panel_api_pkg._helpers import _meta_reqd_root_fieldnames, _parse_csv
 
 from ._helpers import _assert_doctype_in_wp_tables, _panel_required_value_empty
 

@@ -21,13 +21,13 @@ export function usePanel(doctype, parentFilter = {}) {
 	let _loadId = 0;
 
 	function fetchConfig() {
-		return frappeCall("nce_events.api.panel_api.get_panel_config", {
+		return frappeCall("nce_events.api.panel_api_pkg.panel_data.get_panel_config", {
 			root_doctype: doctype,
 		});
 	}
 
 	function fetchData(filters = {}) {
-		return frappeCall("nce_events.api.panel_api.get_panel_data", {
+		return frappeCall("nce_events.api.panel_api_pkg.panel_data.get_panel_data", {
 			root_doctype: doctype,
 			filters: JSON.stringify({ ...parentFilter, ...filters }),
 		});
@@ -67,7 +67,7 @@ export function usePanel(doctype, parentFilter = {}) {
 
 		// "current_date() -interval 30 day" (and +, and curdate/now variants)
 		const sqlM = s.match(
-			/(?:current_date\(\s*\)|curdate\(\s*\)|now\(\s*\))\s*([-+])\s*interval\s+(\d+)\s+(day|month|year)/,
+			/(?:current_date\(\s*\)|curdate\(\s*\)|now\(\s*\))\s*([-+])\s*interval\s+(\d+)\s+(day|month|year)/
 		);
 		if (sqlM) {
 			const sign = sqlM[1] === "-" ? -1 : 1;

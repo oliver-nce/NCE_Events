@@ -1,7 +1,7 @@
 import frappe
 from frappe.model.document import Document
 
-from nce_events.api.panel_api import build_panel_sql
+from nce_events.api.panel_api_pkg.sql import build_panel_sql
 
 
 class PagePanel(Document):

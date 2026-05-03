@@ -7,8 +7,9 @@ get_form_dialog_related_rows are readable by any logged-in user for active dialo
 portal editor (editable fields). save uses normal DocType create/write permission
 on the target record.
 
-This package is the Phase 4 split of the original nce_events.api.form_dialog_api
-module. The submodules group functions by domain:
+This package is the Phase 4 split of the original ``form_dialog_api`` module
+(the deprecated shim was removed in Phase 12). The submodules group functions
+by domain:
 
 - ``_helpers``       — internal utilities (validation, hop-chain, related-row
                        column derivation, fetch_from enrichment).
@@ -17,11 +18,6 @@ module. The submodules group functions by domain:
 - ``related_rows``   — ``get_form_dialog_related_rows``, ``save_form_dialog_related_rows``.
 - ``portal_fields``  — ``get_related_portal_field_editor``, ``save_related_portal_field_config``.
 - ``save``           — ``save_form_dialog_document``.
-
-The deprecated ``nce_events.api.form_dialog_api`` shim re-exports every public
-and underscore-prefixed name from this package so existing ``frappe.call`` paths
-and ``unittest.mock.patch`` paths continue to resolve. New code should import
-from ``nce_events.api.form_dialog`` directly.
 """
 
 from __future__ import annotations
