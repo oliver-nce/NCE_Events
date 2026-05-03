@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Manual overlay merged into CODE_INDEX.json by scripts/build_code_index.py. Edit per-file entries here; the generator preserves your curated 'purpose', 'sections', 'private_helpers', 'key_fields', and 'depends_on'.",
-    "generated": "2026-05-02",
+    "generated": "2026-05-03",
     "generator": "scripts/build_code_index.py",
     "usage": "Run `python scripts/build_code_index.py --write` to regenerate CODE_INDEX.json after editing this file or after adding/renaming/deleting source files. The pre-commit hook runs `--check` and blocks commits whose code changes have not been regenerated."
   },
@@ -832,10 +832,11 @@
       "vue": {
         "uses_defineEmits": true
       },
-      "purpose": "Form dialog body — tabs, sections, PanelFormField grid; related tabs load get_form_dialog_related_rows (scrollable table; portal-editable cells: Select/Check/number/date/text; save_form_dialog_related_rows on Submit); v-model:activeTab.",
+      "purpose": "Form dialog body orchestrator: renders the tab bar (PanelFormDialogTabBar), iterates tabs, and dispatches each tab to either PanelFormDialogRelatedTab (related-doctype tabs) or the inline main-tab fields grid (PanelFormField-based). Aggregates imperative saveAllRelatedRows / resetRelatedToBaseline across related-tab children for the parent dialog.",
       "depends_on": [
         "components/PanelFormField.vue",
-        "utils/frappeCall.js"
+        "components/PanelFormDialogTabBar.vue",
+        "components/PanelFormDialogRelatedTab.vue"
       ]
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogFooter.vue": {
@@ -851,6 +852,23 @@
         "uses_defineEmits": true
       },
       "purpose": "Form dialog header — title, row nav, close.",
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue": {
+      "vue": {
+        "uses_defineProps": true,
+        "uses_defineEmits": true
+      },
+      "purpose": "Form dialog related-doctype tab: scrollable rows table with portal-editable cells (Select/Check/number/date/text/textarea), label-column resizer, schema details panel, save_form_dialog_related_rows on Submit. Exposes saveAllRelatedRows + resetRelatedToBaseline.",
+      "depends_on": [
+        "utils/frappeCall.js"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogTabBar.vue": {
+      "vue": {
+        "uses_defineEmits": true
+      },
+      "purpose": "Index-keyed tab strip for the form dialog body. Pure presentational; emits update:activeTab.",
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormField.vue": {
