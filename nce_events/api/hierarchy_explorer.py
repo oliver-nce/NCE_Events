@@ -1,14 +1,22 @@
+from __future__ import annotations
+
 import csv
 import io
 import json
 import os
+from typing import Any
 
 import frappe
 from frappe import _
 
 
 @frappe.whitelist()
-def get_pane_data(pane, parent_name=None, limit=50, start=0):
+def get_pane_data(
+	pane: str,
+	parent_name: str | None = None,
+	limit: int | str = 50,
+	start: int | str = 0,
+) -> dict[str, Any]:
 	"""Fetch data for a hierarchy explorer pane.
 
 	Args:
@@ -31,7 +39,11 @@ def get_pane_data(pane, parent_name=None, limit=50, start=0):
 
 
 @frappe.whitelist()
-def export_pane_data(pane, parent_name=None, format="csv"):
+def export_pane_data(
+	pane: str,
+	parent_name: str | None = None,
+	format: str = "csv",
+) -> dict[str, Any]:
 	"""Export full dataset for a pane (no pagination).
 
 	Args:
@@ -70,6 +82,7 @@ def export_pane_data(pane, parent_name=None, format="csv"):
 				first_session = first_session.strftime("%m/%d/%Y")
 			else:
 				from datetime import datetime
+
 				first_session = datetime.strptime(str(first_session), "%Y-%m-%d").strftime("%m/%d/%Y")
 		fieldnames = list(rows[0].keys())
 		meta = frappe.get_meta("Family Members")
@@ -116,7 +129,7 @@ def export_pane_data(pane, parent_name=None, format="csv"):
 	}
 
 
-def _get_events(limit, start):
+def _get_events(limit: int, start: int) -> dict[str, Any]:
 	"""Pane 1: Events with baked-in filters and player count."""
 	frappe.has_permission("Events", throw=True)
 
@@ -164,7 +177,7 @@ def _get_events(limit, start):
 	}
 
 
-def _get_players(event_name, limit, start):
+def _get_players(event_name: str, limit: int, start: int) -> dict[str, Any]:
 	"""Pane 2: Family Members registered for a given Event, with family email."""
 	frappe.has_permission("Family Members", throw=True)
 

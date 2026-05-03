@@ -49,7 +49,7 @@ def _require_system_manager() -> None:
 _SOURCE_DISPLAY_KEYS = ("fieldtype", "options")
 
 
-def _enrich_fetch_from_fields(fields_list: list[dict], meta) -> list[dict]:
+def _enrich_fetch_from_fields(fields_list: list[dict], meta: Any) -> list[dict]:
 	"""
 	For every field with fetch_from, look up the source field on the linked
 	DocType and copy display-relevant properties that the local field is
@@ -221,7 +221,7 @@ def _related_doctype_child_rows(related_doctypes: str | list | None) -> list[dic
 	return [_build_related_child_row_dict(r) for r in _parse_related_doctypes_argument(related_doctypes)]
 
 
-def _sync_related_doctypes(doc, related_doctypes: str | list | None) -> None:
+def _sync_related_doctypes(doc: Any, related_doctypes: str | list | None) -> None:
 	doc.related_doctypes = []
 	for row in _related_doctype_child_rows(related_doctypes):
 		doc.append("related_doctypes", row)
@@ -293,7 +293,7 @@ def _hop_walk_final_identifiers(root_name: str, hop_chain: list[dict[str, str]])
 	raise RuntimeError("hop_chain walk did not return")  # pragma: no cover
 
 
-def _related_list_columns_from_child_row(row) -> tuple[list[dict[str, Any]], str]:
+def _related_list_columns_from_child_row(row: Any) -> tuple[list[dict[str, Any]], str]:
 	"""
 	Build column metadata and order_by for related-row list fetch.
 

@@ -11,6 +11,8 @@ linked source field in one round trip.
 
 from __future__ import annotations
 
+from typing import Any
+
 import frappe
 from frappe import _
 from frappe.utils import cint, cstr
@@ -21,7 +23,10 @@ from ._helpers import _assert_doctype_in_wp_tables, _panel_required_value_empty
 
 
 @frappe.whitelist()
-def save_form_dialog_document(doc, writeback_fetches: int | str | None = None) -> dict:
+def save_form_dialog_document(
+	doc: str | dict[str, Any],
+	writeback_fetches: int | str | None = None,
+) -> dict[str, Any]:
 	"""
 	Save a document from the panel Form Dialog.
 

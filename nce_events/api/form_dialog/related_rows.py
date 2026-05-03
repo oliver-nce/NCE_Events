@@ -24,7 +24,7 @@ from ._helpers import (
 )
 
 
-def _related_rows_for_vue_api(doc) -> list[dict[str, Any]]:
+def _related_rows_for_vue_api(doc: Any) -> list[dict[str, Any]]:
 	"""Child rows for V2: doctype, label, link_field, hop_chain, child_row_name, portal_field_config, info."""
 	out: list[dict[str, Any]] = []
 	for r in doc.related_doctypes or []:
@@ -173,7 +173,7 @@ _RELATED_SAVE_SKIP_FIELDTYPES: frozenset[str] = frozenset(
 )
 
 
-def _editable_related_fieldnames_for_save(row, child_dt: str) -> set[str]:
+def _editable_related_fieldnames_for_save(row: Any, child_dt: str) -> set[str]:
 	"""Portal columns with show=1, editable=1, and safe fieldtypes on ``child_dt``."""
 	columns, _ob = _related_list_columns_from_child_row(row)
 	meta = frappe.get_meta(child_dt)

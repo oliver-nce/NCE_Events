@@ -64,6 +64,21 @@ repos:
                 nce_events/public/js/panel_page_v2_dist/.*
             )$
 
+  - repo: https://github.com/RobertCraigie/pyright-python
+    rev: v1.1.350
+    hooks:
+      - id: pyright
+        args: [--project, pyrightconfig.json]
+        pass_filenames: false
+        # Phase 10 typing pass — pyright runs in basic mode against
+        # nce_events/api/ (tests are excluded via pyrightconfig.json and
+        # will be revisited in Phase 11).
+        files: |
+            (?x)^(
+                nce_events/api/.*\.py|
+                pyrightconfig\.json
+            )$
+
   - repo: local
     hooks:
       - id: build-code-index

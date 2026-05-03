@@ -51,3 +51,39 @@ from nce_events.api.form_dialog import (
 	save_form_dialog_related_rows,
 	save_related_portal_field_config,
 )
+
+# Explicit re-export surface — every name imported above is part of the
+# documented shim API. Listed for static type checkers (pyright treats
+# `__all__` as the authoritative re-export set).
+__all__ = [
+	"_allowed_child_names_for_related_tab",
+	"_assert_doctype_in_wp_tables",
+	"_build_portal_editor_rows",
+	"_build_related_child_row_dict",
+	"_editable_related_fieldnames_for_save",
+	"_enrich_fetch_from_fields",
+	"_filters_for_related_rows",
+	"_hop_walk_final_identifiers",
+	"_normalize_hop_chain_value",
+	"_normalize_portal_field_config_for_save",
+	"_panel_required_value_empty",
+	"_parse_portal_field_config_entries",
+	"_parse_related_doctypes_argument",
+	"_portal_meta_field_eligible_for_editor",
+	"_related_doctype_child_rows",
+	"_related_list_columns_from_child_row",
+	"_related_row_signature",
+	"_related_rows_for_vue_api",
+	"_require_system_manager",
+	"_sanitize_get_list_fields",
+	"_sync_related_doctypes",
+	"capture_form_dialog_from_desk",
+	"get_form_dialog_definition",
+	"get_form_dialog_related_rows",
+	"get_related_portal_field_editor",
+	"list_form_dialogs_for_doctype",
+	"rebuild_form_dialog",
+	"save_form_dialog_document",
+	"save_form_dialog_related_rows",
+	"save_related_portal_field_config",
+]
