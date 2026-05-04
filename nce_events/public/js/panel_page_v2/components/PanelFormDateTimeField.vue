@@ -4,6 +4,10 @@
 
 <script setup>
 import { ref, watch, onMounted, onBeforeUnmount, nextTick, inject } from "vue";
+import {
+	applyVueValueToDateControl,
+	createDateControlChangeHandler,
+} from "../utils/frappeDateControlSync.js";
 
 const props = defineProps({
 	field: { type: Object, required: true },
@@ -14,31 +18,25 @@ const props = defineProps({
 
 const emit = defineEmits(["change"]);
 
-// Injected directly from PanelFormDialog — raw ref, no prop cycle delay.
+/** Mutes Frappe control echo while loader seeds formData. */
 const fdSyncingFromLoad = inject("fdSyncingFromLoad", null);
 
 const hostRef = ref(null);
 let control = null;
 
-function makeDoc() {
-	const fn = props.field.fieldname;
-	return { [fn]: props.modelValue ?? "" };
-}
-
 function buildDf() {
 	const fn = props.field.fieldname;
-	const ft = props.field.fieldtype;
 	return {
 		fieldname: fn,
-		fieldtype: ft,
+		fieldtype: props.field.fieldtype,
 		read_only: props.readOnly ? 1 : 0,
 		reqd: props.mandatory ? 1 : 0,
 		hidden: 0,
-		change() {
-			if (fdSyncingFromLoad?.value) return;
-			const v = this.get_value();
-			emit("change", { fieldname: fn, value: v });
-		},
+		change: createDateControlChangeHandler({
+			fieldname: fn,
+			fdSyncingFromLoad,
+			emit,
+		}),
 	};
 }
 
@@ -50,13 +48,14 @@ function mountFrappeControl() {
 	if (ft !== "Date" && ft !== "Datetime") {
 		return;
 	}
+	const fn = props.field.fieldname;
 	const $host = window.$(hostRef.value);
 	$host.empty();
 	control = frappe.ui.form.make_control({
 		parent: $host,
 		df: buildDf(),
 		render_input: true,
-		doc: makeDoc(),
+		doc: { [fn]: props.modelValue ?? "" },
 	});
 }
 
@@ -67,12 +66,9 @@ onMounted(() => {
 watch(
 	() => props.modelValue,
 	(v) => {
-		if (!control?.set_value) return;
-		const cur = control.get_value();
-		if (String(cur ?? "") !== String(v ?? "")) {
-			control.set_value(v ?? "", true);
-		}
+		applyVueValueToDateControl(control, props.field.fieldname, v, fdSyncingFromLoad);
 	},
+	{ flush: "post" },
 );
 
 watch(
