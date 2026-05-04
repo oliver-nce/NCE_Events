@@ -44,6 +44,7 @@ const TAB_GROUPS = {
 		"section_break_computed",
 		"unstored_calculation_fields",
 		"section_break_widgets",
+		"allow_new_record_creation",
 		"show_filter",
 		"show_sheets",
 		"column_break_widgets",

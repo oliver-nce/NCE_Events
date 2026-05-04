@@ -211,6 +211,16 @@ function startResize(e) {
 }
 .ppv2-float-header :deep(.ppv2-hdr-btn:hover) { opacity: 1; }
 
+.ppv2-float-header :deep(.ppv2-hdr-btn--new) {
+	color: #fff !important;
+	font-weight: 700;
+	font-size: 22px;
+	opacity: 1;
+}
+.ppv2-float-header :deep(.ppv2-hdr-btn--new:hover) {
+	opacity: 1;
+}
+
 .ppv2-float-header :deep(.ppv2-hdr-btn--refreshing) {
 	color: var(--color-secondary) !important;
 	opacity: 1;

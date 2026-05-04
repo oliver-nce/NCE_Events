@@ -18,6 +18,7 @@
     "title_field",
     "required_fields",
     "section_break_widgets",
+    "allow_new_record_creation",
     "show_filter",
     "show_sheets",
     "column_break_widgets",
@@ -120,6 +121,13 @@
       "fieldname": "section_break_widgets",
       "fieldtype": "Section Break",
       "label": "Header Widgets"
+    },
+    {
+      "default": "0",
+      "description": "Show a + button (leftmost in the panel header) that opens a new document form for this panel's DocType in a new browser tab. Not used on the root WP Tables panel.",
+      "fieldname": "allow_new_record_creation",
+      "fieldtype": "Check",
+      "label": "Allow New Record Creation"
     },
     {
       "default": "1",

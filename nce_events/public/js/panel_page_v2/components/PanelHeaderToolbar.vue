@@ -5,6 +5,15 @@
 		>
 		<div class="ppv2-header-controls">
 			<button
+				v-if="props.showNewRecord"
+				type="button"
+				class="ppv2-hdr-btn ppv2-hdr-btn--new"
+				title="New record"
+				@click="$emit('new-record')"
+			>
+				+
+			</button>
+			<button
 				class="ppv2-hdr-btn"
 				:class="{ 'ppv2-hdr-btn--refreshing': props.loading }"
 				title="Refresh"
@@ -51,8 +60,9 @@ const props = defineProps({
 	total: { type: Number, default: 0 },
 	showEmail: { type: Boolean, default: false },
 	showSms: { type: Boolean, default: false },
+	showNewRecord: { type: Boolean, default: false },
 	showClose: { type: Boolean, default: false },
 });
 
-defineEmits(["refresh", "toggle-filter", "sheets", "email", "sms", "close"]);
+defineEmits(["refresh", "toggle-filter", "sheets", "email", "sms", "new-record", "close"]);
 </script>

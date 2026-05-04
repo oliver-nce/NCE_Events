@@ -50,12 +50,14 @@
 					:total="p.fullTotal"
 					:show-email="!!p.config?.email_field"
 					:show-sms="!!p.config?.sms_field"
+					:show-new-record="!!p.config?.allow_new_record_creation"
 					show-close
 					@refresh="onRefreshPanel(p)"
 					@toggle-filter="p._showFilter = !p._showFilter"
 					@sheets="onSheets(p)"
 					@email="onEmail(p)"
 					@sms="onSms(p)"
+					@new-record="onNewRecord(p)"
 					@close="closePanel(p.id)"
 				/>
 			</template>
@@ -508,6 +510,13 @@ function onRefreshPanel(panel) {
 	if (panel._reload) {
 		panel._reload();
 	}
+}
+
+function onNewRecord(panel) {
+	if (!panel?.doctype) return;
+	const slug = panel.doctype.toLowerCase().replace(/ /g, "-");
+	const url = `${window.location.origin}/app/${slug}/new`;
+	window.open(url, "_blank");
 }
 
 function onSheets(p) {
