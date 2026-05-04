@@ -4,7 +4,8 @@
 		v-if="open"
 		class="ppv2-form-dialog-backdrop"
 		:style="{ opacity: dissolveOpacity }"
-		@pointerdown.self="onBackdropPointerDownSelf"
+		@mousedown.self="onBackdropMouseDownSelf"
+		@click.self="onBackdropClickSelf"
 	>
 		<div
 			v-if="showFdLoadDebug"
@@ -119,7 +120,7 @@ const fdBodyRef = ref(null);
 const backdropRef = ref(null);
 const relatedDirty = ref(false);
 
-const { onBackdropPointerDownSelf, disarm: disarmBackdropDismiss } = useBackdropPointerDismiss(
+const { onMouseDownSelf: onBackdropMouseDownSelf, onClickSelf: onBackdropClickSelf, disarm: disarmBackdropDismiss } = useBackdropPointerDismiss(
 	backdropRef,
 	() => onCancel(),
 );

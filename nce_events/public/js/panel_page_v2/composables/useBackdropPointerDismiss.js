@@ -1,69 +1,37 @@
 import { onUnmounted } from "vue";
 
-/** Primary (= left) mouse, or pen/touch taps. */
-function allowPointerDownDismiss(e) {
-	if (e.pointerType === "mouse") {
-		return e.button === 0;
-	}
-	return e.pointerType === "touch" || e.pointerType === "pen";
-}
-
-/** Matching release for dismiss (mouseup / pointer up). */
-function allowPointerUpDismiss(e) {
-	if (e.pointerType === "mouse") {
-		return e.button === 0;
-	}
-	return e.pointerType === "touch" || e.pointerType === "pen";
-}
-
 /**
- * Replace @click.self on a modal backdrop so text-selection drags that end on the dimmed region
- * do not close the dialog. Dismiss runs only when pointerdown **and** pointerup both hit the same
- * backdrop element (Vue `.self` semantics).
+ * Dismiss a modal backdrop only on a true click — i.e. both mousedown AND the
+ * synthesised click originated on the backdrop itself.
+ *
+ * Why this works for text-selection overshoot:
+ *   - mousedown starts on a field inside the dialog → @mousedown.self does NOT fire
+ *     → armed stays false
+ *   - User drags, releases on backdrop → browser synthesises a click whose target
+ *     is the nearest common ancestor (the backdrop), but @click.self handler checks
+ *     armed === false → no dismiss.
+ *
+ * True backdrop click: mousedown.self arms → click.self sees armed=true → dismiss.
  */
 export function useBackdropPointerDismiss(backdropElRef, onDismiss) {
 	let armed = false;
-	let listenerActive = false;
 
-	function onWindowPointerUp(e) {
-		if (listenerActive) {
-			window.removeEventListener("pointerup", onWindowPointerUp, true);
-			listenerActive = false;
-		}
-
-		const bd = backdropElRef?.value ?? null;
-		const wasArmed = armed;
-		armed = false;
-
-		if (!bd || !wasArmed) return;
-		if (!allowPointerUpDismiss(e)) return;
-		if (e.target !== bd) return;
-		onDismiss();
+	function onMouseDownSelf(e) {
+		if (e.button !== 0) return;
+		armed = true;
 	}
 
-	function onBackdropPointerDownSelf(e) {
-		const bd = backdropElRef?.value ?? null;
-		if (!bd || e.target !== bd) return;
-		if (!allowPointerDownDismiss(e)) return;
-
-		if (listenerActive) {
-			window.removeEventListener("pointerup", onWindowPointerUp, true);
-			listenerActive = false;
-		}
-		armed = true;
-		window.addEventListener("pointerup", onWindowPointerUp, { capture: true });
-		listenerActive = true;
+	function onClickSelf() {
+		const was = armed;
+		armed = false;
+		if (was) onDismiss();
 	}
 
 	function disarm() {
 		armed = false;
-		if (listenerActive) {
-			window.removeEventListener("pointerup", onWindowPointerUp, true);
-			listenerActive = false;
-		}
 	}
 
 	onUnmounted(disarm);
 
-	return { onBackdropPointerDownSelf, disarm };
+	return { onMouseDownSelf, onClickSelf, disarm };
 }

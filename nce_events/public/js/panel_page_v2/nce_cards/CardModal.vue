@@ -1,6 +1,6 @@
 <template>
 	<Teleport to="body">
-		<div ref="backdropRef" class="card-modal-backdrop" @pointerdown.self="onBackdropPointerDownSelf">
+		<div ref="backdropRef" class="card-modal-backdrop" @mousedown.self="onMouseDownSelf" @click.self="onClickSelf">
 			<div class="card-modal">
 				<CardForm
 					:card-def-name="cardDefName"
@@ -28,7 +28,7 @@ defineProps({
 const emit = defineEmits(["open-card", "close"]);
 
 const backdropRef = ref(null);
-const { onBackdropPointerDownSelf } = useBackdropPointerDismiss(backdropRef, () => emit("close"));
+const { onMouseDownSelf, onClickSelf } = useBackdropPointerDismiss(backdropRef, () => emit("close"));
 
 function onKeyDown(e) {
 	if (e.key === "Escape") emit("close");
