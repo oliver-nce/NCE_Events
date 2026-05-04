@@ -48,6 +48,25 @@ export function usePanelFormDialogHost(openPanels) {
 		return true;
 	}
 
+	/** New document in the same frozen Form Dialog as row edit — requires Page Panel Form Dialog link. */
+	function openFormDialogForNewRecord(panel) {
+		if (!panel?.config?.form_dialog) return false;
+		formDialogPendingDocName.value = null;
+		formDialogPendingDefinition.value = null;
+		formDialogPendingDoctype.value = null;
+		formDialogDissolving.value = false;
+		formDialogDissolveOpacity.value = 1;
+		formDialogSlot.value = 0;
+		formDialogDefinition.value = panel.config.form_dialog;
+		formDialogDoctype.value = panel.doctype;
+		formDialogDocName.value = null;
+		formDialogSourcePanelId.value = panel.id;
+		const rf = panel.config?.required_fields;
+		formDialogRequiredFields.value = Array.isArray(rf) ? rf.slice() : [];
+		showFormDialog.value = true;
+		return true;
+	}
+
 	function onFormDialogClose() {
 		showFormDialog.value = false;
 		formDialogRequiredFields.value = [];
@@ -178,6 +197,7 @@ export function usePanelFormDialogHost(openPanels) {
 		onFormDialogNavPrev,
 		onFormDialogNavNext,
 		openFormDialogFromPanelRow,
+		openFormDialogForNewRecord,
 		onFormDialogClose,
 		onFormDialogSaved,
 		reloadPanelForFormDialogDoctype,

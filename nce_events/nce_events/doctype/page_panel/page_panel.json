@@ -124,7 +124,7 @@
     },
     {
       "default": "0",
-      "description": "Show a + button (leftmost in the panel header) that opens a new document form for this panel's DocType in a new browser tab. Not used on the root WP Tables panel.",
+      "description": "Show a + button (leftmost in the panel header) that opens the panel's Form Dialog to create a new document. Requires Form Dialog to be linked on this Page Panel. Not used on the root WP Tables panel.",
       "fieldname": "allow_new_record_creation",
       "fieldtype": "Check",
       "label": "Allow New Record Creation"

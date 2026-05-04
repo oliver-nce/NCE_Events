@@ -50,7 +50,9 @@
 					:total="p.fullTotal"
 					:show-email="!!p.config?.email_field"
 					:show-sms="!!p.config?.sms_field"
-					:show-new-record="!!p.config?.allow_new_record_creation"
+					:show-new-record="
+						!!p.config?.allow_new_record_creation && !!p.config?.form_dialog
+					"
 					show-close
 					@refresh="onRefreshPanel(p)"
 					@toggle-filter="p._showFilter = !p._showFilter"
@@ -255,6 +257,7 @@ const {
 	onFormDialogNavPrev,
 	onFormDialogNavNext,
 	openFormDialogFromPanelRow,
+	openFormDialogForNewRecord,
 	onFormDialogClose,
 	onFormDialogSaved,
 	reloadPanelForFormDialogDoctype,
@@ -513,10 +516,15 @@ function onRefreshPanel(panel) {
 }
 
 function onNewRecord(panel) {
-	if (!panel?.doctype) return;
-	const slug = panel.doctype.toLowerCase().replace(/ /g, "-");
-	const url = `${window.location.origin}/app/${slug}/new`;
-	window.open(url, "_blank");
+	if (!openFormDialogForNewRecord(panel) && typeof frappe !== "undefined" && frappe.msgprint) {
+		frappe.msgprint({
+			title: __("New record"),
+			message: __(
+				"Link a Form Dialog on this Page Panel (Dialogs tab) to create records from the panel.",
+			),
+			indicator: "orange",
+		});
+	}
 }
 
 function onSheets(p) {
