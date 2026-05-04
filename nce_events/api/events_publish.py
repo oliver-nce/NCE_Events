@@ -7,7 +7,7 @@ from typing import Any
 
 import frappe
 from frappe import _
-from frappe.utils import cint, cstr, get_datetime, getdate
+from frappe.utils import cint, cstr, getdate
 
 from nce_events.api.derived_fields import apply_derived_fields_to_doc
 from nce_events.api.panel_api_pkg._helpers import validate_document_page_panel_required_roots
@@ -15,19 +15,6 @@ from nce_events.api.woocommerce_client import DEFAULT_WOOCOMMERCE_CONNECTOR, wc_
 
 _EVENTS_DOCTYPE: str = "Events"
 _EVENT_TYPES_DOCTYPE: str = "Event Types"
-_SKIP_FIELDTYPES: frozenset[str] = frozenset(
-	{
-		"Tab Break",
-		"Section Break",
-		"Column Break",
-		"HTML",
-		"Fold",
-		"Heading",
-		"Button",
-		"Table",
-		"Table MultiSelect",
-	},
-)
 
 
 def slugify_product_slug(raw: str | None) -> str:
@@ -36,71 +23,6 @@ def slugify_product_slug(raw: str | None) -> str:
 	s = re.sub(r"[^a-z0-9\-_]+", "-", s)
 	s = re.sub(r"-{2,}", "-", s).strip("-")
 	return (s or "event")[:200]
-
-
-def _field_value_empty(df: Any, value: object) -> bool:
-	if value is None:
-		return True
-	if isinstance(value, str) and not value.strip():
-		return True
-	if df.fieldtype == "Check":
-		return False
-	if value in ((), []):
-		return True
-	return False
-
-
-def _is_midnight_time_value(value: object) -> bool:
-	if value is None:
-		return False
-	s = str(value).strip()
-	if not s:
-		return False
-	if s in ("00:00:00", "00:00:00.000000"):
-		return True
-	parts = s.replace(".", ":").split(":")
-	return len(parts) >= 3 and parts[0] == "00" and parts[1] == "00" and parts[2].startswith("00")
-
-
-def _is_year_2000_date_value(df: Any, value: object) -> bool:
-	if value is None or value == "":
-		return False
-	try:
-		if df.fieldtype == "Date":
-			d = getdate(value)
-			return d.year == 2000
-		if df.fieldtype == "Datetime":
-			dt = get_datetime(value)
-			return dt.year == 2000
-	except Exception:
-		return False
-	return False
-
-
-def _validate_events_for_publish(doc: dict[str, Any]) -> None:
-	meta = frappe.get_meta(_EVENTS_DOCTYPE)
-	errors: list[str] = []
-
-	for df in meta.fields:
-		if df.fieldtype in _SKIP_FIELDTYPES:
-			continue
-		if cint(getattr(df, "is_virtual", 0)):
-			continue
-		fn = df.fieldname
-		if not fn:
-			continue
-		val = doc.get(fn)
-		if cint(df.reqd):
-			if _field_value_empty(df, val):
-				errors.append(_("{0} is required.").format(df.label or fn))
-				continue
-			if df.fieldtype == "Time" and _is_midnight_time_value(val):
-				errors.append(_("{0} cannot be 00:00:00.").format(df.label or fn))
-			if df.fieldtype in ("Date", "Datetime") and _is_year_2000_date_value(df, val):
-				errors.append(_("{0} cannot be in the year 2000.").format(df.label or fn))
-
-	if errors:
-		frappe.throw(_("Fix the following before publishing:\n{0}").format("\n".join(errors)))
 
 
 def _wc_status_from_events(status: object) -> str:
@@ -272,8 +194,9 @@ def publish_events_to_website(
 	``name`` = new product id, then run ``after_events_publish_to_woocommerce`` hooks.
 
 	``doc`` may be a JSON string from ``frappe.call``. Derived fields from ``WP Tables`` are merged
-	next; page panel ``required_fields`` plus meta root required are enforced; then WooCommerce
-	payload validation. (WP ``column_mapping`` defaults are applied in the panel New Form Dialog.)
+	next; only Page Panel ``required_fields`` for Events are enforced before WooCommerce (not
+	DocType meta ``reqd``, since the row is inserted after the WC call). (WP ``column_mapping``
+	defaults are applied in the panel New Form Dialog.)
 
 	Other apps (e.g. nce_sync) may register::
 
@@ -287,8 +210,9 @@ def publish_events_to_website(
 		frappe.throw(_("Not permitted to create {0}").format(_EVENTS_DOCTYPE), frappe.PermissionError)
 
 	apply_derived_fields_to_doc(_EVENTS_DOCTYPE, doc)
-	validate_document_page_panel_required_roots(doc, _EVENTS_DOCTYPE)
-	_validate_events_for_publish(doc)
+	validate_document_page_panel_required_roots(
+		doc, _EVENTS_DOCTYPE, include_meta_mandatory=False
+	)
 
 	wc_body = build_woocommerce_product_payload(doc)
 	conn = (connector_name or "").strip() or DEFAULT_WOOCOMMERCE_CONNECTOR

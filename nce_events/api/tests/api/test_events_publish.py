@@ -109,7 +109,6 @@ class TestBuildWooCommerceProductPayload(unittest.TestCase):
 
 class TestPublishEventsToWebsite(unittest.TestCase):
 	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)
-	@patch("nce_events.api.events_publish._validate_events_for_publish")
 	@patch("nce_events.api.events_publish._run_after_publish_hooks")
 	@patch("nce_events.api.events_publish._allowed_events_row")
 	@patch("nce_events.api.events_publish.frappe.get_doc")
@@ -124,7 +123,6 @@ class TestPublishEventsToWebsite(unittest.TestCase):
 		mock_get_doc,
 		mock_allowed,
 		mock_hooks,
-		mock_validate,
 		mock_perm,
 	):
 		def _allowed(doc, wp_id):
@@ -161,7 +159,9 @@ class TestPublishEventsToWebsite(unittest.TestCase):
 		}
 		out = publish_events_to_website(doc)
 		self.assertEqual(out["name"], "501")
-		mock_validate_panel.assert_called_once()
+		mock_validate_panel.assert_called_once_with(
+			doc, "Events", include_meta_mandatory=False
+		)
 		mock_apply_derived.assert_called_once()
 		self.assertEqual(mock_wc.call_args[0][2], "/products")
 		kwargs = mock_wc.call_args[1]

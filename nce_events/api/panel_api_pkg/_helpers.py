@@ -160,11 +160,20 @@ def _parse_csv(value: str | None) -> list[str]:
 	return [v.strip() for v in value.split(",") if v.strip()]
 
 
-def validate_document_page_panel_required_roots(doc: dict[str, Any], doctype: str) -> None:
+def validate_document_page_panel_required_roots(
+	doc: dict[str, Any],
+	doctype: str,
+	*,
+	include_meta_mandatory: bool = True,
+) -> None:
 	"""
-	Raise if Page Panel ``required_fields`` (for this doctype) or root meta-mandatory
-	fields are empty. Skips dotted keys (link child paths). Same emptiness rules as
-	Form Dialog save via ``_panel_required_value_empty``.
+	Raise if required root fields are empty. Skips dotted keys (link child paths).
+	Same emptiness rules as Form Dialog save via ``_panel_required_value_empty``.
+
+	When ``include_meta_mandatory`` is True (default): Page Panel ``required_fields``
+	for this doctype plus DocType meta-mandatory (``reqd``) root fields.
+
+	When False: only Page Panel ``required_fields`` (e.g. Woo publish before insert).
 	"""
 	from nce_events.api.form_dialog._helpers import _panel_required_value_empty
 
@@ -172,7 +181,10 @@ def validate_document_page_panel_required_roots(doc: dict[str, Any], doctype: st
 	if frappe.db.exists("Page Panel", doctype):
 		pp = frappe.get_doc("Page Panel", doctype)
 		required_keys.extend(_parse_csv(getattr(pp, "required_fields", None) or ""))
-	required_keys = list(dict.fromkeys(required_keys + _meta_reqd_root_fieldnames(doctype)))
+	if include_meta_mandatory:
+		required_keys = list(dict.fromkeys(required_keys + _meta_reqd_root_fieldnames(doctype)))
+	else:
+		required_keys = list(dict.fromkeys(required_keys))
 	for fn in required_keys:
 		if "." in fn:
 			continue
