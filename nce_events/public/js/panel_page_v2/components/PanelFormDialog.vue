@@ -1,5 +1,11 @@
 <template>
-	<div v-if="open" class="ppv2-form-dialog-backdrop" :style="{ opacity: dissolveOpacity }" @click.self="onCancel">
+	<div
+		ref="backdropRef"
+		v-if="open"
+		class="ppv2-form-dialog-backdrop"
+		:style="{ opacity: dissolveOpacity }"
+		@pointerdown.self="onBackdropPointerDownSelf"
+	>
 		<div
 			v-if="showFdLoadDebug"
 			class="ppv2-fd-load-debug"
@@ -88,6 +94,7 @@ import {
 	confirmDiscardIfDirty,
 	createRowNavKeydownHandler,
 } from "../composables/useFormDialogChrome.js";
+import { useBackdropPointerDismiss } from "../composables/useBackdropPointerDismiss.js";
 
 const props = defineProps({
 	open: { type: Boolean, default: false },
@@ -109,7 +116,13 @@ const emit = defineEmits(["close", "saved", "nav-prev", "nav-next"]);
 
 const activeTab = ref(0);
 const fdBodyRef = ref(null);
+const backdropRef = ref(null);
 const relatedDirty = ref(false);
+
+const { onBackdropPointerDownSelf, disarm: disarmBackdropDismiss } = useBackdropPointerDismiss(
+	backdropRef,
+	() => onCancel(),
+);
 
 const form = usePanelFormDialog({
 	definitionName: toRef(props, "definitionName"),
@@ -205,6 +218,7 @@ watch(
 	}),
 	(cur, prev) => {
 		if (!cur.open) {
+			disarmBackdropDismiss();
 			window.removeEventListener("keydown", onFormDialogKeydown, true);
 			form.resetWhenClosed();
 			return;

@@ -1,6 +1,6 @@
 <template>
 	<Teleport to="body">
-		<div class="card-modal-backdrop" @click.self="$emit('close')">
+		<div ref="backdropRef" class="card-modal-backdrop" @pointerdown.self="onBackdropPointerDownSelf">
 			<div class="card-modal">
 				<CardForm
 					:card-def-name="cardDefName"
@@ -15,8 +15,9 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import CardForm from "./CardForm.vue";
+import { useBackdropPointerDismiss } from "../composables/useBackdropPointerDismiss.js";
 
 defineProps({
 	cardDefName: { type: String, required: true },
@@ -25,6 +26,9 @@ defineProps({
 });
 
 const emit = defineEmits(["open-card", "close"]);
+
+const backdropRef = ref(null);
+const { onBackdropPointerDownSelf } = useBackdropPointerDismiss(backdropRef, () => emit("close"));
 
 function onKeyDown(e) {
 	if (e.key === "Escape") emit("close");
