@@ -59,6 +59,10 @@ from .related_rows import (
 	get_form_dialog_related_rows,
 	save_form_dialog_related_rows,
 )
+from .button_visibility import (
+	get_form_dialog_button_hidden_map,
+	validate_hide_if_sql,
+)
 from .save import save_form_dialog_document
 
 __all__ = [
@@ -85,11 +89,13 @@ __all__ = [
 	"_sync_related_doctypes",
 	"capture_form_dialog_from_desk",
 	"get_form_dialog_definition",
+	"get_form_dialog_button_hidden_map",
 	"get_form_dialog_related_rows",
 	"get_related_portal_field_editor",
 	"list_form_dialogs_for_doctype",
 	"rebuild_form_dialog",
 	"save_form_dialog_document",
+	"validate_hide_if_sql",
 	"save_form_dialog_related_rows",
 	"save_related_portal_field_config",
 ]

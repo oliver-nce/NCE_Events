@@ -57,6 +57,8 @@
 			/>
 			<PanelFormDialogFooter
 				:buttons="form.buttons.value"
+				:definition-name="definitionName"
+				:doc-name="docName"
 				:saving="form.saving.value"
 				:is-dirty="footerIsDirty"
 				@cancel="onCancel"

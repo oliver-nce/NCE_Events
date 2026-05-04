@@ -1,11 +1,16 @@
 import frappe
 from frappe.model.document import Document
 
+from nce_events.api.form_dialog.button_visibility import HIDE_IF_SQL, validate_hide_if_sql
+
 
 class FormDialog(Document):
     def validate(self):
         if self.target_doctype:
             _assert_doctype_in_wp_tables(self.target_doctype)
+        for row in self.buttons or []:
+            if getattr(row, "hide_if", None) == HIDE_IF_SQL:
+                validate_hide_if_sql(getattr(row, "hide_if_sql", None) or "")
 
 
 def _assert_doctype_in_wp_tables(doctype: str) -> None:
