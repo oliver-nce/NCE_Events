@@ -4,6 +4,50 @@ import { isLayoutField } from "../utils/frappeFieldExpr.js";
 import { parseLayout } from "../utils/parseLayout.js";
 import { isFdLoadDebugEnabled } from "../utils/formDialogLoadDebug.js";
 
+/** Aligns with server ``events_publish._field_value_empty`` for WP Tables default merge. */
+function formDataValueEmptyForWpDefault(field, value) {
+	if (value === undefined || value === null) {
+		return true;
+	}
+	if (typeof value === "string" && !value.trim()) {
+		return true;
+	}
+	if (field && field.fieldtype === "Check") {
+		return false;
+	}
+	if (Array.isArray(value) && value.length === 0) {
+		return true;
+	}
+	return false;
+}
+
+/**
+ * Merge ``get_wp_tables_default_field_values_api`` into new-doc formData (frozen fields only).
+ * @param {Record<string, unknown>} formData
+ * @param {Array<Record<string, unknown>>} fields
+ * @param {unknown} defaults
+ */
+function mergeWpTablesMappingDefaultsIntoFormData(formData, fields, defaults) {
+	if (!defaults || typeof defaults !== "object" || Array.isArray(defaults)) {
+		return;
+	}
+	const byName = new Map();
+	for (const f of fields || []) {
+		if (f && f.fieldname && !isLayoutField(f.fieldtype)) {
+			byName.set(f.fieldname, f);
+		}
+	}
+	for (const [fn, dval] of Object.entries(defaults)) {
+		const df = byName.get(fn);
+		if (!df) {
+			continue;
+		}
+		if (formDataValueEmptyForWpDefault(df, formData[fn])) {
+			formData[fn] = dval;
+		}
+	}
+}
+
 /** @param {unknown} raw */
 function normalizeHopChainForRelated(raw) {
 	if (Array.isArray(raw)) {
@@ -222,6 +266,24 @@ export function createFrozenFormLoad(ctx) {
 				);
 			} else {
 				pushDebug("frappe.client.get", true, "(skipped — new doc)");
+				try {
+					const wpDefaults = await frappeCall(
+						"nce_events.api.wp_tables_mapping.get_wp_tables_default_field_values_api",
+						{ frappe_doctype: dt }
+					);
+					if (mySeq !== loadSeq) {
+						pushDebug("aborted", false, "stale seq after wp_tables defaults API");
+						return;
+					}
+					mergeWpTablesMappingDefaultsIntoFormData(formData, fields, wpDefaults);
+					const n =
+						wpDefaults && typeof wpDefaults === "object" && !Array.isArray(wpDefaults)
+							? Object.keys(wpDefaults).length
+							: 0;
+					pushDebug("wp_tables_defaults", true, `${n} mapping key(s)`);
+				} catch (e) {
+					pushDebug("wp_tables_defaults", false, dt, e?.message || e);
+				}
 			}
 
 			const linkFields = fields.filter(

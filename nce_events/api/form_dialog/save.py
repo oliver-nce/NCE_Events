@@ -17,9 +17,8 @@ import frappe
 from frappe import _
 from frappe.utils import cint, cstr
 
-from nce_events.api.panel_api_pkg._helpers import _meta_reqd_root_fieldnames, _parse_csv
-
-from ._helpers import _assert_doctype_in_wp_tables, _panel_required_value_empty
+from nce_events.api.panel_api_pkg._helpers import validate_document_page_panel_required_roots
+from ._helpers import _assert_doctype_in_wp_tables
 
 
 @frappe.whitelist()
@@ -54,17 +53,7 @@ def save_form_dialog_document(
 		if not frappe.has_permission(doctype, "create"):
 			frappe.throw(_("Not permitted"), frappe.PermissionError)
 
-	required_keys: list[str] = []
-	if frappe.db.exists("Page Panel", doctype):
-		pp = frappe.get_doc("Page Panel", doctype)
-		required_keys = _parse_csv(getattr(pp, "required_fields", None) or "")
-	required_keys = list(dict.fromkeys(required_keys + _meta_reqd_root_fieldnames(doctype)))
-	for fn in required_keys:
-		if "." in fn:
-			continue
-		val = doc.get(fn)
-		if _panel_required_value_empty(val):
-			frappe.throw(_("Missing value for required field: {0}").format(fn))
+	validate_document_page_panel_required_roots(doc, doctype)
 
 	if cint(writeback_fetches):
 		meta = frappe.get_meta(doctype)

@@ -6,6 +6,7 @@ import json
 from typing import Any
 
 import frappe
+from frappe.utils import cstr
 
 
 def get_wp_tables_column_mapping(frappe_doctype: str) -> dict[str, Any]:
@@ -75,6 +76,45 @@ def get_derived_sql_specs(frappe_doctype: str) -> list[dict[str, str]]:
 	if not cm:
 		return []
 	return derived_sql_specs_from_column_mapping(cm)
+
+
+def get_wp_tables_default_field_values(frappe_doctype: str) -> dict[str, Any]:
+	"""
+	Read ``column_mapping`` entries whose value dict includes a default.
+
+	Supported keys (first non-empty wins): ``default_value``, ``default``, ``wp_default``.
+	Only dict-shaped mapping entries with a ``fieldname`` are considered.
+	"""
+	cm = get_wp_tables_column_mapping(frappe_doctype)
+	if not cm:
+		return {}
+	out: dict[str, Any] = {}
+	for _wp_col, col_info in cm.items():
+		if not isinstance(col_info, dict):
+			continue
+		fn = cstr(col_info.get("fieldname") or "").strip()
+		if not fn:
+			continue
+		chosen = None
+		for dk in ("default_value", "default", "wp_default"):
+			if dk not in col_info:
+				continue
+			raw = col_info.get(dk)
+			if raw is None:
+				continue
+			if isinstance(raw, str) and not raw.strip():
+				continue
+			chosen = raw
+			break
+		if chosen is not None:
+			out[fn] = chosen
+	return out
+
+
+@frappe.whitelist()
+def get_wp_tables_default_field_values_api(frappe_doctype: str) -> dict[str, Any]:
+	"""Whitelisted: ``column_mapping`` default values for panel Form Dialog new-doc seeding."""
+	return get_wp_tables_default_field_values(frappe_doctype)
 
 
 @frappe.whitelist()

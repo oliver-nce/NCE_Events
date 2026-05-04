@@ -10,9 +10,11 @@ from frappe import _
 from frappe.utils import cint, cstr, get_datetime, getdate
 
 from nce_events.api.derived_fields import apply_derived_fields_to_doc
+from nce_events.api.panel_api_pkg._helpers import validate_document_page_panel_required_roots
 from nce_events.api.woocommerce_client import DEFAULT_WOOCOMMERCE_CONNECTOR, wc_request
 
 _EVENTS_DOCTYPE: str = "Events"
+_EVENT_TYPES_DOCTYPE: str = "Event Types"
 _SKIP_FIELDTYPES: frozenset[str] = frozenset(
 	{
 		"Tab Break",
@@ -121,6 +123,65 @@ def _categories_payload(product_type: object) -> list[dict[str, Any]]:
 	return [{"name": raw}]
 
 
+def _event_types_meta_field(meta: Any, candidates: tuple[str, ...]) -> str | None:
+	for fn in candidates:
+		if meta.has_field(fn):
+			return fn
+	return None
+
+
+def _woo_category_label_from_event_type_row(event_type_id: str) -> str | None:
+	"""e.g. ``Tryouts, Tryout`` when category + type are set on Event Types."""
+	if not event_type_id or not frappe.db.exists(_EVENT_TYPES_DOCTYPE, event_type_id):
+		return None
+	meta = frappe.get_meta(_EVENT_TYPES_DOCTYPE)
+
+	type_fn = _event_types_meta_field(meta, ("type",))
+	if not type_fn:
+		return None
+	parent_fn = _event_types_meta_field(meta, ("category", "parent_category", "event_category"))
+
+	fields = list({type_fn, parent_fn} - {None})
+	row = frappe.db.get_value(_EVENT_TYPES_DOCTYPE, event_type_id, fields, as_dict=True)
+	if not row:
+		return None
+	typ = cstr(row.get(type_fn)).strip()
+	if not typ:
+		return None
+	if parent_fn:
+		parent_val = cstr(row.get(parent_fn) or "").strip()
+		if parent_val:
+			return f"{parent_val}, {typ}"
+	return typ
+
+
+def _wc_categories_payload_from_doc(doc: dict[str, Any]) -> list[dict[str, Any]]:
+	"""Prefer Event Types via ``event_type_id``, then Events ``type``, else ``product_type``."""
+	et_id = cstr(doc.get("event_type_id") or "").strip()
+	if et_id:
+		label = _woo_category_label_from_event_type_row(et_id)
+		if label:
+			return _categories_payload(label)
+
+	fb_typ = doc.get("type")
+	if fb_typ is None or str(fb_typ).strip() == "":
+		return _categories_payload(doc.get("product_type"))
+	return _categories_payload(fb_typ)
+
+
+def _product_categories_meta_value(categories: list[dict[str, Any]]) -> str:
+	"""WooCommerce Events / site convention: ``product_categories`` meta mirrors category assignment."""
+	if not categories:
+		return ""
+	first = categories[0]
+	if isinstance(first, dict):
+		if first.get("name") is not None:
+			return cstr(first["name"]).strip()
+		if first.get("id") is not None:
+			return cstr(first["id"]).strip()
+	return ""
+
+
 def _mysql_date(value: object) -> str:
 	if value is None or value == "":
 		return ""
@@ -137,6 +198,20 @@ def build_woocommerce_product_payload(doc: dict[str, Any]) -> dict[str, Any]:
 	price_val = doc.get("price")
 	regular_price = "" if price_val is None or price_val == "" else cstr(price_val).strip()
 
+	wc_categories = _wc_categories_payload_from_doc(doc)
+	meta_rows: list[dict[str, Any]] = [
+		{"key": "_sku", "value": sku},
+		{
+			"key": "WooCommerceEventsDateMySQLFormat",
+			"value": _mysql_date(doc.get("first_session_date")),
+		},
+		{
+			"key": "WooCommerceEventsEndDateMySQLFormat",
+			"value": _mysql_date(doc.get("end_date")),
+		},
+		{"key": "product_categories", "value": _product_categories_meta_value(wc_categories)},
+	]
+
 	payload: dict[str, Any] = {
 		"name": cstr(doc.get("event_name")).strip() or _("Untitled"),
 		"type": "simple",
@@ -145,18 +220,8 @@ def build_woocommerce_product_payload(doc: dict[str, Any]) -> dict[str, Any]:
 		"sku": sku,
 		"regular_price": regular_price,
 		"description": cstr(doc.get("content") or ""),
-		"categories": _categories_payload(doc.get("product_type")),
-		"meta_data": [
-			{"key": "_sku", "value": sku},
-			{
-				"key": "WooCommerceEventsDateMySQLFormat",
-				"value": _mysql_date(doc.get("first_session_date")),
-			},
-			{
-				"key": "WooCommerceEventsEndDateMySQLFormat",
-				"value": _mysql_date(doc.get("end_date")),
-			},
-		],
+		"categories": wc_categories,
+		"meta_data": meta_rows,
 	}
 	return payload
 
@@ -206,8 +271,9 @@ def publish_events_to_website(
 	Validate Events payload, create WooCommerce product, insert ``Events`` with
 	``name`` = new product id, then run ``after_events_publish_to_woocommerce`` hooks.
 
-	``doc`` may be a JSON string from ``frappe.call``. Derived fields from ``WP Tables``
-	(``is_derived`` / ``sql_expression``) are merged before validation.
+	``doc`` may be a JSON string from ``frappe.call``. Derived fields from ``WP Tables`` are merged
+	next; page panel ``required_fields`` plus meta root required are enforced; then WooCommerce
+	payload validation. (WP ``column_mapping`` defaults are applied in the panel New Form Dialog.)
 
 	Other apps (e.g. nce_sync) may register::
 
@@ -221,6 +287,7 @@ def publish_events_to_website(
 		frappe.throw(_("Not permitted to create {0}").format(_EVENTS_DOCTYPE), frappe.PermissionError)
 
 	apply_derived_fields_to_doc(_EVENTS_DOCTYPE, doc)
+	validate_document_page_panel_required_roots(doc, _EVENTS_DOCTYPE)
 	_validate_events_for_publish(doc)
 
 	wc_body = build_woocommerce_product_payload(doc)

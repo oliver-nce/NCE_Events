@@ -48,17 +48,63 @@ class TestBuildWooCommerceProductPayload(unittest.TestCase):
 		self.assertIn("_sku", keys)
 		self.assertIn("WooCommerceEventsDateMySQLFormat", keys)
 		self.assertIn("WooCommerceEventsEndDateMySQLFormat", keys)
+		self.assertIn("product_categories", keys)
+		self.assertEqual(next(m["value"] for m in p["meta_data"] if m["key"] == "product_categories"), "Workshops")
 
 	def test_category_numeric_id(self):
 		doc = {
 			"event_name": "X",
 			"sku": "x",
-			"product_type": "12",
+			"type": "12",
 			"first_session_date": "2026-01-02",
 			"end_date": "2026-01-03",
 		}
 		p = build_woocommerce_product_payload(doc)
 		self.assertEqual(p["categories"], [{"id": 12}])
+		self.assertEqual(next(m["value"] for m in p["meta_data"] if m["key"] == "product_categories"), "12")
+
+	def test_event_type_ids_builds_combo_label(self):
+		from nce_events.api import events_publish as ep
+
+		doc = {
+			"event_name": "E",
+			"sku": "s",
+			"event_type_id": "ET-1",
+			"type": "Ignored When ET",
+			"product_type": "Ignored",
+			"first_session_date": "2026-01-01",
+			"end_date": "2026-01-02",
+		}
+
+		meta = MagicMock()
+		meta.has_field = lambda fn: fn in {"category", "type"}
+
+		with patch.object(ep.frappe.db, "exists", return_value=True):
+			with patch.object(ep.frappe, "get_meta", return_value=meta):
+				with patch.object(
+					ep.frappe.db,
+					"get_value",
+					return_value={"category": "Tryouts", "type": "Tryout"},
+				):
+					p = build_woocommerce_product_payload(doc)
+		self.assertEqual(p["categories"], [{"name": "Tryouts, Tryout"}])
+		self.assertEqual(
+			next(m["value"] for m in p["meta_data"] if m["key"] == "product_categories"),
+			"Tryouts, Tryout",
+		)
+
+	def test_fallback_type_when_no_event_type(self):
+		doc = {
+			"event_name": "E",
+			"sku": "sku",
+			"type": "Clinics",
+			"product_type": "Workshops",
+			"first_session_date": "2026-01-01",
+			"end_date": "2026-01-02",
+		}
+		p = build_woocommerce_product_payload(doc)
+		self.assertEqual(p["categories"], [{"name": "Clinics"}])
+		self.assertEqual(next(m["value"] for m in p["meta_data"] if m["key"] == "product_categories"), "Clinics")
 
 
 class TestPublishEventsToWebsite(unittest.TestCase):
@@ -69,8 +115,10 @@ class TestPublishEventsToWebsite(unittest.TestCase):
 	@patch("nce_events.api.events_publish.frappe.get_doc")
 	@patch("nce_events.api.events_publish.wc_request")
 	@patch("nce_events.api.events_publish.apply_derived_fields_to_doc")
+	@patch("nce_events.api.events_publish.validate_document_page_panel_required_roots")
 	def test_derived_merged_before_wc_post(
 		self,
+		mock_validate_panel,
 		mock_apply_derived,
 		mock_wc,
 		mock_get_doc,
@@ -113,6 +161,7 @@ class TestPublishEventsToWebsite(unittest.TestCase):
 		}
 		out = publish_events_to_website(doc)
 		self.assertEqual(out["name"], "501")
+		mock_validate_panel.assert_called_once()
 		mock_apply_derived.assert_called_once()
 		self.assertEqual(mock_wc.call_args[0][2], "/products")
 		kwargs = mock_wc.call_args[1]

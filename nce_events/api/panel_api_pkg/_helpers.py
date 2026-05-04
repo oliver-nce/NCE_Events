@@ -158,3 +158,23 @@ def _parse_csv(value: str | None) -> list[str]:
 	if not value:
 		return []
 	return [v.strip() for v in value.split(",") if v.strip()]
+
+
+def validate_document_page_panel_required_roots(doc: dict[str, Any], doctype: str) -> None:
+	"""
+	Raise if Page Panel ``required_fields`` (for this doctype) or root meta-mandatory
+	fields are empty. Skips dotted keys (link child paths). Same emptiness rules as
+	Form Dialog save via ``_panel_required_value_empty``.
+	"""
+	from nce_events.api.form_dialog._helpers import _panel_required_value_empty
+
+	required_keys: list[str] = []
+	if frappe.db.exists("Page Panel", doctype):
+		pp = frappe.get_doc("Page Panel", doctype)
+		required_keys.extend(_parse_csv(getattr(pp, "required_fields", None) or ""))
+	required_keys = list(dict.fromkeys(required_keys + _meta_reqd_root_fieldnames(doctype)))
+	for fn in required_keys:
+		if "." in fn:
+			continue
+		if _panel_required_value_empty(doc.get(fn)):
+			frappe.throw(_("Missing value for required field: {0}").format(fn))
