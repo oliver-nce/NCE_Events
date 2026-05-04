@@ -50,7 +50,7 @@ class TestHiddenMapIntegration(FrappeTestCase):
 	@patch("nce_events.nce_events.doctype.form_dialog.form_dialog._assert_doctype_in_wp_tables")
 	def test_map_respects_modes(self, mock_wp):
 		mock_wp.return_value = None
-		from nce_events.api.form_dialog.button_visibility import get_form_dialog_button_hidden_map
+		from nce_events.api.form_dialog.button_visibility import get_form_dialog_footer_visibility
 
 		doc = frappe.get_doc(
 			{
@@ -70,13 +70,16 @@ class TestHiddenMapIntegration(FrappeTestCase):
 		doc.insert(ignore_permissions=True)
 		frappe.db.commit()
 		try:
-			m1 = get_form_dialog_button_hidden_map(doc.name, None)
-			b1 = [k for k, v in m1.items() if v]
-			self.assertEqual(len(b1), 1)
+			m1 = get_form_dialog_footer_visibility(doc.name, None)
+			hidden1 = [k for k, v in m1["buttons"].items() if v]
+			self.assertEqual(len(hidden1), 1)
+			self.assertFalse(m1["submit_hidden"])
 
-			m2 = get_form_dialog_button_hidden_map(doc.name, "SomeName")
-			b2 = [k for k, v in m2.items() if v]
-			self.assertEqual(len(b2), 1)
+			m2 = get_form_dialog_footer_visibility(doc.name, "SomeName")
+			hidden2 = [k for k, v in m2["buttons"].items() if v]
+			self.assertEqual(len(hidden2), 1)
+			self.assertFalse(m2["submit_hidden"])
 		finally:
 			frappe.delete_doc("Form Dialog", doc.name, force=True)
 			frappe.db.commit()
+

@@ -23,6 +23,7 @@
 				Revert
 			</button>
 			<button
+				v-if="submitVisible"
 				type="button"
 				class="ppv2-fd-tab-btn ppv2-fd-tab-active"
 				:disabled="saving"
@@ -49,6 +50,9 @@ const props = defineProps({
 	definitionName: { type: String, default: "" },
 	/** Root document name; empty when new / unsaved. */
 	docName: { type: String, default: null },
+	/** Same options as Form Dialog Button \"Hide If\" — controls default Submit. */
+	submitHideIf: { type: String, default: "Never" },
+	submitHideIfSql: { type: String, default: "" },
 	saving: { type: Boolean, default: false },
 	isDirty: { type: Boolean, default: false },
 });
@@ -56,6 +60,7 @@ const props = defineProps({
 defineEmits(["cancel", "revert", "submit", "custom-button"]);
 
 const visibleButtons = ref([]);
+const submitVisible = ref(true);
 
 function localHidden(btn, docName) {
 	const m = String(btn.hide_if || HIDE_NEVER);
@@ -73,50 +78,75 @@ function needsSqlServer(btn) {
 	return m.toLowerCase() === "sql_expression";
 }
 
-async function refreshVisibleButtons() {
+function submitHideLocal(docName) {
+	return localHidden({ hide_if: String(props.submitHideIf || HIDE_NEVER) }, docName);
+}
+
+function submitNeedsSqlServer() {
+	const m = String(props.submitHideIf || "");
+	if (m === HIDE_SQL) return true;
+	return m.toLowerCase() === "sql_expression";
+}
+
+async function refreshFooterVisibility() {
 	const raw = props.buttons || [];
-	const needServer = raw.some((b) => needsSqlServer(b));
-	if (!needServer) {
-		const dn = props.docName;
-		visibleButtons.value = raw.filter((b) => !localHidden(b, dn));
-		return;
-	}
-	if (!props.definitionName) {
-		visibleButtons.value = raw.filter((b) => {
-			const lh = localHidden(b, props.docName);
-			return lh === null ? true : !lh;
-		});
-		return;
-	}
-	try {
-		const hiddenMap = await frappeCall(
-			"nce_events.api.form_dialog.button_visibility.get_form_dialog_button_hidden_map",
-			{
-				form_dialog: props.definitionName,
-				docname: props.docName || "",
-			},
-		);
-		visibleButtons.value = raw.filter((b) => {
-			const id = b.name;
-			if (id != null && hiddenMap && Object.prototype.hasOwnProperty.call(hiddenMap, id)) {
-				return !hiddenMap[id];
+	const dn = props.docName;
+	const needButtonsSql = raw.some((b) => needsSqlServer(b));
+	const needSubmitSql = submitNeedsSqlServer();
+	const needApi =
+		Boolean(props.definitionName) &&
+		Boolean(props.definitionName.trim()) &&
+		(needButtonsSql || needSubmitSql);
+
+	let hiddenMap = null;
+	let submitHiddenFlag = /** @type {boolean|null} */ (null);
+	if (needApi) {
+		try {
+			const payload = await frappeCall(
+				"nce_events.api.form_dialog.button_visibility.get_form_dialog_footer_visibility",
+				{
+					form_dialog: props.definitionName,
+					docname: dn || "",
+				},
+			);
+			hiddenMap = payload && typeof payload.buttons === "object" ? payload.buttons : null;
+			if (payload && typeof payload.submit_hidden !== "undefined" && payload.submit_hidden !== null) {
+				submitHiddenFlag = Boolean(payload.submit_hidden);
 			}
-			const lh = localHidden(b, props.docName);
-			return lh === null ? true : !lh;
-		});
-	} catch (e) {
-		console.error("[PanelFormDialogFooter] visibility", e);
-		visibleButtons.value = raw.filter((b) => {
-			const lh = localHidden(b, props.docName);
-			return lh === null ? true : !lh;
-		});
+		} catch (e) {
+			console.error("[PanelFormDialogFooter] visibility", e);
+		}
 	}
+
+	visibleButtons.value = raw.filter((b) => {
+		const lh = localHidden(b, dn);
+		if (lh !== null) return !lh;
+		if (hiddenMap != null && b.name != null && Object.prototype.hasOwnProperty.call(hiddenMap, b.name)) {
+			return !hiddenMap[b.name];
+		}
+		return true;
+	});
+
+	let hideSubmit;
+	if (submitHiddenFlag !== null) {
+		hideSubmit = submitHiddenFlag;
+	} else {
+		const sv = submitHideLocal(dn);
+		hideSubmit = sv === null ? false : !!sv;
+	}
+	submitVisible.value = !hideSubmit;
 }
 
 watch(
-	() => [props.buttons, props.definitionName, props.docName],
+	() => [
+		props.buttons,
+		props.definitionName,
+		props.docName,
+		props.submitHideIf,
+		props.submitHideIfSql,
+	],
 	() => {
-		refreshVisibleButtons();
+		refreshFooterVisibility();
 	},
 	{ deep: true, immediate: true },
 );

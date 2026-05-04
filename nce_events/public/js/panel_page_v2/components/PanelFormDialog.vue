@@ -59,6 +59,8 @@
 				:buttons="form.buttons.value"
 				:definition-name="definitionName"
 				:doc-name="docName"
+				:submit-hide-if="footerSubmitHideIf"
+				:submit-hide-if-sql="footerSubmitHideSql"
 				:saving="form.saving.value"
 				:is-dirty="footerIsDirty"
 				@cancel="onCancel"
@@ -132,6 +134,13 @@ watch(
 const loadDebugRows = computed(() => form.loadDebugLog.value);
 
 const footerIsDirty = computed(() => form.isDirty.value || relatedDirty.value);
+
+const footerSubmitHideIf = computed(
+	() => (form.definition.value?.submit_hide_if || "Never").trim() || "Never",
+);
+const footerSubmitHideSql = computed(() =>
+	String(form.definition.value?.submit_hide_if_sql || "").trim(),
+);
 
 function onRelatedDirty(v) {
 	relatedDirty.value = !!v;

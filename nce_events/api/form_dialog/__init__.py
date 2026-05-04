@@ -61,6 +61,7 @@ from .related_rows import (
 )
 from .button_visibility import (
 	get_form_dialog_button_hidden_map,
+	get_form_dialog_footer_visibility,
 	validate_hide_if_sql,
 )
 from .save import save_form_dialog_document
@@ -90,6 +91,7 @@ __all__ = [
 	"capture_form_dialog_from_desk",
 	"get_form_dialog_definition",
 	"get_form_dialog_button_hidden_map",
+	"get_form_dialog_footer_visibility",
 	"get_form_dialog_related_rows",
 	"get_related_portal_field_editor",
 	"list_form_dialogs_for_doctype",

@@ -10,6 +10,9 @@
     "frozen_meta_json",
     "captured_at",
     "dialog_size",
+    "section_break_submit",
+    "submit_hide_if",
+    "submit_hide_if_sql",
     "is_active",
     "writeback_on_submit",
     "buttons",
@@ -53,6 +56,27 @@
       "in_list_view": 1,
       "label": "Dialog Size",
       "options": "sm\nmd\nlg\nxl\n2xl\n3xl"
+    },
+    {
+      "fieldname": "section_break_submit",
+      "fieldtype": "Section Break",
+      "label": "Default Submit Button"
+    },
+    {
+      "default": "Never",
+      "description": "Hide the footer Submit button for this dialog (e.g. use only custom Buttons). Same rules as per-button Hide If.",
+      "fieldname": "submit_hide_if",
+      "fieldtype": "Select",
+      "label": "Hide Submit If",
+      "options": "Never\nRecord not saved\nRecord saved\nSQL expression"
+    },
+    {
+      "depends_on": "eval:doc.submit_hide_if=='SQL expression'",
+      "description": "Single SELECT; hide Submit when the first column of the first row is truthy. Bind %(name)s to the root document name. Use {{t:DocType Name}} for tables.",
+      "fieldname": "submit_hide_if_sql",
+      "fieldtype": "Code",
+      "label": "Hide Submit SQL",
+      "options": "SQL"
     },
     {
       "default": "1",

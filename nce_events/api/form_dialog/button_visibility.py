@@ -1,5 +1,6 @@
 """
-Evaluate Form Dialog custom button visibility (hide rules) for the V2 footer.
+Evaluate Form Dialog footer visibility for the V2 panel (custom buttons +
+default Submit).
 
 Hide-if modes (mutually exclusive on each Form Dialog Button row):
 
@@ -185,16 +186,7 @@ def button_should_hide(
 	return False
 
 
-@frappe.whitelist()
-def get_form_dialog_button_hidden_map(form_dialog: str, docname: str | None = None) -> dict[str, bool]:
-	"""
-	For each Form Dialog Button child row, return whether the button is hidden.
-
-	:param form_dialog: Form Dialog document name (same as ``get_form_dialog_definition``).
-	:param docname: Root document name, or empty/None for a new unsaved record.
-
-	:returns: Mapping of child row ``name`` -> ``True`` if the button should be hidden.
-	"""
+def _load_form_dialog_for_visibility(form_dialog: str):
 	if frappe.session.user == "Guest":
 		frappe.throw(_("Login required"), frappe.PermissionError)
 
@@ -211,15 +203,46 @@ def get_form_dialog_button_hidden_map(form_dialog: str, docname: str | None = No
 
 	if not frappe.utils.cint(doc.is_active):
 		frappe.throw(_("This Form Dialog is not active."), frappe.PermissionError)
+	return doc
 
-	out: dict[str, bool] = {}
+
+def _footer_visibility_core(doc: Any, docname: str | None) -> dict[str, Any]:
+	buttons_hidden: dict[str, bool] = {}
 	for row in doc.buttons or []:
 		rn = getattr(row, "name", None)
 		if not rn:
 			continue
-		out[str(rn)] = button_should_hide(
+		buttons_hidden[str(rn)] = button_should_hide(
 			getattr(row, "hide_if", None),
 			docname,
 			getattr(row, "hide_if_sql", None),
 		)
-	return out
+	submit_hidden = button_should_hide(
+		getattr(doc, "submit_hide_if", None),
+		docname,
+		getattr(doc, "submit_hide_if_sql", None),
+	)
+	return {"buttons": buttons_hidden, "submit_hidden": submit_hidden}
+
+
+@frappe.whitelist()
+def get_form_dialog_footer_visibility(form_dialog: str, docname: str | None = None) -> dict[str, Any]:
+	"""
+	Return hidden-state for custom footer buttons and the default Submit button.
+
+	Each key in ``buttons`` is a Form Dialog Button child row name; value is
+	``True`` when that custom button should be hidden. ``submit_hidden`` is
+	``True`` when the default Submit control should be hidden.
+	"""
+	doc = _load_form_dialog_for_visibility(form_dialog)
+	return _footer_visibility_core(doc, docname)
+
+
+@frappe.whitelist()
+def get_form_dialog_button_hidden_map(form_dialog: str, docname: str | None = None) -> dict[str, bool]:
+	"""
+	Return only the custom-button hidden map (legacy callers).
+	New code should use ``get_form_dialog_footer_visibility`` when Submit rules matter.
+	"""
+	doc = _load_form_dialog_for_visibility(form_dialog)
+	return dict(_footer_visibility_core(doc, docname)["buttons"])

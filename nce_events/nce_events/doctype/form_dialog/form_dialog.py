@@ -11,6 +11,8 @@ class FormDialog(Document):
         for row in self.buttons or []:
             if getattr(row, "hide_if", None) == HIDE_IF_SQL:
                 validate_hide_if_sql(getattr(row, "hide_if_sql", None) or "")
+        if getattr(self, "submit_hide_if", None) == HIDE_IF_SQL:
+            validate_hide_if_sql(getattr(self, "submit_hide_if_sql", None) or "")
 
 
 def _assert_doctype_in_wp_tables(doctype: str) -> None:
