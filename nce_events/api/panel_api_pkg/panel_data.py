@@ -15,7 +15,6 @@ from nce_events.api.panel_api_pkg._helpers import (
 	_get_gender_field_key,
 	_get_link_fieldnames,
 	_get_link_fields_with_target,
-	_meta_reqd_root_fieldnames,
 	_parse_csv,
 	_safe_filename,
 	_title_case,
@@ -67,7 +66,6 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 	"""Fetch display configuration for a single Page Panel."""
 	if not frappe.db.exists("Page Panel", root_doctype):
 		auto_email, auto_sms = _auto_detect_contact_fields(root_doctype)
-		meta_reqd = _meta_reqd_root_fieldnames(root_doctype)
 		return {
 			"root_doctype": root_doctype,
 			"header_text": root_doctype,
@@ -78,7 +76,7 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 			"gender_column": "",
 			"gender_color_fields": [],
 			"title_field": "",
-			"required_fields": meta_reqd,
+			"required_fields": [],
 			"tint_by_gender": {},
 			"computed_columns": [],
 			"show_filter": 1,
@@ -113,9 +111,7 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 		if not sms_field:
 			sms_field = auto_sms
 	bold_fields = _parse_csv(doc.bold_fields)
-	required_fields = _parse_csv(getattr(doc, "required_fields", None))
-	meta_reqd = _meta_reqd_root_fieldnames(doc.root_doctype)
-	required_fields = list(dict.fromkeys(required_fields + meta_reqd))
+	required_fields = list(dict.fromkeys(_parse_csv(getattr(doc, "required_fields", None))))
 	gender_color_fields = _parse_csv(doc.gender_color_fields)
 	# Add computed columns with tint_by_row so they tint based on row's gender_column
 	for cc in computed_columns:

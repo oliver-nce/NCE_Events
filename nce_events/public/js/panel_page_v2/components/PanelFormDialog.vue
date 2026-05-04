@@ -285,7 +285,7 @@ async function onPlaceholderButton(btn) {
 	const script = String(btn?.button_script || "").trim();
 	if (props.doctype === "Events" && script === "publish_events_to_website") {
 		form.validationError.value = null;
-		const errors = form.validate();
+		const errors = form.validateForWooPublish();
 		if (errors.length) {
 			form.validationError.value = errors.map((e) => e.message).join(", ");
 			if (typeof frappe !== "undefined" && frappe.msgprint) {

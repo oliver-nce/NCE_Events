@@ -344,7 +344,7 @@ function _move_root_field_first(fields, fieldname) {
 	return copy;
 }
 
-/** DocType Mandatory (reqd) — drives Required column auto-check on Display matrix. */
+/** DocType Mandatory (reqd) — tooltip on Display matrix Required column (checkbox follows panel list only). */
 function _isDocfieldMetaReqd(f) {
 	return !!(f && (Number(f.reqd) === 1 || f.reqd === true || f.reqd === "1"));
 }
@@ -397,7 +397,7 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		shown_set[k] = true;
 	});
 
-	// Keys where underlying DocType marks the field Mandatory (reqd) — Required column on + persisted in _sync_all
+	// Keys where underlying DocType marks the field Mandatory (reqd) — tooltip on Required column only
 	const metaReqdKeys = {};
 	function _registerMetaReqd(fields, prefix) {
 		(fields || []).forEach(function (f) {
@@ -530,12 +530,6 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 			});
 			col_order = reordered;
 		}
-
-		Object.keys(metaReqdKeys).forEach(function (k) {
-			if (metaReqdKeys[k] && nr.indexOf(k) === -1) {
-				nr.push(k);
-			}
-		});
 
 		frm.set_value("column_order", col_order.join(", "));
 		frm.set_value("bold_fields", nb.join(", "));
@@ -712,10 +706,13 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set, matrix_opts)
 			}
 		}
 		const metaReqd = !!metaReqdKeys[key];
-		const reqChecked = saved.required.indexOf(key) !== -1 || metaReqd;
-		const reqDisabled = metaReqd ? " disabled" : "";
+		const reqChecked = saved.required.indexOf(key) !== -1;
 		const reqTitle = metaReqd
-			? ' title="' + frappe.utils.escape_html(__("Mandatory on DocType")) + '"'
+			? ' title="' +
+				frappe.utils.escape_html(
+					__("Mandatory on DocType — check Required to include in panel validation")
+				) +
+				'"'
 			: "";
 		html += `<tr data-key="${esc_key}"${bg}>
 			<td style="padding:4px 8px;color:#8d949a;font-size:11px;">${fn_display}</td>
@@ -728,7 +725,7 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set, matrix_opts)
 		}></td>
 			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="required"${
 			reqChecked ? " checked" : ""
-		}${reqDisabled}${reqTitle}></td>
+		}${reqTitle}></td>
 			<td ${td}><input type="radio"    data-key="${esc_key}" name="gender_col_${uid}"${
 			saved.gender_col === key ? " checked" : ""
 		}></td>

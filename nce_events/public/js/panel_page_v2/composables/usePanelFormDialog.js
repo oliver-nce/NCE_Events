@@ -70,6 +70,14 @@ export function usePanelFormDialog({ definitionName, doctype, docName, requiredF
 		return snapshotForCompare(formData) !== snapshotForCompare(originalData.value);
 	});
 
+	function validateForWooPublish() {
+		return validatePanelRequiredFields(
+			allFields.value,
+			formData,
+			panelRequiredFields ? unref(panelRequiredFields) : [],
+		);
+	}
+
 	function validate() {
 		const base = validateFrozenForm(allFields.value, formData);
 		const extra = validatePanelRequiredFields(
@@ -146,6 +154,7 @@ export function usePanelFormDialog({ definitionName, doctype, docName, requiredF
 		resetWhenClosed,
 		load,
 		validate,
+		validateForWooPublish,
 		save,
 		revert,
 		isFieldVisible,
