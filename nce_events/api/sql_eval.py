@@ -9,10 +9,26 @@ This module does not reference any specific DocType or WooCommerce — callers s
 
 from __future__ import annotations
 
+import json
 import re
+from datetime import date, datetime
+from decimal import Decimal
 from typing import Any
 
 import frappe
+
+
+def _coerce_sql_bind_value(val: Any) -> Any:
+	"""Scalar values for PyMySQL; dict/list (e.g. JSON / client objects) → JSON text."""
+	if val is None:
+		return None
+	if isinstance(val, (dict, list)):
+		return json.dumps(val, default=str, sort_keys=True)
+	if isinstance(val, bool):
+		return int(val)
+	if isinstance(val, (int, float, str, bytes, datetime, date, Decimal)):
+		return val
+	return str(val)
 
 
 def split_sql_code_and_string_literals(expression: str) -> list[tuple[str, str]]:
@@ -83,7 +99,7 @@ def _substitute_row_tokens_in_code(
 		out_new = re.sub(pat, repl, out)
 		if out_new != out:
 			if fn not in params:
-				params[fn] = row.get(fn)
+				params[fn] = _coerce_sql_bind_value(row.get(fn))
 		out = out_new
 	return out
 

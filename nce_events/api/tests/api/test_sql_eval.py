@@ -42,6 +42,16 @@ class TestEvaluateSqlExpressions(unittest.TestCase):
 		self.assertEqual(params.get("b"), 32)
 
 	@patch("nce_events.api.sql_eval.frappe.db.sql")
+	def test_dict_bind_coerced_to_json_string(self, mock_sql):
+		mock_sql.return_value = [{"out": 1}]
+		row = {"a": {"nested": 1}, "b": 2}
+		allow = frozenset({"a", "b"})
+		evaluate_sql_expressions({"out": "LENGTH(a) + b"}, row, allow)
+		_sql, params = mock_sql.call_args[0][:2]
+		self.assertEqual(params.get("a"), '{"nested": 1}')
+		self.assertEqual(params.get("b"), 2)
+
+	@patch("nce_events.api.sql_eval.frappe.db.sql")
 	def test_empty_expressions(self, mock_sql):
 		self.assertEqual(evaluate_sql_expressions({}, {"x": 1}, frozenset({"x"})), {})
 		mock_sql.assert_not_called()
