@@ -31,6 +31,13 @@ def _woocommerce_api_base_url(creds: dict[str, Any]) -> str:
 	return raw + suffix
 
 
+def get_woocommerce_v3_base_url(connector_name: str) -> str:
+	"""Resolve ``.../wp-json/wc/v3`` base for a connector (no credentials returned)."""
+	cname = (connector_name or "").strip() or DEFAULT_WOOCOMMERCE_CONNECTOR
+	creds = get_credentials(cname)
+	return _woocommerce_api_base_url(creds)
+
+
 def _validate_relative_path(path: str) -> None:
 	"""Restrict to WooCommerce v3 product routes under ``/products``."""
 	p = (path or "").strip()

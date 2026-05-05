@@ -97,6 +97,16 @@ import {
 } from "../composables/useFormDialogChrome.js";
 import { useBackdropPointerDismiss } from "../composables/useBackdropPointerDismiss.js";
 
+/** Set to `false` for real WooCommerce POST + Frappe Events insert. When `true`, only shows the proposed request in a dialog. */
+const WOO_EVENTS_PUBLISH_PREVIEW_ONLY = true;
+
+function escapeForPreHtml(s) {
+	return String(s)
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;");
+}
+
 const props = defineProps({
 	open: { type: Boolean, default: false },
 	definitionName: { type: String, required: true },
@@ -299,16 +309,31 @@ async function onPlaceholderButton(btn) {
 		}
 		try {
 			const doc = { doctype: props.doctype, ...form.formData };
-			const r = await frappeCall("nce_events.api.events_publish.publish_events_to_website", { doc });
-			if (typeof props.reloadPanelAfterPublish === "function") {
-				await props.reloadPanelAfterPublish();
-			}
-			if (typeof frappe !== "undefined" && frappe.msgprint) {
-				frappe.msgprint({
-					title: "Published",
-					message: `Event ${r?.name || ""} created on the site.`,
-					indicator: "green",
-				});
+			if (WOO_EVENTS_PUBLISH_PREVIEW_ONLY) {
+				const r = await frappeCall(
+					"nce_events.api.events_publish.preview_publish_events_to_website",
+					{ doc },
+				);
+				const body = JSON.stringify(r, null, 2);
+				if (typeof frappe !== "undefined" && frappe.msgprint) {
+					frappe.msgprint({
+						title: "WooCommerce publish preview (dry run)",
+						message: `<pre style="white-space:pre-wrap;max-height:65vh;overflow:auto;text-align:left;font-size:12px;">${escapeForPreHtml(body)}</pre>`,
+						wide: true,
+					});
+				}
+			} else {
+				const r = await frappeCall("nce_events.api.events_publish.publish_events_to_website", { doc });
+				if (typeof props.reloadPanelAfterPublish === "function") {
+					await props.reloadPanelAfterPublish();
+				}
+				if (typeof frappe !== "undefined" && frappe.msgprint) {
+					frappe.msgprint({
+						title: "Published",
+						message: `Event ${r?.name || ""} created on the site.`,
+						indicator: "green",
+					});
+				}
 			}
 		} catch (e) {
 			const msg = e?.message || String(e) || "Publish failed";

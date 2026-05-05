@@ -10,7 +10,11 @@ from frappe import _
 from frappe.utils import cint, cstr, getdate
 
 from nce_events.api.panel_api_pkg._helpers import validate_document_page_panel_required_roots
-from nce_events.api.woocommerce_client import DEFAULT_WOOCOMMERCE_CONNECTOR, wc_request
+from nce_events.api.woocommerce_client import (
+	DEFAULT_WOOCOMMERCE_CONNECTOR,
+	get_woocommerce_v3_base_url,
+	wc_request,
+)
 
 _EVENTS_DOCTYPE: str = "Events"
 _EVENT_TYPES_DOCTYPE: str = "Event Types"
@@ -183,6 +187,46 @@ def _run_after_publish_hooks(name: str) -> None:
 			)
 
 
+def _prepare_events_publish(
+	doc: dict[str, Any] | str,
+	connector_name: str | None = None,
+) -> tuple[dict[str, Any], dict[str, Any], str]:
+	"""Parse ``doc``, enforce permissions and panel required fields, build WooCommerce body."""
+	doc = frappe.parse_json(doc) if isinstance(doc, str) else dict(doc)
+	if (doc.get("doctype") or _EVENTS_DOCTYPE) != _EVENTS_DOCTYPE:
+		frappe.throw(_("Document must be doctype {0}.").format(_EVENTS_DOCTYPE))
+
+	if not frappe.has_permission(_EVENTS_DOCTYPE, "create"):
+		frappe.throw(_("Not permitted to create {0}").format(_EVENTS_DOCTYPE), frappe.PermissionError)
+
+	validate_document_page_panel_required_roots(
+		doc, _EVENTS_DOCTYPE, include_meta_mandatory=False
+	)
+
+	wc_body = build_woocommerce_product_payload(doc)
+	conn = (connector_name or "").strip() or DEFAULT_WOOCOMMERCE_CONNECTOR
+	return doc, wc_body, conn
+
+
+@frappe.whitelist()
+def preview_publish_events_to_website(
+	doc: dict[str, Any] | str,
+	connector_name: str | None = None,
+) -> dict[str, Any]:
+	"""Same validation and payload as publish, but do not call WooCommerce or insert Events."""
+	_doc, wc_body, conn = _prepare_events_publish(doc, connector_name)
+	api_base = get_woocommerce_v3_base_url(conn)
+	return {
+		"ok": 1,
+		"dry_run": 1,
+		"method": "POST",
+		"path": "/products",
+		"api_base_url": api_base,
+		"connector_name": conn,
+		"json_body": wc_body,
+	}
+
+
 @frappe.whitelist()
 def publish_events_to_website(
 	doc: dict[str, Any] | str,
@@ -201,19 +245,7 @@ def publish_events_to_website(
 
 	    after_events_publish_to_woocommerce = ["my.module.push_fn"]
 	"""
-	doc = frappe.parse_json(doc) if isinstance(doc, str) else dict(doc)
-	if (doc.get("doctype") or _EVENTS_DOCTYPE) != _EVENTS_DOCTYPE:
-		frappe.throw(_("Document must be doctype {0}.").format(_EVENTS_DOCTYPE))
-
-	if not frappe.has_permission(_EVENTS_DOCTYPE, "create"):
-		frappe.throw(_("Not permitted to create {0}").format(_EVENTS_DOCTYPE), frappe.PermissionError)
-
-	validate_document_page_panel_required_roots(
-		doc, _EVENTS_DOCTYPE, include_meta_mandatory=False
-	)
-
-	wc_body = build_woocommerce_product_payload(doc)
-	conn = (connector_name or "").strip() or DEFAULT_WOOCOMMERCE_CONNECTOR
+	_doc, wc_body, conn = _prepare_events_publish(doc, connector_name)
 
 	wc_resp = wc_request(conn, "POST", "/products", json_body=wc_body)
 	wpid = wc_resp.get("id") if isinstance(wc_resp, dict) else None
@@ -221,7 +253,7 @@ def publish_events_to_website(
 		frappe.throw(_("WooCommerce response did not include a product id."))
 	wp_id = int(wpid)
 
-	row = _allowed_events_row(doc, wp_id)
+	row = _allowed_events_row(_doc, wp_id)
 	ev = frappe.get_doc(row)
 	ev.insert(ignore_permissions=True)
 

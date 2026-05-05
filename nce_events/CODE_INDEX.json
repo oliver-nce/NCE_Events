@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Manual overlay merged into CODE_INDEX.json by scripts/build_code_index.py. Edit per-file entries here; the generator preserves your curated 'purpose', 'sections', 'private_helpers', 'key_fields', and 'depends_on'.",
-    "generated": "2026-05-03",
+    "generated": "2026-05-05",
     "generator": "scripts/build_code_index.py",
     "usage": "Run `python scripts/build_code_index.py --write` to regenerate CODE_INDEX.json after editing this file or after adding/renaming/deleting source files. The pre-commit hook runs `--check` and blocks commits whose code changes have not been regenerated."
   },
@@ -46,10 +46,12 @@
     "nce_events/api/events_publish.py": {
       "exports": [
         "build_woocommerce_product_payload",
+        "preview_publish_events_to_website",
         "publish_events_to_website",
         "slugify_product_slug"
       ],
       "whitelist_endpoints": [
+        "preview_publish_events_to_website",
         "publish_events_to_website"
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
@@ -107,6 +109,21 @@
         "fetch_from enrichment",
         "Related-doctypes argument parsing and child-row sync"
       ]
+    },
+    "nce_events/api/form_dialog/button_visibility.py": {
+      "exports": [
+        "button_should_hide",
+        "evaluate_sql_hide",
+        "expand_hide_if_sql_table_tokens",
+        "get_form_dialog_button_hidden_map",
+        "get_form_dialog_footer_visibility",
+        "validate_hide_if_sql"
+      ],
+      "whitelist_endpoints": [
+        "get_form_dialog_button_hidden_map",
+        "get_form_dialog_footer_visibility"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
     "nce_events/api/form_dialog/capture.py": {
       "exports": [
@@ -282,6 +299,9 @@
       ]
     },
     "nce_events/api/panel_api_pkg/_helpers.py": {
+      "exports": [
+        "validate_document_page_panel_required_roots"
+      ],
       "purpose": "Internal helpers shared by the panel_api package: auto-detect email/SMS fields, find link fields, title case conversion, safe filename generation, WP Tables label map, link field extraction, gender field detection, required fieldnames extraction, CSV parsing.",
       "private_helpers": [
         "_auto_detect_contact_fields",
@@ -470,6 +490,14 @@
     "nce_events/api/tests/api/form_dialog/__init__.py": {
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
+    "nce_events/api/tests/api/form_dialog/test_button_visibility.py": {
+      "exports": [
+        "TestButtonShouldHide",
+        "TestHiddenMapIntegration",
+        "TestValidateHideSql"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/api/tests/api/form_dialog/test_capture.py": {
       "exports": [
         "TestCaptureFormDialog",
@@ -514,6 +542,7 @@
     "nce_events/api/tests/api/test_events_publish.py": {
       "exports": [
         "TestBuildWooCommerceProductPayload",
+        "TestPreviewPublishEventsToWebsite",
         "TestPublishEventsToWebsite",
         "TestSlugifyProductSlug"
       ],
@@ -537,7 +566,9 @@
     "nce_events/api/tests/api/test_wp_tables_mapping.py": {
       "exports": [
         "TestDerivedSqlSpecsFromColumnMapping",
-        "TestGetDerivedSqlSpecs"
+        "TestGetDerivedSqlSpecs",
+        "TestGetWpTablesDefaultFieldValues",
+        "TestGetWpTablesDefaultFieldValuesApi"
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
@@ -566,6 +597,7 @@
     },
     "nce_events/api/woocommerce_client.py": {
       "exports": [
+        "get_woocommerce_v3_base_url",
         "wc_request"
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
@@ -576,11 +608,14 @@
         "get_derived_sql_specs",
         "get_derived_sql_specs_api",
         "get_wp_tables_column_mapping",
-        "get_wp_tables_column_mapping_api"
+        "get_wp_tables_column_mapping_api",
+        "get_wp_tables_default_field_values",
+        "get_wp_tables_default_field_values_api"
       ],
       "whitelist_endpoints": [
         "get_derived_sql_specs_api",
-        "get_wp_tables_column_mapping_api"
+        "get_wp_tables_column_mapping_api",
+        "get_wp_tables_default_field_values_api"
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
@@ -995,6 +1030,12 @@
         "utils/frappeFieldExpr.js"
       ]
     },
+    "nce_events/public/js/panel_page_v2/composables/useBackdropPointerDismiss.js": {
+      "exports": [
+        "useBackdropPointerDismiss"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/public/js/panel_page_v2/composables/useFormDialogChrome.js": {
       "exports": [
         "confirmDiscardIfDirty",
@@ -1141,6 +1182,15 @@
       ],
       "purpose": "Utility: Promise wrapper for frappe.call (shared by usePanel, usePanelFormDialog stack, nce_cards/useCardForm).",
       "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/utils/frappeDateControlSync.js": {
+      "exports": [
+        "applyVueValueToDateControl",
+        "createDateControlChangeHandler",
+        "stubDocMatchesModel",
+        "writeStubDocField"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
     "nce_events/public/js/panel_page_v2/utils/frappeFieldExpr.js": {
       "exports": [

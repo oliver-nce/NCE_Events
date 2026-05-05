@@ -163,5 +163,42 @@ class TestPublishEventsToWebsite(unittest.TestCase):
 		self.assertEqual(insert_row.get("sku"), "panel-sku")
 
 
+class TestPreviewPublishEventsToWebsite(unittest.TestCase):
+	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)
+	@patch("nce_events.api.events_publish.validate_document_page_panel_required_roots")
+	@patch(
+		"nce_events.api.events_publish.get_woocommerce_v3_base_url",
+		return_value="https://example.test/wp-json/wc/v3",
+	)
+	@patch("nce_events.api.events_publish.wc_request")
+	def test_preview_builds_payload_without_wc_request(
+		self,
+		mock_wc,
+		mock_base_url,
+		mock_validate_panel,
+		mock_perm,
+	):
+		from nce_events.api.events_publish import preview_publish_events_to_website
+
+		doc = {
+			"doctype": "Events",
+			"sku": "panel-sku",
+			"event_name": "Spring",
+			"content": "c",
+			"status": "publish",
+			"price": 10,
+			"product_type": "Workshops",
+			"first_session_date": "2026-06-01",
+			"end_date": "2026-06-02",
+		}
+		out = preview_publish_events_to_website(doc)
+		mock_wc.assert_not_called()
+		self.assertEqual(out.get("dry_run"), 1)
+		self.assertEqual(out.get("method"), "POST")
+		self.assertEqual(out.get("path"), "/products")
+		self.assertEqual(out.get("api_base_url"), "https://example.test/wp-json/wc/v3")
+		self.assertEqual(out["json_body"]["sku"], "panel-sku")
+
+
 if __name__ == "__main__":
 	unittest.main()
