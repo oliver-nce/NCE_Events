@@ -91,6 +91,7 @@ import PanelFormDialogFooter from "./PanelFormDialogFooter.vue";
 import { usePanelFormDialog } from "../composables/usePanelFormDialog.js";
 import { extractServerMessage } from "../composables/frozenFormSave.js";
 import { frappeCall } from "../utils/frappeCall.js";
+import { normalizeDocForWooEventsPublish } from "../utils/wooPublishDocNormalize.js";
 import {
 	confirmDiscardIfDirty,
 	createRowNavKeydownHandler,
@@ -308,7 +309,20 @@ async function onPlaceholderButton(btn) {
 			return;
 		}
 		try {
-			const doc = { doctype: props.doctype, ...form.formData };
+			const doc = normalizeDocForWooEventsPublish({
+				doctype: props.doctype,
+				...JSON.parse(JSON.stringify(form.formData)),
+			});
+			const fs = doc.first_session_date;
+			if (fs == null || String(fs).trim() === "") {
+				const msg =
+					"First Session Date is empty. The Events Form Dialog must include the `first_session_date` field (capture it from Desk) and you must set a date before publishing.";
+				form.validationError.value = msg;
+				if (typeof frappe !== "undefined" && frappe.msgprint) {
+					frappe.msgprint({ title: "Publish", message: msg, indicator: "orange" });
+				}
+				return;
+			}
 			if (WOO_EVENTS_PUBLISH_PREVIEW_ONLY) {
 				const r = await frappeCall(
 					"nce_events.api.events_publish.preview_publish_events_to_website",

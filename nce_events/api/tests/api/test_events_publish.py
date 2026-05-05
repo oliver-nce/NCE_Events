@@ -60,6 +60,24 @@ class TestBuildWooCommerceProductPayload(unittest.TestCase):
 			"2026-06-15",
 		)
 
+	def test_first_session_iso_datetime_string(self):
+		doc = {
+			"event_name": "E",
+			"sku": "s",
+			"product_type": "Workshops",
+			"first_session_date": "2026-08-20T14:00:00.000Z",
+			"number_of_sessions": 1,
+		}
+		p = build_woocommerce_product_payload(doc)
+		self.assertEqual(
+			next(m["value"] for m in p["meta_data"] if m["key"] == "WooCommerceEventsDateMySQLFormat"),
+			"2026-08-20",
+		)
+		self.assertEqual(
+			next(m["value"] for m in p["meta_data"] if m["key"] == "WooCommerceEventsEndDateMySQLFormat"),
+			"2026-08-27",
+		)
+
 	def test_category_numeric_id(self):
 		doc = {
 			"event_name": "X",

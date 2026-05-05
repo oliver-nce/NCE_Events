@@ -1208,6 +1208,12 @@
       "purpose": "Utility: parse a flat Frappe DocField array into a nested Tabs→Sections→Columns→Fields tree. Used by usePanelFormDialog to render frozen_meta_json layout.",
       "depends_on": []
     },
+    "nce_events/public/js/panel_page_v2/utils/wooPublishDocNormalize.js": {
+      "exports": [
+        "normalizeDocForWooEventsPublish"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/public/js/panel_page_v2/vite.config.js": {
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     }

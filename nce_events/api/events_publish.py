@@ -113,10 +113,18 @@ def _parse_events_date(value: object) -> date | None:
 		return None
 	if isinstance(value, (dict, list)):
 		return None
-	if not cstr(value).strip():
+	s = cstr(value).strip()
+	if not s:
 		return None
+	# JSON-serialized JS Date: 2026-05-05T00:00:00.000Z
+	if len(s) >= 10 and s[4] == "-" and s[7] == "-":
+		if "T" in s or (len(s) > 10 and s[10] == " "):
+			try:
+				return getdate(s[:10])
+			except Exception:
+				pass
 	try:
-		raw = getdate(value)
+		raw = getdate(s)
 	except Exception:
 		return None
 	if isinstance(raw, datetime):
