@@ -10,6 +10,31 @@ import frappe
 from nce_events.api.events_publish import build_woocommerce_product_payload, slugify_product_slug
 
 
+class TestAllowedEventsRowReqdTimestamps(unittest.TestCase):
+	def test_fills_reqd_datetime_when_missing(self):
+		from types import SimpleNamespace
+
+		from nce_events.api import events_publish as ep
+
+		meta = SimpleNamespace(
+			fields=[
+				SimpleNamespace(fieldname="event_name", fieldtype="Data", reqd=0),
+				SimpleNamespace(fieldname="mod_ts", fieldtype="Datetime", reqd=1),
+				SimpleNamespace(fieldname="create_ts", fieldtype="Datetime", reqd=1),
+			]
+		)
+
+		with patch.object(ep.frappe, "get_meta", return_value=meta):
+			with patch.object(ep, "now_datetime", return_value="2026-06-10 15:30:00"):
+				row = ep._allowed_events_row(
+					{"doctype": "Events", "event_name": "E"},
+					99,
+				)
+		self.assertEqual(row["name"], "99")
+		self.assertEqual(row["mod_ts"], "2026-06-10 15:30:00")
+		self.assertEqual(row["create_ts"], "2026-06-10 15:30:00")
+
+
 class TestSlugifyProductSlug(unittest.TestCase):
 	def test_lowercase_hyphens(self):
 		self.assertEqual(slugify_product_slug("My Event!!"), "my-event")

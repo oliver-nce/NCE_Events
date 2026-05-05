@@ -541,6 +541,7 @@
     },
     "nce_events/api/tests/api/test_events_publish.py": {
       "exports": [
+        "TestAllowedEventsRowReqdTimestamps",
         "TestBuildWooCommerceProductPayload",
         "TestPreviewPublishEventsToWebsite",
         "TestPublishEventsToWebsite",

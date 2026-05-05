@@ -8,7 +8,7 @@ from typing import Any
 
 import frappe
 from frappe import _
-from frappe.utils import cint, cstr, getdate
+from frappe.utils import cint, cstr, getdate, now_datetime, today
 
 from nce_events.api.panel_api_pkg._helpers import validate_document_page_panel_required_roots
 from nce_events.api.woocommerce_client import (
@@ -106,6 +106,24 @@ def _product_categories_meta_value(categories: list[dict[str, Any]]) -> str:
 		if first.get("id") is not None:
 			return cstr(first["id"]).strip()
 	return ""
+
+
+def _fill_missing_required_event_dates(meta: Any, row: dict[str, Any]) -> None:
+	"""Set required date/timestamp fields left empty (e.g. WP mirrors not on the panel form)."""
+	for f in meta.fields:
+		if not f.reqd or not f.fieldname:
+			continue
+		v = row.get(f.fieldname)
+		if v is not None and cstr(v).strip() != "":
+			continue
+		fn_lower = f.fieldname.lower()
+		ts_suffix = "_ts" in fn_lower
+		if f.fieldtype == "Date":
+			row[f.fieldname] = today()
+		elif f.fieldtype == "Datetime":
+			row[f.fieldname] = now_datetime()
+		elif f.fieldtype in ("Data", "Small Text") and ts_suffix:
+			row[f.fieldname] = cstr(now_datetime())
 
 
 def _parse_events_date(value: object) -> date | None:
@@ -215,6 +233,7 @@ def _allowed_events_row(doc: dict[str, Any], wp_id: int) -> dict[str, Any]:
 			out["pk"] = wp_id
 		else:
 			out["pk"] = str(wp_id)
+	_fill_missing_required_event_dates(meta, out)
 	return out
 
 
