@@ -35,6 +35,7 @@ class TestBuildWooCommerceProductPayload(unittest.TestCase):
 			"product_type": "Workshops",
 			"first_session_date": "2026-06-01",
 			"end_date": "2026-06-05",
+			"number_of_sessions": 2,
 		}
 		p = build_woocommerce_product_payload(doc)
 		self.assertEqual(p["name"], "Spring Camp")
@@ -50,6 +51,14 @@ class TestBuildWooCommerceProductPayload(unittest.TestCase):
 		self.assertIn("WooCommerceEventsEndDateMySQLFormat", keys)
 		self.assertIn("product_categories", keys)
 		self.assertEqual(next(m["value"] for m in p["meta_data"] if m["key"] == "product_categories"), "Workshops")
+		self.assertEqual(
+			next(m["value"] for m in p["meta_data"] if m["key"] == "WooCommerceEventsDateMySQLFormat"),
+			"2026-06-01",
+		)
+		self.assertEqual(
+			next(m["value"] for m in p["meta_data"] if m["key"] == "WooCommerceEventsEndDateMySQLFormat"),
+			"2026-06-15",
+		)
 
 	def test_category_numeric_id(self):
 		doc = {
@@ -119,7 +128,18 @@ class TestBuildWooCommerceProductPayload(unittest.TestCase):
 		first = next(m["value"] for m in p["meta_data"] if m["key"] == "WooCommerceEventsDateMySQLFormat")
 		end = next(m["value"] for m in p["meta_data"] if m["key"] == "WooCommerceEventsEndDateMySQLFormat")
 		self.assertEqual(first, "")
-		self.assertEqual(end, "2026-01-02")
+		self.assertEqual(end, "")
+
+	def test_wc_end_date_defaults_to_first_when_sessions_missing(self):
+		doc = {
+			"event_name": "E",
+			"sku": "s",
+			"first_session_date": "2026-03-10",
+			"product_type": "Workshops",
+		}
+		p = build_woocommerce_product_payload(doc)
+		end = next(m["value"] for m in p["meta_data"] if m["key"] == "WooCommerceEventsEndDateMySQLFormat")
+		self.assertEqual(end, "2026-03-10")
 
 
 class TestPublishEventsToWebsite(unittest.TestCase):

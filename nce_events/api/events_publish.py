@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+from datetime import date, datetime, timedelta
 from typing import Any
 
 import frappe
@@ -107,18 +108,37 @@ def _product_categories_meta_value(categories: list[dict[str, Any]]) -> str:
 	return ""
 
 
-def _mysql_date(value: object) -> str:
+def _parse_events_date(value: object) -> date | None:
 	if value is None or value == "":
-		return ""
+		return None
 	if isinstance(value, (dict, list)):
-		return ""
-	s = cstr(value).strip()
-	if not s:
-		return ""
+		return None
+	if not cstr(value).strip():
+		return None
 	try:
-		return getdate(value).strftime("%Y-%m-%d")
+		raw = getdate(value)
 	except Exception:
+		return None
+	if isinstance(raw, datetime):
+		return raw.date()
+	if isinstance(raw, date):
+		return raw
+	return None
+
+
+def _mysql_date(value: object) -> str:
+	d = _parse_events_date(value)
+	return d.strftime("%Y-%m-%d") if d else ""
+
+
+def _wc_events_end_date_mysql_from_doc(doc: dict[str, Any]) -> str:
+	"""Woo end meta = first session date + ``7 * number_of_sessions`` days (MySQL ``Y-m-d``)."""
+	first = _parse_events_date(doc.get("first_session_date"))
+	if first is None:
 		return ""
+	n_sessions = max(0, cint(doc.get("number_of_sessions") or 0))
+	end = first + timedelta(days=7 * n_sessions)
+	return end.strftime("%Y-%m-%d")
 
 
 def build_woocommerce_product_payload(doc: dict[str, Any]) -> dict[str, Any]:
@@ -137,7 +157,7 @@ def build_woocommerce_product_payload(doc: dict[str, Any]) -> dict[str, Any]:
 		},
 		{
 			"key": "WooCommerceEventsEndDateMySQLFormat",
-			"value": _mysql_date(doc.get("end_date")),
+			"value": _wc_events_end_date_mysql_from_doc(doc),
 		},
 		{"key": "product_categories", "value": _product_categories_meta_value(wc_categories)},
 	]
