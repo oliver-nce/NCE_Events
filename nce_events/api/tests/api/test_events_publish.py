@@ -106,6 +106,21 @@ class TestBuildWooCommerceProductPayload(unittest.TestCase):
 		self.assertEqual(p["categories"], [{"name": "Clinics"}])
 		self.assertEqual(next(m["value"] for m in p["meta_data"] if m["key"] == "product_categories"), "Clinics")
 
+	def test_invalid_first_session_date_does_not_truncate_garbage(self):
+		doc = {
+			"event_name": "E",
+			"sku": "sku",
+			"type": "Clinics",
+			"product_type": "Workshops",
+			"first_session_date": "{'fieldname': 'broken'}",
+			"end_date": "2026-01-02",
+		}
+		p = build_woocommerce_product_payload(doc)
+		first = next(m["value"] for m in p["meta_data"] if m["key"] == "WooCommerceEventsDateMySQLFormat")
+		end = next(m["value"] for m in p["meta_data"] if m["key"] == "WooCommerceEventsEndDateMySQLFormat")
+		self.assertEqual(first, "")
+		self.assertEqual(end, "2026-01-02")
+
 
 class TestPublishEventsToWebsite(unittest.TestCase):
 	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)

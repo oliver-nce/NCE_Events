@@ -110,10 +110,15 @@ def _product_categories_meta_value(categories: list[dict[str, Any]]) -> str:
 def _mysql_date(value: object) -> str:
 	if value is None or value == "":
 		return ""
+	if isinstance(value, (dict, list)):
+		return ""
+	s = cstr(value).strip()
+	if not s:
+		return ""
 	try:
 		return getdate(value).strftime("%Y-%m-%d")
 	except Exception:
-		return cstr(value).strip()[:10]
+		return ""
 
 
 def build_woocommerce_product_payload(doc: dict[str, Any]) -> dict[str, Any]:
