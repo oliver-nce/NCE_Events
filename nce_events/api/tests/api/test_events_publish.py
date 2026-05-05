@@ -113,12 +113,10 @@ class TestPublishEventsToWebsite(unittest.TestCase):
 	@patch("nce_events.api.events_publish._allowed_events_row")
 	@patch("nce_events.api.events_publish.frappe.get_doc")
 	@patch("nce_events.api.events_publish.wc_request")
-	@patch("nce_events.api.events_publish.apply_derived_fields_to_doc")
 	@patch("nce_events.api.events_publish.validate_document_page_panel_required_roots")
-	def test_derived_merged_before_wc_post(
+	def test_publish_never_calls_derived_fields_merge(
 		self,
 		mock_validate_panel,
-		mock_apply_derived,
 		mock_wc,
 		mock_get_doc,
 		mock_allowed,
@@ -134,13 +132,7 @@ class TestPublishEventsToWebsite(unittest.TestCase):
 			}
 
 		mock_allowed.side_effect = _allowed
-
-		def _apply_derived(_dt, d, **kwargs):
-			d["sku"] = "derived-sku-1"
-			return d
-
-		mock_apply_derived.side_effect = _apply_derived
-		mock_wc.return_value = {"id": 501, "slug": "s", "sku": "derived-sku-1"}
+		mock_wc.return_value = {"id": 501, "slug": "s", "sku": "panel-sku"}
 		ev = MagicMock()
 		ev.name = "501"
 		mock_get_doc.return_value = ev
@@ -149,6 +141,8 @@ class TestPublishEventsToWebsite(unittest.TestCase):
 
 		doc = {
 			"doctype": "Events",
+			"name": "EVT-WOULD-HAVE-TRIGGERED-DERIVED-BEFORE",
+			"sku": "panel-sku",
 			"event_name": "Spring",
 			"content": "c",
 			"status": "publish",
@@ -162,12 +156,11 @@ class TestPublishEventsToWebsite(unittest.TestCase):
 		mock_validate_panel.assert_called_once_with(
 			doc, "Events", include_meta_mandatory=False
 		)
-		mock_apply_derived.assert_called_once()
 		self.assertEqual(mock_wc.call_args[0][2], "/products")
 		kwargs = mock_wc.call_args[1]
-		self.assertEqual(kwargs["json_body"]["sku"], "derived-sku-1")
+		self.assertEqual(kwargs["json_body"]["sku"], "panel-sku")
 		insert_row = mock_get_doc.call_args[0][0]
-		self.assertEqual(insert_row.get("sku"), "derived-sku-1")
+		self.assertEqual(insert_row.get("sku"), "panel-sku")
 
 
 if __name__ == "__main__":

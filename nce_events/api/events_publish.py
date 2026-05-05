@@ -9,7 +9,6 @@ import frappe
 from frappe import _
 from frappe.utils import cint, cstr, getdate
 
-from nce_events.api.derived_fields import apply_derived_fields_to_doc
 from nce_events.api.panel_api_pkg._helpers import validate_document_page_panel_required_roots
 from nce_events.api.woocommerce_client import DEFAULT_WOOCOMMERCE_CONNECTOR, wc_request
 
@@ -193,10 +192,10 @@ def publish_events_to_website(
 	Validate Events payload, create WooCommerce product, insert ``Events`` with
 	``name`` = new product id, then run ``after_events_publish_to_woocommerce`` hooks.
 
-	``doc`` may be a JSON string from ``frappe.call``. Derived fields from ``WP Tables`` are merged
-	next; only Page Panel ``required_fields`` for Events are enforced before WooCommerce (not
-	DocType meta ``reqd``, since the row is inserted after the WC call). (WP ``column_mapping``
-	defaults are applied in the panel New Form Dialog.)
+	``doc`` may be a JSON string from ``frappe.call``. WP Tables **derived** SQL (``sql_expression``)
+	is **not** run on publish — only the values on ``doc`` are used. Page Panel ``required_fields``
+	for Events are enforced before WooCommerce (not DocType meta ``reqd``, since the row is inserted
+	after the WC call). (WP ``column_mapping`` defaults are applied in the panel New Form Dialog.)
 
 	Other apps (e.g. nce_sync) may register::
 
@@ -209,7 +208,6 @@ def publish_events_to_website(
 	if not frappe.has_permission(_EVENTS_DOCTYPE, "create"):
 		frappe.throw(_("Not permitted to create {0}").format(_EVENTS_DOCTYPE), frappe.PermissionError)
 
-	apply_derived_fields_to_doc(_EVENTS_DOCTYPE, doc)
 	validate_document_page_panel_required_roots(
 		doc, _EVENTS_DOCTYPE, include_meta_mandatory=False
 	)
