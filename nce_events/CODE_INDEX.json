@@ -1162,6 +1162,12 @@
       "purpose": "Utility: maps every Frappe fieldtype string to a { component, props } config (or { layout } for structural types). Single source of truth for fieldtype→control mapping in V2 dialogs.",
       "depends_on": []
     },
+    "nce_events/public/js/panel_page_v2/utils/formDialogLiveScrape.js": {
+      "exports": [
+        "readLiveFieldValue"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/public/js/panel_page_v2/utils/formDialogLoadDebug.js": {
       "exports": [
         "FD_LOAD_DEBUG_STORAGE_KEY",

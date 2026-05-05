@@ -2,7 +2,7 @@
  * Normalize Events doc dates before WooCommerce preview/publish.
  * Ensures YYYY-MM-DD strings (Frappe Date / JSON Date / Moment) so Python getdate sees them.
  */
-const WOO_EVENTS_DATE_FIELDNAMES = ["first_session_date", "end_date"];
+const WOO_EVENTS_DATE_FIELDNAMES = ["first_session_date"];
 
 /** MM-DD-YYYY as shown in Frappe Desk US datepickers, e.g. 05-28-2026 */
 function usStyleMmDdYyyyToYmd(t) {

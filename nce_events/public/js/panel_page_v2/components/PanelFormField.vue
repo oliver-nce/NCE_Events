@@ -21,6 +21,7 @@
     v-else-if="config?.component"
     v-show="visible"
     class="ppv2-fd-field"
+    :data-fd-fieldname="field.fieldname"
     :class="{
       'ppv2-fd-field-bold': field.bold,
       'ppv2-fd-field-editable': !readOnly,
