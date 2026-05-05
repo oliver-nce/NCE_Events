@@ -100,7 +100,7 @@ import {
 import { useBackdropPointerDismiss } from "../composables/useBackdropPointerDismiss.js";
 
 /** Set to `false` for real WooCommerce POST + Frappe Events insert. When `true`, only shows the proposed request in a dialog. */
-const WOO_EVENTS_PUBLISH_PREVIEW_ONLY = true;
+const WOO_EVENTS_PUBLISH_PREVIEW_ONLY = false;
 
 function escapeForPreHtml(s) {
 	return String(s)
