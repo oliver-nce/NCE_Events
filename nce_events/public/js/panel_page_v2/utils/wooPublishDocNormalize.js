@@ -4,6 +4,18 @@
  */
 const WOO_EVENTS_DATE_FIELDNAMES = ["first_session_date", "end_date"];
 
+/** MM-DD-YYYY as shown in Frappe Desk US datepickers, e.g. 05-28-2026 */
+function usStyleMmDdYyyyToYmd(t) {
+	const m = /^(\d{1,2})-(\d{1,2})-(\d{4})$/.exec(t.trim());
+	if (!m) {
+		return null;
+	}
+	const mm = m[1].padStart(2, "0");
+	const dd = m[2].padStart(2, "0");
+	const yyyy = m[3];
+	return `${yyyy}-${mm}-${dd}`;
+}
+
 function coerceToYmd(v) {
 	if (v == null || v === "") {
 		return v;
@@ -19,6 +31,21 @@ function coerceToYmd(v) {
 		if (/^\d{4}-\d{2}-\d{2}T/.test(t)) {
 			return t.slice(0, 10);
 		}
+		if (typeof frappe !== "undefined" && frappe.datetime?.user_to_str) {
+			try {
+				const s = frappe.datetime.user_to_str(t, true);
+				if (s && /^\d{4}-\d{2}-\d{2}/.test(String(s))) {
+					return String(s).slice(0, 10);
+				}
+			} catch {
+				/* fall through */
+			}
+		}
+		const us = usStyleMmDdYyyyToYmd(t);
+		if (us) {
+			return us;
+		}
+		return t;
 	}
 	if (v instanceof Date) {
 		if (Number.isNaN(v.getTime())) {

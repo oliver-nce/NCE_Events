@@ -80,7 +80,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onUnmounted, toRef, computed, provide } from "vue";
+import { ref, watch, onUnmounted, toRef, computed, provide, nextTick } from "vue";
 import {
 	isFdLoadDebugEnabled,
 	FD_LOAD_DEBUG_STORAGE_KEY,
@@ -142,6 +142,23 @@ const form = usePanelFormDialog({
 	docName: toRef(props, "docName"),
 	requiredFields: toRef(props, "requiredFields"),
 });
+
+/** Frappe Date/Datetime controls only emit into formData on change; blur commits open pickers. */
+async function flushFrappeDateControlsIntoFormData() {
+	const root = fdBodyRef.value?.$el;
+	if (root?.querySelectorAll) {
+		root.querySelectorAll(".ppv2-fd-datetime-frappe input").forEach((el) => {
+			if (typeof el.blur === "function") {
+				el.blur();
+			}
+		});
+	}
+	await nextTick();
+	if (document.activeElement && typeof document.activeElement.blur === "function") {
+		document.activeElement.blur();
+	}
+	await nextTick();
+}
 
 // Provide the raw ref so Date/Link controls can read .value synchronously
 // in their Frappe df.change() callback — bypasses Vue prop propagation delay.
@@ -309,6 +326,7 @@ async function onPlaceholderButton(btn) {
 			return;
 		}
 		try {
+			await flushFrappeDateControlsIntoFormData();
 			const doc = normalizeDocForWooEventsPublish({
 				doctype: props.doctype,
 				...JSON.parse(JSON.stringify(form.formData)),

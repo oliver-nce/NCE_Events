@@ -46,7 +46,6 @@ class TestBuildWooCommerceProductPayload(unittest.TestCase):
 		self.assertEqual(p["regular_price"], "99.5")
 		self.assertEqual(p["categories"], [{"name": "Workshops"}])
 		keys = {m["key"] for m in p["meta_data"]}
-		self.assertIn("_sku", keys)
 		self.assertIn("WooCommerceEventsDateMySQLFormat", keys)
 		self.assertIn("WooCommerceEventsEndDateMySQLFormat", keys)
 		self.assertIn("product_categories", keys)
@@ -76,6 +75,24 @@ class TestBuildWooCommerceProductPayload(unittest.TestCase):
 		self.assertEqual(
 			next(m["value"] for m in p["meta_data"] if m["key"] == "WooCommerceEventsEndDateMySQLFormat"),
 			"2026-08-27",
+		)
+
+	def test_us_style_mm_dd_yyyy_first_session(self):
+		doc = {
+			"event_name": "E",
+			"sku": "s",
+			"product_type": "Workshops",
+			"first_session_date": "05-28-2026",
+			"number_of_sessions": 8,
+		}
+		p = build_woocommerce_product_payload(doc)
+		self.assertEqual(
+			next(m["value"] for m in p["meta_data"] if m["key"] == "WooCommerceEventsDateMySQLFormat"),
+			"2026-05-28",
+		)
+		self.assertEqual(
+			next(m["value"] for m in p["meta_data"] if m["key"] == "WooCommerceEventsEndDateMySQLFormat"),
+			"2026-07-23",
 		)
 
 	def test_category_numeric_id(self):

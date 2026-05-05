@@ -116,6 +116,8 @@ def _parse_events_date(value: object) -> date | None:
 	s = cstr(value).strip()
 	if not s:
 		return None
+	if s[0] in "{[" or (s.startswith("'") and len(s) >= 2 and s[1] == "{"):
+		return None
 	# JSON-serialized JS Date: 2026-05-05T00:00:00.000Z
 	if len(s) >= 10 and s[4] == "-" and s[7] == "-":
 		if "T" in s or (len(s) > 10 and s[10] == " "):
@@ -123,6 +125,14 @@ def _parse_events_date(value: object) -> date | None:
 				return getdate(s[:10])
 			except Exception:
 				pass
+	# Desk US-style picker: 05-28-2026 (getdate may not parse depending on system)
+	us_m = re.fullmatch(r"(\d{1,2})-(\d{1,2})-(\d{4})", s)
+	if us_m:
+		mm, dd, yyyy = int(us_m.group(1)), int(us_m.group(2)), int(us_m.group(3))
+		try:
+			return date(yyyy, mm, dd)
+		except ValueError:
+			pass
 	try:
 		raw = getdate(s)
 	except Exception:
@@ -158,7 +168,6 @@ def build_woocommerce_product_payload(doc: dict[str, Any]) -> dict[str, Any]:
 
 	wc_categories = _wc_categories_payload_from_doc(doc)
 	meta_rows: list[dict[str, Any]] = [
-		{"key": "_sku", "value": sku},
 		{
 			"key": "WooCommerceEventsDateMySQLFormat",
 			"value": _mysql_date(doc.get("first_session_date")),
