@@ -17,7 +17,7 @@ function _do_publish(frm) {
 			const wp_id = r.message.wp_id;
 			frappe.msgprint({
 				title: __("Published"),
-				message: `<p>${__("Product created successfully on WooCommerce.")}</p><p><strong>${__("WooCommerce Product ID:")} ${frappe.utils.escape_html(String(wp_id))}</strong></p>`,
+				message: `<p>${__("Product ID")} <strong>${frappe.utils.escape_html(String(wp_id))}</strong> ${__("created in Woo Commerce")}</p><p>${__("It will appear in the Events panel in a few minutes")}</p>`,
 				indicator: "green",
 				primary_action: {
 					label: __("OK"),
