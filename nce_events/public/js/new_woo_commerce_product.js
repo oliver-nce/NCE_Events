@@ -7,17 +7,6 @@ frappe.ui.form.on("New Woo Commerce Product", {
 });
 
 function _do_publish(frm) {
-	const required = ["event_name", "type_id", "price", "start_date"];
-	const missing = required.filter((f) => !frm.doc[f] && frm.doc[f] !== 0);
-	if (missing.length) {
-		frappe.msgprint({
-			title: __("Missing Fields"),
-			message: __("Please fill all required fields: {0}", [missing.join(", ")]),
-			indicator: "orange",
-		});
-		return;
-	}
-
 	frappe.call({
 		method: "nce_events.api.events_publish.publish_new_woo_commerce_product",
 		args: { doc: frm.doc },
