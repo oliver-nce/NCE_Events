@@ -360,16 +360,32 @@ def _patch_new_woo_body(wc_body: dict[str, Any]) -> None:
 			break
 
 
+def _wc_slug(label: str) -> str:
+	"""Derive a WooCommerce-style slug from a category label (lowercase, hyphens)."""
+	return re.sub(r"[^a-z0-9]+", "-", label.strip().lower()).strip("-")
+
+
 def _resolve_wc_category_term_id(label: str, connector: str) -> int | None:
 	"""
-	Search WooCommerce product categories for an exact name match and return the term_id.
-	Returns ``None`` if no match is found.
+	Return the WooCommerce product category term_id for *label*.
+
+	Strategy (most-precise first):
+	1. ``?slug=<derived-slug>`` — exact slug lookup, no pagination.
+	2. ``?search=<label>&per_page=100`` — name-contains search with exact-name
+	   filter as fallback (handles slugs that differ from the computed value).
 	"""
+	slug = _wc_slug(label)
+	by_slug = wc_request(connector, "GET", "/products/categories", query_params={"slug": slug})
+	if isinstance(by_slug, list) and by_slug:
+		cid = by_slug[0].get("id")
+		if cid is not None:
+			return int(cid)
+
 	results = wc_request(
 		connector,
 		"GET",
 		"/products/categories",
-		query_params={"search": label, "per_page": "20"},
+		query_params={"search": label, "per_page": "100"},
 	)
 	if not isinstance(results, list):
 		return None
