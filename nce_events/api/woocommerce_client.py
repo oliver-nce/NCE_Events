@@ -46,7 +46,11 @@ def _validate_relative_path(path: str) -> None:
 	if ".." in p or "\n" in p or "\r" in p:
 		frappe.throw(_("Invalid WooCommerce path."))
 	rest = p[1:]
-	if rest == "products" or (rest.startswith("products/") and re.match(r"^products/\d+$", rest)):
+	if (
+		rest == "products"
+		or rest == "products/categories"
+		or (rest.startswith("products/") and re.match(r"^products/\d+$", rest))
+	):
 		return
 	frappe.throw(_("WooCommerce path is not allowed: {0}").format(path))
 
@@ -57,6 +61,7 @@ def wc_request(
 	path: str,
 	*,
 	json_body: dict[str, Any] | list[Any] | None = None,
+	query_params: dict[str, str] | None = None,
 	timeout: int = _DEFAULT_TIMEOUT,
 ) -> dict[str, Any] | list[Any]:
 	"""
@@ -66,6 +71,7 @@ def wc_request(
 	:param method: HTTP method (GET, POST, PUT, PATCH, DELETE).
 	:param path: Path **relative to** ``/wp-json/wc/v3``, e.g. ``/products`` or ``/products/42``.
 	:param json_body: Optional JSON body for POST/PUT/PATCH.
+	:param query_params: Optional extra URL query parameters (merged with auth params).
 	"""
 	m = (method or "").strip().upper()
 	if m not in _ALLOWED_METHODS:
@@ -84,6 +90,8 @@ def wc_request(
 	base = _woocommerce_api_base_url(creds)
 	url = base + path
 	params: dict[str, str] = {"consumer_key": ck, "consumer_secret": cs}
+	if query_params:
+		params.update(query_params)
 
 	try:
 		resp = requests.request(

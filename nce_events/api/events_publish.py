@@ -360,6 +360,48 @@ def _patch_new_woo_body(wc_body: dict[str, Any]) -> None:
 			break
 
 
+def _resolve_wc_category_term_id(label: str, connector: str) -> int | None:
+	"""
+	Search WooCommerce product categories for an exact name match and return the term_id.
+	Returns ``None`` if no match is found.
+	"""
+	results = wc_request(
+		connector,
+		"GET",
+		"/products/categories",
+		query_params={"search": label, "per_page": "20"},
+	)
+	if not isinstance(results, list):
+		return None
+	label_lower = label.strip().lower()
+	for cat in results:
+		if isinstance(cat, dict) and cstr(cat.get("name")).strip().lower() == label_lower:
+			cid = cat.get("id")
+			return int(cid) if cid is not None else None
+	return None
+
+
+def _resolve_and_patch_categories(wc_body: dict[str, Any], connector: str) -> None:
+	"""
+	Replace the name-based ``categories`` entry built by the payload helper with
+	``[{"id": term_id}]`` resolved from the WooCommerce categories API.
+	Throws if the category cannot be found — an unresolved category produces a
+	silently uncategorised product.
+	"""
+	cats = wc_body.get("categories", [])
+	if not cats or not isinstance(cats[0], dict):
+		return
+	label = cstr(cats[0].get("name") or "").strip()
+	if not label:
+		return
+	term_id = _resolve_wc_category_term_id(label, connector)
+	if term_id is None:
+		frappe.throw(
+			_("WooCommerce product category not found for: {0}").format(label),
+		)
+	wc_body["categories"] = [{"id": term_id}]
+
+
 @frappe.whitelist()
 def publish_new_woo_commerce_product(
 	doc: dict[str, Any] | str,
@@ -383,6 +425,7 @@ def publish_new_woo_commerce_product(
 
 	wc_body = build_woocommerce_product_payload(mapped)
 	_patch_new_woo_body(wc_body)
+	_resolve_and_patch_categories(wc_body, DEFAULT_WOOCOMMERCE_CONNECTOR)
 
 	wc_resp = wc_request(DEFAULT_WOOCOMMERCE_CONNECTOR, "POST", "/products", json_body=wc_body)
 
