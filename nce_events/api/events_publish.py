@@ -384,22 +384,31 @@ def _resolve_wc_category_term_id(label: str, connector: str) -> int | None:
 def _resolve_and_patch_categories(wc_body: dict[str, Any], connector: str) -> None:
 	"""
 	Replace the name-based ``categories`` entry built by the payload helper with
-	``[{"id": term_id}]`` resolved from the WooCommerce categories API.
-	Throws if the category cannot be found — an unresolved category produces a
-	silently uncategorised product.
+	``[{"id": term_id}, ...]`` resolved from the WooCommerce categories API.
+
+	If the (normalised) label is comma-separated (e.g. ``"Tryout,Tryouts"``) every
+	part is looked up independently and all matching term_ids are applied to the
+	product.  Throws if any part cannot be found.
 	"""
 	cats = wc_body.get("categories", [])
 	if not cats or not isinstance(cats[0], dict):
 		return
-	label = cstr(cats[0].get("name") or "").strip()
-	if not label:
+	raw_label = cstr(cats[0].get("name") or "").strip()
+	if not raw_label:
 		return
-	term_id = _resolve_wc_category_term_id(label, connector)
-	if term_id is None:
-		frappe.throw(
-			_("WooCommerce product category not found for: {0}").format(label),
-		)
-	wc_body["categories"] = [{"id": term_id}]
+
+	normalized = _normalize_new_woo_category_label(raw_label)
+	parts = [p.strip() for p in normalized.split(",") if p.strip()]
+
+	resolved: list[dict[str, Any]] = []
+	for part in parts:
+		term_id = _resolve_wc_category_term_id(part, connector)
+		if term_id is None:
+			frappe.throw(_("WooCommerce product category not found for: {0}").format(part))
+		resolved.append({"id": term_id})
+
+	if resolved:
+		wc_body["categories"] = resolved
 
 
 @frappe.whitelist()
