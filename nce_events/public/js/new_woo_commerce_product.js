@@ -21,8 +21,7 @@ function _do_publish(frm) {
 				indicator: "green",
 				primary_action: {
 					label: __("OK"),
-					action(dialog) {
-						dialog.hide();
+					action() {
 						_clear_and_reload(frm);
 					},
 				},
