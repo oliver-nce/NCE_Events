@@ -326,3 +326,83 @@ def publish_events_to_website(
 		"wp_id": wp_id,
 		"woocommerce": {"id": wp_id, "slug": wc_resp.get("slug"), "sku": wc_resp.get("sku")},
 	}
+
+
+_NEW_WOO_DOCTYPE: str = "New Woo Commerce Product"
+_NEW_WOO_FIELDS: tuple[str, ...] = ("event_name", "type_id", "price", "start_date")
+
+# Canonical WooCommerce category label for the Tryout event family.
+_TRYOUT_PARTS: frozenset[str] = frozenset({"tryout", "tryouts"})
+_TRYOUT_CANONICAL: str = "Tryout,Tryouts"
+
+
+def _normalize_new_woo_category_label(label: str) -> str:
+	"""Return the canonical Tryout label when the resolved type is a Tryout variant."""
+	parts = {p.strip().lower() for p in label.split(",") if p.strip()}
+	if parts and parts.issubset(_TRYOUT_PARTS):
+		return _TRYOUT_CANONICAL
+	return label
+
+
+def _patch_new_woo_body(wc_body: dict[str, Any]) -> None:
+	"""
+	Post-process the WooCommerce payload for New Woo Commerce Product:
+	  - Force status = 'private' and post_type = 'product'.
+	  - Normalise the product_categories meta value for Tryout variants.
+	Mutates wc_body in place.
+	"""
+	wc_body["status"] = "private"
+	wc_body["post_type"] = "product"
+
+	for entry in wc_body.get("meta_data", []):
+		if isinstance(entry, dict) and entry.get("key") == "product_categories":
+			entry["value"] = _normalize_new_woo_category_label(cstr(entry.get("value") or ""))
+			break
+
+
+@frappe.whitelist()
+def publish_new_woo_commerce_product(
+	doc: dict[str, Any] | str,
+) -> dict[str, Any]:
+	"""
+	Validate New Woo Commerce Product form values, POST to WooCommerce, and return the new
+	product id.  Does NOT insert a Frappe document — the caller clears the Singleton after success.
+	"""
+	doc = frappe.parse_json(doc) if isinstance(doc, str) else dict(doc)
+
+	if not frappe.has_permission(_NEW_WOO_DOCTYPE, "write"):
+		frappe.throw(_("Not permitted to write {0}").format(_NEW_WOO_DOCTYPE), frappe.PermissionError)
+
+	missing = [f for f in _NEW_WOO_FIELDS if not cstr(doc.get(f)).strip()]
+	if missing:
+		frappe.throw(_("Please fill all required fields: {0}").format(", ".join(missing)))
+
+	mapped: dict[str, Any] = dict(doc)
+	mapped["event_type_id"] = mapped.pop("type_id", None)
+	mapped["first_session_date"] = mapped.pop("start_date", None)
+
+	wc_body = build_woocommerce_product_payload(mapped)
+	_patch_new_woo_body(wc_body)
+
+	wc_resp = wc_request(DEFAULT_WOOCOMMERCE_CONNECTOR, "POST", "/products", json_body=wc_body)
+
+	wpid = wc_resp.get("id") if isinstance(wc_resp, dict) else None
+	if wpid is None:
+		frappe.throw(_("WooCommerce response did not include a product id."))
+
+	return {"ok": 1, "wp_id": int(wpid)}
+
+
+@frappe.whitelist()
+def clear_new_woo_commerce_product() -> dict[str, Any]:
+	"""Clear all editable fields on the New Woo Commerce Product Singleton after a successful publish."""
+	if not frappe.has_permission(_NEW_WOO_DOCTYPE, "write"):
+		frappe.throw(_("Not permitted to write {0}").format(_NEW_WOO_DOCTYPE), frappe.PermissionError)
+
+	doc = frappe.get_doc(_NEW_WOO_DOCTYPE)
+	doc.event_name = ""
+	doc.type_id = None
+	doc.price = 0
+	doc.start_date = None
+	doc.save(ignore_permissions=True)
+	return {"ok": 1}
