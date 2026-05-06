@@ -420,20 +420,11 @@ def _resolve_and_patch_categories(wc_body: dict[str, Any], connector: str) -> No
 	for part in parts:
 		term_id = _resolve_wc_category_term_id(part, connector)
 		if term_id is None:
-			frappe.log_error(
-				title="WooCommerce category not found",
-				message=f"No product_cat term found for label: {part!r} — skipped.",
-			)
-		else:
-			resolved.append({"id": term_id})
+			frappe.throw(_("WooCommerce product category not found for: {0}").format(part))
+		resolved.append({"id": term_id})
 
-	if not resolved:
-		frappe.throw(
-			_("No WooCommerce product categories could be resolved from: {0}").format(
-				", ".join(parts)
-			)
-		)
-	wc_body["categories"] = resolved
+	if resolved:
+		wc_body["categories"] = resolved
 
 
 @frappe.whitelist()
