@@ -331,33 +331,15 @@ def publish_events_to_website(
 _NEW_WOO_DOCTYPE: str = "New Woo Commerce Product"
 _NEW_WOO_FIELDS: tuple[str, ...] = ("event_name", "type_id", "price", "start_date")
 
-# Canonical WooCommerce category label for the Tryout event family.
-_TRYOUT_PARTS: frozenset[str] = frozenset({"tryout", "tryouts"})
-_TRYOUT_CANONICAL: str = "Tryout,Tryouts"
-
-
-def _normalize_new_woo_category_label(label: str) -> str:
-	"""Return the canonical Tryout label when the resolved type is a Tryout variant."""
-	parts = {p.strip().lower() for p in label.split(",") if p.strip()}
-	if parts and parts.issubset(_TRYOUT_PARTS):
-		return _TRYOUT_CANONICAL
-	return label
-
 
 def _patch_new_woo_body(wc_body: dict[str, Any]) -> None:
 	"""
 	Post-process the WooCommerce payload for New Woo Commerce Product:
 	  - Force status = 'private' and post_type = 'product'.
-	  - Normalise the product_categories meta value for Tryout variants.
 	Mutates wc_body in place.
 	"""
 	wc_body["status"] = "private"
 	wc_body["post_type"] = "product"
-
-	for entry in wc_body.get("meta_data", []):
-		if isinstance(entry, dict) and entry.get("key") == "product_categories":
-			entry["value"] = _normalize_new_woo_category_label(cstr(entry.get("value") or ""))
-			break
 
 
 def _wc_slug(label: str) -> str:
@@ -400,31 +382,20 @@ def _resolve_wc_category_term_id(label: str, connector: str) -> int | None:
 def _resolve_and_patch_categories(wc_body: dict[str, Any], connector: str) -> None:
 	"""
 	Replace the name-based ``categories`` entry built by the payload helper with
-	``[{"id": term_id}, ...]`` resolved from the WooCommerce categories API.
-
-	If the (normalised) label is comma-separated (e.g. ``"Tryout,Tryouts"``) every
-	part is looked up independently and all matching term_ids are applied to the
-	product.  Throws if any part cannot be found.
+	``[{"id": term_id}]`` resolved from the WooCommerce categories API.
+	Throws if the category cannot be found.
 	"""
 	cats = wc_body.get("categories", [])
 	if not cats or not isinstance(cats[0], dict):
 		return
-	raw_label = cstr(cats[0].get("name") or "").strip()
-	if not raw_label:
+	label = cstr(cats[0].get("name") or "").strip()
+	if not label:
 		return
 
-	normalized = _normalize_new_woo_category_label(raw_label)
-	parts = [p.strip() for p in normalized.split(",") if p.strip()]
-
-	resolved: list[dict[str, Any]] = []
-	for part in parts:
-		term_id = _resolve_wc_category_term_id(part, connector)
-		if term_id is None:
-			frappe.throw(_("WooCommerce product category not found for: {0}").format(part))
-		resolved.append({"id": term_id})
-
-	if resolved:
-		wc_body["categories"] = resolved
+	term_id = _resolve_wc_category_term_id(label, connector)
+	if term_id is None:
+		frappe.throw(_("WooCommerce product category not found for: {0}").format(label))
+	wc_body["categories"] = [{"id": term_id}]
 
 
 @frappe.whitelist()
