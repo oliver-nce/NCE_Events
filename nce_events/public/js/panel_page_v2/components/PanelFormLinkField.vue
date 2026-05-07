@@ -55,6 +55,35 @@ function mountFrappeControl() {
 		render_input: true,
 		doc: makeDoc(),
 	});
+
+	// Begins-with filter: show only dropdown items whose label starts with the
+	// typed text (server still fetches using contains, so this is client-side).
+	// Action items (Create new, Advanced Search) always pass through.
+	if (control.awesomplete) {
+		control.awesomplete.filter = function (item, input) {
+			if (item && item.action) return true;
+			const label = (
+				typeof item === "object" ? item.label || item.value || "" : item
+			).toString();
+			const q = (input || "").trim();
+			if (!q) return true;
+			return label.toLowerCase().startsWith(q.toLowerCase());
+		};
+	}
+
+	// Advanced Search propagation: frappe.ui.form.LinkSelector selects a value
+	// by calling set_input(value) + $input.trigger("change") when the control
+	// has no .doctype (our case — no frm passed). That raw change event bypasses
+	// df.change, so Vue never sees the update. Forward it here.
+	if (control.$input) {
+		const fn = props.field.fieldname;
+		control.$input.on("change.pfl_adv", function () {
+			if (fdSyncingFromLoad?.value) return;
+			const v = control.get_value();
+			emit("change", { fieldname: fn, value: v });
+			emit("link-change", { fieldname: fn, value: v });
+		});
+	}
 }
 
 onMounted(() => {
@@ -83,6 +112,7 @@ watch(
 );
 
 onBeforeUnmount(() => {
+	control?.$input?.off("change.pfl_adv");
 	if (control?.$wrapper) {
 		control.$wrapper.remove();
 	}
