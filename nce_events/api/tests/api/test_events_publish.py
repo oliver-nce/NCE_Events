@@ -312,6 +312,7 @@ class TestPublishEventsUpdateBranch(unittest.TestCase):
 		"event_name": "Spring Camp",
 		"event_type_id": "",
 		"price": 50.0,
+		"status": "publish",
 	}
 
 	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)
@@ -352,6 +353,26 @@ class TestPublishEventsUpdateBranch(unittest.TestCase):
 		self.assertEqual(out["wp_id"], 501)
 		self.assertNotIn("skipped", out)
 		mock_hooks.assert_called_once_with("501")
+
+	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)
+	@patch("nce_events.api.events_publish.validate_document_page_panel_required_roots")
+	@patch("nce_events.api.events_publish._resolve_and_patch_categories")
+	@patch("nce_events.api.events_publish._run_after_publish_hooks")
+	@patch("nce_events.api.events_publish.frappe.db")
+	@patch("nce_events.api.events_publish.wc_request")
+	def test_changed_status_triggers_put(self, mock_wc, mock_db, mock_hooks, mock_cats, mock_validate, mock_perm):
+		mock_db.exists.return_value = "501"
+		mock_db.get_value.return_value = {**self._STORED_SAME, "status": "private"}
+		mock_wc.return_value = {"id": 501, "slug": "spring-camp", "sku": "sku-1"}
+
+		from nce_events.api.events_publish import publish_events_to_website
+
+		out = publish_events_to_website(dict(self._DOC))  # _DOC has status="publish"
+
+		put_calls = [c for c in mock_wc.call_args_list if c[0][1] == "PUT"]
+		self.assertEqual(len(put_calls), 1)
+		self.assertEqual(put_calls[0][0][2], "/products/501")
+		self.assertEqual(out["wp_id"], 501)
 
 	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)
 	@patch("nce_events.api.events_publish.validate_document_page_panel_required_roots")
@@ -481,6 +502,7 @@ class TestPreviewPublishUpdateBranch(unittest.TestCase):
 			"event_name": "Spring Camp",
 			"event_type_id": "",
 			"price": 50.0,
+			"status": "publish",
 		}
 
 		from nce_events.api.events_publish import preview_publish_events_to_website

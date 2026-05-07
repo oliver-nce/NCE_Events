@@ -19,7 +19,7 @@ from nce_events.api.woocommerce_client import (
 
 _EVENTS_DOCTYPE: str = "Events"
 _EVENT_TYPES_DOCTYPE: str = "Event Types"
-_WC_TRACKED_FIELDS: tuple[str, ...] = ("first_session_date", "event_name", "event_type_id", "price")
+_WC_TRACKED_FIELDS: tuple[str, ...] = ("first_session_date", "event_name", "event_type_id", "price", "status")
 
 
 def slugify_product_slug(raw: str | None) -> str:
@@ -263,7 +263,7 @@ def _is_existing_events_row(name: object) -> int | None:
 
 
 def _wc_tracked_fields_changed(doc: dict[str, Any], wp_id: int) -> bool:
-	"""Return True if any tracked WC field (first_session_date, event_name, event_type_id, price) differs from the stored Events row."""
+	"""Return True if any tracked WC field (first_session_date, event_name, event_type_id, price, status) differs from the stored Events row."""
 	stored = frappe.db.get_value(
 		_EVENTS_DOCTYPE, str(wp_id), list(_WC_TRACKED_FIELDS), as_dict=True
 	)
@@ -276,6 +276,8 @@ def _wc_tracked_fields_changed(doc: dict[str, Any], wp_id: int) -> bool:
 	if cstr(doc.get("event_type_id")).strip() != cstr(stored.get("event_type_id")).strip():
 		return True
 	if flt(doc.get("price") or 0) != flt(stored.get("price") or 0):
+		return True
+	if _wc_status_from_events(doc.get("status")) != _wc_status_from_events(stored.get("status")):
 		return True
 	return False
 
