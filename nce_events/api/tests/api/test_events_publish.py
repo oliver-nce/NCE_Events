@@ -295,5 +295,208 @@ class TestPreviewPublishEventsToWebsite(unittest.TestCase):
 		self.assertEqual(out["json_body"]["sku"], "panel-sku")
 
 
+class TestPublishEventsUpdateBranch(unittest.TestCase):
+	"""Tests for the update (PUT) branch of publish_events_to_website."""
+
+	_DOC = {
+		"doctype": "Events",
+		"name": "501",
+		"sku": "sku-1",
+		"event_name": "Spring Camp",
+		"price": 50,
+		"first_session_date": "2026-06-01",
+		"status": "publish",
+	}
+	_STORED_SAME = {
+		"first_session_date": "2026-06-01",
+		"event_name": "Spring Camp",
+		"event_type_id": "",
+		"price": 50.0,
+	}
+
+	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)
+	@patch("nce_events.api.events_publish.validate_document_page_panel_required_roots")
+	@patch("nce_events.api.events_publish.frappe.db")
+	@patch("nce_events.api.events_publish.wc_request")
+	def test_unchanged_fields_skip_wc_call(self, mock_wc, mock_db, mock_validate, mock_perm):
+		mock_db.exists.return_value = "501"
+		mock_db.get_value.return_value = self._STORED_SAME
+
+		from nce_events.api.events_publish import publish_events_to_website
+
+		out = publish_events_to_website(dict(self._DOC))
+
+		mock_wc.assert_not_called()
+		self.assertEqual(out["skipped"], 1)
+		self.assertEqual(out["wp_id"], 501)
+		self.assertEqual(out["name"], "501")
+
+	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)
+	@patch("nce_events.api.events_publish.validate_document_page_panel_required_roots")
+	@patch("nce_events.api.events_publish._resolve_and_patch_categories")
+	@patch("nce_events.api.events_publish._run_after_publish_hooks")
+	@patch("nce_events.api.events_publish.frappe.db")
+	@patch("nce_events.api.events_publish.wc_request")
+	def test_changed_name_triggers_put(self, mock_wc, mock_db, mock_hooks, mock_cats, mock_validate, mock_perm):
+		mock_db.exists.return_value = "501"
+		mock_db.get_value.return_value = {**self._STORED_SAME, "event_name": "Old Name"}
+		mock_wc.return_value = {"id": 501, "slug": "spring-camp", "sku": "sku-1"}
+
+		from nce_events.api.events_publish import publish_events_to_website
+
+		out = publish_events_to_website(dict(self._DOC))
+
+		put_calls = [c for c in mock_wc.call_args_list if c[0][1] == "PUT"]
+		self.assertEqual(len(put_calls), 1)
+		self.assertEqual(put_calls[0][0][2], "/products/501")
+		self.assertEqual(out["wp_id"], 501)
+		self.assertNotIn("skipped", out)
+		mock_hooks.assert_called_once_with("501")
+
+	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)
+	@patch("nce_events.api.events_publish.validate_document_page_panel_required_roots")
+	@patch("nce_events.api.events_publish._resolve_and_patch_categories")
+	@patch("nce_events.api.events_publish._run_after_publish_hooks")
+	@patch("nce_events.api.events_publish.frappe.db")
+	@patch("nce_events.api.events_publish.wc_request")
+	def test_changed_price_triggers_put(self, mock_wc, mock_db, mock_hooks, mock_cats, mock_validate, mock_perm):
+		mock_db.exists.return_value = "501"
+		mock_db.get_value.return_value = {**self._STORED_SAME, "price": 25.0}
+		mock_wc.return_value = {"id": 501, "slug": "spring-camp", "sku": "sku-1"}
+
+		from nce_events.api.events_publish import publish_events_to_website
+
+		out = publish_events_to_website(dict(self._DOC))
+
+		put_calls = [c for c in mock_wc.call_args_list if c[0][1] == "PUT"]
+		self.assertEqual(len(put_calls), 1)
+		self.assertEqual(out["wp_id"], 501)
+
+	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)
+	@patch("nce_events.api.events_publish._run_after_publish_hooks")
+	@patch("nce_events.api.events_publish._allowed_events_row")
+	@patch("nce_events.api.events_publish.frappe.get_doc")
+	@patch("nce_events.api.events_publish.frappe.db")
+	@patch("nce_events.api.events_publish.wc_request")
+	@patch("nce_events.api.events_publish.validate_document_page_panel_required_roots")
+	def test_non_numeric_name_still_creates(self, mock_validate, mock_wc, mock_db, mock_get_doc, mock_allowed, mock_hooks, mock_perm):
+		mock_db.exists.return_value = False
+		mock_wc.return_value = {"id": 999, "slug": "s", "sku": "sk"}
+		ev = MagicMock()
+		ev.name = "999"
+		mock_get_doc.return_value = ev
+		mock_allowed.return_value = {"doctype": "Events", "name": "999"}
+
+		from nce_events.api.events_publish import publish_events_to_website
+
+		doc = {**self._DOC, "name": "EVT-NON-NUMERIC"}
+		out = publish_events_to_website(doc)
+
+		post_calls = [c for c in mock_wc.call_args_list if c[0][1] == "POST"]
+		self.assertEqual(len(post_calls), 1)
+		self.assertEqual(post_calls[0][0][2], "/products")
+		self.assertEqual(out["name"], "999")
+		mock_db.get_value.assert_not_called()
+
+
+class TestUpdateWooCommerceProduct(unittest.TestCase):
+	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)
+	@patch("nce_events.api.events_publish._resolve_and_patch_categories")
+	@patch("nce_events.api.events_publish.frappe.db")
+	@patch("nce_events.api.events_publish.wc_request")
+	def test_put_called_with_correct_path(self, mock_wc, mock_db, mock_cats, mock_perm):
+		mock_db.exists.return_value = "501"
+		mock_wc.return_value = {"id": 501, "slug": "spring-camp", "sku": "sku-1"}
+
+		from nce_events.api.events_publish import update_woo_commerce_product
+
+		doc = {
+			"doctype": "Events",
+			"name": "501",
+			"event_name": "Spring Camp",
+			"price": 50,
+			"first_session_date": "2026-06-01",
+			"status": "publish",
+		}
+		out = update_woo_commerce_product(doc)
+
+		put_calls = [c for c in mock_wc.call_args_list if c[0][1] == "PUT"]
+		self.assertEqual(len(put_calls), 1)
+		self.assertEqual(put_calls[0][0][2], "/products/501")
+		self.assertEqual(out["ok"], 1)
+		self.assertEqual(out["wp_id"], 501)
+
+	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)
+	@patch("nce_events.api.events_publish.frappe.db")
+	def test_non_numeric_name_throws(self, mock_db, mock_perm):
+		mock_db.exists.return_value = False
+
+		from nce_events.api.events_publish import update_woo_commerce_product
+
+		with self.assertRaises(frappe.ValidationError):
+			update_woo_commerce_product({"doctype": "Events", "name": "EVT-NON-NUMERIC"})
+
+
+class TestPreviewPublishUpdateBranch(unittest.TestCase):
+	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)
+	@patch("nce_events.api.events_publish.validate_document_page_panel_required_roots")
+	@patch("nce_events.api.events_publish.get_woocommerce_v3_base_url", return_value="https://example.test/wp-json/wc/v3")
+	@patch("nce_events.api.events_publish.frappe.db")
+	@patch("nce_events.api.events_publish.wc_request")
+	def test_preview_update_returns_put(self, mock_wc, mock_db, mock_base, mock_validate, mock_perm):
+		mock_db.exists.return_value = "501"
+		mock_db.get_value.return_value = {
+			"first_session_date": "2026-05-01",  # differs → changed
+			"event_name": "Spring Camp",
+			"event_type_id": "",
+			"price": 50.0,
+		}
+
+		from nce_events.api.events_publish import preview_publish_events_to_website
+
+		out = preview_publish_events_to_website({
+			"doctype": "Events",
+			"name": "501",
+			"event_name": "Spring Camp",
+			"price": 50,
+			"first_session_date": "2026-06-01",
+			"status": "publish",
+		})
+
+		mock_wc.assert_not_called()
+		self.assertEqual(out["method"], "PUT")
+		self.assertEqual(out["path"], "/products/501")
+		self.assertEqual(out["dry_run"], 1)
+		self.assertNotIn("skipped", out)
+
+	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)
+	@patch("nce_events.api.events_publish.validate_document_page_panel_required_roots")
+	@patch("nce_events.api.events_publish.get_woocommerce_v3_base_url", return_value="https://example.test/wp-json/wc/v3")
+	@patch("nce_events.api.events_publish.frappe.db")
+	@patch("nce_events.api.events_publish.wc_request")
+	def test_preview_unchanged_includes_skipped(self, mock_wc, mock_db, mock_base, mock_validate, mock_perm):
+		mock_db.exists.return_value = "501"
+		mock_db.get_value.return_value = {
+			"first_session_date": "2026-06-01",
+			"event_name": "Spring Camp",
+			"event_type_id": "",
+			"price": 50.0,
+		}
+
+		from nce_events.api.events_publish import preview_publish_events_to_website
+
+		out = preview_publish_events_to_website({
+			"doctype": "Events",
+			"name": "501",
+			"event_name": "Spring Camp",
+			"price": 50,
+			"first_session_date": "2026-06-01",
+			"status": "publish",
+		})
+
+		self.assertEqual(out["method"], "PUT")
+		self.assertEqual(out["skipped"], 1)
+
+
 if __name__ == "__main__":
 	unittest.main()
