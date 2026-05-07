@@ -15,10 +15,18 @@ function _do_publish(frm) {
 		callback(r) {
 			if (!r.message?.ok) return;
 			const wp_id = r.message.wp_id;
-			frappe.msgprint({
-				title: __("Published"),
-				message: `<p>${__("Product ID")} <strong>${frappe.utils.escape_html(String(wp_id))}</strong> ${__("created in Woo Commerce")}</p><p>${__("It will appear in the Events panel in a few minutes")}</p>`,
-				indicator: "green",
+			// Clear the singleton record and reload the form in the background,
+			// then show the success dialog so values are gone when user dismisses it.
+			frappe.call({
+				method: "nce_events.api.events_publish.clear_new_woo_commerce_product",
+				callback() {
+					frm.reload_doc();
+					frappe.msgprint({
+						title: __("Published"),
+						message: `<p>${__("Product ID")} <strong>${frappe.utils.escape_html(String(wp_id))}</strong> ${__("created in Woo Commerce")}</p><p>${__("It will appear in the Events panel in a few minutes")}</p>`,
+						indicator: "green",
+					});
+				},
 			});
 		},
 	});
