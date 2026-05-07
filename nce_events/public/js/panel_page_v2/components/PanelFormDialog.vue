@@ -99,15 +99,6 @@ import {
 } from "../composables/useFormDialogChrome.js";
 import { useBackdropPointerDismiss } from "../composables/useBackdropPointerDismiss.js";
 
-/**
- * Map of doctype → backend method to call (before form.save()) when the record
- * already has a numeric name (i.e. is already linked to an external system).
- * Add future doctypes here; each method receives { doc } and returns { ok, skipped? }.
- */
-const DOCTYPE_SUBMIT_HOOKS = {
-	Events: "nce_events.api.events_publish.update_events_to_website",
-	// Families: "nce_events.api.families.update_families_to_website",
-};
 
 function escapeForPreHtml(s) {
 	return String(s)
@@ -296,10 +287,10 @@ async function onLinkChange({ fieldname, value }) {
 
 async function onSubmit() {
 	try {
-		// If this doctype has a submit hook and the record already has a numeric name
-		// (linked to an external system), call the hook BEFORE saving to Frappe so the
-		// change-detection compares against the old stored DB values.
-		const submitHookMethod = DOCTYPE_SUBMIT_HOOKS[props.doctype];
+		// If the Form Dialog definition has a presubmit script and the record already
+		// has a numeric name (linked to an external system), call it BEFORE saving to
+		// Frappe so change-detection compares against the old stored DB values.
+		const submitHookMethod = (form.definition.value?.custom_presubmit_script || "").trim();
 		let hookResult = null;
 		if (submitHookMethod && String(form.formData.name || "").match(/^\d+$/)) {
 			await flushFrappeDateControlsIntoFormData();

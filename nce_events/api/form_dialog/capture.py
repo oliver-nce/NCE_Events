@@ -189,6 +189,7 @@ def get_form_dialog_definition(name: str) -> dict:
 		"writeback_on_submit": doc.writeback_on_submit or 0,
 		"submit_hide_if": (getattr(doc, "submit_hide_if", None) or "").strip() or "Never",
 		"submit_hide_if_sql": (getattr(doc, "submit_hide_if_sql", None) or "").strip(),
+		"custom_presubmit_script": (getattr(doc, "custom_presubmit_script", None) or "").strip(),
 		"buttons": buttons,
 		"related_doctypes": related_doctypes,
 	}
