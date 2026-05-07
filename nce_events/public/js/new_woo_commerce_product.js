@@ -19,22 +19,7 @@ function _do_publish(frm) {
 				title: __("Published"),
 				message: `<p>${__("Product ID")} <strong>${frappe.utils.escape_html(String(wp_id))}</strong> ${__("created in Woo Commerce")}</p><p>${__("It will appear in the Events panel in a few minutes")}</p>`,
 				indicator: "green",
-				primary_action: {
-					label: __("OK"),
-					action() {
-						_clear_and_reload(frm);
-					},
-				},
 			});
-		},
-	});
-}
-
-function _clear_and_reload(frm) {
-	frappe.call({
-		method: "nce_events.api.events_publish.clear_new_woo_commerce_product",
-		callback() {
-			frm.reload_doc();
 		},
 	});
 }
