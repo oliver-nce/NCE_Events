@@ -1,4 +1,4 @@
-"""Publish Events to WooCommerce and insert Frappe Events with ``name`` = WC product id."""
+"""Update existing Frappe Events records on WooCommerce via the REST API."""
 
 from __future__ import annotations
 
@@ -8,12 +8,11 @@ from typing import Any
 
 import frappe
 from frappe import _
-from frappe.utils import cint, cstr, flt, getdate, now_datetime, today
+from frappe.utils import cint, cstr, flt, getdate
 
 from nce_events.api.panel_api_pkg._helpers import validate_document_page_panel_required_roots
 from nce_events.api.woocommerce_client import (
 	DEFAULT_WOOCOMMERCE_CONNECTOR,
-	get_woocommerce_v3_base_url,
 	wc_request,
 )
 
@@ -109,23 +108,6 @@ def _product_categories_meta_value(categories: list[dict[str, Any]]) -> str:
 	return ""
 
 
-def _fill_missing_required_event_dates(meta: Any, row: dict[str, Any]) -> None:
-	"""Set required date/timestamp fields left empty (e.g. WP mirrors not on the panel form)."""
-	for f in meta.fields:
-		if not f.reqd or not f.fieldname:
-			continue
-		v = row.get(f.fieldname)
-		if v is not None and cstr(v).strip() != "":
-			continue
-		fn_lower = f.fieldname.lower()
-		ts_suffix = "_ts" in fn_lower
-		if f.fieldtype == "Date":
-			row[f.fieldname] = today()
-		elif f.fieldtype == "Datetime":
-			row[f.fieldname] = now_datetime()
-		elif f.fieldtype in ("Data", "Small Text") and ts_suffix:
-			row[f.fieldname] = cstr(now_datetime())
-
 
 def _parse_events_date(value: object) -> date | None:
 	if value is None or value == "":
@@ -212,31 +194,6 @@ def build_woocommerce_product_payload(doc: dict[str, Any]) -> dict[str, Any]:
 	return payload
 
 
-def _allowed_events_row(doc: dict[str, Any], wp_id: int) -> dict[str, Any]:
-	meta = frappe.get_meta(_EVENTS_DOCTYPE)
-	allowed = {f.fieldname for f in meta.fields}
-	out: dict[str, Any] = {"doctype": _EVENTS_DOCTYPE, "name": str(wp_id)}
-	for k, v in doc.items():
-		if k in ("doctype", "name"):
-			continue
-		if k in allowed:
-			out[k] = v
-	out["name"] = str(wp_id)
-	if "wp_id" in allowed:
-		wf = meta.get_field("wp_id")
-		if wf and wf.fieldtype in ("Int", "Float", "Currency"):
-			out["wp_id"] = wp_id
-		else:
-			out["wp_id"] = str(wp_id)
-	if "pk" in allowed:
-		pkf = meta.get_field("pk")
-		if pkf and pkf.fieldtype in ("Int", "Float", "Currency"):
-			out["pk"] = wp_id
-		else:
-			out["pk"] = str(wp_id)
-	_fill_missing_required_event_dates(meta, out)
-	return out
-
 
 def _run_after_publish_hooks(name: str) -> None:
 	for fn in frappe.get_hooks("after_events_publish_to_woocommerce") or []:
@@ -291,17 +248,15 @@ def _do_woo_product_put(wp_id: int, wc_body: dict[str, Any], conn: str) -> dict[
 def _prepare_events_publish(
 	doc: dict[str, Any] | str,
 	connector_name: str | None = None,
-	*,
-	_perm_action: str = "create",
 ) -> tuple[dict[str, Any], dict[str, Any], str]:
-	"""Parse ``doc``, enforce permissions and panel required fields, build WooCommerce body."""
+	"""Parse ``doc``, enforce write permissions and panel required fields, build WooCommerce body."""
 	doc = frappe.parse_json(doc) if isinstance(doc, str) else dict(doc)
 	if (doc.get("doctype") or _EVENTS_DOCTYPE) != _EVENTS_DOCTYPE:
 		frappe.throw(_("Document must be doctype {0}.").format(_EVENTS_DOCTYPE))
 
-	if not frappe.has_permission(_EVENTS_DOCTYPE, _perm_action):
+	if not frappe.has_permission(_EVENTS_DOCTYPE, "write"):
 		frappe.throw(
-			_("Not permitted to {0} {1}").format(_perm_action, _EVENTS_DOCTYPE),
+			_("Not permitted to write {0}").format(_EVENTS_DOCTYPE),
 			frappe.PermissionError,
 		)
 
@@ -315,60 +270,17 @@ def _prepare_events_publish(
 
 
 @frappe.whitelist()
-def preview_publish_events_to_website(
-	doc: dict[str, Any] | str,
-	connector_name: str | None = None,
-) -> dict[str, Any]:
-	"""Same validation and payload as publish, but do not call WooCommerce or insert Events."""
-	raw = frappe.parse_json(doc) if isinstance(doc, str) else dict(doc)
-	wp_id = _is_existing_events_row(raw.get("name"))
-	_doc, wc_body, conn = _prepare_events_publish(
-		raw, connector_name, _perm_action="write" if wp_id is not None else "create"
-	)
-	api_base = get_woocommerce_v3_base_url(conn)
-	if wp_id is not None:
-		base = {
-			"ok": 1,
-			"dry_run": 1,
-			"method": "PUT",
-			"path": f"/products/{wp_id}",
-			"api_base_url": api_base,
-			"connector_name": conn,
-			"json_body": wc_body,
-		}
-		if not _wc_tracked_fields_changed(_doc, wp_id):
-			base["skipped"] = 1
-		return base
-	return {
-		"ok": 1,
-		"dry_run": 1,
-		"method": "POST",
-		"path": "/products",
-		"api_base_url": api_base,
-		"connector_name": conn,
-		"json_body": wc_body,
-	}
-
-
-@frappe.whitelist()
-def publish_events_to_website(
+def update_events_to_website(
 	doc: dict[str, Any] | str,
 	connector_name: str | None = None,
 ) -> dict[str, Any]:
 	"""
-	Validate Events payload, then either update or create a WooCommerce product:
+	Check tracked fields against the stored Events row and PUT to WooCommerce if changed.
 
-	- **Update** (``name`` is a numeric WC product id and the Events row exists): PUT to
-	  ``/products/{id}`` when any of the four tracked fields (``first_session_date``,
-	  ``event_name``, ``event_type_id``, ``price``) differ from the stored row.  Does not
-	  persist the Frappe record — the caller's Submit handles that.
-	- **Create** (no existing row): POST to ``/products``, insert ``Events`` with
-	  ``name`` = new product id, run ``after_events_publish_to_woocommerce`` hooks.
+	``doc["name"]`` must be a numeric WC product id matching an existing Frappe Events row.
+	Returns ``{"ok": 1, "skipped": 1}`` when no tracked fields differ.
 
-	``doc`` may be a JSON string from ``frappe.call``. WP Tables **derived** SQL (``sql_expression``)
-	is **not** run on publish — only the values on ``doc`` are used. Page Panel ``required_fields``
-	for Events are enforced before WooCommerce (not DocType meta ``reqd``, since the row is inserted
-	after the WC call). (WP ``column_mapping`` defaults are applied in the panel New Form Dialog.)
+	Does not persist the Frappe record — the caller's Submit handles that.
 
 	Other apps (e.g. nce_sync) may register::
 
@@ -376,43 +288,27 @@ def publish_events_to_website(
 	"""
 	raw = frappe.parse_json(doc) if isinstance(doc, str) else dict(doc)
 	wp_id = _is_existing_events_row(raw.get("name"))
-	_doc, wc_body, conn = _prepare_events_publish(
-		raw, connector_name, _perm_action="write" if wp_id is not None else "create"
-	)
+	if wp_id is None:
+		frappe.throw(
+			_("{0} does not have a valid WooCommerce product id as its name.").format(_EVENTS_DOCTYPE)
+		)
 
-	if wp_id is not None:
-		if not _wc_tracked_fields_changed(_doc, wp_id):
-			return {"ok": 1, "name": str(wp_id), "wp_id": wp_id, "skipped": 1}
-		wc_resp = _do_woo_product_put(wp_id, wc_body, conn)
-		_run_after_publish_hooks(str(wp_id))
-		return {
-			"ok": 1,
-			"name": str(wp_id),
-			"wp_id": wp_id,
-			"woocommerce": {
-				"id": wc_resp.get("id", wp_id),
-				"slug": wc_resp.get("slug"),
-				"sku": wc_resp.get("sku"),
-			},
-		}
+	_doc, wc_body, conn = _prepare_events_publish(raw, connector_name)
 
-	wc_resp = wc_request(conn, "POST", "/products", json_body=wc_body)
-	wpid = wc_resp.get("id") if isinstance(wc_resp, dict) else None
-	if wpid is None:
-		frappe.throw(_("WooCommerce response did not include a product id."))
-	new_wp_id = int(wpid)
+	if not _wc_tracked_fields_changed(_doc, wp_id):
+		return {"ok": 1, "name": str(wp_id), "wp_id": wp_id, "skipped": 1}
 
-	row = _allowed_events_row(_doc, new_wp_id)
-	ev = frappe.get_doc(row)
-	ev.insert(ignore_permissions=True)
-
-	_run_after_publish_hooks(ev.name)
-
+	wc_resp = _do_woo_product_put(wp_id, wc_body, conn)
+	_run_after_publish_hooks(str(wp_id))
 	return {
 		"ok": 1,
-		"name": ev.name,
-		"wp_id": new_wp_id,
-		"woocommerce": {"id": new_wp_id, "slug": wc_resp.get("slug"), "sku": wc_resp.get("sku")},
+		"name": str(wp_id),
+		"wp_id": wp_id,
+		"woocommerce": {
+			"id": wc_resp.get("id", wp_id),
+			"slug": wc_resp.get("slug"),
+			"sku": wc_resp.get("sku"),
+		},
 	}
 
 

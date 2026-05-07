@@ -99,8 +99,15 @@ import {
 } from "../composables/useFormDialogChrome.js";
 import { useBackdropPointerDismiss } from "../composables/useBackdropPointerDismiss.js";
 
-/** Set to `false` for real WooCommerce POST + Frappe Events insert. When `true`, only shows the proposed request in a dialog. */
-const WOO_EVENTS_PUBLISH_PREVIEW_ONLY = false;
+/**
+ * Map of doctype → backend method to call (before form.save()) when the record
+ * already has a numeric name (i.e. is already linked to an external system).
+ * Add future doctypes here; each method receives { doc } and returns { ok, skipped? }.
+ */
+const DOCTYPE_SUBMIT_HOOKS = {
+	Events: "nce_events.api.events_publish.update_events_to_website",
+	// Families: "nce_events.api.families.update_families_to_website",
+};
 
 function escapeForPreHtml(s) {
 	return String(s)
@@ -289,6 +296,35 @@ async function onLinkChange({ fieldname, value }) {
 
 async function onSubmit() {
 	try {
+		// If this doctype has a submit hook and the record already has a numeric name
+		// (linked to an external system), call the hook BEFORE saving to Frappe so the
+		// change-detection compares against the old stored DB values.
+		const submitHookMethod = DOCTYPE_SUBMIT_HOOKS[props.doctype];
+		let hookResult = null;
+		if (submitHookMethod && String(form.formData.name || "").match(/^\d+$/)) {
+			await flushFrappeDateControlsIntoFormData();
+			const raw = JSON.parse(JSON.stringify(form.formData));
+			if (props.doctype === "Events") {
+				const root = fdBodyRef.value?.$el;
+				const liveFirst = readLiveFieldValue(root, "first_session_date");
+				if (liveFirst != null) raw.first_session_date = liveFirst;
+				const liveSessions = readLiveFieldValue(root, "number_of_sessions");
+				if (liveSessions != null) raw.number_of_sessions = liveSessions;
+			}
+			const doc = props.doctype === "Events"
+				? normalizeDocForWooEventsPublish({ doctype: props.doctype, ...raw })
+				: { doctype: props.doctype, ...raw };
+			try {
+				hookResult = await frappeCall(submitHookMethod, { doc });
+			} catch (hookErr) {
+				const msg = hookErr?.message || String(hookErr) || "Update failed";
+				if (typeof frappe !== "undefined" && frappe.msgprint) {
+					frappe.msgprint({ title: "WooCommerce", message: msg, indicator: "red" });
+				}
+				// Hook failure does not block the Frappe save
+			}
+		}
+
 		const result = await form.save();
 		try {
 			await fdBodyRef.value?.saveAllRelatedRows?.();
@@ -303,6 +339,13 @@ async function onSubmit() {
 			}
 			throw relErr;
 		}
+
+		if (hookResult && !hookResult.skipped) {
+			if (typeof frappe !== "undefined" && frappe.show_alert) {
+				frappe.show_alert({ message: "WooCommerce product updated", indicator: "green" }, 5);
+			}
+		}
+
 		emit("saved", result);
 		emit("close");
 	} catch {
@@ -312,7 +355,7 @@ async function onSubmit() {
 
 async function onPlaceholderButton(btn) {
 	const script = String(btn?.button_script || "").trim();
-	if (props.doctype === "Events" && script === "publish_events_to_website") {
+	if (props.doctype === "Events" && script === "update_events_to_website") {
 		form.validationError.value = null;
 		const errors = form.validateForWooPublish();
 		if (errors.length) {
@@ -356,7 +399,7 @@ async function onPlaceholderButton(btn) {
 					});
 				}
 			} else {
-				const r = await frappeCall("nce_events.api.events_publish.publish_events_to_website", { doc });
+				const r = await frappeCall("nce_events.api.events_publish.update_events_to_website", { doc });
 				if (typeof props.reloadPanelAfterPublish === "function") {
 					await props.reloadPanelAfterPublish();
 				}
