@@ -21,6 +21,25 @@ from nce_events.api.panel_api_pkg._helpers import validate_document_page_panel_r
 from ._helpers import _assert_doctype_in_wp_tables
 
 
+def _sanitize_scalar_fields(doc: dict[str, Any]) -> None:
+	"""
+	Guard against frontend bugs that send a change-event payload dict
+	``{"fieldname": "x", "value": "y"}`` as a field value instead of the
+	scalar ``"y"``.  PyMySQL rejects dict parameters with ``TypeError: dict
+	can not be used as parameter``.  Extract the inner value when possible;
+	drop keys whose value remains a non-list dict (never valid for a scalar
+	field in this save path).
+	"""
+	for key in list(doc.keys()):
+		v = doc[key]
+		if isinstance(v, dict) and key not in ("doctype",):
+			inner = v.get("value")
+			if inner is not None and not isinstance(inner, (dict, list)):
+				doc[key] = inner
+			else:
+				doc.pop(key)
+
+
 @frappe.whitelist()
 def save_form_dialog_document(
 	doc: str | dict[str, Any],
@@ -95,6 +114,7 @@ def save_form_dialog_document(
 			if changed:
 				target.save()
 
+	_sanitize_scalar_fields(doc)
 	d = frappe.get_doc(doc)
 	d.save()
 	return d.as_dict()

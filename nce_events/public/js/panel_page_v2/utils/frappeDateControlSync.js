@@ -74,6 +74,8 @@ export function createDateControlChangeHandler(cfg) {
 		}
 		const v = this.get_value();
 		writeStubDocField(this, fn, v);
-		cfg.emit("change", { fieldname: fn, value: v });
+		// Emit the scalar value only — PanelFormField wraps it with fieldname.
+		// Emitting {fieldname, value} caused the dict to be stored in formData.
+		cfg.emit("change", v);
 	};
 }
