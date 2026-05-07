@@ -21,8 +21,6 @@ def _panel_required_value_empty(val: object) -> bool:
 		return True
 	if val == "":
 		return True
-	if val == 0:
-		return True
 	return False
 
 

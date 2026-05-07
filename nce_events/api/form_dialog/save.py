@@ -116,5 +116,5 @@ def save_form_dialog_document(
 
 	_sanitize_scalar_fields(doc)
 	d = frappe.get_doc(doc)
-	d.save()
+	d.save(ignore_version=True)
 	return d.as_dict()

@@ -2,7 +2,7 @@ import { evaluateExpression, isLayoutField } from "../utils/frappeFieldExpr.js";
 
 /** Same emptiness rule as mandatory DocField validation in validateFrozenForm. */
 export function isMandatoryValueEmpty(value) {
-	return value === null || value === undefined || value === "" || value === 0;
+	return value === null || value === undefined || value === "";
 }
 
 /** Frappe Virtual DocField — computed, not stored; always read-only on Desk. */
