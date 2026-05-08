@@ -65,7 +65,6 @@
       :field="field"
       :model-value="modelValue"
       :read-only="readOnly"
-      :mandatory="mandatory"
       @change="onChange"
       @link-change="onLinkChangePayload"
     />
@@ -76,7 +75,6 @@
       :field="field"
       :model-value="modelValue"
       :read-only="readOnly"
-      :mandatory="mandatory"
       @change="onChange"
     />
 

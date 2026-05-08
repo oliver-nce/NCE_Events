@@ -13,7 +13,6 @@ const props = defineProps({
 	field: { type: Object, required: true },
 	modelValue: { default: null },
 	readOnly: { type: Boolean, default: false },
-	mandatory: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(["change"]);
@@ -30,7 +29,8 @@ function buildDf() {
 		fieldname: fn,
 		fieldtype: props.field.fieldtype,
 		read_only: props.readOnly ? 1 : 0,
-		reqd: props.mandatory ? 1 : 0,
+		// Mandatory asterisk is on PanelFormField's <label> only; df.reqd would duplicate Frappe control UI.
+		reqd: 0,
 		hidden: 0,
 		change: createDateControlChangeHandler({
 			fieldname: fn,
@@ -72,11 +72,11 @@ watch(
 );
 
 watch(
-	() => [props.readOnly, props.mandatory, props.field.fieldtype],
+	() => [props.readOnly, props.field.fieldtype],
 	() => {
 		if (!control) return;
 		control.df.read_only = props.readOnly ? 1 : 0;
-		control.df.reqd = props.mandatory ? 1 : 0;
+		control.df.reqd = 0;
 		control.refresh();
 	},
 );
