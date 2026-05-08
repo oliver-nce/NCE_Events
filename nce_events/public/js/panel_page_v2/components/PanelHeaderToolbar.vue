@@ -28,6 +28,13 @@
 				<i class="fa fa-table"></i>
 			</button>
 			<button
+				class="ppv2-hdr-btn ppv2-hdr-btn--excel-dl"
+				title="Download CSV (Excel, filtered view)"
+				@click="$emit('download-csv')"
+			>
+				<i class="fa fa-file-excel-o" aria-hidden="true"></i>
+			</button>
+			<button
 				v-if="props.showEmail"
 				class="ppv2-hdr-btn"
 				title="Email"
@@ -64,5 +71,23 @@ const props = defineProps({
 	showClose: { type: Boolean, default: false },
 });
 
-defineEmits(["refresh", "toggle-filter", "sheets", "email", "sms", "new-record", "close"]);
+defineEmits([
+	"refresh",
+	"toggle-filter",
+	"sheets",
+	"download-csv",
+	"email",
+	"sms",
+	"new-record",
+	"close",
+]);
 </script>
+
+<style scoped>
+/* Slightly smaller FA “spreadsheet” glyph so it fits the header bar */
+.ppv2-hdr-btn--excel-dl i.fa {
+	color: #217346;
+	font-size: 0.88em;
+	vertical-align: middle;
+}
+</style>

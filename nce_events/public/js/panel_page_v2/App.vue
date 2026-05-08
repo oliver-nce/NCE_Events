@@ -11,6 +11,9 @@
 					@refresh="onRefreshRoot"
 					@toggle-filter="rootPanelShowFilter = !rootPanelShowFilter"
 					@sheets="onSheets({ doctype: 'WP Tables', parentFilter: {}, rows })"
+					@download-csv="
+						onDownloadCsv({ doctype: 'WP Tables', parentFilter: {}, rows })
+					"
 				/>
 			</template>
 			<PanelTable
@@ -26,6 +29,9 @@
 				@row-click="onRootRowClick"
 				@row-drop="(row) => onRowDrop(null, row)"
 				@sheets="onSheets({ doctype: 'WP Tables', parentFilter: {}, rows })"
+				@download-csv="
+					onDownloadCsv({ doctype: 'WP Tables', parentFilter: {}, rows })
+				"
 				@filter-change="(f) => onFilterChange(null, f)"
 				@refresh="onRefreshRoot"
 				@show-filter="rootPanelShowFilter = true"
@@ -57,6 +63,7 @@
 					@refresh="onRefreshPanel(p)"
 					@toggle-filter="p._showFilter = !p._showFilter"
 					@sheets="onSheets(p)"
+					@download-csv="onDownloadCsv(p)"
 					@email="onEmail(p)"
 					@sms="onSms(p)"
 					@new-record="onNewRecord(p)"
@@ -79,6 +86,7 @@
 				@row-click="(row) => onDrilledRowClick(p, row)"
 				@drill="(ev) => onDrill(ev, p)"
 				@sheets="onSheets(p)"
+				@download-csv="onDownloadCsv(p)"
 				@email="onEmail(p)"
 				@sms="onSms(p)"
 				@tags="openTagFinder(p)"
@@ -536,18 +544,67 @@ function panelDisplayRowsForExport(panelPayload) {
 	return Array.isArray(r) ? r : [];
 }
 
-function onSheets(panelPayload) {
+function filteredPanelExportArgs(panelPayload) {
 	const displayRows = panelDisplayRowsForExport(panelPayload);
 	const filteredRowNames = displayRows
 		.map((row) => row.name)
 		.filter((n) => n != null && String(n).trim() !== "");
+	return {
+		root_doctype: panelPayload.doctype,
+		filters: JSON.stringify(panelPayload.parentFilter || {}),
+		filtered_row_names: JSON.stringify(filteredRowNames),
+	};
+}
+
+/** Fetch public CSV URL same-origin → blob → save as filename (better than navigating away). */
+function triggerCsvBrowserDownload(absUrl, filename, rowsExported) {
+	fetch(absUrl, { credentials: "same-origin" })
+		.then((res) => {
+			if (!res.ok) throw new Error(res.statusText);
+			return res.blob();
+		})
+		.then((blob) => {
+			const blobUrl = URL.createObjectURL(blob);
+			const a = document.createElement("a");
+			a.href = blobUrl;
+			a.download = filename || "panel-export.csv";
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(blobUrl);
+			frappe.show_alert({
+				message: __("Downloaded CSV ({0} rows)", [rowsExported]),
+				indicator: "green",
+			});
+		})
+		.catch(() => {
+			frappe.show_alert({
+				message: __("Could not download CSV"),
+				indicator: "red",
+			});
+		});
+}
+
+function onDownloadCsv(panelPayload) {
 	frappe.call({
 		method: "nce_events.api.panel_api_pkg.panel_data.export_panel_data",
-		args: {
-			root_doctype: panelPayload.doctype,
-			filters: JSON.stringify(panelPayload.parentFilter || {}),
-			filtered_row_names: JSON.stringify(filteredRowNames),
+		args: filteredPanelExportArgs(panelPayload),
+		callback(r) {
+			const msg = r.message;
+			if (!msg?.url) {
+				frappe.show_alert({ message: __("Export failed"), indicator: "red" });
+				return;
+			}
+			const url = window.location.origin + msg.url;
+			triggerCsvBrowserDownload(url, msg.filename || "panel-export.csv", msg.rows_exported);
 		},
+	});
+}
+
+function onSheets(panelPayload) {
+	frappe.call({
+		method: "nce_events.api.panel_api_pkg.panel_data.export_panel_data",
+		args: filteredPanelExportArgs(panelPayload),
 		callback(r) {
 			if (!r.message) return;
 			const url = window.location.origin + r.message.url;
