@@ -24,7 +24,11 @@
 			<button class="ppv2-hdr-btn" title="Filter" @click="$emit('toggle-filter')">
 				<i class="fa fa-filter"></i>
 			</button>
-			<button class="ppv2-hdr-btn" title="Export to Sheets" @click="$emit('sheets')">
+			<button
+				class="ppv2-hdr-btn"
+				title="Export to Google Sheets (filtered view)"
+				@click="$emit('sheets')"
+			>
 				<i class="fa fa-table"></i>
 			</button>
 			<button
