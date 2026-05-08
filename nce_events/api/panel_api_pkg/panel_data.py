@@ -8,6 +8,7 @@ import os
 from typing import Any
 
 import frappe
+from frappe import _
 from frappe.utils import cint, cstr
 
 from nce_events.api.panel_api_pkg._helpers import (
@@ -357,16 +358,52 @@ def get_panel_data(
 	}
 
 
+_EXPORT_NAME_CAP = 50000
+
+
+def _names_for_filtered_export(filtered_row_names: str | list | None) -> list[str] | None:
+	"""If None, caller exports full row set from get_panel_data. If a list (possibly empty), export only those `name`s in order."""
+	if filtered_row_names is None:
+		return None
+	if isinstance(filtered_row_names, list):
+		raw = filtered_row_names
+	elif isinstance(filtered_row_names, str):
+		s = filtered_row_names.strip()
+		if not s:
+			return None
+		try:
+			raw = json.loads(s)
+		except json.JSONDecodeError:
+			frappe.throw(_("filtered_row_names must be a JSON array"))
+	else:
+		return None
+
+	if not isinstance(raw, list):
+		frappe.throw(_("filtered_row_names must be a JSON array"))
+
+	out = [str(n).strip() for n in raw if n is not None and str(n).strip() != ""]
+	if len(out) > _EXPORT_NAME_CAP:
+		frappe.throw(_("filtered_row_names exceeds maximum ({0})").format(_EXPORT_NAME_CAP))
+
+	return out
+
+
 @frappe.whitelist()
 def export_panel_data(
 	root_doctype: str,
 	filters: str | dict | None = None,
 	user_filters: str | list | None = None,
+	filtered_row_names: str | list | None = None,
 ) -> dict[str, Any]:
 	"""Export a panel's current data as CSV to a public path and return its URL."""
 	result = get_panel_data(root_doctype, filters, user_filters=user_filters)
 	columns = result["columns"]
 	rows = result["rows"]
+
+	names_subset = _names_for_filtered_export(filtered_row_names)
+	if names_subset is not None:
+		row_by_name = {str(r.get("name")).strip(): r for r in rows if r.get("name") not in (None, "")}
+		rows = [row_by_name[n] for n in names_subset if n in row_by_name]
 
 	col_fieldnames = [c["fieldname"] for c in columns]
 	labels = [c["label"] for c in columns]
@@ -387,7 +424,16 @@ def export_panel_data(
 
 	safe_dt = _safe_filename(root_doctype)
 	ts = frappe.utils.now_datetime().strftime("%Y%m%d_%H%M%S")
-	context_key = json.dumps({"f": filters, "uf": user_filters, "t": ts}, sort_keys=True, default=str)
+	context_key = json.dumps(
+		{
+			"f": filters,
+			"uf": user_filters,
+			"frn": names_subset,
+			"t": ts,
+		},
+		sort_keys=True,
+		default=str,
+	)
 	suffix = hashlib.md5(context_key.encode()).hexdigest()[:10]
 	filename = f"{safe_dt}_{ts}_{suffix}.csv"
 

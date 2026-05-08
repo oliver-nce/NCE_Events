@@ -527,13 +527,26 @@ function onNewRecord(panel) {
 	}
 }
 
-function onSheets(p) {
+/** Same row list the table shows: drilled panels use `_panelRows` when set (live ref), else `rows`. */
+function panelDisplayRowsForExport(panelPayload) {
+	if (!panelPayload) return [];
+	const pr = panelPayload._panelRows;
+	if (Array.isArray(pr)) return pr;
+	const r = panelPayload.rows;
+	return Array.isArray(r) ? r : [];
+}
+
+function onSheets(panelPayload) {
+	const displayRows = panelDisplayRowsForExport(panelPayload);
+	const filteredRowNames = displayRows
+		.map((row) => row.name)
+		.filter((n) => n != null && String(n).trim() !== "");
 	frappe.call({
 		method: "nce_events.api.panel_api_pkg.panel_data.export_panel_data",
 		args: {
-			root_doctype: p.doctype,
-			filters: JSON.stringify(p.parentFilter || {}),
-			user_filters: JSON.stringify([]),
+			root_doctype: panelPayload.doctype,
+			filters: JSON.stringify(panelPayload.parentFilter || {}),
+			filtered_row_names: JSON.stringify(filteredRowNames),
 		},
 		callback(r) {
 			if (!r.message) return;
