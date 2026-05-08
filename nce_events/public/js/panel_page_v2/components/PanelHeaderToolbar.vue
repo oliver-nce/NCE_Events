@@ -28,7 +28,7 @@
 				<i class="fa fa-table"></i>
 			</button>
 			<button
-				class="ppv2-hdr-btn ppv2-hdr-btn--excel-dl"
+				class="ppv2-hdr-btn"
 				title="Download CSV (Excel, filtered view)"
 				@click="$emit('download-csv')"
 			>
@@ -82,12 +82,3 @@ defineEmits([
 	"close",
 ]);
 </script>
-
-<style scoped>
-/* Slightly smaller FA “spreadsheet” glyph so it fits the header bar */
-.ppv2-hdr-btn--excel-dl i.fa {
-	color: #217346;
-	font-size: 0.88em;
-	vertical-align: middle;
-}
-</style>
