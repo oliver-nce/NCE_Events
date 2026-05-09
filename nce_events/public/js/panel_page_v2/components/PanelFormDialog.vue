@@ -346,6 +346,84 @@ async function onSubmit() {
 
 async function onPlaceholderButton(btn) {
 	const script = String(btn?.button_script || "").trim();
+	const scriptKey = (script.split(/\s+/)[0] || "").trim();
+
+	if (
+		props.doctype === "New Woo Commerce Product" &&
+		scriptKey === "publish_new_woo_commerce_product"
+	) {
+		form.validationError.value = null;
+		try {
+			await flushFrappeDateControlsIntoFormData();
+			const raw = JSON.parse(JSON.stringify(form.formData));
+			const doc = {
+				doctype: props.doctype,
+				event_name: raw.event_name,
+				type_id: raw.type_id,
+				price: raw.price,
+				start_date: raw.start_date,
+			};
+			const labels = [];
+			if (!String(doc.event_name ?? "").trim()) labels.push(__("Event Name"));
+			if (!String(doc.type_id ?? "").trim()) labels.push(__("Type"));
+			if (doc.price === "" || doc.price === null || String(doc.price).trim() === "") {
+				labels.push(__("Price"));
+			}
+			if (!String(doc.start_date ?? "").trim()) labels.push(__("Start Date"));
+			if (labels.length) {
+				const msg = `${__("Please fill all required fields:")} ${labels.join(", ")}`;
+				form.validationError.value = msg;
+				if (typeof frappe !== "undefined" && frappe.msgprint) {
+					frappe.msgprint({ title: __("Validation"), message: msg, indicator: "red" });
+				}
+				return;
+			}
+			const r = await frappeCall(
+				"nce_events.api.events_publish.publish_new_woo_commerce_product",
+				{ doc },
+				{ freeze: true, freeze_message: __("Publishing to WooCommerce…") },
+			);
+			if (!r?.ok) return;
+			const wp_id = r.wp_id;
+			try {
+				await frappeCall("nce_events.api.events_publish.clear_new_woo_commerce_product");
+			} catch {
+				if (typeof frappe !== "undefined" && frappe.msgprint) {
+					frappe.msgprint({
+						title: __("Published"),
+						message: __(
+							"Product was created but clearing the singleton failed — open Desk if needed.",
+						),
+						indicator: "orange",
+					});
+				}
+				await form.load();
+				return;
+			}
+			await form.load();
+			if (typeof frappe !== "undefined" && frappe.msgprint) {
+				frappe.msgprint({
+					title: __("Published"),
+					message: `<p>${__("Product ID")} <strong>${frappe.utils.escape_html(
+						String(wp_id),
+					)}</strong> ${__("created in Woo Commerce")}</p><p>${__(
+						"It will appear in the Events panel in a few minutes",
+					)}</p>`,
+					indicator: "green",
+				});
+			}
+			if (typeof props.reloadPanelAfterPublish === "function") {
+				await props.reloadPanelAfterPublish();
+			}
+		} catch (e) {
+			const msg = e?.message || String(e) || "Publish failed";
+			form.validationError.value = msg;
+			if (typeof frappe !== "undefined" && frappe.msgprint) {
+				frappe.msgprint({ title: __("Publish"), message: msg, indicator: "red" });
+			}
+		}
+		return;
+	}
 	if (props.doctype === "Events" && script === "update_events_to_website") {
 		form.validationError.value = null;
 		const errors = form.validateForWooPublish();

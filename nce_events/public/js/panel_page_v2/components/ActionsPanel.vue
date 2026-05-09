@@ -4,9 +4,17 @@
 			<span class="ppv2-title">Actions</span>
 		</template>
 		<div class="ppv2-actions-body">
-			<button type="button" class="ppv2-action-btn" @click="$emit('new-woo-product')">
-				New Woo Commerce Product
+			<button
+				v-for="a in actions"
+				:key="a.action_id || a.name"
+				type="button"
+				class="ppv2-action-btn"
+				:title="a.action_id || a.name"
+				@click="$emit('select', a)"
+			>
+				{{ a.label }}
 			</button>
+			<div v-if="!actions.length" class="ppv2-actions-empty">No actions</div>
 		</div>
 		<template #footer>Actions</template>
 	</PanelFloat>
@@ -15,7 +23,11 @@
 <script setup>
 import PanelFloat from "./PanelFloat.vue";
 
-defineEmits(["new-woo-product"]);
+defineProps({
+	actions: { type: Array, default: () => [] },
+});
+
+defineEmits(["select"]);
 </script>
 
 <style scoped>
@@ -49,5 +61,13 @@ defineEmits(["new-woo-product"]);
 
 .ppv2-action-btn:active {
 	transform: translateY(1px);
+}
+
+.ppv2-actions-empty {
+	font-size: var(--font-size-sm);
+	color: var(--text-muted);
+	font-style: italic;
+	text-align: center;
+	padding: 6px 0;
 }
 </style>

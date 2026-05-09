@@ -67,6 +67,24 @@ export function usePanelFormDialogHost(openPanels) {
 		return true;
 	}
 
+	/** Open Form Dialog without a parent panel context (e.g. from Actions panel). */
+	function openFormDialogStandalone({ formDialog, doctype, docName = null, requiredFields = [] }) {
+		if (!formDialog || !doctype) return false;
+		formDialogPendingDocName.value = null;
+		formDialogPendingDefinition.value = null;
+		formDialogPendingDoctype.value = null;
+		formDialogDissolving.value = false;
+		formDialogDissolveOpacity.value = 1;
+		formDialogSlot.value = 0;
+		formDialogDefinition.value = formDialog;
+		formDialogDoctype.value = doctype;
+		formDialogDocName.value = docName;
+		formDialogSourcePanelId.value = null;
+		formDialogRequiredFields.value = Array.isArray(requiredFields) ? requiredFields.slice() : [];
+		showFormDialog.value = true;
+		return true;
+	}
+
 	function onFormDialogClose() {
 		showFormDialog.value = false;
 		formDialogRequiredFields.value = [];
@@ -198,6 +216,7 @@ export function usePanelFormDialogHost(openPanels) {
 		onFormDialogNavNext,
 		openFormDialogFromPanelRow,
 		openFormDialogForNewRecord,
+		openFormDialogStandalone,
 		onFormDialogClose,
 		onFormDialogSaved,
 		reloadPanelForFormDialogDoctype,

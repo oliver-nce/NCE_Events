@@ -1,6 +1,6 @@
 <template>
 	<div class="ppv2-root">
-		<ActionsPanel @new-woo-product="showNewWooProductDialog = true" />
+		<ActionsPanel :actions="panelActions" @select="onPanelActionSelect" />
 		<PanelFloat :init-x="240" :init-y="60" :init-w="900" :init-h="550">
 			<template #header>
 				<span class="ppv2-title">{{ config?.header_text || "NCE Tables" }}</span>
@@ -100,11 +100,6 @@
 			/>
 			<template #footer>{{ floatedPanelTitle(p) }}</template>
 		</PanelFloat>
-
-		<NewWooProductDialog
-			v-if="showNewWooProductDialog"
-			@close="showNewWooProductDialog = false"
-		/>
 
 		<TagFinder
 			v-if="tagFinderDoctype"
@@ -221,6 +216,7 @@
 import { ref, reactive, computed, onMounted, onUnmounted } from "vue";
 import { useNceCardStack, parseOpenCardOpts } from "./composables/useNceCardStack.js";
 import { usePanelFormDialogHost } from "./composables/usePanelFormDialogHost.js";
+import { usePanelActions } from "./composables/usePanelActions.js";
 import { usePanel } from "./composables/usePanel.js";
 import { useSendDialogs } from "./composables/useSendDialogs.js";
 import PanelFloat from "./components/PanelFloat.vue";
@@ -230,7 +226,6 @@ import TagFinder from "./components/TagFinder.vue";
 import CardModal from "./nce_cards/CardModal.vue";
 import PanelFormDialog from "./components/PanelFormDialog.vue";
 import ActionsPanel from "./components/ActionsPanel.vue";
-import NewWooProductDialog from "./components/NewWooProductDialog.vue";
 
 const rootPanel = usePanel("WP Tables");
 const {
@@ -245,7 +240,6 @@ const {
 	reload,
 } = rootPanel;
 const rootPanelShowFilter = ref(false);
-const showNewWooProductDialog = ref(false);
 
 // Hide nce_name — it duplicates frappe_doctype in the root panel.
 // Also strip is_link from frappe_doctype so clicking opens the next panel (via row-click)
@@ -275,6 +269,7 @@ const {
 	onFormDialogNavNext,
 	openFormDialogFromPanelRow,
 	openFormDialogForNewRecord,
+	openFormDialogStandalone,
 	onFormDialogClose,
 	onFormDialogSaved,
 	reloadPanelForFormDialogDoctype,
@@ -286,6 +281,20 @@ const {
 	formDialogDissolving,
 	formDialogDissolveOpacity,
 } = usePanelFormDialogHost(openPanels);
+
+function refreshPanelByDoctype(doctype) {
+	const panel = openPanels.find((p) => p.doctype === doctype);
+	if (panel?._reload) panel._reload();
+}
+
+const { actions: panelActions, loadActions, executeAction: runPanelAction } = usePanelActions({
+	openFormDialogStandalone,
+	refreshPanelByDoctype,
+});
+
+async function onPanelActionSelect(action) {
+	await runPanelAction(action);
+}
 
 const { cardStack, openCardModal, closeTopCard, onOpenCard } = useNceCardStack();
 
@@ -319,6 +328,7 @@ function onKeyDown(e) {
 
 onMounted(() => {
 	load();
+	loadActions();
 	window.addEventListener("keydown", onKeyDown);
 	window._nce_open_tag_finder = (dt, x, y) => {
 		if (!dt) return;
