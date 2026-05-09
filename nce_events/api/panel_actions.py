@@ -3,6 +3,8 @@ from __future__ import annotations
 from typing import Any
 
 import frappe
+from frappe import _
+from frappe.utils import cstr
 
 _PUBLIC_FIELDS: tuple[str, ...] = (
 	"name",
@@ -52,3 +54,36 @@ def get_panel_actions() -> list[dict[str, Any]]:
 		out.append(r)
 
 	return out
+
+
+@frappe.whitelist()
+def resolve_panel_action_doc_name(
+	doctype: str,
+	record_mode: str,
+	record_name: str | None = None,
+) -> dict[str, Any]:
+	"""Resolve doc ``name`` for opening a Form Dialog (handles Frappe Single / ``issingle`` DocTypes)."""
+	dt = cstr(doctype).strip()
+	if not dt:
+		frappe.throw(_("DocType is required."))
+	if not frappe.db.exists("DocType", dt):
+		frappe.throw(_("DocType {0} is not installed on this site.").format(dt))
+
+	mode = cstr(record_mode).strip() or "New"
+	if mode == "New":
+		return {"doc_name": None}
+	if mode == "Specific Name":
+		rn = cstr(record_name).strip()
+		if not rn:
+			frappe.throw(_("Record Name is required for Specific Name mode."))
+		return {"doc_name": rn}
+	if mode == "Singleton":
+		meta = frappe.get_meta(dt)
+		if meta.issingle:
+			return {"doc_name": dt}
+		rows = frappe.get_all(dt, fields=["name"], limit_start=0, limit_page_length=1)
+		if not rows:
+			return {"doc_name": None}
+		return {"doc_name": cstr(rows[0].name)}
+
+	frappe.throw(_("Unknown record mode: {0}").format(mode))

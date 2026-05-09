@@ -43,18 +43,15 @@ export function usePanelActions({ openFormDialogStandalone, refreshPanelByDoctyp
 	}
 
 	async function _resolveFormDialogDocName(action) {
-		if (action.record_mode === "Specific Name") {
-			return action.record_name || null;
+		if (action.record_mode === "New") {
+			return null;
 		}
-		if (action.record_mode === "Singleton") {
-			const rows = await frappeCall("frappe.client.get_list", {
-				doctype: action.target_doctype,
-				fields: ["name"],
-				limit_page_length: 1,
-			});
-			return rows?.[0]?.name ?? null;
-		}
-		return null;
+		const resolved = await frappeCall("nce_events.api.panel_actions.resolve_panel_action_doc_name", {
+			doctype: action.target_doctype,
+			record_mode: action.record_mode,
+			record_name: action.record_name || "",
+		});
+		return resolved?.doc_name ?? null;
 	}
 
 	async function executeAction(action) {
