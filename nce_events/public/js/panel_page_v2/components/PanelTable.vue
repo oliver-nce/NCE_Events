@@ -1,4 +1,21 @@
 <template>
+	<Teleport to="body">
+		<div
+			v-if="headerMenuOpen && headerMenuCol"
+			ref="headerMenuRef"
+			class="ppv2-header-ctx-menu"
+			:style="{ left: headerMenuX + 'px', top: headerMenuY + 'px' }"
+			@click.stop
+			@contextmenu.prevent
+		>
+			<button type="button" class="ppv2-header-ctx-item" @click="applyHeaderSort('asc')">
+				Sort Ascending
+			</button>
+			<button type="button" class="ppv2-header-ctx-item" @click="applyHeaderSort('desc')">
+				Sort Descending
+			</button>
+		</div>
+	</Teleport>
 	<div ref="panelRef" class="ppv2-panel">
 		<PanelTableFilterBar
 			:columns="columns"
@@ -23,6 +40,7 @@
 								width: colWidths[ci] ? colWidths[ci] + 'px' : 'auto',
 								minWidth: '40px',
 							}"
+							@contextmenu.prevent="openHeaderContextMenu($event, col)"
 						>
 							{{ col.label }}
 							<div
@@ -35,7 +53,7 @@
 				</thead>
 				<tbody>
 					<tr
-						v-for="(row, ri) in rows"
+						v-for="(row, ri) in displayRows"
 						:key="row.name || ri"
 						:class="{
 							'ppv2-alt': ri % 2 === 1,
@@ -108,7 +126,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, nextTick } from "vue";
+import { ref, reactive, computed, watch, nextTick, onUnmounted } from "vue";
 import PanelTableFilterBar from "./PanelTableFilterBar.vue";
 
 const props = defineProps({
@@ -143,6 +161,127 @@ const emit = defineEmits([
 
 const colWidths = reactive({});
 const panelRef = ref(null);
+
+/** Client-side sort (current row set only). */
+const sortFieldname = ref(null);
+const sortDir = ref(null); // 'asc' | 'desc'
+
+const headerMenuOpen = ref(false);
+const headerMenuCol = ref(null);
+const headerMenuX = ref(0);
+const headerMenuY = ref(0);
+const headerMenuRef = ref(null);
+let _closeHeaderMenuHandler = null;
+
+function closeHeaderMenu() {
+	headerMenuOpen.value = false;
+	headerMenuCol.value = null;
+	if (_closeHeaderMenuHandler) {
+		document.removeEventListener("click", _closeHeaderMenuHandler, true);
+		document.removeEventListener("keydown", _closeHeaderMenuHandler, true);
+		_closeHeaderMenuHandler = null;
+	}
+}
+
+function openHeaderContextMenu(event, col) {
+	headerMenuCol.value = col;
+	headerMenuX.value = event.clientX;
+	headerMenuY.value = event.clientY;
+	headerMenuOpen.value = true;
+	nextTick(() => {
+		if (_closeHeaderMenuHandler) {
+			document.removeEventListener("click", _closeHeaderMenuHandler, true);
+			document.removeEventListener("keydown", _closeHeaderMenuHandler, true);
+		}
+		_closeHeaderMenuHandler = (e) => {
+			if (e.type === "keydown" && e.key === "Escape") {
+				closeHeaderMenu();
+				return;
+			}
+			if (e.type === "click") {
+				const el = headerMenuRef.value;
+				if (el && el.contains(e.target)) return;
+				closeHeaderMenu();
+			}
+		};
+		setTimeout(() => {
+			document.addEventListener("click", _closeHeaderMenuHandler, true);
+			document.addEventListener("keydown", _closeHeaderMenuHandler, true);
+		}, 0);
+	});
+}
+
+function applyHeaderSort(dir) {
+	const col = headerMenuCol.value;
+	if (col?.fieldname) {
+		sortFieldname.value = col.fieldname;
+		sortDir.value = dir;
+	}
+	closeHeaderMenu();
+}
+
+function compareRowsForSort(ra, rb, fieldname, dir) {
+	const mult = dir === "desc" ? -1 : 1;
+	const va = getVal(ra, fieldname);
+	const vb = getVal(rb, fieldname);
+	const aEmpty = va == null || va === "";
+	const bEmpty = vb == null || vb === "";
+	if (aEmpty && bEmpty) return 0;
+	if (aEmpty) return 1 * mult;
+	if (bEmpty) return -1 * mult;
+	if (typeof va === "object" || typeof vb === "object") {
+		const sa = typeof va === "object" ? JSON.stringify(va) : String(va);
+		const sb = typeof vb === "object" ? JSON.stringify(vb) : String(vb);
+		return mult * sa.localeCompare(sb, undefined, { sensitivity: "base" });
+	}
+	const sa = String(va).trim();
+	const sb = String(vb).trim();
+	const dateRe = /^\d{4}-\d{2}-\d{2}/;
+	if (dateRe.test(sa) && dateRe.test(sb)) {
+		return mult * sa.slice(0, 10).localeCompare(sb.slice(0, 10));
+	}
+	const na = parseFloat(sa);
+	const nb = parseFloat(sb);
+	if (
+		!Number.isNaN(na) &&
+		!Number.isNaN(nb) &&
+		/^[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?$/.test(sa) &&
+		/^[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?$/.test(sb)
+	) {
+		if (na === nb) return 0;
+		return mult * (na < nb ? -1 : 1);
+	}
+	return mult * sa.localeCompare(sb, undefined, { numeric: true, sensitivity: "base" });
+}
+
+const displayRows = computed(() => {
+	const list = props.rows || [];
+	const fn = sortFieldname.value;
+	const dir = sortDir.value;
+	if (!fn || !dir) return list;
+	const tagged = list.map((r, i) => ({ r, i }));
+	tagged.sort((a, b) => {
+		const c = compareRowsForSort(a.r, b.r, fn, dir);
+		if (c !== 0) return c;
+		return a.i - b.i;
+	});
+	return tagged.map((t) => t.r);
+});
+
+watch(
+	() => [props.rows, props.columns],
+	() => {
+		const fn = sortFieldname.value;
+		if (fn && !props.columns?.some((c) => c.fieldname === fn)) {
+			sortFieldname.value = null;
+			sortDir.value = null;
+		}
+	}
+);
+
+onUnmounted(() => {
+	closeHeaderMenu();
+});
 
 function onRowClick(event, row) {
 	if (event.ctrlKey) {
@@ -348,6 +487,33 @@ function startColResize(e, ci) {
 }
 
 /* ── Table ── */
+
+.ppv2-header-ctx-menu {
+	position: fixed;
+	z-index: 100100;
+	min-width: 180px;
+	padding: 4px 0;
+	margin: 0;
+	background: var(--bg-card);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-sm, 4px);
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+.ppv2-header-ctx-item {
+	display: block;
+	width: 100%;
+	padding: 8px 14px;
+	border: none;
+	background: transparent;
+	text-align: left;
+	font-size: var(--font-size-sm);
+	color: var(--text-color);
+	cursor: pointer;
+	font-family: inherit;
+}
+.ppv2-header-ctx-item:hover {
+	background: var(--primary-light);
+}
 
 .ppv2-body {
 	flex: 1;
