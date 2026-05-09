@@ -68,6 +68,7 @@
 				:doc-name="docName"
 				:submit-hide-if="footerSubmitHideIf"
 				:submit-hide-if-sql="footerSubmitHideSql"
+				:submit-label="footerSubmitLabel"
 				:saving="form.saving.value"
 				:is-dirty="footerIsDirty"
 				@cancel="onCancel"
@@ -186,6 +187,10 @@ const footerSubmitHideSql = computed(() =>
 	String(form.definition.value?.submit_hide_if_sql || "").trim(),
 );
 
+const footerSubmitLabel = computed(() =>
+	String(form.definition.value?.submit_label || "").trim(),
+);
+
 function onRelatedDirty(v) {
 	relatedDirty.value = !!v;
 }
@@ -290,6 +295,90 @@ async function onLinkChange({ fieldname, value }) {
 
 async function onSubmit() {
 	try {
+		const onSubmitMethod = (form.definition.value?.on_submit_method || "").trim();
+		if (onSubmitMethod) {
+			form.validationError.value = null;
+			const errors = form.validate();
+			if (errors.length) {
+				form.validationError.value = errors.map((e) => e.message).join(", ");
+				if (typeof frappe !== "undefined" && frappe.msgprint) {
+					frappe.msgprint({
+						title: __("Validation"),
+						message: form.validationError.value,
+						indicator: "red",
+					});
+				}
+				return;
+			}
+			await flushFrappeDateControlsIntoFormData();
+			const raw = JSON.parse(JSON.stringify(form.formData));
+			let doc = { doctype: props.doctype, ...raw };
+			if (props.doctype === "Events") {
+				const root = fdBodyRef.value?.$el;
+				const liveFirst = readLiveFieldValue(root, "first_session_date");
+				if (liveFirst != null) raw.first_session_date = liveFirst;
+				const liveSessions = readLiveFieldValue(root, "number_of_sessions");
+				if (liveSessions != null) raw.number_of_sessions = liveSessions;
+				doc = normalizeDocForWooEventsPublish({ doctype: props.doctype, ...raw });
+			}
+			form.saving.value = true;
+			try {
+				const r = await frappeCall(
+					onSubmitMethod,
+					{ doc },
+					{ freeze: true, freeze_message: __("Submitting…") },
+				);
+				if (!r?.ok) {
+					const msg = r?.message || __("Submit failed");
+					form.validationError.value = msg;
+					if (typeof frappe !== "undefined" && frappe.msgprint) {
+						frappe.msgprint({ title: __("Error"), message: msg, indicator: "red" });
+					}
+					return;
+				}
+				await form.load();
+				if (r.clear_ok === 0) {
+					if (typeof frappe !== "undefined" && frappe.msgprint) {
+						frappe.msgprint({
+							title: __("Published"),
+							message: __(
+								"Product was created but clearing the form failed — open Desk if needed.",
+							),
+							indicator: "orange",
+						});
+					}
+				} else if (r.wp_id != null) {
+					if (typeof frappe !== "undefined" && frappe.msgprint) {
+						frappe.msgprint({
+							title: __("Published"),
+							message: `<p>${__("Product ID")} <strong>${frappe.utils.escape_html(
+								String(r.wp_id),
+							)}</strong> ${__("created in Woo Commerce")}</p><p>${__(
+								"It will appear in the Events panel in a few minutes",
+							)}</p>`,
+							indicator: "green",
+						});
+					}
+				} else if (typeof frappe !== "undefined" && frappe.show_alert) {
+					frappe.show_alert({ message: __("Saved"), indicator: "green" }, 5);
+				}
+				if (typeof props.reloadPanelAfterPublish === "function") {
+					await props.reloadPanelAfterPublish();
+				}
+				emit("saved", r);
+				emit("close");
+			} catch (e) {
+				const msg = e?.message || String(e) || __("Submit failed");
+				form.validationError.value = msg;
+				if (typeof frappe !== "undefined" && frappe.msgprint) {
+					frappe.msgprint({ title: __("Error"), message: msg, indicator: "red" });
+				}
+			} finally {
+				form.saving.value = false;
+			}
+			return;
+		}
+
 		// If the Form Dialog definition has a presubmit script and the record already
 		// has a numeric name (linked to an external system), call it BEFORE saving to
 		// Frappe so change-detection compares against the old stored DB values.
@@ -349,84 +438,7 @@ async function onSubmit() {
 
 async function onPlaceholderButton(btn) {
 	const script = String(btn?.button_script || "").trim();
-	const scriptKey = (script.split(/\s+/)[0] || "").trim();
 
-	if (
-		props.doctype === "New Woo Commerce Product" &&
-		scriptKey === "publish_new_woo_commerce_product"
-	) {
-		form.validationError.value = null;
-		try {
-			await flushFrappeDateControlsIntoFormData();
-			const raw = JSON.parse(JSON.stringify(form.formData));
-			const doc = {
-				doctype: props.doctype,
-				event_name: raw.event_name,
-				type_id: raw.type_id,
-				price: raw.price,
-				start_date: raw.start_date,
-			};
-			const labels = [];
-			if (!String(doc.event_name ?? "").trim()) labels.push(__("Event Name"));
-			if (!String(doc.type_id ?? "").trim()) labels.push(__("Type"));
-			if (doc.price === "" || doc.price === null || String(doc.price).trim() === "") {
-				labels.push(__("Price"));
-			}
-			if (!String(doc.start_date ?? "").trim()) labels.push(__("Start Date"));
-			if (labels.length) {
-				const msg = `${__("Please fill all required fields:")} ${labels.join(", ")}`;
-				form.validationError.value = msg;
-				if (typeof frappe !== "undefined" && frappe.msgprint) {
-					frappe.msgprint({ title: __("Validation"), message: msg, indicator: "red" });
-				}
-				return;
-			}
-			const r = await frappeCall(
-				"nce_events.api.events_publish.publish_new_woo_commerce_product",
-				{ doc },
-				{ freeze: true, freeze_message: __("Publishing to WooCommerce…") },
-			);
-			if (!r?.ok) return;
-			const wp_id = r.wp_id;
-			try {
-				await frappeCall("nce_events.api.events_publish.clear_new_woo_commerce_product");
-			} catch {
-				if (typeof frappe !== "undefined" && frappe.msgprint) {
-					frappe.msgprint({
-						title: __("Published"),
-						message: __(
-							"Product was created but clearing the singleton failed — open Desk if needed.",
-						),
-						indicator: "orange",
-					});
-				}
-				await form.load();
-				return;
-			}
-			await form.load();
-			if (typeof frappe !== "undefined" && frappe.msgprint) {
-				frappe.msgprint({
-					title: __("Published"),
-					message: `<p>${__("Product ID")} <strong>${frappe.utils.escape_html(
-						String(wp_id),
-					)}</strong> ${__("created in Woo Commerce")}</p><p>${__(
-						"It will appear in the Events panel in a few minutes",
-					)}</p>`,
-					indicator: "green",
-				});
-			}
-			if (typeof props.reloadPanelAfterPublish === "function") {
-				await props.reloadPanelAfterPublish();
-			}
-		} catch (e) {
-			const msg = e?.message || String(e) || "Publish failed";
-			form.validationError.value = msg;
-			if (typeof frappe !== "undefined" && frappe.msgprint) {
-				frappe.msgprint({ title: __("Publish"), message: msg, indicator: "red" });
-			}
-		}
-		return;
-	}
 	if (props.doctype === "Events" && script === "update_events_to_website") {
 		form.validationError.value = null;
 		const errors = form.validateForWooPublish();

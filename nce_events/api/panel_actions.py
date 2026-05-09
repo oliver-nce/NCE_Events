@@ -187,6 +187,8 @@ def get_panel_action_dialog_definition(action_id: str) -> dict[str, Any]:
 		"submit_hide_if": (cstr(doc.submit_hide_if) or "").strip() or "Never",
 		"submit_hide_if_sql": (cstr(doc.submit_hide_if_sql) or "").strip(),
 		"custom_presubmit_script": (cstr(doc.custom_presubmit_script) or "").strip(),
+		"submit_label": cstr(getattr(doc, "submit_label", None) or "").strip(),
+		"on_submit_method": cstr(getattr(doc, "on_submit_method", None) or "").strip(),
 		"buttons": buttons,
 		"related_doctypes": related_doctypes,
 	}

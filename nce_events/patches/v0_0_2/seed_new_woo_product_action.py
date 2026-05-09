@@ -1,7 +1,7 @@
 """Seed the 'new-woo-product' Panel Action with an inline captured Form Dialog.
 
 Idempotent. Re-runs are safe: if the row already exists, the patch leaves it
-alone so admins can edit fields/buttons by hand.
+alone so admins can edit fields by hand.
 """
 
 from __future__ import annotations
@@ -14,6 +14,8 @@ from nce_events.api.form_dialog._helpers import _enrich_fetch_from_fields
 
 ACTION_ID = "new-woo-product"
 TARGET_DOCTYPE = "New Woo Commerce Product"
+_ON_SUBMIT = "nce_events.api.events_publish.submit_new_woo_commerce_product"
+_SUBMIT_LABEL = "Publish to WooCommerce"
 
 
 def execute() -> None:
@@ -47,15 +49,8 @@ def execute() -> None:
 			"dialog_size": "xl",
 			"submit_hide_if": "Never",
 			"writeback_on_submit": 0,
-			"buttons": [
-				{
-					"label": "Publish to WooCommerce",
-					"hide_if": "Never",
-					"button_script": "publish_new_woo_commerce_product",
-					"sort_order": 0,
-					"source_note": "Seeded by seed_new_woo_product_action; handled in PanelFormDialog.vue.",
-				}
-			],
+			"submit_label": _SUBMIT_LABEL,
+			"on_submit_method": _ON_SUBMIT,
 			"description": "V2 Actions: WooCommerce publish flow for the New Woo Commerce Product singleton.",
 		}
 	)

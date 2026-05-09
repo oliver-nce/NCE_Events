@@ -460,6 +460,26 @@ def publish_new_woo_commerce_product(
 
 
 @frappe.whitelist()
+def submit_new_woo_commerce_product(
+	doc: dict[str, Any] | str,
+) -> dict[str, Any]:
+	"""POST new product to WooCommerce then clear the singleton form. For V2 Panel Action ``on_submit_method``."""
+	result = dict(publish_new_woo_commerce_product(doc))
+	if not result.get("ok"):
+		return result
+	try:
+		clear_new_woo_commerce_product()
+		result["clear_ok"] = 1
+	except Exception:
+		frappe.log_error(
+			title="submit_new_woo_commerce_product clear failed",
+			message=frappe.get_traceback(),
+		)
+		result["clear_ok"] = 0
+	return result
+
+
+@frappe.whitelist()
 def clear_new_woo_commerce_product() -> dict[str, Any]:
 	"""Clear all editable fields on the New Woo Commerce Product Singleton after a successful publish."""
 	if not frappe.has_permission(_NEW_WOO_DOCTYPE, "write"):

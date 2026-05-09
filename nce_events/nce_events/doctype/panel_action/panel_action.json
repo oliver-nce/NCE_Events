@@ -25,6 +25,8 @@
 		"submit_hide_if_sql",
 		"writeback_on_submit",
 		"custom_presubmit_script",
+		"submit_label",
+		"on_submit_method",
 		"section_break_buttons",
 		"buttons",
 		"section_break_related",
@@ -175,6 +177,20 @@
 			"fieldname": "custom_presubmit_script",
 			"fieldtype": "Data",
 			"label": "Pre-submit Server Method"
+		},
+		{
+			"depends_on": "eval:doc.action_type=='Form Dialog'",
+			"description": "Footer primary button label. Leave blank for the default \"Submit\".",
+			"fieldname": "submit_label",
+			"fieldtype": "Data",
+			"label": "Submit Button Label"
+		},
+		{
+			"depends_on": "eval:doc.action_type=='Form Dialog'",
+			"description": "Whitelisted server method that replaces Frappe save when Submit is clicked. Called with { doc }. Handle persistence (external API, clears, child saves) inside the method.",
+			"fieldname": "on_submit_method",
+			"fieldtype": "Data",
+			"label": "On Submit Server Method"
 		},
 		{
 			"depends_on": "eval:doc.action_type=='Form Dialog'",

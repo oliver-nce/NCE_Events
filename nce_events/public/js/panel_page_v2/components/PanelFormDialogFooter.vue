@@ -29,14 +29,14 @@
 				:disabled="saving"
 				@click="$emit('submit')"
 			>
-				{{ saving ? "Saving…" : "Submit" }}
+				{{ savingSubmitText }}
 			</button>
 		</div>
 	</div>
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref, watch, computed } from "vue";
 import { frappeCall } from "../utils/frappeCall.js";
 
 const HIDE_NEVER = "Never";
@@ -53,11 +53,23 @@ const props = defineProps({
 	/** Same options as Form Dialog Button \"Hide If\" — controls default Submit. */
 	submitHideIf: { type: String, default: "Never" },
 	submitHideIfSql: { type: String, default: "" },
+	/** Custom label for the primary footer's Submit button (Form Dialog / Panel Action). */
+	submitLabel: { type: String, default: "" },
 	saving: { type: Boolean, default: false },
 	isDirty: { type: Boolean, default: false },
 });
 
 defineEmits(["cancel", "revert", "submit", "custom-button"]);
+
+const savingSubmitText = computed(() => {
+	if (!props.saving) {
+		const sl = String(props.submitLabel || "").trim();
+		return sl || "Submit";
+	}
+	const sl = String(props.submitLabel || "").trim();
+	if (sl) return `${sl}…`;
+	return "Saving…";
+});
 
 const visibleButtons = ref([]);
 const submitVisible = ref(true);
@@ -144,6 +156,7 @@ watch(
 		props.docName,
 		props.submitHideIf,
 		props.submitHideIfSql,
+		props.submitLabel,
 	],
 	() => {
 		refreshFooterVisibility();
