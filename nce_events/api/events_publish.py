@@ -481,17 +481,19 @@ def submit_new_woo_commerce_product(
 
 @frappe.whitelist()
 def clear_new_woo_commerce_product() -> dict[str, Any]:
-	"""Clear all editable fields on the New Woo Commerce Product Singleton after a successful publish."""
+	"""Clear editable fields on the New Woo Commerce Product Single after publish.
+
+	Uses ``set_single_value`` only — no ``Document.save()``, so mandatory validation
+	and document hooks do not run. This avoids mixed success/error UI when the form
+	is intentionally blanked.
+	"""
 	if not frappe.has_permission(_NEW_WOO_DOCTYPE, "write"):
 		frappe.throw(_("Not permitted to write {0}").format(_NEW_WOO_DOCTYPE), frappe.PermissionError)
 
-	doc = frappe.get_doc(_NEW_WOO_DOCTYPE)
-	doc.event_name = ""
-	doc.type_id = None
-	doc.price = 0
-	doc.start_date = None
-	# Blank values would normally fail Mandatory validation on this DocType; clearing
-	# after a successful publish is intentional (same as resetting the Desk form).
-	doc.flags.ignore_mandatory = True
-	doc.save(ignore_permissions=True)
+	frappe.db.set_single_value(_NEW_WOO_DOCTYPE, "event_name", "")
+	frappe.db.set_single_value(_NEW_WOO_DOCTYPE, "type_id", None)
+	frappe.db.set_single_value(_NEW_WOO_DOCTYPE, "price", 0)
+	frappe.db.set_single_value(_NEW_WOO_DOCTYPE, "start_date", None)
+	frappe.db.commit()
+	frappe.clear_cache(doctype=_NEW_WOO_DOCTYPE)
 	return {"ok": 1}
