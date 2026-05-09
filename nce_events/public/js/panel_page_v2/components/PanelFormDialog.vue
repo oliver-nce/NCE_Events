@@ -336,7 +336,9 @@ async function onSubmit() {
 					}
 					return;
 				}
+				/* Server handled persistence (e.g. Woo + clear Single). Sync UI from DB — no Document.save in Vue. */
 				await form.load();
+				form.validationError.value = null;
 				if (r.clear_ok === 0) {
 					if (typeof frappe !== "undefined" && frappe.msgprint) {
 						frappe.msgprint({
@@ -360,12 +362,12 @@ async function onSubmit() {
 						});
 					}
 				} else if (typeof frappe !== "undefined" && frappe.show_alert) {
-					frappe.show_alert({ message: __("Saved"), indicator: "green" }, 5);
+					frappe.show_alert({ message: __("Done"), indicator: "green" }, 5);
 				}
 				if (typeof props.reloadPanelAfterPublish === "function") {
 					await props.reloadPanelAfterPublish();
 				}
-				emit("saved", r);
+				/* Do not emit saved — no Frappe form save; host must not run onFormDialogSaved panel refresh. */
 				emit("close");
 			} catch (e) {
 				const msg = e?.message || String(e) || __("Submit failed");
