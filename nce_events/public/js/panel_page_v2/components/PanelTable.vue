@@ -488,33 +488,6 @@ function startColResize(e, ci) {
 
 /* ── Table ── */
 
-.ppv2-header-ctx-menu {
-	position: fixed;
-	z-index: 100100;
-	min-width: 180px;
-	padding: 4px 0;
-	margin: 0;
-	background: var(--bg-card);
-	border: 1px solid var(--border-color);
-	border-radius: var(--border-radius-sm, 4px);
-	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
-}
-.ppv2-header-ctx-item {
-	display: block;
-	width: 100%;
-	padding: 8px 14px;
-	border: none;
-	background: transparent;
-	text-align: left;
-	font-size: var(--font-size-sm);
-	color: var(--text-color);
-	cursor: pointer;
-	font-family: inherit;
-}
-.ppv2-header-ctx-item:hover {
-	background: var(--primary-light);
-}
-
 .ppv2-body {
 	flex: 1;
 	overflow: auto;
@@ -639,5 +612,37 @@ function startColResize(e, ci) {
 }
 .ppv2-col-resize:hover {
 	background: color-mix(in srgb, var(--color-primary) 30%, transparent);
+}
+</style>
+
+<!-- Menu is teleported to <body>; unscoped so background always applies -->
+<style>
+.ppv2-header-ctx-menu {
+	position: fixed;
+	z-index: 100100;
+	min-width: 180px;
+	padding: 4px 0;
+	margin: 0;
+	border: 1px solid var(--border-color, #d1d5db);
+	border-radius: 4px;
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+	/* Opaque fill: teleported node + theme vars may otherwise compute to transparent */
+	background-color: #ffffff;
+	color: var(--text-color, #252525);
+}
+.ppv2-header-ctx-item {
+	display: block;
+	width: 100%;
+	padding: 8px 14px;
+	border: none;
+	background-color: transparent;
+	text-align: left;
+	font-size: 13px;
+	color: inherit;
+	cursor: pointer;
+	font-family: inherit;
+}
+.ppv2-header-ctx-item:hover {
+	background-color: var(--primary-light, #e8f0fe);
 }
 </style>
