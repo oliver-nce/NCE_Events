@@ -1,6 +1,7 @@
 <template>
 	<div class="ppv2-root">
-		<PanelFloat :init-x="40" :init-y="60" :init-w="900" :init-h="550">
+		<ActionsPanel @new-woo-product="showNewWooProductDialog = true" />
+		<PanelFloat :init-x="240" :init-y="60" :init-w="900" :init-h="550">
 			<template #header>
 				<span class="ppv2-title">{{ config?.header_text || "NCE Tables" }}</span>
 				<PanelHeaderToolbar
@@ -99,6 +100,11 @@
 			/>
 			<template #footer>{{ floatedPanelTitle(p) }}</template>
 		</PanelFloat>
+
+		<NewWooProductDialog
+			v-if="showNewWooProductDialog"
+			@close="showNewWooProductDialog = false"
+		/>
 
 		<TagFinder
 			v-if="tagFinderDoctype"
@@ -223,6 +229,8 @@ import PanelHeaderToolbar from "./components/PanelHeaderToolbar.vue";
 import TagFinder from "./components/TagFinder.vue";
 import CardModal from "./nce_cards/CardModal.vue";
 import PanelFormDialog from "./components/PanelFormDialog.vue";
+import ActionsPanel from "./components/ActionsPanel.vue";
+import NewWooProductDialog from "./components/NewWooProductDialog.vue";
 
 const rootPanel = usePanel("WP Tables");
 const {
@@ -237,6 +245,7 @@ const {
 	reload,
 } = rootPanel;
 const rootPanelShowFilter = ref(false);
+const showNewWooProductDialog = ref(false);
 
 // Hide nce_name — it duplicates frappe_doctype in the root panel.
 // Also strip is_link from frappe_doctype so clicking opens the next panel (via row-click)
@@ -350,8 +359,8 @@ function floatedPanelTitle(p) {
 function nextPos(parentId) {
 	/* Find the parent panel's position and offset from it */
 	if (parentId === "root") {
-		/* Offset from the root WP Tables panel (40, 60) */
-		return { x: 40 + 80, y: 60 + 24 };
+		/* Offset from the root WP Tables panel (matches :init-x / :init-y on root PanelFloat) */
+		return { x: 240 + 80, y: 60 + 24 };
 	}
 	const parent = openPanels.find((p) => p.id === parentId);
 	if (parent) {

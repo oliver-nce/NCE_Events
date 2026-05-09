@@ -1,104 +1,53 @@
 <template>
-	<div class="actions-panel">
-		<button
-			v-for="action in sortedActions"
-			:key="action.name || action.label"
-			class="action-btn"
-			@click="executeAction(action)"
-		>
-			{{ action.label }}
-		</button>
-	</div>
+	<PanelFloat :init-x="20" :init-y="60" :init-w="200" :init-h="420">
+		<template #header>
+			<span class="ppv2-title">Actions</span>
+		</template>
+		<div class="ppv2-actions-body">
+			<button type="button" class="ppv2-action-btn" @click="$emit('new-woo-product')">
+				New Woo Commerce Product
+			</button>
+		</div>
+		<template #footer>Actions</template>
+	</PanelFloat>
 </template>
 
 <script setup>
-import { computed } from "vue";
+import PanelFloat from "./PanelFloat.vue";
 
-const props = defineProps({
-	actions: { type: Array, default: () => [] },
-	scripts: { type: Array, default: () => [] },
-	record: { type: Object, default: null },
-});
-
-const emit = defineEmits(["open-card", "refresh"]);
-
-const sortedActions = computed(() =>
-	[...(props.actions || [])].sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0))
-);
-
-function findScript(actionScriptName) {
-	return (props.scripts || []).find((s) => s.script_name === actionScriptName);
-}
-
-function resolveTokens(str) {
-	if (!str || !props.record) return str;
-	return str.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, key) => props.record[key] || "");
-}
-
-async function executeAction(action) {
-	const script = findScript(action.action_script);
-	if (!script) {
-		frappe.msgprint(`Script "${action.action_script}" not found`);
-		return;
-	}
-	switch (script.script_type) {
-		case "server":
-			await new Promise((resolve, reject) => {
-				frappe.call({
-					method: script.method,
-					args: { name: props.record.name },
-					callback: () => {
-						frappe.show_alert({ message: `${action.label} completed`, indicator: "green" });
-						emit("refresh");
-						resolve();
-					},
-					error: reject,
-				});
-			});
-			break;
-		case "open_url":
-			window.open(resolveTokens(script.method), "_blank");
-			break;
-		case "open_card":
-			emit("open-card", {
-				cardDefName: script.method,
-				doctype: props.record.doctype,
-				name: props.record.name,
-			});
-			break;
-		case "frappe_action":
-			if (script.method === "print") {
-				window.open(
-					`/printview?doctype=${props.record.doctype}&name=${props.record.name}`,
-					"_blank"
-				);
-			}
-			break;
-		default:
-			console.warn("Unknown script type:", script.script_type);
-	}
-}
+defineEmits(["new-woo-product"]);
 </script>
 
 <style scoped>
-.actions-panel {
-	width: 140px;
-	flex-shrink: 0;
+.ppv2-actions-body {
+	padding: 12px;
 	display: flex;
 	flex-direction: column;
-	gap: var(--spacing-sm);
-	padding: var(--spacing-sm);
+	gap: 10px;
 }
-.action-btn {
-	background: var(--bg-surface);
-	border: 1px solid var(--border-color);
-	border-radius: var(--border-radius-sm);
-	padding: var(--spacing-sm) var(--spacing-md);
-	cursor: pointer;
-	font-size: var(--font-size-sm);
+
+.ppv2-action-btn {
+	width: 100%;
+	padding: 10px 12px;
+	font-size: var(--font-size-sm, 13px);
+	font-weight: var(--font-weight-bold, 600);
+	font-family: var(--font-family);
 	text-align: left;
+	cursor: pointer;
+	border-radius: var(--border-radius-sm, 4px);
+	border: 1px solid color-mix(in srgb, var(--primary) 35%, var(--border-color));
+	background: color-mix(in srgb, var(--primary) 12%, var(--bg-card));
+	color: var(--text-color);
+	line-height: 1.3;
+	transition: background 0.15s ease, border-color 0.15s ease;
 }
-.action-btn:hover {
-	background: var(--primary-light);
+
+.ppv2-action-btn:hover {
+	background: color-mix(in srgb, var(--primary) 22%, var(--bg-card));
+	border-color: var(--primary);
+}
+
+.ppv2-action-btn:active {
+	transform: translateY(1px);
 }
 </style>
