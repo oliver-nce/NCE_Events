@@ -2,7 +2,7 @@ frappe.pages["panel-page-v2"].on_page_show = function (wrapper) {
 	if (!wrapper._page_obj) {
 		wrapper._page_obj = frappe.ui.make_app_page({
 			parent: wrapper,
-			title: "NCE Events_Manager",
+			title: "NCE Events Manager",
 			single_column: true,
 		});
 	}
