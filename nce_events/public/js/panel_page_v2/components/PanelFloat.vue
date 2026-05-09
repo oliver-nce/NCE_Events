@@ -134,10 +134,10 @@ function startResize(e) {
 <style scoped>
 .ppv2-float {
 	/*
-	 * position: fixed + translate3d for movement.
-	 * left/top stay at 0 — all positioning is via transform.
+	 * position: absolute inside .ppv2-root so Y offsets sit below the Frappe page
+	 * title (NCE Events V2). translate3d() keeps drag on the GPU.
 	 */
-	position: fixed;
+	position: absolute;
 	left: 0;
 	top: 0;
 	display: flex;

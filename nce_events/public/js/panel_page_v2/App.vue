@@ -1,7 +1,7 @@
 <template>
 	<div class="ppv2-root">
 		<ActionsPanel :actions="panelActions" @select="onPanelActionSelect" />
-		<PanelFloat :init-x="240" :init-y="60" :init-w="900" :init-h="550">
+		<PanelFloat :init-x="240" :init-y="16" :init-w="900" :init-h="550">
 			<template #header>
 				<span class="ppv2-title">{{ config?.header_text || "NCE Tables" }}</span>
 				<PanelHeaderToolbar
@@ -375,7 +375,7 @@ function nextPos(parentId) {
 	/* Find the parent panel's position and offset from it */
 	if (parentId === "root") {
 		/* Offset from the root WP Tables panel (matches :init-x / :init-y on root PanelFloat) */
-		return { x: 240 + 80, y: 60 + 24 };
+		return { x: 240 + 80, y: 16 + 24 };
 	}
 	const parent = openPanels.find((p) => p.id === parentId);
 	if (parent) {

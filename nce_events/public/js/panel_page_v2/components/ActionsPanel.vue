@@ -1,5 +1,5 @@
 <template>
-	<PanelFloat :init-x="20" :init-y="60" :init-w="200" :init-h="420">
+	<PanelFloat :init-x="20" :init-y="16" :init-w="200" :init-h="420">
 		<template #header>
 			<span class="ppv2-title">Actions</span>
 		</template>
