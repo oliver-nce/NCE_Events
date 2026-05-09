@@ -135,7 +135,7 @@ function startResize(e) {
 .ppv2-float {
 	/*
 	 * position: absolute inside .ppv2-root so Y offsets sit below the Frappe page
-	 * title (NCE Events V2). translate3d() keeps drag on the GPU.
+	 * title (NCE Events_Manager). translate3d() keeps drag on the GPU.
 	 */
 	position: absolute;
 	left: 0;
