@@ -490,5 +490,8 @@ def clear_new_woo_commerce_product() -> dict[str, Any]:
 	doc.type_id = None
 	doc.price = 0
 	doc.start_date = None
+	# Blank values would normally fail Mandatory validation on this DocType; clearing
+	# after a successful publish is intentional (same as resetting the Desk form).
+	doc.flags.ignore_mandatory = True
 	doc.save(ignore_permissions=True)
 	return {"ok": 1}
