@@ -126,6 +126,7 @@
 			v-if="formDialogSlot === 0 && formDialogDefinition"
 			:open="true"
 			:definition-name="formDialogDefinition"
+			:definition-source="formDialogDefinitionSource"
 			:doctype="formDialogDoctype"
 			:doc-name="formDialogDocName"
 			:required-fields="formDialogRequiredFields"
@@ -150,6 +151,7 @@
 			v-if="formDialogSlot === 0 && formDialogPendingDefinition"
 			:open="true"
 			:definition-name="formDialogPendingDefinition"
+			:definition-source="formDialogDefinitionSource"
 			:doctype="formDialogPendingDoctype"
 			:doc-name="formDialogPendingDocName"
 			:required-fields="formDialogRequiredFields"
@@ -170,6 +172,7 @@
 			v-if="formDialogSlot === 1 && formDialogDefinition"
 			:open="true"
 			:definition-name="formDialogDefinition"
+			:definition-source="formDialogDefinitionSource"
 			:doctype="formDialogDoctype"
 			:doc-name="formDialogDocName"
 			:required-fields="formDialogRequiredFields"
@@ -194,6 +197,7 @@
 			v-if="formDialogSlot === 1 && formDialogPendingDefinition"
 			:open="true"
 			:definition-name="formDialogPendingDefinition"
+			:definition-source="formDialogDefinitionSource"
 			:doctype="formDialogPendingDoctype"
 			:doc-name="formDialogPendingDocName"
 			:required-fields="formDialogRequiredFields"
@@ -262,6 +266,7 @@ const {
 	formDialogDocName,
 	formDialogDefinition,
 	formDialogDoctype,
+	formDialogDefinitionSource,
 	formDialogRequiredFields,
 	formDialogNavInfo,
 	formDialogNavLabel,

@@ -89,6 +89,7 @@ export function createFrozenFormLoad(ctx) {
 		handleFetchFrom,
 		syncingFromLoad,
 		loadDebugLog,
+		definitionSource,
 	} = ctx;
 
 	let loadSeq = 0;
@@ -144,22 +145,30 @@ export function createFrozenFormLoad(ctx) {
 		);
 
 		try {
+			const src = unref(definitionSource) || "form_dialog";
 			let defn;
 			try {
-				defn = await frappeCall(
-					"nce_events.api.form_dialog.capture.get_form_dialog_definition",
-					{ name: defnName }
-				);
+				if (src === "panel_action") {
+					defn = await frappeCall(
+						"nce_events.api.panel_actions.get_panel_action_dialog_definition",
+						{ action_id: defnName },
+					);
+				} else {
+					defn = await frappeCall(
+						"nce_events.api.form_dialog.capture.get_form_dialog_definition",
+						{ name: defnName },
+					);
+				}
 			} catch (e) {
-				pushDebug("get_form_dialog_definition", false, defnName, e?.message || e);
+				pushDebug(`get_definition[${src}]`, false, defnName, e?.message || e);
 				throw e;
 			}
 			if (mySeq !== loadSeq) {
-				pushDebug("aborted", false, "stale seq after get_form_dialog_definition");
+				pushDebug("aborted", false, "stale seq after get_definition");
 				return;
 			}
 			pushDebug(
-				"get_form_dialog_definition",
+				`get_definition[${src}]`,
 				true,
 				`ok dialog_size=${defn?.dialog_size ?? "?"}`
 			);

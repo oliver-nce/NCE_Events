@@ -1,10 +1,17 @@
 from __future__ import annotations
 
+import json
 from typing import Any
 
 import frappe
 from frappe import _
-from frappe.utils import cstr
+from frappe.utils import cint, cstr
+
+from nce_events.api.form_dialog._helpers import (
+	_assert_doctype_in_wp_tables,
+	_enrich_fetch_from_fields,
+	_require_system_manager,
+)
 
 _PUBLIC_FIELDS: tuple[str, ...] = (
 	"name",
@@ -13,7 +20,6 @@ _PUBLIC_FIELDS: tuple[str, ...] = (
 	"sort_order",
 	"action_type",
 	"target_doctype",
-	"form_dialog",
 	"record_mode",
 	"record_name",
 	"client_handler",
@@ -87,3 +93,100 @@ def resolve_panel_action_doc_name(
 		return {"doc_name": cstr(rows[0].name)}
 
 	frappe.throw(_("Unknown record mode: {0}").format(mode))
+
+
+@frappe.whitelist()
+def capture_panel_action_dialog(action_id: str) -> dict[str, Any]:
+	"""Capture target DocType meta into ``frozen_meta_json`` on the Panel Action row."""
+	_require_system_manager()
+
+	aid = cstr(action_id).strip()
+	if not aid:
+		frappe.throw(_("Missing action_id"))
+
+	doc = frappe.get_doc("Panel Action", aid)
+	if cstr(doc.action_type) != "Form Dialog":
+		frappe.throw(_("Action {0} is not a Form Dialog action.").format(aid))
+
+	target = cstr(doc.target_doctype).strip()
+	if not target:
+		frappe.throw(_("Set Target DocType before capturing."))
+
+	_assert_doctype_in_wp_tables(target)
+
+	meta = frappe.get_meta(target)
+	fields_list = [f.as_dict() for f in meta.fields]
+	fields_list = _enrich_fetch_from_fields(fields_list, meta)
+
+	doc.frozen_meta_json = json.dumps({"fields": fields_list}, default=str, indent=None)
+	doc.captured_at = frappe.utils.now_datetime()
+	doc.save(ignore_permissions=True)
+	frappe.db.commit()
+
+	return {
+		"action_id": doc.name,
+		"target_doctype": target,
+		"field_count": len(fields_list),
+		"captured_at": str(doc.captured_at),
+	}
+
+
+@frappe.whitelist()
+def get_panel_action_dialog_definition(action_id: str) -> dict[str, Any]:
+	"""Return the Panel Action's captured Form Dialog definition for the V2 renderer.
+
+	Same shape as ``nce_events.api.form_dialog.capture.get_form_dialog_definition`` so
+	the existing PanelFormDialog loader can consume it without branching.
+	"""
+	if frappe.session.user == "Guest":
+		frappe.throw(_("Login required"), frappe.PermissionError)
+
+	aid = cstr(action_id).strip()
+	if not aid:
+		frappe.throw(_("Missing action_id"))
+
+	prev = frappe.flags.ignore_permissions
+	frappe.flags.ignore_permissions = True
+	try:
+		doc = frappe.get_doc("Panel Action", aid)
+	finally:
+		frappe.flags.ignore_permissions = prev
+
+	if cstr(doc.action_type) != "Form Dialog":
+		frappe.throw(_("Action {0} is not a Form Dialog action.").format(aid))
+	if not cint(doc.enabled):
+		frappe.throw(_("This Panel Action is disabled."), frappe.PermissionError)
+
+	frozen: dict[str, Any] = {}
+	raw = doc.frozen_meta_json
+	if raw and str(raw).strip():
+		try:
+			frozen = json.loads(raw)
+		except json.JSONDecodeError as err:
+			frappe.log_error(
+				message=f"Panel Action {aid!r}: {err}\n{str(raw)[:2000]!r}",
+				title="panel_action_invalid_json",
+			)
+			frappe.throw(
+				_("Panel Action schema is invalid. Use 'Capture from Desk' on the Panel Action row.")
+			)
+
+	buttons = sorted(
+		[b.as_dict() for b in (doc.buttons or [])],
+		key=lambda b: (cint(b.get("sort_order")), cint(b.get("idx")), cstr(b.get("name") or "")),
+	)
+	related_doctypes = [r.as_dict() for r in (doc.related_doctypes or [])]
+
+	return {
+		"name": doc.name,
+		"title": cstr(doc.label) or doc.name,
+		"target_doctype": cstr(doc.target_doctype),
+		"dialog_size": cstr(doc.dialog_size) or "xl",
+		"frozen_meta": frozen,
+		"writeback_on_submit": cint(doc.writeback_on_submit) or 0,
+		"submit_hide_if": (cstr(doc.submit_hide_if) or "").strip() or "Never",
+		"submit_hide_if_sql": (cstr(doc.submit_hide_if_sql) or "").strip(),
+		"custom_presubmit_script": (cstr(doc.custom_presubmit_script) or "").strip(),
+		"buttons": buttons,
+		"related_doctypes": related_doctypes,
+	}

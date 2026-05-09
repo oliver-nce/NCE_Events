@@ -14,6 +14,8 @@ export function usePanelFormDialogHost(openPanels) {
 	const formDialogDefinition = ref(null);
 	const formDialogDoctype = ref(null);
 	const formDialogSourcePanelId = ref(null);
+	/** Where the captured definition lives: 'form_dialog' (default) or 'panel_action'. */
+	const formDialogDefinitionSource = ref("form_dialog");
 	/** Root fieldnames from Page Panel `required_fields` (Form Dialog validation). */
 	const formDialogRequiredFields = ref([]);
 
@@ -42,6 +44,7 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogDoctype.value = panel.doctype;
 		formDialogDocName.value = row.name;
 		formDialogSourcePanelId.value = panel.id;
+		formDialogDefinitionSource.value = "form_dialog";
 		const rf = panel.config?.required_fields;
 		formDialogRequiredFields.value = Array.isArray(rf) ? rf.slice() : [];
 		showFormDialog.value = true;
@@ -61,14 +64,24 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogDoctype.value = panel.doctype;
 		formDialogDocName.value = null;
 		formDialogSourcePanelId.value = panel.id;
+		formDialogDefinitionSource.value = "form_dialog";
 		const rf = panel.config?.required_fields;
 		formDialogRequiredFields.value = Array.isArray(rf) ? rf.slice() : [];
 		showFormDialog.value = true;
 		return true;
 	}
 
-	/** Open Form Dialog without a parent panel context (e.g. from Actions panel). */
-	function openFormDialogStandalone({ formDialog, doctype, docName = null, requiredFields = [] }) {
+	/**
+	 * Open Form Dialog without a parent panel context (e.g. from Actions panel).
+	 * @param {{ formDialog: string; doctype: string; docName?: string|null; requiredFields?: string[]; definitionSource?: 'form_dialog'|'panel_action' }} args
+	 */
+	function openFormDialogStandalone({
+		formDialog,
+		doctype,
+		docName = null,
+		requiredFields = [],
+		definitionSource = "form_dialog",
+	}) {
 		if (!formDialog || !doctype) return false;
 		formDialogPendingDocName.value = null;
 		formDialogPendingDefinition.value = null;
@@ -80,6 +93,7 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogDoctype.value = doctype;
 		formDialogDocName.value = docName;
 		formDialogSourcePanelId.value = null;
+		formDialogDefinitionSource.value = definitionSource || "form_dialog";
 		formDialogRequiredFields.value = Array.isArray(requiredFields) ? requiredFields.slice() : [];
 		showFormDialog.value = true;
 		return true;
@@ -92,6 +106,7 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogDefinition.value = null;
 		formDialogDoctype.value = null;
 		formDialogSourcePanelId.value = null;
+		formDialogDefinitionSource.value = "form_dialog";
 		// Clear any in-flight pending nav
 		formDialogPendingDocName.value = null;
 		formDialogPendingDefinition.value = null;
@@ -108,6 +123,7 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogDefinition.value = null;
 		formDialogDoctype.value = null;
 		formDialogSourcePanelId.value = null;
+		formDialogDefinitionSource.value = "form_dialog";
 		// Clear any in-flight pending nav
 		formDialogPendingDocName.value = null;
 		formDialogPendingDefinition.value = null;
@@ -208,6 +224,7 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogDocName,
 		formDialogDefinition,
 		formDialogDoctype,
+		formDialogDefinitionSource,
 		formDialogRequiredFields,
 		formDialogSourcePanelId,
 		formDialogNavInfo,

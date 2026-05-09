@@ -19,7 +19,7 @@ import { createFrozenFormLoad } from "./useFrozenFormLoad.js";
  * @param {import('vue').Ref<string|null>|string|null} options.docName
  * @param {import('vue').Ref<string[]>|import('vue').ComputedRef<string[]>|undefined} options.requiredFields — Page Panel root fieldnames
  */
-export function usePanelFormDialog({ definitionName, doctype, docName, requiredFields }) {
+export function usePanelFormDialog({ definitionName, doctype, docName, requiredFields, definitionSource }) {
 	const panelRequiredFields = requiredFields;
 	const definition = ref(null);
 	const tabs = ref([]);
@@ -54,6 +54,7 @@ export function usePanelFormDialog({ definitionName, doctype, docName, requiredF
 		handleFetchFrom,
 		syncingFromLoad,
 		loadDebugLog,
+		definitionSource,
 	});
 
 	const isNew = computed(() => !unref(docName));

@@ -11,3 +11,4 @@ nce_events.patches.v0_0_2.add_model_field_to_api_connector
 nce_events.patches.v0_0_2.add_credential_config_to_api_connector
 nce_events.patches.v0_0_2.migrate_core_filter_to_default_filters
 nce_events.patches.v0_0_2.seed_new_woo_product_action
+nce_events.patches.v0_0_2.seed_new_woo_product_action_v2

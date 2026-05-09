@@ -73,10 +73,11 @@ export function usePanelActions({ openFormDialogStandalone, refreshPanelByDoctyp
 					}
 				}
 				openFormDialogStandalone({
-					formDialog: action.form_dialog,
+					formDialog: action.action_id || action.name,
 					doctype: action.target_doctype,
 					docName,
 					requiredFields: [],
+					definitionSource: "panel_action",
 				});
 				return;
 			}

@@ -121,6 +121,8 @@ const props = defineProps({
 	requiredFields: { type: Array, default: () => [] },
 	/** Refetch open panel for this doctype after WC publish (Form Dialog Button script). */
 	reloadPanelAfterPublish: { type: Function, default: null },
+	/** Where the captured definition lives: 'form_dialog' (default) or 'panel_action'. */
+	definitionSource: { type: String, default: "form_dialog" },
 });
 
 const emit = defineEmits(["close", "saved", "nav-prev", "nav-next"]);
@@ -140,6 +142,7 @@ const form = usePanelFormDialog({
 	doctype: toRef(props, "doctype"),
 	docName: toRef(props, "docName"),
 	requiredFields: toRef(props, "requiredFields"),
+	definitionSource: toRef(props, "definitionSource"),
 });
 
 /** Frappe Date/Datetime controls only emit into formData on change; blur commits open pickers. */
