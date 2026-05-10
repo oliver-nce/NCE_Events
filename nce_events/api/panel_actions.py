@@ -95,6 +95,25 @@ def resolve_panel_action_doc_name(
 	frappe.throw(_("Unknown record mode: {0}").format(mode))
 
 
+def _desk_route_key(name: str) -> str:
+	return cstr(name or "").strip().lower().replace(" ", "-").replace("_", "-")
+
+
+@frappe.whitelist()
+def resolve_doctype_for_list_route(fragment: str) -> dict[str, str]:
+	"""Map slug (e.g. error-log) or exact DocType name to canonical DocType name for Desk list URLs."""
+	frag = cstr(fragment).strip()
+	if not frag:
+		frappe.throw(_("DocType is required."))
+	if frappe.db.exists("DocType", frag):
+		return {"doctype": frag}
+	target = _desk_route_key(frag)
+	for dt in frappe.get_all("DocType", pluck="name"):
+		if _desk_route_key(dt) == target:
+			return {"doctype": cstr(dt)}
+	frappe.throw(_("No DocType matches {0!r}.").format(frag))
+
+
 @frappe.whitelist()
 def capture_panel_action_dialog(action_id: str) -> dict[str, Any]:
 	"""Capture target DocType meta into ``frozen_meta_json`` on the Panel Action row."""

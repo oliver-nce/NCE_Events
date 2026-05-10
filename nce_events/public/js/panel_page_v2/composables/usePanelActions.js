@@ -1,6 +1,7 @@
 import { ref } from "vue";
 import { frappeCall } from "../utils/frappeCall.js";
 import { clientHandlers } from "../actions/registry.js";
+import { parseClientHandlerSpec } from "../utils/parseClientHandlerSpec.js";
 
 /**
  * @param {{
@@ -27,7 +28,7 @@ export function usePanelActions({ openFormDialogStandalone, refreshPanelByDoctyp
 		}
 	}
 
-	function _ctx() {
+	function _ctx(args = []) {
 		return {
 			frappe,
 			frappeCall,
@@ -39,6 +40,7 @@ export function usePanelActions({ openFormDialogStandalone, refreshPanelByDoctyp
 					frappe.confirm(msg, () => resolve(true), () => resolve(false));
 				}),
 			refreshPanel: refreshPanelByDoctype,
+			args: Array.isArray(args) ? args : [],
 		};
 	}
 
@@ -82,7 +84,16 @@ export function usePanelActions({ openFormDialogStandalone, refreshPanelByDoctyp
 				return;
 			}
 			if (action.action_type === "Client Script") {
-				const key = action.client_handler;
+				const spec = parseClientHandlerSpec(action.client_handler);
+				const key = spec.key;
+				if (!key) {
+					frappe.msgprint({
+						title: __("Error"),
+						message: __("Set Client Handler (e.g. show_dt(error-log))."),
+						indicator: "red",
+					});
+					return;
+				}
 				const entry = clientHandlers[key];
 				if (!entry) {
 					console.warn(`[PanelAction] No handler registered for "${key}"`);
@@ -99,7 +110,7 @@ export function usePanelActions({ openFormDialogStandalone, refreshPanelByDoctyp
 					console.warn(`[PanelAction] Handler "${key}" is not a function`);
 					return;
 				}
-				await fn(_ctx());
+				await fn(_ctx(spec.args));
 				return;
 			}
 			console.warn(`[PanelAction] Unknown action_type: ${action.action_type}`);
