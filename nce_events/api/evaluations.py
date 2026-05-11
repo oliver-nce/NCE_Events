@@ -7,6 +7,8 @@ from typing import Any
 import frappe
 from frappe import _
 
+from nce_events.utils.sql_table import physical_table_name
+
 
 def _norm_rating(val: Any) -> int:
 	"""Coerce rating to int 0..7 for Kanban lanes."""
@@ -97,8 +99,8 @@ def get_event_enrollments(event_id: str) -> list[dict[str, Any]]:
 	link_f = _validate_sql_identifier(_events_link_field(enroll_dt))
 	player_f = _validate_sql_identifier(_player_link_field(enroll_dt))
 
-	enroll_tn = frappe.db.get_table_name(enroll_dt)
-	fm_tn = frappe.db.get_table_name("Family Members")
+	enroll_tn = physical_table_name(enroll_dt)
+	fm_tn = physical_table_name("Family Members")
 	rating_expr = _rating_sql_fragment(enroll_dt)
 
 	q = f"""

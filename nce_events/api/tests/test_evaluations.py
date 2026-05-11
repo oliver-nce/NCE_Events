@@ -8,9 +8,13 @@ from unittest.mock import MagicMock, patch
 import frappe
 
 from nce_events.api.evaluations import _norm_rating, get_event_enrollments
+from nce_events.utils.sql_table import physical_table_name
 
 
-class TestNormRating(unittest.TestCase):
+class TestPhysicalTableName(unittest.TestCase):
+	def test_tab_prefix(self):
+		self.assertEqual(physical_table_name("Enrollments"), "tabEnrollments")
+		self.assertEqual(physical_table_name("Family Members"), "tabFamily Members")
 	def test_none_empty(self):
 		self.assertEqual(_norm_rating(None), 0)
 		self.assertEqual(_norm_rating(""), 0)
@@ -55,7 +59,6 @@ class TestGetEventEnrollments(unittest.TestCase):
 					get_event_enrollments("missing-event")
 
 	@patch("nce_events.api.evaluations.frappe.db.sql")
-	@patch("nce_events.api.evaluations.frappe.db.get_table_name")
 	@patch("nce_events.api.evaluations.frappe.has_permission")
 	@patch("nce_events.api.evaluations.frappe.db.exists", return_value=True)
 	@patch("nce_events.api.evaluations._rating_sql_fragment", return_value="r.`rating`")
@@ -70,15 +73,10 @@ class TestGetEventEnrollments(unittest.TestCase):
 		mock_rating_sql,
 		mock_exists,
 		mock_perm,
-		mock_get_tn,
 		mock_sql,
 	):
 		mock_session = MagicMock()
 		mock_session.user = "Administrator"
-		mock_get_tn.side_effect = lambda dt: {
-			"Enrollments": "tabEnrollments",
-			"Family Members": "tabFamily Members",
-		}[dt]
 		mock_sql.return_value = [
 			{
 				"name": "1001",

@@ -20,6 +20,8 @@ from typing import Any
 import frappe
 from frappe import _
 
+from nce_events.utils.sql_table import physical_table_name
+
 # Stored Form Dialog Button.hide_if values (see form_dialog_button.json Select options)
 HIDE_IF_NEVER = "Never"
 HIDE_IF_NOT_SAVED = "Record not saved"
@@ -88,7 +90,7 @@ def expand_hide_if_sql_table_tokens(sql: str) -> str:
 			frappe.throw(_("Empty DocType in {{t:...}} token."))
 		if not frappe.db.exists("DocType", dt):
 			frappe.throw(_("Unknown DocType in {{t:...}}: {0}").format(dt))
-		tn = frappe.db.get_table_name(dt)
+		tn = physical_table_name(dt)
 		return f"`{tn}`"
 
 	return _TABLE_TOKEN_RE.sub(repl, sql)

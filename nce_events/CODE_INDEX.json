@@ -617,7 +617,7 @@
     "nce_events/api/tests/test_evaluations.py": {
       "exports": [
         "TestGetEventEnrollments",
-        "TestNormRating"
+        "TestPhysicalTableName"
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
@@ -671,6 +671,12 @@
   },
   "utils": {
     "nce_events/utils/__init__.py": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/utils/sql_table.py": {
+      "exports": [
+        "physical_table_name"
+      ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
     "nce_events/utils/version.py": {
