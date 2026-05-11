@@ -1,49 +1,39 @@
-# Current Task: Evaluations — Phase 4 of 9
+# Current Task: Evaluations — Phase 5 of 9
 
 ```
 [PLAN OVERVIEW]
-Total phases: 9
-Summary: iPad SPA at /app/evaluations/<event_id>; 8-column rating Kanban; save enrollment.rating on tile drop; 3 s polling; Pinia shell + view registry.
-
-Phase 1 — Frappe Page shell ✅
-Phase 2 — Vue + Vite + Pinia + App header ✅
-Phase 3 — Route eventId + Pinia shell + view registry ✅
-Phase 4 — get_event_enrollments API + tests (nce_events/api/evaluations.py)
-Phase 5 — Read-only RatingKanbanView + fetch wiring
+Phase 4 — get_event_enrollments API + tests ✅
+Phase 5 — Read-only RatingKanbanView + fetch wiring (Vue)
 Phase 6 — set_enrollment_rating API + tests
 Phase 7 — Drag tile → save on drop
 Phase 8 — Polling merge
 Phase 9 — iPad polish
 ```
 
-## Phase 3 deliverable
+## Phase 4 delivered
 
-- `stores/shell.js` — `useNceEvalShellStore`: `eventId`, `activeView`, `setEventId`, `setView`
-- `evaluations.js` — `eventId` from `frappe.get_route()[1]` passed to `mount`
-- `main.js` — `mount(selector, { eventId?, activeView? })` patches store before mount
-- `App.vue` — `VIEWS` registry + `<component :is>`
-- `RatingKanbanPlaceholder.vue` — shows view id, event id or URL hint
+- `nce_events/api/evaluations.py` — `@whitelist` `get_event_enrollments(event_id)`
+- `nce_events/api/tests/test_evaluations.py` — norm rating + mocked happy path + guest / validation
+- Auto-discovered whitelist (no hooks change needed in this app)
 
-Rebuild: `cd nce_events/public/js/evaluations && npm run build` then `bench build`.
+Method for `frappe.call`: `nce_events.api.evaluations.get_event_enrollments`
 
 ---
 
 ```
-[CURRENT PHASE: 4 of 9] — Backend: list enrollments for event
+[CURRENT PHASE: 5 of 9] — Read-only Kanban + fetch from API
 
 File(s):
-  - nce_events/api/evaluations.py (new)
-  - nce_events/hooks.py — whitelist `nce_events.api.evaluations.get_event_enrollments` if not using decorator-only pattern used elsewhere
-  - nce_events/api/tests/test_evaluations.py (new)
+  - nce_events/public/js/evaluations/composables/useEnrollments.js (new)
+  - nce_events/public/js/evaluations/components/RatingKanbanPlaceholder.vue → replace or add RatingKanbanView.vue
+  - nce_events/public/js/evaluations/App.vue — register `rating_kanban` → real view
+  - Rebuild evaluations_dist
 
 Changes:
-  1. Add @frappe.whitelist() get_event_enrollments(event_id) — validate event_id non-empty; permission check; SQL or get_list joining Registrations (enrollment) to Events by product_id / event link per nce_sync schema — return list of dicts: name, first_name, last_initial, position, gender, rating (int 0–7).
-  2. Confirm enrollment DocType name and field names against nce_sync (Registrations vs Enrollment).
-  3. Unit tests with frappe.set_user / mocks per existing api tests pattern.
+  1. Composable: `frappe.call({ method: 'nce_events.api.evaluations.get_event_enrollments', args: { event_id: shell.eventId }})` with loading/error state; skip if !eventId.
+  2. RatingKanbanView.vue: 8 columns 0–7, one row per enrollment: name line (first_name + last_initial “John R.” style) + position; rating tile in lane `rating` (static, no drag).
+  3. Gender colors on name line: male #1B2A60, female #7A0E5C (constants).
+  4. Wire shell.activeView registry to RatingKanbanView.
 
-Design context:
-  - Response shape must match Phase 5 `useEnrollments` consumer.
-
-Frappe notes:
-  - Whitelist method name matches frappe.call from Vue in Phase 5.
+Frappe notes: use existing frappeCall util if project has one (panel_page_v2/utils/frappeCall.js) — copy pattern or import if shared path allows; else inline frappe.call in composable.
 ```

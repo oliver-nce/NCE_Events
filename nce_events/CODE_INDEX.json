@@ -43,6 +43,15 @@
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
+    "nce_events/api/evaluations.py": {
+      "exports": [
+        "get_event_enrollments"
+      ],
+      "whitelist_endpoints": [
+        "get_event_enrollments"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/api/events_publish.py": {
       "exports": [
         "build_woocommerce_product_payload",
@@ -602,6 +611,13 @@
         "TestComputeJinjaTag",
         "TestEnsureTabPrefix",
         "TestTranslateWpQuery"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/api/tests/test_evaluations.py": {
+      "exports": [
+        "TestGetEventEnrollments",
+        "TestNormRating"
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
