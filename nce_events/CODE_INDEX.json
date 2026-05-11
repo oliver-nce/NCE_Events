@@ -859,6 +859,15 @@
     "nce_events/public/js/evaluations/components/RatingKanbanPlaceholder.vue": {
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
+    "nce_events/public/js/evaluations/components/RatingKanbanView.vue": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/public/js/evaluations/composables/useEnrollments.js": {
+      "exports": [
+        "useEnrollments"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/public/js/evaluations/main.js": {
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
@@ -868,7 +877,10 @@
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
-    "nce_events/public/js/evaluations/vite.config.js": {
+    "nce_events/public/js/evaluations/utils/frappeCall.js": {
+      "exports": [
+        "frappeCall"
+      ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
     "nce_events/public/js/panel_page_v2/App.vue": {
@@ -1311,9 +1323,6 @@
       "exports": [
         "normalizeDocForWooEventsPublish"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
-    },
-    "nce_events/public/js/panel_page_v2/vite.config.js": {
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     }
   },

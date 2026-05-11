@@ -12,18 +12,18 @@
 
 <script setup>
 import { computed } from "vue";
-import RatingKanbanPlaceholder from "./components/RatingKanbanPlaceholder.vue";
+import RatingKanbanView from "./components/RatingKanbanView.vue";
 import { useNceEvalShellStore } from "./stores/shell.js";
 
 const shell = useNceEvalShellStore();
 
-/** Extend when adding views (Phase 5+). */
+/** Extend when adding views. */
 const VIEWS = {
-	rating_kanban: RatingKanbanPlaceholder,
+	rating_kanban: RatingKanbanView,
 };
 
 const currentView = computed(
-	() => VIEWS[shell.activeView] || RatingKanbanPlaceholder,
+	() => VIEWS[shell.activeView] || RatingKanbanView,
 );
 </script>
 
