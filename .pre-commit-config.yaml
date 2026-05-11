@@ -61,7 +61,8 @@ repos:
                 .*boilerplate.*|
                 template/templates/includes/.*|
                 template/public/js/lib/.*|
-                nce_events/public/js/panel_page_v2_dist/.*
+                nce_events/public/js/panel_page_v2_dist/.*|
+                nce_events/public/js/evaluations_dist/.*
             )$
 
   - repo: https://github.com/RobertCraigie/pyright-python

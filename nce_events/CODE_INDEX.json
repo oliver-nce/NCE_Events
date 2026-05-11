@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Manual overlay merged into CODE_INDEX.json by scripts/build_code_index.py. Edit per-file entries here; the generator preserves your curated 'purpose', 'sections', 'private_helpers', 'key_fields', and 'depends_on'.",
-    "generated": "2026-05-05",
+    "generated": "2026-05-10",
     "generator": "scripts/build_code_index.py",
     "usage": "Run `python scripts/build_code_index.py --write` to regenerate CODE_INDEX.json after editing this file or after adding/renaming/deleting source files. The pre-commit hook runs `--check` and blocks commits whose code changes have not been regenerated."
   },
@@ -46,13 +46,19 @@
     "nce_events/api/events_publish.py": {
       "exports": [
         "build_woocommerce_product_payload",
-        "preview_publish_events_to_website",
-        "publish_events_to_website",
-        "slugify_product_slug"
+        "clear_new_woo_commerce_product",
+        "publish_new_woo_commerce_product",
+        "slugify_product_slug",
+        "submit_new_woo_commerce_product",
+        "update_events_to_website",
+        "update_woo_commerce_product"
       ],
       "whitelist_endpoints": [
-        "preview_publish_events_to_website",
-        "publish_events_to_website"
+        "clear_new_woo_commerce_product",
+        "publish_new_woo_commerce_product",
+        "submit_new_woo_commerce_product",
+        "update_events_to_website",
+        "update_woo_commerce_product"
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
@@ -281,6 +287,23 @@
         "Test send",
         "Bulk panel send"
       ]
+    },
+    "nce_events/api/panel_actions.py": {
+      "exports": [
+        "capture_panel_action_dialog",
+        "get_panel_action_dialog_definition",
+        "get_panel_actions",
+        "resolve_doctype_for_list_route",
+        "resolve_panel_action_doc_name"
+      ],
+      "whitelist_endpoints": [
+        "capture_panel_action_dialog",
+        "get_panel_action_dialog_definition",
+        "get_panel_actions",
+        "resolve_doctype_for_list_route",
+        "resolve_panel_action_doc_name"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
     "nce_events/api/panel_api_pkg/__init__.py": {
       "purpose": "Panel API package — Phase 5 split of the original 1093-LOC panel_api.py module (the deprecated shim was removed in Phase 12). Re-exports submodule public + underscore-prefixed names so callers can resolve them at the package root.",
@@ -541,11 +564,10 @@
     },
     "nce_events/api/tests/api/test_events_publish.py": {
       "exports": [
-        "TestAllowedEventsRowReqdTimestamps",
         "TestBuildWooCommerceProductPayload",
-        "TestPreviewPublishEventsToWebsite",
-        "TestPublishEventsToWebsite",
-        "TestSlugifyProductSlug"
+        "TestSlugifyProductSlug",
+        "TestUpdateEventsToWebsite",
+        "TestUpdateWooCommerceProduct"
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
@@ -782,6 +804,12 @@
     "nce_events/nce_events/doctype/page_panel_default_filter/": {
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
+    "nce_events/nce_events/doctype/panel_action/": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/nce_events/doctype/panel_action_role/": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/nce_events/doctype/settings/": {
       "purpose": "App-level settings singleton",
       "key_fields": [],
@@ -809,6 +837,15 @@
     }
   },
   "frontend_v2": {
+    "nce_events/public/js/evaluations/App.vue": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/public/js/evaluations/main.js": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/public/js/evaluations/vite.config.js": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/public/js/panel_page_v2/App.vue": {
       "purpose": "V2 SPA root: composes PanelFloat + PanelTable for the root WP Tables panel and per-doctype drilled panels, hosts TagFinder/CardModal/PanelFormDialog overlays. Uses PanelHeaderToolbar for the float headers and useSendDialogs for the plain-JS email/SMS dialog launchers.",
       "depends_on": [
@@ -825,6 +862,18 @@
         "shared/email_dialog.js",
         "shared/ai_tools.js"
       ]
+    },
+    "nce_events/public/js/panel_page_v2/actions/handlers/showDt.js": {
+      "exports": [
+        "showDt"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/public/js/panel_page_v2/actions/registry.js": {
+      "exports": [
+        "clientHandlers"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
     "nce_events/public/js/panel_page_v2/components/ActionsPanel.vue": {
       "vue": {
@@ -1082,6 +1131,12 @@
         "utils/frappeCall.js"
       ]
     },
+    "nce_events/public/js/panel_page_v2/composables/usePanelActions.js": {
+      "exports": [
+        "usePanelActions"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/public/js/panel_page_v2/composables/usePanelFormDialog.js": {
       "exports": [
         "usePanelFormDialog"
@@ -1207,6 +1262,18 @@
       ],
       "purpose": "Utility: Frappe-style depends_on / *_depends_on evaluation and layout fieldtype list for frozen form meta.",
       "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/utils/openDeskDoctypeList.js": {
+      "exports": [
+        "openDeskDoctypeListInNewTab"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/public/js/panel_page_v2/utils/parseClientHandlerSpec.js": {
+      "exports": [
+        "parseClientHandlerSpec"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
     "nce_events/public/js/panel_page_v2/utils/parseLayout.js": {
       "exports": [

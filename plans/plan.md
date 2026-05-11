@@ -1,172 +1,83 @@
-# Plan: Related-Tables Checkbox Picker on Form Dialog Capture/Rebuild
+# Plan: Evaluations — rating Kanban (SPA)
 
-## Goal
-When a user creates or rebuilds a Form Dialog (from the Page Panel Dialogs tab), present a checkbox dialog listing all one-to-many linked DocTypes discovered via `get_child_doctypes()`. The user picks which related tables they want as tabs in the Form Dialog. On rebuild, the previous selection is pre-populated.
+### Goal
 
-This plan covers **only the picker UI and persistence** — the actual rendering of related-table tabs inside PanelFormDialog is a separate, later task.
+Build an **iPad landscape** SPA at **`/app/evaluations/<event_id>`** for one event’s enrollments. Each row shows **player name + position** (gender colors TBD — navy / dark magenta); only a **rating tile** moves across **eight lanes (ratings 0–7)**. **On drop**, the lane index is saved to the **enrollment row’s `rating` field**. Sync across devices uses **polling** (~3 s, Phase 8). Shell uses **Pinia** (`activeView`, `eventId`) and a **view registry** so more components can plug in later. Phases ordered so **each phase ends demonstrable**.
 
----
+### Phases
 
-## Current State
+**Phase 1 — Frappe Page shell**
 
-### How capture/rebuild works today
-1. **Page Panel → Dialogs tab** (`page_panel.js` ~line 1152): User clicks "Create & capture from Desk" → `frappe.prompt` asks for a title → calls `capture_form_dialog_from_desk(doctype, title)`.
-2. **Rebuild** (`page_panel.js` ~line 1187): User clicks rebuild → `frappe.confirm` → calls `rebuild_form_dialog(name)`.
-3. **Backend** (`form_dialog_api.py`): Both endpoints freeze `frappe.get_meta(doctype).fields` into `frozen_meta_json` on the Form Dialog doc.
-4. **Form Dialog DocType** (`form_dialog.json`): Has no field for storing selected related tables.
+- **Files:** `nce_events/nce_events/page/evaluations/__init__.py`, `evaluations.json`, `evaluations.js`
+- **What:** Desk Page **`evaluations`** loads built assets from `evaluations_dist/` and mounts the Vue bundle via `window.NCEEvaluations.mount`.
+- **Key decisions:** Keys `frappe.pages["evaluations"]`; guard `wrapper._vue_app`; mount `#nce-evaluations-app`.
+- **Depends on:** none.
+- **Done when:** Visiting `/app/evaluations` shows the Desk page and runs the SPA (requires Phase 2 dist).
 
-### How related DocTypes are discovered
-- `panel_api.py → get_child_doctypes(root_doctype)`: Scans WP Tables for DocTypes with a Link field pointing at `root_doctype`. Returns `[{ doctype, link_field, label }]`.
+**Phase 2 — Vue + Vite + Pinia skeleton**
 
----
+- **Files:** `nce_events/public/js/evaluations/{package.json,vite.config.js,main.js,App.vue}`, `evaluations_dist/*` (build output); `npm install` → `package-lock.json`
+- **What:** Vite **IIFE** → `evaluations_dist/evaluations.js` + `style.css`; **`createPinia()`** + **`window.NCEEvaluations.mount`**. `App.vue`: header (“Evaluations”), reserved actions area, empty `<main>`.
+- **Key decisions:** Global `window.NCEEvaluations`; Pinia wired in `main.js`.
+- **Depends on:** Phase 1.
+- **Done when:** `npm run build` + `bench build` → `/app/evaluations` renders header strip.
 
-## Changes Required
+**Phase 3 — URL → `eventId` + Pinia shell + view registry**
 
-### A. Schema — Form Dialog DocType
+- **Files:** `nce_events/public/js/evaluations/stores/shell.js` (Pinia store), `App.vue`, `evaluations.js` (`frappe.get_route()` → mount options)
+- **What:** Extend `mount(selector, opts)` — pass `opts.eventId` from route `[1]`; store holds `eventId`, `activeView` (default `rating_kanban`); `<component :is>` from a small **views registry** + placeholder kanban stub.
+- **Key decisions:** `defineStore('nceEvalShell')` fields: `eventId`, `activeView`, `setView(id)`.
+- **Depends on:** Phase 2.
 
-Add a new field `related_doctypes` (JSON or Code/JSON) to `form_dialog.json`:
+**Phase 4 — Backend: list enrollments**
 
-```
-{
-  "fieldname": "related_doctypes",
-  "fieldtype": "Code",
-  "label": "Related DocTypes",
-  "options": "JSON",
-  "description": "JSON array of selected related DocTypes, e.g. [{\"doctype\":\"Enrollment\",\"link_field\":\"contact\",\"label\":\"Enrollments\"}]"
-}
-```
+- **Files:** `nce_events/api/evaluations.py`, `hooks.py` (whitelist if pattern requires), `nce_events/api/tests/test_evaluations.py`
+- **What:** Whitelisted `get_event_enrollments(event_id)` → rows with **`name`** (DocType Enrollment/Registrations PK), **`first_name`**, **`last_initial`**, **`position`**, **`gender`**, **`rating`** (normalize to int 0–7 server-side).
+- **Key decisions:** Module `nce_events.api.evaluations`; exact join against `Events`/`Registrations`/`Family Members` **verified in `nce_sync` meta**.
+- **Depends on:** none (parallel after Phase 2).
 
-Add it to `field_order` after `writeback_on_submit`, before `buttons`.
+**Phase 5 — Read-only Kanban (no drag)**
 
-**Migration note**: Existing Form Dialog docs will have this field empty/null, which is fine — it means "no related tabs selected".
+- **Files:** `nce_events/public/js/evaluations/components/RatingKanbanView.vue`, `composables/useEnrollments.js` (or Pinia enrolment store later), wire in `App.vue` registry.
+- **What:** Eight columns fitting **iPad landscape**; rows scroll vertically; tiles sit in lane `rating`; **rating number visible on tile** — updates only from server reload for this phase (no optimistic cross-lane preview until Phase 7).
+- **Depends on:** Phases 3, 4.
 
-### B. Backend — `form_dialog_api.py`
+**Phase 6 — Backend: set rating**
 
-#### B1. `capture_form_dialog_from_desk(doctype, title, related_doctypes=None)`
+- **Files:** `nce_events/api/evaluations.py` + tests  
+- **What:** Whitelisted `set_enrollment_rating(name, rating)` with `rating` ∈ `{0…7}`, permission check on doc write, **`frappe.db.set_value`** + **`frappe.db.commit`**, returns `{ ok, rating }`.
+- **Depends on:** Phase 4.
 
-- Accept an optional `related_doctypes` arg (JSON string or list).
-- If provided, store it on the doc as `doc.related_doctypes = json.dumps(related_doctypes)`.
-- On update of an existing doc, overwrite `related_doctypes` if the arg is provided.
+**Phase 7 — Drag rating tile → save on drop**
 
-#### B2. `rebuild_form_dialog(name, related_doctypes=None)`
+- **Files:** `RatingKanbanView.vue` (+ optional `RatingTile.vue`)
+- **What:** Horizontal drag **on tile only**; **number on tile updates on drop**; optimistic UI + rollback on error; avoid fighting vertical scroll (handle / axis).
+- **Depends on:** Phases 5, 6.
 
-- Same: accept optional `related_doctypes`, store if provided.
-- If `related_doctypes` is not passed (None), preserve the existing value on the doc (don't wipe it).
+**Phase 8 — Polling**
 
-#### B3. `get_form_dialog_definition(name)` — return `related_doctypes`
+- **Files:** `composables/useEnrollmentsPolling.js`, `RatingKanbanView.vue`
+- **What:** Poll `get_event_enrollments` ~3 s; **`document.hidden`** pauses merge; merge must not wipe an in-flight drag/save (`dirty`/lock per row).
+- **Depends on:** Phase 5.
 
-- Parse and include `related_doctypes` in the returned dict so the Vue frontend can later use it to render tabs.
+**Phase 9 — iPad polish**
 
-### C. Frontend — `page_panel.js` (Dialogs tab)
+- **Files:** scoped CSS on Kanban layout + shell
+- **What:** ~44px touch targets; **~½ in right scroll gutter / stable scrollbar styling** per spec; narrow columns tuned for landscape.
+- **Depends on:** Phase 7 (can start earlier for layout tokens).
 
-#### C1. Create flow (after the title prompt, before the API call)
+### Design Decisions
 
-Insert a second step between the title prompt and the `capture_form_dialog_from_desk` call:
+- **Route:** `/app/evaluations/<event_id>` — `eventId` from `frappe.get_route()[1]` (validate non-empty Phase 3).
+- **Bundle:** `window.NCEEvaluations.mount(selector, opts?)`; assets **`/assets/nce_events/js/evaluations_dist/evaluations.js`** + **`style.css`**.
+- **State:** Pinia store **`nceEvalShell`**: `eventId`, **`activeView: 'rating_kanban'`** (+ future ids); **`setView(id)`**.
+- **View registry:** `views = { rating_kanban: RatingKanbanView, … }` — root uses `<component :is="views[shell.activeView]" />`.
+- **Polling:** MVP only — **no frappe.publish_realtime** in v1.
+- **Naming:** Enrollment DocType = **whatever `nce_sync` uses** (“Registrations” in SQL snippets); coder confirms field **`rating`** and **position/gender JOIN** paths.
 
-1. Call `get_child_doctypes(root_doctype)` to get the available related DocTypes.
-2. If the list is empty, skip straight to the capture call (no picker needed).
-3. If non-empty, show a `frappe.msgprint` or custom dialog with:
-   - Heading: **"Add tabs to display related tables?"**
-   - A checkbox for each child DocType, using `label` as the display text.
-   - OK / Skip buttons.
-4. Collect the checked items as `related_doctypes` array.
-5. Pass `related_doctypes` to `capture_form_dialog_from_desk`.
+### Risks / Open Questions
 
-#### C2. Rebuild flow (after the confirm, before the API call)
-
-1. Load the current Form Dialog's `related_doctypes` from the server (already available via `get_form_dialog_definition` or a lightweight read).
-2. Call `get_child_doctypes(root_doctype)` to get the full available list.
-3. Show the same checkbox dialog, **pre-checking** any DocTypes that were previously selected.
-4. Pass the updated selection to `rebuild_form_dialog`.
-
-#### C3. Checkbox dialog helper
-
-Create a reusable function, e.g.:
-
-```js
-function _show_related_picker(available, preselected, callback) {
-    // available: [{ doctype, link_field, label }]
-    // preselected: [{ doctype, ... }] or []
-    // callback(selected): called with array of selected items
-
-    const preselected_set = new Set((preselected || []).map(r => r.doctype));
-    const fields = available.map(c => ({
-        label: c.label,
-        fieldname: "sel_" + c.doctype.replace(/ /g, "_"),
-        fieldtype: "Check",
-        default: preselected_set.has(c.doctype) ? 1 : 0,
-    }));
-
-    const d = new frappe.ui.Dialog({
-        title: "Add tabs to display related tables?",
-        fields: fields,
-        primary_action_label: "OK",
-        secondary_action_label: "Skip",
-        primary_action(values) {
-            const selected = available.filter(c => {
-                const key = "sel_" + c.doctype.replace(/ /g, "_");
-                return values[key];
-            });
-            d.hide();
-            callback(selected);
-        },
-        secondary_action() {
-            d.hide();
-            callback([]);
-        },
-    });
-    d.show();
-}
-```
-
----
-
-## Sequence (Create flow)
-
-```
-User clicks "Create & capture from Desk"
-  → frappe.prompt for title
-  → frappe.call get_child_doctypes(root_doctype)
-  → if children: _show_related_picker(children, [], callback)
-     else: callback([])
-  → frappe.call capture_form_dialog_from_desk(doctype, title, related_doctypes)
-  → set form_dialog on Page Panel, save, re-render
-```
-
-## Sequence (Rebuild flow)
-
-```
-User clicks Rebuild
-  → frappe.confirm "Overwrite frozen schema?"
-  → frappe.call get_form_dialog_definition(name)   // to get current related_doctypes
-  → frappe.call get_child_doctypes(root_doctype)
-  → _show_related_picker(children, current_related, callback)
-  → frappe.call rebuild_form_dialog(name, related_doctypes)
-  → re-render
-```
-
----
-
-## Files to Modify
-
-| File | Change |
-|------|--------|
-| `nce_events/nce_events/doctype/form_dialog/form_dialog.json` | Add `related_doctypes` field |
-| `nce_events/api/form_dialog_api.py` | Accept + store `related_doctypes` in capture/rebuild; return it in get_definition |
-| `nce_events/nce_events/doctype/page_panel/page_panel.js` | Insert related-picker dialog into create + rebuild flows |
-
-## Files NOT Modified (yet)
-
-| File | Why later |
-|------|-----------|
-| `PanelFormDialogBody.vue` | Rendering related-table tabs is the next task |
-| `usePanelFormDialog.js` | Same — data loading for related tabs is later |
-| `panel_api.py` | `get_child_doctypes` already exists and is sufficient |
-
----
-
-## Edge Cases
-
-1. **No child DocTypes found** → Skip picker silently, proceed with capture/rebuild as today.
-2. **Rebuild with a child DocType that no longer exists in WP Tables** → The pre-populated checkbox will simply not appear (it's filtered by the fresh `get_child_doctypes` result). The old entry in `related_doctypes` is replaced by the new selection.
-3. **Existing Form Dialogs with null `related_doctypes`** → Treated as empty array (no related tabs). No migration needed.
+- Enrollment DocType + field shapes live in **`nce_sync`** — confirm before locking SQL in Phase 4.
+- **Roles:** Phase 6 needs write permission beyond System Manager if coaches aren’t admins.
+- **`frappe.get_route()`** on Desk Page — smoke-test event id segment on real bench.
+- iPad scrollbar “½ in” vs **native overlay scrollbars** — may need styled inner gutter vs OS defaults.

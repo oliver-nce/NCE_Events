@@ -70,6 +70,7 @@ GROUP_RULES: list[tuple[re.Pattern, str]] = [
 	(re.compile(r"^nce_events/__init__\.py$"), "backend"),
 	(re.compile(r"^nce_events/utils/.*\.py$"), "utils"),
 	(re.compile(r"^nce_events/public/js/panel_page_v2/.*\.(js|vue)$"), "frontend_v2"),
+	(re.compile(r"^nce_events/public/js/evaluations/.*\.(js|vue)$"), "frontend_v2"),
 	(re.compile(r"^nce_events/public/js/hierarchy_explorer/.*\.js$"), "hierarchy_explorer"),
 	(re.compile(r"^nce_events/public/js/js_dialogs/.*\.js$"), "js_dialogs"),
 	(
@@ -81,7 +82,13 @@ GROUP_RULES: list[tuple[re.Pattern, str]] = [
 ]
 
 # Folders excluded entirely from scanning.
-EXCLUDE_DIR_NAMES = {"__pycache__", "node_modules", ".git", "panel_page_v2_dist"}
+EXCLUDE_DIR_NAMES = {
+	"__pycache__",
+	"node_modules",
+	".git",
+	"panel_page_v2_dist",
+	"evaluations_dist",
+}
 
 # DocType folder root.
 DOCTYPE_ROOT = "nce_events/nce_events/doctype"
