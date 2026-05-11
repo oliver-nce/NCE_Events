@@ -4,11 +4,28 @@
 			<h1 class="nce-eval-title">Evaluations</h1>
 			<div class="nce-eval-actions" aria-label="Actions (reserved)" />
 		</header>
-		<main class="nce-eval-main" />
+		<main class="nce-eval-main">
+			<component :is="currentView" />
+		</main>
 	</div>
 </template>
 
-<script setup></script>
+<script setup>
+import { computed } from "vue";
+import RatingKanbanPlaceholder from "./components/RatingKanbanPlaceholder.vue";
+import { useNceEvalShellStore } from "./stores/shell.js";
+
+const shell = useNceEvalShellStore();
+
+/** Extend when adding views (Phase 5+). */
+const VIEWS = {
+	rating_kanban: RatingKanbanPlaceholder,
+};
+
+const currentView = computed(
+	() => VIEWS[shell.activeView] || RatingKanbanPlaceholder,
+);
+</script>
 
 <style scoped>
 .nce-eval-root {
@@ -44,6 +61,6 @@
 .nce-eval-main {
 	flex: 1;
 	min-height: 0;
-	overflow: hidden;
+	overflow: auto;
 }
 </style>

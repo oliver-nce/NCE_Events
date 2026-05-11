@@ -22,7 +22,12 @@ frappe.pages["evaluations"].on_page_show = function (wrapper) {
 			mount_el.style.cssText = "height:100%;width:100%;";
 			wrapper._page_obj.main.append(mount_el);
 			if (window.NCEEvaluations && window.NCEEvaluations.mount) {
-				wrapper._vue_app = window.NCEEvaluations.mount("#nce-evaluations-app");
+				const route = frappe.get_route() || [];
+				const eventId = route[1] ? String(route[1]) : "";
+				wrapper._vue_app = window.NCEEvaluations.mount(
+					"#nce-evaluations-app",
+					{ eventId },
+				);
 			}
 		}
 	);

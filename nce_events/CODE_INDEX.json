@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Manual overlay merged into CODE_INDEX.json by scripts/build_code_index.py. Edit per-file entries here; the generator preserves your curated 'purpose', 'sections', 'private_helpers', 'key_fields', and 'depends_on'.",
-    "generated": "2026-05-10",
+    "generated": "2026-05-11",
     "generator": "scripts/build_code_index.py",
     "usage": "Run `python scripts/build_code_index.py --write` to regenerate CODE_INDEX.json after editing this file or after adding/renaming/deleting source files. The pre-commit hook runs `--check` and blocks commits whose code changes have not been regenerated."
   },
@@ -840,7 +840,16 @@
     "nce_events/public/js/evaluations/App.vue": {
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
+    "nce_events/public/js/evaluations/components/RatingKanbanPlaceholder.vue": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/public/js/evaluations/main.js": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/public/js/evaluations/stores/shell.js": {
+      "exports": [
+        "useNceEvalShellStore"
+      ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
     "nce_events/public/js/evaluations/vite.config.js": {

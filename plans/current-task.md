@@ -1,59 +1,49 @@
-# Current Task: Evaluations — Phase 3 of 9
+# Current Task: Evaluations — Phase 4 of 9
 
 ```
 [PLAN OVERVIEW]
 Total phases: 9
-Summary: iPad SPA at /app/evaluations/<event_id>; 8-column rating Kanban; save enrollment.rating on tile drop; 3 s polling for multi-device sync; Pinia shell + view registry.
+Summary: iPad SPA at /app/evaluations/<event_id>; 8-column rating Kanban; save enrollment.rating on tile drop; 3 s polling; Pinia shell + view registry.
 
-Phase 1 — Frappe Page shell (nce_events/nce_events/page/evaluations/)
-Phase 2 — Vue + Vite + Pinia + App header (nce_events/public/js/evaluations/)
-Phase 3 — Route eventId + Pinia shell store + view registry (stores/shell.js, App.vue, page evaluations.js)
+Phase 1 — Frappe Page shell ✅
+Phase 2 — Vue + Vite + Pinia + App header ✅
+Phase 3 — Route eventId + Pinia shell + view registry ✅
 Phase 4 — get_event_enrollments API + tests (nce_events/api/evaluations.py)
 Phase 5 — Read-only RatingKanbanView + fetch wiring
 Phase 6 — set_enrollment_rating API + tests
 Phase 7 — Drag tile → save on drop
 Phase 8 — Polling merge
-Phase 9 — iPad polish (gutter scroll, lanes)
+Phase 9 — iPad polish
 ```
 
-## Status — Phases 1–2 ✅ complete
+## Phase 3 deliverable
 
-Artifacts:
+- `stores/shell.js` — `useNceEvalShellStore`: `eventId`, `activeView`, `setEventId`, `setView`
+- `evaluations.js` — `eventId` from `frappe.get_route()[1]` passed to `mount`
+- `main.js` — `mount(selector, { eventId?, activeView? })` patches store before mount
+- `App.vue` — `VIEWS` registry + `<component :is>`
+- `RatingKanbanPlaceholder.vue` — shows view id, event id or URL hint
 
-- Desk Page: `evaluations.json`, `evaluations.js`, `__init__.py`
-- Vue sources: `public/js/evaluations/{main.js,App.vue,vite.config.js,package.json}`
-- Build output: `public/js/evaluations_dist/{evaluations.js,style.css}`
-- Code index excludes `evaluations_dist`; ESLint excludes built bundle patterns.
-
-Smoke test locally: `bench build`, open **`/app/evaluations`** (System Manager).
+Rebuild: `cd nce_events/public/js/evaluations && npm run build` then `bench build`.
 
 ---
 
 ```
-[CURRENT PHASE: 3 of 9] — URL → eventId + Pinia shell + view registry
+[CURRENT PHASE: 4 of 9] — Backend: list enrollments for event
 
 File(s):
-  - nce_events/nce_events/page/evaluations/evaluations.js
-  - nce_events/public/js/evaluations/main.js
-  - nce_events/public/js/evaluations/App.vue
-  - nce_events/public/js/evaluations/stores/shell.js (new)
+  - nce_events/api/evaluations.py (new)
+  - nce_events/hooks.py — whitelist `nce_events.api.evaluations.get_event_enrollments` if not using decorator-only pattern used elsewhere
+  - nce_events/api/tests/test_evaluations.py (new)
 
 Changes:
-  1. evaluations.js — read frappe.get_route(); pass event id into mount:
-     window.NCEEvaluations.mount('#nce-evaluations-app', { eventId: frappe.get_route()[1] || '' })
-  2. main.js — change mount(signature) to accept opts; before mount create app per call OR pass props via pinia.shell.setEventId from opts once (preferred: Pinia patch on entry before Mount):
-         const mount = (selector, opts = {}) => { shellStore/event init from opts if provided; return app.mount(selector); }
-     Keep single Vue app instance (same pattern as NCEPanelPageV2 — one mount per page lifecycle).
-  3. stores/shell.js — defineStore('nceEvalShell', { state: () => ({ eventId: '', activeView: 'rating_kanban' }), actions: setEventId, setView })
-  4. App.vue — use store; `<component :is="currentViewComponent" />` from registry `{ rating_kanban: MinimalPlaceholder }`; placeholder shows eventId + view id for QA.
-  5. Optionally add stubs/RatingKanbanPlaceholder.vue as minimal component.
+  1. Add @frappe.whitelist() get_event_enrollments(event_id) — validate event_id non-empty; permission check; SQL or get_list joining Registrations (enrollment) to Events by product_id / event link per nce_sync schema — return list of dicts: name, first_name, last_initial, position, gender, rating (int 0–7).
+  2. Confirm enrollment DocType name and field names against nce_sync (Registrations vs Enrollment).
+  3. Unit tests with frappe.set_user / mocks per existing api tests pattern.
 
 Design context:
-  - activeView values are string enums; first real view id: rating_kanban.
-  - eventId empty string handled in UI (“No event selected”) until UX decided.
+  - Response shape must match Phase 5 `useEnrollments` consumer.
 
 Frappe notes:
-  - Route `/app/evaluations/EVT-XYZ` → frappe.get_route() is ['evaluations', 'EVT-XYZ'] typically.
-
-Rebuild: cd nce_events/public/js/evaluations && npm run build; then bench build.
+  - Whitelist method name matches frappe.call from Vue in Phase 5.
 ```
