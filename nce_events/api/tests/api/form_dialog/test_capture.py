@@ -80,6 +80,8 @@ class TestGetFormDialogDefinition(FrappeTestCase):
 		self.assertEqual(result["buttons"][0]["label"], "First")
 		self.assertEqual(result["buttons"][1]["label"], "Second")
 		self.assertEqual(result["buttons"][2]["label"], "Third")
+		self.assertIn("tab_notes", result)
+		self.assertEqual(result["tab_notes"], [])
 
 		# Cleanup
 		frappe.delete_doc("Form Dialog", doc.name, force=True)

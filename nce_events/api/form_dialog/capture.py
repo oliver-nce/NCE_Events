@@ -26,6 +26,7 @@ from ._helpers import (
 	_related_doctype_child_rows,
 	_require_system_manager,
 	_sync_related_doctypes,
+	_sync_form_dialog_tab_notes_from_fields,
 )
 from .related_rows import _related_rows_for_vue_api
 
@@ -67,6 +68,7 @@ def capture_form_dialog_from_desk(
 		doc.frozen_meta_json = frozen_json
 		doc.captured_at = frappe.utils.now_datetime()
 		_sync_related_doctypes(doc, related_doctypes)
+		_sync_form_dialog_tab_notes_from_fields(doc, fields_list)
 		doc.save(ignore_permissions=True)
 	else:
 		doc = frappe.get_doc(
@@ -81,6 +83,7 @@ def capture_form_dialog_from_desk(
 				"related_doctypes": _related_doctype_child_rows(related_doctypes),
 			}
 		)
+		_sync_form_dialog_tab_notes_from_fields(doc, fields_list)
 		doc.insert(ignore_permissions=True)
 
 	frappe.db.commit()
@@ -115,6 +118,7 @@ def rebuild_form_dialog(name: str, related_doctypes: str | list | None = None) -
 	doc.frozen_meta_json = json.dumps({"fields": fields_list}, default=str, indent=None)
 	doc.captured_at = frappe.utils.now_datetime()
 	_sync_related_doctypes(doc, related_doctypes)
+	_sync_form_dialog_tab_notes_from_fields(doc, fields_list)
 	doc.save(ignore_permissions=True)
 	frappe.db.commit()
 
@@ -180,6 +184,15 @@ def get_form_dialog_definition(name: str) -> dict:
 	)
 	related_doctypes = _related_rows_for_vue_api(doc)
 
+	tab_notes = [
+		{
+			"tab_anchor": cstr(getattr(r, "tab_anchor", None) or "").strip(),
+			"tab_label": cstr(getattr(r, "tab_label", None) or ""),
+			"note": cstr(getattr(r, "note", None) or ""),
+		}
+		for r in sorted(doc.get("tab_notes") or [], key=lambda row: int(getattr(row, "idx", 0) or 0))
+	]
+
 	return {
 		"name": doc.name,
 		"title": doc.title,
@@ -192,6 +205,7 @@ def get_form_dialog_definition(name: str) -> dict:
 		"custom_presubmit_script": (getattr(doc, "custom_presubmit_script", None) or "").strip(),
 		"buttons": buttons,
 		"related_doctypes": related_doctypes,
+		"tab_notes": tab_notes,
 	}
 
 

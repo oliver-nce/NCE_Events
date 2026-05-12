@@ -405,3 +405,110 @@ def _sanitize_get_list_fields(child_doctype: str, fieldnames: list[str]) -> list
 	if "name" not in out:
 		out.insert(0, "name")
 	return out
+
+
+# --- Main-form tab anchors (mirror public/js/panel_page_v2/utils/parseLayout.js) ---
+FD_LEAD_TAB_ANCHOR = "__lead__"
+
+
+def _frozen_tab_visually_nonempty(sections: list[dict[str, Any]]) -> bool:
+	for sec in sections:
+		for col in sec.get("columns") or []:
+			if col.get("fields"):
+				return True
+	return False
+
+
+def _main_tab_skeleton_from_frozen_fields(fields_list: list[dict]) -> list[dict[str, str]]:
+	"""
+	Collect {anchor, label} for each logical tab Desk/Vue derive from frozen fields.
+
+	Anchor is FD_LEAD_TAB_ANCHOR for the leading tab (before first Tab Break), otherwise
+	the Tab Break fieldname. Drops tabs with no visible data fields — same rule as JS
+	``parseLayout`` + ``hasVisibleFields``.
+	"""
+	visible_fields = [f for f in fields_list if not cint((f.get("hidden") or 0))]
+
+	tabs_skeleton: list[dict[str, str]] = []
+
+	cur_anchor = FD_LEAD_TAB_ANCHOR
+	cur_label = "Details"
+	cur_sections: list[dict[str, Any]] = []
+
+	cur_section: dict[str, Any] = {
+		"label": "",
+		"collapsible": False,
+		"description": "",
+		"columns": [],
+	}
+	cur_column: dict[str, list[Any]] = {"fields": []}
+
+	def maybe_push_tab_done() -> None:
+		if _frozen_tab_visually_nonempty(cur_sections):
+			tabs_skeleton.append({"anchor": cur_anchor, "label": cur_label})
+
+	for field in visible_fields:
+		ft = cstr(field.get("fieldtype") or "")
+		if ft == "Tab Break":
+			cur_section["columns"].append(cur_column)
+			cur_sections.append(cur_section)
+			maybe_push_tab_done()
+			tab_break_fn = cstr(field.get("fieldname") or "").strip()
+			cur_anchor = tab_break_fn or FD_LEAD_TAB_ANCHOR
+			cur_label = cstr(field.get("label") or "").strip() or "Details"
+			cur_sections = []
+			cur_section = {
+				"label": "",
+				"collapsible": False,
+				"description": "",
+				"columns": [],
+			}
+			cur_column = {"fields": []}
+			continue
+
+		if ft == "Section Break":
+			cur_section["columns"].append(cur_column)
+			cur_sections.append(cur_section)
+			cur_section = {
+				"label": cstr(field.get("label") or "").strip(),
+				"collapsible": bool(cint(field.get("collapsible"))),
+				"description": cstr(field.get("description") or "").strip(),
+				"columns": [],
+			}
+			cur_column = {"fields": []}
+			continue
+
+		if ft == "Column Break":
+			cur_section["columns"].append(cur_column)
+			cur_column = {"fields": []}
+			continue
+
+		cur_column["fields"].append(field)
+
+	cur_section["columns"].append(cur_column)
+	cur_sections.append(cur_section)
+	maybe_push_tab_done()
+
+	return tabs_skeleton
+
+
+def _sync_form_dialog_tab_notes_from_fields(doc: Any, fields_list: list[dict]) -> None:
+	"""Rebuild ``tab_notes`` child rows from frozen fields; reuse ``note`` by ``tab_anchor``."""
+	skeleton = _main_tab_skeleton_from_frozen_fields(fields_list)
+	prev: dict[str, str] = {}
+	for row in list(getattr(doc, "tab_notes", None) or []):
+		ac = (cstr(getattr(row, "tab_anchor", None)) or "").strip()
+		if not ac:
+			continue
+		prev[ac] = cstr(getattr(row, "note", "") or "") if getattr(row, "note", None) is not None else ""
+
+	doc.tab_notes = []
+	for sk in skeleton:
+		doc.append(
+			"tab_notes",
+			{
+				"tab_anchor": sk["anchor"],
+				"tab_label": sk["label"],
+				"note": prev.get(sk["anchor"], ""),
+			},
+		)

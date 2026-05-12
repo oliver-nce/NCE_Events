@@ -70,6 +70,13 @@
 								</div>
 							</div>
 						</div>
+						<div
+							v-if="tab.tabGuidance && String(tab.tabGuidance).trim()"
+							class="ppv2-fd-tab-guidance"
+						>
+							<strong class="ppv2-fd-tab-guidance-label">Note:</strong>
+							<span class="ppv2-fd-tab-guidance-text">{{ tab.tabGuidance }}</span>
+						</div>
 					</template>
 				</div>
 			</div>
@@ -209,6 +216,23 @@ defineExpose({ saveAllRelatedRows, resetRelatedToBaseline });
 .ppv2-fd-columns > div {
 	min-width: 0;
 	overflow: visible;
+}
+.ppv2-fd-tab-guidance {
+	margin-top: 12px;
+	padding: 10px 12px;
+	font-size: var(--font-size-sm);
+	color: var(--text-muted);
+	background: var(--control-bg, #f7fafc);
+	border: 1px solid var(--border-color, #e2e8f0);
+	border-radius: var(--border-radius-sm, 4px);
+	line-height: 1.45;
+}
+.ppv2-fd-tab-guidance-label {
+	color: var(--text-color);
+	margin-right: 6px;
+}
+.ppv2-fd-tab-guidance-text {
+	white-space: pre-wrap;
 }
 .ppv2-fd-validation-error {
 	margin-top: 8px;

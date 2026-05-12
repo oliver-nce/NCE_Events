@@ -210,4 +210,5 @@ def get_panel_action_dialog_definition(action_id: str) -> dict[str, Any]:
 		"on_submit_method": cstr(getattr(doc, "on_submit_method", None) or "").strip(),
 		"buttons": buttons,
 		"related_doctypes": related_doctypes,
+		"tab_notes": [],
 	}

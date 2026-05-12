@@ -199,5 +199,68 @@ class TestHopWalkFinalIdentifiers(unittest.TestCase):
 		self.assertEqual(kwargs1["filters"], {"enrollment": ["in", ["en1"]]})
 
 
+class TestMainTabSkeletonAndTabNotes(unittest.TestCase):
+	def test_lead_anchor_single_visible_field(self):
+		from nce_events.api.form_dialog._helpers import (
+			FD_LEAD_TAB_ANCHOR,
+			_main_tab_skeleton_from_frozen_fields,
+		)
+
+		fields = [{"hidden": 0, "fieldtype": "Data", "fieldname": "a"}]
+		sk = _main_tab_skeleton_from_frozen_fields(fields)
+		self.assertEqual(len(sk), 1)
+		self.assertEqual(sk[0]["anchor"], FD_LEAD_TAB_ANCHOR)
+
+	def test_second_tab_uses_tab_break_fieldname_anchor(self):
+		from nce_events.api.form_dialog._helpers import FD_LEAD_TAB_ANCHOR, _main_tab_skeleton_from_frozen_fields
+
+		fields = [
+			{"hidden": 0, "fieldtype": "Data", "fieldname": "a"},
+			{"hidden": 0, "fieldtype": "Tab Break", "fieldname": "tab_extra", "label": "Extra"},
+			{"hidden": 0, "fieldtype": "Data", "fieldname": "b"},
+		]
+		sk = _main_tab_skeleton_from_frozen_fields(fields)
+		self.assertEqual(len(sk), 2)
+		self.assertEqual(sk[0]["anchor"], FD_LEAD_TAB_ANCHOR)
+		self.assertEqual(sk[1]["anchor"], "tab_extra")
+		self.assertEqual(sk[1]["label"], "Extra")
+
+	def test_sync_tab_notes_keeps_matching_anchors(self):
+		from unittest.mock import MagicMock
+
+		from nce_events.api.form_dialog._helpers import (
+			FD_LEAD_TAB_ANCHOR,
+			_sync_form_dialog_tab_notes_from_fields,
+		)
+
+		fields = [
+			{"hidden": 0, "fieldtype": "Data", "fieldname": "a"},
+			{"hidden": 0, "fieldtype": "Tab Break", "fieldname": "tab_extra", "label": "Extras"},
+			{"hidden": 0, "fieldtype": "Data", "fieldname": "b"},
+		]
+		old_lead = MagicMock()
+		old_lead.tab_anchor = FD_LEAD_TAB_ANCHOR
+		old_lead.note = "Hello"
+		old_extra = MagicMock()
+		old_extra.tab_anchor = "tab_extra"
+		old_extra.note = "World"
+		doc = MagicMock()
+		doc.tab_notes = [old_lead, old_extra]
+		appended = []
+
+		def _append(dn, row):
+			appended.append((dn, row))
+
+		doc.append = _append
+
+		_sync_form_dialog_tab_notes_from_fields(doc, fields)
+
+		self.assertEqual(doc.tab_notes, [])
+		self.assertEqual(len(appended), 2)
+		self.assertEqual(appended[0][0], "tab_notes")
+		self.assertEqual(appended[0][1]["note"], "Hello")
+		self.assertEqual(appended[1][1]["note"], "World")
+
+
 if __name__ == "__main__":
 	unittest.main()

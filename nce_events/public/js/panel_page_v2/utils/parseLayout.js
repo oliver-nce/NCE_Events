@@ -1,16 +1,26 @@
 /**
+ * Anchor for frozen layout tabs that appear before the first Tab Break in DocType meta.
+ * Keep in sync with ``nce_events.api.form_dialog._helpers.FD_LEAD_TAB_ANCHOR``.
+ */
+export const FORM_DIALOG_LEAD_TAB_ANCHOR = "__lead__";
+
+/**
  * Parse a flat Frappe field list into a nested layout tree.
  *
  * @param {Array} fields - Array of DocField objects, sorted by idx
  * @returns {Array} Array of tab objects
  *
- * Each tab:     { label: string, sections: Section[] }
+ * Each tab:     { anchor: string, label: string, sections: Section[] }
  * Each section: { label: string, collapsible: bool, description: string, columns: Column[] }
  * Each column:  { fields: DocField[] }
  */
 export function parseLayout(fields) {
   const tabs = [];
-  let currentTab = { label: "Details", sections: [] };
+  let currentTab = {
+    anchor: FORM_DIALOG_LEAD_TAB_ANCHOR,
+    label: "Details",
+    sections: [],
+  };
   let currentSection = { label: "", collapsible: false, description: "", columns: [] };
   let currentColumn = { fields: [] };
 
@@ -25,7 +35,12 @@ export function parseLayout(fields) {
       if (hasVisibleFields(currentTab)) {
         tabs.push(currentTab);
       }
-      currentTab = { label: field.label || "Details", sections: [] };
+      const breakFn = (field.fieldname && String(field.fieldname).trim()) || FORM_DIALOG_LEAD_TAB_ANCHOR;
+      currentTab = {
+        anchor: breakFn,
+        label: field.label || "Details",
+        sections: [],
+      };
       currentSection = { label: "", collapsible: false, description: "", columns: [] };
       currentColumn = { fields: [] };
     } else if (ft === "Section Break") {

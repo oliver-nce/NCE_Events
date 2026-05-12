@@ -180,6 +180,22 @@ export function createFrozenFormLoad(ctx) {
 			allFields.value = fields;
 			tabs.value = parseLayout(fields);
 
+			const tn = Array.isArray(defn.tab_notes) ? defn.tab_notes : [];
+			const notesByAnchor = new Map(
+				tn.map((row) => {
+					const ak = row && row.tab_anchor != null ? String(row.tab_anchor).trim() : "";
+					return [ak, row && row.note != null ? String(row.note) : ""];
+				}),
+			);
+			for (const tab of tabs.value) {
+				if (tab._related) {
+					continue;
+				}
+				const anch = tab.anchor != null ? String(tab.anchor).trim() : "";
+				const text = anch ? notesByAnchor.get(anch) : "";
+				tab.tabGuidance = text != null && String(text).trim() ? text : "";
+			}
+
 			// Related DocType tabs: only from child rows; parse `info` JSON per row (try/catch).
 			let relatedAdded = 0;
 			try {

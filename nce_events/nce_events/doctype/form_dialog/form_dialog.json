@@ -16,7 +16,8 @@
     "is_active",
     "writeback_on_submit",
     "buttons",
-    "related_doctypes"
+    "related_doctypes",
+    "tab_notes"
   ],
   "fields": [
     {
@@ -102,6 +103,13 @@
       "fieldtype": "Table",
       "label": "Related DocTypes",
       "options": "Form Dialog Related DocType"
+    },
+    {
+      "description": "Per main-form tab hints for panel users (__lead__ before first Tab Break; not used for Related DocTypes tabs). Rows are rebuilt on Capture/Rebuild; existing notes stay when the tab anchor matches.",
+      "fieldname": "tab_notes",
+      "fieldtype": "Table",
+      "label": "Tab Notes",
+      "options": "Form Dialog Tab Note"
     }
   ],
   "index_web_pages_for_search": 0,
