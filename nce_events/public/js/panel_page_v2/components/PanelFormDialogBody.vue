@@ -220,15 +220,16 @@ defineExpose({ saveAllRelatedRows, resetRelatedToBaseline });
 .ppv2-fd-tab-guidance {
 	margin-top: 12px;
 	padding: 10px 12px;
-	font-size: var(--font-size-sm);
-	color: var(--text-muted);
+	font-size: var(--font-size-base);
+	font-family: var(--font-family);
+	color: var(--text-color);
 	background: var(--control-bg, #f7fafc);
 	border: 1px solid var(--border-color, #e2e8f0);
 	border-radius: var(--border-radius-sm, 4px);
 	line-height: 1.45;
 }
 .ppv2-fd-tab-guidance-label {
-	color: var(--text-color);
+	font-weight: var(--font-weight-bold, 700);
 	margin-right: 6px;
 }
 .ppv2-fd-tab-guidance-text {
