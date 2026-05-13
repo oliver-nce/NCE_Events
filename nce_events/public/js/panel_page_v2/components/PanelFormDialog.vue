@@ -124,6 +124,8 @@ const props = defineProps({
 	reloadPanelAfterPublish: { type: Function, default: null },
 	/** Where the captured definition lives: 'form_dialog' (default) or 'panel_action'. */
 	definitionSource: { type: String, default: "form_dialog" },
+	/** Host bumps after WP read-back so form reloads without closing dialog */
+	wpReadbackReloadTick: { type: Number, default: 0 },
 });
 
 const emit = defineEmits(["close", "saved", "nav-prev", "nav-next"]);
@@ -177,6 +179,22 @@ watch(
 );
 
 const loadDebugRows = computed(() => form.loadDebugLog.value);
+
+watch(
+	() => props.wpReadbackReloadTick,
+	async (tick, prev) => {
+		if (!props.open || Number(tick) <= 0 || tick === prev) return;
+		if (!props.docName) return;
+		await nextTick();
+		try {
+			await form.load();
+			fdBodyRef.value?.resetRelatedToBaseline?.();
+			relatedDirty.value = false;
+		} catch {
+			/* keep current form if reload fails */
+		}
+	},
+);
 
 const footerIsDirty = computed(() => form.isDirty.value || relatedDirty.value);
 

@@ -27,7 +27,7 @@ function mutablePanelRows(panel) {
  * Handles WP temp-name → PK rename by matching ``oldRowName``.
  */
 async function patchPanelRowFromServer(panel, doctype, oldRowName, savedName) {
-	if (!panel || !doctype) return;
+	if (!panel || !doctype) return null;
 
 	const tryNames = [];
 	if (savedName != null && String(savedName).trim() !== "") {
@@ -40,7 +40,7 @@ async function patchPanelRowFromServer(panel, doctype, oldRowName, savedName) {
 	) {
 		tryNames.push(String(oldRowName).trim());
 	}
-	if (!tryNames.length) return;
+	if (!tryNames.length) return null;
 
 	let doc = null;
 	for (const nm of tryNames) {
@@ -51,7 +51,7 @@ async function patchPanelRowFromServer(panel, doctype, oldRowName, savedName) {
 			/* try alternate name after async WP rename */
 		}
 	}
-	if (!doc) return;
+	if (!doc) return null;
 
 	const list = mutablePanelRows(panel);
 	const docNameStr = doc.name != null ? String(doc.name).trim() : "";
@@ -68,9 +68,10 @@ async function patchPanelRowFromServer(panel, doctype, oldRowName, savedName) {
 		target = list.find((r) => r && String(r.name) === needle);
 		if (target) break;
 	}
-	if (!target) return;
+	if (!target) return docNameStr || null;
 
 	Object.assign(target, doc);
+	return docNameStr || null;
 }
 
 function clearFormDialogRefs(host) {
@@ -129,6 +130,9 @@ export function usePanelFormDialogHost(openPanels) {
 	const formDialogPendingDoctype = ref(null);
 	const formDialogDissolving = ref(false);
 	const formDialogDissolveOpacity = ref(1);
+
+	/** Bumped after WP SQL read-back so PanelFormDialog can `form.load()` while staying open */
+	const wpReadbackReloadTick = ref(0);
 
 	const {
 		formDialogNavInfo,
@@ -227,6 +231,8 @@ export function usePanelFormDialogHost(openPanels) {
 				? String(savedDoc.name).trim()
 				: null;
 
+		let closeDialogAfter = true;
+
 		try {
 			let wantReadback = 0;
 			if (doctype) {
@@ -246,12 +252,20 @@ export function usePanelFormDialogHost(openPanels) {
 					: openPanels.find((x) => x.doctype === doctype);
 
 			if (Number(wantReadback) === 1) {
+				closeDialogAfter = false;
 				frappeFreezeRefreshing();
+				let mergedPk = null;
 				try {
 					await sleepMs(WP_READBACK_PAUSE_MS);
 					if (panel) {
-						await patchPanelRowFromServer(panel, doctype, oldRowName, savedName);
+						mergedPk = await patchPanelRowFromServer(panel, doctype, oldRowName, savedName);
 					}
+					if (mergedPk != null && String(mergedPk).trim() !== "") {
+						formDialogDocName.value = String(mergedPk).trim();
+					} else if (savedName) {
+						formDialogDocName.value = savedName;
+					}
+					wpReadbackReloadTick.value++;
 				} finally {
 					frappeUnfreeze();
 				}
@@ -259,20 +273,22 @@ export function usePanelFormDialogHost(openPanels) {
 				panel._reload();
 			}
 		} finally {
-			clearFormDialogRefs({
-				showFormDialog,
-				formDialogRequiredFields,
-				formDialogDocName,
-				formDialogDefinition,
-				formDialogDoctype,
-				formDialogSourcePanelId,
-				formDialogDefinitionSource,
-				formDialogPendingDocName,
-				formDialogPendingDefinition,
-				formDialogPendingDoctype,
-				formDialogDissolving,
-				formDialogDissolveOpacity,
-			});
+			if (closeDialogAfter) {
+				clearFormDialogRefs({
+					showFormDialog,
+					formDialogRequiredFields,
+					formDialogDocName,
+					formDialogDefinition,
+					formDialogDoctype,
+					formDialogSourcePanelId,
+					formDialogDefinitionSource,
+					formDialogPendingDocName,
+					formDialogPendingDefinition,
+					formDialogPendingDoctype,
+					formDialogDissolving,
+					formDialogDissolveOpacity,
+				});
+			}
 		}
 	}
 
@@ -384,5 +400,6 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogPendingDoctype,
 		formDialogDissolving,
 		formDialogDissolveOpacity,
+		wpReadbackReloadTick,
 	};
 }

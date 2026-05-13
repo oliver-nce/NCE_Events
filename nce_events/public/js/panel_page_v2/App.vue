@@ -129,6 +129,7 @@
 			:definition-source="formDialogDefinitionSource"
 			:doctype="formDialogDoctype"
 			:doc-name="formDialogDocName"
+			:wp-readback-reload-tick="wpReadbackReloadTick"
 			:required-fields="formDialogRequiredFields"
 			:reload-panel-after-publish="reloadPanelForFormDialogDoctype"
 			:row-nav-enabled="formDialogNavInfo.total > 1"
@@ -154,6 +155,7 @@
 			:definition-source="formDialogDefinitionSource"
 			:doctype="formDialogPendingDoctype"
 			:doc-name="formDialogPendingDocName"
+			:wp-readback-reload-tick="wpReadbackReloadTick"
 			:required-fields="formDialogRequiredFields"
 			:reload-panel-after-publish="reloadPanelForFormDialogDoctype"
 			:row-nav-enabled="false"
@@ -175,6 +177,7 @@
 			:definition-source="formDialogDefinitionSource"
 			:doctype="formDialogDoctype"
 			:doc-name="formDialogDocName"
+			:wp-readback-reload-tick="wpReadbackReloadTick"
 			:required-fields="formDialogRequiredFields"
 			:reload-panel-after-publish="reloadPanelForFormDialogDoctype"
 			:row-nav-enabled="formDialogNavInfo.total > 1"
@@ -200,6 +203,7 @@
 			:definition-source="formDialogDefinitionSource"
 			:doctype="formDialogPendingDoctype"
 			:doc-name="formDialogPendingDocName"
+			:wp-readback-reload-tick="wpReadbackReloadTick"
 			:required-fields="formDialogRequiredFields"
 			:reload-panel-after-publish="reloadPanelForFormDialogDoctype"
 			:row-nav-enabled="false"
@@ -283,9 +287,10 @@ const {
 	formDialogPendingDocName,
 	formDialogPendingDefinition,
 	formDialogPendingDoctype,
-	formDialogDissolving,
-	formDialogDissolveOpacity,
-} = usePanelFormDialogHost(openPanels);
+		formDialogDissolving,
+		formDialogDissolveOpacity,
+		wpReadbackReloadTick,
+	} = usePanelFormDialogHost(openPanels);
 
 function refreshPanelByDoctype(doctype) {
 	const panel = openPanels.find((p) => p.doctype === doctype);
