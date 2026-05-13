@@ -432,7 +432,7 @@ async function onSubmit() {
 		}
 
 		emit("saved", result);
-		emit("close");
+		/* Caller (host) closes after optional WP read-back pause + panel row patch */
 	} catch {
 		// validationError (root) or related save error — stay open
 	}

@@ -1,5 +1,108 @@
 import { ref } from "vue";
 import { useFormDialogRecordNav, panelRowArray } from "./useFormDialogRecordNav.js";
+import { frappeCall } from "../utils/frappeCall.js";
+
+const WP_READBACK_PAUSE_MS = 1500;
+
+function sleepMs(ms) {
+	return new Promise((resolve) => {
+		setTimeout(resolve, ms);
+	});
+}
+
+/** Filtered rows ref array from drilled panel (`usePanel`). */
+function mutablePanelRows(panel) {
+	const pr = panel._panelRows;
+	if (pr?.value !== undefined && Array.isArray(pr.value)) {
+		return pr.value;
+	}
+	if (Array.isArray(panel.rows)) {
+		return panel.rows;
+	}
+	return [];
+}
+
+/**
+ * Reload one document from Desk and merge into the row object shown in ``panel``.
+ * Handles WP temp-name → PK rename by matching ``oldRowName``.
+ */
+async function patchPanelRowFromServer(panel, doctype, oldRowName, savedName) {
+	if (!panel || !doctype) return;
+
+	const tryNames = [];
+	if (savedName != null && String(savedName).trim() !== "") {
+		tryNames.push(String(savedName).trim());
+	}
+	if (
+		oldRowName != null &&
+		String(oldRowName).trim() !== "" &&
+		(!tryNames.length || String(oldRowName).trim() !== tryNames[0])
+	) {
+		tryNames.push(String(oldRowName).trim());
+	}
+	if (!tryNames.length) return;
+
+	let doc = null;
+	for (const nm of tryNames) {
+		try {
+			doc = await frappeCall("frappe.client.get", { doctype, name: nm });
+			if (doc) break;
+		} catch {
+			/* try alternate name after async WP rename */
+		}
+	}
+	if (!doc) return;
+
+	const list = mutablePanelRows(panel);
+	const docNameStr = doc.name != null ? String(doc.name).trim() : "";
+	const needles = Array.from(
+		new Set(
+			[String(oldRowName || "").trim(), String(savedName || "").trim(), docNameStr].filter(
+				(s) => s !== "",
+			),
+		),
+	);
+
+	let target = null;
+	for (const needle of needles) {
+		target = list.find((r) => r && String(r.name) === needle);
+		if (target) break;
+	}
+	if (!target) return;
+
+	Object.assign(target, doc);
+}
+
+function clearFormDialogRefs(host) {
+	host.formDialogRequiredFields.value = [];
+	host.formDialogDocName.value = null;
+	host.formDialogDefinition.value = null;
+	host.formDialogDoctype.value = null;
+	host.formDialogSourcePanelId.value = null;
+	host.formDialogDefinitionSource.value = "form_dialog";
+	host.formDialogPendingDocName.value = null;
+	host.formDialogPendingDefinition.value = null;
+	host.formDialogPendingDoctype.value = null;
+	host.formDialogDissolving.value = false;
+	host.formDialogDissolveOpacity.value = 1;
+	host.showFormDialog.value = false;
+}
+
+function frappeFreezeRefreshing() {
+	const msg =
+		typeof window.__ === "function"
+			? window.__("Refreshing…")
+			: "Refreshing…";
+	if (typeof frappe !== "undefined" && frappe.dom && typeof frappe.dom.freeze === "function") {
+		frappe.dom.freeze(msg);
+	}
+}
+
+function frappeUnfreeze() {
+	if (typeof frappe !== "undefined" && frappe.dom && typeof frappe.dom.unfreeze === "function") {
+		frappe.dom.unfreeze();
+	}
+}
 
 /**
  * Panel Page V2: form dialog state, row navigation, open from panel row, close/save + panel refresh.
@@ -115,24 +218,61 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogDissolveOpacity.value = 1;
 	}
 
-	function onFormDialogSaved() {
+	async function onFormDialogSaved(savedDoc) {
 		const doctype = formDialogDoctype.value;
-		showFormDialog.value = false;
-		formDialogRequiredFields.value = [];
-		formDialogDocName.value = null;
-		formDialogDefinition.value = null;
-		formDialogDoctype.value = null;
-		formDialogSourcePanelId.value = null;
-		formDialogDefinitionSource.value = "form_dialog";
-		// Clear any in-flight pending nav
-		formDialogPendingDocName.value = null;
-		formDialogPendingDefinition.value = null;
-		formDialogPendingDoctype.value = null;
-		formDialogDissolving.value = false;
-		formDialogDissolveOpacity.value = 1;
-		const panel = openPanels.find((x) => x.doctype === doctype);
-		if (panel && panel._reload) {
-			panel._reload();
+		const oldRowName = formDialogDocName.value;
+		const sourcePanelId = formDialogSourcePanelId.value;
+		const savedName =
+			savedDoc && savedDoc.name != null && String(savedDoc.name).trim() !== ""
+				? String(savedDoc.name).trim()
+				: null;
+
+		try {
+			let wantReadback = 0;
+			if (doctype) {
+				try {
+					wantReadback = await frappeCall(
+						"nce_events.api.wp_readback_panel.doctype_has_wp_sql_live_readback",
+						{ frappe_doctype: doctype },
+					);
+				} catch {
+					wantReadback = 0;
+				}
+			}
+
+			const panel =
+				sourcePanelId != null && sourcePanelId !== undefined
+					? openPanels.find((x) => x.id === sourcePanelId && x.doctype === doctype)
+					: openPanels.find((x) => x.doctype === doctype);
+
+			if (Number(wantReadback) === 1) {
+				frappeFreezeRefreshing();
+				try {
+					await sleepMs(WP_READBACK_PAUSE_MS);
+					if (panel) {
+						await patchPanelRowFromServer(panel, doctype, oldRowName, savedName);
+					}
+				} finally {
+					frappeUnfreeze();
+				}
+			} else if (panel && panel._reload) {
+				panel._reload();
+			}
+		} finally {
+			clearFormDialogRefs({
+				showFormDialog,
+				formDialogRequiredFields,
+				formDialogDocName,
+				formDialogDefinition,
+				formDialogDoctype,
+				formDialogSourcePanelId,
+				formDialogDefinitionSource,
+				formDialogPendingDocName,
+				formDialogPendingDefinition,
+				formDialogPendingDoctype,
+				formDialogDissolving,
+				formDialogDissolveOpacity,
+			});
 		}
 	}
 
