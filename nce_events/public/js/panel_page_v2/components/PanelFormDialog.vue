@@ -115,6 +115,7 @@ import {
 	pollSyncJobsUntilDone,
 	fetchFreshDocAfterSync,
 } from "../composables/wpReadbackFlow.js";
+import { createSubmitPerfTrace } from "../utils/submitPerfTrace.js";
 
 
 function escapeForPreHtml(s) {
@@ -363,13 +364,21 @@ async function onLinkChange({ fieldname, value }) {
 }
 
 async function onSubmit() {
+	const perf = createSubmitPerfTrace();
+	perf.push(
+		"start",
+		`submit ${props.doctype} def=${props.definitionName || ""} doc=${props.docName || "(new)"}`,
+	);
+	const pollLog = (cat, msg) => perf.push(cat, msg);
 	try {
 		const onSubmitMethod = (form.definition.value?.on_submit_method || "").trim();
 		if (onSubmitMethod) {
+			perf.push("branch", "custom on_submit_method");
 			form.validationError.value = null;
 			const errors = form.validate();
 			if (errors.length) {
 				form.validationError.value = errors.map((e) => e.message).join(", ");
+				perf.push("validation", form.validationError.value);
 				if (typeof frappe !== "undefined" && frappe.msgprint) {
 					frappe.msgprint({
 						title: __("Validation"),
@@ -379,6 +388,7 @@ async function onSubmit() {
 				}
 				return;
 			}
+			perf.push("step", "flushFrappeDateControlsIntoFormData (custom submit)");
 			await flushFrappeDateControlsIntoFormData();
 			const raw = JSON.parse(JSON.stringify(form.formData));
 			let doc = { doctype: props.doctype, ...raw };
@@ -392,20 +402,24 @@ async function onSubmit() {
 			}
 			form.saving.value = true;
 			try {
+				perf.push("api", `calling custom on_submit_method ${onSubmitMethod}`);
 				const r = await frappeCall(
 					onSubmitMethod,
 					{ doc },
 					{ freeze: true, freeze_message: __("Submitting…") },
 				);
+				perf.push("api", `on_submit_method response ok=${Boolean(r?.ok)}`);
 				if (!r?.ok) {
 					const msg = r?.message || __("Submit failed");
 					form.validationError.value = msg;
+					perf.push("error", msg);
 					if (typeof frappe !== "undefined" && frappe.msgprint) {
 						frappe.msgprint({ title: __("Error"), message: msg, indicator: "red" });
 					}
 					return;
 				}
 				/* Server handled persistence (e.g. Woo + clear Single). Sync UI from DB — no Document.save in Vue. */
+				perf.push("step", "form.load after custom submit");
 				await form.load();
 				form.validationError.value = null;
 				if (r.clear_ok === 0) {
@@ -434,13 +448,16 @@ async function onSubmit() {
 					frappe.show_alert({ message: __("Done"), indicator: "green" }, 5);
 				}
 				if (typeof props.reloadPanelAfterPublish === "function") {
+					perf.push("step", "reloadPanelAfterPublish()");
 					await props.reloadPanelAfterPublish();
 				}
+				perf.push("done", "custom submit path complete, closing dialog");
 				/* Do not emit saved — no Frappe form save; host must not run onFormDialogSaved panel refresh. */
 				emit("close");
 			} catch (e) {
 				const msg = e?.message || String(e) || __("Submit failed");
 				form.validationError.value = msg;
+				perf.push("error", msg);
 				if (typeof frappe !== "undefined" && frappe.msgprint) {
 					frappe.msgprint({ title: __("Error"), message: msg, indicator: "red" });
 				}
@@ -450,12 +467,15 @@ async function onSubmit() {
 			return;
 		}
 
+		perf.push("branch", "standard Frappe save + readback");
+
 		// If the Form Dialog definition has a presubmit script and the record already
 		// has a numeric name (linked to an external system), call it BEFORE saving to
 		// Frappe so change-detection compares against the old stored DB values.
 		const submitHookMethod = (form.definition.value?.custom_presubmit_script || "").trim();
 		let hookResult = null;
 		if (submitHookMethod && String(form.formData.name || "").match(/^\d+$/)) {
+			perf.push("step", `presubmit hook ${submitHookMethod}`);
 			await flushFrappeDateControlsIntoFormData();
 			const raw = JSON.parse(JSON.stringify(form.formData));
 			if (props.doctype === "Events") {
@@ -470,8 +490,10 @@ async function onSubmit() {
 				: { doctype: props.doctype, ...raw };
 			try {
 				hookResult = await frappeCall(submitHookMethod, { doc });
+				perf.push("presubmit", `hook returned skipped=${Boolean(hookResult?.skipped)}`);
 			} catch (hookErr) {
 				const msg = hookErr?.message || String(hookErr) || "Update failed";
+				perf.push("presubmit_error", msg);
 				if (typeof frappe !== "undefined" && frappe.msgprint) {
 					frappe.msgprint({ title: "WooCommerce", message: msg, indicator: "red" });
 				}
@@ -479,13 +501,21 @@ async function onSubmit() {
 			}
 		}
 
+		perf.push("save", "form.save() …");
 		const result = await form.save();
+		perf.push(
+			"save",
+			`form.save ok name=${result?.name ?? "?"} sync_job_ids=${JSON.stringify(result?.sync_job_ids || [])}`,
+		);
 		let relatedSaveJobIds = [];
 		try {
+			perf.push("related", "saveAllRelatedRows() …");
 			const relResult = await fdBodyRef.value?.saveAllRelatedRows?.();
 			if (Array.isArray(relResult)) relatedSaveJobIds = relResult;
+			perf.push("related", `related sync_job_ids=${JSON.stringify(relatedSaveJobIds)}`);
 		} catch (relErr) {
 			const m = extractServerMessage(relErr);
+			perf.push("related_error", m);
 			if (typeof frappe !== "undefined" && frappe.msgprint) {
 				frappe.msgprint({
 					title: "Related rows",
@@ -506,6 +536,10 @@ async function onSubmit() {
 		const relatedJobIds = Array.isArray(relatedSaveJobIds) ? relatedSaveJobIds : [];
 		const allJobIds = [...mainJobIds, ...relatedJobIds];
 		console.log("[NCE readback] save complete. mainJobIds:", mainJobIds, "relatedJobIds:", relatedJobIds);
+		perf.push(
+			"jobs",
+			`main=${mainJobIds.length} related=${relatedJobIds.length} total=${allJobIds.length}`,
+		);
 
 		if (allJobIds.length) {
 			const oldRowName = props.docName;
@@ -515,22 +549,25 @@ async function onSubmit() {
 					: null;
 			readbackFooterPhase.value = "readback-waiting";
 			try {
-			const { anyFailed } = await pollSyncJobsUntilDone(allJobIds);
-			if (anyFailed) {
-				if (typeof frappe !== "undefined" && frappe.msgprint) {
-					frappe.msgprint({
-						title: __("Sync error"),
-						message: __("One or more sync jobs failed. Check Error Log."),
-						indicator: "red",
-					});
+				perf.push("readback", "poll main + related sync jobs");
+				const { anyFailed } = await pollSyncJobsUntilDone(allJobIds, { log: pollLog });
+				if (anyFailed) {
+					perf.push("sync", "one or more main/related jobs failed");
+					if (typeof frappe !== "undefined" && frappe.msgprint) {
+						frappe.msgprint({
+							title: __("Sync error"),
+							message: __("One or more sync jobs failed. Check Error Log."),
+							indicator: "red",
+						});
+					}
+					readbackFooterPhase.value = "normal";
+					return;
 				}
-				readbackFooterPhase.value = "normal";
-				return;
-			}
 			const freshName = savedName || oldRowName;
 			// Sync linked related DocTypes (e.g. Event Sessions) from WP before showing changes
 			try {
 				console.log("[NCE readback] triggering linked DocType syncs for", freshName);
+				perf.push("linked", `trigger_linked_sync_for_dialog_readback name=${freshName}`);
 				const linkedResult = await frappeCall(
 					"nce_events.api.form_dialog.sync_related.trigger_linked_sync_for_dialog_readback",
 					{
@@ -543,28 +580,42 @@ async function onSubmit() {
 					? linkedResult.sync_job_ids
 					: [];
 				console.log("[NCE readback] linked sync job_ids:", linkedJobIds);
+				perf.push("linked", `sync_job_ids count=${linkedJobIds.length}`);
 				if (linkedJobIds.length) {
-					await pollSyncJobsUntilDone(linkedJobIds);
+					perf.push("readback", "poll linked sync jobs");
+					await pollSyncJobsUntilDone(linkedJobIds, { log: pollLog });
 				}
 			} catch (err) {
 				console.warn("[NCE readback] linked sync failed (non-fatal):", err);
+				perf.push("linked_error", err?.message || String(err));
 			}
+			perf.push("readback", "fetchFreshDocAfterSync");
 			const fresh = await fetchFreshDocAfterSync(props.doctype, freshName);
 			emit("readback-merged", { fresh, oldRowName, savedName });
 			await nextTick();
 			readbackFooterPhase.value = "readback-show-changes";
+			perf.push("done", "readback complete, show changes");
 			} catch (e) {
 				readbackFooterPhase.value = "normal";
 				const msg = e?.message || String(e) || __("Read-back wait failed");
+				perf.push("readback_error", msg);
 				if (typeof frappe !== "undefined" && frappe.msgprint) {
 					frappe.msgprint({ title: __("Error"), message: msg, indicator: "red" });
 				}
 			}
 		} else {
+			perf.push("saved", "no sync jobs queued, emit saved");
 			emit("saved");
 		}
-	} catch {
+	} catch (e) {
+		const msg =
+			e?.message ||
+			extractServerMessage(e) ||
+			String(e || "");
+		if (msg) perf.push("error", msg);
 		// validationError (root) or related save error — stay open
+	} finally {
+		perf.showCopyDialog();
 	}
 }
 

@@ -42,12 +42,12 @@ export function mergeFreshDocIntoPanel(panel, doc, oldRowName, savedName) {
  * Poll all jobIds until every one reaches a terminal state or timeout.
  *
  * @param {string[]} jobIds
- * @param {{ intervalMs?: number, timeoutMs?: number }} opts
+ * @param {{ intervalMs?: number, timeoutMs?: number, log?: (category: string, message: string) => void }} opts
  * @returns {Promise<{ allFinished: boolean, anyFailed: boolean, statuses: Record<string,string|null> }>}
  */
 export async function pollSyncJobsUntilDone(
 	jobIds,
-	{ intervalMs = DEFAULT_POLL_INTERVAL_MS, timeoutMs = DEFAULT_TIMEOUT_MS } = {},
+	{ intervalMs = DEFAULT_POLL_INTERVAL_MS, timeoutMs = DEFAULT_TIMEOUT_MS, log } = {},
 ) {
 	if (!jobIds || !jobIds.length) {
 		return { allFinished: true, anyFailed: false, statuses: {} };
@@ -56,10 +56,16 @@ export async function pollSyncJobsUntilDone(
 	const statuses = Object.fromEntries(jobIds.map((id) => [id, "queued"]));
 	const pending = new Set(jobIds);
 	const deadline = Date.now() + timeoutMs;
+	const pollStart = Date.now();
 
 	console.log("[NCE readback] polling jobs:", jobIds);
+	log?.(
+		"poll",
+		`start (${jobIds.length} job(s), interval ${intervalMs}ms, timeout ${timeoutMs}ms)`,
+	);
 	while (pending.size > 0 && Date.now() < deadline) {
 		await sleepMs(intervalMs);
+		log?.("poll_tick", `${pending.size} pending, elapsed ${Date.now() - pollStart}ms`);
 		for (const id of Array.from(pending)) {
 			try {
 				const st = await frappeCall(
@@ -69,15 +75,25 @@ export async function pollSyncJobsUntilDone(
 				const status = st ?? "missing";
 				statuses[id] = status;
 				console.log(`[NCE readback] job ${id.slice(0, 8)}… → ${status}`);
+				log?.("job_status", `${id.slice(0, 8)}… → ${status}`);
 				if (terminal.has(status) || status === "missing") {
 					pending.delete(id);
 				}
 			} catch (err) {
 				console.warn("[NCE readback] poll error for job", id.slice(0, 8) + "…", err);
+				log?.(
+					"job_poll_err",
+					`${id.slice(0, 8)}… ${err?.message || String(err)}`,
+				);
 			}
 		}
 	}
+	const timedOut = pending.size > 0 && Date.now() >= deadline;
+	if (timedOut) {
+		log?.("poll_timeout", `${pending.size} job(s) still pending after ${timeoutMs}ms`);
+	}
 	console.log("[NCE readback] poll done. allFinished:", pending.size === 0, "statuses:", statuses);
+	log?.("poll_done", `allFinished=${pending.size === 0} anyTimedOut=${timedOut}`);
 
 	const anyFailed = Object.values(statuses).some(
 		(s) => s === "failed" || s === "stopped",
