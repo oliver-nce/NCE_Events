@@ -78,6 +78,13 @@
       @change="onChange"
     />
 
+    <!-- HTML-label fields: always render value as HTML, never editable -->
+    <div
+      v-else-if="labelHasHtml"
+      class="ppv2-fd-input ppv2-fd-readonly-plain ppv2-fd-html-display"
+      v-html="modelValue ?? ''"
+    />
+
     <!-- Textarea types — virtual / read-only: static text (no focus, resize, or edits) -->
     <div
       v-else-if="isTextarea && readOnly"
@@ -137,6 +144,10 @@ const props = defineProps({
 const emit = defineEmits(["change", "link-change"]);
 
 const config = computed(() => getComponentConfig(props.field));
+
+const labelHasHtml = computed(() =>
+	(props.field.label || "").toLowerCase().includes("html")
+);
 
 function normFieldtype(field) {
 	return String(field?.fieldtype ?? "").trim();
@@ -271,6 +282,9 @@ function onLinkChangePayload(payload) {
 .ppv2-fd-muted {
   color: var(--text-muted);
   font-style: italic;
+}
+.ppv2-fd-html-display {
+  white-space: normal;
 }
 /* Bold field style — mirrors Desk's bold:1 treatment */
 .ppv2-fd-field-bold .ppv2-fd-label {

@@ -669,7 +669,15 @@ watch(
 	},
 );
 
-defineExpose({ saveAllRelatedRows, resetRelatedToBaseline });
+/** Refetch grid when parent bumps ``reloadTick`` or calls ``reloadRelatedFromServer`` */
+function reloadRelatedFromServer() {
+	if (!props.tab?._related?.child_row_name) return;
+	const dn = String(props.rootDocName || "").trim();
+	if (!dn) return;
+	fetchRelatedForTab(props.ti);
+}
+
+defineExpose({ saveAllRelatedRows, resetRelatedToBaseline, reloadRelatedFromServer });
 
 function relatedLabelColPx(ti) {
 	const w = relatedLabelColByTab[ti];

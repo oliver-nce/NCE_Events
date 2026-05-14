@@ -255,12 +255,15 @@ function onRelatedDirty(v) {
 }
 
 async function onReadbackShowChanges() {
-	internalReloadTick.value += 1;
-	await nextTick();
 	try {
+		/* Load root doc first so ``docName`` / link fields are in sync, then bump tick so related tabs refetch. */
 		await form.load();
 		await nextTick();
 		relatedDirty.value = false;
+		internalReloadTick.value += 1;
+		await nextTick();
+		fdBodyRef.value?.reloadRelatedFromServer?.();
+		await nextTick();
 		readbackFooterPhase.value = "readback-close-only";
 	} catch {
 		/* keep current form */

@@ -25,7 +25,7 @@
 					:definition-name="definitionName"
 					:root-doctype="rootDoctype"
 					:root-doc-name="rootDocName"
-					:reload-tick="reloadTick"
+					:reload-tick="props.reloadTick"
 					:form-data="formData"
 					:original-form-data="originalFormData"
 					@related-dirty="(v) => $emit('related-dirty', v)"
@@ -161,7 +161,13 @@ function resetRelatedToBaseline() {
 	}
 }
 
-defineExpose({ saveAllRelatedRows, resetRelatedToBaseline });
+function reloadRelatedFromServer() {
+	for (const ref of relatedTabRefs.value) {
+		ref?.reloadRelatedFromServer?.();
+	}
+}
+
+defineExpose({ saveAllRelatedRows, resetRelatedToBaseline, reloadRelatedFromServer });
 </script>
 
 <style scoped>
