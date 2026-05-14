@@ -10,6 +10,8 @@ is shown.
 
 from __future__ import annotations
 
+import json
+
 import frappe
 from frappe import _
 from frappe.utils import cint, cstr
@@ -83,9 +85,13 @@ def trigger_linked_sync_for_dialog_readback(
             diag.append("  → skip: missing child_dt or link_field")
             continue
 
-        hop_chain = cstr(getattr(row, "hop_chain", "") or "").strip()
-        if hop_chain:
-            diag.append(f"  → skip: hop_chain={hop_chain!r}")
+        hop_chain_raw = cstr(getattr(row, "hop_chain", "") or "").strip()
+        try:
+            hop_chain_list = json.loads(hop_chain_raw) if hop_chain_raw else []
+        except (ValueError, TypeError):
+            hop_chain_list = [hop_chain_raw]
+        if hop_chain_list:
+            diag.append(f"  → skip: hop_chain={hop_chain_raw!r}")
             continue
 
         wp_rows = frappe.get_all(
