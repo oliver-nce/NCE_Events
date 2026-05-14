@@ -55,6 +55,8 @@ export async function pollSyncJobsUntilDone(
 	const terminal = new Set(["finished", "failed", "stopped"]);
 	const statuses = Object.fromEntries(jobIds.map((id) => [id, "queued"]));
 	const pending = new Set(jobIds);
+	const errorCounts = Object.fromEntries(jobIds.map((id) => [id, 0]));
+	const MAX_CONSECUTIVE_ERRORS = 3;
 	const deadline = Date.now() + timeoutMs;
 	const pollStart = Date.now();
 
@@ -74,17 +76,25 @@ export async function pollSyncJobsUntilDone(
 				);
 				const status = st ?? "missing";
 				statuses[id] = status;
+				errorCounts[id] = 0;
 				console.log(`[NCE readback] job ${id.slice(0, 8)}… → ${status}`);
 				log?.("job_status", `${id.slice(0, 8)}… → ${status}`);
 				if (terminal.has(status) || status === "missing") {
 					pending.delete(id);
 				}
 			} catch (err) {
+				errorCounts[id] = (errorCounts[id] || 0) + 1;
 				console.warn("[NCE readback] poll error for job", id.slice(0, 8) + "…", err);
 				log?.(
 					"job_poll_err",
-					`${id.slice(0, 8)}… ${err?.message || String(err)}`,
+					`${id.slice(0, 8)}… ${err?.message || String(err)} (error ${errorCounts[id]}/${MAX_CONSECUTIVE_ERRORS})`,
 				);
+				if (errorCounts[id] >= MAX_CONSECUTIVE_ERRORS) {
+					statuses[id] = "missing";
+					pending.delete(id);
+					console.warn("[NCE readback] giving up on job", id.slice(0, 8) + "… after", MAX_CONSECUTIVE_ERRORS, "errors");
+					log?.("job_gave_up", `${id.slice(0, 8)}… removed after ${MAX_CONSECUTIVE_ERRORS} consecutive errors`);
+				}
 			}
 		}
 	}

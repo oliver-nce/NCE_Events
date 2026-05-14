@@ -25,4 +25,4 @@ def get_sync_job_status(job_id: str) -> str | None:
             return "missing"
         return st.value  # e.g. 'finished', 'failed', 'queued', 'started', 'stopped'
     except Exception:
-        return None
+        return "missing"

@@ -363,8 +363,8 @@ async function onLinkChange({ fieldname, value }) {
 	await form.handleFetchFrom(fieldname, value);
 }
 
-async function onSubmit() {
-	const perf = createSubmitPerfTrace();
+async function onSubmit(opts = {}) {
+	const perf = createSubmitPerfTrace({ liveDialog: !!opts?.shift });
 	perf.push(
 		"start",
 		`submit ${props.doctype} def=${props.definitionName || ""} doc=${props.docName || "(new)"}`,

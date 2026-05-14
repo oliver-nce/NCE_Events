@@ -1,13 +1,47 @@
 /**
  * Form Dialog submit timings: console + optional Desk msgprint copy block.
  *
- * Enable popup after submit: localStorage.setItem("nce_fd_submit_trace", "1")
+ * Regular click → console.log lines only.
+ * Shift+click   → live dialog opens immediately and streams each step.
+ *
+ * Enable popup after regular submit: localStorage.setItem("nce_fd_submit_trace", "1")
  * Disable: localStorage.removeItem("nce_fd_submit_trace")
  */
 
-export function createSubmitPerfTrace() {
+export function createSubmitPerfTrace({ liveDialog = false } = {}) {
 	const t0 = typeof performance !== "undefined" ? performance.now() : Date.now();
 	const lines = [];
+	let _pre = null;
+	let _dialog = null;
+
+	if (liveDialog && typeof frappe !== "undefined" && frappe.ui?.Dialog) {
+		try {
+			_dialog = new frappe.ui.Dialog({
+				title: "Submit trace — running…",
+				size: "large",
+			});
+			_dialog.show();
+			const pre = document.createElement("pre");
+			pre.style.cssText =
+				"white-space:pre-wrap;max-height:65vh;overflow:auto;font-size:11px;" +
+				"user-select:all;padding:8px;margin:0;line-height:1.5;";
+			_dialog.$body[0].appendChild(pre);
+			_pre = pre;
+		} catch {
+			_pre = null;
+			_dialog = null;
+		}
+	}
+
+	function updateLiveDialog() {
+		if (!_pre) return;
+		try {
+			_pre.textContent = lines.join("\n");
+			_pre.scrollTop = _pre.scrollHeight;
+		} catch {
+			/* ignore */
+		}
+	}
 
 	function push(cat, msg) {
 		const now = typeof performance !== "undefined" ? performance.now() : Date.now();
@@ -17,6 +51,7 @@ export function createSubmitPerfTrace() {
 		if (typeof console !== "undefined" && console.log) {
 			console.log("[NCE submit]", line);
 		}
+		updateLiveDialog();
 	}
 
 	function shouldPopup() {
@@ -29,6 +64,7 @@ export function createSubmitPerfTrace() {
 
 	function showCopyDialog() {
 		if (!lines.length) return;
+
 		try {
 			if (typeof window !== "undefined") {
 				window.__nce_last_submit_trace = lines.join("\n");
@@ -36,6 +72,16 @@ export function createSubmitPerfTrace() {
 		} catch {
 			/* ignore */
 		}
+
+		if (_dialog) {
+			try {
+				_dialog.set_title("Submit trace — done");
+			} catch {
+				/* ignore */
+			}
+			return;
+		}
+
 		if (!shouldPopup() || typeof frappe === "undefined" || !frappe.msgprint) return;
 		const __ =
 			typeof window !== "undefined" && typeof window.__ === "function"

@@ -48,15 +48,15 @@
 				>
 					Revert
 				</button>
-				<button
-					v-if="submitVisible"
-					type="button"
-					class="ppv2-fd-tab-btn ppv2-fd-tab-active"
-					:disabled="saving"
-					@click="$emit('submit')"
-				>
-					{{ savingSubmitText }}
-				</button>
+			<button
+				v-if="submitVisible"
+				type="button"
+				class="ppv2-fd-tab-btn ppv2-fd-tab-active"
+				:disabled="saving"
+				@click="$emit('submit', { shift: $event.shiftKey })"
+			>
+				{{ savingSubmitText }}
+			</button>
 			</div>
 		</template>
 	</div>
