@@ -514,23 +514,42 @@ async function onSubmit() {
 					: null;
 			readbackFooterPhase.value = "readback-waiting";
 			try {
-				const { anyFailed } = await pollSyncJobsUntilDone(allJobIds);
-				if (anyFailed) {
-					if (typeof frappe !== "undefined" && frappe.msgprint) {
-						frappe.msgprint({
-							title: __("Sync error"),
-							message: __("One or more sync jobs failed. Check Error Log."),
-							indicator: "red",
-						});
-					}
-					readbackFooterPhase.value = "normal";
-					return;
+			const { anyFailed } = await pollSyncJobsUntilDone(allJobIds);
+			if (anyFailed) {
+				if (typeof frappe !== "undefined" && frappe.msgprint) {
+					frappe.msgprint({
+						title: __("Sync error"),
+						message: __("One or more sync jobs failed. Check Error Log."),
+						indicator: "red",
+					});
 				}
-				const freshName = savedName || oldRowName;
-				const fresh = await fetchFreshDocAfterSync(props.doctype, freshName);
-				emit("readback-merged", { fresh, oldRowName, savedName });
-				await nextTick();
-				readbackFooterPhase.value = "readback-show-changes";
+				readbackFooterPhase.value = "normal";
+				return;
+			}
+			const freshName = savedName || oldRowName;
+			// Sync linked related DocTypes (e.g. Event Sessions) from WP before showing changes
+			try {
+				const linkedResult = await frappeCall(
+					"nce_events.api.form_dialog.sync_related.trigger_linked_sync_for_dialog_readback",
+					{
+						definition: props.definitionName,
+						root_doctype: props.doctype,
+						root_name: freshName,
+					},
+				);
+				const linkedJobIds = Array.isArray(linkedResult?.sync_job_ids)
+					? linkedResult.sync_job_ids
+					: [];
+				if (linkedJobIds.length) {
+					await pollSyncJobsUntilDone(linkedJobIds);
+				}
+			} catch {
+				/* linked sync failure is non-fatal — proceed to show changes */
+			}
+			const fresh = await fetchFreshDocAfterSync(props.doctype, freshName);
+			emit("readback-merged", { fresh, oldRowName, savedName });
+			await nextTick();
+			readbackFooterPhase.value = "readback-show-changes";
 			} catch (e) {
 				readbackFooterPhase.value = "normal";
 				const msg = e?.message || String(e) || __("Read-back wait failed");
