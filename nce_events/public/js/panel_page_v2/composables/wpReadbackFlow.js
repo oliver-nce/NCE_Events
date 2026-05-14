@@ -57,6 +57,7 @@ export async function pollSyncJobsUntilDone(
 	const pending = new Set(jobIds);
 	const deadline = Date.now() + timeoutMs;
 
+	console.log("[NCE readback] polling jobs:", jobIds);
 	while (pending.size > 0 && Date.now() < deadline) {
 		await sleepMs(intervalMs);
 		for (const id of Array.from(pending)) {
@@ -67,14 +68,16 @@ export async function pollSyncJobsUntilDone(
 				);
 				const status = st ?? "missing";
 				statuses[id] = status;
+				console.log(`[NCE readback] job ${id.slice(0, 8)}… → ${status}`);
 				if (terminal.has(status) || status === "missing") {
 					pending.delete(id);
 				}
-			} catch {
-				/* network blip — keep polling */
+			} catch (err) {
+				console.warn("[NCE readback] poll error for job", id.slice(0, 8) + "…", err);
 			}
 		}
 	}
+	console.log("[NCE readback] poll done. allFinished:", pending.size === 0, "statuses:", statuses);
 
 	const anyFailed = Object.values(statuses).some(
 		(s) => s === "failed" || s === "stopped",

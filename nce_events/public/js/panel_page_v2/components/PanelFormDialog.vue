@@ -505,6 +505,7 @@ async function onSubmit() {
 		const mainJobIds = Array.isArray(result?.sync_job_ids) ? result.sync_job_ids : [];
 		const relatedJobIds = Array.isArray(relatedSaveJobIds) ? relatedSaveJobIds : [];
 		const allJobIds = [...mainJobIds, ...relatedJobIds];
+		console.log("[NCE readback] save complete. mainJobIds:", mainJobIds, "relatedJobIds:", relatedJobIds);
 
 		if (allJobIds.length) {
 			const oldRowName = props.docName;
@@ -529,6 +530,7 @@ async function onSubmit() {
 			const freshName = savedName || oldRowName;
 			// Sync linked related DocTypes (e.g. Event Sessions) from WP before showing changes
 			try {
+				console.log("[NCE readback] triggering linked DocType syncs for", freshName);
 				const linkedResult = await frappeCall(
 					"nce_events.api.form_dialog.sync_related.trigger_linked_sync_for_dialog_readback",
 					{
@@ -540,11 +542,12 @@ async function onSubmit() {
 				const linkedJobIds = Array.isArray(linkedResult?.sync_job_ids)
 					? linkedResult.sync_job_ids
 					: [];
+				console.log("[NCE readback] linked sync job_ids:", linkedJobIds);
 				if (linkedJobIds.length) {
 					await pollSyncJobsUntilDone(linkedJobIds);
 				}
-			} catch {
-				/* linked sync failure is non-fatal — proceed to show changes */
+			} catch (err) {
+				console.warn("[NCE readback] linked sync failed (non-fatal):", err);
 			}
 			const fresh = await fetchFreshDocAfterSync(props.doctype, freshName);
 			emit("readback-merged", { fresh, oldRowName, savedName });

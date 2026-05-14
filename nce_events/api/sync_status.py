@@ -22,7 +22,7 @@ def get_sync_job_status(job_id: str) -> str | None:
         from frappe.utils.background_jobs import get_job_status
         st = get_job_status(job_id)
         if st is None:
-            return None
+            return "missing"
         return st.value  # e.g. 'finished', 'failed', 'queued', 'started', 'stopped'
     except Exception:
         return None
