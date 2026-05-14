@@ -71,6 +71,7 @@
 				:submit-hide-if-sql="footerSubmitHideSql"
 				:submit-label="footerSubmitLabel"
 				:saving="form.saving.value"
+				:loading="form.loading.value"
 				:is-dirty="footerIsDirty"
 				@cancel="onCancel"
 				@revert="onRevert"

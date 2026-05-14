@@ -17,7 +17,7 @@
 			<button
 				type="button"
 				class="ppv2-fd-tab-btn"
-				:disabled="saving || !isDirty"
+				:disabled="saving || loading || !isDirty"
 				@click="$emit('revert')"
 			>
 				Revert
@@ -26,7 +26,7 @@
 				v-if="submitVisible"
 				type="button"
 				class="ppv2-fd-tab-btn ppv2-fd-tab-active"
-				:disabled="saving"
+				:disabled="saving || loading"
 				@click="$emit('submit')"
 			>
 				{{ savingSubmitText }}
@@ -56,6 +56,8 @@ const props = defineProps({
 	/** Custom label for the primary footer's Submit button (Form Dialog / Panel Action). */
 	submitLabel: { type: String, default: "" },
 	saving: { type: Boolean, default: false },
+	/** True while form.load() is in flight — avoid submit/revert with stale modified. */
+	loading: { type: Boolean, default: false },
 	isDirty: { type: Boolean, default: false },
 });
 
