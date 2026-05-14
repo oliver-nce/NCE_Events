@@ -158,7 +158,13 @@ function resetRelatedToBaseline() {
 	}
 }
 
-defineExpose({ saveAllRelatedRows, resetRelatedToBaseline });
+function reloadRelatedFromServer() {
+	for (const ref of relatedTabRefs.value) {
+		ref?.reloadRelatedFromServer?.();
+	}
+}
+
+defineExpose({ saveAllRelatedRows, resetRelatedToBaseline, reloadRelatedFromServer });
 </script>
 
 <style scoped>

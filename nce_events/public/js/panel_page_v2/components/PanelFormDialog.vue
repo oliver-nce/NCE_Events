@@ -188,7 +188,8 @@ watch(
 		await nextTick();
 		try {
 			await form.load();
-			fdBodyRef.value?.resetRelatedToBaseline?.();
+			await nextTick();
+			fdBodyRef.value?.reloadRelatedFromServer?.();
 			relatedDirty.value = false;
 		} catch {
 			/* keep current form if reload fails */

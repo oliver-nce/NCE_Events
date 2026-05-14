@@ -22,37 +22,9 @@ function mutablePanelRows(panel) {
 	return [];
 }
 
-/**
- * Reload one document from Desk and merge into the row object shown in ``panel``.
- * Handles WP temp-name → PK rename by matching ``oldRowName``.
- */
-async function patchPanelRowFromServer(panel, doctype, oldRowName, savedName) {
-	if (!panel || !doctype) return null;
-
-	const tryNames = [];
-	if (savedName != null && String(savedName).trim() !== "") {
-		tryNames.push(String(savedName).trim());
-	}
-	if (
-		oldRowName != null &&
-		String(oldRowName).trim() !== "" &&
-		(!tryNames.length || String(oldRowName).trim() !== tryNames[0])
-	) {
-		tryNames.push(String(oldRowName).trim());
-	}
-	if (!tryNames.length) return null;
-
-	let doc = null;
-	for (const nm of tryNames) {
-		try {
-			doc = await frappeCall("frappe.client.get", { doctype, name: nm });
-			if (doc) break;
-		} catch {
-			/* try alternate name after async WP rename */
-		}
-	}
-	if (!doc) return null;
-
+/** Merge fresh Desk doc into the matching panel row (same row keys). */
+function mergeFreshDocIntoPanelRow(panel, doc, oldRowName, savedName) {
+	if (!panel || !doc) return;
 	const list = mutablePanelRows(panel);
 	const docNameStr = doc.name != null ? String(doc.name).trim() : "";
 	const needles = Array.from(
@@ -62,16 +34,41 @@ async function patchPanelRowFromServer(panel, doctype, oldRowName, savedName) {
 			),
 		),
 	);
-
 	let target = null;
 	for (const needle of needles) {
 		target = list.find((r) => r && String(r.name) === needle);
 		if (target) break;
 	}
-	if (!target) return docNameStr || null;
-
+	if (!target) return;
 	Object.assign(target, doc);
-	return docNameStr || null;
+}
+
+/**
+ * After WP SQL delay: one ``frappe.client.get`` for PK + panel merge + dialog ``form.load()`` seed.
+ */
+async function fetchDocAfterWpDelay(doctype, savedName, oldRowName) {
+	const tries = [];
+	if (savedName != null && String(savedName).trim() !== "") {
+		tries.push(String(savedName).trim());
+	}
+	if (
+		oldRowName != null &&
+		String(oldRowName).trim() !== "" &&
+		(!tries.length || String(oldRowName).trim() !== tries[0])
+	) {
+		tries.push(String(oldRowName).trim());
+	}
+	for (const nm of tries) {
+		try {
+			const doc = await frappeCall("frappe.client.get", { doctype, name: nm });
+			if (doc?.name != null && String(doc.name).trim() !== "") {
+				return doc;
+			}
+		} catch {
+			/* try alternate after WP rename */
+		}
+	}
+	return null;
 }
 
 function clearFormDialogRefs(host) {
@@ -131,7 +128,7 @@ export function usePanelFormDialogHost(openPanels) {
 	const formDialogDissolving = ref(false);
 	const formDialogDissolveOpacity = ref(1);
 
-	/** Bumped after WP SQL read-back so PanelFormDialog can `form.load()` while staying open */
+	/** After WP delay: bump so dialog runs full ``form.load()`` from Frappe DB (panel row merged same GET). */
 	const wpReadbackReloadTick = ref(0);
 
 	const {
@@ -254,16 +251,16 @@ export function usePanelFormDialogHost(openPanels) {
 			if (Number(wantReadback) === 1) {
 				closeDialogAfter = false;
 				frappeFreezeRefreshing();
-				let mergedPk = null;
 				try {
 					await sleepMs(WP_READBACK_PAUSE_MS);
-					if (panel) {
-						mergedPk = await patchPanelRowFromServer(panel, doctype, oldRowName, savedName);
-					}
-					if (mergedPk != null && String(mergedPk).trim() !== "") {
-						formDialogDocName.value = String(mergedPk).trim();
+					const fresh = await fetchDocAfterWpDelay(doctype, savedName, oldRowName);
+					if (fresh?.name != null && String(fresh.name).trim() !== "") {
+						formDialogDocName.value = String(fresh.name).trim();
 					} else if (savedName) {
 						formDialogDocName.value = savedName;
+					}
+					if (panel && fresh) {
+						mergeFreshDocIntoPanelRow(panel, fresh, oldRowName, savedName);
 					}
 					wpReadbackReloadTick.value++;
 				} finally {

@@ -71,6 +71,17 @@ watch(
 	{ flush: "post" },
 );
 
+/** Loader seeds formData while syncing=true; Date watcher skips set_input then — re-apply once syncing ends */
+watch(
+	() => fdSyncingFromLoad?.value,
+	(syncing) => {
+		if (syncing) return;
+		nextTick(() => {
+			applyVueValueToDateControl(control, props.field.fieldname, props.modelValue, null);
+		});
+	},
+);
+
 watch(
 	() => [props.readOnly, props.field.fieldtype],
 	() => {
