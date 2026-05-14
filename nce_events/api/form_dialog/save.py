@@ -115,6 +115,16 @@ def save_form_dialog_document(
 				target.save()
 
 	_sanitize_scalar_fields(doc)
-	d = frappe.get_doc(doc)
+	# Existing row: load from DB first so optimistic concurrency uses the current
+	# ``modified`` (NCE_Sync or another listener may have updated the row).
+	if name:
+		d = frappe.get_doc(doctype, name)
+		for k, v in doc.items():
+			if k in ("doctype", "name", "owner", "creation", "modified", "modified_by"):
+				continue
+			if d.meta.get_field(k):
+				d.set(k, v)
+	else:
+		d = frappe.get_doc(doc)
 	d.save(ignore_version=True)
 	return d.as_dict()

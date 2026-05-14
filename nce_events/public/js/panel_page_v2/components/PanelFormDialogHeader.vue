@@ -26,7 +26,14 @@
 			</div>
 			<span class="ppv2-fd-title">{{ title }}</span>
 		</div>
-		<button class="ppv2-fd-close" type="button" @click="$emit('close')">&times;</button>
+		<button
+			v-if="closable"
+			class="ppv2-fd-close"
+			type="button"
+			@click="$emit('close')"
+		>
+			&times;
+		</button>
 	</div>
 </template>
 
@@ -37,6 +44,8 @@ defineProps({
 	canNavigateNext: { type: Boolean, default: false },
 	rowNavLabel: { type: String, default: "" },
 	title: { type: String, default: "" },
+	/** False during WP read-back wait / Show changes — user must use footer flow */
+	closable: { type: Boolean, default: true },
 });
 
 defineEmits(["close", "nav-prev", "nav-next"]);

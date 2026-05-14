@@ -32,13 +32,21 @@
 				</div>
 			</div>
 		</div>
-		<div class="ppv2-form-dialog" :class="'ppv2-fd-size-' + form.dialogSize.value">
+		<div class="ppv2-form-dialog ppv2-fd-dialog-root" :class="'ppv2-fd-size-' + form.dialogSize.value">
+			<div
+				v-if="readbackFooterPhase === 'readback-waiting'"
+				class="ppv2-fd-readback-overlay"
+				@click.stop
+			>
+				<div class="ppv2-fd-readback-spinner">{{ readbackUpdatingText }}</div>
+			</div>
 			<PanelFormDialogHeader
-				:row-nav-enabled="rowNavEnabled"
+				:row-nav-enabled="rowNavEnabledEffective"
 				:can-navigate-prev="canNavigatePrev"
 				:can-navigate-next="canNavigateNext"
 				:row-nav-label="rowNavLabel"
 				:title="form.dialogTitle.value"
+				:closable="headerClosable"
 				@close="onCancel"
 				@nav-prev="onNavPrevClick"
 				@nav-next="onNavNextClick"
@@ -48,7 +56,7 @@
 			:definition-name="definitionName"
 			:root-doctype="doctype"
 			:root-doc-name="docName"
-			:reload-tick="reloadTick"
+			:reload-tick="internalReloadTick"
 			:loading="form.loading.value"
 			:error="form.error.value"
 			:tabs="form.tabs.value"
@@ -64,6 +72,7 @@
 			@related-dirty="onRelatedDirty"
 		/>
 			<PanelFormDialogFooter
+				:footer-phase="readbackFooterPhase"
 				:buttons="form.buttons.value"
 				:definition-name="definitionName"
 				:doc-name="docName"
@@ -71,12 +80,13 @@
 				:submit-hide-if-sql="footerSubmitHideSql"
 				:submit-label="footerSubmitLabel"
 				:saving="form.saving.value"
-				:loading="form.loading.value"
 				:is-dirty="footerIsDirty"
 				@cancel="onCancel"
 				@revert="onRevert"
 				@submit="onSubmit"
 				@custom-button="onPlaceholderButton"
+				@readback-show-changes="onReadbackShowChanges"
+				@readback-close="onReadbackFinalClose"
 			/>
 		</div>
 	</div>
@@ -101,6 +111,10 @@ import {
 	createRowNavKeydownHandler,
 } from "../composables/useFormDialogChrome.js";
 import { useBackdropPointerDismiss } from "../composables/useBackdropPointerDismiss.js";
+import {
+	fetchReadbackConfig,
+	waitForWpReadbackFreshDoc,
+} from "../composables/wpReadbackFlow.js";
 
 
 function escapeForPreHtml(s) {
@@ -126,20 +140,30 @@ const props = defineProps({
 	reloadPanelAfterPublish: { type: Function, default: null },
 	/** Where the captured definition lives: 'form_dialog' (default) or 'panel_action'. */
 	definitionSource: { type: String, default: "form_dialog" },
-	/** Bumped by host (e.g. after WP read-back) to trigger form.load() without closing */
-	reloadTick: { type: Number, default: 0 },
 });
 
-const emit = defineEmits(["close", "saved", "nav-prev", "nav-next"]);
+const emit = defineEmits(["close", "saved", "nav-prev", "nav-next", "readback-merged"]);
 
 const activeTab = ref(0);
 const fdBodyRef = ref(null);
 const backdropRef = ref(null);
 const relatedDirty = ref(false);
+/** Bumped from this dialog when user clicks Show changes (related grids refetch). */
+const internalReloadTick = ref(0);
+/** Footer + chrome: normal | readback-waiting | readback-show-changes | readback-close-only */
+const readbackFooterPhase = ref("normal");
 
-const { onMouseDownSelf: onBackdropMouseDownSelf, onClickSelf: onBackdropClickSelf, disarm: disarmBackdropDismiss } = useBackdropPointerDismiss(
-	backdropRef,
-	() => onCancel(),
+const readbackUpdatingText =
+	typeof window.__ === "function" ? window.__("Updating") + "…" : "Updating…";
+
+const headerClosable = computed(
+	() =>
+		readbackFooterPhase.value !== "readback-waiting" &&
+		readbackFooterPhase.value !== "readback-show-changes",
+);
+
+const rowNavEnabledEffective = computed(
+	() => props.rowNavEnabled && readbackFooterPhase.value === "normal",
 );
 
 const form = usePanelFormDialog({
@@ -175,31 +199,45 @@ const showFdLoadDebug = ref(false);
 watch(
 	() => props.open,
 	(o) => {
-		if (o) showFdLoadDebug.value = isFdLoadDebugEnabled();
+		if (o) {
+			showFdLoadDebug.value = isFdLoadDebugEnabled();
+			readbackFooterPhase.value = "normal";
+			internalReloadTick.value = 0;
+		}
 	},
 	{ immediate: true },
 );
 
 const loadDebugRows = computed(() => form.loadDebugLog.value);
 
-watch(
-	() => props.reloadTick,
-	async (tick, prev) => {
-		if (!props.open || Number(tick) <= 0 || tick === prev) return;
-		if (!props.docName) return;
-		await nextTick();
-		try {
-			await form.load();
-			relatedDirty.value = false;
-		} catch {
-			/* keep current form if reload fails */
-		}
-		// Related grids are refreshed reactively: reloadTick flows down as a prop
-		// to PanelFormDialogBody → PanelFormDialogRelatedTab, which watches it.
-	},
-);
-
 const footerIsDirty = computed(() => form.isDirty.value || relatedDirty.value);
+
+function onReadbackFinalClose() {
+	readbackFooterPhase.value = "normal";
+	emit("close");
+}
+
+function onCancel() {
+	if (
+		readbackFooterPhase.value === "readback-waiting" ||
+		readbackFooterPhase.value === "readback-show-changes"
+	) {
+		return;
+	}
+	if (readbackFooterPhase.value === "readback-close-only") {
+		onReadbackFinalClose();
+		return;
+	}
+	confirmDiscardIfDirty(() => footerIsDirty.value, () => {
+		form.revert();
+		fdBodyRef.value?.resetRelatedToBaseline?.();
+		relatedDirty.value = false;
+		emit("close");
+	});
+}
+
+const { onMouseDownSelf: onBackdropMouseDownSelf, onClickSelf: onBackdropClickSelf, disarm: disarmBackdropDismiss } =
+	useBackdropPointerDismiss(backdropRef, onCancel);
 
 const footerSubmitHideIf = computed(
 	() => (form.definition.value?.submit_hide_if || "Never").trim() || "Never",
@@ -216,16 +254,21 @@ function onRelatedDirty(v) {
 	relatedDirty.value = !!v;
 }
 
-function onCancel() {
-	confirmDiscardIfDirty(() => footerIsDirty.value, () => {
-		form.revert();
-		fdBodyRef.value?.resetRelatedToBaseline?.();
+async function onReadbackShowChanges() {
+	internalReloadTick.value += 1;
+	await nextTick();
+	try {
+		await form.load();
+		await nextTick();
 		relatedDirty.value = false;
-		emit("close");
-	});
+		readbackFooterPhase.value = "readback-close-only";
+	} catch {
+		/* keep current form */
+	}
 }
 
 function onRevert() {
+	if (readbackFooterPhase.value !== "normal") return;
 	if (!footerIsDirty.value || form.saving.value) {
 		return;
 	}
@@ -249,19 +292,21 @@ function onRevert() {
 }
 
 function onNavPrevClick() {
+	if (readbackFooterPhase.value !== "normal") return;
 	if (!props.canNavigatePrev) return;
 	confirmDiscardIfDirty(() => footerIsDirty.value, () => emit("nav-prev"));
 }
 
 function onNavNextClick() {
+	if (readbackFooterPhase.value !== "normal") return;
 	if (!props.canNavigateNext) return;
 	confirmDiscardIfDirty(() => footerIsDirty.value, () => emit("nav-next"));
 }
 
 const onFormDialogKeydown = createRowNavKeydownHandler({
 	getOpen: () => props.open,
-	getCanPrev: () => props.canNavigatePrev,
-	getCanNext: () => props.canNavigateNext,
+	getCanPrev: () => props.canNavigatePrev && readbackFooterPhase.value === "normal",
+	getCanNext: () => props.canNavigateNext && readbackFooterPhase.value === "normal",
 	onNavPrev: onNavPrevClick,
 	onNavNext: onNavNextClick,
 });
@@ -452,8 +497,33 @@ async function onSubmit() {
 			}
 		}
 
-		emit("saved", result);
-		/* Caller (host) closes after optional WP read-back pause + panel row patch */
+		const cfg = await fetchReadbackConfig(props.doctype);
+		if (cfg.enabled === 1) {
+			const oldRowName = props.docName;
+			const savedName =
+				result?.name != null && String(result.name).trim() !== ""
+					? String(result.name).trim()
+					: null;
+			readbackFooterPhase.value = "readback-waiting";
+			try {
+				const fresh = await waitForWpReadbackFreshDoc(props.doctype, result, oldRowName, cfg);
+				emit("readback-merged", {
+					fresh,
+					oldRowName,
+					savedName,
+				});
+				await nextTick();
+				readbackFooterPhase.value = "readback-show-changes";
+			} catch (e) {
+				readbackFooterPhase.value = "normal";
+				const msg = e?.message || String(e) || __("Read-back wait failed");
+				if (typeof frappe !== "undefined" && frappe.msgprint) {
+					frappe.msgprint({ title: __("Error"), message: msg, indicator: "red" });
+				}
+			}
+		} else {
+			emit("saved");
+		}
 	} catch {
 		// validationError (root) or related save error — stay open
 	}
@@ -551,6 +621,27 @@ async function onPlaceholderButton(btn) {
 	flex-direction: column;
 	max-height: 90vh;
 	overflow: hidden;
+	position: relative;
+}
+.ppv2-fd-readback-overlay {
+	position: absolute;
+	inset: 0;
+	z-index: 20;
+	background: color-mix(in srgb, var(--bg-card) 88%, transparent);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	pointer-events: all;
+}
+.ppv2-fd-readback-spinner {
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--text-color);
+	padding: 16px 24px;
+	border-radius: var(--border-radius-sm, 6px);
+	background: var(--bg-card);
+	border: 1px solid var(--border-color);
+	box-shadow: var(--shadow);
 }
 .ppv2-fd-size-sm {
 	width: 400px;

@@ -129,7 +129,6 @@
 			:definition-source="formDialogDefinitionSource"
 			:doctype="formDialogDoctype"
 			:doc-name="formDialogDocName"
-			:reload-tick="wpReadbackReloadTick"
 			:required-fields="formDialogRequiredFields"
 			:reload-panel-after-publish="reloadPanelForFormDialogDoctype"
 			:row-nav-enabled="formDialogNavInfo.total > 1"
@@ -144,6 +143,7 @@
 			}"
 			@close="onFormDialogClose"
 			@saved="onFormDialogSaved"
+			@readback-merged="onReadbackMerged"
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
 		/>
@@ -155,7 +155,6 @@
 			:definition-source="formDialogDefinitionSource"
 			:doctype="formDialogPendingDoctype"
 			:doc-name="formDialogPendingDocName"
-			:reload-tick="wpReadbackReloadTick"
 			:required-fields="formDialogRequiredFields"
 			:reload-panel-after-publish="reloadPanelForFormDialogDoctype"
 			:row-nav-enabled="false"
@@ -166,6 +165,7 @@
 			:style="{ zIndex: 1048 }"
 			@close="onFormDialogClose"
 			@saved="onFormDialogSaved"
+			@readback-merged="onReadbackMerged"
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
 		/>
@@ -177,7 +177,6 @@
 			:definition-source="formDialogDefinitionSource"
 			:doctype="formDialogDoctype"
 			:doc-name="formDialogDocName"
-			:reload-tick="wpReadbackReloadTick"
 			:required-fields="formDialogRequiredFields"
 			:reload-panel-after-publish="reloadPanelForFormDialogDoctype"
 			:row-nav-enabled="formDialogNavInfo.total > 1"
@@ -192,6 +191,7 @@
 			}"
 			@close="onFormDialogClose"
 			@saved="onFormDialogSaved"
+			@readback-merged="onReadbackMerged"
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
 		/>
@@ -203,7 +203,6 @@
 			:definition-source="formDialogDefinitionSource"
 			:doctype="formDialogPendingDoctype"
 			:doc-name="formDialogPendingDocName"
-			:reload-tick="wpReadbackReloadTick"
 			:required-fields="formDialogRequiredFields"
 			:reload-panel-after-publish="reloadPanelForFormDialogDoctype"
 			:row-nav-enabled="false"
@@ -214,6 +213,7 @@
 			:style="{ zIndex: 1048 }"
 			@close="onFormDialogClose"
 			@saved="onFormDialogSaved"
+			@readback-merged="onReadbackMerged"
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
 		/>
@@ -281,6 +281,7 @@ const {
 	openFormDialogStandalone,
 	onFormDialogClose,
 	onFormDialogSaved,
+	onReadbackMerged,
 	reloadPanelForFormDialogDoctype,
 	// Dual-slot dissolve
 	formDialogSlot,
@@ -289,7 +290,6 @@ const {
 	formDialogPendingDoctype,
 		formDialogDissolving,
 		formDialogDissolveOpacity,
-		wpReadbackReloadTick,
 	} = usePanelFormDialogHost(openPanels);
 
 function refreshPanelByDoctype(doctype) {

@@ -106,7 +106,6 @@ export function usePanelFormDialog({ definitionName, doctype, docName, requiredF
 			saving,
 			validationError,
 			runValidate: validate,
-			onStaleDocRetry: load,
 		});
 	}
 

@@ -1,37 +1,64 @@
 <template>
 	<div class="ppv2-fd-footer">
-		<div class="ppv2-fd-custom-buttons">
-			<button
-				v-for="(btn, bi) in visibleButtons"
-				:key="'fd-btn-' + bi + '-' + (btn.label || bi) + '-' + (btn.name || '')"
-				type="button"
-				class="ppv2-fd-tab-btn"
-				@click="$emit('custom-button', btn)"
-			>
-				{{ btn.label }}
-			</button>
-		</div>
+		<!-- WP read-back: wait — no buttons (spinner is on dialog overlay) -->
+		<template v-if="footerPhase === 'readback-waiting'" />
 
-		<div class="ppv2-fd-action-buttons">
-			<button type="button" class="ppv2-fd-tab-btn" @click="$emit('cancel')">Cancel</button>
-			<button
-				type="button"
-				class="ppv2-fd-tab-btn"
-				:disabled="saving || loading || !isDirty"
-				@click="$emit('revert')"
-			>
-				Revert
-			</button>
-			<button
-				v-if="submitVisible"
-				type="button"
-				class="ppv2-fd-tab-btn ppv2-fd-tab-active"
-				:disabled="saving || loading"
-				@click="$emit('submit')"
-			>
-				{{ savingSubmitText }}
-			</button>
-		</div>
+		<!-- WP read-back: user reloads form + related grids -->
+		<template v-else-if="footerPhase === 'readback-show-changes'">
+			<div class="ppv2-fd-readback-actions">
+				<button
+					type="button"
+					class="ppv2-fd-tab-btn ppv2-fd-tab-active"
+					@click="$emit('readback-show-changes')"
+				>
+					{{ __("Show changes") }}
+				</button>
+			</div>
+		</template>
+
+		<!-- WP read-back: done — single Close -->
+		<template v-else-if="footerPhase === 'readback-close-only'">
+			<div class="ppv2-fd-readback-actions">
+				<button type="button" class="ppv2-fd-tab-btn ppv2-fd-tab-active" @click="$emit('readback-close')">
+					{{ __("Close") }}
+				</button>
+			</div>
+		</template>
+
+		<template v-else>
+			<div class="ppv2-fd-custom-buttons">
+				<button
+					v-for="(btn, bi) in visibleButtons"
+					:key="'fd-btn-' + bi + '-' + (btn.label || bi) + '-' + (btn.name || '')"
+					type="button"
+					class="ppv2-fd-tab-btn"
+					@click="$emit('custom-button', btn)"
+				>
+					{{ btn.label }}
+				</button>
+			</div>
+
+			<div class="ppv2-fd-action-buttons">
+				<button type="button" class="ppv2-fd-tab-btn" @click="$emit('cancel')">Cancel</button>
+				<button
+					type="button"
+					class="ppv2-fd-tab-btn"
+					:disabled="saving || !isDirty"
+					@click="$emit('revert')"
+				>
+					Revert
+				</button>
+				<button
+					v-if="submitVisible"
+					type="button"
+					class="ppv2-fd-tab-btn ppv2-fd-tab-active"
+					:disabled="saving"
+					@click="$emit('submit')"
+				>
+					{{ savingSubmitText }}
+				</button>
+			</div>
+		</template>
 	</div>
 </template>
 
@@ -45,23 +72,26 @@ const HIDE_SAVED = "Record saved";
 const HIDE_SQL = "SQL expression";
 
 const props = defineProps({
+	/** normal | readback-waiting | readback-show-changes | readback-close-only */
+	footerPhase: {
+		type: String,
+		default: "normal",
+	},
 	buttons: { type: Array, default: () => [] },
-	/** Form Dialog document name (for hide-rule API). */
 	definitionName: { type: String, default: "" },
-	/** Root document name; empty when new / unsaved. */
 	docName: { type: String, default: null },
-	/** Same options as Form Dialog Button \"Hide If\" — controls default Submit. */
 	submitHideIf: { type: String, default: "Never" },
 	submitHideIfSql: { type: String, default: "" },
-	/** Custom label for the primary footer's Submit button (Form Dialog / Panel Action). */
 	submitLabel: { type: String, default: "" },
 	saving: { type: Boolean, default: false },
-	/** True while form.load() is in flight — avoid submit/revert with stale modified. */
-	loading: { type: Boolean, default: false },
 	isDirty: { type: Boolean, default: false },
 });
 
-defineEmits(["cancel", "revert", "submit", "custom-button"]);
+defineEmits(["cancel", "revert", "submit", "custom-button", "readback-show-changes", "readback-close"]);
+
+function __(s) {
+	return typeof window.__ === "function" ? window.__(s) : s;
+}
 
 const savingSubmitText = computed(() => {
 	if (!props.saving) {
@@ -159,8 +189,10 @@ watch(
 		props.submitHideIf,
 		props.submitHideIfSql,
 		props.submitLabel,
+		props.footerPhase,
 	],
 	() => {
+		if (props.footerPhase !== "normal") return;
 		refreshFooterVisibility();
 	},
 	{ deep: true, immediate: true },
@@ -176,6 +208,8 @@ watch(
 	align-items: center;
 	justify-content: space-between;
 	gap: 8px;
+	min-height: 48px;
+	box-sizing: border-box;
 }
 .ppv2-fd-custom-buttons {
 	display: flex;
@@ -185,6 +219,11 @@ watch(
 	display: flex;
 	gap: 6px;
 	margin-left: auto;
+}
+.ppv2-fd-readback-actions {
+	display: flex;
+	width: 100%;
+	justify-content: flex-end;
 }
 .ppv2-fd-tab-btn {
 	padding: 6px 14px;

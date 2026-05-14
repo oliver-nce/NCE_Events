@@ -1,12 +1,12 @@
 import { ref } from "vue";
 import { useFormDialogRecordNav, panelRowArray } from "./useFormDialogRecordNav.js";
-import { useWpReadbackRefresh } from "./useWpReadbackRefresh.js";
+import { mergeFreshDocIntoPanel } from "./wpReadbackFlow.js";
 
 /**
  * Panel Page V2: form dialog state, row navigation, open from panel row, close/save + panel refresh.
  * Uses a dual-slot dissolve transition for flicker-free prev/next navigation.
  * Core dialog UI lives in PanelFormDialog.vue + usePanelFormDialog.
- * WP read-back UX (wait, poll, panel-row merge, dialog reload) lives in useWpReadbackRefresh.
+ * WP read-back wait/Show changes/Close UX lives in PanelFormDialog; host only merges panel rows on @readback-merged.
  *
  * @param {import('vue').Reactive<Array>} openPanels — same reactive array as App.vue floats
  */
@@ -35,10 +35,6 @@ export function usePanelFormDialogHost(openPanels) {
 		sourcePanelId: formDialogSourcePanelId,
 		docName: formDialogDocName,
 	});
-
-	/** WP read-back: reactive tick watched by PanelFormDialog to run form.load(). */
-	const { reloadTick: wpReadbackReloadTick, runIfEnabled: runWpReadback } =
-		useWpReadbackRefresh();
 
 	// ── Open helpers ──────────────────────────────────────────────────────────
 
@@ -107,34 +103,36 @@ export function usePanelFormDialogHost(openPanels) {
 		_resetPendingSlot();
 	}
 
-	// ── Save ─────────────────────────────────────────────────────────────────
+	// ── Save (standard path only; WP read-back path never emits `saved`) ─────
 
-	async function onFormDialogSaved(savedDoc) {
+	function onFormDialogSaved() {
 		const doctype = formDialogDoctype.value;
-		const oldRowName = formDialogDocName.value;
 		const sourcePanelId = formDialogSourcePanelId.value;
-
 		const panel =
 			sourcePanelId != null
 				? openPanels.find((x) => x.id === sourcePanelId && x.doctype === doctype)
 				: openPanels.find((x) => x.doctype === doctype);
+		if (panel?._reload) panel._reload();
+		_clearDialogRefs();
+	}
 
-		const wpHandled = await runWpReadback({
-			doctype,
-			savedDoc,
-			oldRowName,
-			panel,
-			setDialogDocName: (name) => {
-				if (name != null) formDialogDocName.value = name;
-			},
-		});
-
-		if (!wpHandled) {
-			// Standard save: reload the panel and close the dialog.
-			if (panel?._reload) panel._reload();
-			_clearDialogRefs();
+	/**
+	 * After WP read-back wait in the dialog: patch the floated panel row + PK if renamed.
+	 * @param {{ fresh: object|null, oldRowName: string|null, savedName: string|null }} payload
+	 */
+	function onReadbackMerged({ fresh, oldRowName, savedName }) {
+		const doctype = formDialogDoctype.value;
+		const sourcePanelId = formDialogSourcePanelId.value;
+		const panel =
+			sourcePanelId != null
+				? openPanels.find((x) => x.id === sourcePanelId && x.doctype === doctype)
+				: openPanels.find((x) => x.doctype === doctype);
+		if (panel && fresh) {
+			mergeFreshDocIntoPanel(panel, fresh, oldRowName, savedName);
 		}
-		// WP path: dialog stays open; reloadTick triggered inside runWpReadback.
+		if (fresh?.name != null && String(fresh.name).trim() !== "") {
+			formDialogDocName.value = String(fresh.name).trim();
+		}
 	}
 
 	// ── Dual-slot dissolve navigation ─────────────────────────────────────────
@@ -194,7 +192,7 @@ export function usePanelFormDialogHost(openPanels) {
 		function step(now) {
 			const elapsed = now - start;
 			const progress = Math.min(elapsed / duration, 1);
-			formDialogDissolveOpacity.value = 1 - progress * progress; // ease-out quad
+			formDialogDissolveOpacity.value = 1 - progress * progress;
 			if (progress < 1) {
 				requestAnimationFrame(step);
 			} else {
@@ -250,6 +248,7 @@ export function usePanelFormDialogHost(openPanels) {
 		openFormDialogStandalone,
 		onFormDialogClose,
 		onFormDialogSaved,
+		onReadbackMerged,
 		reloadPanelForFormDialogDoctype,
 		// Dual-slot
 		formDialogSlot,
@@ -258,7 +257,5 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogPendingDoctype,
 		formDialogDissolving,
 		formDialogDissolveOpacity,
-		// WP read-back: watched by PanelFormDialog via :reload-tick prop
-		wpReadbackReloadTick,
 	};
 }
