@@ -13,8 +13,40 @@
       "frozenset used for fieldtype/fieldname skip sets",
       "Tag system uses Jinja template tags with gender-conditional pronouns",
       "Form Dialog: frozen_meta_json (snapshot of frappe.get_meta fields) is parsed by parseLayout.js + rendered by PanelFormDialog.vue. Only DocTypes in WP Tables are eligible.",
-      "Form Dialog buttons: script text is copied from Desk at capture/rebuild time — not live-linked. Rebuild is manual."
-    ]
+      "Form Dialog buttons: script text is copied from Desk at capture/rebuild time — not live-linked. Rebuild is manual.",
+      "NCE Sync mirror refresh (separate app): whitelisted nce_sync.api.sync_doctype_rows (by doc names) and nce_sync.api.sync_linked_doctype_rows (rebuild child rows for one parent Link). Full call shapes, enqueue helpers, and permission notes: architecture.nce_sync_mirror_refresh_apis."
+    ],
+    "nce_sync_mirror_refresh_apis": {
+      "source_app": "nce_sync Frappe app (dependency of NCE Events; implementation not in this repo).",
+      "requirements": "Target DocType must be on WP Tables as Mirrored or Linked with a real WordPress table.",
+      "permissions": "sync_doctype_rows requires read on the DocType. sync_linked_doctype_rows requires read and delete.",
+      "behavior": "Whitelisted methods return immediately after queueing; Desk shows toasts when the background worker finishes.",
+      "whitelist_vs_enqueue": "Whitelisted frappe.call uses frappe.session.user for permission checks (read; linked sync also delete). For cron or other contexts without a reliable session user, enqueue nce_sync.utils.data_sync.run_sync_doctype_rows_job or run_sync_linked_doctype_rows_job with queue default, timeout (e.g. 3600), and explicit user= so completion toasts have a recipient. Use whitelist when you want framework permission checks; use direct frappe.enqueue only when you deliberately bypass whitelist and enforce your own rules.",
+      "whitelisted_methods": {
+        "nce_sync.api.sync_doctype_rows": {
+          "args": {
+            "doctype": "Mirrored DocType name (string)",
+            "names": "List of row names, e.g. ['101','102']; some callers may pass JSON.stringify([...]) if supplying a string"
+          },
+          "response": "r.message typically includes queued, doctype, row_count, etc."
+        },
+        "nce_sync.api.sync_linked_doctype_rows": {
+          "args": {
+            "doctype": "Child mirrored DocType (string)",
+            "link_field": "Fieldname of the Link field on that child (string)",
+            "link_value": "Parent name stored in that Link, e.g. EVT-00001 (string)"
+          },
+          "response": "Same pattern — queued summary in r.message"
+        }
+      },
+      "enqueue_job_targets": {
+        "nce_sync.utils.data_sync.run_sync_doctype_rows_job": "kwargs: doctype, names (list), user",
+        "nce_sync.utils.data_sync.run_sync_linked_doctype_rows_job": "kwargs: doctype, link_field, link_value, user"
+      },
+      "examples_desk_js": "frappe.call({ method: 'nce_sync.api.sync_doctype_rows', args: { doctype: 'Your Mirrored DocType', names: ['101', '102'] }, callback(r) { if (!r.exc) console.log(r.message); } });\n\nfrappe.call({ method: 'nce_sync.api.sync_linked_doctype_rows', args: { doctype: 'Your Child Mirrored DocType', link_field: 'event', link_value: 'EVT-00001' }, callback(r) { if (!r.exc) console.log(r.message); } });",
+      "examples_server_session_python": "frappe.call({ \"method\": \"nce_sync.api.sync_doctype_rows\", \"doctype\": \"Your Mirrored DocType\", \"names\": [\"101\", \"102\"] })\n\nfrappe.call({ \"method\": \"nce_sync.api.sync_linked_doctype_rows\", \"doctype\": \"Your Child Mirrored DocType\", \"link_field\": \"event\", \"link_value\": \"EVT-00001\" })\n\nAlternative: frappe.get_attr(\"nce_sync.api.sync_doctype_rows\")(...) with the same keyword arguments.",
+      "examples_server_enqueue_python": "def queue_row_sync(doctype: str, names: list, notify_user: str = \"Administrator\"):\n    frappe.enqueue(\"nce_sync.utils.data_sync.run_sync_doctype_rows_job\", queue=\"default\", timeout=3600, doctype=doctype, names=list(names), user=notify_user)\n\ndef queue_link_rebuild(doctype: str, link_field: str, link_value: str, notify_user: str = \"Administrator\"):\n    frappe.enqueue(\"nce_sync.utils.data_sync.run_sync_linked_doctype_rows_job\", queue=\"default\", timeout=3600, doctype=doctype, link_field=link_field, link_value=link_value, user=notify_user)"
+    }
   },
   "module_overrides": {
     "nce_events/hooks.py": {

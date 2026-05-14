@@ -127,4 +127,6 @@ def save_form_dialog_document(
 	else:
 		d = frappe.get_doc(doc)
 	d.save(ignore_version=True)
-	return d.as_dict()
+	result = d.as_dict()
+	result["sync_job_ids"] = list(getattr(frappe.local, "nce_sync_queued_job_ids", []))
+	return result

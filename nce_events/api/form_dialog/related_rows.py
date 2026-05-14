@@ -286,7 +286,7 @@ def save_form_dialog_related_rows(
 	allowed_fields = _editable_related_fieldnames_for_save(row, child_dt)
 
 	if not updates:
-		return {"ok": 1, "saved": 0}
+		return {"ok": 1, "saved": 0, "sync_job_ids": []}
 
 	saved = 0
 	for item in updates:
@@ -314,4 +314,8 @@ def save_form_dialog_related_rows(
 		child.save()
 		saved += 1
 
-	return {"ok": 1, "saved": saved}
+	return {
+		"ok": 1,
+		"saved": saved,
+		"sync_job_ids": list(getattr(frappe.local, "nce_sync_queued_job_ids", [])),
+	}

@@ -148,11 +148,14 @@ function valuesEqual(a, b) {
 const relatedTabRefs = ref([]);
 
 async function saveAllRelatedRows(...args) {
+	const allJobIds = [];
 	for (const ref of relatedTabRefs.value) {
 		if (ref?.saveAllRelatedRows) {
-			await ref.saveAllRelatedRows(...args);
+			const ids = await ref.saveAllRelatedRows(...args);
+			if (Array.isArray(ids)) allJobIds.push(...ids);
 		}
 	}
+	return allJobIds;
 }
 
 function resetRelatedToBaseline() {

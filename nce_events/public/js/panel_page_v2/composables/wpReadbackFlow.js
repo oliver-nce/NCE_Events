@@ -1,51 +1,16 @@
 /**
- * WP SQL read-back helpers (NCE_Sync live write-back + refresh-from-WP).
- * Used by PanelFormDialog for post-save wait/poll; host imports merge for the panel row.
+ * WP SQL read-back helpers — job-poll edition.
+ * Used by PanelFormDialog after save: poll NCE Sync job IDs until all finish,
+ * then fetch the fresh doc from Frappe.
  */
 
 import { frappeCall } from "../utils/frappeCall.js";
 
-const CUSHION_MS = 1500;
-const MIN_WAIT_MS = 1500;
-const MAX_WAIT_MS = 8000;
-const POLL_RETRIES = 2;
-const POLL_GAP_MS = 750;
+const DEFAULT_POLL_INTERVAL_MS = 600;
+const DEFAULT_TIMEOUT_MS = 120_000;
 
 function sleepMs(ms) {
 	return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function parseFrappeModified(s) {
-	if (!s) return 0;
-	const ms = Date.parse(String(s).trim().replace(" ", "T"));
-	return Number.isFinite(ms) ? ms : 0;
-}
-
-export function computeWpReadbackWaitMs(writeBackRefreshSeconds) {
-	const target = (Number(writeBackRefreshSeconds) || 0) * 1000 + CUSHION_MS;
-	return Math.min(MAX_WAIT_MS, Math.max(MIN_WAIT_MS, target));
-}
-
-/**
- * @returns {{ enabled: number, write_back_refresh_seconds: number }}
- */
-export async function fetchReadbackConfig(frappe_doctype) {
-	const out = { enabled: 0, write_back_refresh_seconds: 0 };
-	const dt = (frappe_doctype || "").trim();
-	if (!dt) return out;
-	try {
-		const r = await frappeCall(
-			"nce_events.api.wp_readback_panel.doctype_has_wp_sql_live_readback",
-			{ frappe_doctype: dt },
-		);
-		if (r && typeof r === "object") {
-			out.enabled = Number(r.enabled) || 0;
-			out.write_back_refresh_seconds = Number(r.write_back_refresh_seconds) || 0;
-		}
-	} catch {
-		/* treat as disabled */
-	}
-	return out;
 }
 
 function panelRowList(panel) {
@@ -73,50 +38,62 @@ export function mergeFreshDocIntoPanel(panel, doc, oldRowName, savedName) {
 	if (target) Object.assign(target, doc);
 }
 
-async function fetchDoc(doctype, savedName, oldRowName) {
-	const tries = Array.from(
-		new Set([savedName, oldRowName].filter((n) => n != null && String(n).trim() !== "")),
-	).map((n) => String(n).trim());
+/**
+ * Poll all jobIds until every one reaches a terminal state or timeout.
+ *
+ * @param {string[]} jobIds
+ * @param {{ intervalMs?: number, timeoutMs?: number }} opts
+ * @returns {Promise<{ allFinished: boolean, anyFailed: boolean, statuses: Record<string,string|null> }>}
+ */
+export async function pollSyncJobsUntilDone(
+	jobIds,
+	{ intervalMs = DEFAULT_POLL_INTERVAL_MS, timeoutMs = DEFAULT_TIMEOUT_MS } = {},
+) {
+	if (!jobIds || !jobIds.length) {
+		return { allFinished: true, anyFailed: false, statuses: {} };
+	}
+	const terminal = new Set(["finished", "failed", "stopped"]);
+	const statuses = Object.fromEntries(jobIds.map((id) => [id, "queued"]));
+	const pending = new Set(jobIds);
+	const deadline = Date.now() + timeoutMs;
 
-	for (const name of tries) {
-		try {
-			const doc = await frappeCall("frappe.client.get", { doctype, name });
-			if (doc?.name != null && String(doc.name).trim() !== "") return doc;
-		} catch {
-			/* next */
+	while (pending.size > 0 && Date.now() < deadline) {
+		await sleepMs(intervalMs);
+		for (const id of Array.from(pending)) {
+			try {
+				const st = await frappeCall(
+					"nce_events.api.sync_status.get_sync_job_status",
+					{ job_id: id },
+				);
+				const status = st ?? "missing";
+				statuses[id] = status;
+				if (terminal.has(status) || status === "missing") {
+					pending.delete(id);
+				}
+			} catch {
+				/* network blip — keep polling */
+			}
 		}
 	}
-	return null;
-}
 
-async function fetchDocPolling(doctype, savedName, oldRowName, savedModified) {
-	const baselineMs = parseFrappeModified(savedModified);
-	let last = null;
-
-	for (let attempt = 0; attempt <= POLL_RETRIES; attempt++) {
-		const doc = await fetchDoc(doctype, savedName, oldRowName);
-		if (doc) last = doc;
-		if (!baselineMs || (doc && parseFrappeModified(doc.modified) > baselineMs)) {
-			return doc;
-		}
-		if (attempt < POLL_RETRIES) await sleepMs(POLL_GAP_MS);
-	}
-
-	return last;
+	const anyFailed = Object.values(statuses).some(
+		(s) => s === "failed" || s === "stopped",
+	);
+	const allFinished = pending.size === 0;
+	return { allFinished, anyFailed, statuses };
 }
 
 /**
- * Sleep for WP Tables delay, then poll until ``modified`` moves past ``savedDoc.modified``.
- *
- * @param {{ enabled: number, write_back_refresh_seconds: number }} cfg — from ``fetchReadbackConfig`` (must have enabled === 1)
- * @returns {Promise<object|null>} Fresh doc dict or null
+ * Fetch the fresh Frappe doc after sync jobs complete.
+ * @returns {Promise<object|null>}
  */
-export async function waitForWpReadbackFreshDoc(doctype, savedDoc, oldRowName, cfg) {
-	await sleepMs(computeWpReadbackWaitMs(cfg.write_back_refresh_seconds));
-	const savedName =
-		savedDoc?.name != null && String(savedDoc.name).trim() !== ""
-			? String(savedDoc.name).trim()
-			: null;
-	const savedModified = savedDoc?.modified ? String(savedDoc.modified) : null;
-	return fetchDocPolling(doctype, savedName, oldRowName, savedModified);
+export async function fetchFreshDocAfterSync(doctype, docName) {
+	if (!doctype || !docName) return null;
+	try {
+		const doc = await frappeCall("frappe.client.get", { doctype, name: docName });
+		if (doc?.name != null && String(doc.name).trim() !== "") return doc;
+	} catch {
+		/* ignore */
+	}
+	return null;
 }

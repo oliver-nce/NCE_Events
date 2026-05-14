@@ -112,8 +112,8 @@ import {
 } from "../composables/useFormDialogChrome.js";
 import { useBackdropPointerDismiss } from "../composables/useBackdropPointerDismiss.js";
 import {
-	fetchReadbackConfig,
-	waitForWpReadbackFreshDoc,
+	pollSyncJobsUntilDone,
+	fetchFreshDocAfterSync,
 } from "../composables/wpReadbackFlow.js";
 
 
@@ -480,8 +480,10 @@ async function onSubmit() {
 		}
 
 		const result = await form.save();
+		let relatedSaveJobIds = [];
 		try {
-			await fdBodyRef.value?.saveAllRelatedRows?.();
+			const relResult = await fdBodyRef.value?.saveAllRelatedRows?.();
+			if (Array.isArray(relResult)) relatedSaveJobIds = relResult;
 		} catch (relErr) {
 			const m = extractServerMessage(relErr);
 			if (typeof frappe !== "undefined" && frappe.msgprint) {
@@ -500,8 +502,11 @@ async function onSubmit() {
 			}
 		}
 
-		const cfg = await fetchReadbackConfig(props.doctype);
-		if (cfg.enabled === 1) {
+		const mainJobIds = Array.isArray(result?.sync_job_ids) ? result.sync_job_ids : [];
+		const relatedJobIds = Array.isArray(relatedSaveJobIds) ? relatedSaveJobIds : [];
+		const allJobIds = [...mainJobIds, ...relatedJobIds];
+
+		if (allJobIds.length) {
 			const oldRowName = props.docName;
 			const savedName =
 				result?.name != null && String(result.name).trim() !== ""
@@ -509,12 +514,21 @@ async function onSubmit() {
 					: null;
 			readbackFooterPhase.value = "readback-waiting";
 			try {
-				const fresh = await waitForWpReadbackFreshDoc(props.doctype, result, oldRowName, cfg);
-				emit("readback-merged", {
-					fresh,
-					oldRowName,
-					savedName,
-				});
+				const { anyFailed } = await pollSyncJobsUntilDone(allJobIds);
+				if (anyFailed) {
+					if (typeof frappe !== "undefined" && frappe.msgprint) {
+						frappe.msgprint({
+							title: __("Sync error"),
+							message: __("One or more sync jobs failed. Check Error Log."),
+							indicator: "red",
+						});
+					}
+					readbackFooterPhase.value = "normal";
+					return;
+				}
+				const freshName = savedName || oldRowName;
+				const fresh = await fetchFreshDocAfterSync(props.doctype, freshName);
+				emit("readback-merged", { fresh, oldRowName, savedName });
 				await nextTick();
 				readbackFooterPhase.value = "readback-show-changes";
 			} catch (e) {

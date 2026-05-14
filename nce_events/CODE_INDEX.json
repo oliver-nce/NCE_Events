@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Manual overlay merged into CODE_INDEX.json by scripts/build_code_index.py. Edit per-file entries here; the generator preserves your curated 'purpose', 'sections', 'private_helpers', 'key_fields', and 'depends_on'.",
-    "generated": "2026-05-11",
+    "generated": "2026-05-14",
     "generator": "scripts/build_code_index.py",
     "usage": "Run `python scripts/build_code_index.py --write` to regenerate CODE_INDEX.json after editing this file or after adding/renaming/deleting source files. The pre-commit hook runs `--check` and blocks commits whose code changes have not been regenerated."
   },
@@ -15,8 +15,71 @@
       "frozenset used for fieldtype/fieldname skip sets",
       "Tag system uses Jinja template tags with gender-conditional pronouns",
       "Form Dialog: frozen_meta_json (snapshot of frappe.get_meta fields) is parsed by parseLayout.js + rendered by PanelFormDialog.vue. Only DocTypes in WP Tables are eligible.",
-      "Form Dialog buttons: script text is copied from Desk at capture/rebuild time — not live-linked. Rebuild is manual."
-    ]
+      "Form Dialog buttons: script text is copied from Desk at capture/rebuild time — not live-linked. Rebuild is manual.",
+      "NCE Sync mirror refresh (separate app): whitelisted nce_sync.api.sync_doctype_rows (by doc names) and nce_sync.api.sync_linked_doctype_rows (rebuild child rows for one parent Link). Full call shapes, enqueue helpers, and permission notes: architecture.nce_sync_mirror_refresh_apis."
+    ],
+    "nce_sync_mirror_refresh_apis": {
+      "source_app": "nce_sync Frappe app (dependency of NCE Events; implementation not in this repo).",
+      "requirements": "Target DocType must be on WP Tables as Mirrored or Linked with a real WordPress table.",
+      "permissions": "sync_doctype_rows requires read on the DocType. sync_linked_doctype_rows requires read and delete.",
+      "behavior": "Whitelisted methods return immediately after queueing; Desk shows toasts when the background worker finishes.",
+      "whitelist_vs_enqueue": "Whitelisted frappe.call uses frappe.session.user for permission checks (read; linked sync also delete). For cron or other contexts without a reliable session user, enqueue nce_sync.utils.data_sync.run_sync_doctype_rows_job or run_sync_linked_doctype_rows_job with queue default, timeout (e.g. 3600), and explicit user= so completion toasts have a recipient. Use whitelist when you want framework permission checks; use direct frappe.enqueue only when you deliberately bypass whitelist and enforce your own rules.",
+      "whitelisted_methods": {
+        "nce_sync.api.sync_doctype_rows": {
+          "args": {
+            "doctype": "Mirrored DocType name (string)",
+            "names": "List of row names, e.g. ['101','102']; some callers may pass JSON.stringify([...]) if supplying a string"
+          },
+          "response": "r.message typically includes queued, doctype, row_count, etc."
+        },
+        "nce_sync.api.sync_linked_doctype_rows": {
+          "args": {
+            "doctype": "Child mirrored DocType (string)",
+            "link_field": "Fieldname of the Link field on that child (string)",
+            "link_value": "Parent name stored in that Link, e.g. EVT-00001 (string)"
+          },
+          "response": "Same pattern — queued summary in r.message"
+        }
+      },
+      "enqueue_job_targets": {
+        "nce_sync.utils.data_sync.run_sync_doctype_rows_job": "kwargs: doctype, names (list), user",
+        "nce_sync.utils.data_sync.run_sync_linked_doctype_rows_job": "kwargs: doctype, link_field, link_value, user"
+      },
+      "examples_desk_js": "frappe.call({ method: 'nce_sync.api.sync_doctype_rows', args: { doctype: 'Your Mirrored DocType', names: ['101', '102'] }, callback(r) { if (!r.exc) console.log(r.message); } });\n\nfrappe.call({ method: 'nce_sync.api.sync_linked_doctype_rows', args: { doctype: 'Your Child Mirrored DocType', link_field: 'event', link_value: 'EVT-00001' }, callback(r) { if (!r.exc) console.log(r.message); } });",
+      "examples_server_session_python": "frappe.call({ \"method\": \"nce_sync.api.sync_doctype_rows\", \"doctype\": \"Your Mirrored DocType\", \"names\": [\"101\", \"102\"] })\n\nfrappe.call({ \"method\": \"nce_sync.api.sync_linked_doctype_rows\", \"doctype\": \"Your Child Mirrored DocType\", \"link_field\": \"event\", \"link_value\": \"EVT-00001\" })\n\nAlternative: frappe.get_attr(\"nce_sync.api.sync_doctype_rows\")(...) with the same keyword arguments.",
+      "examples_server_enqueue_python": "def queue_row_sync(doctype: str, names: list, notify_user: str = \"Administrator\"):\n    frappe.enqueue(\"nce_sync.utils.data_sync.run_sync_doctype_rows_job\", queue=\"default\", timeout=3600, doctype=doctype, names=list(names), user=notify_user)\n\ndef queue_link_rebuild(doctype: str, link_field: str, link_value: str, notify_user: str = \"Administrator\"):\n    frappe.enqueue(\"nce_sync.utils.data_sync.run_sync_linked_doctype_rows_job\", queue=\"default\", timeout=3600, doctype=doctype, link_field=link_field, link_value=link_value, user=notify_user)"
+    },
+    "nce_sync_job_tracking": {
+      "summary": "sync_doctype_rows and sync_linked_doctype_rows only queue work. Use the job_id in the API response with Frappe's RQ helpers to track completion (success vs failure).",
+      "api_response_job_id": "On success, r.message includes { queued: true, job_id: '<uuid>', ... }. Queue two jobs (e.g. tickets + attendees) → two job_id values; track both independently.",
+      "server_poll_pattern": "import time\nfrom frappe.utils.background_jobs import get_job_status\nfrom rq.job import JobStatus\n\ndef wait_for_job(job_id: str, timeout_sec: float = 3600, poll_sec: float = 0.5) -> str:\n    terminal = {JobStatus.FINISHED, JobStatus.FAILED, JobStatus.STOPPED}\n    deadline = time.monotonic() + timeout_sec\n    while time.monotonic() < deadline:\n        st = get_job_status(job_id)\n        if st is None:\n            return 'missing'\n        if st in terminal:\n            return st.value  # 'finished', 'failed', or 'stopped'\n        time.sleep(poll_sec)\n    return 'timeout'",
+      "status_interpretation": {
+        "FINISHED": "Worker returned without raising. Sync logic completed; row-level skips are still possible — check Error Log for row-level rigor.",
+        "FAILED": "Exception in the job. Check Error Log and the user's red msgprint path.",
+        "None_missing": "RQ may have evicted the job record after result_ttl (Frappe default: minutes). Poll soon after enqueue. If polling later, treat missing as 'unknown — recheck data/logs' rather than failure.",
+        "ttl_note": "None after completion may mean evicted, not still running. Short polls right after enqueue avoid ambiguity. For long gaps, log your own completion flag in DB or check Sync Log / Error Log."
+      },
+      "client_poll_approaches": {
+        "recommended": "Whitelist a thin wrapper around get_job_status(job_id) in your app (add permission checks), then poll from JS.",
+        "approach_table": "A: Whitelist wrapper — high rigour, recommended for spinner-until-done UX. B: Server orchestrates (enqueue + server polls/chains) — high rigour, user never polls. C: Toast-only UX — low rigour.",
+        "example_js": "async function waitForNceSyncJob(jobId, { intervalMs = 500, timeoutMs = 3600000 } = {}) {\n  const t0 = Date.now();\n  while (Date.now() - t0 < timeoutMs) {\n    const r = await frappe.call({\n      method: 'your_app.api.get_sync_job_status',\n      args: { job_id: jobId },\n    });\n    const st = r.message; // 'queued', 'started', 'finished', 'failed', null\n    if (st === 'finished') return 'finished';\n    if (st === 'failed' || st === 'stopped') return st;\n    await new Promise((res) => setTimeout(res, intervalMs));\n  }\n  return 'timeout';\n}"
+      },
+      "multiple_jobs": "All finished: every job_id hit FINISHED (or policy allows missing within TTL window). Any failed: surface failure and stop spinner. Use Promise.all (JS) or parallel wait_for_job calls (Python).",
+      "limits": [
+        "Same site only — job_id is meaningless across sites.",
+        "Workers must run — status stays queued if no worker consumes the default queue.",
+        "TTL — None after completion may mean evicted, not still running. Short polls after enqueue avoid ambiguity.",
+        "Success != business OK — FINISHED with skips logged is still FINISHED; strict row-level proof needs Sync Log / Error Log / custom checks.",
+        "get_job_status is NOT whitelisted for arbitrary client users — wrap it server-side with permission checks.",
+        "If you queue two related DocTypes, track two job_ids or chain jobs server-side."
+      ],
+      "checklist": [
+        "Call sync_* API → read job_id from r.message.",
+        "Poll get_job_status(job_id) (server) or your whitelisted wrapper (client) until FINISHED / FAILED / timeout.",
+        "On FAILED or timeout → show error + link to Error Log.",
+        "For two related DocTypes → track two job_ids or chain jobs server-side."
+      ]
+    }
   },
   "backend": {
     "nce_events/__init__.py": {
@@ -543,6 +606,7 @@
         "TestAssertDoctypeInWPTables",
         "TestFiltersForRelatedRows",
         "TestHopWalkFinalIdentifiers",
+        "TestMainTabSkeletonAndTabNotes",
         "TestParseRelatedDoctypes",
         "TestRelatedListColumnsOptions"
       ],
@@ -638,6 +702,15 @@
       "exports": [
         "get_woocommerce_v3_base_url",
         "wc_request"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/api/wp_readback_panel.py": {
+      "exports": [
+        "doctype_has_wp_sql_live_readback"
+      ],
+      "whitelist_endpoints": [
+        "doctype_has_wp_sql_live_readback"
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
@@ -795,6 +868,9 @@
       "depends_on": []
     },
     "nce_events/nce_events/doctype/form_dialog_related_doctype/": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/nce_events/doctype/form_dialog_tab_note/": {
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
     "nce_events/nce_events/doctype/page_panel/": {
@@ -989,7 +1065,6 @@
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue": {
       "vue": {
-        "uses_defineProps": true,
         "uses_defineEmits": true
       },
       "purpose": "Form dialog related-doctype tab: scrollable rows table with portal-editable cells (Select/Check/number/date/text/textarea), label-column resizer, schema details panel, save_form_dialog_related_rows on Submit. Exposes saveAllRelatedRows + resetRelatedToBaseline.",
@@ -1219,6 +1294,15 @@
       "purpose": "V2 composable — Tag Finder field loading and tag generation",
       "depends_on": []
     },
+    "nce_events/public/js/panel_page_v2/composables/wpReadbackFlow.js": {
+      "exports": [
+        "computeWpReadbackWaitMs",
+        "fetchReadbackConfig",
+        "mergeFreshDocIntoPanel",
+        "waitForWpReadbackFreshDoc"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/public/js/panel_page_v2/main.js": {
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
@@ -1320,6 +1404,7 @@
     },
     "nce_events/public/js/panel_page_v2/utils/parseLayout.js": {
       "exports": [
+        "FORM_DIALOG_LEAD_TAB_ANCHOR",
         "parseLayout"
       ],
       "purpose": "Utility: parse a flat Frappe DocField array into a nested Tabs→Sections→Columns→Fields tree. Used by usePanelFormDialog to render frozen_meta_json layout.",

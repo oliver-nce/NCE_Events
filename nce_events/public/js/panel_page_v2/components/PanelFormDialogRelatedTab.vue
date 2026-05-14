@@ -633,18 +633,18 @@ async function saveAllRelatedRows() {
 	const defn = String(props.definitionName || "").trim();
 	const dt = String(props.rootDoctype || "").trim();
 	if (!dn || !defn || !dt) {
-		return;
+		return [];
 	}
 	const tab = props.tab;
 	const crn = tab?._related?.child_row_name;
 	if (!crn) {
-		return;
+		return [];
 	}
 	const updates = buildRelatedUpdates(props.ti);
 	if (!updates.length) {
-		return;
+		return [];
 	}
-	await frappeCall("nce_events.api.form_dialog.related_rows.save_form_dialog_related_rows", {
+	const r = await frappeCall("nce_events.api.form_dialog.related_rows.save_form_dialog_related_rows", {
 		definition: defn,
 		related_row_name: crn,
 		root_doctype: dt,
@@ -656,6 +656,7 @@ async function saveAllRelatedRows() {
 		st.baseline = JSON.parse(JSON.stringify(st.rows));
 	}
 	emit("related-dirty", false);
+	return Array.isArray(r?.sync_job_ids) ? r.sync_job_ids : [];
 }
 
 /** Refetch this grid whenever the host bumps reloadTick (e.g. after WP read-back). */
