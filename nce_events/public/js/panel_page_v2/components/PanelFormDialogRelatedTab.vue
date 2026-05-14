@@ -212,6 +212,8 @@ const props = defineProps({
 	definitionName: { type: String, default: "" },
 	rootDoctype: { type: String, default: "" },
 	rootDocName: { type: String, default: null },
+	/** Bumped by host (e.g. after WP read-back) to trigger a fresh server fetch. */
+	reloadTick: { type: Number, default: 0 },
 	formData: { type: Object, required: true },
 	originalFormData: { type: Object, default: null },
 });
@@ -656,15 +658,18 @@ async function saveAllRelatedRows() {
 	emit("related-dirty", false);
 }
 
-/** Refetch grid after root PK changes (e.g. WP SQL read-back rename) */
-function reloadRelatedFromServer() {
-	if (!props.tab?._related?.child_row_name) return;
-	const dn = String(props.rootDocName || "").trim();
-	if (!dn) return;
-	fetchRelatedForTab(props.ti);
-}
+/** Refetch this grid whenever the host bumps reloadTick (e.g. after WP read-back). */
+watch(
+	() => props.reloadTick,
+	(tick, prev) => {
+		if (!tick || tick === prev) return;
+		if (!props.tab?._related?.child_row_name) return;
+		if (!String(props.rootDocName || "").trim()) return;
+		fetchRelatedForTab(props.ti);
+	},
+);
 
-defineExpose({ saveAllRelatedRows, resetRelatedToBaseline, reloadRelatedFromServer });
+defineExpose({ saveAllRelatedRows, resetRelatedToBaseline });
 
 function relatedLabelColPx(ti) {
 	const w = relatedLabelColByTab[ti];

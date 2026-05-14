@@ -17,18 +17,19 @@
 					:class="{ 'ppv2-fd-tab-panel-active': tabs.length === 1 || activeTab === ti }"
 				>
 					<!-- Related DocType tab: dispatched to PanelFormDialogRelatedTab child -->
-					<PanelFormDialogRelatedTab
-						v-if="tab._related"
-						:ref="(el) => (relatedTabRefs[ti] = el)"
-						:ti="ti"
-						:tab="tab"
-						:definition-name="definitionName"
-						:root-doctype="rootDoctype"
-						:root-doc-name="rootDocName"
-						:form-data="formData"
-						:original-form-data="originalFormData"
-						@related-dirty="(v) => $emit('related-dirty', v)"
-					/>
+				<PanelFormDialogRelatedTab
+					v-if="tab._related"
+					:ref="(el) => (relatedTabRefs[ti] = el)"
+					:ti="ti"
+					:tab="tab"
+					:definition-name="definitionName"
+					:root-doctype="rootDoctype"
+					:root-doc-name="rootDocName"
+					:reload-tick="reloadTick"
+					:form-data="formData"
+					:original-form-data="originalFormData"
+					@related-dirty="(v) => $emit('related-dirty', v)"
+				/>
 
 					<!-- Normal frozen-schema tab -->
 					<template v-else>
@@ -98,6 +99,8 @@ const props = defineProps({
 	definitionName: { type: String, default: "" },
 	rootDoctype: { type: String, default: "" },
 	rootDocName: { type: String, default: null },
+	/** Bumped by host to trigger related-tab refetch without imperative calls. */
+	reloadTick: { type: Number, default: 0 },
 	loading: { type: Boolean, default: false },
 	error: { type: String, default: null },
 	tabs: { type: Array, default: () => [] },
@@ -158,13 +161,7 @@ function resetRelatedToBaseline() {
 	}
 }
 
-function reloadRelatedFromServer() {
-	for (const ref of relatedTabRefs.value) {
-		ref?.reloadRelatedFromServer?.();
-	}
-}
-
-defineExpose({ saveAllRelatedRows, resetRelatedToBaseline, reloadRelatedFromServer });
+defineExpose({ saveAllRelatedRows, resetRelatedToBaseline });
 </script>
 
 <style scoped>

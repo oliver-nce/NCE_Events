@@ -43,25 +43,26 @@
 				@nav-prev="onNavPrevClick"
 				@nav-next="onNavNextClick"
 			/>
-			<PanelFormDialogBody
-				ref="fdBodyRef"
-				:definition-name="definitionName"
-				:root-doctype="doctype"
-				:root-doc-name="docName"
-				:loading="form.loading.value"
-				:error="form.error.value"
-				:tabs="form.tabs.value"
-				:validation-error="form.validationError.value"
-				:form-data="form.formData"
-				:original-form-data="form.originalData.value"
-				:is-field-visible="form.isFieldVisible"
-				:is-field-mandatory="form.isFieldMandatory"
-				:is-field-read-only="form.isFieldReadOnly"
-				v-model:active-tab="activeTab"
-				@field-change="onFieldChange"
-				@link-change="onLinkChange"
-				@related-dirty="onRelatedDirty"
-			/>
+		<PanelFormDialogBody
+			ref="fdBodyRef"
+			:definition-name="definitionName"
+			:root-doctype="doctype"
+			:root-doc-name="docName"
+			:reload-tick="reloadTick"
+			:loading="form.loading.value"
+			:error="form.error.value"
+			:tabs="form.tabs.value"
+			:validation-error="form.validationError.value"
+			:form-data="form.formData"
+			:original-form-data="form.originalData.value"
+			:is-field-visible="form.isFieldVisible"
+			:is-field-mandatory="form.isFieldMandatory"
+			:is-field-read-only="form.isFieldReadOnly"
+			v-model:active-tab="activeTab"
+			@field-change="onFieldChange"
+			@link-change="onLinkChange"
+			@related-dirty="onRelatedDirty"
+		/>
 			<PanelFormDialogFooter
 				:buttons="form.buttons.value"
 				:definition-name="definitionName"
@@ -124,8 +125,8 @@ const props = defineProps({
 	reloadPanelAfterPublish: { type: Function, default: null },
 	/** Where the captured definition lives: 'form_dialog' (default) or 'panel_action'. */
 	definitionSource: { type: String, default: "form_dialog" },
-	/** Host bumps after WP read-back so form reloads without closing dialog */
-	wpReadbackReloadTick: { type: Number, default: 0 },
+	/** Bumped by host (e.g. after WP read-back) to trigger form.load() without closing */
+	reloadTick: { type: Number, default: 0 },
 });
 
 const emit = defineEmits(["close", "saved", "nav-prev", "nav-next"]);
@@ -181,19 +182,19 @@ watch(
 const loadDebugRows = computed(() => form.loadDebugLog.value);
 
 watch(
-	() => props.wpReadbackReloadTick,
+	() => props.reloadTick,
 	async (tick, prev) => {
 		if (!props.open || Number(tick) <= 0 || tick === prev) return;
 		if (!props.docName) return;
 		await nextTick();
 		try {
 			await form.load();
-			await nextTick();
-			fdBodyRef.value?.reloadRelatedFromServer?.();
 			relatedDirty.value = false;
 		} catch {
 			/* keep current form if reload fails */
 		}
+		// Related grids are refreshed reactively: reloadTick flows down as a prop
+		// to PanelFormDialogBody → PanelFormDialogRelatedTab, which watches it.
 	},
 );
 
