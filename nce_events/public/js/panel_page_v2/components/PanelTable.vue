@@ -19,6 +19,7 @@
 	<div ref="panelRef" class="ppv2-panel">
 		<PanelTableFilterBar
 			:columns="columns"
+			:search-only-columns="searchOnlyColumns"
 			:default-filters="defaultFilters"
 			:show-filter="showFilter"
 			@filter-change="(f) => $emit('filter-change', f)"
@@ -142,6 +143,7 @@ const props = defineProps({
 	config: { type: Object, default: () => ({}) },
 	defaultFilters: { type: Array, default: () => [] },
 	showFilter: { type: Boolean, default: false },
+	searchOnlyColumns: { type: Array, default: () => [] },
 });
 
 const emit = defineEmits([

@@ -69,6 +69,7 @@
 			:is-field-read-only="form.isFieldReadOnly"
 				:find-layout-mode="findCriteriaActive"
 				:find-criteria="findCriteria"
+				:findable-fieldnames="findableFieldnames"
 				v-model:active-tab="activeTab"
 				@field-change="onFieldChange"
 				@find-criteria-patch="patchFindCriterion"
@@ -162,6 +163,8 @@ const props = defineProps({
 	findChromePhase: { type: String, default: "none" },
 	/** Optional seed object when entering criteria phase (Modify Find). */
 	findSeedCriteria: { type: Object, default: null },
+	/** Search-only panel fields to render as extra criteria inputs in Find mode. */
+	findSearchOnlyColumns: { type: Array, default: () => [] },
 });
 
 const emit = defineEmits([
@@ -201,6 +204,14 @@ const rowNavEnabledEffective = computed(
 );
 
 const findCriteriaActive = computed(() => props.findChromePhase === "criteria");
+
+// Set of fieldnames from panel effective_searchable — only these are enterable in Find mode.
+// null when no panel context (allows all searchable fields).
+const findableFieldnames = computed(() => {
+	const cols = props.findSearchOnlyColumns;
+	if (!cols || !cols.length) return null;
+	return new Set(cols.map((c) => c.fieldname));
+});
 
 const form = usePanelFormDialog({
 	definitionName: toRef(props, "definitionName"),
@@ -252,6 +263,7 @@ function syncFindCriteriaFromSeed() {
 	const seed = props.findSeedCriteria;
 	for (const f of form.allFields.value || []) {
 		if (!isFindSearchableRootField(f)) continue;
+		if (findableFieldnames.value && !findableFieldnames.value.has(f.fieldname)) continue;
 		const fn = f.fieldname;
 		if (seed && typeof seed === "object" && Object.prototype.hasOwnProperty.call(seed, fn)) {
 			const v = seed[fn];

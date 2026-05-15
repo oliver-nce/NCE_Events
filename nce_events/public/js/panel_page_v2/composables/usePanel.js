@@ -251,5 +251,5 @@ export function usePanel(doctype, parentFilter = {}) {
 		_applyFilters();
 	}
 
-	return { config, columns, rows, total, fullTotal, loading, error, load, reload, setFilters };
+	return { config, columns, rows, allRows: _allRows, total, fullTotal, loading, error, load, reload, setFilters };
 }

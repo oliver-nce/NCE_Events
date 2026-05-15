@@ -79,6 +79,7 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 			"title_field": "",
 			"required_fields": [],
 			"search_fields": [],
+			"search_only_columns": [],
 			"effective_searchable": [],
 			"tint_by_gender": {},
 			"computed_columns": [],
@@ -116,6 +117,26 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 	bold_fields = _parse_csv(doc.bold_fields)
 	required_fields = list(dict.fromkeys(_parse_csv(getattr(doc, "required_fields", None))))
 	search_only_fields = list(dict.fromkeys(_parse_csv(getattr(doc, "search_fields", None))))
+
+	# Build label/fieldtype metadata for search-only fields (used by filter bar + Find dialog)
+	search_only_cols: list[dict] = []
+	if search_only_fields:
+		try:
+			_so_meta = frappe.get_meta(root_doctype)
+			_so_ft_map: dict[str, str] = {f.fieldname: (f.fieldtype or "") for f in _so_meta.fields}
+			_so_lbl_map: dict[str, str] = {"name": "ID"}
+			for _f in _so_meta.fields:
+				if _f.fieldname:
+					_so_lbl_map[_f.fieldname] = _f.label or _title_case(_f.fieldname)
+			for fn in search_only_fields:
+				col: dict = {"fieldname": fn, "label": _so_lbl_map.get(fn) or _title_case(fn)}
+				ft = _so_ft_map.get(fn, "")
+				if ft:
+					col["fieldtype"] = ft
+				search_only_cols.append(col)
+		except Exception:
+			search_only_cols = [{"fieldname": fn, "label": _title_case(fn)} for fn in search_only_fields]
+
 	gender_color_fields = _parse_csv(doc.gender_color_fields)
 	# Add computed columns with tint_by_row so they tint based on row's gender_column
 	for cc in computed_columns:
@@ -167,6 +188,7 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 		"title_field": title_field,
 		"required_fields": required_fields,
 		"search_fields": search_only_fields,
+		"search_only_columns": search_only_cols,
 		"effective_searchable": list(dict.fromkeys(column_order + search_only_fields)),
 		"tint_by_gender": tint_by_gender,
 		"computed_columns": computed_columns,

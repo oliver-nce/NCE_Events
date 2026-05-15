@@ -3,6 +3,48 @@ import { useFormDialogRecordNav, panelRowArray } from "./useFormDialogRecordNav.
 import { mergeFreshDocIntoPanel } from "./wpReadbackFlow.js";
 
 /**
+ * FileMaker-style criterion match against a single cell value.
+ * Operators: = (empty), * (nonempty), >=, <=, !=, >, <, =value (exact),
+ * ~value (contains), wildcard (* / %), default (contains).
+ */
+function _matchFindCriterion(cellValue, term) {
+	const s = String(term ?? "").trim();
+	if (!s) return true;
+	const v = cellValue == null ? "" : String(cellValue).trim();
+	const vLow = v.toLowerCase();
+
+	if (s === "=") return v === "";
+	if (s === "*") return v !== "";
+
+	for (const op of [">=", "<=", "!="]) {
+		if (s.startsWith(op)) {
+			const right = s.slice(op.length).trim().toLowerCase();
+			const vN = parseFloat(v), rN = parseFloat(right);
+			const num = !isNaN(vN) && !isNaN(rN);
+			if (op === ">=") return num ? vN >= rN : vLow >= right;
+			if (op === "<=") return num ? vN <= rN : vLow <= right;
+			if (op === "!=") return vLow !== right;
+		}
+	}
+	for (const op of [">", "<"]) {
+		if (s.startsWith(op)) {
+			const right = s.slice(op.length).trim().toLowerCase();
+			const vN = parseFloat(v), rN = parseFloat(right);
+			const num = !isNaN(vN) && !isNaN(rN);
+			if (op === ">") return num ? vN > rN : vLow > right;
+			if (op === "<") return num ? vN < rN : vLow < right;
+		}
+	}
+	if (s.startsWith("=")) return vLow === s.slice(1).trim().toLowerCase();
+	if (s.startsWith("~")) return vLow.includes(s.slice(1).trim().toLowerCase());
+	if (s.includes("*") || s.includes("%")) {
+		const pat = s.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*").replace(/%/g, ".*");
+		return new RegExp("^" + pat + "$", "i").test(v);
+	}
+	return vLow.includes(s.toLowerCase());
+}
+
+/**
  * Panel Page V2: form dialog state, row navigation, open from panel row, close/save + panel refresh.
  * Uses a dual-slot dissolve transition for flicker-free prev/next navigation.
  * Core dialog UI lives in PanelFormDialog.vue + usePanelFormDialog.
@@ -31,6 +73,8 @@ export function usePanelFormDialogHost(openPanels) {
 	const formDialogFindConstrainNames = ref(null);
 	/** Find/search: `null` = inactive; array = active match set (may be empty). */
 	const formDialogFindMatchNames = ref(null);
+	/** Search-only columns (fieldname + label + fieldtype) for the active Find panel. */
+	const formDialogFindSearchOnlyColumns = ref([]);
 	const formDialogFindActive = computed(() => formDialogFindMatchNames.value !== null);
 
 	// Dual-slot state for dissolve transitions
@@ -113,6 +157,21 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogLastFindCriteria.value = null;
 		formDialogFindConstrainNames.value = null;
 		formDialogFindSeedCriteria.value = null;
+		// Capture all panel-known columns (visible + search-only) so the Find dialog
+		// can render extra criteria inputs for fields not in the frozen Form Dialog layout.
+		// Visible columns come from panel.columns; search-only from panel.config.search_only_columns.
+		// Filter out _related_* and computed (_count_*) sentinel columns.
+		const visibleCols = (Array.isArray(panel.columns) ? panel.columns : []).filter(
+			(c) => c.fieldname && !c.fieldname.startsWith("_") && !c.is_related_link
+		);
+		const soColumns = Array.isArray(panel.config?.search_only_columns)
+			? panel.config.search_only_columns
+			: [];
+		const visibleFns = new Set(visibleCols.map((c) => c.fieldname));
+		formDialogFindSearchOnlyColumns.value = [
+			...visibleCols,
+			...soColumns.filter((c) => !visibleFns.has(c.fieldname)),
+		];
 		formDialogFindChromePhase.value = "criteria";
 		formDialogDialogLoadMode.value = "find-shell";
 		showFormDialog.value = true;
@@ -166,12 +225,8 @@ export function usePanelFormDialogHost(openPanels) {
 	}
 
 	function onFormDialogFindCriteria(criteria) {
-		const definition = formDialogDefinition.value;
-		if (!definition) return;
 		const cmap =
-			criteria && typeof criteria === "object" && !Array.isArray(criteria)
-				? criteria
-				: {};
+			criteria && typeof criteria === "object" && !Array.isArray(criteria) ? criteria : {};
 		const keys = Object.keys(cmap).filter((k) => String(cmap[k] ?? "").trim() !== "");
 		if (!keys.length) {
 			const msg =
@@ -181,51 +236,51 @@ export function usePanelFormDialogHost(openPanels) {
 			if (typeof frappe !== "undefined" && frappe.msgprint) frappe.msgprint(msg);
 			return;
 		}
-		frappe.call({
-			method: "nce_events.api.form_dialog.search.get_form_dialog_search_matches_criteria",
-			args: { definition, criteria: cmap },
-			callback(r) {
-				let names = Array.isArray(r?.message?.names) ? r.message.names : [];
-				const constrain = formDialogFindConstrainNames.value;
-				formDialogFindConstrainNames.value = null;
-				if (Array.isArray(constrain) && constrain.length) {
-					const allowed = new Set(constrain.map(String));
-					names = names.filter((n) => allowed.has(String(n)));
+
+		// Client-side search against the cached panel rows (_allRows)
+		const sourcePanel = openPanels.find((x) => x.id === formDialogSourcePanelId.value);
+		const allRows = sourcePanel?._allRows?.value ?? [];
+
+		let names = allRows
+			.filter((row) => {
+				for (const key of keys) {
+					if (!_matchFindCriterion(row[key], cmap[key])) return false;
 				}
-				formDialogFindSeedCriteria.value = null;
-				formDialogLastFindCriteria.value = { ...cmap };
-				if (!names.length) {
-					const msg =
-						typeof window.__ === "function"
-							? window.__("No records match your request.")
-							: "No records match your request.";
-					if (typeof frappe !== "undefined" && frappe.msgprint) frappe.msgprint(msg);
-					return;
-				}
-				formDialogFindMatchNames.value = names;
-				formDialogFindChromePhase.value = "post-find";
-				formDialogDialogLoadMode.value = "full";
-				const cur = formDialogDocName.value;
-				if (cur == null || String(cur).trim() === "") {
-					const p = openPanels.find((x) => x.id === formDialogSourcePanelId.value);
-					const panelSet = new Set(
-						(p ? panelRowArray(p) : []).map((row) => String(row.name)),
-					);
-					formDialogDocName.value =
-						names.find((n) => panelSet.has(String(n))) ?? names[0];
-				} else {
-					const curStr = String(cur);
-					if (!names.map(String).includes(curStr)) {
-						const p = openPanels.find((x) => x.id === formDialogSourcePanelId.value);
-						const panelSet = new Set(
-							(p ? panelRowArray(p) : []).map((row) => String(row.name)),
-						);
-						formDialogDocName.value =
-							names.find((n) => panelSet.has(String(n))) ?? names[0];
-					}
-				}
-			},
-		});
+				return true;
+			})
+			.map((row) => String(row.name));
+
+		// Apply Constrain Found Set if active
+		const constrain = formDialogFindConstrainNames.value;
+		formDialogFindConstrainNames.value = null;
+		if (Array.isArray(constrain) && constrain.length) {
+			const constrainSet = new Set(constrain.map(String));
+			names = names.filter((n) => constrainSet.has(n));
+		}
+
+		formDialogFindSeedCriteria.value = null;
+		formDialogLastFindCriteria.value = { ...cmap };
+
+		if (!names.length) {
+			const msg =
+				typeof window.__ === "function"
+					? window.__("No records match your request.")
+					: "No records match your request.";
+			if (typeof frappe !== "undefined" && frappe.msgprint) frappe.msgprint(msg);
+			return;
+		}
+
+		formDialogFindMatchNames.value = names;
+		formDialogFindChromePhase.value = "post-find";
+		formDialogDialogLoadMode.value = "full";
+
+		// Navigate to the first match that is in the current panel view
+		const p = openPanels.find((x) => x.id === formDialogSourcePanelId.value);
+		const panelSet = new Set((p ? panelRowArray(p) : []).map((row) => String(row.name)));
+		const cur = String(formDialogDocName.value ?? "").trim();
+		if (!cur || !names.includes(cur)) {
+			formDialogDocName.value = names.find((n) => panelSet.has(n)) ?? names[0];
+		}
 	}
 
 	function onFormDialogFindClear() {
@@ -308,6 +363,7 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogSourcePanelId.value = null;
 		formDialogDefinitionSource.value = "form_dialog";
 		formDialogFindMatchNames.value = null;
+		formDialogFindSearchOnlyColumns.value = [];
 		formDialogDialogLoadMode.value = "full";
 		formDialogFindChromePhase.value = "none";
 		formDialogFindSeedCriteria.value = null;
@@ -406,6 +462,7 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogDialogLoadMode,
 		formDialogFindChromePhase,
 		formDialogFindSeedCriteria,
+		formDialogFindSearchOnlyColumns,
 		onFormDialogFindCriteria,
 		onFormDialogFindClear,
 		onFormDialogFindShowAll,

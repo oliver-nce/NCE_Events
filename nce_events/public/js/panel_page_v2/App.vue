@@ -85,6 +85,7 @@
 				:show-email="!!p.config?.email_field"
 				:show-sms="!!p.config?.sms_field"
 				:show-filter="p._showFilter"
+				:search-only-columns="p.config?.search_only_columns || []"
 				@close="closePanel(p.id)"
 				@row-click="(row) => onDrilledRowClick(p, row)"
 				@drill="(ev) => onDrill(ev, p)"
@@ -139,6 +140,7 @@
 			:dialog-load-mode="formDialogDialogLoadMode"
 			:find-chrome-phase="formDialogFindChromePhase"
 			:find-seed-criteria="formDialogFindSeedCriteria"
+			:find-search-only-columns="formDialogFindSearchOnlyColumns"
 			:can-navigate-prev="formDialogNavInfo.canPrev"
 			:can-navigate-next="formDialogNavInfo.canNext"
 			:row-nav-label="formDialogNavLabel"
@@ -172,6 +174,7 @@
 			:dialog-load-mode="formDialogDialogLoadMode"
 			:find-chrome-phase="formDialogFindChromePhase"
 			:find-seed-criteria="formDialogFindSeedCriteria"
+			:find-search-only-columns="formDialogFindSearchOnlyColumns"
 			:row-nav-enabled="false"
 			:can-navigate-prev="false"
 			:can-navigate-next="false"
@@ -205,6 +208,7 @@
 			:dialog-load-mode="formDialogDialogLoadMode"
 			:find-chrome-phase="formDialogFindChromePhase"
 			:find-seed-criteria="formDialogFindSeedCriteria"
+			:find-search-only-columns="formDialogFindSearchOnlyColumns"
 			:can-navigate-prev="formDialogNavInfo.canPrev"
 			:can-navigate-next="formDialogNavInfo.canNext"
 			:row-nav-label="formDialogNavLabel"
@@ -238,6 +242,7 @@
 			:dialog-load-mode="formDialogDialogLoadMode"
 			:find-chrome-phase="formDialogFindChromePhase"
 			:find-seed-criteria="formDialogFindSeedCriteria"
+			:find-search-only-columns="formDialogFindSearchOnlyColumns"
 			:row-nav-enabled="false"
 			:can-navigate-prev="false"
 			:can-navigate-next="false"
@@ -314,6 +319,7 @@ const {
 	formDialogDialogLoadMode,
 	formDialogFindChromePhase,
 	formDialogFindSeedCriteria,
+	formDialogFindSearchOnlyColumns,
 	formDialogNavInfo,
 	formDialogNavLabel,
 	onFormDialogNavPrev,
@@ -482,6 +488,7 @@ async function openPanel(doctype, parentFilter = {}, parentId = null, parentCont
 		p.rows = panel.rows.value;
 		p.total = panel.total.value;
 		p.fullTotal = panel.fullTotal.value;
+		p._allRows = panel.allRows; // live ref — full unfiltered row set, used by client-side Find
 		p._setFilters = (uf) => {
 			panel.setFilters(uf);
 			// p.rows and p.total are live references to panel.rows.value and panel.total.value

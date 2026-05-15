@@ -63,7 +63,7 @@
 										:mandatory="findLayoutMode ? false : isFieldMandatory(field)"
 										:read-only="fieldReadOnlyEffective(field)"
 										:find-criteria-mode="
-											findLayoutMode && isFindSearchableRootField(field)
+											findLayoutMode && isFindEnterable(field)
 										"
 										:field-dirty="
 											!findLayoutMode &&
@@ -120,12 +120,17 @@ const props = defineProps({
 	findLayoutMode: { type: Boolean, default: false },
 	/** Reactive bag of criterion strings while ``findLayoutMode``. */
 	findCriteria: { type: Object, required: true },
+	/**
+	 * Set of fieldnames (from panel effective_searchable) that are enterable in Find mode.
+	 * null = allow all searchable fields (default / no panel context).
+	 */
+	findableFieldnames: { type: Object, default: null },
 });
 
 const emit = defineEmits(["field-change", "link-change", "related-dirty", "find-criteria-patch"]);
 
 function fieldModelValue(field) {
-	if (props.findLayoutMode && isFindSearchableRootField(field)) {
+	if (props.findLayoutMode && isFindEnterable(field)) {
 		const fn = field.fieldname;
 		const v = props.findCriteria[fn];
 		return v === undefined || v === null ? "" : v;
@@ -133,15 +138,22 @@ function fieldModelValue(field) {
 	return props.formData[field.fieldname];
 }
 
+function isFindEnterable(field) {
+	if (!isFindSearchableRootField(field)) return false;
+	// If a panel context is provided, only effective_searchable fields are enterable
+	if (props.findableFieldnames) return props.findableFieldnames.has(field.fieldname);
+	return true;
+}
+
 function fieldReadOnlyEffective(field) {
-	if (props.findLayoutMode && isFindSearchableRootField(field)) {
-		return false;
+	if (props.findLayoutMode) {
+		return !isFindEnterable(field);
 	}
 	return props.isFieldReadOnly(field);
 }
 
 function onFieldOrCriterionChange(field, p) {
-	if (props.findLayoutMode && field && isFindSearchableRootField(field)) {
+	if (props.findLayoutMode && field && isFindEnterable(field)) {
 		emit("find-criteria-patch", { fieldname: p.fieldname, value: p.value });
 		return;
 	}

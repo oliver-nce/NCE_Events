@@ -170,11 +170,17 @@ def _fieldtype_by_name(fields: list, fieldname: str) -> str:
 
 
 @frappe.whitelist()
-def get_form_dialog_search_matches_criteria(definition: str, criteria=None) -> dict:
+def get_form_dialog_search_matches_criteria(
+	definition: str, criteria=None, root_doctype: str = None
+) -> dict:
 	"""
 	AND-combined find: each non-empty criterion applies only to that field.
 	``criteria`` is a JSON object (or dict from client) ``{ fieldname: raw_term, ... }``.
 	Same per-field operators as ``get_form_dialog_search_matches``.
+
+	``root_doctype`` is the Page Panel's root DocType. When supplied, fields listed
+	in that panel's ``search_fields`` are also eligible as search criteria even if
+	they are not present in the Form Dialog's frozen layout.
 	"""
 	if frappe.session.user == "Guest":
 		frappe.throw(_("Login required"), frappe.PermissionError)
@@ -213,6 +219,24 @@ def get_form_dialog_search_matches_criteria(definition: str, criteria=None) -> d
 		if ft in _SKIP_FIELDTYPES or ft == "Check":
 			continue
 		allowed.add(fn)
+
+	# Also allow all panel-visible and search-only fields from the linked Page Panel
+	root_dt = cstr(root_doctype or "").strip()
+	if root_dt and frappe.db.exists("Page Panel", root_dt):
+		pp_vals = frappe.db.get_value(
+			"Page Panel", root_dt, ["column_order", "search_fields"], as_dict=True
+		) or {}
+		raw = ",".join(filter(None, [pp_vals.get("column_order"), pp_vals.get("search_fields")]))
+		pp_fields = [s.strip() for s in raw.split(",") if s.strip()]
+		if pp_fields:
+			try:
+				_meta_pp = frappe.get_meta(doctype)
+				_meta_pp_fns = {mf.fieldname for mf in _meta_pp.fields}
+				for fn in pp_fields:
+					if fn and _SAFE_FIELDNAME.match(fn) and fn in _meta_pp_fns:
+						allowed.add(fn)
+			except Exception:
+				pass
 
 	table = f"`tab{doctype}`"
 	field_conds: list[str] = []

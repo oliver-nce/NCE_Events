@@ -13,6 +13,15 @@
 				<option v-for="col in columns" :key="col.fieldname" :value="col.fieldname">
 					{{ col.label }}
 				</option>
+				<optgroup v-if="searchOnlyColumns.length" label="Search Only">
+					<option
+						v-for="col in searchOnlyColumns"
+						:key="'so-' + col.fieldname"
+						:value="col.fieldname"
+					>
+						{{ col.label }}
+					</option>
+				</optgroup>
 			</select>
 			<span v-if="cond.field" class="ppv2-filter-ops">
 				<button
@@ -77,6 +86,7 @@ import { reactive, watch } from "vue";
 
 const props = defineProps({
 	columns: { type: Array, default: () => [] },
+	searchOnlyColumns: { type: Array, default: () => [] },
 	defaultFilters: { type: Array, default: () => [] },
 	showFilter: { type: Boolean, default: false },
 });
@@ -91,7 +101,11 @@ let _filterTimer = null;
 const DATE_FIELDTYPES = new Set(["Date", "Datetime"]);
 
 function colByFieldname(fieldname) {
-	return props.columns.find((c) => c.fieldname === fieldname) || null;
+	return (
+		props.columns.find((c) => c.fieldname === fieldname) ||
+		props.searchOnlyColumns.find((c) => c.fieldname === fieldname) ||
+		null
+	);
 }
 
 function isDateField(fieldname) {
