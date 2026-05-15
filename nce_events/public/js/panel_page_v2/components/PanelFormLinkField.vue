@@ -84,11 +84,11 @@ function mountFrappeControl() {
 			emit("link-change", { fieldname: fn, value: v });
 		});
 
-		// Open the dropdown immediately on focus even when the field already has
-		// a value. Select-all lets the user type to replace without clearing first.
+		// Open the dropdown immediately on focus showing the full option list.
+		// Clearing the input text before triggering fetches with an empty query
+		// so Awesomplete returns all options, not just matches for the current value.
 		control.$input.on("focus.pfl_dd", function () {
-			this.select();
-			$(this).trigger("input");
+			$(this).val("").trigger("input");
 		});
 	}
 }
