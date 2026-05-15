@@ -20,6 +20,15 @@ export function usePanelFormDialogHost(openPanels) {
 	const formDialogDefinitionSource = ref("form_dialog");
 	/** Root fieldnames from Page Panel `required_fields` (Form Dialog validation). */
 	const formDialogRequiredFields = ref([]);
+	/** `full` — normal doc load; `find-shell` — definition only, empty fields for criteria entry. */
+	const formDialogDialogLoadMode = ref("full");
+	/** Find UX: `none` | `criteria` | `post-find` */
+	const formDialogFindChromePhase = ref("none");
+	/** When entering criteria phase from Modify Find — field→value strings (may be empty object). */
+	const formDialogFindSeedCriteria = ref(null);
+	const formDialogLastFindCriteria = ref(null);
+	/** Next Perform Find intersects with this name list (Constrain Found Set). */
+	const formDialogFindConstrainNames = ref(null);
 	/** Find/search: `null` = inactive; array = active match set (may be empty). */
 	const formDialogFindMatchNames = ref(null);
 	const formDialogFindActive = computed(() => formDialogFindMatchNames.value !== null);
@@ -62,6 +71,10 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogDefinitionSource.value = "form_dialog";
 		const rf = panel.config?.required_fields;
 		formDialogRequiredFields.value = Array.isArray(rf) ? rf.slice() : [];
+		formDialogDialogLoadMode.value = "full";
+		formDialogFindSeedCriteria.value = null;
+		formDialogFindChromePhase.value =
+			formDialogFindMatchNames.value != null ? "post-find" : "none";
 		showFormDialog.value = true;
 		return true;
 	}
@@ -77,6 +90,31 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogDefinitionSource.value = "form_dialog";
 		const rf = panel.config?.required_fields;
 		formDialogRequiredFields.value = Array.isArray(rf) ? rf.slice() : [];
+		formDialogDialogLoadMode.value = "full";
+		formDialogFindSeedCriteria.value = null;
+		formDialogFindChromePhase.value =
+			formDialogFindMatchNames.value != null ? "post-find" : "none";
+		showFormDialog.value = true;
+		return true;
+	}
+
+	/** Toolbar Find — empty criteria layout, same Form Dialog definition as the panel. */
+	function openFormDialogForFind(panel) {
+		if (!panel?.config?.form_dialog) return false;
+		_resetPendingSlot();
+		formDialogDefinition.value = panel.config.form_dialog;
+		formDialogDoctype.value = panel.doctype;
+		formDialogDocName.value = null;
+		formDialogSourcePanelId.value = panel.id;
+		formDialogDefinitionSource.value = "form_dialog";
+		const rf = panel.config?.required_fields;
+		formDialogRequiredFields.value = Array.isArray(rf) ? rf.slice() : [];
+		formDialogFindMatchNames.value = null;
+		formDialogLastFindCriteria.value = null;
+		formDialogFindConstrainNames.value = null;
+		formDialogFindSeedCriteria.value = null;
+		formDialogFindChromePhase.value = "criteria";
+		formDialogDialogLoadMode.value = "find-shell";
 		showFormDialog.value = true;
 		return true;
 	}
@@ -100,6 +138,10 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogSourcePanelId.value = null;
 		formDialogDefinitionSource.value = definitionSource || "form_dialog";
 		formDialogRequiredFields.value = Array.isArray(requiredFields) ? requiredFields.slice() : [];
+		formDialogDialogLoadMode.value = "full";
+		formDialogFindSeedCriteria.value = null;
+		formDialogFindChromePhase.value =
+			formDialogFindMatchNames.value != null ? "post-find" : "none";
 		showFormDialog.value = true;
 		return true;
 	}
@@ -115,6 +157,11 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogSourcePanelId.value = null;
 		formDialogDefinitionSource.value = "form_dialog";
 		formDialogFindMatchNames.value = null;
+		formDialogDialogLoadMode.value = "full";
+		formDialogFindChromePhase.value = "none";
+		formDialogFindSeedCriteria.value = null;
+		formDialogLastFindCriteria.value = null;
+		formDialogFindConstrainNames.value = null;
 		_resetPendingSlot();
 	}
 
@@ -127,31 +174,87 @@ export function usePanelFormDialogHost(openPanels) {
 				: {};
 		const keys = Object.keys(cmap).filter((k) => String(cmap[k] ?? "").trim() !== "");
 		if (!keys.length) {
-			formDialogFindMatchNames.value = null;
+			const msg =
+				typeof window.__ === "function"
+					? window.__("Enter at least one search criterion.")
+					: "Enter at least one search criterion.";
+			if (typeof frappe !== "undefined" && frappe.msgprint) frappe.msgprint(msg);
 			return;
 		}
 		frappe.call({
 			method: "nce_events.api.form_dialog.search.get_form_dialog_search_matches_criteria",
 			args: { definition, criteria: cmap },
 			callback(r) {
-				const names = Array.isArray(r?.message?.names) ? r.message.names : [];
+				let names = Array.isArray(r?.message?.names) ? r.message.names : [];
+				const constrain = formDialogFindConstrainNames.value;
+				formDialogFindConstrainNames.value = null;
+				if (Array.isArray(constrain) && constrain.length) {
+					const allowed = new Set(constrain.map(String));
+					names = names.filter((n) => allowed.has(String(n)));
+				}
+				formDialogFindSeedCriteria.value = null;
+				formDialogLastFindCriteria.value = { ...cmap };
+				if (!names.length) {
+					const msg =
+						typeof window.__ === "function"
+							? window.__("No records match your request.")
+							: "No records match your request.";
+					if (typeof frappe !== "undefined" && frappe.msgprint) frappe.msgprint(msg);
+					return;
+				}
 				formDialogFindMatchNames.value = names;
+				formDialogFindChromePhase.value = "post-find";
+				formDialogDialogLoadMode.value = "full";
 				const cur = formDialogDocName.value;
-				if (!names.length || cur == null || String(cur).trim() === "") return;
-				const curStr = String(cur);
-				if (names.map(String).includes(curStr)) return;
-				const p = openPanels.find((x) => x.id === formDialogSourcePanelId.value);
-				const panelSet = new Set(
-					(p ? panelRowArray(p) : []).map((row) => String(row.name)),
-				);
-				const pick = names.find((n) => panelSet.has(String(n))) ?? names[0];
-				formDialogDocName.value = pick;
+				if (cur == null || String(cur).trim() === "") {
+					const p = openPanels.find((x) => x.id === formDialogSourcePanelId.value);
+					const panelSet = new Set(
+						(p ? panelRowArray(p) : []).map((row) => String(row.name)),
+					);
+					formDialogDocName.value =
+						names.find((n) => panelSet.has(String(n))) ?? names[0];
+				} else {
+					const curStr = String(cur);
+					if (!names.map(String).includes(curStr)) {
+						const p = openPanels.find((x) => x.id === formDialogSourcePanelId.value);
+						const panelSet = new Set(
+							(p ? panelRowArray(p) : []).map((row) => String(row.name)),
+						);
+						formDialogDocName.value =
+							names.find((n) => panelSet.has(String(n))) ?? names[0];
+					}
+				}
 			},
 		});
 	}
 
 	function onFormDialogFindClear() {
 		formDialogFindMatchNames.value = null;
+		formDialogFindChromePhase.value = "none";
+		formDialogLastFindCriteria.value = null;
+		formDialogFindSeedCriteria.value = null;
+	}
+
+	function onFormDialogFindShowAll() {
+		onFormDialogFindClear();
+	}
+
+	function onFormDialogFindModify() {
+		const last = formDialogLastFindCriteria.value;
+		formDialogFindSeedCriteria.value =
+			last && typeof last === "object" ? { ...last } : {};
+		formDialogFindChromePhase.value = "criteria";
+	}
+
+	function onFormDialogFindConstrain() {
+		const cur = formDialogFindMatchNames.value;
+		formDialogFindConstrainNames.value = Array.isArray(cur) ? [...cur] : [];
+		formDialogFindSeedCriteria.value = null;
+		formDialogFindChromePhase.value = "criteria";
+	}
+
+	function onFormDialogFindCancelCriteria() {
+		onFormDialogClose();
 	}
 
 	// ── Save (standard path only; WP read-back path never emits `saved`) ─────
@@ -205,6 +308,11 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogSourcePanelId.value = null;
 		formDialogDefinitionSource.value = "form_dialog";
 		formDialogFindMatchNames.value = null;
+		formDialogDialogLoadMode.value = "full";
+		formDialogFindChromePhase.value = "none";
+		formDialogFindSeedCriteria.value = null;
+		formDialogLastFindCriteria.value = null;
+		formDialogFindConstrainNames.value = null;
 		formDialogPendingDocName.value = null;
 		formDialogPendingDefinition.value = null;
 		formDialogPendingDoctype.value = null;
@@ -295,12 +403,20 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogNavLabel,
 		formDialogFindMatchNames,
 		formDialogFindActive,
+		formDialogDialogLoadMode,
+		formDialogFindChromePhase,
+		formDialogFindSeedCriteria,
 		onFormDialogFindCriteria,
 		onFormDialogFindClear,
+		onFormDialogFindShowAll,
+		onFormDialogFindModify,
+		onFormDialogFindConstrain,
+		onFormDialogFindCancelCriteria,
 		onFormDialogNavPrev,
 		onFormDialogNavNext,
 		openFormDialogFromPanelRow,
 		openFormDialogForNewRecord,
+		openFormDialogForFind,
 		openFormDialogStandalone,
 		onFormDialogClose,
 		onFormDialogSaved,

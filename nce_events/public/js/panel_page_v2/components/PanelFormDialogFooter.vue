@@ -25,7 +25,35 @@
 			</div>
 		</template>
 
+		<!-- FileMaker-style find: criteria entry — only these two actions -->
+		<template v-else-if="footerPhase === 'normal' && findChromePhase === 'criteria'">
+			<div class="ppv2-fd-find-footer-only">
+				<button
+					type="button"
+					class="ppv2-fd-tab-btn ppv2-fd-tab-active"
+					@click="$emit('find-perform')"
+				>
+					{{ __("Perform Find") }}
+				</button>
+				<button type="button" class="ppv2-fd-tab-btn" @click="$emit('find-cancel')">
+					{{ __("Cancel Find") }}
+				</button>
+			</div>
+		</template>
+
 		<template v-else>
+			<div v-if="findChromePhase === 'post-find'" class="ppv2-fd-find-followup">
+				<button type="button" class="ppv2-fd-tab-btn" @click="$emit('find-constrain')">
+					{{ __("Constrain Found Set") }}
+				</button>
+				<button type="button" class="ppv2-fd-tab-btn" @click="$emit('find-modify')">
+					{{ __("Modify Find") }}
+				</button>
+				<button type="button" class="ppv2-fd-tab-btn" @click="$emit('find-show-all')">
+					{{ __("Show All") }}
+				</button>
+			</div>
+
 			<div class="ppv2-fd-custom-buttons">
 				<button
 					v-for="(btn, bi) in visibleButtons"
@@ -56,15 +84,15 @@
 				>
 					Revert
 				</button>
-			<button
-				v-if="submitVisible"
-				type="button"
-				class="ppv2-fd-tab-btn ppv2-fd-tab-active"
-				:disabled="saving || browseActionsLocked"
-				@click="$emit('submit', { shift: $event.shiftKey })"
-			>
-				{{ savingSubmitText }}
-			</button>
+				<button
+					v-if="submitVisible"
+					type="button"
+					class="ppv2-fd-tab-btn ppv2-fd-tab-active"
+					:disabled="saving || browseActionsLocked"
+					@click="$emit('submit', { shift: $event.shiftKey })"
+				>
+					{{ savingSubmitText }}
+				</button>
 			</div>
 		</template>
 	</div>
@@ -95,9 +123,23 @@ const props = defineProps({
 	isDirty: { type: Boolean, default: false },
 	/** Disable footer actions while in FileMaker-style find layout (use header Cancel Find). */
 	browseActionsLocked: { type: Boolean, default: false },
+	/** `none` | `criteria` | `post-find` — drives find footer bands */
+	findChromePhase: { type: String, default: "none" },
 });
 
-defineEmits(["cancel", "revert", "submit", "custom-button", "readback-show-changes", "readback-close"]);
+defineEmits([
+	"cancel",
+	"revert",
+	"submit",
+	"custom-button",
+	"readback-show-changes",
+	"readback-close",
+	"find-perform",
+	"find-cancel",
+	"find-constrain",
+	"find-modify",
+	"find-show-all",
+]);
 
 function __(s) {
 	return typeof window.__ === "function" ? window.__(s) : s;
@@ -200,6 +242,7 @@ watch(
 		props.submitHideIfSql,
 		props.submitLabel,
 		props.footerPhase,
+		props.findChromePhase,
 	],
 	() => {
 		if (props.footerPhase !== "normal") return;
@@ -215,11 +258,27 @@ watch(
 	padding: 10px 16px;
 	border-top: 1px solid var(--border-color);
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	justify-content: space-between;
 	gap: 8px;
 	min-height: 48px;
 	box-sizing: border-box;
+}
+.ppv2-fd-find-footer-only {
+	display: flex;
+	width: 100%;
+	justify-content: flex-end;
+	gap: 8px;
+}
+.ppv2-fd-find-followup {
+	display: flex;
+	width: 100%;
+	flex-wrap: wrap;
+	gap: 6px;
+	padding-bottom: 4px;
+	border-bottom: 1px dashed var(--border-color);
+	margin-bottom: 2px;
 }
 .ppv2-fd-custom-buttons {
 	display: flex;

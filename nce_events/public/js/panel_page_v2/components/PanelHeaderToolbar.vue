@@ -25,6 +25,14 @@
 				<i class="fa fa-filter"></i>
 			</button>
 			<button
+				v-if="props.showFind"
+				class="ppv2-hdr-btn"
+				title="Find records"
+				@click="$emit('find')"
+			>
+				<i class="fa fa-search"></i>
+			</button>
+			<button
 				class="ppv2-hdr-btn"
 				title="Export to Google Sheets (filtered view)"
 				@click="$emit('sheets')"
@@ -73,6 +81,7 @@ const props = defineProps({
 	showSms: { type: Boolean, default: false },
 	showNewRecord: { type: Boolean, default: false },
 	showClose: { type: Boolean, default: false },
+	showFind: { type: Boolean, default: false },
 });
 
 defineEmits([
@@ -83,6 +92,7 @@ defineEmits([
 	"email",
 	"sms",
 	"new-record",
+	"find",
 	"close",
 ]);
 </script>

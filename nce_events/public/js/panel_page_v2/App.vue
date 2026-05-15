@@ -60,6 +60,7 @@
 					:show-new-record="
 						!!p.config?.allow_new_record_creation && !!p.config?.form_dialog
 					"
+					:show-find="!!p.config?.form_dialog"
 					show-close
 					@refresh="onRefreshPanel(p)"
 					@toggle-filter="p._showFilter = !p._showFilter"
@@ -68,6 +69,7 @@
 					@email="onEmail(p)"
 					@sms="onSms(p)"
 					@new-record="onNewRecord(p)"
+					@find="() => onPanelToolbarFind(p)"
 					@close="closePanel(p.id)"
 				/>
 			</template>
@@ -134,7 +136,9 @@
 			:row-nav-enabled="
 				formDialogNavInfo.total > 1 || formDialogSourcePanelId != null
 			"
-			:find-active="formDialogFindActive"
+			:dialog-load-mode="formDialogDialogLoadMode"
+			:find-chrome-phase="formDialogFindChromePhase"
+			:find-seed-criteria="formDialogFindSeedCriteria"
 			:can-navigate-prev="formDialogNavInfo.canPrev"
 			:can-navigate-next="formDialogNavInfo.canNext"
 			:row-nav-label="formDialogNavLabel"
@@ -150,7 +154,10 @@
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
 			@find-criteria="onFormDialogFindCriteria"
-			@find-clear="onFormDialogFindClear"
+			@find-cancel-criteria="onFormDialogFindCancelCriteria"
+			@find-show-all="onFormDialogFindShowAll"
+			@find-modify="onFormDialogFindModify"
+			@find-constrain="onFormDialogFindConstrain"
 		/>
 		<!-- Slot 1 pending (behind) -->
 		<PanelFormDialog
@@ -162,6 +169,9 @@
 			:doc-name="formDialogPendingDocName"
 			:required-fields="formDialogRequiredFields"
 			:reload-panel-after-publish="reloadPanelForFormDialogDoctype"
+			:dialog-load-mode="formDialogDialogLoadMode"
+			:find-chrome-phase="formDialogFindChromePhase"
+			:find-seed-criteria="formDialogFindSeedCriteria"
 			:row-nav-enabled="false"
 			:can-navigate-prev="false"
 			:can-navigate-next="false"
@@ -173,6 +183,11 @@
 			@readback-merged="onReadbackMerged"
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
+			@find-criteria="onFormDialogFindCriteria"
+			@find-cancel-criteria="onFormDialogFindCancelCriteria"
+			@find-show-all="onFormDialogFindShowAll"
+			@find-modify="onFormDialogFindModify"
+			@find-constrain="onFormDialogFindConstrain"
 		/>
 		<!-- Slot 1 active -->
 		<PanelFormDialog
@@ -187,7 +202,9 @@
 			:row-nav-enabled="
 				formDialogNavInfo.total > 1 || formDialogSourcePanelId != null
 			"
-			:find-active="formDialogFindActive"
+			:dialog-load-mode="formDialogDialogLoadMode"
+			:find-chrome-phase="formDialogFindChromePhase"
+			:find-seed-criteria="formDialogFindSeedCriteria"
 			:can-navigate-prev="formDialogNavInfo.canPrev"
 			:can-navigate-next="formDialogNavInfo.canNext"
 			:row-nav-label="formDialogNavLabel"
@@ -203,7 +220,10 @@
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
 			@find-criteria="onFormDialogFindCriteria"
-			@find-clear="onFormDialogFindClear"
+			@find-cancel-criteria="onFormDialogFindCancelCriteria"
+			@find-show-all="onFormDialogFindShowAll"
+			@find-modify="onFormDialogFindModify"
+			@find-constrain="onFormDialogFindConstrain"
 		/>
 		<!-- Slot 0 pending (behind) -->
 		<PanelFormDialog
@@ -215,6 +235,9 @@
 			:doc-name="formDialogPendingDocName"
 			:required-fields="formDialogRequiredFields"
 			:reload-panel-after-publish="reloadPanelForFormDialogDoctype"
+			:dialog-load-mode="formDialogDialogLoadMode"
+			:find-chrome-phase="formDialogFindChromePhase"
+			:find-seed-criteria="formDialogFindSeedCriteria"
 			:row-nav-enabled="false"
 			:can-navigate-prev="false"
 			:can-navigate-next="false"
@@ -226,6 +249,11 @@
 			@readback-merged="onReadbackMerged"
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
+			@find-criteria="onFormDialogFindCriteria"
+			@find-cancel-criteria="onFormDialogFindCancelCriteria"
+			@find-show-all="onFormDialogFindShowAll"
+			@find-modify="onFormDialogFindModify"
+			@find-constrain="onFormDialogFindConstrain"
 		/>
 	</div>
 </template>
@@ -283,15 +311,21 @@ const {
 	formDialogDefinitionSource,
 	formDialogRequiredFields,
 	formDialogSourcePanelId,
+	formDialogDialogLoadMode,
+	formDialogFindChromePhase,
+	formDialogFindSeedCriteria,
 	formDialogNavInfo,
 	formDialogNavLabel,
-	formDialogFindActive,
 	onFormDialogNavPrev,
 	onFormDialogNavNext,
 	onFormDialogFindCriteria,
-	onFormDialogFindClear,
+	onFormDialogFindCancelCriteria,
+	onFormDialogFindShowAll,
+	onFormDialogFindModify,
+	onFormDialogFindConstrain,
 	openFormDialogFromPanelRow,
 	openFormDialogForNewRecord,
+	openFormDialogForFind,
 	openFormDialogStandalone,
 	onFormDialogClose,
 	onFormDialogSaved,
@@ -302,9 +336,9 @@ const {
 	formDialogPendingDocName,
 	formDialogPendingDefinition,
 	formDialogPendingDoctype,
-		formDialogDissolving,
-		formDialogDissolveOpacity,
-	} = usePanelFormDialogHost(openPanels);
+	formDialogDissolving,
+	formDialogDissolveOpacity,
+} = usePanelFormDialogHost(openPanels);
 
 function refreshPanelByDoctype(doctype) {
 	const panel = openPanels.find((p) => p.doctype === doctype);
@@ -572,6 +606,22 @@ function onNewRecord(panel) {
 			title: __("New record"),
 			message: __(
 				"Link a Form Dialog on this Page Panel (Dialogs tab) to create records from the panel.",
+			),
+			indicator: "orange",
+		});
+	}
+}
+
+function onPanelToolbarFind(panel) {
+	if (
+		!openFormDialogForFind(panel) &&
+		typeof frappe !== "undefined" &&
+		frappe.msgprint
+	) {
+		frappe.msgprint({
+			title: __("Find"),
+			message: __(
+				"Link a Form Dialog on this Page Panel (Dialogs tab) to search from the panel.",
 			),
 			indicator: "orange",
 		});

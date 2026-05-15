@@ -5,7 +5,7 @@
 				<button
 					type="button"
 					class="ppv2-fd-nav-btn"
-					:disabled="!canNavigatePrev || findLayoutMode"
+					:disabled="!canNavigatePrev || freezeNav"
 					title="Previous record (panel list) — Alt+←"
 					aria-label="Previous record"
 					@click="$emit('nav-prev')"
@@ -16,56 +16,13 @@
 				<button
 					type="button"
 					class="ppv2-fd-nav-btn"
-					:disabled="!canNavigateNext || findLayoutMode"
+					:disabled="!canNavigateNext || freezeNav"
 					title="Next record (panel list) — Alt+→"
 					aria-label="Next record"
 					@click="$emit('nav-next')"
 				>
 					<i class="fa fa-chevron-right"></i>
 				</button>
-
-				<!-- Find layout mode: Perform / Cancel -->
-				<template v-if="findLayoutMode">
-					<button
-						type="button"
-						class="ppv2-fd-find-action ppv2-fd-find-perform"
-						title="Run find with criteria typed in the form"
-						@click="$emit('find-layout-perform')"
-					>
-						{{ __("Perform Find") }}
-					</button>
-					<button
-						type="button"
-						class="ppv2-fd-find-action"
-						title="Leave find mode without searching"
-						@click="$emit('find-layout-cancel')"
-					>
-						{{ __("Cancel Find") }}
-					</button>
-				</template>
-
-				<template v-else>
-					<button
-						type="button"
-						class="ppv2-fd-nav-btn ppv2-fd-find-btn"
-						:class="{ 'ppv2-fd-find-active': findActive }"
-						title="Enter find mode — type criteria in form fields"
-						aria-label="Enter find mode"
-						@click="$emit('find-layout-enter')"
-					>
-						<i class="fa fa-search"></i>
-					</button>
-					<button
-						v-if="findActive"
-						type="button"
-						class="ppv2-fd-nav-btn"
-						title="Clear find — show all rows again"
-						aria-label="Clear find"
-						@click="$emit('find-clear')"
-					>
-						<i class="fa fa-times"></i>
-					</button>
-				</template>
 			</div>
 			<span class="ppv2-fd-title">{{ title }}</span>
 		</div>
@@ -83,23 +40,11 @@ defineProps({
 	rowNavLabel: { type: String, default: "" },
 	title: { type: String, default: "" },
 	closable: { type: Boolean, default: true },
-	findActive: { type: Boolean, default: false },
-	findLayoutMode: { type: Boolean, default: false },
+	/** Disable prev/next while typing find criteria (footer owns Perform/Cancel). */
+	freezeNav: { type: Boolean, default: false },
 });
 
-defineEmits([
-	"close",
-	"nav-prev",
-	"nav-next",
-	"find-clear",
-	"find-layout-enter",
-	"find-layout-perform",
-	"find-layout-cancel",
-]);
-
-function __(s) {
-	return typeof window.__ === "function" ? window.__(s) : s;
-}
+defineEmits(["close", "nav-prev", "nav-next"]);
 </script>
 
 <style scoped>
@@ -175,27 +120,5 @@ function __(s) {
 }
 .ppv2-fd-close:hover {
 	opacity: 1;
-}
-.ppv2-fd-find-btn.ppv2-fd-find-active {
-	background: color-mix(in srgb, var(--text-header) 30%, transparent);
-	border-color: color-mix(in srgb, var(--text-header) 60%, transparent);
-}
-.ppv2-fd-find-action {
-	height: 28px;
-	padding: 0 10px;
-	border: 1px solid color-mix(in srgb, var(--text-header) 35%, transparent);
-	border-radius: var(--border-radius-sm, 4px);
-	background: color-mix(in srgb, var(--text-header) 12%, transparent);
-	color: var(--text-header);
-	cursor: pointer;
-	font-size: 12px;
-	font-weight: var(--font-weight-bold, 600);
-}
-.ppv2-fd-find-action:hover {
-	background: color-mix(in srgb, var(--text-header) 22%, transparent);
-}
-.ppv2-fd-find-perform {
-	background: color-mix(in srgb, var(--primary, #3182ce) 35%, transparent);
-	border-color: color-mix(in srgb, var(--primary, #3182ce) 55%, transparent);
 }
 </style>

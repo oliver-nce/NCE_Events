@@ -18,8 +18,16 @@ import { createFrozenFormLoad } from "./useFrozenFormLoad.js";
  * @param {import('vue').Ref<string>|string} options.doctype
  * @param {import('vue').Ref<string|null>|string|null} options.docName
  * @param {import('vue').Ref<string[]>|import('vue').ComputedRef<string[]>|undefined} options.requiredFields — Page Panel root fieldnames
+ * @param {import('vue').Ref<string>|string|undefined} options.loadMode — `'full'` | `'find-shell'`
  */
-export function usePanelFormDialog({ definitionName, doctype, docName, requiredFields, definitionSource }) {
+export function usePanelFormDialog({
+	definitionName,
+	doctype,
+	docName,
+	requiredFields,
+	definitionSource,
+	loadMode,
+}) {
 	const panelRequiredFields = requiredFields;
 	const definition = ref(null);
 	const tabs = ref([]);
@@ -39,6 +47,7 @@ export function usePanelFormDialog({ definitionName, doctype, docName, requiredF
 	const handleFetchFrom = createHandleFetchFrom(allFields, formData);
 
 	const { load, resetWhenClosed } = createFrozenFormLoad({
+		loadMode,
 		definitionName,
 		doctype,
 		docName,
@@ -61,6 +70,10 @@ export function usePanelFormDialog({ definitionName, doctype, docName, requiredF
 	const dialogTitle = computed(() => {
 		const dt = unref(doctype);
 		const dn = unref(docName);
+		const lm = loadMode ? unref(loadMode) : "full";
+		if (lm === "find-shell" && !dn) {
+			return `Find ${dt}`;
+		}
 		if (!dn) return `New ${dt}`;
 		return `Edit ${dt}: ${dn}`;
 	});

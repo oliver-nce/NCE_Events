@@ -74,6 +74,7 @@ function normalizeHopChainForRelated(raw) {
  */
 export function createFrozenFormLoad(ctx) {
 	const {
+		loadMode,
 		definitionName,
 		doctype,
 		docName,
@@ -266,7 +267,17 @@ export function createFrozenFormLoad(ctx) {
 					formData[field.fieldname] = field.default || null;
 				}
 			}
-			pushDebug("formData seed", true, `defaults from meta`);
+			const lm = loadMode ? unref(loadMode) : "full";
+			const findShell = lm === "find-shell" && !dn;
+			if (findShell) {
+				for (const field of fields) {
+					if (field.fieldname && !isLayoutField(field.fieldtype)) {
+						formData[field.fieldname] = null;
+					}
+				}
+				pushDebug("find-shell", true, "empty formData — criteria dialog");
+			}
+			pushDebug("formData seed", true, findShell ? "cleared for find" : `defaults from meta`);
 
 			if (dn) {
 				let doc;
@@ -289,7 +300,7 @@ export function createFrozenFormLoad(ctx) {
 					true,
 					`${dt}/${dn} keys=${Object.keys(doc || {}).length}`
 				);
-			} else {
+			} else if (!findShell) {
 				pushDebug("frappe.client.get", true, "(skipped — new doc)");
 				try {
 					const wpDefaults = await frappeCall(
@@ -309,11 +320,13 @@ export function createFrozenFormLoad(ctx) {
 				} catch (e) {
 					pushDebug("wp_tables_defaults", false, dt, e?.message || e);
 				}
+			} else {
+				pushDebug("frappe.client.get", true, "(skipped — find-shell)");
 			}
 
-			const linkFields = fields.filter(
-				(f) => f.fieldtype === "Link" && f.options && formData[f.fieldname]
-			);
+			const linkFields = findShell
+				? []
+				: fields.filter((f) => f.fieldtype === "Link" && f.options && formData[f.fieldname]);
 			await Promise.all(
 				linkFields.map((lf) => handleFetchFrom(lf.fieldname, formData[lf.fieldname]))
 			);
