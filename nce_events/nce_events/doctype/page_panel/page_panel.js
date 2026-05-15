@@ -713,11 +713,11 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set, matrix_opts)
 			<th ${th_left}>Field</th>
 			<th ${th_left}>Label</th>
 			<th ${th_style}>Show</th>
+			<th ${th_style}>Search Only</th>
 			<th ${th_style}>Bold</th>
 			<th ${th_style}>Required</th>
 			<th ${th_style}>Gender</th>
-			<th ${th_style}>Tint</th>
-			<th ${th_style}>Search Only</th>`;
+			<th ${th_style}>Tint</th>`;
 	if (showTitleColumn) {
 		html += `<th ${th_style}>Title</th>`;
 	}
@@ -770,6 +770,7 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set, matrix_opts)
 			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="show"${
 			shown_set[key] ? " checked" : ""
 		}></td>
+			${search_only_cell}
 			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="bold"${
 			saved.bold.indexOf(key) !== -1 ? " checked" : ""
 		}></td>
@@ -782,7 +783,6 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set, matrix_opts)
 			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="tint"${
 			saved.gender_tint.indexOf(key) !== -1 ? " checked" : ""
 		}></td>
-			${search_only_cell}
 			${title_cell}
 		</tr>`;
 	});
