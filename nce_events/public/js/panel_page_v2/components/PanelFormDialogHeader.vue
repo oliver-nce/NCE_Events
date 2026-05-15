@@ -5,7 +5,7 @@
 				<button
 					type="button"
 					class="ppv2-fd-nav-btn"
-					:disabled="!canNavigatePrev"
+					:disabled="!canNavigatePrev || findLayoutMode"
 					title="Previous record (panel list) — Alt+←"
 					aria-label="Previous record"
 					@click="$emit('nav-prev')"
@@ -16,51 +16,56 @@
 				<button
 					type="button"
 					class="ppv2-fd-nav-btn"
-					:disabled="!canNavigateNext"
+					:disabled="!canNavigateNext || findLayoutMode"
 					title="Next record (panel list) — Alt+→"
 					aria-label="Next record"
 					@click="$emit('nav-next')"
 				>
 					<i class="fa fa-chevron-right"></i>
 				</button>
-				<button
-					v-if="!findOpen"
-					type="button"
-					class="ppv2-fd-nav-btn ppv2-fd-find-btn"
-					:class="{ 'ppv2-fd-find-active': findActive }"
-					title="Find records"
-					aria-label="Find records"
-					@click="openFind"
-				>
-					<i class="fa fa-search"></i>
-				</button>
-				<div v-else class="ppv2-fd-find-row" @mousedown.stop>
-					<input
-						ref="findInputRef"
-						v-model="findTerm"
-						class="ppv2-fd-find-input"
-						placeholder="Find…"
-						type="text"
-						@keydown.enter.prevent="submitFind"
-						@keydown.escape.prevent="clearFind"
-					/>
+
+				<!-- Find layout mode: Perform / Cancel -->
+				<template v-if="findLayoutMode">
 					<button
 						type="button"
-						class="ppv2-fd-nav-btn"
-						title="Run find"
-						@click="submitFind"
+						class="ppv2-fd-find-action ppv2-fd-find-perform"
+						title="Run find with criteria typed in the form"
+						@click="$emit('find-layout-perform')"
+					>
+						{{ __("Perform Find") }}
+					</button>
+					<button
+						type="button"
+						class="ppv2-fd-find-action"
+						title="Leave find mode without searching"
+						@click="$emit('find-layout-cancel')"
+					>
+						{{ __("Cancel Find") }}
+					</button>
+				</template>
+
+				<template v-else>
+					<button
+						type="button"
+						class="ppv2-fd-nav-btn ppv2-fd-find-btn"
+						:class="{ 'ppv2-fd-find-active': findActive }"
+						title="Enter find mode — type criteria in form fields"
+						aria-label="Enter find mode"
+						@click="$emit('find-layout-enter')"
 					>
 						<i class="fa fa-search"></i>
 					</button>
 					<button
+						v-if="findActive"
 						type="button"
 						class="ppv2-fd-nav-btn"
-						title="Clear find"
-						@click="clearFind"
+						title="Clear find — show all rows again"
+						aria-label="Clear find"
+						@click="$emit('find-clear')"
 					>
 						<i class="fa fa-times"></i>
 					</button>
-				</div>
+				</template>
 			</div>
 			<span class="ppv2-fd-title">{{ title }}</span>
 		</div>
@@ -71,8 +76,6 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from "vue";
-
 defineProps({
 	rowNavEnabled: { type: Boolean, default: false },
 	canNavigatePrev: { type: Boolean, default: false },
@@ -81,28 +84,21 @@ defineProps({
 	title: { type: String, default: "" },
 	closable: { type: Boolean, default: true },
 	findActive: { type: Boolean, default: false },
+	findLayoutMode: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(["close", "nav-prev", "nav-next", "find", "find-clear"]);
+defineEmits([
+	"close",
+	"nav-prev",
+	"nav-next",
+	"find-clear",
+	"find-layout-enter",
+	"find-layout-perform",
+	"find-layout-cancel",
+]);
 
-const findOpen = ref(false);
-const findTerm = ref("");
-const findInputRef = ref(null);
-
-function openFind() {
-	findOpen.value = true;
-	nextTick(() => findInputRef.value?.focus());
-}
-
-function submitFind() {
-	emit("find", findTerm.value);
-	findOpen.value = false;
-}
-
-function clearFind() {
-	findTerm.value = "";
-	findOpen.value = false;
-	emit("find-clear");
+function __(s) {
+	return typeof window.__ === "function" ? window.__(s) : s;
 }
 </script>
 
@@ -129,6 +125,7 @@ function clearFind() {
 	align-items: center;
 	gap: 6px;
 	flex-shrink: 0;
+	flex-wrap: wrap;
 }
 .ppv2-fd-nav-btn {
 	display: inline-flex;
@@ -183,23 +180,22 @@ function clearFind() {
 	background: color-mix(in srgb, var(--text-header) 30%, transparent);
 	border-color: color-mix(in srgb, var(--text-header) 60%, transparent);
 }
-.ppv2-fd-find-row {
-	display: flex;
-	align-items: center;
-	gap: 4px;
-}
-.ppv2-fd-find-input {
+.ppv2-fd-find-action {
 	height: 28px;
-	padding: 0 8px;
-	border: 1px solid color-mix(in srgb, var(--text-header) 40%, transparent);
+	padding: 0 10px;
+	border: 1px solid color-mix(in srgb, var(--text-header) 35%, transparent);
 	border-radius: var(--border-radius-sm, 4px);
-	background: color-mix(in srgb, var(--bg-header) 80%, white);
+	background: color-mix(in srgb, var(--text-header) 12%, transparent);
 	color: var(--text-header);
+	cursor: pointer;
 	font-size: 12px;
-	width: 160px;
-	outline: none;
+	font-weight: var(--font-weight-bold, 600);
 }
-.ppv2-fd-find-input:focus {
-	border-color: color-mix(in srgb, var(--text-header) 70%, transparent);
+.ppv2-fd-find-action:hover {
+	background: color-mix(in srgb, var(--text-header) 22%, transparent);
+}
+.ppv2-fd-find-perform {
+	background: color-mix(in srgb, var(--primary, #3182ce) 35%, transparent);
+	border-color: color-mix(in srgb, var(--primary, #3182ce) 55%, transparent);
 }
 </style>

@@ -16,6 +16,26 @@
   <!-- Button placeholder -->
   <span v-else-if="config?.layout === 'button'" />
 
+  <!-- Find criteria entry — plain text per field (FM-style); operators ~ * % etc. -->
+  <div
+    v-else-if="findCriteriaMode && config?.component"
+    v-show="visible"
+    class="ppv2-fd-field ppv2-fd-field-find-criteria"
+    :data-fd-fieldname="field.fieldname"
+  >
+    <label class="ppv2-fd-label">{{ field.label }}</label>
+    <input
+      type="text"
+      class="ppv2-fd-input"
+      :value="criteriaInputValue"
+      spellcheck="false"
+      autocomplete="off"
+      placeholder=""
+      @input="onChange($event.target.value)"
+    />
+    <p v-if="field.description" class="ppv2-fd-desc">{{ field.description }}</p>
+  </div>
+
   <!-- Data entry fields -->
   <div
     v-else-if="config?.component"
@@ -137,6 +157,8 @@ const props = defineProps({
   visible: { type: Boolean, default: true },
   mandatory: { type: Boolean, default: false },
   readOnly: { type: Boolean, default: false },
+  /** Plain-text criterion input (FileMaker find layout). */
+  findCriteriaMode: { type: Boolean, default: false },
   /** True when current value differs from last loaded snapshot (until Submit). */
   fieldDirty: { type: Boolean, default: false },
 });
@@ -202,6 +224,11 @@ const inputDisplayValue = computed(() => {
 	}
 	return props.modelValue ?? "";
 });
+
+/** In find mode always edit/display raw string (no time normalization). */
+const criteriaInputValue = computed(() =>
+	props.modelValue == null ? "" : String(props.modelValue),
+);
 
 function onChange(value) {
   emit("change", { fieldname: props.field.fieldname, value });
@@ -335,7 +362,7 @@ function onLinkChangePayload(payload) {
 .ppv2-fd-field-dirty .ppv2-fd-check-row input {
   accent-color: #c0392b;
 }
-.ppv2-fd-field-bold .ppv2-fd-input {
-  font-weight: 600;
+.ppv2-fd-field-find-criteria .ppv2-fd-input {
+	font-family: ui-monospace, monospace;
 }
 </style>

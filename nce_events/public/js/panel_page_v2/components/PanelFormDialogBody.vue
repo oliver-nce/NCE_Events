@@ -6,6 +6,7 @@
 			<PanelFormDialogTabBar
 				:tabs="tabs"
 				:active-tab="activeTab"
+				:block-related-tabs="findLayoutMode"
 				@update:active-tab="activeTab = $event"
 			/>
 
@@ -57,15 +58,19 @@
 										v-for="field in col.fields"
 										:key="field.fieldname"
 										:field="field"
-										:model-value="formData[field.fieldname]"
+										:model-value="fieldModelValue(field)"
 										:visible="isFieldVisible(field)"
-										:mandatory="isFieldMandatory(field)"
-										:read-only="isFieldReadOnly(field)"
+										:mandatory="findLayoutMode ? false : isFieldMandatory(field)"
+										:read-only="fieldReadOnlyEffective(field)"
+										:find-criteria-mode="
+											findLayoutMode && isFindSearchableRootField(field)
+										"
 										:field-dirty="
+											!findLayoutMode &&
 											!isFieldReadOnly(field) &&
 											isRootFieldDirty(field.fieldname)
 										"
-										@change="(p) => $emit('field-change', p)"
+										@change="(p) => onFieldOrCriterionChange(field, p)"
 										@link-change="(p) => $emit('link-change', p)"
 									/>
 								</div>
@@ -91,6 +96,7 @@
 
 <script setup>
 import { ref } from "vue";
+import { isFindSearchableRootField } from "../utils/formDialogFindFields.js";
 import PanelFormField from "./PanelFormField.vue";
 import PanelFormDialogTabBar from "./PanelFormDialogTabBar.vue";
 import PanelFormDialogRelatedTab from "./PanelFormDialogRelatedTab.vue";
@@ -111,9 +117,36 @@ const props = defineProps({
 	isFieldVisible: { type: Function, required: true },
 	isFieldMandatory: { type: Function, required: true },
 	isFieldReadOnly: { type: Function, required: true },
+	findLayoutMode: { type: Boolean, default: false },
+	/** Reactive bag of criterion strings while ``findLayoutMode``. */
+	findCriteria: { type: Object, required: true },
 });
 
-const emit = defineEmits(["field-change", "link-change", "related-dirty"]);
+const emit = defineEmits(["field-change", "link-change", "related-dirty", "find-criteria-patch"]);
+
+function fieldModelValue(field) {
+	if (props.findLayoutMode && isFindSearchableRootField(field)) {
+		const fn = field.fieldname;
+		const v = props.findCriteria[fn];
+		return v === undefined || v === null ? "" : v;
+	}
+	return props.formData[field.fieldname];
+}
+
+function fieldReadOnlyEffective(field) {
+	if (props.findLayoutMode && isFindSearchableRootField(field)) {
+		return false;
+	}
+	return props.isFieldReadOnly(field);
+}
+
+function onFieldOrCriterionChange(field, p) {
+	if (props.findLayoutMode && field && isFindSearchableRootField(field)) {
+		emit("find-criteria-patch", { fieldname: p.fieldname, value: p.value });
+		return;
+	}
+	emit("field-change", p);
+}
 
 const activeTab = defineModel("activeTab", { type: Number, required: true });
 

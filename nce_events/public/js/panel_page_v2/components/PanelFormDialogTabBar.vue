@@ -6,6 +6,7 @@
 			type="button"
 			class="ppv2-fd-tab-btn"
 			:class="{ 'ppv2-fd-tab-active': activeTab === ti }"
+			:disabled="blockRelatedTabs && tab._related"
 			@click="$emit('update:activeTab', ti)"
 		>
 			{{ tab.label }}
@@ -17,6 +18,8 @@
 const props = defineProps({
 	tabs: { type: Array, default: () => [] },
 	activeTab: { type: Number, required: true },
+	/** Disable switching into related DocType tabs (e.g. FileMaker-style find on root fields only). */
+	blockRelatedTabs: { type: Boolean, default: false },
 });
 
 defineEmits(["update:activeTab"]);
@@ -40,9 +43,8 @@ defineEmits(["update:activeTab"]);
 	font-weight: var(--font-weight-bold, 600);
 	cursor: pointer;
 }
-.ppv2-fd-tab-active {
-	background: var(--bg-header);
-	color: var(--text-header);
-	border-color: var(--bg-header);
+.ppv2-fd-tab-btn:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
 }
 </style>

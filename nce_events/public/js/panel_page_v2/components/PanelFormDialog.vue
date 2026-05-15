@@ -48,11 +48,14 @@
 				:title="form.dialogTitle.value"
 				:closable="headerClosable"
 				:find-active="findActive"
+				:find-layout-mode="findLayoutMode"
 				@close="onCancel"
 				@nav-prev="onNavPrevClick"
 				@nav-next="onNavNextClick"
-				@find="(term) => emit('find', term)"
 				@find-clear="emit('find-clear')"
+				@find-layout-enter="enterFindLayoutMode"
+				@find-layout-perform="performFindLayout"
+				@find-layout-cancel="cancelFindLayout"
 			/>
 		<PanelFormDialogBody
 			ref="fdBodyRef"
@@ -69,8 +72,11 @@
 			:is-field-visible="form.isFieldVisible"
 			:is-field-mandatory="form.isFieldMandatory"
 			:is-field-read-only="form.isFieldReadOnly"
-			v-model:active-tab="activeTab"
-			@field-change="onFieldChange"
+				:find-layout-mode="findLayoutMode"
+				:find-criteria="findCriteria"
+				v-model:active-tab="activeTab"
+				@field-change="onFieldChange"
+				@find-criteria-patch="patchFindCriterion"
 			@link-change="onLinkChange"
 			@related-dirty="onRelatedDirty"
 		/>
@@ -84,6 +90,7 @@
 				:submit-label="footerSubmitLabel"
 				:saving="form.saving.value"
 				:is-dirty="footerIsDirty"
+				:browse-actions-locked="findLayoutMode"
 				@cancel="onCancel"
 				@revert="onRevert"
 				@submit="onSubmit"
@@ -96,7 +103,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onUnmounted, toRef, computed, provide, nextTick } from "vue";
+import { ref, watch, onUnmounted, toRef, computed, provide, nextTick, reactive } from "vue";
 import {
 	isFdLoadDebugEnabled,
 	FD_LOAD_DEBUG_STORAGE_KEY,
@@ -119,6 +126,11 @@ import {
 	fetchFreshDocAfterSync,
 } from "../composables/wpReadbackFlow.js";
 import { createSubmitPerfTrace } from "../utils/submitPerfTrace.js";
+import {
+	isFindSearchableRootField,
+	stringifyFindCriterionSeed,
+	firstNonRelatedTabIndex,
+} from "../utils/formDialogFindFields.js";
 
 
 function escapeForPreHtml(s) {
@@ -153,11 +165,14 @@ const emit = defineEmits([
 	"nav-prev",
 	"nav-next",
 	"readback-merged",
-	"find",
+	"find-criteria",
 	"find-clear",
 ]);
 
 const activeTab = ref(0);
+/** FileMaker-style find: type criteria in root fields (AND across fields). */
+const findLayoutMode = ref(false);
+const findCriteria = reactive({});
 const fdBodyRef = ref(null);
 const backdropRef = ref(null);
 const relatedDirty = ref(false);
@@ -209,9 +224,54 @@ async function flushFrappeDateControlsIntoFormData() {
 provide("fdSyncingFromLoad", form.syncingFromLoad);
 
 const showFdLoadDebug = ref(false);
+
+const loadDebugRows = computed(() => form.loadDebugLog.value);
+
+const footerIsDirty = computed(() => form.isDirty.value || relatedDirty.value);
+
+function resetFindLayoutLocal() {
+	findLayoutMode.value = false;
+	for (const k of Object.keys(findCriteria)) delete findCriteria[k];
+}
+
+function patchFindCriterion({ fieldname, value }) {
+	if (!fieldname) return;
+	findCriteria[fieldname] = value;
+}
+
+function enterFindLayoutMode() {
+	findLayoutMode.value = true;
+	for (const k of Object.keys(findCriteria)) delete findCriteria[k];
+	const fd = form.formData;
+	for (const f of form.allFields.value || []) {
+		if (!isFindSearchableRootField(f)) continue;
+		findCriteria[f.fieldname] = stringifyFindCriterionSeed(fd[f.fieldname]);
+	}
+	const tabs = form.tabs.value || [];
+	if (tabs.length && tabs[activeTab.value]?._related) {
+		activeTab.value = firstNonRelatedTabIndex(tabs);
+	}
+}
+
+function performFindLayout() {
+	findLayoutMode.value = false;
+	const out = {};
+	for (const k of Object.keys(findCriteria)) {
+		if (String(findCriteria[k] ?? "").trim() !== "") {
+			out[k] = findCriteria[k];
+		}
+	}
+	emit("find-criteria", { ...out });
+}
+
+function cancelFindLayout() {
+	resetFindLayoutLocal();
+}
+
 watch(
 	() => props.open,
 	(o) => {
+		resetFindLayoutLocal();
 		if (o) {
 			showFdLoadDebug.value = isFdLoadDebugEnabled();
 			readbackFooterPhase.value = "normal";
@@ -221,16 +281,16 @@ watch(
 	{ immediate: true },
 );
 
-const loadDebugRows = computed(() => form.loadDebugLog.value);
-
-const footerIsDirty = computed(() => form.isDirty.value || relatedDirty.value);
-
 function onReadbackFinalClose() {
 	readbackFooterPhase.value = "normal";
 	emit("close");
 }
 
 function onCancel() {
+	if (findLayoutMode.value) {
+		cancelFindLayout();
+		return;
+	}
 	if (
 		readbackFooterPhase.value === "readback-waiting" ||
 		readbackFooterPhase.value === "readback-show-changes"
@@ -284,6 +344,7 @@ async function onReadbackShowChanges() {
 }
 
 function onRevert() {
+	if (findLayoutMode.value) return;
 	if (readbackFooterPhase.value !== "normal") return;
 	if (!footerIsDirty.value || form.saving.value) {
 		return;
@@ -308,12 +369,14 @@ function onRevert() {
 }
 
 function onNavPrevClick() {
+	if (findLayoutMode.value) return;
 	if (readbackFooterPhase.value !== "normal") return;
 	if (!props.canNavigatePrev) return;
 	confirmDiscardIfDirty(() => footerIsDirty.value, () => emit("nav-prev"));
 }
 
 function onNavNextClick() {
+	if (findLayoutMode.value) return;
 	if (readbackFooterPhase.value !== "normal") return;
 	if (!props.canNavigateNext) return;
 	confirmDiscardIfDirty(() => footerIsDirty.value, () => emit("nav-next"));
@@ -321,8 +384,14 @@ function onNavNextClick() {
 
 const onFormDialogKeydown = createRowNavKeydownHandler({
 	getOpen: () => props.open,
-	getCanPrev: () => props.canNavigatePrev && readbackFooterPhase.value === "normal",
-	getCanNext: () => props.canNavigateNext && readbackFooterPhase.value === "normal",
+	getCanPrev: () =>
+		props.canNavigatePrev &&
+		readbackFooterPhase.value === "normal" &&
+		!findLayoutMode.value,
+	getCanNext: () =>
+		props.canNavigateNext &&
+		readbackFooterPhase.value === "normal" &&
+		!findLayoutMode.value,
 	onNavPrev: onNavPrevClick,
 	onNavNext: onNavNextClick,
 });
@@ -352,6 +421,7 @@ watch(
 			cur.definitionName !== prev?.definitionName ||
 			cur.doctype !== prev?.doctype;
 		if (contextChanged) {
+			resetFindLayoutLocal();
 			if (opening || cur.docName !== prev?.docName) {
 				activeTab.value = 0;
 			}
@@ -376,6 +446,7 @@ async function onLinkChange({ fieldname, value }) {
 }
 
 async function onSubmit(opts = {}) {
+	if (findLayoutMode.value) return;
 	const perf = createSubmitPerfTrace({ liveDialog: !!opts?.shift });
 	perf.push(
 		"start",
@@ -632,6 +703,7 @@ async function onSubmit(opts = {}) {
 }
 
 async function onPlaceholderButton(btn) {
+	if (findLayoutMode.value) return;
 	const script = String(btn?.button_script || "").trim();
 
 	if (props.doctype === "Events" && script === "update_events_to_website") {

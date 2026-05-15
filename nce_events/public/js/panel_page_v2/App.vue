@@ -149,7 +149,7 @@
 			@readback-merged="onReadbackMerged"
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
-			@find="onFormDialogFind"
+			@find-criteria="onFormDialogFindCriteria"
 			@find-clear="onFormDialogFindClear"
 		/>
 		<!-- Slot 1 pending (behind) -->
@@ -202,7 +202,7 @@
 			@readback-merged="onReadbackMerged"
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
-			@find="onFormDialogFind"
+			@find-criteria="onFormDialogFindCriteria"
 			@find-clear="onFormDialogFindClear"
 		/>
 		<!-- Slot 0 pending (behind) -->
@@ -288,7 +288,7 @@ const {
 	formDialogFindActive,
 	onFormDialogNavPrev,
 	onFormDialogNavNext,
-	onFormDialogFind,
+	onFormDialogFindCriteria,
 	onFormDialogFindClear,
 	openFormDialogFromPanelRow,
 	openFormDialogForNewRecord,

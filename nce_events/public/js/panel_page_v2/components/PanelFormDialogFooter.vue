@@ -32,6 +32,7 @@
 					:key="'fd-btn-' + bi + '-' + (btn.label || bi) + '-' + (btn.name || '')"
 					type="button"
 					class="ppv2-fd-tab-btn"
+					:disabled="browseActionsLocked"
 					@click="$emit('custom-button', btn)"
 				>
 					{{ btn.label }}
@@ -39,11 +40,18 @@
 			</div>
 
 			<div class="ppv2-fd-action-buttons">
-				<button type="button" class="ppv2-fd-tab-btn" @click="$emit('cancel')">Cancel</button>
 				<button
 					type="button"
 					class="ppv2-fd-tab-btn"
-					:disabled="saving || !isDirty"
+					:disabled="browseActionsLocked"
+					@click="$emit('cancel')"
+				>
+					Cancel
+				</button>
+				<button
+					type="button"
+					class="ppv2-fd-tab-btn"
+					:disabled="saving || browseActionsLocked || !isDirty"
 					@click="$emit('revert')"
 				>
 					Revert
@@ -52,7 +60,7 @@
 				v-if="submitVisible"
 				type="button"
 				class="ppv2-fd-tab-btn ppv2-fd-tab-active"
-				:disabled="saving"
+				:disabled="saving || browseActionsLocked"
 				@click="$emit('submit', { shift: $event.shiftKey })"
 			>
 				{{ savingSubmitText }}
@@ -85,6 +93,8 @@ const props = defineProps({
 	submitLabel: { type: String, default: "" },
 	saving: { type: Boolean, default: false },
 	isDirty: { type: Boolean, default: false },
+	/** Disable footer actions while in FileMaker-style find layout (use header Cancel Find). */
+	browseActionsLocked: { type: Boolean, default: false },
 });
 
 defineEmits(["cancel", "revert", "submit", "custom-button", "readback-show-changes", "readback-close"]);

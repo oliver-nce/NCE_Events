@@ -118,16 +118,21 @@ export function usePanelFormDialogHost(openPanels) {
 		_resetPendingSlot();
 	}
 
-	function onFormDialogFind(term) {
-		if (!term || !String(term).trim()) {
+	function onFormDialogFindCriteria(criteria) {
+		const definition = formDialogDefinition.value;
+		if (!definition) return;
+		const cmap =
+			criteria && typeof criteria === "object" && !Array.isArray(criteria)
+				? criteria
+				: {};
+		const keys = Object.keys(cmap).filter((k) => String(cmap[k] ?? "").trim() !== "");
+		if (!keys.length) {
 			formDialogFindMatchNames.value = null;
 			return;
 		}
-		const definition = formDialogDefinition.value;
-		if (!definition) return;
 		frappe.call({
-			method: "nce_events.api.form_dialog.search.get_form_dialog_search_matches",
-			args: { definition, term: String(term).trim() },
+			method: "nce_events.api.form_dialog.search.get_form_dialog_search_matches_criteria",
+			args: { definition, criteria: cmap },
 			callback(r) {
 				const names = Array.isArray(r?.message?.names) ? r.message.names : [];
 				formDialogFindMatchNames.value = names;
@@ -139,8 +144,7 @@ export function usePanelFormDialogHost(openPanels) {
 				const panelSet = new Set(
 					(p ? panelRowArray(p) : []).map((row) => String(row.name)),
 				);
-				const pick =
-					names.find((n) => panelSet.has(String(n))) ?? names[0];
+				const pick = names.find((n) => panelSet.has(String(n))) ?? names[0];
 				formDialogDocName.value = pick;
 			},
 		});
@@ -291,7 +295,7 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogNavLabel,
 		formDialogFindMatchNames,
 		formDialogFindActive,
-		onFormDialogFind,
+		onFormDialogFindCriteria,
 		onFormDialogFindClear,
 		onFormDialogNavPrev,
 		onFormDialogNavNext,
