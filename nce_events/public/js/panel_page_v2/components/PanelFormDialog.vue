@@ -47,9 +47,12 @@
 				:row-nav-label="rowNavLabel"
 				:title="form.dialogTitle.value"
 				:closable="headerClosable"
+				:find-active="findActive"
 				@close="onCancel"
 				@nav-prev="onNavPrevClick"
 				@nav-next="onNavNextClick"
+				@find="(term) => emit('find', term)"
+				@find-clear="emit('find-clear')"
 			/>
 		<PanelFormDialogBody
 			ref="fdBodyRef"
@@ -141,9 +144,18 @@ const props = defineProps({
 	reloadPanelAfterPublish: { type: Function, default: null },
 	/** Where the captured definition lives: 'form_dialog' (default) or 'panel_action'. */
 	definitionSource: { type: String, default: "form_dialog" },
+	findActive: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(["close", "saved", "nav-prev", "nav-next", "readback-merged"]);
+const emit = defineEmits([
+	"close",
+	"saved",
+	"nav-prev",
+	"nav-next",
+	"readback-merged",
+	"find",
+	"find-clear",
+]);
 
 const activeTab = ref(0);
 const fdBodyRef = ref(null);

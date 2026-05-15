@@ -131,7 +131,10 @@
 			:doc-name="formDialogDocName"
 			:required-fields="formDialogRequiredFields"
 			:reload-panel-after-publish="reloadPanelForFormDialogDoctype"
-			:row-nav-enabled="formDialogNavInfo.total > 1"
+			:row-nav-enabled="
+				formDialogNavInfo.total > 1 || formDialogSourcePanelId != null
+			"
+			:find-active="formDialogFindActive"
 			:can-navigate-prev="formDialogNavInfo.canPrev"
 			:can-navigate-next="formDialogNavInfo.canNext"
 			:row-nav-label="formDialogNavLabel"
@@ -146,6 +149,8 @@
 			@readback-merged="onReadbackMerged"
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
+			@find="onFormDialogFind"
+			@find-clear="onFormDialogFindClear"
 		/>
 		<!-- Slot 1 pending (behind) -->
 		<PanelFormDialog
@@ -179,7 +184,10 @@
 			:doc-name="formDialogDocName"
 			:required-fields="formDialogRequiredFields"
 			:reload-panel-after-publish="reloadPanelForFormDialogDoctype"
-			:row-nav-enabled="formDialogNavInfo.total > 1"
+			:row-nav-enabled="
+				formDialogNavInfo.total > 1 || formDialogSourcePanelId != null
+			"
+			:find-active="formDialogFindActive"
 			:can-navigate-prev="formDialogNavInfo.canPrev"
 			:can-navigate-next="formDialogNavInfo.canNext"
 			:row-nav-label="formDialogNavLabel"
@@ -194,6 +202,8 @@
 			@readback-merged="onReadbackMerged"
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
+			@find="onFormDialogFind"
+			@find-clear="onFormDialogFindClear"
 		/>
 		<!-- Slot 0 pending (behind) -->
 		<PanelFormDialog
@@ -272,10 +282,14 @@ const {
 	formDialogDoctype,
 	formDialogDefinitionSource,
 	formDialogRequiredFields,
+	formDialogSourcePanelId,
 	formDialogNavInfo,
 	formDialogNavLabel,
+	formDialogFindActive,
 	onFormDialogNavPrev,
 	onFormDialogNavNext,
+	onFormDialogFind,
+	onFormDialogFindClear,
 	openFormDialogFromPanelRow,
 	openFormDialogForNewRecord,
 	openFormDialogStandalone,
