@@ -132,6 +132,14 @@ def _related_row_signature(doctype: str, hop_chain: list[dict[str, str]]) -> str
 	return f"{doctype}\0{json.dumps(hop_chain, separators=(',', ':'))}"
 
 
+def _related_tab_portal_config_key(child_doctype: str, link_field: str, hop_chain_raw: object) -> str:
+	"""Stable key for merging portal_field_config across Form Dialog rebuilds."""
+	dt = cstr(child_doctype or "").strip()
+	lf = cstr(link_field or "").strip()
+	hc = _normalize_hop_chain_value(hop_chain_raw)
+	return f"{dt}\0{lf}\0{json.dumps(hc, separators=(',', ':'))}"
+
+
 def _parse_related_doctypes_argument(related_doctypes: str | list | None) -> list[dict[str, Any]]:
 	"""Normalize JSON from the Page Panel picker: doctype, link_field, label, optional hop_chain."""
 	if related_doctypes is None:
@@ -217,8 +225,26 @@ def _related_doctype_child_rows(related_doctypes: str | list | None) -> list[dic
 
 
 def _sync_related_doctypes(doc: Any, related_doctypes: str | list | None) -> None:
+	preserved_portal: dict[str, str] = {}
+	for old in list(doc.get("related_doctypes") or []):
+		key = _related_tab_portal_config_key(
+			getattr(old, "child_doctype", None),
+			getattr(old, "link_field", None),
+			getattr(old, "hop_chain", None),
+		)
+		pfc = cstr(getattr(old, "portal_field_config", None) or "").strip()
+		if pfc:
+			preserved_portal[key] = pfc
+
 	doc.related_doctypes = []
 	for row in _related_doctype_child_rows(related_doctypes):
+		key = _related_tab_portal_config_key(
+			row.get("child_doctype"),
+			row.get("link_field"),
+			row.get("hop_chain"),
+		)
+		if key in preserved_portal:
+			row["portal_field_config"] = preserved_portal[key]
 		doc.append("related_doctypes", row)
 
 

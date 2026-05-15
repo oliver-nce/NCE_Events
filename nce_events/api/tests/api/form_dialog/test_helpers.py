@@ -262,5 +262,54 @@ class TestMainTabSkeletonAndTabNotes(unittest.TestCase):
 		self.assertEqual(appended[1][1]["note"], "World")
 
 
+class TestSyncRelatedPreservesPortalConfig(unittest.TestCase):
+	"""_sync_related_doctypes must keep portal_field_config when related tab is re-selected."""
+
+	def test_preserves_portal_field_config_when_same_child_link_and_hop(self):
+		from types import SimpleNamespace
+
+		from nce_events.api.form_dialog._helpers import _sync_related_doctypes
+
+		cfg = json.dumps([{"fieldname": "date_time", "show": 1}])
+		old = SimpleNamespace(
+			child_doctype="Event Sessions",
+			link_field="product_id",
+			hop_chain="[]",
+			portal_field_config=cfg,
+		)
+
+		class StubDoc:
+			def __init__(self):
+				self.related_doctypes = [old]
+
+			def get(self, key, default=None):
+				if key == "related_doctypes":
+					return self.related_doctypes
+				return default
+
+			def append(self, fieldname, row):
+				self.related_doctypes.append(row)
+
+		doc = StubDoc()
+		fake_rows = [
+			{
+				"child_doctype": "Event Sessions",
+				"link_field": "product_id",
+				"tab_label": "Event Sessions",
+				"hop_chain": "[]",
+				"info": "{}",
+			}
+		]
+
+		with patch(
+			"nce_events.api.form_dialog._helpers._related_doctype_child_rows",
+			return_value=fake_rows,
+		):
+			_sync_related_doctypes(doc, [{"doctype": "Event Sessions", "link_field": "product_id"}])
+
+		self.assertEqual(len(doc.related_doctypes), 1)
+		self.assertEqual(doc.related_doctypes[0].get("portal_field_config"), cfg)
+
+
 if __name__ == "__main__":
 	unittest.main()
