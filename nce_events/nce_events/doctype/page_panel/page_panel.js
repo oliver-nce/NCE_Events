@@ -71,6 +71,7 @@ const MATRIX_FIELDS = [
 	"gender_color_fields",
 	"title_field",
 	"required_fields",
+	"search_fields",
 ];
 const BREAK_FIELDS = [
 	"section_break_widgets",
@@ -198,7 +199,7 @@ function _collect_valid_display_keys(root_fields, link_fields, linked_data, frm)
 	return valid;
 }
 
-/** Drop column_order / bold / gender / title entries that no longer match any field row. */
+/** Drop column_order / bold / gender / title / search entries that no longer match any field row. */
 function _prune_stale_display_keys(frm, valid) {
 	function keep(csv) {
 		return _parse_csv(csv).filter(function (k) {
@@ -209,6 +210,7 @@ function _prune_stale_display_keys(frm, valid) {
 	const bold = keep(frm.doc.bold_fields);
 	const req = keep(frm.doc.required_fields);
 	const tint = keep(frm.doc.gender_color_fields);
+	const srch = keep(frm.doc.search_fields);
 	const gcRaw = (frm.doc.gender_column || "").trim();
 	const gc = gcRaw && valid[gcRaw] ? gcRaw : "";
 	const tfRaw = (frm.doc.title_field || "").trim();
@@ -218,12 +220,15 @@ function _prune_stale_display_keys(frm, valid) {
 	const nextBold = bold.join(", ");
 	const nextReq = req.join(", ");
 	const nextTint = tint.join(", ");
+	const nextSrch = srch.join(", ");
 	if (nextCol !== (frm.doc.column_order || "").trim()) frm.set_value("column_order", nextCol);
 	if (nextBold !== (frm.doc.bold_fields || "").trim()) frm.set_value("bold_fields", nextBold);
 	if (nextReq !== (frm.doc.required_fields || "").trim())
 		frm.set_value("required_fields", nextReq);
 	if (nextTint !== (frm.doc.gender_color_fields || "").trim())
 		frm.set_value("gender_color_fields", nextTint);
+	if (nextSrch !== (frm.doc.search_fields || "").trim())
+		frm.set_value("search_fields", nextSrch);
 	if (gc !== gcRaw) frm.set_value("gender_column", gc);
 	if (tf !== tfRaw) frm.set_value("title_field", tf);
 }
@@ -243,6 +248,7 @@ function _display_has_orphan_keys(frm, valid) {
 	if (listHasOrphan(frm.doc.bold_fields)) return true;
 	if (listHasOrphan(frm.doc.required_fields)) return true;
 	if (listHasOrphan(frm.doc.gender_color_fields)) return true;
+	if (listHasOrphan(frm.doc.search_fields)) return true;
 	const gc = (frm.doc.gender_column || "").trim();
 	if (gc && !valid[gc]) return true;
 	const tf = (frm.doc.title_field || "").trim();
@@ -381,6 +387,7 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		gender_col: (frm.doc.gender_column || "").trim(),
 		gender_tint: _parse_csv(frm.doc.gender_color_fields),
 		title_field: (frm.doc.title_field || "").trim(),
+		search: _parse_csv(frm.doc.search_fields),
 	};
 	if (!saved.title_field && dtTitle && root_names[dtTitle]) {
 		saved.title_field = dtTitle;
@@ -483,6 +490,7 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 			nb = [],
 			nr = [],
 			nt = [],
+			ns = [],
 			ngc = "",
 			ntf = "";
 		sub_tabs.forEach(function (st) {
@@ -492,10 +500,13 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 			m.$matrix.find("tbody tr").each(function () {
 				const key = $(this).data("key");
 				const $r = m.$matrix.find(`input[data-key="${key}"]`);
-				if ($r.filter('[data-role="show"]').prop("checked")) col_order.push(key);
+				const showOn = $r.filter('[data-role="show"]').prop("checked");
+				if (showOn) col_order.push(key);
 				if ($r.filter('[data-role="bold"]').prop("checked")) nb.push(key);
 				if ($r.filter('[data-role="required"]').prop("checked")) nr.push(key);
 				if ($r.filter('[data-role="tint"]').prop("checked")) nt.push(key);
+				// Search Only: only when Show is off (mutual exclusion enforced in UI but double-checked here)
+				if (!showOn && $r.filter('[data-role="search-only"]').prop("checked")) ns.push(key);
 			});
 		});
 		const $all_gc = $container.find(`input[name="gender_col_${uid}"]:checked`);
@@ -537,7 +548,32 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		frm.set_value("gender_column", ngc);
 		frm.set_value("gender_color_fields", nt.join(", "));
 		frm.set_value("title_field", ntf);
+		frm.set_value("search_fields", ns.join(", "));
 	}
+
+	// Show ↔ Search Only mutual exclusion: checking one clears the other on the same row
+	function _enforceShowSearchExclusivity($matrix, changedRole, key) {
+		if (changedRole === "show") {
+			$matrix.find('input[data-role="search-only"]').filter(function () {
+				return $(this).data("key") === key;
+			}).prop("checked", false);
+		} else if (changedRole === "search-only") {
+			$matrix.find('input[data-role="show"]').filter(function () {
+				return $(this).data("key") === key;
+			}).prop("checked", false);
+		}
+	}
+
+	sub_tabs.forEach(function (st) {
+		if (st.id === "_order") return;
+		const m = matrices[st.id];
+		if (!m || !m.$matrix) return;
+		m.$matrix.on("change", 'input[data-role="show"], input[data-role="search-only"]', function () {
+			if (!$(this).prop("checked")) return; // only act when turning ON
+			_enforceShowSearchExclusivity(m.$matrix, $(this).data("role"), $(this).data("key"));
+			// _sync_all fires via the generic handler registered below
+		});
+	});
 
 	// Wire change events on all matrices
 	sub_tabs.forEach(function (st) {
@@ -585,6 +621,8 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		$toolbar.find(".pp-select-all").on("click", function (e) {
 			e.preventDefault();
 			m.$matrix.find('input[data-role="show"]').prop("checked", true);
+			// Show and Search Only are mutually exclusive — clear Search Only for all rows
+			m.$matrix.find('input[data-role="search-only"]').prop("checked", false);
 			_sync_all();
 		});
 		$toolbar.find(".pp-select-none").on("click", function (e) {
@@ -678,7 +716,8 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set, matrix_opts)
 			<th ${th_style}>Bold</th>
 			<th ${th_style}>Required</th>
 			<th ${th_style}>Gender</th>
-			<th ${th_style}>Tint</th>`;
+			<th ${th_style}>Tint</th>
+			<th ${th_style}>Search Only</th>`;
 	if (showTitleColumn) {
 		html += `<th ${th_style}>Title</th>`;
 	}
@@ -714,6 +753,17 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set, matrix_opts)
 				) +
 				'"'
 			: "";
+		// Search Only cell: _related_ rows get a grey non-interactive cell.
+		// A field already shown (shown_set) cannot also be Search Only.
+		let search_only_cell;
+		if (f._related) {
+			search_only_cell = `<td ${td} style="background:#f0f0f0;"></td>`;
+		} else {
+			const soChecked = !shown_set[key] && saved.search.indexOf(key) !== -1;
+			search_only_cell = `<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="search-only"${
+				soChecked ? " checked" : ""
+			}></td>`;
+		}
 		html += `<tr data-key="${esc_key}"${bg}>
 			<td style="padding:4px 8px;color:#8d949a;font-size:11px;">${fn_display}</td>
 			<td style="padding:4px 8px;color:#4c5a67;">${frappe.utils.escape_html(label)}</td>
@@ -732,6 +782,7 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set, matrix_opts)
 			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="tint"${
 			saved.gender_tint.indexOf(key) !== -1 ? " checked" : ""
 		}></td>
+			${search_only_cell}
 			${title_cell}
 		</tr>`;
 	});
@@ -2238,6 +2289,7 @@ frappe.ui.form.on("Page Panel", {
 		frm.set_value("gender_column", "");
 		frm.set_value("gender_color_fields", "");
 		frm.set_value("title_field", "");
+		frm.set_value("search_fields", "");
 		_render_default_filters(frm);
 		if (frm.doc.root_doctype) {
 			frappe.call({

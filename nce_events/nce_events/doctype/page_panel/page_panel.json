@@ -17,6 +17,7 @@
     "gender_color_fields",
     "title_field",
     "required_fields",
+    "search_fields",
     "section_break_widgets",
     "allow_new_record_creation",
     "show_filter",
@@ -116,6 +117,13 @@
       "fieldtype": "Small Text",
       "hidden": 1,
       "label": "Required Fields"
+    },
+    {
+      "description": "Comma-delimited fields fetched with every panel load for search/filter use but not shown as grid columns (managed by Display tab)",
+      "fieldname": "search_fields",
+      "fieldtype": "Small Text",
+      "hidden": 1,
+      "label": "Search Fields"
     },
     {
       "fieldname": "section_break_widgets",
