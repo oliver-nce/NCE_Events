@@ -132,14 +132,16 @@ export function usePanelFormDialogHost(openPanels) {
 				const names = Array.isArray(r?.message?.names) ? r.message.names : [];
 				formDialogFindMatchNames.value = names;
 				const cur = formDialogDocName.value;
-				if (
-					names.length &&
-					cur != null &&
-					String(cur).trim() !== "" &&
-					!names.map(String).includes(String(cur))
-				) {
-					formDialogDocName.value = names[0];
-				}
+				if (!names.length || cur == null || String(cur).trim() === "") return;
+				const curStr = String(cur);
+				if (names.map(String).includes(curStr)) return;
+				const p = openPanels.find((x) => x.id === formDialogSourcePanelId.value);
+				const panelSet = new Set(
+					(p ? panelRowArray(p) : []).map((row) => String(row.name)),
+				);
+				const pick =
+					names.find((n) => panelSet.has(String(n))) ?? names[0];
+				formDialogDocName.value = pick;
 			},
 		});
 	}
