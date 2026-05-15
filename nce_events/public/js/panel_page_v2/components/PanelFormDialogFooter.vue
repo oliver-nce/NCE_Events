@@ -25,7 +25,7 @@
 			</div>
 		</template>
 
-		<!-- FileMaker-style find: criteria entry — only these two actions -->
+		<!-- FileMaker-style find: criteria entry -->
 		<template v-else-if="footerPhase === 'normal' && findChromePhase === 'criteria'">
 			<div class="ppv2-fd-find-footer-only">
 				<button
@@ -35,6 +35,15 @@
 				>
 					{{ __("Perform Find") }}
 				</button>
+				<!-- Only shown when there is an active found set to narrow -->
+				<button
+					v-if="findMatchActive"
+					type="button"
+					class="ppv2-fd-tab-btn"
+					@click="$emit('find-perform-constrain')"
+				>
+					{{ __("Constrain Found Set") }}
+				</button>
 				<button type="button" class="ppv2-fd-tab-btn" @click="$emit('find-cancel')">
 					{{ __("Cancel Find") }}
 				</button>
@@ -43,11 +52,11 @@
 
 		<template v-else>
 			<div v-if="findChromePhase === 'post-find'" class="ppv2-fd-find-followup">
-				<button type="button" class="ppv2-fd-tab-btn" @click="$emit('find-constrain')">
-					{{ __("Constrain Found Set") }}
-				</button>
 				<button type="button" class="ppv2-fd-tab-btn" @click="$emit('find-modify')">
 					{{ __("Modify Find") }}
+				</button>
+				<button type="button" class="ppv2-fd-tab-btn" @click="$emit('find-constrain')">
+					{{ __("Constrain Found Set") }}
 				</button>
 				<button type="button" class="ppv2-fd-tab-btn" @click="$emit('find-show-all')">
 					{{ __("Show All") }}
@@ -125,6 +134,8 @@ const props = defineProps({
 	browseActionsLocked: { type: Boolean, default: false },
 	/** `none` | `criteria` | `post-find` — drives find footer bands */
 	findChromePhase: { type: String, default: "none" },
+	/** True when a found set is active — enables Constrain Found Set in criteria phase. */
+	findMatchActive: { type: Boolean, default: false },
 });
 
 defineEmits([
@@ -135,6 +146,7 @@ defineEmits([
 	"readback-show-changes",
 	"readback-close",
 	"find-perform",
+	"find-perform-constrain",
 	"find-cancel",
 	"find-constrain",
 	"find-modify",

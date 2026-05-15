@@ -139,6 +139,7 @@
 			"
 			:dialog-load-mode="formDialogDialogLoadMode"
 			:find-chrome-phase="formDialogFindChromePhase"
+			:find-match-active="formDialogFindActive"
 			:find-seed-criteria="formDialogFindSeedCriteria"
 			:find-search-only-columns="formDialogFindSearchOnlyColumns"
 			:can-navigate-prev="formDialogNavInfo.canPrev"
@@ -156,6 +157,7 @@
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
 			@find-criteria="onFormDialogFindCriteria"
+			@find-criteria-constrain="onFormDialogFindCriteriaConstrain"
 			@find-cancel-criteria="onFormDialogFindCancelCriteria"
 			@find-show-all="onFormDialogFindShowAll"
 			@find-modify="onFormDialogFindModify"
@@ -173,6 +175,7 @@
 			:reload-panel-after-publish="reloadPanelForFormDialogDoctype"
 			:dialog-load-mode="formDialogDialogLoadMode"
 			:find-chrome-phase="formDialogFindChromePhase"
+			:find-match-active="formDialogFindActive"
 			:find-seed-criteria="formDialogFindSeedCriteria"
 			:find-search-only-columns="formDialogFindSearchOnlyColumns"
 			:row-nav-enabled="false"
@@ -187,6 +190,7 @@
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
 			@find-criteria="onFormDialogFindCriteria"
+			@find-criteria-constrain="onFormDialogFindCriteriaConstrain"
 			@find-cancel-criteria="onFormDialogFindCancelCriteria"
 			@find-show-all="onFormDialogFindShowAll"
 			@find-modify="onFormDialogFindModify"
@@ -207,6 +211,7 @@
 			"
 			:dialog-load-mode="formDialogDialogLoadMode"
 			:find-chrome-phase="formDialogFindChromePhase"
+			:find-match-active="formDialogFindActive"
 			:find-seed-criteria="formDialogFindSeedCriteria"
 			:find-search-only-columns="formDialogFindSearchOnlyColumns"
 			:can-navigate-prev="formDialogNavInfo.canPrev"
@@ -224,6 +229,7 @@
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
 			@find-criteria="onFormDialogFindCriteria"
+			@find-criteria-constrain="onFormDialogFindCriteriaConstrain"
 			@find-cancel-criteria="onFormDialogFindCancelCriteria"
 			@find-show-all="onFormDialogFindShowAll"
 			@find-modify="onFormDialogFindModify"
@@ -241,6 +247,7 @@
 			:reload-panel-after-publish="reloadPanelForFormDialogDoctype"
 			:dialog-load-mode="formDialogDialogLoadMode"
 			:find-chrome-phase="formDialogFindChromePhase"
+			:find-match-active="formDialogFindActive"
 			:find-seed-criteria="formDialogFindSeedCriteria"
 			:find-search-only-columns="formDialogFindSearchOnlyColumns"
 			:row-nav-enabled="false"
@@ -255,6 +262,7 @@
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
 			@find-criteria="onFormDialogFindCriteria"
+			@find-criteria-constrain="onFormDialogFindCriteriaConstrain"
 			@find-cancel-criteria="onFormDialogFindCancelCriteria"
 			@find-show-all="onFormDialogFindShowAll"
 			@find-modify="onFormDialogFindModify"
@@ -322,9 +330,11 @@ const {
 	formDialogFindSearchOnlyColumns,
 	formDialogNavInfo,
 	formDialogNavLabel,
+	formDialogFindActive,
 	onFormDialogNavPrev,
 	onFormDialogNavNext,
 	onFormDialogFindCriteria,
+	onFormDialogFindCriteriaConstrain,
 	onFormDialogFindCancelCriteria,
 	onFormDialogFindShowAll,
 	onFormDialogFindModify,

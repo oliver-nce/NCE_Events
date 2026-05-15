@@ -310,6 +310,17 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogFindChromePhase.value = "criteria";
 	}
 
+	/**
+	 * "Constrain Found Set" clicked while in criteria phase.
+	 * Narrows the current found set by the entered criteria — equivalent to
+	 * setting constrainNames then immediately performing the find.
+	 */
+	function onFormDialogFindCriteriaConstrain(criteria) {
+		const cur = formDialogFindMatchNames.value;
+		formDialogFindConstrainNames.value = Array.isArray(cur) ? [...cur] : [];
+		onFormDialogFindCriteria(criteria);
+	}
+
 	function onFormDialogFindCancelCriteria() {
 		onFormDialogClose();
 	}
@@ -466,6 +477,7 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogFindSeedCriteria,
 		formDialogFindSearchOnlyColumns,
 		onFormDialogFindCriteria,
+		onFormDialogFindCriteriaConstrain,
 		onFormDialogFindClear,
 		onFormDialogFindShowAll,
 		onFormDialogFindModify,

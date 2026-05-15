@@ -88,6 +88,7 @@
 				:is-dirty="footerIsDirty"
 				:browse-actions-locked="findCriteriaActive"
 				:find-chrome-phase="findChromePhase"
+				:find-match-active="findMatchActive"
 				@cancel="onCancel"
 				@revert="onRevert"
 				@submit="onSubmit"
@@ -95,6 +96,7 @@
 				@readback-show-changes="onReadbackShowChanges"
 				@readback-close="onReadbackFinalClose"
 				@find-perform="performFindLayout"
+				@find-perform-constrain="performConstrainFindLayout"
 				@find-cancel="emit('find-cancel-criteria')"
 				@find-constrain="emit('find-constrain')"
 				@find-modify="emit('find-modify')"
@@ -165,6 +167,8 @@ const props = defineProps({
 	findSeedCriteria: { type: Object, default: null },
 	/** Search-only panel fields to render as extra criteria inputs in Find mode. */
 	findSearchOnlyColumns: { type: Array, default: () => [] },
+	/** True when a found set is active — passed to footer to enable Constrain Found Set in criteria phase. */
+	findMatchActive: { type: Boolean, default: false },
 });
 
 const emit = defineEmits([
@@ -174,6 +178,7 @@ const emit = defineEmits([
 	"nav-next",
 	"readback-merged",
 	"find-criteria",
+	"find-criteria-constrain",
 	"find-cancel-criteria",
 	"find-show-all",
 	"find-modify",
@@ -286,6 +291,17 @@ function performFindLayout() {
 		}
 	}
 	emit("find-criteria", { ...out });
+}
+
+/** Same as performFindLayout but signals host to narrow within the current found set. */
+function performConstrainFindLayout() {
+	const out = {};
+	for (const k of Object.keys(findCriteria)) {
+		if (String(findCriteria[k] ?? "").trim() !== "") {
+			out[k] = findCriteria[k];
+		}
+	}
+	emit("find-criteria-constrain", { ...out });
 }
 
 watch(
