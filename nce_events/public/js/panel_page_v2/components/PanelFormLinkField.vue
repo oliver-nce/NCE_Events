@@ -83,6 +83,13 @@ function mountFrappeControl() {
 			emit("change", { fieldname: fn, value: v });
 			emit("link-change", { fieldname: fn, value: v });
 		});
+
+		// Open the dropdown immediately on focus even when the field already has
+		// a value. Select-all lets the user type to replace without clearing first.
+		control.$input.on("focus.pfl_dd", function () {
+			this.select();
+			$(this).trigger("input");
+		});
 	}
 }
 
@@ -112,7 +119,7 @@ watch(
 );
 
 onBeforeUnmount(() => {
-	control?.$input?.off("change.pfl_adv");
+	control?.$input?.off("change.pfl_adv focus.pfl_dd");
 	if (control?.$wrapper) {
 		control.$wrapper.remove();
 	}
