@@ -24,12 +24,20 @@
     :data-fd-fieldname="field.fieldname"
   >
     <label class="ppv2-fd-label">{{ field.label }}</label>
-    <!-- Select / static-Autocomplete: native dropdown; emit "=value" so criterion is exact match. -->
+    <!-- Link / Autocomplete-link: full Frappe ControlLink autocomplete; exact-match criterion. -->
+    <PanelFormLinkField
+      v-if="field.fieldtype === 'Link' || isAutocompleteLink"
+      :field="field"
+      :model-value="criteriaExactValue"
+      :read-only="false"
+      @change="onExactCriteriaChange($event.value)"
+    />
+    <!-- Select / static-Autocomplete: native dropdown; exact-match criterion. -->
     <select
-      v-if="useNativeSelectUi"
+      v-else-if="useNativeSelectUi"
       class="ppv2-fd-input ppv2-fd-select"
-      :value="criteriaInputValue"
-      @change="onSelectCriteriaChange($event.target.value)"
+      :value="criteriaExactValue"
+      @change="onExactCriteriaChange($event.target.value)"
     >
       <option value="">— Any —</option>
       <option v-for="opt in selectOptions" :key="opt" :value="opt">{{ opt }}</option>
@@ -237,18 +245,19 @@ const inputDisplayValue = computed(() => {
 	return props.modelValue ?? "";
 });
 
+/** In find mode: plain string, no time normalization. Used by the free-text input. */
+const criteriaInputValue = computed(() =>
+	props.modelValue == null ? "" : String(props.modelValue),
+);
+
 /**
- * In find mode always edit/display raw string (no time normalization).
- * For Select criteria the stored value has a leading "=" (exact-match prefix from _matchFindCriterion);
- * strip it so the <select> shows the plain option text.
+ * For exact-match controls (Link, Select) in find mode: the stored criterion has a leading "="
+ * (so _matchFindCriterion uses strict equality). Strip it so the control sees the plain value.
  */
-const criteriaInputValue = computed(() => {
+const criteriaExactValue = computed(() => {
 	if (props.modelValue == null) return "";
 	const s = String(props.modelValue);
-	if (props.findCriteriaMode && useNativeSelectUi.value && s.startsWith("=")) {
-		return s.slice(1);
-	}
-	return s;
+	return s.startsWith("=") ? s.slice(1) : s;
 });
 
 function onChange(value) {
@@ -256,10 +265,10 @@ function onChange(value) {
 }
 
 /**
- * Select field in find-criteria mode: emit "=<value>" so _matchFindCriterion does exact matching.
- * Emit "" (blank) when the "— Any —" option is chosen so the criterion is cleared.
+ * Shared handler for exact-match criteria controls (Link + Select) in find mode.
+ * Emits "=<value>" so _matchFindCriterion uses strict equality, or "" to clear.
  */
-function onSelectCriteriaChange(value) {
+function onExactCriteriaChange(value) {
   emit("change", { fieldname: props.field.fieldname, value: value ? `=${value}` : "" });
 }
 
