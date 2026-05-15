@@ -16,7 +16,7 @@
   <!-- Button placeholder -->
   <span v-else-if="config?.layout === 'button'" />
 
-  <!-- Find criteria entry — plain text per field (FM-style); operators ~ * % etc. -->
+  <!-- Find criteria entry — Select fields keep their native dropdown; others get plain text (FM-style operators). -->
   <div
     v-else-if="findCriteriaMode && config?.component"
     v-show="visible"
@@ -24,7 +24,19 @@
     :data-fd-fieldname="field.fieldname"
   >
     <label class="ppv2-fd-label">{{ field.label }}</label>
+    <!-- Select / static-Autocomplete: native dropdown; emit "=value" so criterion is exact match. -->
+    <select
+      v-if="useNativeSelectUi"
+      class="ppv2-fd-input ppv2-fd-select"
+      :value="criteriaInputValue"
+      @change="onSelectCriteriaChange($event.target.value)"
+    >
+      <option value="">— Any —</option>
+      <option v-for="opt in selectOptions" :key="opt" :value="opt">{{ opt }}</option>
+    </select>
+    <!-- All other field types: free-text with FM-style operator support -->
     <input
+      v-else
       type="text"
       class="ppv2-fd-input"
       :value="criteriaInputValue"
@@ -225,13 +237,30 @@ const inputDisplayValue = computed(() => {
 	return props.modelValue ?? "";
 });
 
-/** In find mode always edit/display raw string (no time normalization). */
-const criteriaInputValue = computed(() =>
-	props.modelValue == null ? "" : String(props.modelValue),
-);
+/**
+ * In find mode always edit/display raw string (no time normalization).
+ * For Select criteria the stored value has a leading "=" (exact-match prefix from _matchFindCriterion);
+ * strip it so the <select> shows the plain option text.
+ */
+const criteriaInputValue = computed(() => {
+	if (props.modelValue == null) return "";
+	const s = String(props.modelValue);
+	if (props.findCriteriaMode && useNativeSelectUi.value && s.startsWith("=")) {
+		return s.slice(1);
+	}
+	return s;
+});
 
 function onChange(value) {
   emit("change", { fieldname: props.field.fieldname, value });
+}
+
+/**
+ * Select field in find-criteria mode: emit "=<value>" so _matchFindCriterion does exact matching.
+ * Emit "" (blank) when the "— Any —" option is chosen so the criterion is cleared.
+ */
+function onSelectCriteriaChange(value) {
+  emit("change", { fieldname: props.field.fieldname, value: value ? `=${value}` : "" });
 }
 
 function onLinkChangePayload(payload) {
