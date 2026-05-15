@@ -1,4 +1,4 @@
-import { ref } from "vue";
+import { ref, computed } from "vue";
 import { useFormDialogRecordNav, panelRowArray } from "./useFormDialogRecordNav.js";
 import { mergeFreshDocIntoPanel } from "./wpReadbackFlow.js";
 
@@ -20,6 +20,9 @@ export function usePanelFormDialogHost(openPanels) {
 	const formDialogDefinitionSource = ref("form_dialog");
 	/** Root fieldnames from Page Panel `required_fields` (Form Dialog validation). */
 	const formDialogRequiredFields = ref([]);
+	/** Find/search: `null` = inactive; array = active match set (may be empty). */
+	const formDialogFindMatchNames = ref(null);
+	const formDialogFindActive = computed(() => formDialogFindMatchNames.value !== null);
 
 	// Dual-slot state for dissolve transitions
 	const formDialogSlot = ref(0);
@@ -34,7 +37,18 @@ export function usePanelFormDialogHost(openPanels) {
 		showFormDialog,
 		sourcePanelId: formDialogSourcePanelId,
 		docName: formDialogDocName,
+		findMatchNames: formDialogFindMatchNames,
 	});
+
+	function _effectiveNavList() {
+		const p = _getPanelForNav();
+		if (!p) return [];
+		const full = panelRowArray(p);
+		const names = formDialogFindMatchNames.value;
+		if (!Array.isArray(names)) return full;
+		const set = new Set(names.map(String));
+		return full.filter((row) => row && set.has(String(row.name)));
+	}
 
 	// ── Open helpers ──────────────────────────────────────────────────────────
 
@@ -100,7 +114,38 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogDoctype.value = null;
 		formDialogSourcePanelId.value = null;
 		formDialogDefinitionSource.value = "form_dialog";
+		formDialogFindMatchNames.value = null;
 		_resetPendingSlot();
+	}
+
+	function onFormDialogFind(term) {
+		if (!term || !String(term).trim()) {
+			formDialogFindMatchNames.value = null;
+			return;
+		}
+		const definition = formDialogDefinition.value;
+		if (!definition) return;
+		frappe.call({
+			method: "nce_events.api.form_dialog.search.get_form_dialog_search_matches",
+			args: { definition, term: String(term).trim() },
+			callback(r) {
+				const names = Array.isArray(r?.message?.names) ? r.message.names : [];
+				formDialogFindMatchNames.value = names;
+				const cur = formDialogDocName.value;
+				if (
+					names.length &&
+					cur != null &&
+					String(cur).trim() !== "" &&
+					!names.map(String).includes(String(cur))
+				) {
+					formDialogDocName.value = names[0];
+				}
+			},
+		});
+	}
+
+	function onFormDialogFindClear() {
+		formDialogFindMatchNames.value = null;
 	}
 
 	// ── Save (standard path only; WP read-back path never emits `saved`) ─────
@@ -153,6 +198,7 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogDoctype.value = null;
 		formDialogSourcePanelId.value = null;
 		formDialogDefinitionSource.value = "form_dialog";
+		formDialogFindMatchNames.value = null;
 		formDialogPendingDocName.value = null;
 		formDialogPendingDefinition.value = null;
 		formDialogPendingDoctype.value = null;
@@ -166,7 +212,7 @@ export function usePanelFormDialogHost(openPanels) {
 	}
 
 	function _targetRowName(direction) {
-		const list = panelRowArray(_getPanelForNav());
+		const list = _effectiveNavList();
 		const idx = list.findIndex((row) => row && row.name === formDialogDocName.value);
 		if (idx < 0) return null;
 		const targetIdx = idx + (direction === "prev" ? -1 : 1);
@@ -241,6 +287,10 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogSourcePanelId,
 		formDialogNavInfo,
 		formDialogNavLabel,
+		formDialogFindMatchNames,
+		formDialogFindActive,
+		onFormDialogFind,
+		onFormDialogFindClear,
 		onFormDialogNavPrev,
 		onFormDialogNavNext,
 		openFormDialogFromPanelRow,
