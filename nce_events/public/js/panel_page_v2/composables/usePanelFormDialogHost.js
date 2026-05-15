@@ -237,9 +237,11 @@ export function usePanelFormDialogHost(openPanels) {
 			return;
 		}
 
-		// Client-side search against the cached panel rows (_allRows)
+		// Client-side search against the cached panel rows (_allRows).
+		// openPanels is reactive([]), so Vue 3 auto-unwraps refs stored on it —
+		// _allRows is already the plain array when accessed, NOT a ref.
 		const sourcePanel = openPanels.find((x) => x.id === formDialogSourcePanelId.value);
-		const allRows = sourcePanel?._allRows?.value ?? [];
+		const allRows = sourcePanel?._allRows ?? [];
 
 		let names = allRows
 			.filter((row) => {
