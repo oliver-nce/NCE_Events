@@ -24,6 +24,9 @@ def _build_panel_sql(root_doctype: str, filters: dict | None = None) -> tuple[st
 	for fn in fetch_only:
 		if fn not in all_fields:
 			all_fields.append(fn)
+	for fn in (config.get("search_fields") or []):
+		if fn not in all_fields:
+			all_fields.append(fn)
 	if not all_fields:
 		all_fields = ["name"]
 

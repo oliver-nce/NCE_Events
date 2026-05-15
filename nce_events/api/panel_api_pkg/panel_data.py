@@ -78,6 +78,8 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 			"gender_color_fields": [],
 			"title_field": "",
 			"required_fields": [],
+			"search_fields": [],
+			"effective_searchable": [],
 			"tint_by_gender": {},
 			"computed_columns": [],
 			"show_filter": 1,
@@ -113,6 +115,7 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 			sms_field = auto_sms
 	bold_fields = _parse_csv(doc.bold_fields)
 	required_fields = list(dict.fromkeys(_parse_csv(getattr(doc, "required_fields", None))))
+	search_only_fields = list(dict.fromkeys(_parse_csv(getattr(doc, "search_fields", None))))
 	gender_color_fields = _parse_csv(doc.gender_color_fields)
 	# Add computed columns with tint_by_row so they tint based on row's gender_column
 	for cc in computed_columns:
@@ -163,6 +166,8 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 		"gender_color_fields": gender_color_fields,
 		"title_field": title_field,
 		"required_fields": required_fields,
+		"search_fields": search_only_fields,
+		"effective_searchable": list(dict.fromkeys(column_order + search_only_fields)),
 		"tint_by_gender": tint_by_gender,
 		"computed_columns": computed_columns,
 		"show_filter": doc.show_filter,
@@ -213,6 +218,9 @@ def get_panel_data(
 	fetch_only: list[str] = list(config.get("fetch_only_fields") or [])
 	all_fields: list[str] = list(display_fields)
 	for fn in fetch_only:
+		if fn not in all_fields:
+			all_fields.append(fn)
+	for fn in (config.get("search_fields") or []):
 		if fn not in all_fields:
 			all_fields.append(fn)
 	if not all_fields:
