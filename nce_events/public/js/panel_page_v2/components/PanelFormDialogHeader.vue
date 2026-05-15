@@ -23,32 +23,87 @@
 				>
 					<i class="fa fa-chevron-right"></i>
 				</button>
+				<button
+					v-if="!findOpen"
+					type="button"
+					class="ppv2-fd-nav-btn ppv2-fd-find-btn"
+					:class="{ 'ppv2-fd-find-active': findActive }"
+					title="Find records"
+					aria-label="Find records"
+					@click="openFind"
+				>
+					<i class="fa fa-search"></i>
+				</button>
+				<div v-else class="ppv2-fd-find-row" @mousedown.stop>
+					<input
+						ref="findInputRef"
+						v-model="findTerm"
+						class="ppv2-fd-find-input"
+						placeholder="Find…"
+						type="text"
+						@keydown.enter.prevent="submitFind"
+						@keydown.escape.prevent="clearFind"
+					/>
+					<button
+						type="button"
+						class="ppv2-fd-nav-btn"
+						title="Run find"
+						@click="submitFind"
+					>
+						<i class="fa fa-search"></i>
+					</button>
+					<button
+						type="button"
+						class="ppv2-fd-nav-btn"
+						title="Clear find"
+						@click="clearFind"
+					>
+						<i class="fa fa-times"></i>
+					</button>
+				</div>
 			</div>
 			<span class="ppv2-fd-title">{{ title }}</span>
 		</div>
-		<button
-			v-if="closable"
-			class="ppv2-fd-close"
-			type="button"
-			@click="$emit('close')"
-		>
+		<button v-if="closable" class="ppv2-fd-close" type="button" @click="$emit('close')">
 			&times;
 		</button>
 	</div>
 </template>
 
 <script setup>
+import { ref, nextTick } from "vue";
+
 defineProps({
 	rowNavEnabled: { type: Boolean, default: false },
 	canNavigatePrev: { type: Boolean, default: false },
 	canNavigateNext: { type: Boolean, default: false },
 	rowNavLabel: { type: String, default: "" },
 	title: { type: String, default: "" },
-	/** False during WP read-back wait / Show changes — user must use footer flow */
 	closable: { type: Boolean, default: true },
+	findActive: { type: Boolean, default: false },
 });
 
-defineEmits(["close", "nav-prev", "nav-next"]);
+const emit = defineEmits(["close", "nav-prev", "nav-next", "find", "find-clear"]);
+
+const findOpen = ref(false);
+const findTerm = ref("");
+const findInputRef = ref(null);
+
+function openFind() {
+	findOpen.value = true;
+	nextTick(() => findInputRef.value?.focus());
+}
+
+function submitFind() {
+	emit("find", findTerm.value);
+	findOpen.value = false;
+}
+
+function clearFind() {
+	findTerm.value = "";
+	findOpen.value = false;
+	emit("find-clear");
+}
 </script>
 
 <style scoped>
@@ -123,5 +178,28 @@ defineEmits(["close", "nav-prev", "nav-next"]);
 }
 .ppv2-fd-close:hover {
 	opacity: 1;
+}
+.ppv2-fd-find-btn.ppv2-fd-find-active {
+	background: color-mix(in srgb, var(--text-header) 30%, transparent);
+	border-color: color-mix(in srgb, var(--text-header) 60%, transparent);
+}
+.ppv2-fd-find-row {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+.ppv2-fd-find-input {
+	height: 28px;
+	padding: 0 8px;
+	border: 1px solid color-mix(in srgb, var(--text-header) 40%, transparent);
+	border-radius: var(--border-radius-sm, 4px);
+	background: color-mix(in srgb, var(--bg-header) 80%, white);
+	color: var(--text-header);
+	font-size: 12px;
+	width: 160px;
+	outline: none;
+}
+.ppv2-fd-find-input:focus {
+	border-color: color-mix(in srgb, var(--text-header) 70%, transparent);
 }
 </style>
