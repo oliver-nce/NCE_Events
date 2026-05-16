@@ -2404,18 +2404,6 @@ frappe.ui.form.on("Page Panel", {
 		if ($layout.data("pp-active-tab") === "display") {
 			_render_display(frm);
 		}
-		if (frm.is_new()) {
-			const $inp = $(frm.layout.wrapper).find(".pp-panel-id-bar input.pp-newname-input");
-			if ($inp.length && !$inp.val().trim() && frm.doc.root_doctype) {
-				const rt = frm.doc.root_doctype;
-				const sug = rt === "Page Panel" ? "PP-page-panel" : rt;
-				$inp.val(sug);
-				frm.doc.__newname = sug;
-				if (frm.fields_dict.__newname && frm.fields_dict.__newname.set_value) {
-					frm.fields_dict.__newname.set_value(sug);
-				}
-			}
-		}
 	},
 
 	column_order: function (frm) {
