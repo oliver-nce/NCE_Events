@@ -7,7 +7,14 @@
 				:tabs="tabs"
 				:active-tab="activeTab"
 				:block-related-tabs="findLayoutMode"
+				:show-find-help-button="findLayoutMode"
 				@update:active-tab="activeTab = $event"
+				@find-help="findHelpOpen = true"
+			/>
+
+			<PanelFormFindSearchHelpModal
+				:open="findHelpOpen"
+				@close="findHelpOpen = false"
 			/>
 
 			<div class="ppv2-fd-tab-panels">
@@ -95,11 +102,12 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { isFindSearchableRootField } from "../utils/formDialogFindFields.js";
 import PanelFormField from "./PanelFormField.vue";
 import PanelFormDialogTabBar from "./PanelFormDialogTabBar.vue";
 import PanelFormDialogRelatedTab from "./PanelFormDialogRelatedTab.vue";
+import PanelFormFindSearchHelpModal from "./PanelFormFindSearchHelpModal.vue";
 
 const props = defineProps({
 	definitionName: { type: String, default: "" },
@@ -128,6 +136,15 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["field-change", "link-change", "related-dirty", "find-criteria-patch"]);
+
+const findHelpOpen = ref(false);
+
+watch(
+	() => props.findLayoutMode,
+	(isFind) => {
+		if (!isFind) findHelpOpen.value = false;
+	},
+);
 
 function fieldModelValue(field) {
 	if (props.findLayoutMode && isFindEnterable(field)) {

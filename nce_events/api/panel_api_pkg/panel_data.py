@@ -26,6 +26,11 @@ from nce_events.api.panel_api_pkg.computed_columns import (
 )
 from nce_events.api.panel_api_pkg.core_filters import _apply_user_filters
 from nce_events.api.panel_api_pkg.discovery import get_child_doctypes
+from nce_events.api.panel_api_pkg.page_panel_lookup import (
+	get_page_panel_doc_for_root,
+	page_panel_exists_for_root,
+	page_panel_docname_for_root,
+)
 from nce_events.api.panel_api_pkg.sql import _build_panel_sql
 
 MALE_HEX: str = "#0000FF"
@@ -65,7 +70,7 @@ _ROSTER_HASH: str = "wwe78f6q87ey97f86q9e8fqw98ef"
 @frappe.whitelist()
 def get_panel_config(root_doctype: str) -> dict[str, Any]:
 	"""Fetch display configuration for a single Page Panel."""
-	if not frappe.db.exists("Page Panel", root_doctype):
+	if not page_panel_exists_for_root(root_doctype):
 		auto_email, auto_sms = _auto_detect_contact_fields(root_doctype)
 		return {
 			"root_doctype": root_doctype,
@@ -98,7 +103,7 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 			"female_hex": FEMALE_HEX,
 		}
 
-	doc = frappe.get_doc("Page Panel", root_doctype)
+	doc = get_page_panel_doc_for_root(root_doctype)
 	if (doc.root_doctype or "").strip() != root_doctype:
 		computed_columns = []
 	else:
@@ -271,8 +276,9 @@ def get_panel_data(
 	# When a drill-down filter is active, always rebuild (filter changes the WHERE).
 	parsed_filters: dict[str, Any] = filters if isinstance(filters, dict) else {}
 	stored_sql: str = ""
-	if not parsed_filters and frappe.db.exists("Page Panel", root_doctype):
-		stored_sql = (frappe.db.get_value("Page Panel", root_doctype, "panel_sql") or "").strip()
+	pp_name = page_panel_docname_for_root(root_doctype)
+	if not parsed_filters and pp_name:
+		stored_sql = (frappe.db.get_value("Page Panel", pp_name, "panel_sql") or "").strip()
 
 	if stored_sql:
 		rows = frappe.db.sql(stored_sql, as_dict=True)

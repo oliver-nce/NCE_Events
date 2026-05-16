@@ -1,6 +1,7 @@
 {
   "actions": [],
-  "autoname": "field:root_doctype",
+  "allow_rename": 1,
+  "autoname": "prompt",
   "creation": "2026-03-01 00:00:00.000000",
   "doctype": "DocType",
   "engine": "InnoDB",
@@ -226,7 +227,7 @@
   "modified_by": "Administrator",
   "module": "NCE Events",
   "name": "Page Panel",
-  "naming_rule": "By fieldname",
+  "naming_rule": "Set by user",
   "owner": "Administrator",
   "permissions": [
     {

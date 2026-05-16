@@ -9,6 +9,8 @@ import frappe
 from frappe import _
 from frappe.utils import cstr
 
+from nce_events.api.panel_api_pkg.page_panel_lookup import page_panel_docname_for_root
+
 _SAFE_FIELDNAME = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
 
 _SKIP_FIELDTYPES = frozenset({
@@ -222,9 +224,10 @@ def get_form_dialog_search_matches_criteria(
 
 	# Also allow all panel-visible and search-only fields from the linked Page Panel
 	root_dt = cstr(root_doctype or "").strip()
-	if root_dt and frappe.db.exists("Page Panel", root_dt):
+	pp_name = page_panel_docname_for_root(root_dt) if root_dt else None
+	if pp_name:
 		pp_vals = frappe.db.get_value(
-			"Page Panel", root_dt, ["column_order", "search_fields"], as_dict=True
+			"Page Panel", pp_name, ["column_order", "search_fields"], as_dict=True
 		) or {}
 		raw = ",".join(filter(None, [pp_vals.get("column_order"), pp_vals.get("search_fields")]))
 		pp_fields = [s.strip() for s in raw.split(",") if s.strip()]

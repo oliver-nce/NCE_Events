@@ -176,10 +176,11 @@ def validate_document_page_panel_required_roots(
 	When False: only Page Panel ``required_fields`` (e.g. Woo publish before insert).
 	"""
 	from nce_events.api.form_dialog._helpers import _panel_required_value_empty
+	from nce_events.api.panel_api_pkg.page_panel_lookup import get_page_panel_doc_for_root
 
 	required_keys: list[str] = []
-	if frappe.db.exists("Page Panel", doctype):
-		pp = frappe.get_doc("Page Panel", doctype)
+	pp = get_page_panel_doc_for_root(doctype)
+	if pp is not None:
 		required_keys.extend(_parse_csv(getattr(pp, "required_fields", None) or ""))
 	if include_meta_mandatory:
 		required_keys = list(dict.fromkeys(required_keys + _meta_reqd_root_fieldnames(doctype)))

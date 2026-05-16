@@ -4,8 +4,10 @@ from typing import Any
 
 import frappe
 
-from nce_events.api.panel_api_pkg._helpers import _title_case
-from nce_events.api.panel_api_pkg.core_filters import _build_core_filter_where
+from nce_events.api.panel_api_pkg.page_panel_lookup import (
+	generate_auto_page_panel_name,
+	page_panel_docname_for_root,
+)
 
 
 def _build_panel_sql(root_doctype: str, filters: dict | None = None) -> tuple[str, list[Any]]:
@@ -122,30 +124,34 @@ def build_panel_sql(root_doctype: str) -> str:
 	Saves the result into panel_sql so get_panel_data can reuse it.
 	"""
 	sql, _ = _build_panel_sql(root_doctype)
-	if frappe.db.exists("Page Panel", root_doctype):
-		frappe.db.set_value("Page Panel", root_doctype, "panel_sql", sql)
+	pp_name = page_panel_docname_for_root(root_doctype)
+	if pp_name:
+		frappe.db.set_value("Page Panel", pp_name, "panel_sql", sql)
 		frappe.db.commit()
 	return sql
 
 
 @frappe.whitelist()
 def save_panel_sql(root_doctype: str, core_filter: str = "", order_by: str = "") -> dict[str, bool]:
-	"""Persist core filter and order_by SQL on a Page Panel record."""
-	core_filter = (core_filter or "").strip()
+	"""Persist order_by on a Page Panel record.
+
+	core_filter is accepted for API compatibility; filters live on ``default_filters``.
+	"""
+	_ = (core_filter or "").strip()
 	order_by = (order_by or "").strip()
 
-	if not frappe.db.exists("Page Panel", root_doctype):
+	pp_name = page_panel_docname_for_root(root_doctype)
+	if not pp_name:
 		doc = frappe.new_doc("Page Panel")
+		doc.name = generate_auto_page_panel_name(root_doctype)
 		doc.root_doctype = root_doctype
-		doc.core_filter = core_filter
 		doc.order_by = order_by
 		doc.insert(ignore_permissions=True)
 	else:
 		frappe.db.set_value(
 			"Page Panel",
-			root_doctype,
+			pp_name,
 			{
-				"core_filter": core_filter,
 				"order_by": order_by,
 			},
 		)
