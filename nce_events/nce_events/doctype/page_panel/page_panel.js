@@ -141,6 +141,96 @@ function _ensure_tab_bar(frm) {
 	_show_tab(frm, "config");
 }
 
+/** Visible Panel ID editor (prompt autoname is easy to miss in the header). */
+function _ensure_panel_id_controls(frm) {
+	const $layout = $(frm.layout.wrapper);
+	if ($layout.find(".pp-panel-id-bar").length) {
+		return;
+	}
+	if (frm.fields_dict.__newname && frm.fields_dict.__newname.$wrapper) {
+		$(frm.fields_dict.__newname.$wrapper).hide();
+	}
+	const $bar = $(
+		'<div class="pp-panel-id-bar" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 0 10px;margin-bottom:4px;border-bottom:1px solid #d1d8dd;"></div>',
+	);
+	const label = __("Panel ID");
+	const $anchor = $layout.find(".pp-tab-bar").first();
+	if (frm.is_new()) {
+		const $lbl = $(
+			'<label class="control-label" style="margin:0;min-width:72px;">' +
+				frappe.utils.escape_html(label) +
+				"</label>",
+		);
+		const $inp = $(
+			'<input type="text" class="input-with-feedback form-control pp-newname-input" style="max-width:420px;">',
+		);
+		$inp.attr("placeholder", __("e.g. Event, or page-panel-registry"));
+		const pre = (frm.doc.__newname || "").trim();
+		if (pre) {
+			$inp.val(pre);
+		}
+		$inp.on("input change blur", function () {
+			const v = ($inp.val() || "").trim();
+			frm.doc.__newname = v;
+			if (frm.fields_dict.__newname && frm.fields_dict.__newname.set_value) {
+				frm.fields_dict.__newname.set_value(v);
+			}
+		});
+		$bar.append($lbl).append($inp);
+	} else if (frm.meta && frappe.utils.cint(frm.meta.allow_rename)) {
+		const $lbl = $('<span class="text-muted">' + frappe.utils.escape_html(label) + ": </span>");
+		const $val = $('<strong style="margin-right:8px;"></strong>').text(frm.doc.name || "");
+		const $btn = $('<button type="button" class="btn btn-xs btn-default">' + __("Change…") + "</button>");
+		$btn.on("click", function () {
+			frappe.prompt(
+				[
+					{
+						fieldname: "new_name",
+						fieldtype: "Data",
+						label: __("New Panel ID"),
+						default: frm.doc.name,
+						reqd: 1,
+					},
+				],
+				function (values) {
+					const nn = (values.new_name || "").trim();
+					if (!nn) {
+						return;
+					}
+					frappe.call({
+						method: "frappe.client.rename_doc",
+						args: {
+							doctype: frm.doctype,
+							old_name: frm.doc.name,
+							new_name: nn,
+						},
+						freeze: true,
+						callback: function (r) {
+							if (!r.exc) {
+								const finalName = r.message || nn;
+								frappe.show_alert({ message: __("Updated"), indicator: "green" });
+								frappe.set_route("Form", frm.doctype, finalName);
+							}
+						},
+					});
+				},
+				__("Rename Page Panel"),
+				__("Rename"),
+			);
+		});
+		$bar.append($lbl).append($val).append($btn);
+	} else {
+		const $lbl = $('<span class="text-muted">' + frappe.utils.escape_html(label) + ": </span>");
+		const $val = $("<strong></strong>").text(frm.doc.name || "");
+		$bar.append($lbl).append($val);
+	}
+	if ($anchor.length) {
+		$anchor.before($bar);
+	} else {
+		$layout.prepend($bar);
+	}
+}
+
 function _refresh_query_tab(frm) {
 	if (!frm.doc.root_doctype) return;
 	const fd = frm.fields_dict["panel_sql"];
@@ -2262,6 +2352,7 @@ function _build_dialogs_tab_html(frm, $container, dialogs) {
 frappe.ui.form.on("Page Panel", {
 	refresh: function (frm) {
 		_ensure_tab_bar(frm);
+		_ensure_panel_id_controls(frm);
 		_render_default_filters(frm);
 		// Hide Frappe's native tab bar (rendered when Tab Break fields exist in the DocType)
 		$(frm.layout.wrapper).find(".form-tabs-list, .nav-tabs").hide();
@@ -2313,10 +2404,31 @@ frappe.ui.form.on("Page Panel", {
 		if ($layout.data("pp-active-tab") === "display") {
 			_render_display(frm);
 		}
+		if (frm.is_new()) {
+			const $inp = $(frm.layout.wrapper).find(".pp-panel-id-bar input.pp-newname-input");
+			if ($inp.length && !$inp.val().trim() && frm.doc.root_doctype) {
+				const rt = frm.doc.root_doctype;
+				const sug = rt === "Page Panel" ? "PP-page-panel" : rt;
+				$inp.val(sug);
+				frm.doc.__newname = sug;
+				if (frm.fields_dict.__newname && frm.fields_dict.__newname.set_value) {
+					frm.fields_dict.__newname.set_value(sug);
+				}
+			}
+		}
 	},
 
 	column_order: function (frm) {
 		// Re-render filter widget so field list reflects updated visible columns
 		_render_default_filters(frm);
+	},
+
+	validate: function (frm) {
+		if (frm.is_new()) {
+			const $inp = $(frm.layout.wrapper).find(".pp-panel-id-bar input.pp-newname-input");
+			if ($inp.length) {
+				frm.doc.__newname = ($inp.val() || "").trim();
+			}
+		}
 	},
 });
