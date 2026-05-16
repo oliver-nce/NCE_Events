@@ -172,9 +172,6 @@ function _ensure_panel_id_controls(frm) {
 		$inp.on("input change blur", function () {
 			const v = ($inp.val() || "").trim();
 			frm.doc.__newname = v;
-			if (frm.fields_dict.__newname && frm.fields_dict.__newname.set_value) {
-				frm.fields_dict.__newname.set_value(v);
-			}
 		});
 		$bar.append($lbl).append($inp);
 	} else if (frm.meta && frappe.utils.cint(frm.meta.allow_rename)) {
