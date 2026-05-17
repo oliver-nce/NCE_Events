@@ -490,6 +490,7 @@ onUnmounted(() => {
 
 function onFieldChange({ fieldname, value }) {
 	form.formData[fieldname] = value;
+	form.onFieldChange(fieldname);
 }
 
 async function onLinkChange({ fieldname, value }) {

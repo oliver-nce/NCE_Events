@@ -39,6 +39,12 @@
 					@related-dirty="(v) => $emit('related-dirty', v)"
 				/>
 
+					<!-- Script tool tab: full JS UI rendered by captured client script -->
+					<PanelFormScriptToolTab
+						v-else-if="tab._scriptTool"
+						:tab="tab"
+					/>
+
 					<!-- Normal frozen-schema tab -->
 					<template v-else>
 						<div
@@ -107,6 +113,7 @@ import { isFindSearchableRootField } from "../utils/formDialogFindFields.js";
 import PanelFormField from "./PanelFormField.vue";
 import PanelFormDialogTabBar from "./PanelFormDialogTabBar.vue";
 import PanelFormDialogRelatedTab from "./PanelFormDialogRelatedTab.vue";
+import PanelFormScriptToolTab from "./PanelFormScriptToolTab.vue";
 import PanelFormFindSearchHelpModal from "./PanelFormFindSearchHelpModal.vue";
 
 const props = defineProps({

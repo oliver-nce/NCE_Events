@@ -70,17 +70,28 @@ export function usePanelFormDialog({
 		definitionSource,
 	});
 
-	const { runOnLoad, runOnChange } = useFormClientScript({
+	const { activateScripts, mountTool, runOnChange } = useFormClientScript({
 		definition,
 		allFields,
 		formData,
 		scriptFieldOverrides,
+		doctype,
 	});
 
-	// Run captured client scripts once after each load completes.
+	// After each load: apply field overrides and push script tool tabs.
 	watch(loading, (isLoading) => {
 		if (!isLoading && definition.value) {
-			runOnLoad();
+			const tools = activateScripts();
+			// Remove stale script tool tabs from any previous load
+			tabs.value = tabs.value.filter((t) => !t._scriptTool);
+			// Push one tab per discovered tool group
+			for (const tool of tools) {
+				tabs.value.push({
+					label: tool.label,
+					sections: [],
+					_scriptTool: { tool, mountFn: mountTool },
+				});
+			}
 		}
 	});
 
@@ -204,6 +215,7 @@ export function usePanelFormDialog({
 		isFieldMandatory,
 		isFieldReadOnly,
 		onFieldChange,
+		mountTool,
 		handleFetchFrom,
 		loadDebugLog,
 	};
