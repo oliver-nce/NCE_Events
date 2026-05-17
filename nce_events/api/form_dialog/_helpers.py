@@ -350,7 +350,8 @@ def _build_inline_child_row_dict(spec: dict[str, Any], root_meta: Any) -> dict[s
 		"label": tab_l,
 	}
 	try:
-		_assert_doctype_in_wp_tables(child_dt)
+		# Nested Table targets (e.g. Page Panel Default Filter) are schema-only helpers and are
+		# not listed in WP Tables. Root ``target_doctype`` was already gated at capture/rebuild entry.
 		child_meta = frappe.get_meta(child_dt)
 		child_fields = [cf.as_dict() for cf in child_meta.fields]
 		child_fields = _enrich_fetch_from_fields(child_fields, child_meta)
