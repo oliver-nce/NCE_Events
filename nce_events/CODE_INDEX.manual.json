@@ -264,7 +264,7 @@
       ]
     },
     "nce_events/api/form_dialog/_helpers.py": {
-      "purpose": "Internal helpers shared by the form_dialog package: WP Tables validation, System Manager guard, hop-chain normalization/walk, related-row filter/column derivation, fetch_from enrichment, related-doctypes argument parsing, panel required-value emptiness check, get_list field sanitization.",
+      "purpose": "Internal helpers shared by the form_dialog package: WP Tables validation, System Manager guard, hop-chain normalization/walk, related-row filter/column derivation, fetch_from enrichment, client-script capture (Client Script DocType records + app-level .js files), related-doctypes argument parsing, panel required-value emptiness check, get_list field sanitization.",
       "private_helpers": [
         "_assert_doctype_in_wp_tables",
         "_require_system_manager",
@@ -273,6 +273,7 @@
         "_filters_for_related_rows",
         "_related_list_columns_from_child_row",
         "_enrich_fetch_from_fields",
+        "_capture_client_scripts",
         "_parse_related_doctypes_argument",
         "_panel_required_value_empty",
         "_sanitize_get_list_fields",
@@ -287,11 +288,12 @@
         "Hop-chain normalization and walk",
         "Related-row filters and column derivation",
         "fetch_from enrichment",
+        "Client script capture (Client Script DocType records + app-level .js files on disk)",
         "Related-doctypes argument parsing and child-row sync"
       ]
     },
     "nce_events/api/form_dialog/capture.py": {
-      "purpose": "Form Dialog schema-capture endpoints: capture/rebuild a Form Dialog by freezing the live DocType meta from Desk, get_form_dialog_definition for the V2 panel renderer, and list_form_dialogs_for_doctype for the Desk Page Panel Dialogs tab.",
+      "purpose": "Form Dialog schema-capture endpoints: capture/rebuild a Form Dialog by freezing the live DocType meta from Desk (fields + client_scripts), get_form_dialog_definition for the V2 panel renderer, and list_form_dialogs_for_doctype for the Desk Page Panel Dialogs tab. frozen_meta_json stores { fields: [...], client_scripts: [...] }.",
       "depends_on": [
         "nce_events/api/form_dialog/_helpers.py",
         "nce_events/api/form_dialog/related_rows.py"
@@ -544,14 +546,22 @@
         "nce_events/api/form_dialog/capture.py"
       ]
     },
+    "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js": {
+      "purpose": "Two-phase captured-script runner for the Panel Form Dialog. Phase 1 activateScripts(): intercepts window.frappe.ui.form.on, executes each client_scripts entry, runs refresh handlers with a DOM-safe shim (real hidden element for layout.wrapper, Proxy for fields_dict, absorb-Proxy for page). Returns tool tab descriptors — one per add_custom_button group, or a single generic 'Tools' entry for DOM-injection scripts that have no add_custom_button calls. Phase 2 mountTool(tool, domContainer): re-runs refresh with the real visible container so the script renders its full UI (tab bars, buttons, sections). Also provides runOnChange(fieldname) for field-level event handlers.",
+      "exports": [
+        "useFormClientScript"
+      ],
+      "depends_on": []
+    },
     "nce_events/public/js/panel_page_v2/composables/usePanelFormDialog.js": {
-      "purpose": "V2 composable — facade for Panel Form Dialog: composes createFrozenFormLoad, createHandleFetchFrom, frozenFormValidate/Save, formDialogSnapshot. Used by PanelFormDialog.vue.",
+      "purpose": "V2 composable — facade for Panel Form Dialog: composes createFrozenFormLoad, createHandleFetchFrom, frozenFormValidate/Save, formDialogSnapshot, and useFormClientScript. Watches loading to run activateScripts() after each load and push tool tabs. Used by PanelFormDialog.vue.",
       "depends_on": [
         "utils/formDialogSnapshot.js",
         "composables/formDialogFetchFrom.js",
         "composables/frozenFormValidate.js",
         "composables/frozenFormSave.js",
-        "composables/useFrozenFormLoad.js"
+        "composables/useFrozenFormLoad.js",
+        "composables/useFormClientScript.js"
       ]
     },
     "nce_events/public/js/panel_page_v2/components/PanelTable.vue": {
@@ -644,12 +654,19 @@
       "purpose": "Form dialog header — title, row nav, close.",
       "depends_on": []
     },
+    "nce_events/public/js/panel_page_v2/components/PanelFormScriptToolTab.vue": {
+      "purpose": "Mounts a captured JS tool UI into a real DOM container. On mount calls mountTool(tool, containerRef.value) from usePanelFormDialog, which re-runs the script's refresh handler with layout.wrapper pointing to the container so the script can inject its full HTML UI (tab bars, buttons, sections). Used for standard DocType form scripts like page_panel.js that do DOM injection rather than add_custom_button.",
+      "depends_on": [
+        "composables/usePanelFormDialog.js"
+      ]
+    },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue": {
-      "purpose": "Form dialog body orchestrator: renders the tab bar (PanelFormDialogTabBar), iterates tabs, and dispatches each tab to either PanelFormDialogRelatedTab (related-doctype tabs) or the inline main-tab fields grid (PanelFormField-based). Aggregates imperative saveAllRelatedRows / resetRelatedToBaseline across related-tab children for the parent dialog.",
+      "purpose": "Form dialog body orchestrator: renders the tab bar (PanelFormDialogTabBar), iterates tabs, and dispatches each tab to PanelFormDialogRelatedTab (related-doctype tabs), PanelFormScriptToolTab (captured JS tool tabs), or the inline main-tab fields grid (PanelFormField-based). Aggregates imperative saveAllRelatedRows / resetRelatedToBaseline across related-tab children for the parent dialog.",
       "depends_on": [
         "components/PanelFormField.vue",
         "components/PanelFormDialogTabBar.vue",
-        "components/PanelFormDialogRelatedTab.vue"
+        "components/PanelFormDialogRelatedTab.vue",
+        "components/PanelFormScriptToolTab.vue"
       ]
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogTabBar.vue": {

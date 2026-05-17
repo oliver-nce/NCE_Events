@@ -122,6 +122,50 @@ export function useFormClientScript({ definition, allFields, formData, scriptFie
 	}
 
 	/**
+	 * Create an off-screen hidden host element with a child anchor, returning a disposer.
+	 * Used for Phase 1 discovery and per-field change handlers where scripts only need
+	 * a non-crashing DOM target, not a visible one.
+	 *
+	 * @returns {{ host: HTMLElement, anchor: HTMLElement, $host: object|null, dispose: Function }}
+	 */
+	function _makeHiddenHost() {
+		const $host = window.$ ? window.$('<div style="display:none;position:absolute;left:-9999px"></div>').appendTo('body') : null;
+		const host = $host ? $host[0] : document.createElement('div');
+		const $anchor = window.$ ? window.$('<div></div>').appendTo(host) : null;
+		const anchor = $anchor ? $anchor[0] : host;
+		return {
+			host,
+			anchor,
+			$host,
+			dispose() { if ($host) $host.remove(); },
+		};
+	}
+
+	/**
+	 * Assemble a full shim ready to pass to a captured refresh handler. Combines the
+	 * base shim with DOM bindings (layout.wrapper, fields_dict, page) and an optional
+	 * add_custom_button override.
+	 *
+	 * @param {object}      opts
+	 * @param {HTMLElement} opts.host             — Element scripts use as `frm.layout.wrapper`.
+	 * @param {HTMLElement} opts.anchor           — Element returned via `frm.fields_dict[*].$wrapper`.
+	 * @param {Function}    [opts.onCustomButton] — Override for `frm.add_custom_button(label, handler, group)`.
+	 */
+	function _assembleShim({ host, anchor, onCustomButton }) {
+		const shim = _buildBaseShim();
+		const $host = window.$ ? window.$(host) : null;
+		shim.layout = { wrapper: host };
+		shim.$wrapper = $host;
+		shim.wrapper = host;
+		shim.fields_dict = _makeFieldsDictProxy(anchor);
+		shim.page = _makeAbsorbProxy();
+		if (typeof onCustomButton === 'function') {
+			shim.add_custom_button = onCustomButton;
+		}
+		return shim;
+	}
+
+	/**
 	 * Phase 1 — call after load completes.
 	 * Runs refresh handlers with a DOM-safe shim, applies field overrides,
 	 * discovers tool groups. If scripts exist with refresh handlers but make no
@@ -138,28 +182,24 @@ export function useFormClientScript({ definition, allFields, formData, scriptFie
 
 		// Attach a real-but-invisible DOM element so scripts that do
 		// $(frm.layout.wrapper) / frm.fields_dict[x].$wrapper don't throw.
-		const $safeHost = window.$ ? window.$('<div style="display:none;position:absolute;left:-9999px"></div>').appendTo('body') : null;
-		const safeHost = $safeHost ? $safeHost[0] : document.createElement('div');
-		const $safeAnchor = window.$ ? window.$('<div></div>').appendTo(safeHost) : null;
-		const safeAnchor = $safeAnchor ? $safeAnchor[0] : safeHost;
+		const hidden = _makeHiddenHost();
+
+		const captureCustomButton = (label, handler, group) => {
+			const groupKey = group || '__ungrouped__';
+			const groupLabel = group || 'Tools';
+			if (!toolGroups[groupKey]) toolGroups[groupKey] = { label: groupLabel, buttons: [] };
+			toolGroups[groupKey].buttons.push({ label, handler });
+		};
 
 		for (const h of handlers) {
 			if (typeof h.refresh !== 'function') continue;
 			hasRefreshHandlers = true;
 
-			const shim = _buildBaseShim();
-			shim.layout = { wrapper: safeHost };
-			shim.$wrapper = $safeHost;
-			shim.wrapper = safeHost;
-			shim.fields_dict = _makeFieldsDictProxy(safeAnchor);
-			shim.page = _makeAbsorbProxy();
-
-			shim.add_custom_button = (label, handler, group) => {
-				const groupKey = group || '__ungrouped__';
-				const groupLabel = group || 'Tools';
-				if (!toolGroups[groupKey]) toolGroups[groupKey] = { label: groupLabel, buttons: [] };
-				toolGroups[groupKey].buttons.push({ label, handler });
-			};
+			const shim = _assembleShim({
+				host: hidden.host,
+				anchor: hidden.anchor,
+				onCustomButton: captureCustomButton,
+			});
 
 			try {
 				h.refresh(shim);
@@ -168,7 +208,7 @@ export function useFormClientScript({ definition, allFields, formData, scriptFie
 			}
 		}
 
-		if ($safeHost) $safeHost.remove();
+		hidden.dispose();
 
 		// Scripts that do pure DOM manipulation have no add_custom_button calls.
 		// Still push a "Tools" tab so mountTool gets to render their full UI.
@@ -184,41 +224,43 @@ export function useFormClientScript({ definition, allFields, formData, scriptFie
 	 * Re-runs refresh with a full DOM-aware shim so scripts can render
 	 * their complete HTML UI (tab bars, buttons, etc.) into the container.
 	 *
+	 * Returns a disposer that empties the container — jQuery's ``.empty()``
+	 * detaches event handlers and data on all child elements, freeing anything
+	 * the script bound inside the container. Listeners that scripts attach to
+	 * ``window`` / ``document`` (rare in form scripts) are NOT cleaned up here.
+	 *
 	 * @param {{ label: string, buttons: Array }} tool
 	 * @param {HTMLElement} domContainer
+	 * @returns {Function} dispose
 	 */
 	function mountTool(tool, domContainer) {
 		const handlers = _captureHandlers();
-		const $container = window.$ ? window.$(domContainer) : null;
 
 		// Create an anchor element inside the container.
 		// Scripts that insert content relative to frm.fields_dict[x].$wrapper
 		// (e.g. $wrapper.before($tabBar)) will insert before this anchor,
 		// placing content inside domContainer correctly.
-		const $anchor = $container ? window.$('<div class="ppv2-tool-anchor" style="display:none"></div>').appendTo($container) : null;
+		const $anchor = window.$ ? window.$('<div class="ppv2-tool-anchor" style="display:none"></div>').appendTo(domContainer) : null;
 		const anchorEl = $anchor ? $anchor[0] : domContainer;
+
+		// Render any add_custom_button registrations as real DOM buttons inside the container.
+		const renderCustomButton = (label, handler /*, group */) => {
+			const btn = document.createElement('button');
+			btn.textContent = label;
+			btn.className = 'ppv2-script-tool-btn';
+			btn.addEventListener('click', () => {
+				try { handler(); } catch (e) { console.warn('[useFormClientScript] button error:', e); }
+			});
+			domContainer.appendChild(btn);
+		};
 
 		for (const h of handlers) {
 			if (typeof h.refresh !== 'function') continue;
-			const shim = _buildBaseShim();
-
-			// Point all DOM references at the real container.
-			shim.layout = { wrapper: domContainer };
-			shim.$wrapper = $container;
-			shim.wrapper = domContainer;
-			shim.fields_dict = _makeFieldsDictProxy(anchorEl);
-			shim.page = _makeAbsorbProxy();
-
-			// Render any add_custom_button registrations into the container.
-			shim.add_custom_button = (label, handler /*, group */) => {
-				const btn = document.createElement('button');
-				btn.textContent = label;
-				btn.className = 'ppv2-script-tool-btn';
-				btn.addEventListener('click', () => {
-					try { handler(); } catch (e) { console.warn('[useFormClientScript] button error:', e); }
-				});
-				domContainer.appendChild(btn);
-			};
+			const shim = _assembleShim({
+				host: domContainer,
+				anchor: anchorEl,
+				onCustomButton: renderCustomButton,
+			});
 
 			try {
 				h.refresh(shim);
@@ -226,6 +268,18 @@ export function useFormClientScript({ definition, allFields, formData, scriptFie
 				console.warn('[useFormClientScript] mount error:', e);
 			}
 		}
+
+		return function dispose() {
+			try {
+				if (window.$) {
+					window.$(domContainer).empty();
+				} else {
+					while (domContainer.firstChild) domContainer.removeChild(domContainer.firstChild);
+				}
+			} catch (e) {
+				console.warn('[useFormClientScript] dispose error:', e);
+			}
+		};
 	}
 
 	/**
@@ -236,25 +290,20 @@ export function useFormClientScript({ definition, allFields, formData, scriptFie
 	 */
 	function runOnChange(fieldname) {
 		const handlers = _captureHandlers();
-		const $dummy = window.$ ? window.$('<div style="display:none"></div>').appendTo('body') : null;
-		const dummyEl = $dummy ? $dummy[0] : document.createElement('div');
+		const hidden = _makeHiddenHost();
 
 		for (const h of handlers) {
 			const fn = h[fieldname];
-			if (typeof fn === 'function') {
-				const shim = _buildBaseShim();
-				shim.layout = { wrapper: dummyEl };
-				shim.fields_dict = _makeFieldsDictProxy(dummyEl);
-				shim.page = _makeAbsorbProxy();
-				try {
-					fn(shim);
-				} catch (e) {
-					console.warn('[useFormClientScript] change error:', e);
-				}
+			if (typeof fn !== 'function') continue;
+			const shim = _assembleShim({ host: hidden.host, anchor: hidden.anchor });
+			try {
+				fn(shim);
+			} catch (e) {
+				console.warn('[useFormClientScript] change error:', e);
 			}
 		}
 
-		if ($dummy) $dummy.remove();
+		hidden.dispose();
 	}
 
 	return { activateScripts, mountTool, runOnChange };

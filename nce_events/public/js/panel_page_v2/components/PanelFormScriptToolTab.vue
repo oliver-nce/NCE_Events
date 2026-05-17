@@ -3,18 +3,29 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 
 const props = defineProps({
 	tab: { type: Object, required: true },
 });
 
 const containerRef = ref(null);
+let _dispose = null;
 
 onMounted(() => {
 	const { tool, mountFn } = props.tab._scriptTool || {};
 	if (typeof mountFn === "function" && containerRef.value) {
-		mountFn(tool, containerRef.value);
+		// mountFn returns a disposer (see useFormClientScript.mountTool).
+		// Stored so onUnmounted can detach jQuery handlers + free DOM-bound state
+		// when the dialog closes or the tab is replaced on prev/next nav.
+		_dispose = mountFn(tool, containerRef.value);
+	}
+});
+
+onUnmounted(() => {
+	if (typeof _dispose === "function") {
+		try { _dispose(); } catch (e) { console.warn("[ScriptToolTab] dispose error:", e); }
+		_dispose = null;
 	}
 });
 </script>

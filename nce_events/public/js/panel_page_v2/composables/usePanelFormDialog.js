@@ -78,9 +78,16 @@ export function usePanelFormDialog({
 		doctype,
 	});
 
-	// After each load: apply field overrides and push script tool tabs.
+	// After each load: clear stale overrides, re-activate scripts, push tool tabs.
 	watch(loading, (isLoading) => {
 		if (!isLoading && definition.value) {
+			// Clear stale script field overrides from any previous load.
+			// Without this, a hidden/required/read-only flag set by a previous
+			// record's script will leak into the next record on prev/next nav
+			// or definition reload.
+			for (const k of Object.keys(scriptFieldOverrides)) {
+				delete scriptFieldOverrides[k];
+			}
 			const tools = activateScripts();
 			// Remove stale script tool tabs from any previous load
 			tabs.value = tabs.value.filter((t) => !t._scriptTool);

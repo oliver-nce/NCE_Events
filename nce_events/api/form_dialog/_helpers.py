@@ -519,6 +519,27 @@ def _main_tab_skeleton_from_frozen_fields(fields_list: list[dict]) -> list[dict[
 	return tabs_skeleton
 
 
+def _build_frozen_meta_json(doctype: str) -> tuple[str, list[dict]]:
+	"""
+	Build the ``frozen_meta_json`` string for a DocType by snapshotting its meta,
+	enriching fetch_from fields, and capturing client scripts.
+
+	Returns ``(frozen_json, fields_list)``. ``fields_list`` is returned alongside
+	so callers can hand it to ``_sync_form_dialog_tab_notes_from_fields`` without
+	re-fetching ``meta``.
+	"""
+	meta = frappe.get_meta(doctype)
+	fields_list = [f.as_dict() for f in meta.fields]
+	fields_list = _enrich_fetch_from_fields(fields_list, meta)
+	client_scripts = _capture_client_scripts(doctype)
+	frozen_json = json.dumps(
+		{"fields": fields_list, "client_scripts": client_scripts},
+		default=str,
+		indent=None,
+	)
+	return frozen_json, fields_list
+
+
 def _capture_client_scripts(doctype: str) -> list[str]:
 	"""
 	Collect all Form-view JS for a DocType from two sources:
