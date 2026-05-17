@@ -2,6 +2,18 @@
 const _dt_field_cache = {};
 let _pp_rebuild_pending = false;
 
+/** Coerce to int like Frappe ``cint``. Desk exposes ``cint`` globally — it is not ``frappe.utils.cint``. */
+function _cint(val) {
+	if (typeof window !== "undefined" && typeof window.cint === "function") {
+		return window.cint(val);
+	}
+	if (frappe.utils && typeof frappe.utils.cint === "function") {
+		return frappe.utils.cint(val);
+	}
+	const n = parseInt(String(val ?? ""), 10);
+	return Number.isNaN(n) ? 0 : n;
+}
+
 /** API returns { fields, doctype_title_field } (or legacy list). */
 function _unpack_doctype_fields_message(msg) {
 	if (msg && Array.isArray(msg.fields)) {
@@ -174,7 +186,7 @@ function _ensure_panel_id_controls(frm) {
 			frm.doc.__newname = v;
 		});
 		$bar.append($lbl).append($inp);
-	} else if (frm.meta && frappe.utils.cint(frm.meta.allow_rename)) {
+	} else if (frm.meta && _cint(frm.meta.allow_rename)) {
 		const $lbl = $('<span class="text-muted">' + frappe.utils.escape_html(label) + ": </span>");
 		const $val = $('<strong style="margin-right:8px;"></strong>').text(frm.doc.name || "");
 		const $btn = $('<button type="button" class="btn btn-xs btn-default">' + __("Change…") + "</button>");
