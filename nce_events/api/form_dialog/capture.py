@@ -21,6 +21,7 @@ from frappe.utils import cint, cstr
 
 from ._helpers import (
 	_assert_doctype_in_wp_tables,
+	_capture_client_scripts,
 	_enrich_fetch_from_fields,
 	_normalize_hop_chain_value,
 	_related_doctype_child_rows,
@@ -55,7 +56,12 @@ def capture_form_dialog_from_desk(
 		fields_list.append(f.as_dict())
 
 	fields_list = _enrich_fetch_from_fields(fields_list, meta)
-	frozen_json = json.dumps({"fields": fields_list}, default=str, indent=None)
+	client_scripts = _capture_client_scripts(doctype)
+	frozen_json = json.dumps(
+		{"fields": fields_list, "client_scripts": client_scripts},
+		default=str,
+		indent=None,
+	)
 
 	if not title:
 		title = f"{doctype} — dialog"
@@ -115,7 +121,12 @@ def rebuild_form_dialog(name: str, related_doctypes: str | list | None = None) -
 		fields_list.append(f.as_dict())
 
 	fields_list = _enrich_fetch_from_fields(fields_list, meta)
-	doc.frozen_meta_json = json.dumps({"fields": fields_list}, default=str, indent=None)
+	client_scripts = _capture_client_scripts(doc.target_doctype)
+	doc.frozen_meta_json = json.dumps(
+		{"fields": fields_list, "client_scripts": client_scripts},
+		default=str,
+		indent=None,
+	)
 	doc.captured_at = frappe.utils.now_datetime()
 	_sync_related_doctypes(doc, related_doctypes)
 	_sync_form_dialog_tab_notes_from_fields(doc, fields_list)

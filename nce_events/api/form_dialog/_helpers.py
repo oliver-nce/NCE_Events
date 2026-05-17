@@ -518,6 +518,29 @@ def _main_tab_skeleton_from_frozen_fields(fields_list: list[dict]) -> list[dict[
 	return tabs_skeleton
 
 
+def _capture_client_scripts(doctype: str) -> list[str]:
+	"""
+	Fetch enabled Form-view Client Scripts for a standard DocType.
+
+	Returns a list of script strings (may be empty). Never raises — a failure
+	silently returns an empty list so capture/rebuild never breaks on missing scripts.
+	"""
+	try:
+		rows = frappe.get_all(
+			"Client Script",
+			filters={"dt": doctype, "enabled": 1, "view": "Form"},
+			fields=["script"],
+			order_by="name asc",
+		)
+		return [
+			cstr(r.get("script") or "").strip()
+			for r in rows
+			if cstr(r.get("script") or "").strip()
+		]
+	except Exception:
+		return []
+
+
 def _sync_form_dialog_tab_notes_from_fields(doc: Any, fields_list: list[dict]) -> None:
 	"""Rebuild ``tab_notes`` child rows from frozen fields; reuse ``note`` by ``tab_anchor``."""
 	skeleton = _main_tab_skeleton_from_frozen_fields(fields_list)

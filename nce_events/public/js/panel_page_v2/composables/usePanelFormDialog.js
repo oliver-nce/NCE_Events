@@ -1,4 +1,4 @@
-import { ref, reactive, computed, unref } from "vue";
+import { ref, reactive, computed, unref, watch } from "vue";
 import { snapshotForCompare } from "../utils/formDialogSnapshot.js";
 import { createHandleFetchFrom } from "./formDialogFetchFrom.js";
 import {
@@ -10,6 +10,7 @@ import {
 } from "./frozenFormValidate.js";
 import { saveFrozenFormDocument } from "./frozenFormSave.js";
 import { createFrozenFormLoad } from "./useFrozenFormLoad.js";
+import { useFormClientScript } from "./useFormClientScript.js";
 
 /**
  * Composable for managing a Panel Form Dialog.
@@ -44,6 +45,9 @@ export function usePanelFormDialog({
 	/** When localStorage nce_fd_load_debug=1, each load() appends step rows for the debug overlay. */
 	const loadDebugLog = ref([]);
 
+	/** Field display overrides written by captured client scripts via set_df_property. */
+	const scriptFieldOverrides = reactive({});
+
 	const handleFetchFrom = createHandleFetchFrom(allFields, formData);
 
 	const { load, resetWhenClosed } = createFrozenFormLoad({
@@ -64,6 +68,20 @@ export function usePanelFormDialog({
 		syncingFromLoad,
 		loadDebugLog,
 		definitionSource,
+	});
+
+	const { runOnLoad, runOnChange } = useFormClientScript({
+		definition,
+		allFields,
+		formData,
+		scriptFieldOverrides,
+	});
+
+	// Run captured client scripts once after each load completes.
+	watch(loading, (isLoading) => {
+		if (!isLoading && definition.value) {
+			runOnLoad();
+		}
 	});
 
 	const isNew = computed(() => !unref(docName));
@@ -130,10 +148,14 @@ export function usePanelFormDialog({
 	}
 
 	function isFieldVisible(field) {
+		const ov = scriptFieldOverrides[field.fieldname];
+		if (ov && ov.hidden !== undefined) return !ov.hidden;
 		return isFieldVisibleRule(field, formData);
 	}
 
 	function isFieldMandatory(field) {
+		const ov = scriptFieldOverrides[field.fieldname];
+		if (ov && ov.reqd !== undefined) return !!ov.reqd;
 		if (isFieldMandatoryRule(field, formData)) {
 			return true;
 		}
@@ -146,7 +168,14 @@ export function usePanelFormDialog({
 	}
 
 	function isFieldReadOnly(field) {
+		const ov = scriptFieldOverrides[field.fieldname];
+		if (ov && ov.read_only !== undefined) return !!ov.read_only;
 		return isFieldReadOnlyRule(field, formData);
+	}
+
+	/** Call after any field value changes to run captured client scripts for that field. */
+	function onFieldChange(fieldname) {
+		runOnChange(fieldname);
 	}
 
 	return {
@@ -174,6 +203,7 @@ export function usePanelFormDialog({
 		isFieldVisible,
 		isFieldMandatory,
 		isFieldReadOnly,
+		onFieldChange,
 		handleFetchFrom,
 		loadDebugLog,
 	};
