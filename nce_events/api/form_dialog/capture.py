@@ -26,6 +26,7 @@ from ._helpers import (
 	_capture_client_scripts,
 	_normalize_hop_chain_value,
 	_related_doctype_child_rows,
+	_require_form_dialog_capture_schema_ready,
 	_require_system_manager,
 	_sync_inline_child_tables,
 	_sync_related_doctypes,
@@ -62,6 +63,7 @@ def capture_form_dialog_from_desk(
 	    The name of the created/updated Form Dialog document.
 	"""
 	_require_system_manager()
+	_require_form_dialog_capture_schema_ready()
 	_assert_doctype_in_wp_tables(doctype)
 
 	frozen_json, fields_list = _build_frozen_meta_json(doctype)
@@ -125,6 +127,7 @@ def rebuild_form_dialog(
 	    Dict with name, target_doctype, captured_at, related_doctypes, inline_child_tables, script_tool_groups.
 	"""
 	_require_system_manager()
+	_require_form_dialog_capture_schema_ready()
 
 	doc = frappe.get_doc("Form Dialog", name)
 	_assert_doctype_in_wp_tables(doc.target_doctype)
@@ -305,16 +308,20 @@ def list_form_dialogs_for_doctype(doctype: str) -> list[dict]:
 			},
 		)
 
-	inline_rows = frappe.get_all(
-		"Form Dialog Inline Child Table",
-		filters={
-			"parent": ("in", names),
-			"parenttype": "Form Dialog",
-			"parentfield": "inline_child_tables",
-		},
-		fields=["name", "parent", "parent_fieldname", "child_doctype", "tab_label", "idx"],
-		order_by="parent asc, idx asc",
-	)
+	# Requires ``bench migrate`` after deploying child DocTypes; avoid breaking Desk if table missing.
+	try:
+		inline_rows = frappe.get_all(
+			"Form Dialog Inline Child Table",
+			filters={
+				"parent": ("in", names),
+				"parenttype": "Form Dialog",
+				"parentfield": "inline_child_tables",
+			},
+			fields=["name", "parent", "parent_fieldname", "child_doctype", "tab_label", "idx"],
+			order_by="parent asc, idx asc",
+		)
+	except Exception:
+		inline_rows = []
 	inline_by_parent: dict[str, list[dict[str, str]]] = {}
 	for r in inline_rows:
 		pid = cstr(r.get("parent") or "").strip()

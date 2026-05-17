@@ -33,6 +33,18 @@ def _assert_doctype_in_wp_tables(doctype: str) -> None:
 		)
 
 
+def _require_form_dialog_capture_schema_ready() -> None:
+	"""Bench ``migrate`` must have applied Form Dialog child-table fields before capture/rebuild."""
+	meta = frappe.get_meta("Form Dialog")
+	for fn in ("inline_child_tables", "script_tool_groups"):
+		if meta.get_field(fn) is None:
+			frappe.throw(
+				_(
+					"Missing Form Dialog field '{0}' in site metadata — deploy the latest nce_events app "
+					"then run '{1}'."
+				).format(fn, "bench migrate"),
+				title=_("Database update required"),
+			)
 def _require_system_manager() -> None:
 	"""Raise if the current user is not System Manager."""
 	if "System Manager" not in frappe.get_roles(frappe.session.user):

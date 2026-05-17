@@ -2475,7 +2475,16 @@ function _bind_dialogs_click_handlers(frm) {
 	});
 
 	$wrapper.on("click.ppFormDialogs", ".pp-dialog-create", function () {
-		const doctype = frm.doc.root_doctype;
+		const doctypeRaw = frm.doc.root_doctype;
+		const doctype = (doctypeRaw && String(doctypeRaw).trim()) || "";
+		if (!doctype) {
+			frappe.msgprint({
+				title: __("Root DocType required"),
+				message: __("Set Root DocType in the Config tab before capturing a dialog."),
+				indicator: "orange",
+			});
+			return;
+		}
 		frappe.prompt(
 			{
 				label: "Dialog title",
