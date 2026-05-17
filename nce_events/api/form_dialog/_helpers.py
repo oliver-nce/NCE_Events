@@ -8,6 +8,7 @@ these helpers are part of the @frappe.whitelist surface; they are private API.
 from __future__ import annotations
 
 import json
+import os
 from typing import Any
 
 import frappe
@@ -520,11 +521,19 @@ def _main_tab_skeleton_from_frozen_fields(fields_list: list[dict]) -> list[dict[
 
 def _capture_client_scripts(doctype: str) -> list[str]:
 	"""
-	Fetch enabled Form-view Client Scripts for a standard DocType.
+	Collect all Form-view JS for a DocType from two sources:
 
-	Returns a list of script strings (may be empty). Never raises — a failure
-	silently returns an empty list so capture/rebuild never breaks on missing scripts.
+	1. ``Client Script`` DocType records (enabled, view=Form) — custom scripts
+	   added via Desk for any doctype.
+	2. The doctype's own app-level ``.js`` file on disk (e.g.
+	   ``page_panel/page_panel.js``) — present for standard doctypes defined in
+	   app code. Uses the same ``frappe.ui.form.on(doctype, {...})`` pattern.
+
+	Returns a list of script strings. Never raises.
 	"""
+	scripts: list[str] = []
+
+	# ── 1. Client Script DocType records ─────────────────────────────────────
 	try:
 		rows = frappe.get_all(
 			"Client Script",
@@ -532,13 +541,34 @@ def _capture_client_scripts(doctype: str) -> list[str]:
 			fields=["script"],
 			order_by="name asc",
 		)
-		return [
-			cstr(r.get("script") or "").strip()
-			for r in rows
-			if cstr(r.get("script") or "").strip()
-		]
+		for r in rows:
+			s = cstr(r.get("script") or "").strip()
+			if s:
+				scripts.append(s)
 	except Exception:
-		return []
+		pass
+
+	# ── 2. App-level doctype .js file ─────────────────────────────────────────
+	try:
+		meta = frappe.get_meta(doctype)
+		module = cstr(meta.module or "").strip()
+		if module:
+			app = frappe.db.get_value("Module Def", module, "app_name")
+			if app:
+				doctype_snake = frappe.scrub(doctype)
+				module_snake = frappe.scrub(module)
+				js_path = frappe.get_app_path(
+					app, module_snake, "doctype", doctype_snake, f"{doctype_snake}.js"
+				)
+				if os.path.isfile(js_path):
+					with open(js_path, encoding="utf-8") as fh:
+						content = fh.read().strip()
+					if content:
+						scripts.append(content)
+	except Exception:
+		pass
+
+	return scripts
 
 
 def _sync_form_dialog_tab_notes_from_fields(doc: Any, fields_list: list[dict]) -> None:
