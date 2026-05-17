@@ -249,6 +249,155 @@ def _sync_related_doctypes(doc: Any, related_doctypes: str | list | None) -> Non
 		doc.append("related_doctypes", row)
 
 
+def table_fields_for_capture_wizard(root_doctype: str) -> list[dict[str, str]]:
+	"""Table fields on ``root_doctype`` for the Page Panel capture picker."""
+	meta = frappe.get_meta(root_doctype)
+	out: list[dict[str, str]] = []
+	for f in meta.fields:
+		if f.fieldtype != "Table" or not (f.options or "").strip():
+			continue
+		out.append(
+			{
+				"parent_fieldname": f.fieldname,
+				"label": cstr(f.label or "").strip() or f.fieldname,
+				"child_doctype": cstr(f.options).strip(),
+			}
+		)
+	return out
+
+
+def _parse_inline_child_tables_argument(raw: object) -> list[dict[str, Any]]:
+	if raw is None:
+		return []
+	if isinstance(raw, str):
+		s = raw.strip()
+		if not s:
+			return []
+		try:
+			raw = json.loads(s)
+		except json.JSONDecodeError:
+			return []
+	if not isinstance(raw, list):
+		return []
+	out: list[dict[str, Any]] = []
+	for item in raw:
+		if not isinstance(item, dict):
+			continue
+		pfn = cstr(item.get("parent_fieldname") or "").strip()
+		if not pfn:
+			continue
+		out.append(
+			{
+				"parent_fieldname": pfn,
+				"tab_label": cstr(item.get("tab_label") or "").strip(),
+			}
+		)
+	return out
+
+
+def _parse_script_tool_groups_argument(raw: object) -> list[dict[str, str]]:
+	if raw is None:
+		return []
+	if isinstance(raw, str):
+		s = raw.strip()
+		if not s:
+			return []
+		try:
+			raw = json.loads(s)
+		except json.JSONDecodeError:
+			return []
+	if not isinstance(raw, list):
+		return []
+	out: list[dict[str, str]] = []
+	for item in raw:
+		if not isinstance(item, dict):
+			continue
+		gk = cstr(item.get("group_key") or "").strip() or "__ungrouped__"
+		tl = cstr(item.get("tab_label") or "").strip()
+		out.append({"group_key": gk, "tab_label": tl})
+	return out
+
+
+def _build_inline_child_row_dict(spec: dict[str, Any], root_meta: Any) -> dict[str, Any] | None:
+	"""One ``Form Dialog Inline Child Table`` row with frozen child fields JSON in ``info``."""
+	pfn = cstr(spec.get("parent_fieldname") or "").strip()
+	if not pfn:
+		return None
+	tab_l = cstr(spec.get("tab_label") or "").strip()
+	df = root_meta.get_field(pfn)
+	if not df or df.fieldtype != "Table" or not (df.options or "").strip():
+		return None
+
+	child_dt = cstr(df.options).strip()
+	if not tab_l:
+		tab_l = cstr(df.label or "").strip() or pfn
+
+	info_obj: dict[str, Any] = {
+		"doctype": child_dt,
+		"parent_fieldname": pfn,
+		"label": tab_l,
+	}
+	try:
+		_assert_doctype_in_wp_tables(child_dt)
+		child_meta = frappe.get_meta(child_dt)
+		child_fields = [cf.as_dict() for cf in child_meta.fields]
+		child_fields = _enrich_fetch_from_fields(child_fields, child_meta)
+		info_obj["fields"] = child_fields
+	except Exception as e:
+		info_obj["capture_error"] = cstr(e)[:500]
+
+	try:
+		info_str = json.dumps(info_obj, default=str)
+	except Exception as e:
+		info_str = json.dumps(
+			{"parent_fieldname": pfn, "doctype": child_dt, "capture_error": cstr(e)[:300]},
+			default=str,
+		)
+
+	return {
+		"parent_fieldname": pfn,
+		"child_doctype": child_dt,
+		"tab_label": tab_l,
+		"info": info_str,
+	}
+
+
+def _sync_inline_child_tables(doc: Any, inline_child_tables: object, root_doctype: str) -> None:
+	preserved_portal: dict[str, str] = {}
+	for old in list(doc.get("inline_child_tables") or []):
+		pfn = cstr(getattr(old, "parent_fieldname", None) or "").strip()
+		pfc = cstr(getattr(old, "portal_field_config", None) or "").strip()
+		if pfn and pfc:
+			preserved_portal[pfn] = pfc
+
+	doc.inline_child_tables = []
+	meta = frappe.get_meta(root_doctype)
+	for spec in _parse_inline_child_tables_argument(inline_child_tables):
+		row = _build_inline_child_row_dict(spec, meta)
+		if not row:
+			continue
+		pfn = cstr(row.get("parent_fieldname") or "").strip()
+		if pfn in preserved_portal:
+			row["portal_field_config"] = preserved_portal[pfn]
+		doc.append("inline_child_tables", row)
+
+
+def _sync_script_tool_groups(doc: Any, script_tool_groups: object) -> None:
+	preserved_labels: dict[str, str] = {}
+	for old in list(doc.get("script_tool_groups") or []):
+		gk = cstr(getattr(old, "group_key", None) or "").strip() or "__ungrouped__"
+		tl = cstr(getattr(old, "tab_label", None) or "").strip()
+		if tl:
+			preserved_labels[gk] = tl
+
+	doc.script_tool_groups = []
+	for item in _parse_script_tool_groups_argument(script_tool_groups):
+		gk = cstr(item.get("group_key") or "").strip() or "__ungrouped__"
+		incoming_tl = cstr(item.get("tab_label") or "").strip()
+		tab_l = preserved_labels.get(gk) or incoming_tl or gk
+		doc.append("script_tool_groups", {"group_key": gk, "tab_label": tab_l})
+
+
 def _hop_walk_final_identifiers(root_name: str, hop_chain: list[dict[str, str]]) -> list[str] | None:
 	"""
 	Walk hop_chain using permission-aware get_list.

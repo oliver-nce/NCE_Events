@@ -14,6 +14,7 @@ Whitelisted as System Manager:
 from __future__ import annotations
 
 import json
+from typing import Any
 
 import frappe
 from frappe import _
@@ -22,18 +23,30 @@ from frappe.utils import cint, cstr
 from ._helpers import (
 	_assert_doctype_in_wp_tables,
 	_build_frozen_meta_json,
+	_capture_client_scripts,
 	_normalize_hop_chain_value,
 	_related_doctype_child_rows,
 	_require_system_manager,
+	_sync_inline_child_tables,
 	_sync_related_doctypes,
+	_sync_script_tool_groups,
 	_sync_form_dialog_tab_notes_from_fields,
+	table_fields_for_capture_wizard,
 )
-from .related_rows import _related_rows_for_vue_api
+from .related_rows import (
+	_inline_child_tables_for_vue_api,
+	_related_rows_for_vue_api,
+	_script_tool_groups_for_vue_api,
+)
 
 
 @frappe.whitelist()
 def capture_form_dialog_from_desk(
-	doctype: str, title: str | None = None, related_doctypes: str | list | None = None
+	doctype: str,
+	title: str | None = None,
+	related_doctypes: str | list | None = None,
+	inline_child_tables: str | list | None = None,
+	script_tool_groups: str | list | None = None,
 ) -> str:
 	"""
 	Create or update a Form Dialog by capturing the live DocType schema from Desk.
@@ -42,6 +55,8 @@ def capture_form_dialog_from_desk(
 	    doctype: The Frappe DocType to capture (must be in WP Tables).
 	    title: Optional title for the Form Dialog. Defaults to "{doctype} — dialog".
 	    related_doctypes: Optional JSON string or list of selected related DocTypes.
+	    inline_child_tables: Optional JSON list of dicts with ``parent_fieldname`` and optional ``tab_label``.
+	    script_tool_groups: Optional JSON list of dicts with ``group_key`` and ``tab_label`` for Tools tabs.
 
 	Returns:
 	    The name of the created/updated Form Dialog document.
@@ -62,6 +77,8 @@ def capture_form_dialog_from_desk(
 		doc.frozen_meta_json = frozen_json
 		doc.captured_at = frappe.utils.now_datetime()
 		_sync_related_doctypes(doc, related_doctypes)
+		_sync_inline_child_tables(doc, inline_child_tables, doctype)
+		_sync_script_tool_groups(doc, script_tool_groups)
 		_sync_form_dialog_tab_notes_from_fields(doc, fields_list)
 		doc.save(ignore_permissions=True)
 	else:
@@ -77,6 +94,8 @@ def capture_form_dialog_from_desk(
 				"related_doctypes": _related_doctype_child_rows(related_doctypes),
 			}
 		)
+		_sync_inline_child_tables(doc, inline_child_tables, doctype)
+		_sync_script_tool_groups(doc, script_tool_groups)
 		_sync_form_dialog_tab_notes_from_fields(doc, fields_list)
 		doc.insert(ignore_permissions=True)
 
@@ -85,7 +104,12 @@ def capture_form_dialog_from_desk(
 
 
 @frappe.whitelist()
-def rebuild_form_dialog(name: str, related_doctypes: str | list | None = None) -> dict:
+def rebuild_form_dialog(
+	name: str,
+	related_doctypes: str | list | None = None,
+	inline_child_tables: str | list | None = None,
+	script_tool_groups: str | list | None = None,
+) -> dict:
 	"""
 	Re-capture the DocType schema from Desk and overwrite the frozen snapshot.
 
@@ -94,9 +118,11 @@ def rebuild_form_dialog(name: str, related_doctypes: str | list | None = None) -
 	Args:
 	    name: The name (title) of the Form Dialog document.
 	    related_doctypes: Optional JSON string or list of selected related DocTypes.
+	    inline_child_tables: Optional JSON list of dicts with ``parent_fieldname`` and optional ``tab_label``.
+	    script_tool_groups: Optional JSON list of dicts with ``group_key`` and ``tab_label``.
 
 	Returns:
-	    Dict with name, target_doctype, captured_at, and related_doctypes.
+	    Dict with name, target_doctype, captured_at, related_doctypes, inline_child_tables, script_tool_groups.
 	"""
 	_require_system_manager()
 
@@ -107,6 +133,8 @@ def rebuild_form_dialog(name: str, related_doctypes: str | list | None = None) -
 	doc.frozen_meta_json = frozen_json
 	doc.captured_at = frappe.utils.now_datetime()
 	_sync_related_doctypes(doc, related_doctypes)
+	_sync_inline_child_tables(doc, inline_child_tables, doc.target_doctype)
+	_sync_script_tool_groups(doc, script_tool_groups)
 	_sync_form_dialog_tab_notes_from_fields(doc, fields_list)
 	doc.save(ignore_permissions=True)
 	frappe.db.commit()
@@ -116,6 +144,8 @@ def rebuild_form_dialog(name: str, related_doctypes: str | list | None = None) -
 		"target_doctype": doc.target_doctype,
 		"captured_at": str(doc.captured_at),
 		"related_doctypes": _related_rows_for_vue_api(doc),
+		"inline_child_tables": _inline_child_tables_for_vue_api(doc),
+		"script_tool_groups": _script_tool_groups_for_vue_api(doc),
 	}
 
 
@@ -172,6 +202,8 @@ def get_form_dialog_definition(name: str) -> dict:
 		key=lambda b: (cint(b.get("sort_order")), cint(b.get("idx")), cstr(b.get("name") or "")),
 	)
 	related_doctypes = _related_rows_for_vue_api(doc)
+	inline_child_tables = _inline_child_tables_for_vue_api(doc)
+	script_tool_groups = _script_tool_groups_for_vue_api(doc)
 
 	tab_notes = [
 		{
@@ -194,8 +226,26 @@ def get_form_dialog_definition(name: str) -> dict:
 		"custom_presubmit_script": (getattr(doc, "custom_presubmit_script", None) or "").strip(),
 		"buttons": buttons,
 		"related_doctypes": related_doctypes,
+		"inline_child_tables": inline_child_tables,
+		"script_tool_groups": script_tool_groups,
 		"tab_notes": tab_notes,
 	}
+
+
+@frappe.whitelist()
+def get_capture_wizard_options(doctype: str) -> dict[str, Any]:
+	"""Page Panel capture picker: Table fields on ``doctype`` eligible as inline tabs."""
+	_require_system_manager()
+	_assert_doctype_in_wp_tables(doctype)
+	return {"inline_table_fields": table_fields_for_capture_wizard(doctype)}
+
+
+@frappe.whitelist()
+def preview_capture_client_scripts(doctype: str) -> dict[str, Any]:
+	"""Desk-only: script bodies used for Tools-tab discovery before capture completes."""
+	_require_system_manager()
+	_assert_doctype_in_wp_tables(doctype)
+	return {"scripts": _capture_client_scripts(doctype)}
 
 
 @frappe.whitelist()
@@ -255,7 +305,38 @@ def list_form_dialogs_for_doctype(doctype: str) -> list[dict]:
 			},
 		)
 
+	inline_rows = frappe.get_all(
+		"Form Dialog Inline Child Table",
+		filters={
+			"parent": ("in", names),
+			"parenttype": "Form Dialog",
+			"parentfield": "inline_child_tables",
+		},
+		fields=["name", "parent", "parent_fieldname", "child_doctype", "tab_label", "idx"],
+		order_by="parent asc, idx asc",
+	)
+	inline_by_parent: dict[str, list[dict[str, str]]] = {}
+	for r in inline_rows:
+		pid = cstr(r.get("parent") or "").strip()
+		if not pid:
+			continue
+		pfn = cstr(r.get("parent_fieldname") or "").strip()
+		cd = cstr(r.get("child_doctype") or "").strip()
+		if not pfn or not cd:
+			continue
+		crn = cstr(r.get("name") or "").strip()
+		lb = cstr(r.get("tab_label") or "").strip() or pfn
+		inline_by_parent.setdefault(pid, []).append(
+			{
+				"parent_fieldname": pfn,
+				"child_doctype": cd,
+				"label": lb,
+				"child_row_name": crn,
+			},
+		)
+
 	for d in dialogs:
 		d["related_doctypes"] = by_parent.get(d["name"], [])
+		d["inline_child_tables"] = inline_by_parent.get(d["name"], [])
 
 	return dialogs

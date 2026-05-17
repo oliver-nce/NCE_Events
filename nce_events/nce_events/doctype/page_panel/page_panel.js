@@ -1406,11 +1406,21 @@ function _open_related_portal_float(frm, opts) {
 	const form_dialog = opts.form_dialog;
 	const child_row_name = opts.child_row_name;
 	const titleHint = opts.tab_label || __("Related table");
+	const kind = opts.kind === "inline" ? "inline" : "related";
 
 	if (!form_dialog || !child_row_name) {
 		frappe.show_alert({ message: __("Missing dialog or row id"), indicator: "orange" });
 		return;
 	}
+
+	const loadMethod =
+		kind === "inline"
+			? "nce_events.api.form_dialog.portal_fields.get_inline_child_portal_field_editor"
+			: "nce_events.api.form_dialog.portal_fields.get_related_portal_field_editor";
+	const saveMethod =
+		kind === "inline"
+			? "nce_events.api.form_dialog.portal_fields.save_inline_child_portal_field_config"
+			: "nce_events.api.form_dialog.portal_fields.save_related_portal_field_config";
 
 	_close_related_portal_float();
 
@@ -1457,7 +1467,7 @@ function _open_related_portal_float(frm, opts) {
 	});
 
 	frappe.call({
-		method: "nce_events.api.form_dialog.portal_fields.get_related_portal_field_editor",
+		method: loadMethod,
 		args: { form_dialog: form_dialog, child_row_name: child_row_name },
 		freeze: true,
 		freeze_message: __("Loading fields…"),
@@ -1772,7 +1782,7 @@ function _open_related_portal_float(frm, opts) {
 					payload.push(o);
 				});
 				frappe.call({
-					method: "nce_events.api.form_dialog.portal_fields.save_related_portal_field_config",
+					method: saveMethod,
 					args: {
 						form_dialog: form_dialog,
 						child_row_name: child_row_name,
@@ -1831,23 +1841,180 @@ function _htmlEscAttr(s) {
 		.replace(/"/g, "&quot;");
 }
 
-/** @param buckets {{ "1_hop": object[], "2_hop": object[], "3_hop": object[] }} from get_multi_hop_children */
-function _show_related_picker(buckets, preselected, callback) {
-	const b = buckets || {};
-	const one = b["1_hop"] || [];
-	const two = b["2_hop"] || [];
-	const three = b["3_hop"] || [];
-	const allRowsFlat = one.concat(two, three);
-	if (!allRowsFlat.length) {
-		callback([]);
-		return;
+/** Mirror ``useFormClientScript.activateScripts`` for Desk-side Tools-tab discovery before capture. */
+function _desk_discover_script_tool_groups(doctype, scriptBodies) {
+	const dt = String(doctype || "").trim();
+	const bodies = Array.isArray(scriptBodies) ? scriptBodies : [];
+	const toolGroups = {};
+	let hasRefreshHandlers = false;
+
+	const captureCustomButton = function (label, handler, group) {
+		const groupKey = group ? String(group) : "__ungrouped__";
+		const groupLabel = group || "Tools";
+		if (!toolGroups[groupKey]) {
+			toolGroups[groupKey] = { groupKey: groupKey, label: groupLabel, buttons: [] };
+		}
+		toolGroups[groupKey].buttons.push({ label: label, handler: handler });
+	};
+
+	const $hiddenHost = $(
+		'<div style="display:none;position:absolute;left:-9999px;top:0;"></div>'
+	).appendTo("body");
+	const $anchor = $("<div></div>").appendTo($hiddenHost);
+	const anchorEl = $anchor[0];
+
+	function absorbProxy() {
+		const fn = function () {
+			return absorbProxy();
+		};
+		return new Proxy(fn, {
+			get: function () {
+				return absorbProxy();
+			},
+			apply: function () {
+				return absorbProxy();
+			},
+		});
 	}
 
-	const preselected_set = new Set((preselected || []).map(_relatedPickerFingerprint));
+	function makeFieldsDictProxy() {
+		const $a = $(anchorEl);
+		return new Proxy(
+			{},
+			{
+				get: function (_, fn) {
+					return {
+						$wrapper: $a,
+						wrapper: anchorEl,
+						df: {},
+						get_value: function () {
+							return null;
+						},
+					};
+				},
+			}
+		);
+	}
+
+	const formDataStub = {};
+
+	function assembleShim() {
+		return {
+			doc: formDataStub,
+			doctype: dt,
+			get_value: function () {
+				return null;
+			},
+			set_value: function () {},
+			get_field: function () {
+				return null;
+			},
+			set_df_property: function () {},
+			refresh_field: function () {},
+			set_query: function () {},
+			is_new: function () {
+				return false;
+			},
+			layout: { wrapper: $hiddenHost[0] },
+			$wrapper: $hiddenHost,
+			wrapper: $hiddenHost[0],
+			fields_dict: makeFieldsDictProxy(),
+			page: absorbProxy(),
+			add_custom_button: captureCustomButton,
+		};
+	}
+
+	const handlers = [];
+	const origOn = frappe.ui.form.on;
+	for (let si = 0; si < bodies.length; si++) {
+		const src = bodies[si];
+		if (!src) {
+			continue;
+		}
+		const captured = {};
+		try {
+			frappe.ui.form.on = function (registeredDt, events) {
+				if (registeredDt === dt) {
+					Object.assign(captured, events);
+				}
+			};
+			// eslint-disable-next-line no-new-func
+			new Function("frappe", src)(frappe);
+		} catch (e) {
+			console.warn("[page_panel] script discovery compile error", e);
+		} finally {
+			frappe.ui.form.on = origOn;
+		}
+		handlers.push(captured);
+	}
+
+	for (let hi = 0; hi < handlers.length; hi++) {
+		const h = handlers[hi];
+		if (typeof h.refresh !== "function") {
+			continue;
+		}
+		hasRefreshHandlers = true;
+		try {
+			h.refresh(assembleShim());
+		} catch (e) {
+			console.warn("[page_panel] script discovery refresh error", e);
+		}
+	}
+
+	$hiddenHost.remove();
+
+	if (hasRefreshHandlers && Object.keys(toolGroups).length === 0) {
+		return [{ groupKey: "__ungrouped__", label: "Tools", buttons: [] }];
+	}
+	return Object.values(toolGroups);
+}
+
+/**
+ * Unified capture wizard: related hops + inline Table fields + Tools script groups.
+ *
+ * @param {object} opts
+ * @param {object} opts.buckets — get_multi_hop_children message
+ * @param {object[]} opts.inlineOptions — ``inline_table_fields`` from ``get_capture_wizard_options``
+ * @param {object[]} opts.discoveredTools — from ``_desk_discover_script_tool_groups``
+ * @param {object[]} opts.preselectedRelated — Form Dialog definition rows (shape like picker output)
+ * @param {Set<string>} opts.preselectedInlinePfns — parent fieldnames to pre-check
+ * @param {object[]} opts.storedScriptGroups — ``script_tool_groups`` from definition (may be empty)
+ * @param {Function} [opts.onCancel]
+ * @param {Function} onSubmit — ``({ related, inline_child_tables, script_tool_groups })``
+ */
+function _show_capture_wizard_dialog(opts, onSubmit) {
+	const buckets = opts.buckets || {};
+	const one = buckets["1_hop"] || [];
+	const two = buckets["2_hop"] || [];
+	const three = buckets["3_hop"] || [];
+	const allRowsFlat = one.concat(two, three);
+
+	const inlineOpts = Array.isArray(opts.inlineOptions) ? opts.inlineOptions : [];
+	const discoveredTools = Array.isArray(opts.discoveredTools) ? opts.discoveredTools : [];
+	const toolScriptGroupKeys = discoveredTools.map(function (t) {
+		return String(t.groupKey || "__ungrouped__");
+	});
+
+	const preselectedRelated = opts.preselectedRelated || [];
+	const preRelSet = new Set(preselectedRelated.map(_relatedPickerFingerprint));
+
+	const preInline =
+		opts.preselectedInlinePfns instanceof Set
+			? opts.preselectedInlinePfns
+			: new Set(Array.from(opts.preselectedInlinePfns || []));
+
+	const storedSg = Array.isArray(opts.storedScriptGroups) ? opts.storedScriptGroups : [];
+	const legacyScriptMode = storedSg.length === 0;
+	const sgLabelByKey = {};
+	for (let si = 0; si < storedSg.length; si++) {
+		const r = storedSg[si];
+		const gk = String(r.group_key || "").trim() || "__ungrouped__";
+		sgLabelByKey[gk] = String(r.tab_label || "").trim() || gk;
+	}
 
 	function colHtml(title, rows, idxOffset) {
 		let h =
-			'<div class="pp-related-picker-col" style="flex:1;min-width:0;max-height:360px;overflow-y:auto;padding:10px;border:1px solid #eef0f2;border-radius:6px;background:#fafbfc;">';
+			'<div class="pp-related-picker-col" style="flex:1;min-width:0;max-height:260px;overflow-y:auto;padding:10px;border:1px solid #eef0f2;border-radius:6px;background:#fafbfc;">';
 		h +=
 			'<div style="font-size:11px;font-weight:600;color:#74808b;text-transform:uppercase;margin:0 0 10px;">' +
 			_htmlEscAttr(title) +
@@ -1862,9 +2029,7 @@ function _show_related_picker(buckets, preselected, callback) {
 				const idx = idxOffset + j;
 				const id = "pp-related-sel-" + idx;
 				const lab = row.label || row.doctype || "";
-				const checked = preselected_set.has(_relatedPickerFingerprint(row))
-					? " checked"
-					: "";
+				const checked = preRelSet.has(_relatedPickerFingerprint(row)) ? " checked" : "";
 				h += '<div style="margin:0 0 8px;display:flex;align-items:flex-start;gap:8px;">';
 				h +=
 					'<input type="checkbox" class="pp-related-cb" id="' +
@@ -1887,26 +2052,137 @@ function _show_related_picker(buckets, preselected, callback) {
 		return h;
 	}
 
-	const bodyHtml =
-		'<div class="pp-related-picker-wrap" style="display:flex;gap:12px;align-items:stretch;">' +
+	let inlineSectionHtml = "";
+	if (inlineOpts.length) {
+		inlineSectionHtml +=
+			'<div style="margin:14px 0 10px;font-size:12px;font-weight:600;color:#36414c;">' +
+			_htmlEscAttr(__("Inline child tables (root Table fields)")) +
+			"</div>";
+		inlineSectionHtml +=
+			'<div style="max-height:220px;overflow-y:auto;padding:10px;border:1px solid #eef0f2;border-radius:6px;background:#fafbfc;">';
+		inlineOpts.forEach(function (row, ji) {
+			const pfn = String(row.parent_fieldname || "").trim();
+			if (!pfn) {
+				return;
+			}
+			const id = "pp-inline-sel-" + ji;
+			const lab = row.label || pfn;
+			const cd = row.child_doctype || "";
+			const checked = preInline.has(pfn) ? " checked" : "";
+			inlineSectionHtml += '<div style="margin:0 0 8px;display:flex;align-items:flex-start;gap:8px;">';
+			inlineSectionHtml +=
+				'<input type="checkbox" class="pp-inline-cb" id="' +
+				id +
+				'" data-pfn="' +
+				_htmlEscAttr(pfn) +
+				'" data-tab-label="' +
+				_htmlEscAttr(lab) +
+				'" style="margin-top:2px;"' +
+				checked +
+				"/>";
+			inlineSectionHtml +=
+				'<label for="' +
+				id +
+				'" style="margin:0;font-weight:400;cursor:pointer;line-height:1.35;">' +
+				_htmlEscAttr(lab) +
+				(cd ? ' <span style="color:#8d99a6;font-size:11px;">(' + _htmlEscAttr(cd) + ")</span>" : "") +
+				"</label>";
+			inlineSectionHtml += "</div>";
+		});
+		inlineSectionHtml += "</div>";
+	}
+
+	let toolsSectionHtml =
+		'<div style="margin:14px 0 10px;font-size:12px;font-weight:600;color:#36414c;">' +
+		_htmlEscAttr(__("Tools tabs (from Client Scripts / custom buttons)")) +
+		"</div>";
+
+	if (!discoveredTools.length) {
+		toolsSectionHtml +=
+			'<p style="color:#8d99a6;font-size:12px;margin:0;">' +
+			_htmlEscAttr(__("No button groups discovered (scripts without add_custom_button stay in a single Tools tab).")) +
+			"</p>";
+	} else {
+		toolsSectionHtml +=
+			'<div style="max-height:240px;overflow-y:auto;padding:10px;border:1px solid #eef0f2;border-radius:6px;background:#fafbfc;">';
+		for (let ti = 0; ti < discoveredTools.length; ti++) {
+			const tg = discoveredTools[ti];
+			const gk = String(tg.groupKey || "__ungrouped__");
+			const defaultLab = String(tg.label || gk);
+			let initiallyChecked = false;
+			if (legacyScriptMode) {
+				initiallyChecked = true;
+			} else {
+				initiallyChecked = !!sgLabelByKey[gk];
+			}
+			const tabLabDefault = sgLabelByKey[gk] || defaultLab;
+			const id = "pp-sg-" + ti;
+			const chk = initiallyChecked ? " checked" : "";
+			toolsSectionHtml += '<div style="margin:0 0 10px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;">';
+			toolsSectionHtml +=
+				'<input type="checkbox" class="pp-sg-cb" id="' +
+				id +
+				'" data-gk="' +
+				_htmlEscAttr(gk) +
+				'" style="margin-top:2px;"' +
+				chk +
+				"/>";
+			toolsSectionHtml +=
+				'<label for="' +
+				id +
+				'" style="margin:0;font-weight:600;cursor:pointer;min-width:120px;">' +
+				_htmlEscAttr(defaultLab) +
+				"</label>";
+			toolsSectionHtml +=
+				'<span style="color:#8d99a6;font-size:11px;">' +
+				_htmlEscAttr(__("Tab label")) +
+				'</span><input type="text" class="input-xs form-control pp-sg-label" style="max-width:220px;font-size:12px;height:28px;" data-gk="' +
+				_htmlEscAttr(gk) +
+				'" value="' +
+				_htmlEscAttr(tabLabDefault) +
+				'"/>';
+			toolsSectionHtml += "</div>";
+		}
+		toolsSectionHtml += "</div>";
+		toolsSectionHtml +=
+			'<p style="color:#8d99a6;font-size:11px;margin:8px 0 0;">' +
+			_htmlEscAttr(
+				__(
+					"If all groups stay selected on save, unrestricted Tools tabs are stored (same as leaving Tools unset)."
+				)
+			) +
+			"</p>";
+	}
+
+	const relatedWrap =
+		'<div style="margin:0 0 10px;font-size:12px;font-weight:600;color:#36414c;">' +
+		_htmlEscAttr(__("Related tables (multi-hop)")) +
+		'</div><div class="pp-related-picker-wrap" style="display:flex;gap:12px;align-items:stretch;">' +
 		colHtml(__("1-hop"), one, 0) +
 		colHtml(__("2-hop"), two, one.length) +
 		colHtml(__("3-hop"), three, one.length + two.length) +
 		"</div>";
 
+	const bodyHtml =
+		'<div class="pp-capture-wizard-body" style="max-height:72vh;overflow-y:auto;padding-right:6px;">' +
+		relatedWrap +
+		inlineSectionHtml +
+		toolsSectionHtml +
+		"</div>";
+
 	const d = new frappe.ui.Dialog({
-		title: __("Add tabs to display related tables?"),
-		fields: [{ fieldname: "pp_related_picker_body", fieldtype: "HTML", options: bodyHtml }],
-		size: "large",
-		primary_action_label: __("OK"),
-		secondary_action_label: __("Skip"),
+		title: __("Configure Form Dialog capture"),
+		fields: [{ fieldname: "pp_capture_wizard_body", fieldtype: "HTML", options: bodyHtml }],
+		size: "extra-large",
+		primary_action_label: __("Continue"),
+		secondary_action_label: __("Cancel"),
 		primary_action: function () {
-			const selected = [];
+			const selectedRelated = [];
 			d.$wrapper.find(".pp-related-cb:checked").each(function () {
 				const idx = parseInt($(this).attr("data-idx"), 10);
 				if (!Number.isNaN(idx) && allRowsFlat[idx]) {
 					const src = allRowsFlat[idx];
-					selected.push({
+					selectedRelated.push({
 						doctype: src.doctype,
 						link_field: src.link_field,
 						label: src.label || src.doctype,
@@ -1914,15 +2190,132 @@ function _show_related_picker(buckets, preselected, callback) {
 					});
 				}
 			});
+
+			const inlinePayload = [];
+			d.$wrapper.find(".pp-inline-cb:checked").each(function () {
+				const pfn = String($(this).attr("data-pfn") || "").trim();
+				const tl = String($(this).attr("data-tab-label") || "").trim() || pfn;
+				if (pfn) {
+					inlinePayload.push({ parent_fieldname: pfn, tab_label: tl });
+				}
+			});
+
+			let scriptPayload = [];
+			if (discoveredTools.length) {
+				const checkedKeys = [];
+				d.$wrapper.find(".pp-sg-cb:checked").each(function () {
+					const gk = String($(this).attr("data-gk") || "").trim() || "__ungrouped__";
+					checkedKeys.push(gk);
+				});
+				const allDiscoveredChecked =
+					toolScriptGroupKeys.length > 0 &&
+					toolScriptGroupKeys.every(function (k) {
+						return checkedKeys.indexOf(k) !== -1;
+					});
+				if (legacyScriptMode && allDiscoveredChecked) {
+					scriptPayload = [];
+				} else {
+					const uniq = {};
+					for (let ci = 0; ci < checkedKeys.length; ci++) {
+						const k = checkedKeys[ci];
+						if (uniq[k]) {
+							continue;
+						}
+						uniq[k] = true;
+						let $inp = $();
+						d.$wrapper.find(".pp-sg-label").each(function () {
+							if (($(this).attr("data-gk") || "") === k) {
+								$inp = $(this);
+								return false;
+							}
+						});
+						let tl = ($inp.val() || "").trim();
+						if (!tl) {
+							tl = k;
+						}
+						scriptPayload.push({ group_key: k, tab_label: tl });
+					}
+				}
+			}
+
 			d.hide();
-			callback(selected);
+			onSubmit({
+				related: selectedRelated,
+				inline_child_tables: inlinePayload,
+				script_tool_groups: scriptPayload,
+			});
 		},
 		secondary_action: function () {
 			d.hide();
-			callback([]);
+			if (typeof opts.onCancel === "function") {
+				opts.onCancel();
+			}
 		},
 	});
 	d.show();
+}
+
+/** Parallel fetch for Page Panel capture wizard (multi-hop + Table fields + script preview). */
+function _load_capture_wizard_sources(doctype, onReady, onFail) {
+	let buckets = {};
+	let inlineOpts = [];
+	let scripts = [];
+	let pending = 3;
+	let failed = false;
+
+	function finishFail(message) {
+		if (failed) {
+			return;
+		}
+		failed = true;
+		onFail(message);
+	}
+
+	function tick() {
+		if (failed) {
+			return;
+		}
+		pending--;
+		if (pending === 0) {
+			onReady(buckets, inlineOpts, scripts);
+		}
+	}
+
+	frappe.call({
+		method: "nce_events.api.panel_api_pkg.discovery.get_multi_hop_children",
+		args: { root_doctype: doctype },
+		callback: function (r) {
+			buckets = (r && r.message) || {};
+			tick();
+		},
+		error: function () {
+			finishFail(__("Could not load related DocTypes."));
+		},
+	});
+
+	frappe.call({
+		method: "nce_events.api.form_dialog.capture.get_capture_wizard_options",
+		args: { doctype: doctype },
+		callback: function (r) {
+			inlineOpts = (r && r.message && r.message.inline_table_fields) || [];
+			tick();
+		},
+		error: function () {
+			finishFail(__("Could not load capture wizard options."));
+		},
+	});
+
+	frappe.call({
+		method: "nce_events.api.form_dialog.capture.preview_capture_client_scripts",
+		args: { doctype: doctype },
+		callback: function (r) {
+			scripts = (r && r.message && r.message.scripts) || [];
+			tick();
+		},
+		error: function () {
+			finishFail(__("Could not preview client scripts."));
+		},
+	});
 }
 
 // ── Dialogs tab ───────────────────────────────────────────────────────────
@@ -2001,82 +2394,76 @@ function _bind_dialogs_click_handlers(frm) {
 								}
 								return;
 							}
-							const current_related =
-								(defn_r.message && defn_r.message.related_doctypes) || [];
+							const msg = defn_r.message || {};
+							const current_related = msg.related_doctypes || [];
+							const current_inline = msg.inline_child_tables || [];
+							const current_sg = msg.script_tool_groups || [];
+							const preInlinePfns = new Set(
+								current_inline
+									.map(function (row) {
+										return String(row.parent_fieldname || "").trim();
+									})
+									.filter(Boolean)
+							);
 
-							frappe.call({
-								method: "nce_events.api.panel_api_pkg.discovery.get_multi_hop_children",
-								args: { root_doctype: doctype },
-								error: function () {
-									_pp_rebuild_pending = false;
-									frappe.msgprint({
-										title: __("Error"),
-										message: __("Could not load related DocTypes."),
-										indicator: "red",
-									});
-								},
-								callback: function (r) {
-									const buckets = (r && r.message) || {};
-									const c1 = buckets["1_hop"] || [];
-									const c2 = buckets["2_hop"] || [];
-									const c3 = buckets["3_hop"] || [];
-									const total = c1.length + c2.length + c3.length;
-
-									function _run_rebuild_with_related(selected) {
-										frappe.call({
-											method: "nce_events.api.form_dialog.capture.rebuild_form_dialog",
-											args: {
-												name: current,
-												related_doctypes: JSON.stringify(selected || []),
-											},
-											freeze: true,
-											freeze_message: "Rebuilding schema…",
-											error: function () {
-												_pp_rebuild_pending = false;
-												frappe.msgprint({
-													title: __("Error"),
-													message: __("Rebuild failed."),
-													indicator: "red",
-												});
-											},
-											callback: function () {
-												_pp_rebuild_pending = false;
-												frappe.show_alert({
-													message: "Schema rebuilt.",
-													indicator: "green",
-												});
-												_render_dialogs_tab(frm);
-											},
-										});
-									}
-
-									if (!total) {
-										frappe.confirm(
-											__(
-												"No related DocTypes link to {0}. Rebuild will clear extra tabs. Continue?",
-												[doctype]
-											),
-											function () {
-												_run_rebuild_with_related([]);
-											},
-											function () {
-												_pp_rebuild_pending = false;
-											}
-										);
-										return;
-									}
-
+							_load_capture_wizard_sources(
+								doctype,
+								function (buckets, inlineOpts, scripts) {
+									const discovered = _desk_discover_script_tool_groups(doctype, scripts);
 									setTimeout(function () {
-										_show_related_picker(
-											buckets,
-											current_related,
-											function (selected) {
-												_run_rebuild_with_related(selected);
+										_show_capture_wizard_dialog(
+											{
+												buckets: buckets,
+												inlineOptions: inlineOpts,
+												discoveredTools: discovered,
+												preselectedRelated: current_related,
+												preselectedInlinePfns: preInlinePfns,
+												storedScriptGroups: current_sg,
+												onCancel: function () {
+													_pp_rebuild_pending = false;
+												},
+											},
+											function (sel) {
+												frappe.call({
+													method: "nce_events.api.form_dialog.capture.rebuild_form_dialog",
+													args: {
+														name: current,
+														related_doctypes: JSON.stringify(sel.related || []),
+														inline_child_tables: JSON.stringify(sel.inline_child_tables || []),
+														script_tool_groups: JSON.stringify(sel.script_tool_groups || []),
+													},
+													freeze: true,
+													freeze_message: "Rebuilding schema…",
+													error: function () {
+														_pp_rebuild_pending = false;
+														frappe.msgprint({
+															title: __("Error"),
+															message: __("Rebuild failed."),
+															indicator: "red",
+														});
+													},
+													callback: function () {
+														_pp_rebuild_pending = false;
+														frappe.show_alert({
+															message: "Schema rebuilt.",
+															indicator: "green",
+														});
+														_render_dialogs_tab(frm);
+													},
+												});
 											}
 										);
 									}, 0);
 								},
-							});
+								function (errMsg) {
+									_pp_rebuild_pending = false;
+									frappe.msgprint({
+										title: __("Error"),
+										message: errMsg,
+										indicator: "red",
+									});
+								}
+							);
 						},
 					});
 				}, 200);
@@ -2099,79 +2486,65 @@ function _bind_dialogs_click_handlers(frm) {
 			},
 			function (values) {
 				setTimeout(function () {
-					frappe.call({
-						method: "nce_events.api.panel_api_pkg.discovery.get_multi_hop_children",
-						args: { root_doctype: frm.doc.root_doctype },
-						error: function () {
-							frappe.msgprint({
-								title: __("Error"),
-								message: __("Could not load related DocTypes."),
-								indicator: "red",
-							});
-						},
-						callback: function (r) {
-							const buckets = (r && r.message) || {};
-							const c1 = buckets["1_hop"] || [];
-							const c2 = buckets["2_hop"] || [];
-							const c3 = buckets["3_hop"] || [];
-							const total = c1.length + c2.length + c3.length;
-
-							function _run_capture_with_related(selected) {
-								frappe.call({
-									method: "nce_events.api.form_dialog.capture.capture_form_dialog_from_desk",
-									args: {
-										doctype: doctype,
-										title: values.title,
-										related_doctypes: JSON.stringify(selected || []),
+					_load_capture_wizard_sources(
+						doctype,
+						function (buckets, inlineOpts, scripts) {
+							const discovered = _desk_discover_script_tool_groups(doctype, scripts);
+							setTimeout(function () {
+								_show_capture_wizard_dialog(
+									{
+										buckets: buckets,
+										inlineOptions: inlineOpts,
+										discoveredTools: discovered,
+										preselectedRelated: [],
+										preselectedInlinePfns: new Set(),
+										storedScriptGroups: [],
 									},
-									freeze: true,
-									freeze_message: "Capturing schema from Desk…",
-									error: function () {
-										frappe.msgprint({
-											title: __("Error"),
-											message: __("Capture failed."),
-											indicator: "red",
+									function (sel) {
+										frappe.call({
+											method: "nce_events.api.form_dialog.capture.capture_form_dialog_from_desk",
+											args: {
+												doctype: doctype,
+												title: values.title,
+												related_doctypes: JSON.stringify(sel.related || []),
+												inline_child_tables: JSON.stringify(sel.inline_child_tables || []),
+												script_tool_groups: JSON.stringify(sel.script_tool_groups || []),
+											},
+											freeze: true,
+											freeze_message: "Capturing schema from Desk…",
+											error: function () {
+												frappe.msgprint({
+													title: __("Error"),
+													message: __("Capture failed."),
+													indicator: "red",
+												});
+											},
+											callback: function (cap_r) {
+												if (cap_r && cap_r.message) {
+													frm.set_value("form_dialog", cap_r.message);
+													frm.dirty();
+													frm.save().then(function () {
+														_render_dialogs_tab(frm);
+													});
+													frappe.show_alert({
+														message: "Dialog captured: " + cap_r.message,
+														indicator: "green",
+													});
+												}
+											},
 										});
-									},
-									callback: function (cap_r) {
-										if (cap_r && cap_r.message) {
-											frm.set_value("form_dialog", cap_r.message);
-											frm.dirty();
-											frm.save().then(function () {
-												_render_dialogs_tab(frm);
-											});
-											frappe.show_alert({
-												message: "Dialog captured: " + cap_r.message,
-												indicator: "green",
-											});
-										}
-									},
-								});
-							}
-
-							if (!total) {
-								frappe.confirm(
-									__(
-										"No related DocTypes link to {0}. Create dialog without extra tabs?",
-										[doctype]
-									),
-									function () {
-										_run_capture_with_related([]);
-									},
-									function () {
-										// cancelled
 									}
 								);
-								return;
-							}
-
-							setTimeout(function () {
-								_show_related_picker(buckets, [], function (selected) {
-									_run_capture_with_related(selected);
-								});
 							}, 0);
 						},
-					});
+						function (errMsg) {
+							frappe.msgprint({
+								title: __("Error"),
+								message: errMsg,
+								indicator: "red",
+							});
+						}
+					);
 				}, 200);
 			},
 			"Create Form Dialog",
@@ -2207,6 +2580,26 @@ function _bind_dialogs_click_handlers(frm) {
 			return;
 		}
 		_open_related_portal_float(frm, {
+			form_dialog: dialogName,
+			child_row_name: childRow,
+			tab_label: ($btn.text() || "").trim(),
+		});
+	});
+
+	$wrapper.on("click.ppFormDialogs", ".pp-dialog-inline-tab", function (ev) {
+		ev.preventDefault();
+		const $btn = $(this);
+		const dialogName = $btn.attr("data-dialog-name") || "";
+		const childRow = $btn.attr("data-child-row-name") || "";
+		if (!childRow) {
+			frappe.show_alert({
+				message: __("Reload this form after migrate: missing inline row id."),
+				indicator: "orange",
+			});
+			return;
+		}
+		_open_related_portal_float(frm, {
+			kind: "inline",
 			form_dialog: dialogName,
 			child_row_name: childRow,
 			tab_label: ($btn.text() || "").trim(),
@@ -2327,6 +2720,34 @@ function _build_dialogs_tab_html(frm, $container, dialogs) {
 				list_html += `<tr style="border-bottom:1px solid #ededed;${row_bg}"><td colspan="4" style="padding:4px 8px 8px 20px;background:#fafbfc;font-size:11px;">
 					<div style="color:#8d99a6;margin-bottom:4px;">${__("Related table tabs (preview)")}</div>
 					<div style="display:flex;flex-wrap:wrap;align-items:center;gap:2px;">${rel_btns}</div>
+				</td></tr>`;
+			}
+			const inl = Array.isArray(d.inline_child_tables) ? d.inline_child_tables : [];
+			if (inl.length) {
+				let inl_btns = "";
+				inl.forEach(function (row, idx) {
+					const lab =
+						row.label ||
+						row.tab_label ||
+						row.parent_fieldname ||
+						row.child_doctype ||
+						"Inline";
+					const pfn = row.parent_fieldname || "";
+					const cd = row.child_doctype || "";
+					const crn = row.child_row_name || "";
+					inl_btns += `<button type="button" class="btn btn-xs btn-default pp-dialog-inline-tab" style="margin:2px 4px 2px 0;" data-pp-inline-idx="${idx}" data-dialog-name="${frappe.utils.escape_html(
+						d.name
+					)}" data-child-row-name="${frappe.utils.escape_html(
+						crn
+					)}" data-parent-fieldname="${frappe.utils.escape_html(
+						pfn
+					)}" data-child-doctype="${frappe.utils.escape_html(cd)}">${frappe.utils.escape_html(
+						lab
+					)}</button>`;
+				});
+				list_html += `<tr style="border-bottom:1px solid #ededed;${row_bg}"><td colspan="4" style="padding:4px 8px 8px 20px;background:#fafbfc;font-size:11px;">
+					<div style="color:#8d99a6;margin-bottom:4px;">${__("Inline child tabs (preview)")}</div>
+					<div style="display:flex;flex-wrap:wrap;align-items:center;gap:2px;">${inl_btns}</div>
 				</td></tr>`;
 			}
 		});

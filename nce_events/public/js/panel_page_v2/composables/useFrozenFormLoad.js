@@ -181,6 +181,30 @@ export function createFrozenFormLoad(ctx) {
 			allFields.value = fields;
 			tabs.value = parseLayout(fields);
 
+			const inlineRowsRaw = Array.isArray(defn.inline_child_tables)
+				? defn.inline_child_tables
+				: [];
+			const inlinePfns = new Set(
+				inlineRowsRaw.map((x) => String(x.parent_fieldname || "").trim()).filter(Boolean),
+			);
+			if (inlinePfns.size) {
+				for (const tab of tabs.value) {
+					if (tab._related || !tab.sections) {
+						continue;
+					}
+					for (const sec of tab.sections) {
+						for (const col of sec.columns || []) {
+							col.fields = (col.fields || []).filter((f) => {
+								if (!f || f.fieldtype !== "Table") {
+									return true;
+								}
+								return !inlinePfns.has(f.fieldname);
+							});
+						}
+					}
+				}
+			}
+
 			const tn = Array.isArray(defn.tab_notes) ? defn.tab_notes : [];
 			const notesByAnchor = new Map(
 				tn.map((row) => {
@@ -250,14 +274,77 @@ export function createFrozenFormLoad(ctx) {
 				/* ignore whole related block */
 			}
 
+			let inlineAdded = 0;
+			try {
+				for (const ir of inlineRowsRaw) {
+					try {
+						if (!ir || typeof ir !== "object") {
+							continue;
+						}
+						const pfn = String(ir.parent_fieldname || "").trim();
+						const cdt = String(ir.child_doctype || "").trim();
+						if (!pfn || !cdt) {
+							continue;
+						}
+						let parsed = null;
+						if (ir.info != null && String(ir.info).trim()) {
+							try {
+								parsed = typeof ir.info === "string" ? JSON.parse(ir.info) : ir.info;
+							} catch {
+								parsed = null;
+							}
+						}
+						const label = ir.label || ir.tab_label || pfn;
+						let sections = [];
+						if (parsed && Array.isArray(parsed.fields) && parsed.fields.length) {
+							try {
+								const layoutTabs = parseLayout(parsed.fields);
+								if (layoutTabs.length && layoutTabs[0].sections) {
+									sections = layoutTabs[0].sections;
+								}
+							} catch {
+								sections = [];
+							}
+						}
+						const infoStr =
+							ir.info != null && String(ir.info).trim()
+								? String(ir.info)
+								: parsed
+									? JSON.stringify(parsed)
+									: "";
+						tabs.value.push({
+							label,
+							sections,
+							_inlineChild: {
+								parent_fieldname: pfn,
+								child_doctype: (parsed && parsed.doctype) || cdt,
+								child_row_name: ir.child_row_name || ir.name || "",
+								portal_field_config: ir.portal_field_config || "",
+								info: infoStr,
+								captureError: parsed && parsed.capture_error,
+								hasLayout: sections.length > 0,
+							},
+						});
+						inlineAdded += 1;
+					} catch {
+						/* skip broken inline row */
+					}
+				}
+			} catch {
+				/* ignore inline block */
+			}
+
 			pushDebug(
 				"parseLayout",
 				true,
-				`fields=${fields.length} tabs=${tabs.value.length} (incl ${relatedAdded} related)`
+				`fields=${fields.length} tabs=${tabs.value.length} (incl ${relatedAdded} related, ${inlineAdded} inline)`
 			);
 
 			syncingFromLoad.value = true;
 			pushDebug("syncingFromLoad", true, "true (formData write + fetch_from)");
+
+			const lm = loadMode ? unref(loadMode) : "full";
+			const findShell = lm === "find-shell" && !dn;
 
 			for (const key of Object.keys(formData)) {
 				delete formData[key];
@@ -267,8 +354,11 @@ export function createFrozenFormLoad(ctx) {
 					formData[field.fieldname] = field.default || null;
 				}
 			}
-			const lm = loadMode ? unref(loadMode) : "full";
-			const findShell = lm === "find-shell" && !dn;
+			for (const pfn of inlinePfns) {
+				if (!findShell) {
+					formData[pfn] = Array.isArray(formData[pfn]) ? formData[pfn] : [];
+				}
+			}
 			if (findShell) {
 				for (const field of fields) {
 					if (field.fieldname && !isLayoutField(field.fieldtype)) {

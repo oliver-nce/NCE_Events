@@ -131,16 +131,29 @@
 		$("<style>").attr("id", "fd-portal-matrix-css").text(css).appendTo("head");
 	}
 
-	function _savedRelatedRows(frm) {
-		return (frm.doc.related_doctypes || []).filter(function (r) {
-			return r.name && String(r.name).trim();
+	function _portalRowsWithKind(frm) {
+		const out = [];
+		(frm.doc.related_doctypes || []).forEach(function (r) {
+			if (r.name && String(r.name).trim()) {
+				out.push({ kind: "related", row: r });
+			}
 		});
+		(frm.doc.inline_child_tables || []).forEach(function (r) {
+			if (r.name && String(r.name).trim()) {
+				out.push({ kind: "inline", row: r });
+			}
+		});
+		return out;
 	}
 
-	function _getRowByName(frm, name) {
-		return (frm.doc.related_doctypes || []).find(function (r) {
-			return r.name === name;
-		});
+	function _getPortalRowBundle(frm, rowName) {
+		const bundles = _portalRowsWithKind(frm);
+		for (let i = 0; i < bundles.length; i++) {
+			if (bundles[i].row.name === rowName) {
+				return bundles[i];
+			}
+		}
+		return null;
 	}
 
 	function _payloadFromTbody($tbody) {
@@ -244,7 +257,8 @@
 	}
 
 	function _syncRowToDoc(frm, rowName) {
-		const row = _getRowByName(frm, rowName);
+		const bundle = _getPortalRowBundle(frm, rowName);
+		const row = bundle && bundle.row;
 		if (!row || !frm._fd_portal) {
 			return;
 		}
@@ -630,7 +644,8 @@
 		if (!frm._fd_portal) {
 			return;
 		}
-		const row = _getRowByName(frm, rowName);
+		const bundle = _getPortalRowBundle(frm, rowName);
+		const row = bundle && bundle.row;
 		if (!row) {
 			return;
 		}
@@ -702,7 +717,9 @@
 
 	function _renderPortalShell(frm) {
 		_injectCssOnce();
-		const fd = frm.fields_dict.related_doctypes;
+		const fdRel = frm.fields_dict.related_doctypes;
+		const fdInl = frm.fields_dict.inline_child_tables;
+		const fd = fdRel || fdInl;
 		if (!fd || !fd.$wrapper) {
 			return;
 		}
@@ -713,10 +730,10 @@
 			fd.$wrapper.after($shell);
 		}
 
-		const savedRows = _savedRelatedRows(frm);
+		const bundles = _portalRowsWithKind(frm);
 		let html =
 			'<div class="fd-portal-title">' +
-			__("Portal columns (related tabs)") +
+			__("Portal columns (related & inline tabs)") +
 			"</div>";
 		html += '<div class="fd-portal-outer-bar"></div>';
 		html += '<div class="fd-portal-inner-shell"></div>';
@@ -735,20 +752,28 @@
 			activeInner: "fields",
 		};
 
-		if (!savedRows.length) {
+		if (!bundles.length) {
 			$innerShell.html(
 				'<p class="text-muted" style="margin:0;font-size:12px;">' +
 					__(
-						"Save this Form Dialog after adding Related DocTypes rows. Then configure portal columns per tab."
+						"Save this Form Dialog after adding Related DocTypes or Inline Child Table rows. Then configure portal columns per tab."
 					) +
 					"</p>"
 			);
 			return;
 		}
 
-		savedRows.forEach(function (r) {
+		bundles.forEach(function (b) {
+			const r = b.row;
 			const label =
-				(String(r.tab_label || "").trim() || String(r.child_doctype || "").trim() || __("Related"));
+				b.kind === "inline"
+					? String(r.tab_label || "").trim() ||
+					  String(r.parent_fieldname || "").trim() ||
+					  String(r.child_doctype || "").trim() ||
+					  __("Inline")
+					: String(r.tab_label || "").trim() ||
+					  String(r.child_doctype || "").trim() ||
+					  __("Related");
 			$outerBar.append(
 				'<button type="button" class="btn btn-xs btn-default fd-portal-outer-btn" data-row-name="' +
 					frappe.utils.escape_html(r.name) +
@@ -765,11 +790,11 @@
 			}
 		});
 
-		_showOuterTab(frm, savedRows[0].name);
+		_showOuterTab(frm, bundles[0].row.name);
 	}
 
 	function ensurePortalUi(frm) {
-		if (!frm.fields_dict.related_doctypes) {
+		if (!frm.fields_dict.related_doctypes && !frm.fields_dict.inline_child_tables) {
 			return;
 		}
 		_renderPortalShell(frm);

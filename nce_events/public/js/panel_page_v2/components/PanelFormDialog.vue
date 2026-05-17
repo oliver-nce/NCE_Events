@@ -70,6 +70,7 @@
 				:find-layout-mode="findCriteriaActive"
 				:find-criteria="findCriteria"
 				:findable-fieldnames="findableFieldnames"
+				:read-only-host="findCriteriaActive"
 				v-model:active-tab="activeTab"
 				@field-change="onFieldChange"
 				@find-criteria-patch="patchFindCriterion"

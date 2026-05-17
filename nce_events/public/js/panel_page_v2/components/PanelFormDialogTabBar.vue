@@ -7,7 +7,7 @@
 				type="button"
 				class="ppv2-fd-tab-btn"
 				:class="{ 'ppv2-fd-tab-active': activeTab === ti }"
-				:disabled="blockRelatedTabs && tab._related"
+				:disabled="blockRelatedTabs && (tab._related || tab._inlineChild || tab._scriptTool)"
 				@click="$emit('update:activeTab', ti)"
 			>
 				{{ tab.label }}

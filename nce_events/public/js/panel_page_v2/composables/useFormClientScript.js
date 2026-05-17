@@ -185,9 +185,11 @@ export function useFormClientScript({ definition, allFields, formData, scriptFie
 		const hidden = _makeHiddenHost();
 
 		const captureCustomButton = (label, handler, group) => {
-			const groupKey = group || '__ungrouped__';
+			const groupKey = group ? String(group) : '__ungrouped__';
 			const groupLabel = group || 'Tools';
-			if (!toolGroups[groupKey]) toolGroups[groupKey] = { label: groupLabel, buttons: [] };
+			if (!toolGroups[groupKey]) {
+				toolGroups[groupKey] = { label: groupLabel, groupKey, buttons: [] };
+			}
 			toolGroups[groupKey].buttons.push({ label, handler });
 		};
 
@@ -213,7 +215,7 @@ export function useFormClientScript({ definition, allFields, formData, scriptFie
 		// Scripts that do pure DOM manipulation have no add_custom_button calls.
 		// Still push a "Tools" tab so mountTool gets to render their full UI.
 		if (hasRefreshHandlers && Object.keys(toolGroups).length === 0) {
-			return [{ label: 'Tools', buttons: [] }];
+			return [{ label: 'Tools', groupKey: '__ungrouped__', buttons: [] }];
 		}
 
 		return Object.values(toolGroups);
@@ -235,6 +237,7 @@ export function useFormClientScript({ definition, allFields, formData, scriptFie
 	 */
 	function mountTool(tool, domContainer) {
 		const handlers = _captureHandlers();
+		const targetGk = tool.groupKey != null ? String(tool.groupKey) : '__ungrouped__';
 
 		// Create an anchor element inside the container.
 		// Scripts that insert content relative to frm.fields_dict[x].$wrapper
@@ -244,7 +247,11 @@ export function useFormClientScript({ definition, allFields, formData, scriptFie
 		const anchorEl = $anchor ? $anchor[0] : domContainer;
 
 		// Render any add_custom_button registrations as real DOM buttons inside the container.
-		const renderCustomButton = (label, handler /*, group */) => {
+		const renderCustomButton = (label, handler, group) => {
+			const gk = group ? String(group) : '__ungrouped__';
+			if (gk !== targetGk) {
+				return;
+			}
 			const btn = document.createElement('button');
 			btn.textContent = label;
 			btn.className = 'ppv2-script-tool-btn';

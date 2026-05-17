@@ -9,6 +9,7 @@ Manager) and persists its state on the Form Dialog Related DocType child row.
 from __future__ import annotations
 
 import json
+from typing import Any
 
 import frappe
 from frappe import _
@@ -216,6 +217,92 @@ def save_related_portal_field_config(
 			break
 	if not row:
 		frappe.throw(_("Related DocType row not found"))
+
+	info: dict = {}
+	if row.info:
+		try:
+			info = json.loads(row.info)
+		except json.JSONDecodeError:
+			info = {}
+	meta_fields = info.get("fields") if isinstance(info.get("fields"), list) else []
+	allowed = {
+		cstr(f.get("fieldname") or "").strip()
+		for f in meta_fields
+		if _portal_meta_field_eligible_for_editor(f)
+	}
+
+	normalized = _normalize_portal_field_config_for_save(portal_field_config, allowed)
+
+	row.portal_field_config = json.dumps(normalized, indent=None)
+	doc.save(ignore_permissions=True)
+	frappe.db.commit()
+
+	return {"ok": 1, "portal_field_config": normalized}
+
+
+def _find_inline_child_row(doc: Any, child_row_name: str) -> Any:
+	for r in doc.get("inline_child_tables") or []:
+		if cstr(r.name) == cstr(child_row_name).strip():
+			return r
+	return None
+
+
+@frappe.whitelist()
+def get_inline_child_portal_field_editor(form_dialog: str, child_row_name: str) -> dict:
+	"""Desk: portal column editor for a Form Dialog Inline Child Table row (System Manager)."""
+	_require_system_manager()
+
+	doc = frappe.get_doc("Form Dialog", form_dialog)
+	row = _find_inline_child_row(doc, child_row_name)
+	if not row:
+		frappe.throw(_("Inline child table row not found"))
+
+	info: dict = {}
+	if row.info:
+		try:
+			info = json.loads(row.info)
+		except json.JSONDecodeError:
+			info = {}
+
+	meta_fields = info.get("fields") if isinstance(info.get("fields"), list) else []
+	portal_raw = cstr(getattr(row, "portal_field_config", None) or "").strip()
+	portal_entries = _parse_portal_field_config_entries(portal_raw)
+	rows = _build_portal_editor_rows(meta_fields, portal_entries)
+
+	return {
+		"form_dialog": doc.name,
+		"child_row_name": row.name,
+		"child_doctype": row.child_doctype,
+		"parent_fieldname": cstr(row.parent_fieldname or "").strip(),
+		"tab_label": cstr(row.tab_label or "").strip() or row.child_doctype,
+		"rows": rows,
+		"capture_error": info.get("capture_error"),
+	}
+
+
+@frappe.whitelist()
+def save_inline_child_portal_field_config(
+	form_dialog: str, child_row_name: str, portal_field_config: str | list
+) -> dict:
+	"""Desk: persist portal_field_config on a Form Dialog Inline Child Table row."""
+	_require_system_manager()
+
+	if isinstance(portal_field_config, str):
+		s = portal_field_config.strip()
+		if not s:
+			portal_field_config = []
+		else:
+			try:
+				portal_field_config = json.loads(s)
+			except json.JSONDecodeError:
+				frappe.throw(_("Invalid portal_field_config JSON"))
+	if not isinstance(portal_field_config, list):
+		frappe.throw(_("portal_field_config must be a list"))
+
+	doc = frappe.get_doc("Form Dialog", form_dialog)
+	row = _find_inline_child_row(doc, child_row_name)
+	if not row:
+		frappe.throw(_("Inline child table row not found"))
 
 	info: dict = {}
 	if row.info:

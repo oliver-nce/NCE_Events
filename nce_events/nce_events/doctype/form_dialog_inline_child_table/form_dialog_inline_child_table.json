@@ -1,0 +1,64 @@
+{
+  "actions": [],
+  "creation": "2026-05-17 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "parent_fieldname",
+    "child_doctype",
+    "tab_label",
+    "info",
+    "portal_field_config"
+  ],
+  "fields": [
+    {
+      "description": "Table fieldname on the Form Dialog target DocType (Frappe Table field).",
+      "fieldname": "parent_fieldname",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Parent Table Field",
+      "reqd": 1
+    },
+    {
+      "description": "Child DocType referenced by the Table field options.",
+      "fieldname": "child_doctype",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Child DocType",
+      "options": "DocType",
+      "reqd": 1
+    },
+    {
+      "description": "Tab title in the panel Form Dialog.",
+      "fieldname": "tab_label",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Tab Label"
+    },
+    {
+      "description": "JSON: parent_fieldname, child_doctype, label, optional fields[] (frozen meta), optional capture_error.",
+      "fieldname": "info",
+      "fieldtype": "Long Text",
+      "label": "Tab render JSON"
+    },
+    {
+      "description": "JSON array: [{fieldname, show, editable, optional sort_rank, sort_dir asc|desc}, …] column config for the inline grid.",
+      "fieldname": "portal_field_config",
+      "fieldtype": "Long Text",
+      "label": "Portal field config"
+    }
+  ],
+  "index_web_pages_for_search": 0,
+  "istable": 1,
+  "links": [],
+  "modified": "2026-05-17 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "NCE Events",
+  "name": "Form Dialog Inline Child Table",
+  "owner": "Administrator",
+  "permissions": [],
+  "sort_field": "creation",
+  "sort_order": "ASC",
+  "states": [],
+  "track_changes": 0
+}

@@ -39,6 +39,13 @@
 					@related-dirty="(v) => $emit('related-dirty', v)"
 				/>
 
+				<PanelFormDialogInlineChildTab
+					v-else-if="tab._inlineChild"
+					:tab="tab"
+					:form-data="formData"
+					:read-only-host="readOnlyHost"
+				/>
+
 					<!-- Script tool tab: full JS UI rendered by captured client script -->
 					<PanelFormScriptToolTab
 						v-else-if="tab._scriptTool"
@@ -113,6 +120,7 @@ import { isFindSearchableRootField } from "../utils/formDialogFindFields.js";
 import PanelFormField from "./PanelFormField.vue";
 import PanelFormDialogTabBar from "./PanelFormDialogTabBar.vue";
 import PanelFormDialogRelatedTab from "./PanelFormDialogRelatedTab.vue";
+import PanelFormDialogInlineChildTab from "./PanelFormDialogInlineChildTab.vue";
 import PanelFormScriptToolTab from "./PanelFormScriptToolTab.vue";
 import PanelFormFindSearchHelpModal from "./PanelFormFindSearchHelpModal.vue";
 
@@ -140,6 +148,8 @@ const props = defineProps({
 	 * null = allow all searchable fields (default / no panel context).
 	 */
 	findableFieldnames: { type: Object, default: null },
+	/** Disable editing on inline child tabs (e.g. Find criteria mode). */
+	readOnlyHost: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(["field-change", "link-change", "related-dirty", "find-criteria-patch"]);

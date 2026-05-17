@@ -24,6 +24,42 @@ from ._helpers import (
 )
 
 
+def _inline_child_tables_for_vue_api(doc: Any) -> list[dict[str, Any]]:
+	"""Inline Table-field tabs for V2 — same portal columns shape as related rows."""
+	out: list[dict[str, Any]] = []
+	for r in doc.get("inline_child_tables") or []:
+		d = r.as_dict()
+		pfn = cstr(d.get("parent_fieldname") or "").strip()
+		cd = cstr(d.get("child_doctype") or "").strip()
+		if not pfn or not cd:
+			continue
+		lb = cstr(d.get("tab_label") or "").strip() or pfn
+		crn = cstr(d.get("name") or getattr(r, "name", None) or "").strip()
+		row: dict[str, Any] = {
+			"parent_fieldname": pfn,
+			"child_doctype": cd,
+			"label": lb,
+			"child_row_name": crn,
+		}
+		pfc = d.get("portal_field_config") or getattr(r, "portal_field_config", None)
+		if pfc is not None and cstr(pfc).strip():
+			row["portal_field_config"] = cstr(pfc)
+		info_val = d.get("info")
+		if info_val is not None and cstr(info_val).strip():
+			row["info"] = cstr(info_val)
+		out.append(row)
+	return out
+
+
+def _script_tool_groups_for_vue_api(doc: Any) -> list[dict[str, Any]]:
+	out = []
+	for r in doc.get("script_tool_groups") or []:
+		gk = cstr(getattr(r, "group_key", None) or "").strip() or "__ungrouped__"
+		tl = cstr(getattr(r, "tab_label", None) or "").strip() or gk
+		out.append({"group_key": gk, "tab_label": tl})
+	return out
+
+
 def _related_rows_for_vue_api(doc: Any) -> list[dict[str, Any]]:
 	"""Child rows for V2: doctype, label, link_field, hop_chain, child_row_name, portal_field_config, info."""
 	out: list[dict[str, Any]] = []

@@ -17,6 +17,8 @@
     "writeback_on_submit",
     "buttons",
     "related_doctypes",
+    "inline_child_tables",
+    "script_tool_groups",
     "tab_notes"
   ],
   "fields": [
@@ -103,6 +105,20 @@
       "fieldtype": "Table",
       "label": "Related DocTypes",
       "options": "Form Dialog Related DocType"
+    },
+    {
+      "description": "Frappe Table fields on the target DocType shown as extra editable tabs (child rows live on the root document). Configure columns via Portal columns below.",
+      "fieldname": "inline_child_tables",
+      "fieldtype": "Table",
+      "label": "Inline Child Tables",
+      "options": "Form Dialog Inline Child Table"
+    },
+    {
+      "description": "Captured Client Script add_custom_button groups to expose as Tools tabs. Empty means all discovered groups are shown (legacy). Tab labels are editable here.",
+      "fieldname": "script_tool_groups",
+      "fieldtype": "Table",
+      "label": "Script Tool Groups",
+      "options": "Form Dialog Script Tool Group"
     },
     {
       "description": "Per main-form tab hints for panel users (__lead__ before first Tab Break; not used for Related DocTypes tabs). Rows are rebuilt on Capture/Rebuild; existing notes stay when the tab anchor matches.",

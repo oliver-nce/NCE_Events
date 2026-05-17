@@ -91,12 +91,31 @@ export function usePanelFormDialog({
 			const tools = activateScripts();
 			// Remove stale script tool tabs from any previous load
 			tabs.value = tabs.value.filter((t) => !t._scriptTool);
-			// Push one tab per discovered tool group
+			const sgList = definition.value.script_tool_groups;
+			const restrictSg = Array.isArray(sgList) && sgList.length > 0;
+			const allowedGk = restrictSg
+				? new Set(
+						sgList.map((g) => String(g.group_key ?? "").trim() || "__ungrouped__"),
+					)
+				: null;
+			const labelByKey = {};
+			if (restrictSg) {
+				for (const g of sgList) {
+					const k = String(g.group_key ?? "").trim() || "__ungrouped__";
+					labelByKey[k] = String(g.tab_label ?? "").trim() || k;
+				}
+			}
 			for (const tool of tools) {
+				const gk = tool.groupKey || "__ungrouped__";
+				if (allowedGk && !allowedGk.has(gk)) {
+					continue;
+				}
+				const tabLab = restrictSg ? labelByKey[gk] || tool.label : tool.label;
+				const toolForMount = { ...tool, label: tabLab };
 				tabs.value.push({
-					label: tool.label,
+					label: tabLab,
 					sections: [],
-					_scriptTool: { tool, mountFn: mountTool },
+					_scriptTool: { tool: toolForMount, mountFn: mountTool },
 				});
 			}
 		}
