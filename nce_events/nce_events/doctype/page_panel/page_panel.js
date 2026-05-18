@@ -2003,9 +2003,6 @@ function _show_capture_wizard_dialog(opts, onSubmit) {
 
 	const inlineOpts = Array.isArray(opts.inlineOptions) ? opts.inlineOptions : [];
 	const discoveredTools = Array.isArray(opts.discoveredTools) ? opts.discoveredTools : [];
-	const toolScriptGroupKeys = discoveredTools.map(function (t) {
-		return String(t.groupKey || "__ungrouped__");
-	});
 
 	const preselectedRelated = opts.preselectedRelated || [];
 	const preRelSet = new Set(preselectedRelated.map(_relatedPickerFingerprint));
@@ -2160,7 +2157,7 @@ function _show_capture_wizard_dialog(opts, onSubmit) {
 			'<p style="color:#8d99a6;font-size:11px;margin:8px 0 0;">' +
 			_htmlEscAttr(
 				__(
-					"If all groups stay selected on save, unrestricted Tools tabs are stored (same as leaving Tools unset)."
+					"Edit tab labels below; they are stored on Form Dialog › Script Tool Groups. Unchecked groups stay hidden."
 				)
 			) +
 			"</p>";
@@ -2219,34 +2216,25 @@ function _show_capture_wizard_dialog(opts, onSubmit) {
 					const gk = String($(this).attr("data-gk") || "").trim() || "__ungrouped__";
 					checkedKeys.push(gk);
 				});
-				const allDiscoveredChecked =
-					toolScriptGroupKeys.length > 0 &&
-					toolScriptGroupKeys.every(function (k) {
-						return checkedKeys.indexOf(k) !== -1;
-					});
-				if (legacyScriptMode && allDiscoveredChecked) {
-					scriptPayload = [];
-				} else {
-					const uniq = {};
-					for (let ci = 0; ci < checkedKeys.length; ci++) {
-						const k = checkedKeys[ci];
-						if (uniq[k]) {
-							continue;
-						}
-						uniq[k] = true;
-						let $inp = $();
-						d.$wrapper.find(".pp-sg-label").each(function () {
-							if (($(this).attr("data-gk") || "") === k) {
-								$inp = $(this);
-								return false;
-							}
-						});
-						let tl = ($inp.val() || "").trim();
-						if (!tl) {
-							tl = k;
-						}
-						scriptPayload.push({ group_key: k, tab_label: tl });
+				const uniq = {};
+				for (let ci = 0; ci < checkedKeys.length; ci++) {
+					const k = checkedKeys[ci];
+					if (uniq[k]) {
+						continue;
 					}
+					uniq[k] = true;
+					let $inp = $();
+					d.$wrapper.find(".pp-sg-label").each(function () {
+						if (($(this).attr("data-gk") || "") === k) {
+							$inp = $(this);
+							return false;
+						}
+					});
+					let tl = ($inp.val() || "").trim();
+					if (!tl) {
+						tl = k;
+					}
+					scriptPayload.push({ group_key: k, tab_label: tl });
 				}
 			}
 
