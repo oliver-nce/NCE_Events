@@ -3,7 +3,7 @@
 		<ActionsPanel :actions="panelActions" @select="onPanelActionSelect" />
 		<PanelFloat :init-x="240" :init-y="16" :init-w="900" :init-h="550">
 			<template #header>
-				<span class="ppv2-title">{{ config?.header_text || "NCE Tables" }}</span>
+				<span class="ppv2-title">{{ config?.header_text || panelLabel }}</span>
 				<PanelHeaderToolbar
 					:loading="loading"
 					:show-click-hint="!!config?.open_card_on_click"
@@ -272,7 +272,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted, onUnmounted } from "vue";
+import { ref, reactive, computed, onMounted, onUnmounted, inject } from "vue";
 import { useNceCardStack, parseOpenCardOpts } from "./composables/useNceCardStack.js";
 import { usePanelFormDialogHost } from "./composables/usePanelFormDialogHost.js";
 import { usePanelActions } from "./composables/usePanelActions.js";
@@ -286,7 +286,11 @@ import CardModal from "./nce_cards/CardModal.vue";
 import PanelFormDialog from "./components/PanelFormDialog.vue";
 import ActionsPanel from "./components/ActionsPanel.vue";
 
-const rootPanel = usePanel("WP Tables");
+const panelMode = inject("panelMode", null);
+const panelLabel = inject("panelLabel", "NCE Tables");
+const rootFilter = panelMode ? { doctype_source: panelMode } : {};
+
+const rootPanel = usePanel("WP Tables", rootFilter);
 const {
 	config,
 	columns: rawColumns,
@@ -364,6 +368,7 @@ function refreshPanelByDoctype(doctype) {
 const { actions: panelActions, loadActions, executeAction: runPanelAction } = usePanelActions({
 	openFormDialogStandalone,
 	refreshPanelByDoctype,
+	scope: panelMode,
 });
 
 async function onPanelActionSelect(action) {

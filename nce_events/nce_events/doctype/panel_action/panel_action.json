@@ -10,6 +10,7 @@
 		"label",
 		"sort_order",
 		"enabled",
+		"scope",
 		"section_break_type",
 		"action_type",
 		"section_break_form_dialog",
@@ -68,6 +69,16 @@
 			"fieldtype": "Check",
 			"in_list_view": 1,
 			"label": "Enabled"
+		},
+		{
+			"default": "Both",
+			"description": "Which panel page this action appears on. Pages filtered to one doctype_source value only see actions with the matching scope plus Both.",
+			"fieldname": "scope",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"label": "Scope",
+			"options": "Both\nMirror\nNative",
+			"reqd": 1
 		},
 		{
 			"fieldname": "section_break_type",

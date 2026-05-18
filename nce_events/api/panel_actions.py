@@ -23,6 +23,7 @@ _PUBLIC_FIELDS: tuple[str, ...] = (
 	"record_mode",
 	"record_name",
 	"client_handler",
+	"scope",
 )
 
 
@@ -31,7 +32,7 @@ def _user_role_set() -> frozenset[str]:
 
 
 @frappe.whitelist()
-def get_panel_actions() -> list[dict[str, Any]]:
+def get_panel_actions(scope: str | None = None) -> list[dict[str, Any]]:
 	"""Return enabled Panel Actions visible to the current user, sorted."""
 	if not frappe.has_permission("Panel Action", "read"):
 		return []
@@ -42,6 +43,10 @@ def get_panel_actions() -> list[dict[str, Any]]:
 		fields=list(_PUBLIC_FIELDS),
 		order_by="sort_order asc, modified desc",
 	)
+
+	requested = (scope or "").strip()
+	if requested:
+		rows = [r for r in rows if (r.get("scope") or "Both") in (requested, "Both")]
 
 	user_roles = _user_role_set()
 	out: list[dict[str, Any]] = []

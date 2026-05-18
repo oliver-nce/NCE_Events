@@ -9,7 +9,7 @@ import { parseClientHandlerSpec } from "../utils/parseClientHandlerSpec.js";
  *   refreshPanelByDoctype: (doctype: string) => void;
  * }} deps
  */
-export function usePanelActions({ openFormDialogStandalone, refreshPanelByDoctype }) {
+export function usePanelActions({ openFormDialogStandalone, refreshPanelByDoctype, scope = null }) {
 	const actions = ref([]);
 	const loading = ref(false);
 	const error = ref(null);
@@ -18,7 +18,8 @@ export function usePanelActions({ openFormDialogStandalone, refreshPanelByDoctyp
 		loading.value = true;
 		error.value = null;
 		try {
-			const list = await frappeCall("nce_events.api.panel_actions.get_panel_actions");
+			const args = scope ? { scope } : {};
+			const list = await frappeCall("nce_events.api.panel_actions.get_panel_actions", args);
 			actions.value = Array.isArray(list) ? list : [];
 		} catch (e) {
 			error.value = String(e);
