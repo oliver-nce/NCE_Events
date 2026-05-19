@@ -51,12 +51,7 @@ def _find_spa_definition_name(target: str) -> str | None:
 		{"switch_handler_slug": key},
 		{"doctype_source_mode": key},
 	):
-		name = frappe.db.get_value(
-			"SPA Page Definition",
-			filters,
-			"name",
-			ignore_permissions=True,
-		)
+		name = frappe.db.get_value("SPA Page Definition", filters, "name")
 		if name:
 			return cstr(name)
 
@@ -69,7 +64,6 @@ def _get_spa_row(name: str) -> dict[str, Any] | None:
 		name,
 		_SPA_CONFIG_FIELDS,
 		as_dict=True,
-		ignore_permissions=True,
 	)
 	return row if row else None
 

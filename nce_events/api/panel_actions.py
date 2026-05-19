@@ -68,12 +68,7 @@ def get_panel_actions(scope: str | None = None) -> list[dict[str, Any]]:
 			if target:
 				spa_name = _find_spa_definition_name(target)
 				if spa_name and not cint(
-					frappe.db.get_value(
-						"SPA Page Definition",
-						spa_name,
-						"is_active",
-						ignore_permissions=True,
-					)
+					frappe.db.get_value("SPA Page Definition", spa_name, "is_active")
 				):
 					continue
 		out.append(r)
