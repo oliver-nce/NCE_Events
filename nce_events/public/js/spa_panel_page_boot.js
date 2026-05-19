@@ -43,6 +43,7 @@ nce_events.spa_panel_page.boot = function (wrapper, pageSlug, mountElId) {
 				wrapper._page_obj.main.append(mount_el);
 				if (window.NCEPanelPageV2 && window.NCEPanelPageV2.mount) {
 					wrapper._vue_app = window.NCEPanelPageV2.mount("#" + mountElId, {
+						pageSlug: pageSlug,
 						mode: cfg.doctype_source_mode || null,
 						label: cfg.panel_header_text || "NCE Tables",
 					});

@@ -169,13 +169,20 @@ function startResize(e) {
 
 /* ── Header slot content (rendered by App.vue) ── */
 
+.ppv2-float-header :deep(.ppv2-header-title-row) {
+	display: flex;
+	align-items: center;
+	flex: 1 1 auto;
+	min-width: 0;
+	gap: var(--spacing-sm);
+}
+
 .ppv2-float-header :deep(.ppv2-title) {
 	font-weight: var(--font-weight-bold);
 	font-size: 14px;
-	flex: 1 1 auto;
+	flex: 0 1 auto;
 	min-width: 0;
 	line-height: 1.25;
-	padding-right: var(--spacing-sm);
 }
 
 /* Hint + icon cluster — stays right; avoids sandwiching hint between long title and buttons */
