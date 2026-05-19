@@ -34,7 +34,7 @@ const { pages, loadPages, switchTo } = useSpaPageNav();
 const headerLabel = computed(() => tr("Pages"));
 
 const ready = ref(false);
-const anchor = reactive({ x: 16, y: 4, w: 420, h: 140 });
+const anchor = reactive({ x: 16, y: 4, w: 420, h: 94 });
 
 onMounted(async () => {
 	await loadPages();

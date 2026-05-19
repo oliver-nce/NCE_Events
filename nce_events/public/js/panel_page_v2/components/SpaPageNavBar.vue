@@ -34,7 +34,7 @@ function navTitle(page) {
 
 <style scoped>
 .ppv2-spa-nav {
-	padding: var(--spacing-sm, 12px);
+	padding: 2px var(--spacing-sm, 10px);
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
