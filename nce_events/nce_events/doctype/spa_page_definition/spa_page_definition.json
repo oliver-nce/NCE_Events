@@ -7,12 +7,21 @@
 	"naming_rule": "By fieldname",
 	"field_order": [
 		"page_slug",
+		"is_active",
 		"page_title",
 		"panel_header_text",
 		"doctype_source_mode",
 		"switch_handler_slug"
 	],
 	"fields": [
+		{
+			"default": "1",
+			"description": "When unchecked, this SPA is hidden from Panel Action switch_page targets and UI listings. Direct /app/<slug> URLs still load for testing.",
+			"fieldname": "is_active",
+			"fieldtype": "Check",
+			"in_list_view": 1,
+			"label": "Active"
+		},
 		{
 			"description": "Frappe Page slug (directory name under page/). Example: panel-page-mirrored",
 			"fieldname": "page_slug",
@@ -39,14 +48,12 @@
 			"reqd": 1
 		},
 		{
-			"description": "Value for doctype_source on the root WP Tables filter and Panel Action scope (Mirror or Native).",
+			"description": "Value for doctype_source on the root WP Tables filter and Panel Action scope (Mirror or Native). Leave blank for unfiltered legacy pages.",
 			"fieldname": "doctype_source_mode",
 			"fieldtype": "Select",
 			"in_list_view": 1,
 			"label": "DocType Source Mode",
-			"options": "Mirror\nNative",
-			"reqd": 1,
-			"unique": 1
+			"options": "\nMirror\nNative"
 		},
 		{
 			"description": "Target slug for switch_page(...) Panel Actions that navigate to this SPA. Usually the same as Page Slug.",

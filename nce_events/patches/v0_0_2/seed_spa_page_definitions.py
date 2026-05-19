@@ -14,6 +14,7 @@ _ROWS = (
 		"panel_header_text": "NCE Tables",
 		"doctype_source_mode": "Mirror",
 		"switch_handler_slug": "panel-page-mirrored",
+		"is_active": 1,
 	},
 	{
 		"page_slug": "panel-page-native",
@@ -21,6 +22,15 @@ _ROWS = (
 		"panel_header_text": "NCE Native DocTypes",
 		"doctype_source_mode": "Native",
 		"switch_handler_slug": "panel-page-native",
+		"is_active": 1,
+	},
+	{
+		"page_slug": "panel-page-v2",
+		"page_title": "NCE Events Manager",
+		"panel_header_text": "NCE Events Manager",
+		"doctype_source_mode": "",
+		"switch_handler_slug": "panel-page-v2",
+		"is_active": 0,
 	},
 )
 

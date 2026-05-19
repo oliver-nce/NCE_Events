@@ -567,6 +567,19 @@
         "Report data fetch and formatting"
       ]
     },
+    "nce_events/api/spa_page.py": {
+      "exports": [
+        "get_spa_page_config",
+        "inactive_spa_page_slugs",
+        "list_spa_pages_for_ui",
+        "switch_page_target_slug"
+      ],
+      "whitelist_endpoints": [
+        "get_spa_page_config",
+        "list_spa_pages_for_ui"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/api/sql_eval.py": {
       "exports": [
         "evaluate_sql_expressions",
@@ -713,6 +726,12 @@
       "exports": [
         "TestGetEventEnrollments",
         "TestPhysicalTableName"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/api/tests/test_spa_page.py": {
+      "exports": [
+        "TestSwitchPageTargetSlug"
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
@@ -971,7 +990,7 @@
       "depends_on": []
     },
     "nce_events/nce_events/doctype/spa_page_definition/": {
-      "purpose": "Per-SPA Frappe Page config: page slug, desk title, panel header text, doctype_source mode (Mirror/Native), and switch_page target slug. Seeded for panel-page-mirrored and panel-page-native; not yet read by the Vue bundle at runtime.",
+      "purpose": "Per-SPA Frappe Page config: page slug, is_active, desk title, panel header text, doctype_source mode (Mirror/Native, blank for legacy), and switch_page target slug. Booted via spa_panel_page_boot.js + get_spa_page_config; inactive SPAs hidden from switch_page Panel Actions but still load on direct URL.",
       "key_fields": [
         "page_slug",
         "page_title",

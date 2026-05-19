@@ -15,3 +15,4 @@ nce_events.patches.v0_0_2.seed_new_woo_product_action_v2
 nce_events.patches.v0_0_2.seed_new_woo_product_action_v3
 nce_events.patches.v0_0_2.set_panel_action_scope_default
 nce_events.patches.v0_0_2.seed_spa_page_definitions
+nce_events.patches.v0_0_2.refresh_spa_page_definitions
