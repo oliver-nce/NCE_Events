@@ -805,7 +805,7 @@ function onSheets(panelPayload) {
 	box-sizing: border-box;
 	display: flex;
 	align-items: center;
-	font-size: var(--font-size-lg, 16px);
+	font-size: 24pt;
 	font-weight: var(--font-weight-bold, 600);
 	font-family: var(--font-family);
 	color: var(--text-color);
