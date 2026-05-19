@@ -12,6 +12,7 @@ app_include_js = [
 	"/assets/nce_events/js/schema_explorer.js",
 	"/assets/nce_events/js/enrollments_exchange.js",
 	"/assets/nce_events/js/new_woo_commerce_product.js",
+	"/assets/nce_events/js/spa_panel_page_register.js",
 ]
 app_include_css = [
 	"/assets/nce_events/css/schema_explorer.css",
