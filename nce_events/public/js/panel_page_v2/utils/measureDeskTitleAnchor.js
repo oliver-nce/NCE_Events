@@ -3,8 +3,16 @@
  * Title occupies the left 1/3; switcher sits in the right 2/3.
  * All coordinates are positive and relative to .ppv2-root.
  */
-export function measureDeskTitleAnchor(floatH = 44) {
-	const fallback = { x: 360, y: 8, w: 320, h: floatH };
+/**
+ * Default initial size for the switcher float. Large enough to show 2–3 page
+ * buttons in a single row plus header/footer chrome; PanelFloat handles wrap and
+ * the user can resize/drag from there.
+ */
+const DEFAULT_W = 420;
+const DEFAULT_H = 140;
+
+export function measureDeskTitleAnchor(floatH = DEFAULT_H, floatW = DEFAULT_W) {
+	const fallback = { x: 360, y: 4, w: floatW, h: floatH };
 
 	const root = document.querySelector(".ppv2-root");
 	if (!root) return fallback;
@@ -12,18 +20,14 @@ export function measureDeskTitleAnchor(floatH = 44) {
 	const rootRect = root.getBoundingClientRect();
 	const rootWidth = rootRect.width || 1024;
 
-	const header = root.querySelector(".ppv2-spa-header");
-	const headerH = header ? header.getBoundingClientRect().height : 56;
-
 	const titleSlotWidth = rootWidth / 3;
 	const gap = 16;
-	const desiredW = 320;
 	const maxRightArea = rootWidth - titleSlotWidth - gap * 2;
-	const w = Math.max(220, Math.min(desiredW, maxRightArea));
+	const w = Math.max(260, Math.min(floatW, maxRightArea));
 
 	return {
 		x: Math.round(titleSlotWidth + gap),
-		y: Math.round(Math.max(4, (headerH - floatH) / 2)),
+		y: 4,
 		w: Math.round(w),
 		h: floatH,
 	};
