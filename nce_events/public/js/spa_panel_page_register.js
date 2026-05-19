@@ -13,4 +13,11 @@ nce_events.spa_panel_page.register = function (pageSlug) {
 			nce_events.spa_panel_page.boot(wrapper, pageSlug, mountElId);
 		});
 	};
+	frappe.pages[pageSlug].on_page_hide = function (wrapper) {
+		frappe.require(["/assets/nce_events/js/spa_panel_page_boot.js"], function () {
+			if (nce_events.spa_panel_page.clearLayoutScope) {
+				nce_events.spa_panel_page.clearLayoutScope(wrapper);
+			}
+		});
+	};
 };

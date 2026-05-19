@@ -8,6 +8,51 @@ const _VUE_ASSETS = [
 	"/assets/nce_events/js/panel_page_v2_dist/style.css",
 ];
 
+/** Frappe Page routes have no `.page` wrapper — page-head is a direct child of `wrapper`. */
+function _findSpaScope(wrapper) {
+	let el = wrapper;
+	for (let i = 0; i < 6 && el; i++) {
+		if (el.querySelector && el.querySelector(":scope > .page-head")) return el;
+		el = el.parentElement;
+	}
+	return wrapper;
+}
+
+function _ensureSpaLayoutStyles() {
+	if (document.getElementById("spa-panel-page-style")) return;
+	const s = document.createElement("style");
+	s.id = "spa-panel-page-style";
+	/*
+	 * Scoped to .spa-panel-page on the Frappe page wrapper (set in boot()).
+	 * Only our SPA pages get that class; standard desk pages are unaffected.
+	 */
+	s.textContent = [
+		".spa-panel-page > .page-head {",
+		"  display: none !important;",
+		"  height: 0 !important;",
+		"  min-height: 0 !important;",
+		"  padding: 0 !important;",
+		"  margin: 0 !important;",
+		"  overflow: hidden !important;",
+		"  border: none !important;",
+		"}",
+		".spa-panel-page > .page-body,",
+		".spa-panel-page .page-content,",
+		".spa-panel-page .layout-main-section-wrapper,",
+		".spa-panel-page .layout-main-section {",
+		"  padding-top: 0 !important;",
+		"  margin-top: 0 !important;",
+		"}",
+	].join("\n");
+	document.head.appendChild(s);
+}
+
+nce_events.spa_panel_page.clearLayoutScope = function (wrapper) {
+	const scope = wrapper && wrapper._nce_spa_scope_el;
+	if (scope) scope.classList.remove("spa-panel-page");
+	if (wrapper) wrapper._nce_spa_scope_el = null;
+};
+
 nce_events.spa_panel_page.boot = function (wrapper, pageSlug, mountElId) {
 	if (wrapper._vue_app) return;
 
@@ -35,29 +80,10 @@ nce_events.spa_panel_page.boot = function (wrapper, pageSlug, mountElId) {
 				wrapper._page_obj.page.set_title("");
 			}
 
-			const pageEl = wrapper.closest(".page");
-			if (pageEl) pageEl.classList.add("spa-panel-page");
-			if (!document.getElementById("spa-panel-page-style")) {
-				const s = document.createElement("style");
-				s.id = "spa-panel-page-style";
-				/*
-				 * Scoped strictly to .page.spa-panel-page — this class is only set on
-				 * SPA pages booted via nce_events.spa_panel_page.boot(). Other desk
-				 * pages (User list, Settings, etc.) render their own .page element
-				 * without this class and are therefore unaffected.
-				 */
-				s.textContent = [
-					".page.spa-panel-page > .page-head { display: none !important; }",
-					".page.spa-panel-page > .page-body,",
-					".page.spa-panel-page .page-content,",
-					".page.spa-panel-page .layout-main-section-wrapper,",
-					".page.spa-panel-page .layout-main-section {",
-					"  padding-top: 0 !important;",
-					"  margin-top: 0 !important;",
-					"}",
-				].join("\n");
-				document.head.appendChild(s);
-			}
+			const scopeEl = _findSpaScope(wrapper);
+			scopeEl.classList.add("spa-panel-page");
+			wrapper._nce_spa_scope_el = scopeEl;
+			_ensureSpaLayoutStyles();
 
 			frappe.require(_VUE_ASSETS, function () {
 				if (wrapper._vue_app) return;
