@@ -1,8 +1,11 @@
 <template>
 	<div class="ppv2-root">
+		<header class="ppv2-spa-header">
+			<div class="ppv2-spa-title-slot">{{ pageTitle }}</div>
+		</header>
 		<SpaPageSwitcherFloat />
 		<ActionsPanel :actions="panelActions" @select="onPanelActionSelect" />
-		<PanelFloat :init-x="240" :init-y="16" :init-w="900" :init-h="550">
+		<PanelFloat :init-x="240" :init-y="72" :init-w="900" :init-h="550">
 			<template #header>
 				<span class="ppv2-title">{{ config?.header_text || panelLabel }}</span>
 				<PanelHeaderToolbar
@@ -290,6 +293,7 @@ import SpaPageSwitcherFloat from "./components/SpaPageSwitcherFloat.vue";
 
 const panelMode = inject("panelMode", null);
 const panelLabel = inject("panelLabel", "NCE Tables");
+const pageTitle = inject("pageTitle", "");
 const rootFilter = panelMode ? { doctype_source: panelMode } : {};
 
 const rootPanel = usePanel("WP Tables", rootFilter);
@@ -451,7 +455,7 @@ function nextPos(parentId) {
 	/* Find the parent panel's position and offset from it */
 	if (parentId === "root") {
 		/* Offset from the root WP Tables panel (matches :init-x / :init-y on root PanelFloat) */
-		return { x: 240 + 80, y: 16 + 24 };
+		return { x: 240 + 80, y: 72 + 24 };
 	}
 	const parent = openPanels.find((p) => p.id === parentId);
 	if (parent) {
@@ -749,7 +753,38 @@ function onSheets(panelPayload) {
 	position: relative;
 	width: 100%;
 	height: calc(100vh - 60px);
-	/* Let the SPA page switcher float into the desk page-head row above this root */
-	overflow: visible;
+}
+
+/*
+ * Reserved top strip inside the SPA. Left third holds the SPA title (page_title
+ * from SPA Page Definition); the right two-thirds is open space where the
+ * SpaPageSwitcherFloat anchors and can be dragged around. pointer-events: none
+ * on the band itself so floats dragged over it remain interactive.
+ */
+.ppv2-spa-header {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 56px;
+	pointer-events: none;
+	z-index: 1;
+}
+
+.ppv2-spa-title-slot {
+	width: 33.333%;
+	height: 100%;
+	padding: 12px 16px;
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	font-size: var(--font-size-lg, 16px);
+	font-weight: var(--font-weight-bold, 600);
+	font-family: var(--font-family);
+	color: var(--text-color);
+	pointer-events: auto;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 </style>

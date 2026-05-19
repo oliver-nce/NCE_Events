@@ -5,7 +5,6 @@
 		:init-y="anchor.y"
 		:init-w="anchor.w"
 		:init-h="anchor.h"
-		:min-y="-160"
 	>
 		<template #header>
 			<span class="ppv2-title">{{ headerLabel }}</span>
@@ -35,7 +34,7 @@ const { pages, loadPages, switchTo } = useSpaPageNav();
 const headerLabel = computed(() => tr("Pages"));
 
 const ready = ref(false);
-const anchor = reactive({ x: 280, y: 8, w: 320, h: 80 });
+const anchor = reactive({ x: 360, y: 8, w: 320, h: 44 });
 
 onMounted(async () => {
 	await loadPages();
