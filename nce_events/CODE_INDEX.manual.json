@@ -4,7 +4,7 @@
     "usage": "Run `python scripts/build_code_index.py --write` to regenerate CODE_INDEX.json after editing this file or after adding/renaming/deleting source files. The pre-commit hook runs `--check` and blocks commits whose code changes have not been regenerated."
   },
   "architecture": {
-    "overview": "NCE Events is a Frappe app that renders configurable multi-panel data explorer pages. It has a Python API layer and two frontend generations: V1 (vanilla JS class-based) and V2 (Vue 3 SFC with Vite build). Both share SMS/Email dialogs from V1. Depends on nce_sync app. V2 supports optional frozen Form Dialogs for editing panel rows without leaving the panel page.",
+    "overview": "NCE Events is a Frappe app that renders configurable multi-panel data explorer pages. It has a Python API layer and two frontend generations: V1 (vanilla JS class-based) and V2 (Vue 3 SFC with Vite build). Both share SMS/Email dialogs from V1. Depends on nce_sync app. V2 supports optional frozen Form Dialogs for editing panel rows without leaving the panel page. V2 ships as one Vue bundle mounted by three Frappe Pages: legacy /app/panel-page-v2 (unfiltered), /app/panel-page-mirrored (doctype_source=Mirror), /app/panel-page-native (doctype_source=Native). Each page passes a mode + label into the SPA via app.provide; the root WP Tables panel filter and the Panel Actions scope filter both derive from that mode. See Docs/handoff_panel_page_split.md.",
     "data_flow": "Frappe Page (panel_page / panel_page_v2) → JS/Vue → frappe.call() → api/panel_api_pkg/, api/messaging.py, api/tags.py, api/reports.py, api/form_dialog/ → Frappe ORM → MariaDB",
     "key_patterns": [
       "V2 Vue app built separately: npm run build in public/js/panel_page_v2/ then bench build",
@@ -14,6 +14,7 @@
       "Tag system uses Jinja template tags with gender-conditional pronouns",
       "Form Dialog: frozen_meta_json (snapshot of frappe.get_meta fields) is parsed by parseLayout.js + rendered by PanelFormDialog.vue. Only DocTypes in WP Tables are eligible.",
       "Form Dialog buttons: script text is copied from Desk at capture/rebuild time — not live-linked. Rebuild is manual.",
+      "Panel Page split (Mirror / Native): one Vue bundle, three Frappe Pages. main.js mount(selector, opts) provides panelMode + panelLabel; App.vue injects them, applies { doctype_source: panelMode } to the root usePanel, and passes scope: panelMode to usePanelActions. Cross-page navigation is a Panel Action of type Client Script using switch_page(slug), implemented as a full-reload window.location.assign for KISS state reset. See Docs/handoff_panel_page_split.md.",
       "NCE Sync mirror refresh (separate app): whitelisted nce_sync.api.sync_doctype_rows (by doc names) and nce_sync.api.sync_linked_doctype_rows (rebuild child rows for one parent Link). Full call shapes, enqueue helpers, and permission notes: architecture.nce_sync_mirror_refresh_apis."
     ],
     "nce_sync_mirror_refresh_apis": {
@@ -421,6 +422,17 @@
       "key_fields": [],
       "depends_on": []
     },
+    "nce_events/nce_events/doctype/spa_page_definition/": {
+      "purpose": "Per-SPA Frappe Page config: page slug, desk title, panel header text, doctype_source mode (Mirror/Native), and switch_page target slug. Seeded for panel-page-mirrored and panel-page-native; not yet read by the Vue bundle at runtime.",
+      "key_fields": [
+        "page_slug",
+        "page_title",
+        "panel_header_text",
+        "doctype_source_mode",
+        "switch_handler_slug"
+      ],
+      "depends_on": []
+    },
     "nce_events/nce_events/doctype/form_dialog/": {
       "purpose": "Frozen Desk form definition for V2 dialog rendering. One record per named dialog. Stores frozen_meta_json (fields array snapshot from frappe.get_meta), dialog_size, is_active, writeback_on_submit, and child buttons table. Only DocTypes in WP Tables are allowed as target_doctype.",
       "key_fields": [
@@ -446,6 +458,41 @@
         "source_note"
       ],
       "depends_on": []
+    },
+    "nce_events/nce_events/doctype/panel_action/": {
+      "purpose": "Configurable side-panel action shown in the V2 SPA. action_type drives behavior (Form Dialog, Client Script, Show DocType, etc.); role gating is enforced via the Panel Action Role child table. Scope (Both / Mirror / Native, default Both) controls which panel page the action appears on — a Mirror-scoped action only shows on /app/panel-page-mirrored, a Native-scoped one only on /app/panel-page-native; Both shows on every page. Backfilled by patch v0_0_2/set_panel_action_scope_default.",
+      "key_fields": [
+        "action_id",
+        "label",
+        "action_type",
+        "client_handler",
+        "form_dialog",
+        "enabled",
+        "scope",
+        "sort_order"
+      ],
+      "depends_on": [
+        "panel_action_role"
+      ]
+    },
+    "nce_events/nce_events/doctype/panel_action_role/": {
+      "purpose": "Child table of Panel Action — list of Role names allowed to see and execute the parent action. Empty list means everyone with read on Panel Action can see it.",
+      "key_fields": [
+        "role"
+      ],
+      "depends_on": []
+    },
+    "nce_events/api/panel_actions.py": {
+      "purpose": "Panel Action endpoints — list visible Panel Actions for the current user (role-gated and scope-filtered), capture/load Panel Action Form Dialog definitions, and resolve dynamic DocType targets for showDt actions. get_panel_actions(scope) returns only actions whose Scope matches the requested page scope ('Mirror' / 'Native') plus the universal 'Both' scope; called with scope=null returns everything (used by legacy panel-page-v2).",
+      "depends_on": [
+        "nce_events/nce_events/doctype/panel_action/"
+      ],
+      "sections": [
+        "Public field list (_PUBLIC_FIELDS)",
+        "get_panel_actions (scope + role filter)",
+        "Panel Action Form Dialog capture",
+        "DocType resolution for showDt"
+      ]
     },
     "nce_events/public/js/schema_explorer.js": {
       "purpose": "Tag Finder V1 — DocType field browser for building Jinja template tags",
@@ -478,9 +525,10 @@
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/App.vue": {
-      "purpose": "V2 SPA root: composes PanelFloat + PanelTable for the root WP Tables panel and per-doctype drilled panels, hosts TagFinder/CardModal/PanelFormDialog overlays. Uses PanelHeaderToolbar for the float headers and useSendDialogs for the plain-JS email/SMS dialog launchers.",
+      "purpose": "V2 SPA root: composes PanelFloat + PanelTable for the root WP Tables panel and per-doctype drilled panels, hosts TagFinder/CardModal/PanelFormDialog overlays. Uses PanelHeaderToolbar for the float headers and useSendDialogs for the plain-JS email/SMS dialog launchers. Reads injected panelMode + panelLabel (provided by main.js from the per-page mount opts); when panelMode is set the root panel applies { doctype_source: panelMode } as its parent filter and the same value is passed to usePanelActions as scope. panelLabel falls back to the header title.",
       "depends_on": [
         "composables/usePanel.js",
+        "composables/usePanelActions.js",
         "composables/useNceCardStack.js",
         "composables/usePanelFormDialogHost.js",
         "composables/useSendDialogs.js",
@@ -494,6 +542,36 @@
         "shared/ai_tools.js"
       ]
     },
+    "nce_events/public/js/panel_page_v2/main.js": {
+      "purpose": "V2 SPA bundle entry point. Exposes window.NCEPanelPageV2.mount(selector, opts) — creates a fresh Vue app per mount call (so each Frappe Page gets a clean instance) and provides panelMode + panelLabel from opts so App.vue can scope the root WP Tables filter and Panel Actions list. opts.mode is 'Mirror' / 'Native' / null; opts.label is the header text.",
+      "depends_on": [
+        "App.vue"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/composables/usePanel.js": {
+      "purpose": "V2 composable — load panel config and data, refetch with user_filters. Accepts an optional parentFilter object that is AND-merged into every get_panel_data call (used by App.vue to apply the doctype_source filter on the Mirror / Native pages).",
+      "depends_on": [
+        "utils/frappeCall.js"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/composables/usePanelActions.js": {
+      "purpose": "V2 composable — loads the Panel Actions list and runs the click handler. Accepts a scope option ('Mirror' / 'Native' / null) that is forwarded to get_panel_actions so the server returns only actions whose Scope matches the current panel page (plus the universal 'Both' scope).",
+      "depends_on": [
+        "utils/frappeCall.js",
+        "actions/registry.js"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/actions/registry.js": {
+      "purpose": "Maps Client Script panel action handler keys to JS handler functions. Each Panel Action with action_type=Client Script declares client_handler like 'switch_page(panel-page-native)'; the registry resolves the key (e.g. 'switch_page') to the handler module.",
+      "depends_on": [
+        "actions/handlers/showDt.js",
+        "actions/handlers/switchPage.js"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/actions/handlers/switchPage.js": {
+      "purpose": "Client Script panel action handler — switch_page(slug). Does a full browser navigation via window.location.assign('/app/' + slug) so the target Frappe Page mounts a fresh SPA with no carry-over state. Used by the Mirror→Native and Native→Mirror cross-switch Panel Actions.",
+      "depends_on": []
+    },
     "nce_events/public/js/panel_page_v2/composables/useFormDialogRecordNav.js": {
       "purpose": "V2 composable — form dialog prev/next over the source panel's visible row list; exported panelRowArray for reuse.",
       "depends_on": []
@@ -502,12 +580,6 @@
       "purpose": "V2 composable — panel integration for Panel Form Dialog: refs, open from row, close/save + panel reload; composes useFormDialogRecordNav.",
       "depends_on": [
         "composables/useFormDialogRecordNav.js"
-      ]
-    },
-    "nce_events/public/js/panel_page_v2/composables/usePanel.js": {
-      "purpose": "V2 composable — load panel config and data, refetch with user_filters",
-      "depends_on": [
-        "utils/frappeCall.js"
       ]
     },
     "nce_events/public/js/panel_page_v2/composables/useTagFinder.js": {

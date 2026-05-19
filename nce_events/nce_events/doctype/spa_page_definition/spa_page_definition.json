@@ -1,0 +1,84 @@
+{
+	"actions": [],
+	"autoname": "field:page_slug",
+	"creation": "2026-05-19 00:00:00.000000",
+	"doctype": "DocType",
+	"engine": "InnoDB",
+	"naming_rule": "By fieldname",
+	"field_order": [
+		"page_slug",
+		"page_title",
+		"panel_header_text",
+		"doctype_source_mode",
+		"switch_handler_slug"
+	],
+	"fields": [
+		{
+			"description": "Frappe Page slug (directory name under page/). Example: panel-page-mirrored",
+			"fieldname": "page_slug",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Page Slug",
+			"reqd": 1,
+			"unique": 1
+		},
+		{
+			"description": "Title shown in the Frappe desk page bar for this route.",
+			"fieldname": "page_title",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Page Title",
+			"reqd": 1
+		},
+		{
+			"description": "Title on the teal header bar above the root WP Tables panel (panelLabel in the Vue SPA).",
+			"fieldname": "panel_header_text",
+			"fieldtype": "Data",
+			"in_list_view": 1,
+			"label": "Panel Header Text",
+			"reqd": 1
+		},
+		{
+			"description": "Value for doctype_source on the root WP Tables filter and Panel Action scope (Mirror or Native).",
+			"fieldname": "doctype_source_mode",
+			"fieldtype": "Select",
+			"in_list_view": 1,
+			"label": "DocType Source Mode",
+			"options": "Mirror\nNative",
+			"reqd": 1,
+			"unique": 1
+		},
+		{
+			"description": "Target slug for switch_page(...) Panel Actions that navigate to this SPA. Usually the same as Page Slug.",
+			"fieldname": "switch_handler_slug",
+			"fieldtype": "Data",
+			"label": "Switch Handler Slug",
+			"reqd": 1
+		}
+	],
+	"index_web_pages_for_search": 0,
+	"links": [],
+	"modified": "2026-05-19 00:00:00.000000",
+	"modified_by": "Administrator",
+	"module": "NCE Events",
+	"name": "SPA Page Definition",
+	"owner": "Administrator",
+	"permissions": [
+		{
+			"create": 1,
+			"delete": 1,
+			"email": 1,
+			"export": 1,
+			"print": 1,
+			"read": 1,
+			"report": 1,
+			"role": "System Manager",
+			"share": 1,
+			"write": 1
+		}
+	],
+	"sort_field": "page_slug",
+	"sort_order": "ASC",
+	"states": [],
+	"track_changes": 1
+}

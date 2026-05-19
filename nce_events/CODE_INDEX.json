@@ -1,12 +1,12 @@
 {
   "_meta": {
     "description": "Manual overlay merged into CODE_INDEX.json by scripts/build_code_index.py. Edit per-file entries here; the generator preserves your curated 'purpose', 'sections', 'private_helpers', 'key_fields', and 'depends_on'.",
-    "generated": "2026-05-14",
+    "generated": "2026-05-19",
     "generator": "scripts/build_code_index.py",
     "usage": "Run `python scripts/build_code_index.py --write` to regenerate CODE_INDEX.json after editing this file or after adding/renaming/deleting source files. The pre-commit hook runs `--check` and blocks commits whose code changes have not been regenerated."
   },
   "architecture": {
-    "overview": "NCE Events is a Frappe app that renders configurable multi-panel data explorer pages. It has a Python API layer and two frontend generations: V1 (vanilla JS class-based) and V2 (Vue 3 SFC with Vite build). Both share SMS/Email dialogs from V1. Depends on nce_sync app. V2 supports optional frozen Form Dialogs for editing panel rows without leaving the panel page.",
+    "overview": "NCE Events is a Frappe app that renders configurable multi-panel data explorer pages. It has a Python API layer and two frontend generations: V1 (vanilla JS class-based) and V2 (Vue 3 SFC with Vite build). Both share SMS/Email dialogs from V1. Depends on nce_sync app. V2 supports optional frozen Form Dialogs for editing panel rows without leaving the panel page. V2 ships as one Vue bundle mounted by three Frappe Pages: legacy /app/panel-page-v2 (unfiltered), /app/panel-page-mirrored (doctype_source=Mirror), /app/panel-page-native (doctype_source=Native). Each page passes a mode + label into the SPA via app.provide; the root WP Tables panel filter and the Panel Actions scope filter both derive from that mode. See Docs/handoff_panel_page_split.md.",
     "data_flow": "Frappe Page (panel_page / panel_page_v2) → JS/Vue → frappe.call() → api/panel_api_pkg/, api/messaging.py, api/tags.py, api/reports.py, api/form_dialog/ → Frappe ORM → MariaDB",
     "key_patterns": [
       "V2 Vue app built separately: npm run build in public/js/panel_page_v2/ then bench build",
@@ -16,6 +16,7 @@
       "Tag system uses Jinja template tags with gender-conditional pronouns",
       "Form Dialog: frozen_meta_json (snapshot of frappe.get_meta fields) is parsed by parseLayout.js + rendered by PanelFormDialog.vue. Only DocTypes in WP Tables are eligible.",
       "Form Dialog buttons: script text is copied from Desk at capture/rebuild time — not live-linked. Rebuild is manual.",
+      "Panel Page split (Mirror / Native): one Vue bundle, three Frappe Pages. main.js mount(selector, opts) provides panelMode + panelLabel; App.vue injects them, applies { doctype_source: panelMode } to the root usePanel, and passes scope: panelMode to usePanelActions. Cross-page navigation is a Panel Action of type Client Script using switch_page(slug), implemented as a full-reload window.location.assign for KISS state reset. See Docs/handoff_panel_page_split.md.",
       "NCE Sync mirror refresh (separate app): whitelisted nce_sync.api.sync_doctype_rows (by doc names) and nce_sync.api.sync_linked_doctype_rows (rebuild child rows for one parent Link). Full call shapes, enqueue helpers, and permission notes: architecture.nce_sync_mirror_refresh_apis."
     ],
     "nce_sync_mirror_refresh_apis": {
@@ -48,37 +49,6 @@
       "examples_desk_js": "frappe.call({ method: 'nce_sync.api.sync_doctype_rows', args: { doctype: 'Your Mirrored DocType', names: ['101', '102'] }, callback(r) { if (!r.exc) console.log(r.message); } });\n\nfrappe.call({ method: 'nce_sync.api.sync_linked_doctype_rows', args: { doctype: 'Your Child Mirrored DocType', link_field: 'event', link_value: 'EVT-00001' }, callback(r) { if (!r.exc) console.log(r.message); } });",
       "examples_server_session_python": "frappe.call({ \"method\": \"nce_sync.api.sync_doctype_rows\", \"doctype\": \"Your Mirrored DocType\", \"names\": [\"101\", \"102\"] })\n\nfrappe.call({ \"method\": \"nce_sync.api.sync_linked_doctype_rows\", \"doctype\": \"Your Child Mirrored DocType\", \"link_field\": \"event\", \"link_value\": \"EVT-00001\" })\n\nAlternative: frappe.get_attr(\"nce_sync.api.sync_doctype_rows\")(...) with the same keyword arguments.",
       "examples_server_enqueue_python": "def queue_row_sync(doctype: str, names: list, notify_user: str = \"Administrator\"):\n    frappe.enqueue(\"nce_sync.utils.data_sync.run_sync_doctype_rows_job\", queue=\"default\", timeout=3600, doctype=doctype, names=list(names), user=notify_user)\n\ndef queue_link_rebuild(doctype: str, link_field: str, link_value: str, notify_user: str = \"Administrator\"):\n    frappe.enqueue(\"nce_sync.utils.data_sync.run_sync_linked_doctype_rows_job\", queue=\"default\", timeout=3600, doctype=doctype, link_field=link_field, link_value=link_value, user=notify_user)"
-    },
-    "nce_sync_job_tracking": {
-      "summary": "sync_doctype_rows and sync_linked_doctype_rows only queue work. Use the job_id in the API response with Frappe's RQ helpers to track completion (success vs failure).",
-      "api_response_job_id": "On success, r.message includes { queued: true, job_id: '<uuid>', ... }. Queue two jobs (e.g. tickets + attendees) → two job_id values; track both independently.",
-      "server_poll_pattern": "import time\nfrom frappe.utils.background_jobs import get_job_status\nfrom rq.job import JobStatus\n\ndef wait_for_job(job_id: str, timeout_sec: float = 3600, poll_sec: float = 0.5) -> str:\n    terminal = {JobStatus.FINISHED, JobStatus.FAILED, JobStatus.STOPPED}\n    deadline = time.monotonic() + timeout_sec\n    while time.monotonic() < deadline:\n        st = get_job_status(job_id)\n        if st is None:\n            return 'missing'\n        if st in terminal:\n            return st.value  # 'finished', 'failed', or 'stopped'\n        time.sleep(poll_sec)\n    return 'timeout'",
-      "status_interpretation": {
-        "FINISHED": "Worker returned without raising. Sync logic completed; row-level skips are still possible — check Error Log for row-level rigor.",
-        "FAILED": "Exception in the job. Check Error Log and the user's red msgprint path.",
-        "None_missing": "RQ may have evicted the job record after result_ttl (Frappe default: minutes). Poll soon after enqueue. If polling later, treat missing as 'unknown — recheck data/logs' rather than failure.",
-        "ttl_note": "None after completion may mean evicted, not still running. Short polls right after enqueue avoid ambiguity. For long gaps, log your own completion flag in DB or check Sync Log / Error Log."
-      },
-      "client_poll_approaches": {
-        "recommended": "Whitelist a thin wrapper around get_job_status(job_id) in your app (add permission checks), then poll from JS.",
-        "approach_table": "A: Whitelist wrapper — high rigour, recommended for spinner-until-done UX. B: Server orchestrates (enqueue + server polls/chains) — high rigour, user never polls. C: Toast-only UX — low rigour.",
-        "example_js": "async function waitForNceSyncJob(jobId, { intervalMs = 500, timeoutMs = 3600000 } = {}) {\n  const t0 = Date.now();\n  while (Date.now() - t0 < timeoutMs) {\n    const r = await frappe.call({\n      method: 'your_app.api.get_sync_job_status',\n      args: { job_id: jobId },\n    });\n    const st = r.message; // 'queued', 'started', 'finished', 'failed', null\n    if (st === 'finished') return 'finished';\n    if (st === 'failed' || st === 'stopped') return st;\n    await new Promise((res) => setTimeout(res, intervalMs));\n  }\n  return 'timeout';\n}"
-      },
-      "multiple_jobs": "All finished: every job_id hit FINISHED (or policy allows missing within TTL window). Any failed: surface failure and stop spinner. Use Promise.all (JS) or parallel wait_for_job calls (Python).",
-      "limits": [
-        "Same site only — job_id is meaningless across sites.",
-        "Workers must run — status stays queued if no worker consumes the default queue.",
-        "TTL — None after completion may mean evicted, not still running. Short polls after enqueue avoid ambiguity.",
-        "Success != business OK — FINISHED with skips logged is still FINISHED; strict row-level proof needs Sync Log / Error Log / custom checks.",
-        "get_job_status is NOT whitelisted for arbitrary client users — wrap it server-side with permission checks.",
-        "If you queue two related DocTypes, track two job_ids or chain jobs server-side."
-      ],
-      "checklist": [
-        "Call sync_* API → read job_id from r.message.",
-        "Poll get_job_status(job_id) (server) or your whitelisted wrapper (client) until FINISHED / FAILED / timeout.",
-        "On FAILED or timeout → show error + link to Error Log.",
-        "For two related DocTypes → track two job_ids or chain jobs server-side."
-      ]
     }
   },
   "backend": {
@@ -162,6 +132,9 @@
       ]
     },
     "nce_events/api/form_dialog/_helpers.py": {
+      "exports": [
+        "table_fields_for_capture_wizard"
+      ],
       "purpose": "Internal helpers shared by the form_dialog package: WP Tables validation, System Manager guard, hop-chain normalization/walk, related-row filter/column derivation, fetch_from enrichment, client-script capture (Client Script DocType records + app-level .js files), related-doctypes argument parsing, panel required-value emptiness check, get_list field sanitization.",
       "private_helpers": [
         "_assert_doctype_in_wp_tables",
@@ -208,17 +181,21 @@
     "nce_events/api/form_dialog/capture.py": {
       "exports": [
         "capture_form_dialog_from_desk",
+        "get_capture_wizard_options",
         "get_form_dialog_definition",
         "list_form_dialogs_for_doctype",
+        "preview_capture_client_scripts",
         "rebuild_form_dialog"
       ],
       "whitelist_endpoints": [
         "capture_form_dialog_from_desk",
+        "get_capture_wizard_options",
         "get_form_dialog_definition",
         "list_form_dialogs_for_doctype",
+        "preview_capture_client_scripts",
         "rebuild_form_dialog"
       ],
-      "purpose": "Form Dialog schema-capture endpoints: capture/rebuild a Form Dialog by freezing the live DocType meta from Desk (fields + client_scripts stored as { fields: [...], client_scripts: [...] } in frozen_meta_json), get_form_dialog_definition for the V2 panel renderer, and list_form_dialogs_for_doctype for the Desk Page Panel Dialogs tab.",
+      "purpose": "Form Dialog schema-capture endpoints: capture/rebuild a Form Dialog by freezing the live DocType meta from Desk (fields + client_scripts), get_form_dialog_definition for the V2 panel renderer, and list_form_dialogs_for_doctype for the Desk Page Panel Dialogs tab. frozen_meta_json stores { fields: [...], client_scripts: [...] }.",
       "depends_on": [
         "nce_events/api/form_dialog/_helpers.py",
         "nce_events/api/form_dialog/related_rows.py"
@@ -232,11 +209,15 @@
     },
     "nce_events/api/form_dialog/portal_fields.py": {
       "exports": [
+        "get_inline_child_portal_field_editor",
         "get_related_portal_field_editor",
+        "save_inline_child_portal_field_config",
         "save_related_portal_field_config"
       ],
       "whitelist_endpoints": [
+        "get_inline_child_portal_field_editor",
         "get_related_portal_field_editor",
+        "save_inline_child_portal_field_config",
         "save_related_portal_field_config"
       ],
       "purpose": "Portal-field editor endpoints for Form Dialog Related DocType rows: build the editor row list from frozen child meta and persist user-curated portal_field_config (show/editable/sort_rank/sort_dir).",
@@ -295,6 +276,26 @@
       "sections": [
         "save_form_dialog_document (logged-in users; per-DocType perms)"
       ]
+    },
+    "nce_events/api/form_dialog/search.py": {
+      "exports": [
+        "get_form_dialog_search_matches",
+        "get_form_dialog_search_matches_criteria"
+      ],
+      "whitelist_endpoints": [
+        "get_form_dialog_search_matches",
+        "get_form_dialog_search_matches_criteria"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/api/form_dialog/sync_related.py": {
+      "exports": [
+        "trigger_linked_sync_for_dialog_readback"
+      ],
+      "whitelist_endpoints": [
+        "trigger_linked_sync_for_dialog_readback"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
     "nce_events/api/hierarchy_explorer.py": {
       "exports": [
@@ -377,7 +378,16 @@
         "resolve_doctype_for_list_route",
         "resolve_panel_action_doc_name"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Panel Action endpoints — list visible Panel Actions for the current user (role-gated and scope-filtered), capture/load Panel Action Form Dialog definitions, and resolve dynamic DocType targets for showDt actions. get_panel_actions(scope) returns only actions whose Scope matches the requested page scope ('Mirror' / 'Native') plus the universal 'Both' scope; called with scope=null returns everything (used by legacy panel-page-v2).",
+      "depends_on": [
+        "nce_events/nce_events/doctype/panel_action/"
+      ],
+      "sections": [
+        "Public field list (_PUBLIC_FIELDS)",
+        "get_panel_actions (scope + role filter)",
+        "Panel Action Form Dialog capture",
+        "DocType resolution for showDt"
+      ]
     },
     "nce_events/api/panel_api_pkg/__init__.py": {
       "purpose": "Panel API package — Phase 5 split of the original 1093-LOC panel_api.py module (the deprecated shim was removed in Phase 12). Re-exports submodule public + underscore-prefixed names so callers can resolve them at the package root.",
@@ -481,6 +491,15 @@
         "Diagnostic child lookup"
       ]
     },
+    "nce_events/api/panel_api_pkg/page_panel_lookup.py": {
+      "exports": [
+        "generate_auto_page_panel_name",
+        "get_page_panel_doc_for_root",
+        "page_panel_docname_for_root",
+        "page_panel_exists_for_root"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/api/panel_api_pkg/panel_data.py": {
       "exports": [
         "export_panel_data",
@@ -562,6 +581,15 @@
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
+    "nce_events/api/sync_status.py": {
+      "exports": [
+        "get_sync_job_status"
+      ],
+      "whitelist_endpoints": [
+        "get_sync_job_status"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/api/tags.py": {
       "exports": [
         "get_pronoun_tags_for_doctype"
@@ -610,7 +638,8 @@
         "TestHopWalkFinalIdentifiers",
         "TestMainTabSkeletonAndTabNotes",
         "TestParseRelatedDoctypes",
-        "TestRelatedListColumnsOptions"
+        "TestRelatedListColumnsOptions",
+        "TestSyncRelatedPreservesPortalConfig"
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
@@ -869,7 +898,13 @@
       ],
       "depends_on": []
     },
+    "nce_events/nce_events/doctype/form_dialog_inline_child_table/": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/nce_events/doctype/form_dialog_related_doctype/": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/nce_events/doctype/form_dialog_script_tool_group/": {
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
     "nce_events/nce_events/doctype/form_dialog_tab_note/": {
@@ -905,14 +940,45 @@
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
     "nce_events/nce_events/doctype/panel_action/": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Configurable side-panel action shown in the V2 SPA. action_type drives behavior (Form Dialog, Client Script, Show DocType, etc.); role gating is enforced via the Panel Action Role child table. Scope (Both / Mirror / Native, default Both) controls which panel page the action appears on — a Mirror-scoped action only shows on /app/panel-page-mirrored, a Native-scoped one only on /app/panel-page-native; Both shows on every page. Backfilled by patch v0_0_2/set_panel_action_scope_default.",
+      "key_fields": [
+        "action_id",
+        "label",
+        "action_type",
+        "client_handler",
+        "form_dialog",
+        "enabled",
+        "scope",
+        "sort_order"
+      ],
+      "depends_on": [
+        "panel_action_role"
+      ]
     },
     "nce_events/nce_events/doctype/panel_action_role/": {
+      "purpose": "Child table of Panel Action — list of Role names allowed to see and execute the parent action. Empty list means everyone with read on Panel Action can see it.",
+      "key_fields": [
+        "role"
+      ],
+      "depends_on": []
+    },
+    "nce_events/nce_events/doctype/panel_page_definition/": {
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
     "nce_events/nce_events/doctype/settings/": {
       "purpose": "App-level settings singleton",
       "key_fields": [],
+      "depends_on": []
+    },
+    "nce_events/nce_events/doctype/spa_page_definition/": {
+      "purpose": "Per-SPA Frappe Page config: page slug, desk title, panel header text, doctype_source mode (Mirror/Native), and switch_page target slug. Seeded for panel-page-mirrored and panel-page-native; not yet read by the Vue bundle at runtime.",
+      "key_fields": [
+        "page_slug",
+        "page_title",
+        "panel_header_text",
+        "doctype_source_mode",
+        "switch_handler_slug"
+      ],
       "depends_on": []
     }
   },
@@ -968,9 +1034,10 @@
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
     "nce_events/public/js/panel_page_v2/App.vue": {
-      "purpose": "V2 SPA root: composes PanelFloat + PanelTable for the root WP Tables panel and per-doctype drilled panels, hosts TagFinder/CardModal/PanelFormDialog overlays. Uses PanelHeaderToolbar for the float headers and useSendDialogs for the plain-JS email/SMS dialog launchers.",
+      "purpose": "V2 SPA root: composes PanelFloat + PanelTable for the root WP Tables panel and per-doctype drilled panels, hosts TagFinder/CardModal/PanelFormDialog overlays. Uses PanelHeaderToolbar for the float headers and useSendDialogs for the plain-JS email/SMS dialog launchers. Reads injected panelMode + panelLabel (provided by main.js from the per-page mount opts); when panelMode is set the root panel applies { doctype_source: panelMode } as its parent filter and the same value is passed to usePanelActions as scope. panelLabel falls back to the header title.",
       "depends_on": [
         "composables/usePanel.js",
+        "composables/usePanelActions.js",
         "composables/useNceCardStack.js",
         "composables/usePanelFormDialogHost.js",
         "composables/useSendDialogs.js",
@@ -990,11 +1057,22 @@
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
+    "nce_events/public/js/panel_page_v2/actions/handlers/switchPage.js": {
+      "exports": [
+        "switchPage"
+      ],
+      "purpose": "Client Script panel action handler — switch_page(slug). Does a full browser navigation via window.location.assign('/app/' + slug) so the target Frappe Page mounts a fresh SPA with no carry-over state. Used by the Mirror→Native and Native→Mirror cross-switch Panel Actions.",
+      "depends_on": []
+    },
     "nce_events/public/js/panel_page_v2/actions/registry.js": {
       "exports": [
         "clientHandlers"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Maps Client Script panel action handler keys to JS handler functions. Each Panel Action with action_type=Client Script declares client_handler like 'switch_page(panel-page-native)'; the registry resolves the key (e.g. 'switch_page') to the handler module.",
+      "depends_on": [
+        "actions/handlers/showDt.js",
+        "actions/handlers/switchPage.js"
+      ]
     },
     "nce_events/public/js/panel_page_v2/components/ActionsPanel.vue": {
       "vue": {
@@ -1039,18 +1117,11 @@
         "components/PanelFormDialogFooter.vue"
       ]
     },
-    "nce_events/public/js/panel_page_v2/components/PanelFormScriptToolTab.vue": {
-      "vue": {
-        "uses_defineProps": true
-      },
-      "purpose": "Mounts a captured JS tool UI into a real DOM container on mount. Calls mountTool(tool, containerRef.value) from usePanelFormDialog so the script renders its full UI (tab bars, buttons, sections) into the container. Used for standard DocType form scripts (e.g. page_panel.js) that do DOM injection rather than add_custom_button.",
-      "depends_on": []
-    },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue": {
       "vue": {
         "uses_defineEmits": true
       },
-      "purpose": "Form dialog body orchestrator: renders the tab bar (PanelFormDialogTabBar), iterates tabs, and dispatches each tab to PanelFormDialogRelatedTab (related-doctype tabs), PanelFormScriptToolTab (captured JS tool tabs with _scriptTool flag), or the inline main-tab fields grid (PanelFormField-based). Aggregates imperative saveAllRelatedRows / resetRelatedToBaseline across related-tab children for the parent dialog.",
+      "purpose": "Form dialog body orchestrator: renders the tab bar (PanelFormDialogTabBar), iterates tabs, and dispatches each tab to PanelFormDialogRelatedTab (related-doctype tabs), PanelFormScriptToolTab (captured JS tool tabs), or the inline main-tab fields grid (PanelFormField-based). Aggregates imperative saveAllRelatedRows / resetRelatedToBaseline across related-tab children for the parent dialog.",
       "depends_on": [
         "components/PanelFormField.vue",
         "components/PanelFormDialogTabBar.vue",
@@ -1067,11 +1138,16 @@
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogHeader.vue": {
       "vue": {
-        "uses_defineProps": true,
         "uses_defineEmits": true
       },
       "purpose": "Form dialog header — title, row nav, close.",
       "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogInlineChildTab.vue": {
+      "vue": {
+        "uses_defineProps": true
+      },
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue": {
       "vue": {
@@ -1100,6 +1176,13 @@
         "components/PanelFormDateTimeField.vue"
       ]
     },
+    "nce_events/public/js/panel_page_v2/components/PanelFormFindSearchHelpModal.vue": {
+      "vue": {
+        "uses_defineProps": true,
+        "uses_defineEmits": true
+      },
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/public/js/panel_page_v2/components/PanelFormLinkField.vue": {
       "vue": {
         "uses_defineProps": true,
@@ -1107,6 +1190,15 @@
       },
       "purpose": "Panel Form Dialog control — mounts Frappe Link control in a div host; emits change + link-change for fetch_from; v-model sync.",
       "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormScriptToolTab.vue": {
+      "vue": {
+        "uses_defineProps": true
+      },
+      "purpose": "Mounts a captured JS tool UI into a real DOM container. On mount calls mountTool(tool, containerRef.value) from usePanelFormDialog, which re-runs the script's refresh handler with layout.wrapper pointing to the container so the script can inject its full HTML UI (tab bars, buttons, sections). Used for standard DocType form scripts like page_panel.js that do DOM injection rather than add_custom_button.",
+      "depends_on": [
+        "composables/usePanelFormDialog.js"
+      ]
     },
     "nce_events/public/js/panel_page_v2/components/PanelHeaderToolbar.vue": {
       "vue": {
@@ -1214,6 +1306,13 @@
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
+    "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js": {
+      "exports": [
+        "useFormClientScript"
+      ],
+      "purpose": "Two-phase captured-script runner for the Panel Form Dialog. Phase 1 activateScripts(): intercepts window.frappe.ui.form.on, executes each client_scripts entry, runs refresh handlers with a DOM-safe shim (real hidden element for layout.wrapper, Proxy for fields_dict, absorb-Proxy for page). Returns tool tab descriptors — one per add_custom_button group, or a single generic 'Tools' entry for DOM-injection scripts that have no add_custom_button calls. Phase 2 mountTool(tool, domContainer): re-runs refresh with the real visible container so the script renders its full UI (tab bars, buttons, sections). Also provides runOnChange(fieldname) for field-level event handlers.",
+      "depends_on": []
+    },
     "nce_events/public/js/panel_page_v2/composables/useFormDialogChrome.js": {
       "exports": [
         "confirmDiscardIfDirty",
@@ -1254,7 +1353,7 @@
       "exports": [
         "usePanel"
       ],
-      "purpose": "V2 composable — load panel config and data, refetch with user_filters",
+      "purpose": "V2 composable — load panel config and data, refetch with user_filters. Accepts an optional parentFilter object that is AND-merged into every get_panel_data call (used by App.vue to apply the doctype_source filter on the Mirror / Native pages).",
       "depends_on": [
         "utils/frappeCall.js"
       ]
@@ -1263,20 +1362,17 @@
       "exports": [
         "usePanelActions"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
-    },
-    "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js": {
-      "exports": [
-        "useFormClientScript"
-      ],
-      "purpose": "Two-phase captured-script runner for the Panel Form Dialog. Phase 1 activateScripts(): intercepts window.frappe.ui.form.on, executes each client_scripts entry, runs refresh handlers with a DOM-safe shim (real hidden element for layout.wrapper, Proxy for fields_dict, absorb-Proxy for page). Returns tool tab descriptors — one per add_custom_button group, or a single generic 'Tools' entry for DOM-injection scripts (no add_custom_button). Phase 2 mountTool(tool, domContainer): re-runs refresh with the real visible container. Also provides runOnChange(fieldname) for field-level event handlers.",
-      "depends_on": []
+      "purpose": "V2 composable — loads the Panel Actions list and runs the click handler. Accepts a scope option ('Mirror' / 'Native' / null) that is forwarded to get_panel_actions so the server returns only actions whose Scope matches the current panel page (plus the universal 'Both' scope).",
+      "depends_on": [
+        "utils/frappeCall.js",
+        "actions/registry.js"
+      ]
     },
     "nce_events/public/js/panel_page_v2/composables/usePanelFormDialog.js": {
       "exports": [
         "usePanelFormDialog"
       ],
-      "purpose": "V2 composable — facade for Panel Form Dialog: composes createFrozenFormLoad, createHandleFetchFrom, frozenFormValidate/Save, formDialogSnapshot, and useFormClientScript. Watches loading to run activateScripts() and push tool tabs after each load. Used by PanelFormDialog.vue.",
+      "purpose": "V2 composable — facade for Panel Form Dialog: composes createFrozenFormLoad, createHandleFetchFrom, frozenFormValidate/Save, formDialogSnapshot, and useFormClientScript. Watches loading to run activateScripts() after each load and push tool tabs. Used by PanelFormDialog.vue.",
       "depends_on": [
         "utils/formDialogSnapshot.js",
         "composables/formDialogFetchFrom.js",
@@ -1314,15 +1410,17 @@
     },
     "nce_events/public/js/panel_page_v2/composables/wpReadbackFlow.js": {
       "exports": [
-        "computeWpReadbackWaitMs",
-        "fetchReadbackConfig",
+        "fetchFreshDocAfterSync",
         "mergeFreshDocIntoPanel",
-        "waitForWpReadbackFreshDoc"
+        "pollSyncJobsUntilDone"
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
     "nce_events/public/js/panel_page_v2/main.js": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "V2 SPA bundle entry point. Exposes window.NCEPanelPageV2.mount(selector, opts) — creates a fresh Vue app per mount call (so each Frappe Page gets a clean instance) and provides panelMode + panelLabel from opts so App.vue can scope the root WP Tables filter and Panel Actions list. opts.mode is 'Mirror' / 'Native' / null; opts.label is the header text.",
+      "depends_on": [
+        "App.vue"
+      ]
     },
     "nce_events/public/js/panel_page_v2/nce_cards/CardForm.vue": {
       "vue": {
@@ -1363,6 +1461,14 @@
       "purpose": "Utility: maps every Frappe fieldtype string to a { component, props } config (or { layout } for structural types). Single source of truth for fieldtype→control mapping in V2 dialogs.",
       "depends_on": []
     },
+    "nce_events/public/js/panel_page_v2/utils/formDialogFindFields.js": {
+      "exports": [
+        "firstNonRelatedTabIndex",
+        "isFindSearchableRootField",
+        "stringifyFindCriterionSeed"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/public/js/panel_page_v2/utils/formDialogLiveScrape.js": {
       "exports": [
         "readLiveFieldValue"
@@ -1373,6 +1479,14 @@
       "exports": [
         "FD_LOAD_DEBUG_STORAGE_KEY",
         "isFdLoadDebugEnabled"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/public/js/panel_page_v2/utils/formDialogPortalColumns.js": {
+      "exports": [
+        "buildPortalEditorRows",
+        "parsePortalFieldConfigRaw",
+        "portalColumnsForGrid"
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
@@ -1427,6 +1541,12 @@
       ],
       "purpose": "Utility: parse a flat Frappe DocField array into a nested Tabs→Sections→Columns→Fields tree. Used by usePanelFormDialog to render frozen_meta_json layout.",
       "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/utils/submitPerfTrace.js": {
+      "exports": [
+        "createSubmitPerfTrace"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
     "nce_events/public/js/panel_page_v2/utils/wooPublishDocNormalize.js": {
       "exports": [
