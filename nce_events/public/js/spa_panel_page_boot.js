@@ -40,8 +40,22 @@ nce_events.spa_panel_page.boot = function (wrapper, pageSlug, mountElId) {
 			if (!document.getElementById("spa-panel-page-style")) {
 				const s = document.createElement("style");
 				s.id = "spa-panel-page-style";
-				s.textContent =
-					".page.spa-panel-page > .page-head { display: none !important; }";
+				/*
+				 * Scoped strictly to .page.spa-panel-page — this class is only set on
+				 * SPA pages booted via nce_events.spa_panel_page.boot(). Other desk
+				 * pages (User list, Settings, etc.) render their own .page element
+				 * without this class and are therefore unaffected.
+				 */
+				s.textContent = [
+					".page.spa-panel-page > .page-head { display: none !important; }",
+					".page.spa-panel-page > .page-body,",
+					".page.spa-panel-page .page-content,",
+					".page.spa-panel-page .layout-main-section-wrapper,",
+					".page.spa-panel-page .layout-main-section {",
+					"  padding-top: 0 !important;",
+					"  margin-top: 0 !important;",
+					"}",
+				].join("\n");
 				document.head.appendChild(s);
 			}
 
