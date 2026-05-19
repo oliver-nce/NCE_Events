@@ -1,5 +1,6 @@
 <template>
 	<div class="ppv2-root">
+		<SpaPageSwitcherFloat />
 		<ActionsPanel :actions="panelActions" @select="onPanelActionSelect" />
 		<PanelFloat :init-x="240" :init-y="16" :init-w="900" :init-h="550">
 			<template #header>
@@ -285,6 +286,7 @@ import TagFinder from "./components/TagFinder.vue";
 import CardModal from "./nce_cards/CardModal.vue";
 import PanelFormDialog from "./components/PanelFormDialog.vue";
 import ActionsPanel from "./components/ActionsPanel.vue";
+import SpaPageSwitcherFloat from "./components/SpaPageSwitcherFloat.vue";
 
 const panelMode = inject("panelMode", null);
 const panelLabel = inject("panelLabel", "NCE Tables");

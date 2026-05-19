@@ -26,35 +26,39 @@ defineEmits(["select"]);
 
 <style scoped>
 .ppv2-spa-nav {
+	padding: var(--spacing-sm, 12px);
 	display: flex;
-	align-items: center;
 	flex-wrap: wrap;
-	gap: 6px;
-	flex-shrink: 0;
-	margin-left: var(--spacing-sm, 8px);
+	align-items: center;
+	gap: var(--spacing-sm, 10px);
+	min-height: 100%;
+	box-sizing: border-box;
 }
 
 .ppv2-spa-nav-btn {
-	font-size: 12px;
-	line-height: 1.2;
-	padding: 3px 10px;
-	border-radius: var(--radius-sm, 4px);
-	border: 1px solid rgba(255, 255, 255, 0.45);
-	background: rgba(255, 255, 255, 0.12);
-	color: var(--text-header, #fff);
+	padding: 8px 12px;
+	font-size: var(--font-size-sm, 13px);
+	font-weight: var(--font-weight-bold, 600);
+	font-family: var(--font-family);
+	text-align: center;
 	cursor: pointer;
+	border-radius: var(--border-radius-sm, 4px);
+	border: 1px solid color-mix(in srgb, var(--primary) 35%, var(--border-color));
+	background: color-mix(in srgb, var(--primary) 12%, var(--bg-card));
+	color: var(--text-color);
+	line-height: 1.3;
 	white-space: nowrap;
+	transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .ppv2-spa-nav-btn:hover:not(:disabled) {
-	background: rgba(255, 255, 255, 0.28);
+	background: color-mix(in srgb, var(--primary) 22%, var(--bg-card));
+	border-color: var(--primary);
 }
 
 .ppv2-spa-nav-btn--current,
 .ppv2-spa-nav-btn:disabled {
 	opacity: 0.55;
 	cursor: default;
-	background: rgba(0, 0, 0, 0.15);
-	border-color: rgba(255, 255, 255, 0.25);
 }
 </style>

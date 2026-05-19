@@ -1,4 +1,4 @@
-import { ref, onMounted } from "vue";
+import { ref } from "vue";
 import { frappeCall } from "../utils/frappeCall.js";
 
 /**
@@ -37,10 +37,6 @@ export function useSpaPageNav() {
 			});
 		}
 	}
-
-	onMounted(() => {
-		loadPages();
-	});
 
 	return { pages, loading, loadPages, switchTo };
 }
