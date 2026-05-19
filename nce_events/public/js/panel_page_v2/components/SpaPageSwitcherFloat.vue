@@ -14,7 +14,6 @@
 			:current-slug="pageSlug || ''"
 			@select="switchTo"
 		/>
-		<template #footer>{{ headerLabel }}</template>
 	</PanelFloat>
 </template>
 
@@ -34,7 +33,7 @@ const { pages, loadPages, switchTo } = useSpaPageNav();
 const headerLabel = computed(() => tr("Pages"));
 
 const ready = ref(false);
-const anchor = reactive({ x: 16, y: 4, w: 420, h: 94 });
+const anchor = reactive({ x: 16, y: 4, w: 420, h: 70 });
 
 onMounted(async () => {
 	await loadPages();

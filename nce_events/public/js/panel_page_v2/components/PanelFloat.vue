@@ -12,7 +12,11 @@
 			<slot />
 		</div>
 
-		<div class="ppv2-float-footer" @mousedown.prevent="startDrag">
+		<div
+			v-if="$slots.footer"
+			class="ppv2-float-footer"
+			@mousedown.prevent="startDrag"
+		>
 			<slot name="footer" />
 		</div>
 

@@ -782,7 +782,7 @@ function onSheets(panelPayload) {
 .ppv2-top-row {
 	display: grid;
 	grid-template-columns: 1fr 2fr;
-	height: 56px;
+	height: 71px;
 	flex-shrink: 0;
 }
 

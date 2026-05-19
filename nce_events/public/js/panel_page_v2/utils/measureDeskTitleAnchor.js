@@ -3,8 +3,8 @@
  * All coordinates are positive and relative to that zone's top-left.
  */
 const DEFAULT_W = 420;
-/* Header (28) + body 36 button + 2px top + 2px bottom (40) + footer (24) + borders (2) */
-const DEFAULT_H = 94;
+/* Header (28) + body 36 button + 2px top + 2px bottom (40) + borders (2). No footer. */
+const DEFAULT_H = 70;
 
 export function measureDeskTitleAnchor(floatH = DEFAULT_H, floatW = DEFAULT_W) {
 	const fallback = { x: 16, y: 4, w: floatW, h: floatH };
