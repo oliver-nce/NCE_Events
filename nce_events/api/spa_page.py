@@ -27,27 +27,30 @@ def _find_spa_definition_name(target: str) -> str | None:
 	if not key or not frappe.db.table_exists("tabSPA Page Definition"):
 		return None
 
-	for field in ("name", "page_slug", "switch_handler_slug", "doctype_source_mode"):
-		rows = frappe.get_all(
-			"SPA Page Definition",
-			filters={field: key},
-			pluck="name",
-			limit_page_length=1,
-			ignore_permissions=True,
-		)
-		if rows:
-			return cstr(rows[0])
-
-	return None
+	row = frappe.db.sql(
+		"""
+		SELECT name FROM `tabSPA Page Definition`
+		WHERE name = %(k)s
+		   OR page_slug = %(k)s
+		   OR switch_handler_slug = %(k)s
+		   OR doctype_source_mode = %(k)s
+		LIMIT 1
+		""",
+		{"k": key},
+	)
+	return cstr(row[0][0]) if row else None
 
 
 def _get_spa_row(name: str) -> dict[str, Any] | None:
-	rows = frappe.get_all(
-		"SPA Page Definition",
-		filters={"name": name},
-		fields=list(_SPA_CONFIG_FIELDS),
-		limit_page_length=1,
-		ignore_permissions=True,
+	rows = frappe.db.sql(
+		f"""
+		SELECT {", ".join(f"`{f}`" for f in _SPA_CONFIG_FIELDS)}
+		FROM `tabSPA Page Definition`
+		WHERE name = %s
+		LIMIT 1
+		""",
+		(name,),
+		as_dict=True,
 	)
 	return rows[0] if rows else None
 
