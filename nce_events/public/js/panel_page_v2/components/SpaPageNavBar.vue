@@ -1,5 +1,5 @@
 <template>
-	<nav v-if="pages.length > 1" class="ppv2-spa-nav" @mousedown.stop>
+	<nav v-if="pages.length" class="ppv2-spa-nav" @mousedown.stop>
 		<button
 			v-for="page in pages"
 			:key="page.page_slug"

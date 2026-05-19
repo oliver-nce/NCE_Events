@@ -99,6 +99,7 @@ def get_spa_page_config(page_slug: str) -> dict[str, Any]:
 @frappe.whitelist()
 def list_spa_pages_for_ui() -> list[dict[str, Any]]:
 	"""SPA pages that may appear in Desk UI (shortcuts, switch actions, etc.)."""
+	# Nav labels only; ignore_permissions so non–System Manager desk users still see switches.
 	return frappe.get_all(
 		"SPA Page Definition",
 		filters={"is_active": 1},
@@ -110,6 +111,7 @@ def list_spa_pages_for_ui() -> list[dict[str, Any]]:
 			"switch_handler_slug",
 		],
 		order_by="page_slug asc",
+		ignore_permissions=True,
 	)
 
 

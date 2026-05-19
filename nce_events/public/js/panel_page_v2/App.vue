@@ -3,14 +3,7 @@
 		<ActionsPanel :actions="panelActions" @select="onPanelActionSelect" />
 		<PanelFloat :init-x="240" :init-y="16" :init-w="900" :init-h="550">
 			<template #header>
-				<div class="ppv2-header-title-row">
-					<span class="ppv2-title">{{ config?.header_text || panelLabel }}</span>
-					<SpaPageNavBar
-						:pages="spaNavPages"
-						:current-slug="pageSlug || ''"
-						@select="switchSpaPage"
-					/>
-				</div>
+				<span class="ppv2-title">{{ config?.header_text || panelLabel }}</span>
 				<PanelHeaderToolbar
 					:loading="loading"
 					:show-click-hint="!!config?.open_card_on_click"
@@ -292,13 +285,9 @@ import TagFinder from "./components/TagFinder.vue";
 import CardModal from "./nce_cards/CardModal.vue";
 import PanelFormDialog from "./components/PanelFormDialog.vue";
 import ActionsPanel from "./components/ActionsPanel.vue";
-import SpaPageNavBar from "./components/SpaPageNavBar.vue";
-import { useSpaPageNav } from "./composables/useSpaPageNav.js";
 
 const panelMode = inject("panelMode", null);
 const panelLabel = inject("panelLabel", "NCE Tables");
-const pageSlug = inject("pageSlug", null);
-const { pages: spaNavPages, switchTo: switchSpaPage } = useSpaPageNav();
 const rootFilter = panelMode ? { doctype_source: panelMode } : {};
 
 const rootPanel = usePanel("WP Tables", rootFilter);

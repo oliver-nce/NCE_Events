@@ -17,6 +17,7 @@ app_include_js = [
 app_include_css = [
 	"/assets/nce_events/css/schema_explorer.css",
 	"/assets/nce_events/css/theme_defaults.css",
+	"/assets/nce_events/css/nce_spa_desk_nav.css",
 ]
 
 doctype_js = {
