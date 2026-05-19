@@ -35,6 +35,16 @@ nce_events.spa_panel_page.boot = function (wrapper, pageSlug, mountElId) {
 				wrapper._page_obj.page.set_title("");
 			}
 
+			const pageEl = wrapper.closest(".page");
+			if (pageEl) pageEl.classList.add("spa-panel-page");
+			if (!document.getElementById("spa-panel-page-style")) {
+				const s = document.createElement("style");
+				s.id = "spa-panel-page-style";
+				s.textContent =
+					".page.spa-panel-page > .page-head { display: none !important; }";
+				document.head.appendChild(s);
+			}
+
 			frappe.require(_VUE_ASSETS, function () {
 				if (wrapper._vue_app) return;
 				const mount_el = document.createElement("div");

@@ -1,11 +1,17 @@
 <template>
 	<div class="ppv2-root">
-		<header class="ppv2-spa-header">
-			<div class="ppv2-spa-title-slot">{{ pageTitle }}</div>
-		</header>
-		<SpaPageSwitcherFloat />
-		<ActionsPanel :actions="panelActions" @select="onPanelActionSelect" />
-		<PanelFloat :init-x="240" :init-y="80" :init-w="900" :init-h="550">
+		<div class="ppv2-top-row">
+			<div class="ppv2-zone ppv2-zone-title">{{ pageTitle }}</div>
+			<div class="ppv2-zone ppv2-zone-pages">
+				<SpaPageSwitcherFloat />
+			</div>
+		</div>
+		<div class="ppv2-bottom-row">
+			<div class="ppv2-zone ppv2-zone-actions">
+				<ActionsPanel :actions="panelActions" @select="onPanelActionSelect" />
+			</div>
+			<div class="ppv2-zone ppv2-zone-tables">
+		<PanelFloat :init-x="16" :init-y="16" :init-w="900" :init-h="550">
 			<template #header>
 				<span class="ppv2-title">{{ config?.header_text || panelLabel }}</span>
 				<PanelHeaderToolbar
@@ -115,6 +121,8 @@
 			:init-y="tagFinderY"
 			@close="tagFinderDoctype = ''"
 		/>
+			</div>
+		</div>
 
 		<CardModal
 			v-for="(card, i) in cardStack"
@@ -455,7 +463,7 @@ function nextPos(parentId) {
 	/* Find the parent panel's position and offset from it */
 	if (parentId === "root") {
 		/* Offset from the root WP Tables panel (matches :init-x / :init-y on root PanelFloat) */
-		return { x: 240 + 80, y: 80 + 24 };
+		return { x: 16 + 80, y: 16 + 24 };
 	}
 	const parent = openPanels.find((p) => p.id === parentId);
 	if (parent) {
@@ -749,31 +757,50 @@ function onSheets(panelPayload) {
 </script>
 
 <style scoped>
+/*
+ * 4-zone SPA layout
+ *   ┌──────────────── 1/3 ────────────────┬──────────── 2/3 ─────────────┐
+ *   │  Zone 1 — Title                     │  Zone 2 — Pages float        │
+ *   ├── --ppv2-left-col ──┬───────────────┴── 1fr (remainder) ───────────┤
+ *   │  Zone 3 — Actions   │  Zone 4 — Table panels, drill-downs, etc.    │
+ *   └─────────────────────┴──────────────────────────────────────────────┘
+ *
+ * Bottom row has its own column split, so the left "Actions" column can be
+ * tight (Actions panel width + 40px) while the top row keeps a 1/3 ↔ 2/3 split
+ * for title / page switcher.
+ */
 .ppv2-root {
 	position: relative;
 	width: 100%;
 	height: calc(100vh - 60px);
+	display: flex;
+	flex-direction: column;
+	/* Actions panel init width (200) + 40 px breathing room */
+	--ppv2-left-col: 240px;
 }
 
-/*
- * Reserved top strip inside the SPA. Left third holds the SPA title (page_title
- * from SPA Page Definition); the right two-thirds is open space where the
- * SpaPageSwitcherFloat anchors and can be dragged around. pointer-events: none
- * on the band itself so floats dragged over it remain interactive.
- */
-.ppv2-spa-header {
-	position: absolute;
-	top: 0;
-	left: 0;
-	right: 0;
+.ppv2-top-row {
+	display: grid;
+	grid-template-columns: 1fr 2fr;
 	height: 56px;
-	pointer-events: none;
-	z-index: 1;
+	flex-shrink: 0;
 }
 
-.ppv2-spa-title-slot {
-	width: 33.333%;
-	height: 100%;
+.ppv2-bottom-row {
+	display: grid;
+	grid-template-columns: var(--ppv2-left-col) 1fr;
+	flex: 1;
+	min-height: 0;
+}
+
+.ppv2-zone {
+	position: relative;
+	overflow: visible;
+	min-width: 0;
+	min-height: 0;
+}
+
+.ppv2-zone-title {
 	padding: 12px 16px;
 	box-sizing: border-box;
 	display: flex;
@@ -782,7 +809,6 @@ function onSheets(panelPayload) {
 	font-weight: var(--font-weight-bold, 600);
 	font-family: var(--font-family);
 	color: var(--text-color);
-	pointer-events: auto;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
