@@ -14,7 +14,7 @@ def _ensure_builtin_spa_row(page_slug: str) -> bool:
 	"""Insert a built-in SPA row on first access if migrate seed did not run yet."""
 	if not frappe.db.table_exists("tabSPA Page Definition"):
 		return False
-	if frappe.db.exists("SPA Page Definition", page_slug):
+	if _find_spa_definition_name(page_slug):
 		return True
 
 	from nce_events.patches.v0_0_2.seed_spa_page_definitions import _ROWS
@@ -28,37 +28,63 @@ def _ensure_builtin_spa_row(page_slug: str) -> bool:
 	return False
 
 
+_SPA_CONFIG_FIELDS = (
+	"name",
+	"page_slug",
+	"page_title",
+	"panel_header_text",
+	"doctype_source_mode",
+	"switch_handler_slug",
+	"is_active",
+)
+
+
 def _find_spa_definition_name(target: str) -> str | None:
 	"""Resolve SPA Page Definition name by page_slug, switch_handler_slug, or doctype_source_mode."""
 	key = cstr(target).strip()
 	if not key or not frappe.db.table_exists("tabSPA Page Definition"):
 		return None
 
-	if frappe.db.exists("SPA Page Definition", key):
-		return key
-
-	name = frappe.db.get_value("SPA Page Definition", {"switch_handler_slug": key}, "name")
-	if name:
-		return cstr(name)
-
-	name = frappe.db.get_value("SPA Page Definition", {"doctype_source_mode": key}, "name")
-	if name:
-		return cstr(name)
+	for filters in (
+		{"name": key},
+		{"page_slug": key},
+		{"switch_handler_slug": key},
+		{"doctype_source_mode": key},
+	):
+		name = frappe.db.get_value(
+			"SPA Page Definition",
+			filters,
+			"name",
+			ignore_permissions=True,
+		)
+		if name:
+			return cstr(name)
 
 	return None
 
 
-def _spa_config_dict(doc) -> dict[str, Any]:
-	slug = cstr(doc.page_slug).strip()
-	mode = cstr(doc.doctype_source_mode).strip() or None
+def _get_spa_row(name: str) -> dict[str, Any] | None:
+	row = frappe.db.get_value(
+		"SPA Page Definition",
+		name,
+		_SPA_CONFIG_FIELDS,
+		as_dict=True,
+		ignore_permissions=True,
+	)
+	return row if row else None
+
+
+def _spa_config_dict(row: dict[str, Any]) -> dict[str, Any]:
+	slug = cstr(row.get("page_slug") or row.get("name")).strip()
+	mode = cstr(row.get("doctype_source_mode")).strip() or None
 	return {
 		"page_slug": slug,
 		"route": f"/app/{slug}",
-		"page_title": doc.page_title,
-		"panel_header_text": doc.panel_header_text,
+		"page_title": row.get("page_title"),
+		"panel_header_text": row.get("panel_header_text"),
 		"doctype_source_mode": mode,
-		"switch_handler_slug": doc.switch_handler_slug,
-		"is_active": cint(doc.is_active),
+		"switch_handler_slug": row.get("switch_handler_slug"),
+		"is_active": cint(row.get("is_active")),
 	}
 
 
@@ -76,11 +102,13 @@ def resolve_spa_switch(target_spa: str) -> dict[str, Any]:
 	if not name:
 		frappe.throw(_("No SPA Page Definition matches {0}.").format(key))
 
-	doc = frappe.get_doc("SPA Page Definition", name)
-	if not cint(doc.is_active):
-		frappe.throw(_("SPA {0} is not active.").format(doc.page_slug))
+	row = _get_spa_row(name)
+	if not row:
+		frappe.throw(_("No SPA Page Definition matches {0}.").format(key))
+	if not cint(row.get("is_active")):
+		frappe.throw(_("SPA {0} is not active.").format(row.get("page_slug") or name))
 
-	return _spa_config_dict(doc)
+	return _spa_config_dict(row)
 
 
 @frappe.whitelist()
@@ -89,11 +117,14 @@ def get_spa_page_config(page_slug: str) -> dict[str, Any]:
 	slug = cstr(page_slug).strip()
 	if not slug:
 		frappe.throw(_("Page slug is required."))
-	if not frappe.db.exists("SPA Page Definition", slug) and not _ensure_builtin_spa_row(slug):
+	if not _find_spa_definition_name(slug) and not _ensure_builtin_spa_row(slug):
 		frappe.throw(_("No SPA Page Definition for {0}.").format(slug))
 
-	doc = frappe.get_doc("SPA Page Definition", slug)
-	return _spa_config_dict(doc)
+	name = _find_spa_definition_name(slug) or slug
+	row = _get_spa_row(name)
+	if not row:
+		frappe.throw(_("No SPA Page Definition for {0}.").format(slug))
+	return _spa_config_dict(row)
 
 
 @frappe.whitelist()
@@ -120,6 +151,7 @@ def inactive_spa_page_slugs() -> frozenset[str]:
 		"SPA Page Definition",
 		filters={"is_active": 0},
 		pluck="page_slug",
+		ignore_permissions=True,
 	)
 	return frozenset(cstr(s) for s in rows if s)
 
