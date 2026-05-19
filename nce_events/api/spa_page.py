@@ -10,13 +10,31 @@ from frappe.utils import cint, cstr
 _SWITCH_PAGE_RE = re.compile(r"^switch_page\s*\(\s*([^)]+)\s*\)\s*$", re.IGNORECASE)
 
 
+def _ensure_builtin_spa_row(page_slug: str) -> bool:
+	"""Insert a built-in SPA row on first access if migrate seed did not run yet."""
+	if not frappe.db.table_exists("tabSPA Page Definition"):
+		return False
+	if frappe.db.exists("SPA Page Definition", page_slug):
+		return True
+
+	from nce_events.patches.v0_0_2.seed_spa_page_definitions import _ROWS
+
+	for row in _ROWS:
+		if row["page_slug"] != page_slug:
+			continue
+		frappe.get_doc({"doctype": "SPA Page Definition", **row}).insert(ignore_permissions=True)
+		frappe.db.commit()
+		return True
+	return False
+
+
 @frappe.whitelist()
 def get_spa_page_config(page_slug: str) -> dict[str, Any]:
 	"""Return SPA Page Definition for booting a Frappe Page (active or inactive)."""
 	slug = cstr(page_slug).strip()
 	if not slug:
 		frappe.throw(_("Page slug is required."))
-	if not frappe.db.exists("SPA Page Definition", slug):
+	if not frappe.db.exists("SPA Page Definition", slug) and not _ensure_builtin_spa_row(slug):
 		frappe.throw(_("No SPA Page Definition for {0}.").format(slug))
 
 	doc = frappe.get_doc("SPA Page Definition", slug)
