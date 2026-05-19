@@ -30,8 +30,10 @@ export function useSpaPageNav() {
 				window.location.assign(cfg.route);
 			}
 		} catch (e) {
+			const title =
+				typeof window.__ === "function" ? window.__("Switch Page") : "Switch Page";
 			frappe.msgprint({
-				title: __("Switch Page"),
+				title,
 				message: String(e?.message || e),
 				indicator: "red",
 			});

@@ -7,26 +7,31 @@
 		:init-h="anchor.h"
 	>
 		<template #header>
-			<span class="ppv2-title">{{ __("Pages") }}</span>
+			<span class="ppv2-title">{{ headerLabel }}</span>
 		</template>
 		<SpaPageNavBar
 			:pages="pages"
 			:current-slug="pageSlug || ''"
 			@select="switchTo"
 		/>
-		<template #footer>{{ __("Pages") }}</template>
+		<template #footer>{{ headerLabel }}</template>
 	</PanelFloat>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, inject } from "vue";
+import { ref, reactive, computed, onMounted, inject } from "vue";
 import PanelFloat from "./PanelFloat.vue";
 import SpaPageNavBar from "./SpaPageNavBar.vue";
 import { useSpaPageNav } from "../composables/useSpaPageNav.js";
 import { measureDeskTitleAnchor } from "../utils/measureDeskTitleAnchor.js";
 
+function tr(msg) {
+	return typeof window.__ === "function" ? window.__(msg) : msg;
+}
+
 const pageSlug = inject("pageSlug", null);
 const { pages, loadPages, switchTo } = useSpaPageNav();
+const headerLabel = computed(() => tr("Pages"));
 
 const ready = ref(false);
 const anchor = reactive({ x: 280, y: 8, w: 320, h: 80 });

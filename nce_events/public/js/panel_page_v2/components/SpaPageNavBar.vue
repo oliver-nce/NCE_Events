@@ -7,7 +7,7 @@
 			class="ppv2-spa-nav-btn"
 			:class="{ 'ppv2-spa-nav-btn--current': page.page_slug === currentSlug }"
 			:disabled="page.page_slug === currentSlug"
-			:title="page.page_slug === currentSlug ? __('Current page') : page.page_title"
+			:title="navTitle(page)"
 			@click="$emit('select', page)"
 		>
 			{{ page.page_title }}
@@ -16,12 +16,20 @@
 </template>
 
 <script setup>
-defineProps({
+const props = defineProps({
 	pages: { type: Array, default: () => [] },
 	currentSlug: { type: String, default: "" },
 });
 
 defineEmits(["select"]);
+
+function tr(msg) {
+	return typeof window.__ === "function" ? window.__(msg) : msg;
+}
+
+function navTitle(page) {
+	return page.page_slug === props.currentSlug ? tr("Current page") : page.page_title;
+}
 </script>
 
 <style scoped>
