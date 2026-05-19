@@ -10,24 +10,6 @@ from frappe.utils import cint, cstr
 _SWITCH_PAGE_RE = re.compile(r"^switch_page\s*\(\s*([^)]+)\s*\)\s*$", re.IGNORECASE)
 
 
-def _ensure_builtin_spa_row(page_slug: str) -> bool:
-	"""Insert a built-in SPA row on first access if migrate seed did not run yet."""
-	if not frappe.db.table_exists("tabSPA Page Definition"):
-		return False
-	if _find_spa_definition_name(page_slug):
-		return True
-
-	from nce_events.patches.v0_0_2.seed_spa_page_definitions import _ROWS
-
-	for row in _ROWS:
-		if row["page_slug"] != page_slug:
-			continue
-		frappe.get_doc({"doctype": "SPA Page Definition", **row}).insert(ignore_permissions=True)
-		frappe.db.commit()
-		return True
-	return False
-
-
 _SPA_CONFIG_FIELDS = (
 	"name",
 	"page_slug",
@@ -40,32 +22,34 @@ _SPA_CONFIG_FIELDS = (
 
 
 def _find_spa_definition_name(target: str) -> str | None:
-	"""Resolve SPA Page Definition name by page_slug, switch_handler_slug, or doctype_source_mode."""
+	"""Resolve SPA Page Definition name by name, page_slug, switch_handler_slug, or doctype_source_mode."""
 	key = cstr(target).strip()
 	if not key or not frappe.db.table_exists("tabSPA Page Definition"):
 		return None
 
-	for filters in (
-		{"name": key},
-		{"page_slug": key},
-		{"switch_handler_slug": key},
-		{"doctype_source_mode": key},
-	):
-		name = frappe.db.get_value("SPA Page Definition", filters, "name")
-		if name:
-			return cstr(name)
+	for field in ("name", "page_slug", "switch_handler_slug", "doctype_source_mode"):
+		rows = frappe.get_all(
+			"SPA Page Definition",
+			filters={field: key},
+			pluck="name",
+			limit_page_length=1,
+			ignore_permissions=True,
+		)
+		if rows:
+			return cstr(rows[0])
 
 	return None
 
 
 def _get_spa_row(name: str) -> dict[str, Any] | None:
-	row = frappe.db.get_value(
+	rows = frappe.get_all(
 		"SPA Page Definition",
-		name,
-		_SPA_CONFIG_FIELDS,
-		as_dict=True,
+		filters={"name": name},
+		fields=list(_SPA_CONFIG_FIELDS),
+		limit_page_length=1,
+		ignore_permissions=True,
 	)
-	return row if row else None
+	return rows[0] if rows else None
 
 
 def _spa_config_dict(row: dict[str, Any]) -> dict[str, Any]:
@@ -91,9 +75,6 @@ def resolve_spa_switch(target_spa: str) -> dict[str, Any]:
 
 	name = _find_spa_definition_name(key)
 	if not name:
-		_ensure_builtin_spa_row(key)
-		name = _find_spa_definition_name(key)
-	if not name:
 		frappe.throw(_("No SPA Page Definition matches {0}.").format(key))
 
 	row = _get_spa_row(name)
@@ -111,10 +92,10 @@ def get_spa_page_config(page_slug: str) -> dict[str, Any]:
 	slug = cstr(page_slug).strip()
 	if not slug:
 		frappe.throw(_("Page slug is required."))
-	if not _find_spa_definition_name(slug) and not _ensure_builtin_spa_row(slug):
+	name = _find_spa_definition_name(slug)
+	if not name:
 		frappe.throw(_("No SPA Page Definition for {0}.").format(slug))
 
-	name = _find_spa_definition_name(slug) or slug
 	row = _get_spa_row(name)
 	if not row:
 		frappe.throw(_("No SPA Page Definition for {0}.").format(slug))
