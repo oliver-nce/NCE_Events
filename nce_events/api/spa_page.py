@@ -24,7 +24,7 @@ _SPA_CONFIG_FIELDS = (
 def _find_spa_definition_name(target: str) -> str | None:
 	"""Resolve SPA Page Definition name by name, page_slug, switch_handler_slug, or doctype_source_mode."""
 	key = cstr(target).strip()
-	if not key or not frappe.db.table_exists("tabSPA Page Definition"):
+	if not key or not frappe.db.table_exists("SPA Page Definition"):
 		return None
 
 	row = frappe.db.sql(
