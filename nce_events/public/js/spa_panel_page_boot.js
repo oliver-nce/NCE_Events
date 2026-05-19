@@ -28,11 +28,11 @@ nce_events.spa_panel_page.boot = function (wrapper, pageSlug, mountElId) {
 			if (!wrapper._page_obj) {
 				wrapper._page_obj = frappe.ui.make_app_page({
 					parent: wrapper,
-					title: cfg.page_title,
+					title: "",
 					single_column: true,
 				});
 			} else if (wrapper._page_obj.page && wrapper._page_obj.page.set_title) {
-				wrapper._page_obj.page.set_title(cfg.page_title);
+				wrapper._page_obj.page.set_title("");
 			}
 
 			frappe.require(_VUE_ASSETS, function () {
