@@ -5,6 +5,7 @@
 		:init-y="anchor.y"
 		:init-w="anchor.w"
 		:init-h="anchor.h"
+		:min-y="-160"
 	>
 		<template #header>
 			<span class="ppv2-title">{{ headerLabel }}</span>

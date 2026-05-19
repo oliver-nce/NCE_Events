@@ -749,5 +749,7 @@ function onSheets(panelPayload) {
 	position: relative;
 	width: 100%;
 	height: calc(100vh - 60px);
+	/* Let the SPA page switcher float into the desk page-head row above this root */
+	overflow: visible;
 }
 </style>

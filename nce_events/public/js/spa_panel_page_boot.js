@@ -39,7 +39,8 @@ nce_events.spa_panel_page.boot = function (wrapper, pageSlug, mountElId) {
 				if (wrapper._vue_app) return;
 				const mount_el = document.createElement("div");
 				mount_el.id = mountElId;
-				mount_el.style.cssText = "height:100%;width:100%;";
+				mount_el.style.cssText =
+					"height:100%;width:100%;overflow:visible;position:relative;";
 				wrapper._page_obj.main.append(mount_el);
 				if (window.NCEPanelPageV2 && window.NCEPanelPageV2.mount) {
 					wrapper._vue_app = window.NCEPanelPageV2.mount("#" + mountElId, {

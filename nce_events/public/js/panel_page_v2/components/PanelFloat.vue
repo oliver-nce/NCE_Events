@@ -33,6 +33,8 @@ const props = defineProps({
 	initY: { type: Number, default: 60 },
 	initW: { type: Number, default: 900 },
 	initH: { type: Number, default: 550 },
+	/** Minimum Y (px); use negative values to allow dragging above .ppv2-root top. */
+	minY: { type: Number, default: 0 },
 });
 
 const emit = defineEmits(["close"]);
@@ -78,7 +80,7 @@ function startDrag(e) {
 		// Write directly to the DOM — bypasses Vue reactivity entirely
 		// so the table never re-renders during drag
 		const nx = ox + ev.clientX - sx;
-		const ny = Math.max(0, oy + ev.clientY - sy);
+		const ny = Math.max(props.minY, oy + ev.clientY - sy);
 		el.style.transform = `translate3d(${nx}px, ${ny}px, 0)`;
 	}
 	function onUp(ev) {
@@ -91,7 +93,7 @@ function startDrag(e) {
 		}
 		// Now write back to Vue refs once so it knows the final position
 		x.value = ox + ev.clientX - sx;
-		y.value = Math.max(0, oy + ev.clientY - sy);
+		y.value = Math.max(props.minY, oy + ev.clientY - sy);
 		document.removeEventListener("mousemove", onMove);
 		document.removeEventListener("mouseup", onUp);
 	}
