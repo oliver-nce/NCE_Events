@@ -2,7 +2,7 @@ frappe.pages["panel-page-mirrored"].on_page_show = function (wrapper) {
 	if (!wrapper._page_obj) {
 		wrapper._page_obj = frappe.ui.make_app_page({
 			parent: wrapper,
-			title: "NCE Mirrored Tables",
+			title: "NCE Tables",
 			single_column: true,
 		});
 	}
@@ -22,7 +22,7 @@ frappe.pages["panel-page-mirrored"].on_page_show = function (wrapper) {
 			if (window.NCEPanelPageV2 && window.NCEPanelPageV2.mount) {
 				wrapper._vue_app = window.NCEPanelPageV2.mount("#panel-page-mirrored-app", {
 					mode: "Mirror",
-					label: "NCE Mirrored Tables",
+					label: "NCE Tables",
 				});
 			}
 		}
