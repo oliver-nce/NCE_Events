@@ -1,5 +1,3 @@
-frappe.pages["panel-page-mirrored"].on_page_show = function (wrapper) {
-	frappe.require(["/assets/nce_events/js/spa_panel_page_boot.js"], function () {
-		nce_events.spa_panel_page.boot(wrapper, "panel-page-mirrored", "panel-page-mirrored-app");
-	});
-};
+frappe.require(["/assets/nce_events/js/spa_panel_page_register.js"], function () {
+	nce_events.spa_panel_page.register("panel-page-mirrored");
+});

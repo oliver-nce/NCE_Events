@@ -28,6 +28,61 @@ def _ensure_builtin_spa_row(page_slug: str) -> bool:
 	return False
 
 
+def _find_spa_definition_name(target: str) -> str | None:
+	"""Resolve SPA Page Definition name by page_slug, switch_handler_slug, or doctype_source_mode."""
+	key = cstr(target).strip()
+	if not key or not frappe.db.table_exists("tabSPA Page Definition"):
+		return None
+
+	if frappe.db.exists("SPA Page Definition", key):
+		return key
+
+	name = frappe.db.get_value("SPA Page Definition", {"switch_handler_slug": key}, "name")
+	if name:
+		return cstr(name)
+
+	name = frappe.db.get_value("SPA Page Definition", {"doctype_source_mode": key}, "name")
+	if name:
+		return cstr(name)
+
+	return None
+
+
+def _spa_config_dict(doc) -> dict[str, Any]:
+	slug = cstr(doc.page_slug).strip()
+	mode = cstr(doc.doctype_source_mode).strip() or None
+	return {
+		"page_slug": slug,
+		"route": f"/app/{slug}",
+		"page_title": doc.page_title,
+		"panel_header_text": doc.panel_header_text,
+		"doctype_source_mode": mode,
+		"switch_handler_slug": doc.switch_handler_slug,
+		"is_active": cint(doc.is_active),
+	}
+
+
+@frappe.whitelist()
+def resolve_spa_switch(target_spa: str) -> dict[str, Any]:
+	"""Resolve Panel Action switch_page(target) to a Desk route. Target may be page_slug, mode, or switch_handler_slug."""
+	key = cstr(target_spa).strip()
+	if not key:
+		frappe.throw(_("Target SPA is required."))
+
+	name = _find_spa_definition_name(key)
+	if not name:
+		_ensure_builtin_spa_row(key)
+		name = _find_spa_definition_name(key)
+	if not name:
+		frappe.throw(_("No SPA Page Definition matches {0}.").format(key))
+
+	doc = frappe.get_doc("SPA Page Definition", name)
+	if not cint(doc.is_active):
+		frappe.throw(_("SPA {0} is not active.").format(doc.page_slug))
+
+	return _spa_config_dict(doc)
+
+
 @frappe.whitelist()
 def get_spa_page_config(page_slug: str) -> dict[str, Any]:
 	"""Return SPA Page Definition for booting a Frappe Page (active or inactive)."""
@@ -38,15 +93,7 @@ def get_spa_page_config(page_slug: str) -> dict[str, Any]:
 		frappe.throw(_("No SPA Page Definition for {0}.").format(slug))
 
 	doc = frappe.get_doc("SPA Page Definition", slug)
-	mode = cstr(doc.doctype_source_mode).strip() or None
-	return {
-		"page_slug": doc.page_slug,
-		"page_title": doc.page_title,
-		"panel_header_text": doc.panel_header_text,
-		"doctype_source_mode": mode,
-		"switch_handler_slug": doc.switch_handler_slug,
-		"is_active": cint(doc.is_active),
-	}
+	return _spa_config_dict(doc)
 
 
 @frappe.whitelist()

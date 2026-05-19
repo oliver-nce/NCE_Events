@@ -12,7 +12,7 @@ from nce_events.api.form_dialog._helpers import (
 	_enrich_fetch_from_fields,
 	_require_system_manager,
 )
-from nce_events.api.spa_page import inactive_spa_page_slugs, switch_page_target_slug
+from nce_events.api.spa_page import _find_spa_definition_name, switch_page_target_slug
 
 _PUBLIC_FIELDS: tuple[str, ...] = (
 	"name",
@@ -50,7 +50,6 @@ def get_panel_actions(scope: str | None = None) -> list[dict[str, Any]]:
 		rows = [r for r in rows if (r.get("scope") or "Both") in (requested, "Both")]
 
 	user_roles = _user_role_set()
-	inactive_slugs = inactive_spa_page_slugs()
 	out: list[dict[str, Any]] = []
 	for r in rows:
 		parent_name = r.get("name") or r.get("action_id")
@@ -65,9 +64,13 @@ def get_panel_actions(scope: str | None = None) -> list[dict[str, Any]]:
 		if allowed_roles and not (allowed_roles & user_roles):
 			continue
 		if cstr(r.get("action_type")) == "Client Script":
-			target_slug = switch_page_target_slug(r.get("client_handler"))
-			if target_slug and target_slug in inactive_slugs:
-				continue
+			target = switch_page_target_slug(r.get("client_handler"))
+			if target:
+				spa_name = _find_spa_definition_name(target)
+				if spa_name and not cint(
+					frappe.db.get_value("SPA Page Definition", spa_name, "is_active")
+				):
+					continue
 		out.append(r)
 
 	return out

@@ -572,11 +572,13 @@
         "get_spa_page_config",
         "inactive_spa_page_slugs",
         "list_spa_pages_for_ui",
+        "resolve_spa_switch",
         "switch_page_target_slug"
       ],
       "whitelist_endpoints": [
         "get_spa_page_config",
-        "list_spa_pages_for_ui"
+        "list_spa_pages_for_ui",
+        "resolve_spa_switch"
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
@@ -990,7 +992,7 @@
       "depends_on": []
     },
     "nce_events/nce_events/doctype/spa_page_definition/": {
-      "purpose": "Per-SPA Frappe Page config: page slug, is_active, desk title, panel header text, doctype_source mode (Mirror/Native, blank for legacy), and switch_page target slug. Booted via spa_panel_page_boot.js + get_spa_page_config; inactive SPAs hidden from switch_page Panel Actions but still load on direct URL.",
+      "purpose": "Per-SPA Frappe Page config: page slug, is_active, desk title, panel header text, doctype_source mode (Mirror/Native, blank for legacy), and switch_handler_slug alias. Booted via spa_panel_page_register.js + get_spa_page_config; switch_page(target) resolved by resolve_spa_switch (target = slug, mode, or switch_handler_slug). Inactive SPAs hidden from Panel Actions but direct /app/<slug> still loads.",
       "key_fields": [
         "page_slug",
         "page_title",
@@ -1080,7 +1082,7 @@
       "exports": [
         "switchPage"
       ],
-      "purpose": "Client Script panel action handler — switch_page(slug). Does a full browser navigation via window.location.assign('/app/' + slug) so the target Frappe Page mounts a fresh SPA with no carry-over state. Used by the Mirror→Native and Native→Mirror cross-switch Panel Actions.",
+      "purpose": "Client Script panel action handler — switch_page(target_spa). Calls resolve_spa_switch then window.location.assign(route). target_spa may be page_slug, doctype_source_mode (Mirror/Native), or switch_handler_slug.",
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/actions/registry.js": {
