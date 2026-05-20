@@ -22,25 +22,37 @@
 		</template>
 
 		<div class="ppv2-find-body">
-			<div
-				v-if="mode === 'find'"
-				class="ppv2-find-actions"
-				@mousedown.stop
-			>
+			<!-- Find mode (criteria) — same actions as Form Dialog find footer -->
+			<div v-if="mode === 'find'" class="ppv2-find-actions" @mousedown.stop>
 				<button
 					type="button"
-					class="ppv2-find-action-btn ppv2-find-action-btn--primary"
-					@click="onFindClick"
+					class="ppv2-find-tab-btn ppv2-find-tab-btn--active"
+					@click="onPerformFind"
 				>
-					Find
+					{{ label("Perform Find") }}
 				</button>
-				<button type="button" class="ppv2-find-action-btn" @click="$emit('close')">
-					Cancel
+				<button
+					v-if="findMatchActive"
+					type="button"
+					class="ppv2-find-tab-btn"
+					@click="onPerformFindConstrain"
+				>
+					{{ label("Constrain Found Set") }}
+				</button>
+				<button type="button" class="ppv2-find-tab-btn" @click="$emit('close')">
+					{{ label("Cancel Find") }}
 				</button>
 			</div>
-			<div v-else class="ppv2-find-actions" @mousedown.stop>
-				<button type="button" class="ppv2-find-action-btn" @click="enterFindMode">
-					New Find
+			<!-- Browse mode (post-find) -->
+			<div v-else class="ppv2-find-actions ppv2-find-actions--browse" @mousedown.stop>
+				<button type="button" class="ppv2-find-tab-btn" @click="modifyFind">
+					{{ label("Modify Find") }}
+				</button>
+				<button type="button" class="ppv2-find-tab-btn" @click="enterConstrainMode">
+					{{ label("Constrain Found Set") }}
+				</button>
+				<button type="button" class="ppv2-find-tab-btn" @click="showAll">
+					{{ label("Show All") }}
 				</button>
 			</div>
 
@@ -62,7 +74,7 @@
 								type="text"
 								class="ppv2-find-input"
 								:placeholder="col.label"
-								@keydown.enter.prevent="onFindClick"
+								@keydown.enter.prevent="onPerformFind"
 							/>
 						</td>
 					</tr>
@@ -97,9 +109,24 @@ const props = defineProps({
 
 defineEmits(["close", "row-click"]);
 
-const { mode, criteria, rows, initCriteriaForColumns, enterFindMode, performFind } = useFindPanel({
+const {
+	mode,
+	criteria,
+	rows,
+	findMatchActive,
+	initCriteriaForColumns,
+	performFind,
+	performFindConstrain,
+	modifyFind,
+	enterConstrainMode,
+	showAll,
+} = useFindPanel({
 	allRows: toRef(props, "allRows"),
 });
+
+function label(msg) {
+	return typeof window.__ === "function" ? window.__(msg) : msg;
+}
 
 watch(
 	() => props.columns,
@@ -118,39 +145,51 @@ const sourceTotal = computed(() => {
 	return 0;
 });
 
-function onFindClick() {
-	if (!performFind()) {
-		const msg =
-			typeof window.__ === "function"
-				? window.__("Enter at least one search criterion.")
-				: "Enter at least one search criterion.";
-		if (typeof frappe !== "undefined" && frappe.msgprint) {
-			frappe.msgprint(msg);
-		}
-	}
+function _msgNoCriteria() {
+	const msg = label("Enter at least one search criterion.");
+	if (typeof frappe !== "undefined" && frappe.msgprint) frappe.msgprint(msg);
+}
+
+function onPerformFind() {
+	if (!performFind()) _msgNoCriteria();
+}
+
+function onPerformFindConstrain() {
+	if (!performFindConstrain()) _msgNoCriteria();
 }
 </script>
 
 <style scoped>
 .ppv2-find-actions {
 	display: flex;
-	gap: 8px;
-	padding: 6px 10px;
+	flex-wrap: wrap;
+	gap: 6px;
+	padding: 8px 10px;
 	background: var(--primary-light);
 	border-bottom: 1px solid var(--border-color);
 	flex-shrink: 0;
 }
 
-.ppv2-find-action-btn {
+.ppv2-find-actions--browse {
+	border-bottom: 1px dashed var(--border-color);
+}
+
+.ppv2-find-tab-btn {
 	font-size: 12px;
-	padding: 4px 14px;
+	padding: 6px 12px;
 	border: 1px solid var(--border-color);
 	border-radius: var(--border-radius-sm);
 	background: var(--bg-card);
+	color: var(--text-color);
 	cursor: pointer;
+	font-family: inherit;
 }
 
-.ppv2-find-action-btn--primary {
+.ppv2-find-tab-btn:hover {
+	background: var(--bg-surface);
+}
+
+.ppv2-find-tab-btn--active {
 	background: var(--bg-header);
 	color: var(--text-header);
 	border-color: var(--bg-header);
