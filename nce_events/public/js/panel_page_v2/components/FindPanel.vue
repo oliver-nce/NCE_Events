@@ -13,7 +13,7 @@
 						v-if="mode === 'find'"
 						type="button"
 						class="ppv2-hdr-btn ppv2-find-action-btn"
-						@click="onFindClick"
+						@click.stop="onFindClick"
 					>
 						Find
 					</button>
@@ -59,6 +59,8 @@
 						v-if="mode === 'find'"
 						:columns="columns"
 						:criteria="criteria"
+						@update-criterion="setCriterion"
+						@find-perform="onFindClick"
 					/>
 					<tr
 						v-for="(row, ri) in rows"
@@ -84,7 +86,7 @@
 </template>
 
 <script setup>
-import { computed, toRef } from "vue";
+import { computed, toRef, watch } from "vue";
 import PanelFloat from "./PanelFloat.vue";
 import PanelFindRow from "./PanelFindRow.vue";
 import { useFindPanel } from "../composables/useFindPanel.js";
@@ -101,9 +103,16 @@ const props = defineProps({
 
 defineEmits(["close", "row-click"]);
 
-const { mode, criteria, rows, enterFindMode, performFind } = useFindPanel({
-	allRows: toRef(props, "allRows"),
-});
+const { mode, criteria, rows, initCriteriaForColumns, setCriterion, enterFindMode, performFind } =
+	useFindPanel({
+		allRows: toRef(props, "allRows"),
+	});
+
+watch(
+	() => props.columns,
+	(cols) => initCriteriaForColumns(cols),
+	{ immediate: true }
+);
 
 const browseCount = computed(() => (mode.value === "browse" ? rows.value.length : 0));
 

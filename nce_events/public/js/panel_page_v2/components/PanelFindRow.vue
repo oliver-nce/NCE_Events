@@ -2,20 +2,28 @@
 	<tr class="ppv2-find-row">
 		<td v-for="col in columns" :key="col.fieldname">
 			<input
-				v-model="criteria[col.fieldname]"
+				:value="criteria[col.fieldname] ?? ''"
 				type="text"
 				class="ppv2-find-input"
 				:placeholder="col.label"
+				@input="onInput(col.fieldname, $event)"
+				@keydown.enter.prevent="$emit('find-perform')"
 			/>
 		</td>
 	</tr>
 </template>
 
 <script setup>
-defineProps({
+const props = defineProps({
 	columns: { type: Array, required: true },
 	criteria: { type: Object, required: true },
 });
+
+const emit = defineEmits(["update-criterion", "find-perform"]);
+
+function onInput(fieldname, event) {
+	emit("update-criterion", fieldname, event.target.value);
+}
 </script>
 
 <style scoped>
