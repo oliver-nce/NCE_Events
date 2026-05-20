@@ -67,11 +67,6 @@
 					:row-count-label="p._find?.mode === 'find' ? '—' : undefined"
 					:total="p.fullTotal"
 					:find-header-minimal="p._find?.mode === 'find'"
-					:show-find-or="p._find?.mode === 'find'"
-					:find-or-enabled="!!p._find?.hasAnyCriteria"
-					:find-duplicate-enabled="
-						p._find?.mode === 'find' && (p._find?.criteriaRows?.length ?? 0) > 0
-					"
 					:show-email="!!p.config?.email_field"
 					:show-sms="!!p.config?.sms_field"
 					:show-new-record="
@@ -89,8 +84,6 @@
 					@sms="onSms(p)"
 					@new-record="onNewRecord(p)"
 					@find="() => onPanelToolbarFind(p)"
-					@find-or="() => onPanelFindOr(p)"
-					@find-or-duplicate="() => onPanelFindOrDuplicate(p)"
 					@close="closePanel(p.id)"
 				/>
 			</template>
@@ -98,6 +91,10 @@
 				<PanelFindActionBar
 					:mode="p._find.mode"
 					:find-match-active="p._find.findMatchActive"
+					:find-or-enabled="!!p._find.hasAnyCriteria"
+					:find-duplicate-enabled="(p._find.criteriaRows?.length ?? 0) > 0"
+					@find-or="() => onPanelFindOr(p)"
+					@find-or-duplicate="() => onPanelFindOrDuplicate(p)"
 					@find-perform="() => onPanelFindPerform(p)"
 					@find-constrain="() => onPanelFindConstrain(p)"
 					@find-extend="() => onPanelFindExtend(p)"

@@ -61,26 +61,6 @@
 					<i class="fa fa-comment"></i>
 				</button>
 			</template>
-			<template v-if="props.findHeaderMinimal && props.showFindOr">
-				<button
-					type="button"
-					class="ppv2-hdr-btn ppv2-find-or-btn"
-					title="Add OR find request"
-					:disabled="!props.findOrEnabled"
-					@click="$emit('find-or')"
-				>
-					OR
-				</button>
-				<button
-					type="button"
-					class="ppv2-hdr-btn ppv2-find-or-btn"
-					title="Duplicate this find request"
-					:disabled="!props.findDuplicateEnabled"
-					@click="$emit('find-or-duplicate')"
-				>
-					<i class="fa fa-clipboard" aria-hidden="true"></i>
-				</button>
-			</template>
 			<span class="ppv2-count">{{ displayRowCount }} / {{ props.total }} records</span>
 			<button
 				v-if="props.showClose"
@@ -111,9 +91,6 @@ const props = defineProps({
 	/** Find criteria mode: header shows only count + close. */
 	findHeaderMinimal: { type: Boolean, default: false },
 	rowCountLabel: { type: [Number, String], default: undefined },
-	showFindOr: { type: Boolean, default: false },
-	findOrEnabled: { type: Boolean, default: false },
-	findDuplicateEnabled: { type: Boolean, default: true },
 });
 
 const displayRowCount = computed(() => {
@@ -131,8 +108,6 @@ defineEmits([
 	"sms",
 	"new-record",
 	"find",
-	"find-or",
-	"find-or-duplicate",
 	"close",
 ]);
 </script>
