@@ -12,19 +12,19 @@ function resolveAllRows(allRows) {
 }
 
 /**
- * Find Panel state — mirrors Form Dialog find chrome (criteria / post-find).
+ * In-place Find mode for a panel float (null = normal, find = criteria, browse = found set).
  */
-export function useFindPanel({ allRows }) {
-	const mode = ref("find");
+export function useFindPanel() {
+	const mode = ref(null);
 	const criteria = reactive({});
-	const rows = ref([]);
+	const foundRows = ref([]);
 	const lastCriteria = ref(null);
-	/** Names to intersect on the next Perform Find (one-shot). */
 	const constrainNames = ref(null);
-	/** True after at least one find has been run (enables Constrain in criteria phase). */
 	const foundSetActive = ref(false);
+	let allRowsRef = null;
 
 	const findMatchActive = computed(() => foundSetActive.value);
+	const isActive = computed(() => mode.value != null);
 
 	function initCriteriaForColumns(columns) {
 		for (const c of columns || []) {
@@ -42,11 +42,8 @@ export function useFindPanel({ allRows }) {
 		return Object.keys(criteria).filter((k) => String(criteria[k] ?? "").trim() !== "");
 	}
 
-	function performFind() {
-		const keys = _activeCriterionKeys();
-		if (!keys.length) return false;
-
-		let source = resolveAllRows(allRows);
+	function _matchRows(keys, { extend = false } = {}) {
+		let source = resolveAllRows(allRowsRef);
 		let matches = source.filter((row) =>
 			keys.every((k) => matchFindCriterion(row[k], criteria[k]))
 		);
@@ -58,23 +55,64 @@ export function useFindPanel({ allRows }) {
 			constrainNames.value = null;
 		}
 
-		rows.value = matches;
+		if (extend && foundRows.value.length) {
+			const byName = new Map();
+			for (const row of foundRows.value) {
+				if (row?.name != null) byName.set(String(row.name), row);
+			}
+			for (const row of matches) {
+				if (row?.name != null) byName.set(String(row.name), row);
+			}
+			matches = [...byName.values()];
+		}
+
+		return matches;
+	}
+
+	function _applyBrowse(matches, applyRows) {
+		foundRows.value = matches;
 		lastCriteria.value = { ...criteria };
 		foundSetActive.value = true;
 		mode.value = "browse";
+		if (typeof applyRows === "function") applyRows(matches);
+	}
+
+	function activate(allRows, columns) {
+		allRowsRef = allRows;
+		initCriteriaForColumns(columns);
+		_clearCriteriaValues();
+		mode.value = "find";
+	}
+
+	function newFind(columns) {
+		initCriteriaForColumns(columns);
+		_clearCriteriaValues();
+		mode.value = "find";
+	}
+
+	function performFind(applyRows) {
+		const keys = _activeCriterionKeys();
+		if (!keys.length) return false;
+		_applyBrowse(_matchRows(keys), applyRows);
 		return true;
 	}
 
-	function performFindConstrain() {
-		if (rows.value.length) {
-			constrainNames.value = rows.value
+	function performFindConstrain(applyRows) {
+		if (foundRows.value.length) {
+			constrainNames.value = foundRows.value
 				.map((row) => (row?.name != null ? String(row.name) : ""))
 				.filter(Boolean);
 		}
-		return performFind();
+		return performFind(applyRows);
 	}
 
-	/** Browse → criteria with last search terms (Modify Find). */
+	function extendFind(applyRows) {
+		const keys = _activeCriterionKeys();
+		if (!keys.length) return false;
+		_applyBrowse(_matchRows(keys, { extend: true }), applyRows);
+		return true;
+	}
+
 	function modifyFind() {
 		const last = lastCriteria.value;
 		_clearCriteriaValues();
@@ -86,9 +124,8 @@ export function useFindPanel({ allRows }) {
 		mode.value = "find";
 	}
 
-	/** Browse → criteria to narrow within current found set. */
 	function enterConstrainMode() {
-		const names = rows.value
+		const names = foundRows.value
 			.map((row) => (row?.name != null ? String(row.name) : ""))
 			.filter(Boolean);
 		constrainNames.value = names.length ? names : null;
@@ -96,33 +133,55 @@ export function useFindPanel({ allRows }) {
 		mode.value = "find";
 	}
 
-	/** Browse → show full dataset (Show All). */
-	function showAll() {
-		rows.value = [...resolveAllRows(allRows)];
-		lastCriteria.value = null;
-		constrainNames.value = null;
-		foundSetActive.value = false;
-		_clearCriteriaValues();
-		mode.value = "browse";
+	/** Cancel from criteria: return to browse if a found set exists, else exit find. */
+	function cancelFindCriteria(applyRows, clearRows) {
+		if (foundSetActive.value && foundRows.value.length) {
+			mode.value = "browse";
+			if (typeof applyRows === "function") applyRows(foundRows.value);
+			return;
+		}
+		exitFind(clearRows);
 	}
 
-	function cancelFind() {
-		/* Caller closes the panel */
+	function exitFind(clearRows) {
+		mode.value = null;
+		foundSetActive.value = false;
+		lastCriteria.value = null;
+		constrainNames.value = null;
+		foundRows.value = [];
+		_clearCriteriaValues();
+		allRowsRef = null;
+		if (typeof clearRows === "function") clearRows();
+	}
+
+	function reapplyLastFind(applyRows) {
+		const last = lastCriteria.value;
+		if (!last || !foundSetActive.value) return false;
+		_clearCriteriaValues();
+		for (const [k, v] of Object.entries(last)) {
+			if (k in criteria) criteria[k] = v == null ? "" : String(v);
+		}
+		return performFind(applyRows);
 	}
 
 	return {
 		mode,
 		criteria,
-		rows,
+		foundRows,
 		lastCriteria,
 		foundSetActive,
 		findMatchActive,
+		isActive,
 		initCriteriaForColumns,
+		activate,
+		newFind,
 		performFind,
 		performFindConstrain,
+		extendFind,
 		modifyFind,
 		enterConstrainMode,
-		showAll,
-		cancelFind,
+		cancelFindCriteria,
+		exitFind,
+		reapplyLastFind,
 	};
 }

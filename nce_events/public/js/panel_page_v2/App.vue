@@ -51,7 +51,7 @@
 		</PanelFloat>
 
 		<PanelFloat
-			v-for="p in openPanels.filter((x) => x.kind !== 'find')"
+			v-for="p in openPanels"
 			:key="p.id"
 			:init-x="p.x"
 			:init-y="p.y"
@@ -60,7 +60,33 @@
 		>
 			<template #header>
 				<span class="ppv2-title">{{ floatedPanelTitle(p) }}</span>
+				<PanelFindToolbar
+					v-if="p._find?.mode"
+					:mode="p._find.mode"
+					:row-count="(p._panelRows || p.rows).length"
+					:total="p.fullTotal"
+					:find-match-active="p._find.findMatchActive"
+					:loading="!!p.loading"
+					:show-email="!!p.config?.email_field"
+					:show-sms="!!p.config?.sms_field"
+					show-close
+					@find-perform="() => onPanelFindPerform(p)"
+					@find-constrain="() => onPanelFindConstrain(p)"
+					@find-extend="() => onPanelFindExtend(p)"
+					@find-cancel-criteria="() => onPanelFindCancelCriteria(p)"
+					@find-new="() => onPanelFindNew(p)"
+					@find-modify="() => p._find.modifyFind()"
+					@find-exit="() => onPanelFindExit(p)"
+					@refresh="onRefreshPanel(p)"
+					@toggle-filter="p._showFilter = !p._showFilter"
+					@sheets="onSheets(p)"
+					@download-csv="onDownloadCsv(p)"
+					@email="onEmail(p)"
+					@sms="onSms(p)"
+					@close="closePanel(p.id)"
+				/>
 				<PanelHeaderToolbar
+					v-else
 					:loading="!!p.loading"
 					:show-click-hint="!!p.config?.open_card_on_click"
 					:row-count="(p._panelRows || p.rows).length"
@@ -85,17 +111,19 @@
 			</template>
 			<PanelTable
 				:title="floatedPanelTitle(p)"
-				:columns="p.columns"
-				:rows="p._panelRows || p.rows"
+				:columns="panelTableColumns(p)"
+				:rows="panelTableRows(p)"
 				:total="p.fullTotal"
 				:loading="p.loading"
 				:error="p.error"
 				:config="p.config || {}"
 				:default-filters="p.config?.default_filters || []"
-				:show-email="!!p.config?.email_field"
-				:show-sms="!!p.config?.sms_field"
-				:show-filter="p._showFilter"
-				:search-only-columns="p.config?.search_only_columns || []"
+				:show-email="!!p.config?.email_field && p._find?.mode === 'browse'"
+				:show-sms="!!p.config?.sms_field && p._find?.mode === 'browse'"
+				:show-filter="p._showFilter && p._find?.mode !== 'find'"
+				:search-only-columns="
+					p._find?.mode ? [] : p.config?.search_only_columns || []
+				"
 				@close="closePanel(p.id)"
 				@row-click="(row) => onDrilledRowClick(p, row)"
 				@drill="(ev) => onDrill(ev, p)"
@@ -110,29 +138,26 @@
 				@sms-one="(row) => onSmsOne(p, row)"
 				@row-drop="(row) => onRowDrop(p, row)"
 				@show-filter="p._showFilter = true"
-			/>
+			>
+				<template v-if="p._find?.mode === 'find'" #tbody-prefix>
+					<tr class="ppv2-find-row">
+						<td
+							v-for="col in panelTableColumns(p)"
+							:key="'find-in-' + col.fieldname"
+						>
+							<input
+								v-model="p._find.criteria[col.fieldname]"
+								type="text"
+								class="ppv2-find-input"
+								:placeholder="col.label"
+								@keydown.enter.prevent="onPanelFindPerform(p)"
+							/>
+						</td>
+					</tr>
+				</template>
+			</PanelTable>
 			<template #footer>{{ floatedPanelTitle(p) }}</template>
 		</PanelFloat>
-
-		<FindPanel
-			v-for="fp in openPanels.filter((x) => x.kind === 'find')"
-			:key="'find-' + fp.id"
-			:title="fp.title"
-			:columns="fp.columns"
-			:config="fp.config || {}"
-			:all-rows="fp._allRows"
-			:init-x="fp.x"
-			:init-y="fp.y"
-			:init-w="1200"
-			:init-h="600"
-			@close="closePanel(fp.id)"
-			@row-click="
-				(row) => {
-					const src = openPanels.find((x) => x.id === fp.sourcePanelId);
-					if (src) openFormDialogFromPanelRow(src, row);
-				}
-			"
-		/>
 
 		<TagFinder
 			v-if="tagFinderDoctype"
@@ -294,7 +319,8 @@ import CardModal from "./nce_cards/CardModal.vue";
 import PanelFormDialog from "./components/PanelFormDialog.vue";
 import ActionsPanel from "./components/ActionsPanel.vue";
 import SpaPageSwitcherFloat from "./components/SpaPageSwitcherFloat.vue";
-import FindPanel from "./components/FindPanel.vue";
+import PanelFindToolbar from "./components/PanelFindToolbar.vue";
+import { useFindPanel } from "./composables/useFindPanel.js";
 import { buildFindColumns } from "./utils/findColumns.js";
 
 const panelMode = inject("panelMode", null);
@@ -446,8 +472,91 @@ onUnmounted(() => {
 function floatedPanelTitle(p) {
 	const base = p.config?.header_text || p.doctype || "";
 	const suffix = (p.parentContextTitle || "").trim();
-	if (suffix) return `${base} for ${suffix}`;
-	return base;
+	let title = suffix ? `${base} for ${suffix}` : base;
+	if (p._find?.mode === "find") title += " — Find";
+	else if (p._find?.mode === "browse") title += " — Found";
+	return title;
+}
+
+function panelTableColumns(p) {
+	if (p._find?.mode && p._findColumns?.length) return p._findColumns;
+	return p.columns;
+}
+
+function panelTableRows(p) {
+	if (p._find?.mode === "find") return [];
+	return p._panelRows || p.rows;
+}
+
+function panelApplyFoundSet(p, foundRows) {
+	if (p._panelApi) p._panelApi.setFoundSet(foundRows);
+}
+
+function panelClearFind(p) {
+	if (p._panelApi) p._panelApi.clearFoundSet();
+	p._findColumns = null;
+}
+
+function panelFindMsgNoCriteria() {
+	const msg =
+		typeof window.__ === "function"
+			? window.__("Enter at least one search criterion.")
+			: "Enter at least one search criterion.";
+	if (typeof frappe !== "undefined" && frappe.msgprint) frappe.msgprint(msg);
+}
+
+function onPanelFindPerform(p) {
+	if (!p._find?.performFind((rows) => panelApplyFoundSet(p, rows))) {
+		panelFindMsgNoCriteria();
+	}
+}
+
+function onPanelFindConstrain(p) {
+	if (!p._find?.performFindConstrain((rows) => panelApplyFoundSet(p, rows))) {
+		panelFindMsgNoCriteria();
+	}
+}
+
+function onPanelFindExtend(p) {
+	if (!p._find?.extendFind((rows) => panelApplyFoundSet(p, rows))) {
+		panelFindMsgNoCriteria();
+	}
+}
+
+function onPanelFindCancelCriteria(p) {
+	p._find.cancelFindCriteria(
+		(rows) => panelApplyFoundSet(p, rows),
+		() => panelClearFind(p)
+	);
+}
+
+function onPanelFindNew(p) {
+	p._findColumns = buildFindColumns(p);
+	p._find.newFind(p._findColumns);
+	p._showFilter = false;
+}
+
+function onPanelFindExit(p) {
+	p._find.exitFind(() => panelClearFind(p));
+}
+
+function onPanelToolbarFind(p) {
+	if (!p?.config?.form_dialog) {
+		if (typeof frappe !== "undefined" && frappe.msgprint) {
+			frappe.msgprint({
+				title: __("Find"),
+				message: __(
+					"Link a Form Dialog on this Page Panel (Dialogs tab) to search from the panel.",
+				),
+				indicator: "orange",
+			});
+		}
+		return;
+	}
+	if (p._find?.mode === "find") return;
+	p._findColumns = buildFindColumns(p);
+	p._find.activate(p._allRows, p._findColumns);
+	p._showFilter = false;
 }
 
 function nextPos(parentId) {
@@ -495,11 +604,15 @@ async function openPanel(doctype, parentFilter = {}, parentId = null, parentCont
 		_reload: null,
 		_showFilter: false,
 		_floatRef: null,
+		_find: useFindPanel(),
+		_findColumns: null,
+		_panelApi: null,
 	});
 	openPanels.push(p);
 
 	try {
 		const panel = usePanel(doctype, parentFilter);
+		p._panelApi = panel;
 		await panel.load();
 		p.config = panel.config.value;
 		p.columns = panel.columns.value;
@@ -511,33 +624,21 @@ async function openPanel(doctype, parentFilter = {}, parentId = null, parentCont
 		p._allRows = panel.allRows; // live ref — full unfiltered row set, used by client-side Find
 		p._setFilters = (uf) => {
 			panel.setFilters(uf);
-			// p.rows and p.total are live references to panel.rows.value and panel.total.value
-			// They update reactively when _applyFilters is called
 		};
 		p._reload = async () => {
-			console.log(
-				"[PanelReload] starting reload for",
-				p.doctype,
-				"p.loading before:",
-				p.loading
-			);
 			p.loading = true;
-			console.log("[PanelReload] p.loading set to true");
 			try {
 				await panel.reload();
-				console.log(
-					"[PanelReload] panel.reload() complete, panel.loading.value:",
-					panel.loading.value
-				);
 				p.config = panel.config.value;
 				p.columns = panel.columns.value;
 				p.rows = panel.rows.value;
 				p.total = panel.total.value;
 				p.fullTotal = panel.fullTotal.value;
-				console.log("[PanelReload] p.rows updated, length:", p.rows.length);
+				if (p._find?.mode === "browse" && p._find.foundSetActive) {
+					p._find.reapplyLastFind((rows) => panelApplyFoundSet(p, rows));
+				}
 			} finally {
 				p.loading = false;
-				console.log("[PanelReload] p.loading set back to false");
 			}
 		};
 	} catch (e) {
@@ -605,6 +706,10 @@ function onDrilledRowClick(p, row) {
 function onFilterChange(panel, userFilters) {
 	if (!panel) {
 		rootPanel.setFilters(userFilters);
+	} else if (panel._find?.mode === "browse" && panel._panelApi && panel._find.foundRows) {
+		const source = panel._find.foundRows;
+		const rows = Array.isArray(source) ? source : source.value || [];
+		panel._panelApi.setFiltersOnFoundSet(userFilters, rows);
 	} else if (panel._setFilters) {
 		panel._setFilters(userFilters);
 	}
@@ -637,42 +742,6 @@ function onNewRecord(panel) {
 			indicator: "orange",
 		});
 	}
-}
-
-function onPanelToolbarFind(panel) {
-	if (!panel?.config?.form_dialog) {
-		if (typeof frappe !== "undefined" && frappe.msgprint) {
-			frappe.msgprint({
-				title: __("Find"),
-				message: __(
-					"Link a Form Dialog on this Page Panel (Dialogs tab) to search from the panel.",
-				),
-				indicator: "orange",
-			});
-		}
-		return;
-	}
-	// Replace any existing Find Panel for this source
-	const existingFind = openPanels.find(
-		(x) => x.kind === "find" && x.sourcePanelId === panel.id
-	);
-	if (existingFind) closePanel(existingFind.id);
-
-	const pos = nextPos(panel.id);
-	const id = ++panelCounter;
-	openPanels.push({
-		id,
-		kind: "find",
-		parentId: panel.id,
-		sourcePanelId: panel.id,
-		doctype: panel.doctype,
-		title: `Find: ${panel.config?.header_text || panel.doctype}`,
-		columns: buildFindColumns(panel),
-		config: panel.config,
-		_allRows: panel._allRows,
-		x: pos.x,
-		y: pos.y,
-	});
 }
 
 /** Same row list the table shows: drilled panels use `_panelRows` when set (live ref), else `rows`. */

@@ -619,6 +619,21 @@ function startColResize(e, ci) {
 .ppv2-col-resize:hover {
 	background: color-mix(in srgb, var(--color-primary) 30%, transparent);
 }
+
+:deep(.ppv2-find-row td) {
+	padding: 2px 4px;
+	border-bottom: 1px solid var(--border-color);
+}
+
+:deep(.ppv2-find-input) {
+	width: 100%;
+	box-sizing: border-box;
+	padding: 2px 4px;
+	font-size: calc(var(--font-size-base) + 1px);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-sm);
+	background: var(--bg-card);
+}
 </style>
 
 <!-- Menu is teleported to <body>; unscoped so background always applies -->

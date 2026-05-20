@@ -1,3 +1,4 @@
+<!-- ARCHIVED: separate Find float replaced by in-place find on PanelFloat (App.vue + PanelFindToolbar.vue). -->
 <template>
 	<PanelFloat
 		:init-x="initX"

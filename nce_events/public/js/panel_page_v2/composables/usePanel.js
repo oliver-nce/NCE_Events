@@ -16,6 +16,8 @@ export function usePanel(doctype, parentFilter = {}) {
 	let _defaultFilters = [];
 	// current active user filters [{field, op, value}]
 	const userFilters = ref([]);
+	/** When true, rows are pinned to a Find found set (skip _applyFilters). */
+	let _foundSetPinned = false;
 
 	// Incremented on every load so stale calls self-cancel
 	let _loadId = 0;
@@ -185,13 +187,22 @@ export function usePanel(doctype, parentFilter = {}) {
 	// ── Filter orchestration ──────────────────────────────────────────────────
 	// core filters always applied; user filters layered on top (both AND-combined)
 	function _applyFilters() {
+		if (_foundSetPinned) return;
 		const active = userFilters.value.filter((f) => f.field && String(f.value ?? "") !== "");
-		// If user has entered any filters, use only those — default filters are already
-		// visible in the widget and the user is in full control.
-		// If no user filters, fall back to default filters.
 		const combined = active.length > 0 ? active : _defaultFilters;
 		rows.value = _applyUserFilters(_allRows.value, combined);
 		total.value = rows.value.length;
+	}
+
+	function setFoundSet(found) {
+		_foundSetPinned = true;
+		rows.value = Array.isArray(found) ? found : [];
+		total.value = rows.value.length;
+	}
+
+	function clearFoundSet() {
+		_foundSetPinned = false;
+		_applyFilters();
 	}
 
 	// ── Load / reload ─────────────────────────────────────────────────────────
@@ -209,7 +220,7 @@ export function usePanel(doctype, parentFilter = {}) {
 			columns.value = data.columns || [];
 			_allRows.value = data.rows || [];
 			_defaultFilters = data.default_filters || [];
-			_applyFilters();
+			if (!_foundSetPinned) _applyFilters();
 			fullTotal.value = data.full_count ?? 0;
 			loading.value = false;
 		} catch (e) {
@@ -234,7 +245,7 @@ export function usePanel(doctype, parentFilter = {}) {
 			columns.value = data.columns || [];
 			_allRows.value = data.rows || [];
 			_defaultFilters = data.default_filters || [];
-			_applyFilters();
+			if (!_foundSetPinned) _applyFilters();
 			fullTotal.value = data.full_count ?? 0;
 			loading.value = false;
 		} catch (e) {
@@ -248,8 +259,36 @@ export function usePanel(doctype, parentFilter = {}) {
 	// Set user filters and re-apply (synchronous, no API call)
 	function setFilters(newUserFilters = []) {
 		userFilters.value = newUserFilters;
+		_foundSetPinned = false;
 		_applyFilters();
 	}
 
-	return { config, columns, rows, allRows: _allRows, total, fullTotal, loading, error, load, reload, setFilters };
+	/** Layer filter bar on a fixed row set (Find browse mode). */
+	function setFiltersOnFoundSet(newUserFilters = [], sourceRows = []) {
+		userFilters.value = newUserFilters;
+		_foundSetPinned = true;
+		const active = userFilters.value.filter(
+			(f) => f.field && String(f.value ?? "") !== ""
+		);
+		const combined = active.length > 0 ? active : _defaultFilters;
+		rows.value = _applyUserFilters(sourceRows, combined);
+		total.value = rows.value.length;
+	}
+
+	return {
+		config,
+		columns,
+		rows,
+		allRows: _allRows,
+		total,
+		fullTotal,
+		loading,
+		error,
+		load,
+		reload,
+		setFilters,
+		setFiltersOnFoundSet,
+		setFoundSet,
+		clearFoundSet,
+	};
 }
