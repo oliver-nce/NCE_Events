@@ -1,3 +1,4 @@
+<!-- ARCHIVED: find actions moved to PanelFindActionBar.vue (bar below header). -->
 <template>
 	<div class="ppv2-header-right" @mousedown.stop>
 		<!-- Find mode: search actions -->

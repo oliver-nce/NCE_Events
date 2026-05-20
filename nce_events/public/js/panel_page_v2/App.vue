@@ -60,43 +60,21 @@
 		>
 			<template #header>
 				<span class="ppv2-title">{{ floatedPanelTitle(p) }}</span>
-				<PanelFindToolbar
-					v-if="p._find?.mode"
-					:mode="p._find.mode"
-					:row-count="(p._panelRows || p.rows).length"
-					:total="p.fullTotal"
-					:find-match-active="p._find.findMatchActive"
-					:loading="!!p.loading"
-					:show-email="!!p.config?.email_field"
-					:show-sms="!!p.config?.sms_field"
-					show-close
-					@find-perform="() => onPanelFindPerform(p)"
-					@find-constrain="() => onPanelFindConstrain(p)"
-					@find-extend="() => onPanelFindExtend(p)"
-					@find-cancel-criteria="() => onPanelFindCancelCriteria(p)"
-					@find-new="() => onPanelFindNew(p)"
-					@find-modify="() => p._find.modifyFind()"
-					@find-exit="() => onPanelFindExit(p)"
-					@refresh="onRefreshPanel(p)"
-					@toggle-filter="p._showFilter = !p._showFilter"
-					@sheets="onSheets(p)"
-					@download-csv="onDownloadCsv(p)"
-					@email="onEmail(p)"
-					@sms="onSms(p)"
-					@close="closePanel(p.id)"
-				/>
 				<PanelHeaderToolbar
-					v-else
 					:loading="!!p.loading"
-					:show-click-hint="!!p.config?.open_card_on_click"
+					:show-click-hint="!!p.config?.open_card_on_click && !p._find?.mode"
 					:row-count="(p._panelRows || p.rows).length"
+					:row-count-label="p._find?.mode === 'find' ? '—' : undefined"
 					:total="p.fullTotal"
+					:find-header-minimal="p._find?.mode === 'find'"
 					:show-email="!!p.config?.email_field"
 					:show-sms="!!p.config?.sms_field"
 					:show-new-record="
-						!!p.config?.allow_new_record_creation && !!p.config?.form_dialog
+						!!p.config?.allow_new_record_creation &&
+						!!p.config?.form_dialog &&
+						!p._find?.mode
 					"
-					:show-find="!!p.config?.form_dialog"
+					:show-find="!!p.config?.form_dialog && !p._find?.mode"
 					show-close
 					@refresh="onRefreshPanel(p)"
 					@toggle-filter="p._showFilter = !p._showFilter"
@@ -109,21 +87,79 @@
 					@close="closePanel(p.id)"
 				/>
 			</template>
+			<div v-if="p._find?.mode" class="ppv2-find-stack">
+				<PanelFindActionBar
+					:mode="p._find.mode"
+					:find-match-active="p._find.findMatchActive"
+					@find-perform="() => onPanelFindPerform(p)"
+					@find-constrain="() => onPanelFindConstrain(p)"
+					@find-extend="() => onPanelFindExtend(p)"
+					@find-cancel-criteria="() => onPanelFindCancelCriteria(p)"
+					@find-new="() => onPanelFindNew(p)"
+					@find-modify="() => p._find.modifyFind()"
+					@find-exit="() => onPanelFindExit(p)"
+				/>
+				<PanelTable
+					class="ppv2-find-stack-table"
+					:title="floatedPanelTitle(p)"
+					:columns="panelTableColumns(p)"
+					:rows="panelTableRows(p)"
+					:total="p.fullTotal"
+					:loading="p.loading"
+					:error="p.error"
+					:config="p.config || {}"
+					:default-filters="p.config?.default_filters || []"
+					:show-email="!!p.config?.email_field && p._find?.mode === 'browse'"
+					:show-sms="!!p.config?.sms_field && p._find?.mode === 'browse'"
+					:show-filter="p._showFilter && p._find?.mode !== 'find'"
+					:search-only-columns="[]"
+					@close="closePanel(p.id)"
+					@row-click="(row) => onDrilledRowClick(p, row)"
+					@drill="(ev) => onDrill(ev, p)"
+					@sheets="onSheets(p)"
+					@download-csv="onDownloadCsv(p)"
+					@email="onEmail(p)"
+					@sms="onSms(p)"
+					@tags="openTagFinder(p)"
+					@filter-change="(f) => onFilterChange(p, f)"
+					@refresh="onRefreshPanel(p)"
+					@email-one="(row) => onEmailOne(p, row)"
+					@sms-one="(row) => onSmsOne(p, row)"
+					@row-drop="(row) => onRowDrop(p, row)"
+					@show-filter="p._showFilter = true"
+				>
+					<template v-if="p._find.mode === 'find'" #tbody-prefix>
+						<tr class="ppv2-find-row">
+							<td
+								v-for="col in panelTableColumns(p)"
+								:key="'find-in-' + col.fieldname"
+							>
+								<input
+									v-model="p._find.criteria[col.fieldname]"
+									type="text"
+									class="ppv2-find-input"
+									:placeholder="col.label"
+									@keydown.enter.prevent="onPanelFindPerform(p)"
+								/>
+							</td>
+						</tr>
+					</template>
+				</PanelTable>
+			</div>
 			<PanelTable
+				v-else
 				:title="floatedPanelTitle(p)"
-				:columns="panelTableColumns(p)"
-				:rows="panelTableRows(p)"
+				:columns="p.columns"
+				:rows="p._panelRows || p.rows"
 				:total="p.fullTotal"
 				:loading="p.loading"
 				:error="p.error"
 				:config="p.config || {}"
 				:default-filters="p.config?.default_filters || []"
-				:show-email="!!p.config?.email_field && p._find?.mode === 'browse'"
-				:show-sms="!!p.config?.sms_field && p._find?.mode === 'browse'"
-				:show-filter="p._showFilter && p._find?.mode !== 'find'"
-				:search-only-columns="
-					p._find?.mode ? [] : p.config?.search_only_columns || []
-				"
+				:show-email="!!p.config?.email_field"
+				:show-sms="!!p.config?.sms_field"
+				:show-filter="p._showFilter"
+				:search-only-columns="p.config?.search_only_columns || []"
 				@close="closePanel(p.id)"
 				@row-click="(row) => onDrilledRowClick(p, row)"
 				@drill="(ev) => onDrill(ev, p)"
@@ -138,24 +174,7 @@
 				@sms-one="(row) => onSmsOne(p, row)"
 				@row-drop="(row) => onRowDrop(p, row)"
 				@show-filter="p._showFilter = true"
-			>
-				<template v-if="p._find?.mode === 'find'" #tbody-prefix>
-					<tr class="ppv2-find-row">
-						<td
-							v-for="col in panelTableColumns(p)"
-							:key="'find-in-' + col.fieldname"
-						>
-							<input
-								v-model="p._find.criteria[col.fieldname]"
-								type="text"
-								class="ppv2-find-input"
-								:placeholder="col.label"
-								@keydown.enter.prevent="onPanelFindPerform(p)"
-							/>
-						</td>
-					</tr>
-				</template>
-			</PanelTable>
+			/>
 			<template #footer>{{ floatedPanelTitle(p) }}</template>
 		</PanelFloat>
 
@@ -319,7 +338,7 @@ import CardModal from "./nce_cards/CardModal.vue";
 import PanelFormDialog from "./components/PanelFormDialog.vue";
 import ActionsPanel from "./components/ActionsPanel.vue";
 import SpaPageSwitcherFloat from "./components/SpaPageSwitcherFloat.vue";
-import PanelFindToolbar from "./components/PanelFindToolbar.vue";
+import PanelFindActionBar from "./components/PanelFindActionBar.vue";
 import { useFindPanel } from "./composables/useFindPanel.js";
 import { buildFindColumns } from "./utils/findColumns.js";
 
@@ -878,6 +897,22 @@ function onSheets(panelPayload) {
 	overflow: visible;
 	min-width: 0;
 	min-height: 0;
+}
+
+.ppv2-find-stack {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+}
+
+.ppv2-find-stack-table {
+	flex: 1;
+	min-height: 0;
+}
+
+.ppv2-find-stack-table :deep(.ppv2-panel) {
+	height: 100%;
 }
 
 .ppv2-zone-title {
