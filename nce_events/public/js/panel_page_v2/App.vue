@@ -67,6 +67,11 @@
 					:row-count-label="p._find?.mode === 'find' ? '—' : undefined"
 					:total="p.fullTotal"
 					:find-header-minimal="p._find?.mode === 'find'"
+					:show-find-or="p._find?.mode === 'find'"
+					:find-or-enabled="!!p._find?.hasAnyCriteria"
+					:find-duplicate-enabled="
+						p._find?.mode === 'find' && (p._find?.criteriaRows?.length ?? 0) > 0
+					"
 					:show-email="!!p.config?.email_field"
 					:show-sms="!!p.config?.sms_field"
 					:show-new-record="
@@ -84,6 +89,8 @@
 					@sms="onSms(p)"
 					@new-record="onNewRecord(p)"
 					@find="() => onPanelToolbarFind(p)"
+					@find-or="() => onPanelFindOr(p)"
+					@find-or-duplicate="() => onPanelFindOrDuplicate(p)"
 					@close="closePanel(p.id)"
 				/>
 			</template>
@@ -96,7 +103,7 @@
 					@find-extend="() => onPanelFindExtend(p)"
 					@find-cancel-criteria="() => onPanelFindCancelCriteria(p)"
 					@find-new="() => onPanelFindNew(p)"
-					@find-modify="() => p._find.modifyFind()"
+					@find-modify="() => onPanelFindModify(p)"
 					@find-exit="() => onPanelFindExit(p)"
 				/>
 				<PanelTable
@@ -129,20 +136,19 @@
 					@show-filter="p._showFilter = true"
 				>
 					<template v-if="p._find.mode === 'find'" #tbody-prefix>
-						<tr class="ppv2-find-row">
-							<td
-								v-for="col in panelTableColumns(p)"
-								:key="'find-in-' + col.fieldname"
-							>
-								<input
-									v-model="p._find.criteria[col.fieldname]"
-									type="text"
-									class="ppv2-find-input"
-									:placeholder="col.label"
-									@keydown.enter.prevent="onPanelFindPerform(p)"
-								/>
-							</td>
-						</tr>
+						<PanelFindRow
+							v-for="(row, ri) in p._find.criteriaRows"
+							:key="'find-row-' + p.id + '-' + ri"
+							:columns="panelTableColumns(p)"
+							:criteria="row"
+							:active="p._find.activeRowIndex === ri"
+							:show-or-label="ri > 0"
+							@activate-row="p._find.setActiveRowIndex(ri)"
+							@update-criterion="
+								(fn, val) => p._find.setCriterion(ri, fn, val)
+							"
+							@find-perform="onPanelFindPerform(p)"
+						/>
 					</template>
 				</PanelTable>
 			</div>
@@ -339,6 +345,7 @@ import PanelFormDialog from "./components/PanelFormDialog.vue";
 import ActionsPanel from "./components/ActionsPanel.vue";
 import SpaPageSwitcherFloat from "./components/SpaPageSwitcherFloat.vue";
 import PanelFindActionBar from "./components/PanelFindActionBar.vue";
+import PanelFindRow from "./components/PanelFindRow.vue";
 import { useFindPanel } from "./composables/useFindPanel.js";
 import { buildFindColumns } from "./utils/findColumns.js";
 
@@ -559,6 +566,29 @@ function onPanelFindExit(p) {
 	p._find.exitFind(() => panelClearFind(p));
 }
 
+function onPanelFindModify(p) {
+	p._findColumns = buildFindColumns(p);
+	p._find.modifyFind(p._findColumns);
+}
+
+function onPanelFindOr(p) {
+	p._findColumns = buildFindColumns(p);
+	if (!p._find?.addOrRow(p._findColumns)) {
+		panelFindMsgNoCriteria();
+	}
+}
+
+function onPanelFindOrDuplicate(p) {
+	p._findColumns = buildFindColumns(p);
+	if (!p._find?.duplicateOrRow(p._findColumns)) {
+		const msg =
+			typeof window.__ === "function"
+				? window.__("Click a find row to duplicate, then try again.")
+				: "Click a find row to duplicate, then try again.";
+		if (typeof frappe !== "undefined" && frappe.msgprint) frappe.msgprint(msg);
+	}
+}
+
 function onPanelToolbarFind(p) {
 	if (!p?.config?.form_dialog) {
 		if (typeof frappe !== "undefined" && frappe.msgprint) {
@@ -654,7 +684,11 @@ async function openPanel(doctype, parentFilter = {}, parentId = null, parentCont
 				p.total = panel.total.value;
 				p.fullTotal = panel.fullTotal.value;
 				if (p._find?.mode === "browse" && p._find.foundSetActive) {
-					p._find.reapplyLastFind((rows) => panelApplyFoundSet(p, rows));
+					p._findColumns = buildFindColumns(p);
+					p._find.reapplyLastFind(
+						(rows) => panelApplyFoundSet(p, rows),
+						p._findColumns
+					);
 				}
 			} finally {
 				p.loading = false;

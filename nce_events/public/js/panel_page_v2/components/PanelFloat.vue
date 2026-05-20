@@ -257,6 +257,20 @@ function startResize(e) {
 	font-size: 20px;
 }
 
+.ppv2-float-header :deep(.ppv2-find-or-btn) {
+	font-size: 12px;
+	font-weight: var(--font-weight-bold);
+	padding: 2px 8px;
+	border: 1px solid color-mix(in srgb, var(--text-header) 45%, transparent);
+	border-radius: var(--border-radius-sm);
+	opacity: 1;
+}
+
+.ppv2-float-header :deep(.ppv2-find-or-btn:disabled) {
+	opacity: 0.35;
+	cursor: not-allowed;
+}
+
 .ppv2-float-body {
 	flex: 1;
 	overflow: auto;

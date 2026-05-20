@@ -1,12 +1,19 @@
 <template>
-	<tr class="ppv2-find-row">
-		<td v-for="col in columns" :key="col.fieldname">
+	<tr
+		class="ppv2-find-row"
+		:class="{ 'ppv2-find-row--active': active }"
+		@mousedown="onRowActivate"
+	>
+		<td v-for="(col, ci) in columns" :key="col.fieldname">
+			<span v-if="ci === 0 && showOrLabel" class="ppv2-find-or-label">OR</span>
 			<input
 				:value="criteria[col.fieldname] ?? ''"
 				type="text"
 				class="ppv2-find-input"
 				:placeholder="col.label"
 				@input="onInput(col.fieldname, $event)"
+				@focus="onRowActivate"
+				@mousedown.stop="onRowActivate"
 				@keydown.enter.prevent="$emit('find-perform')"
 			/>
 		</td>
@@ -17,9 +24,15 @@
 const props = defineProps({
 	columns: { type: Array, required: true },
 	criteria: { type: Object, required: true },
+	active: { type: Boolean, default: false },
+	showOrLabel: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(["update-criterion", "find-perform"]);
+const emit = defineEmits(["update-criterion", "activate-row", "find-perform"]);
+
+function onRowActivate() {
+	emit("activate-row");
+}
 
 function onInput(fieldname, event) {
 	emit("update-criterion", fieldname, event.target.value);
@@ -32,6 +45,19 @@ function onInput(fieldname, event) {
 	border-bottom: 1px solid var(--border-color);
 }
 
+.ppv2-find-row--active td {
+	background: color-mix(in srgb, var(--primary-light) 35%, transparent);
+}
+
+.ppv2-find-or-label {
+	display: inline-block;
+	margin-right: 6px;
+	font-size: 11px;
+	font-weight: var(--font-weight-bold);
+	color: var(--text-muted);
+	vertical-align: middle;
+}
+
 .ppv2-find-input {
 	width: 100%;
 	box-sizing: border-box;
@@ -40,5 +66,11 @@ function onInput(fieldname, event) {
 	border: 1px solid var(--border-color);
 	border-radius: var(--border-radius-sm);
 	background: var(--bg-card);
+}
+
+.ppv2-find-or-label + .ppv2-find-input {
+	width: calc(100% - 2.2em);
+	display: inline-block;
+	vertical-align: middle;
 }
 </style>
