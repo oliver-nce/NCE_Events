@@ -119,6 +119,7 @@
 			:key="'find-' + fp.id"
 			:title="fp.title"
 			:columns="fp.columns"
+			:config="fp.config || {}"
 			:all-rows="fp._allRows"
 			:init-x="fp.x"
 			:init-y="fp.y"
@@ -667,6 +668,7 @@ function onPanelToolbarFind(panel) {
 		doctype: panel.doctype,
 		title: `Find: ${panel.config?.header_text || panel.doctype}`,
 		columns: buildFindColumns(panel),
+		config: panel.config,
 		_allRows: panel._allRows,
 		x: pos.x,
 		y: pos.y,

@@ -18,6 +18,7 @@
 	</Teleport>
 	<div ref="panelRef" class="ppv2-panel">
 		<PanelTableFilterBar
+			v-if="!embedded"
 			:columns="columns"
 			:search-only-columns="searchOnlyColumns"
 			:default-filters="defaultFilters"
@@ -53,6 +54,7 @@
 					</tr>
 				</thead>
 				<tbody>
+					<slot name="tbody-prefix" />
 					<tr
 						v-for="(row, ri) in displayRows"
 						:key="row.name || ri"
@@ -144,6 +146,8 @@ const props = defineProps({
 	defaultFilters: { type: Array, default: () => [] },
 	showFilter: { type: Boolean, default: false },
 	searchOnlyColumns: { type: Array, default: () => [] },
+	/** Inside Find Panel etc.: no filter bar; table fills parent. */
+	embedded: { type: Boolean, default: false },
 });
 
 const emit = defineEmits([

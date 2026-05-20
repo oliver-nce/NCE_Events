@@ -27,32 +27,35 @@
 				class="ppv2-find-actions"
 				@mousedown.stop
 			>
-				<button type="button" class="ppv2-find-action-btn ppv2-find-action-btn--primary" @click="onFindClick">
+				<button
+					type="button"
+					class="ppv2-find-action-btn ppv2-find-action-btn--primary"
+					@click="onFindClick"
+				>
 					Find
 				</button>
 				<button type="button" class="ppv2-find-action-btn" @click="$emit('close')">
 					Cancel
 				</button>
 			</div>
-			<div
-				v-else
-				class="ppv2-find-actions"
-				@mousedown.stop
-			>
+			<div v-else class="ppv2-find-actions" @mousedown.stop>
 				<button type="button" class="ppv2-find-action-btn" @click="enterFindMode">
 					New Find
 				</button>
 			</div>
-			<table class="ppv2-table">
-				<thead>
-					<tr>
-						<th v-for="col in columns" :key="col.fieldname">
-							{{ col.label }}
-						</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr v-if="mode === 'find'" class="ppv2-find-row">
+
+			<PanelTable
+				embedded
+				class="ppv2-find-table"
+				:columns="columns"
+				:rows="tableRows"
+				:total="browseCount"
+				:config="config"
+				:loading="false"
+				@row-click="$emit('row-click', $event)"
+			>
+				<template v-if="mode === 'find'" #tbody-prefix>
+					<tr class="ppv2-find-row">
 						<td v-for="col in columns" :key="'in-' + col.fieldname">
 							<input
 								v-model="criteria[col.fieldname]"
@@ -63,21 +66,9 @@
 							/>
 						</td>
 					</tr>
-					<template v-else>
-						<tr
-							v-for="(row, ri) in rows"
-							:key="row.name || ri"
-							class="ppv2-find-browse-row"
-							:class="{ 'ppv2-alt': ri % 2 === 1 }"
-							@click="$emit('row-click', row)"
-						>
-							<td v-for="col in columns" :key="col.fieldname">
-								{{ formatCell(row, col) }}
-							</td>
-						</tr>
-					</template>
-				</tbody>
-			</table>
+				</template>
+			</PanelTable>
+
 			<div v-if="mode === 'browse' && !rows.length" class="ppv2-find-empty">
 				No records match your request.
 			</div>
@@ -90,11 +81,13 @@
 <script setup>
 import { computed, toRef, watch } from "vue";
 import PanelFloat from "./PanelFloat.vue";
+import PanelTable from "./PanelTable.vue";
 import { useFindPanel } from "../composables/useFindPanel.js";
 
 const props = defineProps({
 	title: { type: String, default: "" },
 	columns: { type: Array, default: () => [] },
+	config: { type: Object, default: () => ({}) },
 	allRows: { type: [Array, Object], default: () => [] },
 	initX: { type: Number, default: 140 },
 	initY: { type: Number, default: 120 },
@@ -114,6 +107,8 @@ watch(
 	{ immediate: true }
 );
 
+const tableRows = computed(() => (mode.value === "browse" ? rows.value : []));
+
 const browseCount = computed(() => (mode.value === "browse" ? rows.value.length : 0));
 
 const sourceTotal = computed(() => {
@@ -122,12 +117,6 @@ const sourceTotal = computed(() => {
 	if (r != null && typeof r === "object" && Array.isArray(r.value)) return r.value.length;
 	return 0;
 });
-
-function formatCell(row, col) {
-	const v = row[col.fieldname];
-	if (v == null || v === "") return "";
-	return String(v);
-}
 
 function onFindClick() {
 	if (!performFind()) {
@@ -168,6 +157,23 @@ function onFindClick() {
 	font-weight: var(--font-weight-bold);
 }
 
+.ppv2-find-body {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.ppv2-find-table {
+	flex: 1;
+	min-height: 0;
+}
+
+.ppv2-find-table :deep(.ppv2-panel) {
+	height: 100%;
+}
+
 .ppv2-find-row td {
 	padding: 2px 4px;
 	border-bottom: 1px solid var(--border-color);
@@ -183,23 +189,10 @@ function onFindClick() {
 	background: var(--bg-card);
 }
 
-.ppv2-find-body {
-	flex: 1;
-	overflow: auto;
-	min-height: 0;
-}
-
-.ppv2-find-browse-row {
-	cursor: pointer;
-}
-
-.ppv2-find-browse-row:hover {
-	background: var(--primary-light);
-}
-
 .ppv2-find-empty {
 	padding: 12px;
 	color: var(--text-muted, #666);
 	font-size: calc(var(--font-size-base) + 1px);
+	flex-shrink: 0;
 }
 </style>
