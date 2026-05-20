@@ -2,9 +2,13 @@ import { ref, reactive, unref } from "vue";
 import { matchFindCriterion } from "../utils/findCriterion.js";
 
 function resolveAllRows(allRows) {
-	const r = unref(allRows);
+	let r = unref(allRows);
 	if (Array.isArray(r)) return r;
-	if (r != null && typeof r === "object" && Array.isArray(r.value)) return r.value;
+	// Ref nested on a reactive panel object may still arrive wrapped.
+	for (let i = 0; i < 3 && r != null && typeof r === "object" && !Array.isArray(r); i++) {
+		if (Array.isArray(r.value)) return r.value;
+		r = r.value;
+	}
 	return [];
 }
 

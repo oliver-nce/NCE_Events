@@ -4,7 +4,7 @@
 		class="ppv2-float"
 		:style="floatStyle"
 	>
-		<div class="ppv2-float-header" @mousedown.prevent="startDrag">
+		<div class="ppv2-float-header" @mousedown="startDrag">
 			<slot name="header" />
 		</div>
 
@@ -75,6 +75,15 @@ function _addOverlay(cursor) {
 }
 
 function startDrag(e) {
+	// Buttons/inputs live in the header slot — do not steal their clicks for drag.
+	if (
+		e.target.closest(
+			"button, input, select, textarea, a, [role='button'], .ppv2-header-controls, .ppv2-header-right"
+		)
+	) {
+		return;
+	}
+	e.preventDefault();
 	const sx = e.clientX, sy = e.clientY;
 	const ox = x.value, oy = y.value;
 	const el = floatEl.value;

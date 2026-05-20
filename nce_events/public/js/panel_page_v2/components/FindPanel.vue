@@ -9,30 +9,6 @@
 			<span class="ppv2-title">{{ title }}</span>
 			<div class="ppv2-header-right">
 				<div class="ppv2-header-controls">
-					<button
-						v-if="mode === 'find'"
-						type="button"
-						class="ppv2-hdr-btn ppv2-find-action-btn"
-						@click.stop="onFindClick"
-					>
-						Find
-					</button>
-					<button
-						v-if="mode === 'browse'"
-						type="button"
-						class="ppv2-hdr-btn ppv2-find-action-btn"
-						@click="enterFindMode"
-					>
-						New Find
-					</button>
-					<button
-						v-if="mode === 'find'"
-						type="button"
-						class="ppv2-hdr-btn ppv2-find-action-btn"
-						@click="$emit('close')"
-					>
-						Cancel
-					</button>
 					<span class="ppv2-count">{{ browseCount }} / {{ sourceTotal }} records</span>
 					<button
 						class="ppv2-hdr-btn ppv2-close-btn"
@@ -46,6 +22,27 @@
 		</template>
 
 		<div class="ppv2-find-body">
+			<div
+				v-if="mode === 'find'"
+				class="ppv2-find-actions"
+				@mousedown.stop
+			>
+				<button type="button" class="ppv2-find-action-btn ppv2-find-action-btn--primary" @click="onFindClick">
+					Find
+				</button>
+				<button type="button" class="ppv2-find-action-btn" @click="$emit('close')">
+					Cancel
+				</button>
+			</div>
+			<div
+				v-else
+				class="ppv2-find-actions"
+				@mousedown.stop
+			>
+				<button type="button" class="ppv2-find-action-btn" @click="enterFindMode">
+					New Find
+				</button>
+			</div>
 			<table class="ppv2-table">
 				<thead>
 					<tr>
@@ -55,25 +52,30 @@
 					</tr>
 				</thead>
 				<tbody>
-					<PanelFindRow
-						v-if="mode === 'find'"
-						:columns="columns"
-						:criteria="criteria"
-						@update-criterion="setCriterion"
-						@find-perform="onFindClick"
-					/>
-					<tr
-						v-for="(row, ri) in rows"
-						v-else
-						:key="row.name || ri"
-						class="ppv2-find-browse-row"
-						:class="{ 'ppv2-alt': ri % 2 === 1 }"
-						@click="$emit('row-click', row)"
-					>
-						<td v-for="col in columns" :key="col.fieldname">
-							{{ formatCell(row, col) }}
+					<tr v-if="mode === 'find'" class="ppv2-find-row">
+						<td v-for="col in columns" :key="'in-' + col.fieldname">
+							<input
+								v-model="criteria[col.fieldname]"
+								type="text"
+								class="ppv2-find-input"
+								:placeholder="col.label"
+								@keydown.enter.prevent="onFindClick"
+							/>
 						</td>
 					</tr>
+					<template v-else>
+						<tr
+							v-for="(row, ri) in rows"
+							:key="row.name || ri"
+							class="ppv2-find-browse-row"
+							:class="{ 'ppv2-alt': ri % 2 === 1 }"
+							@click="$emit('row-click', row)"
+						>
+							<td v-for="col in columns" :key="col.fieldname">
+								{{ formatCell(row, col) }}
+							</td>
+						</tr>
+					</template>
 				</tbody>
 			</table>
 			<div v-if="mode === 'browse' && !rows.length" class="ppv2-find-empty">
@@ -88,7 +90,6 @@
 <script setup>
 import { computed, toRef, watch } from "vue";
 import PanelFloat from "./PanelFloat.vue";
-import PanelFindRow from "./PanelFindRow.vue";
 import { useFindPanel } from "../composables/useFindPanel.js";
 
 const props = defineProps({
@@ -103,10 +104,9 @@ const props = defineProps({
 
 defineEmits(["close", "row-click"]);
 
-const { mode, criteria, rows, initCriteriaForColumns, setCriterion, enterFindMode, performFind } =
-	useFindPanel({
-		allRows: toRef(props, "allRows"),
-	});
+const { mode, criteria, rows, initCriteriaForColumns, enterFindMode, performFind } = useFindPanel({
+	allRows: toRef(props, "allRows"),
+});
 
 watch(
 	() => props.columns,
@@ -143,10 +143,44 @@ function onFindClick() {
 </script>
 
 <style scoped>
+.ppv2-find-actions {
+	display: flex;
+	gap: 8px;
+	padding: 6px 10px;
+	background: var(--primary-light);
+	border-bottom: 1px solid var(--border-color);
+	flex-shrink: 0;
+}
+
 .ppv2-find-action-btn {
 	font-size: 12px;
-	padding: 2px 10px;
-	min-width: auto;
+	padding: 4px 14px;
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-sm);
+	background: var(--bg-card);
+	cursor: pointer;
+}
+
+.ppv2-find-action-btn--primary {
+	background: var(--bg-header);
+	color: var(--text-header);
+	border-color: var(--bg-header);
+	font-weight: var(--font-weight-bold);
+}
+
+.ppv2-find-row td {
+	padding: 2px 4px;
+	border-bottom: 1px solid var(--border-color);
+}
+
+.ppv2-find-input {
+	width: 100%;
+	box-sizing: border-box;
+	padding: 2px 4px;
+	font-size: calc(var(--font-size-base) + 1px);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-sm);
+	background: var(--bg-card);
 }
 
 .ppv2-find-body {
