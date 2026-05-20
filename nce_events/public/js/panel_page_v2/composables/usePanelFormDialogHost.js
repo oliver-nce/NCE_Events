@@ -1,47 +1,31 @@
 import { ref, computed } from "vue";
 import { useFormDialogRecordNav, panelRowArray } from "./useFormDialogRecordNav.js";
 import { mergeFreshDocIntoPanel } from "./wpReadbackFlow.js";
+import { matchFindCriterion } from "../utils/findCriterion.js";
+
+/* -----------------------------------------------------------------------
+ * ARCHIVED (next phase: delete).
+ * The functions in this section drove the Form Dialog "find-shell" Find UX.
+ * As of 2026-05-20 the Find action is handled by a separate Find Panel
+ * (see components/FindPanel.vue, composables/useFindPanel.js).
+ * Nothing in App.vue calls into these symbols anymore; they remain here
+ * only for reference and should be removed once the Find Panel is proven.
+ *
+ * Affected symbols: _matchFindCriterion, openFormDialogForFind,
+ * onFormDialogFindCriteria, onFormDialogFindCriteriaConstrain,
+ * onFormDialogFindCancelCriteria, onFormDialogFindShowAll,
+ * onFormDialogFindModify, onFormDialogFindConstrain,
+ * formDialogFindMatchNames, formDialogFindChromePhase,
+ * formDialogFindSeedCriteria, formDialogFindConstrainNames,
+ * formDialogLastFindCriteria, formDialogFindSearchOnlyColumns.
+ * -----------------------------------------------------------------------*/
 
 /**
  * FileMaker-style criterion match against a single cell value.
- * Operators: = (empty), * (nonempty), >=, <=, !=, >, <, =value (exact),
- * ~value (contains), wildcard (* / %), default (contains).
+ * @deprecated Use matchFindCriterion from utils/findCriterion.js
  */
 function _matchFindCriterion(cellValue, term) {
-	const s = String(term ?? "").trim();
-	if (!s) return true;
-	const v = cellValue == null ? "" : String(cellValue).trim();
-	const vLow = v.toLowerCase();
-
-	if (s === "=") return v === "";
-	if (s === "*") return v !== "";
-
-	for (const op of [">=", "<=", "!="]) {
-		if (s.startsWith(op)) {
-			const right = s.slice(op.length).trim().toLowerCase();
-			const vN = parseFloat(v), rN = parseFloat(right);
-			const num = !isNaN(vN) && !isNaN(rN);
-			if (op === ">=") return num ? vN >= rN : vLow >= right;
-			if (op === "<=") return num ? vN <= rN : vLow <= right;
-			if (op === "!=") return vLow !== right;
-		}
-	}
-	for (const op of [">", "<"]) {
-		if (s.startsWith(op)) {
-			const right = s.slice(op.length).trim().toLowerCase();
-			const vN = parseFloat(v), rN = parseFloat(right);
-			const num = !isNaN(vN) && !isNaN(rN);
-			if (op === ">") return num ? vN > rN : vLow > right;
-			if (op === "<") return num ? vN < rN : vLow < right;
-		}
-	}
-	if (s.startsWith("=")) return vLow === s.slice(1).trim().toLowerCase();
-	if (s.startsWith("~")) return vLow.includes(s.slice(1).trim().toLowerCase());
-	if (s.includes("*") || s.includes("%")) {
-		const pat = s.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*").replace(/%/g, ".*");
-		return new RegExp("^" + pat + "$", "i").test(v);
-	}
-	return vLow.includes(s.toLowerCase());
+	return matchFindCriterion(cellValue, term);
 }
 
 /**

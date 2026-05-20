@@ -51,7 +51,7 @@
 		</PanelFloat>
 
 		<PanelFloat
-			v-for="p in openPanels"
+			v-for="p in openPanels.filter((x) => x.kind !== 'find')"
 			:key="p.id"
 			:init-x="p.x"
 			:init-y="p.y"
@@ -114,6 +114,25 @@
 			<template #footer>{{ floatedPanelTitle(p) }}</template>
 		</PanelFloat>
 
+		<FindPanel
+			v-for="fp in openPanels.filter((x) => x.kind === 'find')"
+			:key="'find-' + fp.id"
+			:title="fp.title"
+			:columns="fp.columns"
+			:all-rows="fp._allRows"
+			:init-x="fp.x"
+			:init-y="fp.y"
+			:init-w="1200"
+			:init-h="600"
+			@close="closePanel(fp.id)"
+			@row-click="
+				(row) => {
+					const src = openPanels.find((x) => x.id === fp.sourcePanelId);
+					if (src) openFormDialogFromPanelRow(src, row);
+				}
+			"
+		/>
+
 		<TagFinder
 			v-if="tagFinderDoctype"
 			:root-doctype="tagFinderDoctype"
@@ -168,12 +187,6 @@
 			@readback-merged="onReadbackMerged"
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
-			@find-criteria="onFormDialogFindCriteria"
-			@find-criteria-constrain="onFormDialogFindCriteriaConstrain"
-			@find-cancel-criteria="onFormDialogFindCancelCriteria"
-			@find-show-all="onFormDialogFindShowAll"
-			@find-modify="onFormDialogFindModify"
-			@find-constrain="onFormDialogFindConstrain"
 		/>
 		<!-- Slot 1 pending (behind) -->
 		<PanelFormDialog
@@ -201,12 +214,6 @@
 			@readback-merged="onReadbackMerged"
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
-			@find-criteria="onFormDialogFindCriteria"
-			@find-criteria-constrain="onFormDialogFindCriteriaConstrain"
-			@find-cancel-criteria="onFormDialogFindCancelCriteria"
-			@find-show-all="onFormDialogFindShowAll"
-			@find-modify="onFormDialogFindModify"
-			@find-constrain="onFormDialogFindConstrain"
 		/>
 		<!-- Slot 1 active -->
 		<PanelFormDialog
@@ -240,12 +247,6 @@
 			@readback-merged="onReadbackMerged"
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
-			@find-criteria="onFormDialogFindCriteria"
-			@find-criteria-constrain="onFormDialogFindCriteriaConstrain"
-			@find-cancel-criteria="onFormDialogFindCancelCriteria"
-			@find-show-all="onFormDialogFindShowAll"
-			@find-modify="onFormDialogFindModify"
-			@find-constrain="onFormDialogFindConstrain"
 		/>
 		<!-- Slot 0 pending (behind) -->
 		<PanelFormDialog
@@ -273,12 +274,6 @@
 			@readback-merged="onReadbackMerged"
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
-			@find-criteria="onFormDialogFindCriteria"
-			@find-criteria-constrain="onFormDialogFindCriteriaConstrain"
-			@find-cancel-criteria="onFormDialogFindCancelCriteria"
-			@find-show-all="onFormDialogFindShowAll"
-			@find-modify="onFormDialogFindModify"
-			@find-constrain="onFormDialogFindConstrain"
 		/>
 	</div>
 </template>
@@ -298,6 +293,8 @@ import CardModal from "./nce_cards/CardModal.vue";
 import PanelFormDialog from "./components/PanelFormDialog.vue";
 import ActionsPanel from "./components/ActionsPanel.vue";
 import SpaPageSwitcherFloat from "./components/SpaPageSwitcherFloat.vue";
+import FindPanel from "./components/FindPanel.vue";
+import { buildFindColumns } from "./utils/findColumns.js";
 
 const panelMode = inject("panelMode", null);
 const panelLabel = inject("panelLabel", "NCE Tables");
@@ -351,15 +348,8 @@ const {
 	formDialogFindActive,
 	onFormDialogNavPrev,
 	onFormDialogNavNext,
-	onFormDialogFindCriteria,
-	onFormDialogFindCriteriaConstrain,
-	onFormDialogFindCancelCriteria,
-	onFormDialogFindShowAll,
-	onFormDialogFindModify,
-	onFormDialogFindConstrain,
 	openFormDialogFromPanelRow,
 	openFormDialogForNewRecord,
-	openFormDialogForFind,
 	openFormDialogStandalone,
 	onFormDialogClose,
 	onFormDialogSaved,
@@ -649,19 +639,38 @@ function onNewRecord(panel) {
 }
 
 function onPanelToolbarFind(panel) {
-	if (
-		!openFormDialogForFind(panel) &&
-		typeof frappe !== "undefined" &&
-		frappe.msgprint
-	) {
-		frappe.msgprint({
-			title: __("Find"),
-			message: __(
-				"Link a Form Dialog on this Page Panel (Dialogs tab) to search from the panel.",
-			),
-			indicator: "orange",
-		});
+	if (!panel?.config?.form_dialog) {
+		if (typeof frappe !== "undefined" && frappe.msgprint) {
+			frappe.msgprint({
+				title: __("Find"),
+				message: __(
+					"Link a Form Dialog on this Page Panel (Dialogs tab) to search from the panel.",
+				),
+				indicator: "orange",
+			});
+		}
+		return;
 	}
+	// Replace any existing Find Panel for this source
+	const existingFind = openPanels.find(
+		(x) => x.kind === "find" && x.sourcePanelId === panel.id
+	);
+	if (existingFind) closePanel(existingFind.id);
+
+	const pos = nextPos(panel.id);
+	const id = ++panelCounter;
+	openPanels.push({
+		id,
+		kind: "find",
+		parentId: panel.id,
+		sourcePanelId: panel.id,
+		doctype: panel.doctype,
+		title: `Find: ${panel.config?.header_text || panel.doctype}`,
+		columns: buildFindColumns(panel),
+		_allRows: panel._allRows,
+		x: pos.x,
+		y: pos.y,
+	});
 }
 
 /** Same row list the table shows: drilled panels use `_panelRows` when set (live ref), else `rows`. */
