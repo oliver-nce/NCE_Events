@@ -61,11 +61,16 @@ def _query_with_core_filter(
 
 
 def _ensure_tab_prefix(sql: str) -> str:
-	"""Prepend 'tab' to bare table names in FROM/JOIN clauses.
+	"""Prepend 'tab' to bare table names in a query.
 
-	Event -> tabEvent, `Event Registration` -> `tabEvent Registration`.
-	Already-prefixed names (tabEvent) are left unchanged.
+	Tables named after FROM/JOIN are prefixed (Event -> tabEvent,
+	`Event Registration` -> `tabEvent Registration`), and qualified references to
+	those same tables elsewhere (SELECT / ON / WHERE) are rewritten to match
+	(e.g. ``Venues.state`` -> ``tabVenues.state``).
+
+	Already-prefixed names (tabEvent) and table aliases are left unchanged.
 	"""
+	prefixed: list[str] = []
 
 	def repl(m: re.Match[str]) -> str:
 		kw, ident = m.group(1), m.group(2)
@@ -73,13 +78,35 @@ def _ensure_tab_prefix(sql: str) -> str:
 			ident = ident[1:-1]
 		if ident.lower().startswith("tab"):
 			return m.group(0)
+		prefixed.append(ident)
 		tab_name = "tab" + ident
 		if " " in ident or "-" in ident:
 			tab_name = f"`{tab_name}`"
 		return f"{kw} {tab_name}"
 
 	pattern = r"\b(FROM|JOIN|INNER\s+JOIN|LEFT\s+JOIN|RIGHT\s+JOIN|LEFT\s+OUTER\s+JOIN|RIGHT\s+OUTER\s+JOIN)\s+(`[^`]+`|\w+)"
-	return re.sub(pattern, repl, sql, flags=re.IGNORECASE)
+	out = re.sub(pattern, repl, sql, flags=re.IGNORECASE)
+
+	# Rewrite qualified references to the same tables (Venues.state -> tabVenues.state).
+	# Only touch tables we just prefixed; aliases (e.g. `FROM Events e` ... `e.state`)
+	# use the alias rather than the table name, so they are unaffected.
+	for ident in prefixed:
+		tab_name = "tab" + ident
+		if " " in ident or "-" in ident:
+			# Backticked reference: `Event Registration`. -> `tabEvent Registration`.
+			out = re.sub(
+				r"`" + re.escape(ident) + r"`(\s*\.)",
+				lambda m: f"`{tab_name}`{m.group(1)}",
+				out,
+			)
+		else:
+			# Bare reference: Venues. -> tabVenues. (word-bounded, qualified only)
+			out = re.sub(
+				r"\b" + re.escape(ident) + r"(\s*\.)",
+				lambda m, tn=tab_name: f"{tn}{m.group(1)}",
+				out,
+			)
+	return out
 
 
 def _apply_user_filters(

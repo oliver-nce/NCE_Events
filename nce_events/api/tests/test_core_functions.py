@@ -149,6 +149,38 @@ class TestEnsureTabPrefix(unittest.TestCase):
 		result = _ensure_tab_prefix(sql)
 		self.assertIn("`tabEvent Registration`", result)
 
+	def test_qualified_refs_in_select_on_where(self):
+		sql = (
+			"SELECT Venues.state FROM Events "
+			"INNER JOIN Venues ON Events.venue_id = Venues.`name` "
+			"WHERE %s = Events.`name`"
+		)
+		result = _ensure_tab_prefix(sql)
+		self.assertIn("SELECT tabVenues.state", result)
+		self.assertIn("FROM tabEvents", result)
+		self.assertIn("INNER JOIN tabVenues", result)
+		self.assertIn("tabEvents.venue_id = tabVenues.`name`", result)
+		self.assertIn("WHERE %s = tabEvents.`name`", result)
+		self.assertNotIn("Venues.state", result.replace("tabVenues.state", ""))
+
+	def test_alias_refs_unchanged(self):
+		sql = "SELECT e.name FROM Event e JOIN Registration r ON r.event = e.name"
+		result = _ensure_tab_prefix(sql)
+		self.assertIn("FROM tabEvent e", result)
+		self.assertIn("JOIN tabRegistration r", result)
+		# Aliases (e., r.) must not be touched.
+		self.assertIn("ON r.event = e.name", result)
+
+	def test_backticked_qualified_ref(self):
+		sql = (
+			"SELECT `Event Registration`.amount FROM `Event Registration` "
+			"WHERE `Event Registration`.parent = %s"
+		)
+		result = _ensure_tab_prefix(sql)
+		self.assertIn("FROM `tabEvent Registration`", result)
+		self.assertIn("SELECT `tabEvent Registration`.amount", result)
+		self.assertIn("WHERE `tabEvent Registration`.parent = %s", result)
+
 
 # ──────────────────────────────────────────────────────────
 # _compute_jinja_tag
