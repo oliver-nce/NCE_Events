@@ -118,12 +118,23 @@ def _panel_config_from_doc(doc: Any) -> dict[str, Any]:
 		if fn not in column_order:
 			column_order.append(fn)
 
-	# Fetch-only: always fetch when on root doctype. No conditions.
+	# Fetch-only: root fields needed for panel chrome (email/SMS/title/links).
+	# Linked-table fields (link.child) are included only when explicitly configured —
+	# never auto-join a related DocType because it happens to have a gender field.
 	fetch_only_fields: list[str] = []
 	fetch_only_fields.append("name")
+	gender_column = (doc.gender_column or "").strip()
 	gender_key = _get_gender_field_key(doc.root_doctype)
 	if gender_key:
-		fetch_only_fields.append(gender_key)
+		col_set = set(column_order)
+		search_set = set(search_only_fields)
+		if (
+			"." not in gender_key
+			or gender_key in col_set
+			or gender_key in search_set
+			or gender_column == gender_key
+		):
+			fetch_only_fields.append(gender_key)
 	if email_field:
 		fetch_only_fields.append(email_field)
 	if sms_field:
@@ -151,7 +162,7 @@ def _panel_config_from_doc(doc: Any) -> dict[str, Any]:
 		"column_order": column_order,
 		"fetch_only_fields": fetch_only_fields,
 		"bold_fields": bold_fields,
-		"gender_column": (doc.gender_column or "").strip(),
+		"gender_column": gender_column,
 		"gender_color_fields": gender_color_fields,
 		"title_field": title_field,
 		"required_fields": required_fields,

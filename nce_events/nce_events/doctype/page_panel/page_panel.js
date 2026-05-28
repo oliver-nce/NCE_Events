@@ -244,6 +244,9 @@ function _ensure_panel_id_controls(frm) {
 
 function _refresh_query_tab(frm) {
 	if (!frm.doc.root_doctype) return;
+	if (typeof frm._pp_sync_display === "function") {
+		frm._pp_sync_display();
+	}
 	const fd = frm.fields_dict["panel_sql"];
 	const $btn = fd && fd.$wrapper ? fd.$wrapper.find(".pp-query-refresh-btn") : $();
 	if (fd && fd.$wrapper) {
@@ -252,7 +255,12 @@ function _refresh_query_tab(frm) {
 	$btn.prop("disabled", true);
 	frappe.call({
 		method: "nce_events.api.panel_api_pkg.sql.build_panel_sql",
-		args: { root_doctype: frm.doc.root_doctype },
+		args: {
+			root_doctype: frm.doc.root_doctype,
+			column_order: frm.doc.column_order || "",
+			search_fields: frm.doc.search_fields || "",
+			gender_column: frm.doc.gender_column || "",
+		},
 		callback: function (r) {
 			$btn.prop("disabled", false);
 			if (r.message) {

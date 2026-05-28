@@ -30,12 +30,20 @@ def _build_panel_sql(
 	if config is None:
 		config = get_panel_config(root_doctype)
 	display_fields: list[str] = config["column_order"] or []
+	search_fields: list[str] = list(config.get("search_fields") or [])
 	fetch_only: list[str] = list(config.get("fetch_only_fields") or [])
+	gender_column = (config.get("gender_column") or "").strip()
+	display_set = set(display_fields)
+	search_set = set(search_fields)
 	all_fields: list[str] = list(display_fields)
 	for fn in fetch_only:
-		if fn not in all_fields:
-			all_fields.append(fn)
-	for fn in (config.get("search_fields") or []):
+		if fn in all_fields:
+			continue
+		# Related-table columns require an explicit Display / Search / Gender Column choice.
+		if "." in fn and fn not in display_set and fn not in search_set and fn != gender_column:
+			continue
+		all_fields.append(fn)
+	for fn in search_fields:
 		if fn not in all_fields:
 			all_fields.append(fn)
 	if not all_fields:
@@ -139,15 +147,30 @@ def build_panel_sql_for_doc(doc: Any) -> str:
 
 
 @frappe.whitelist()
-def build_panel_sql(root_doctype: str) -> str:
+def build_panel_sql(
+	root_doctype: str,
+	column_order: str | None = None,
+	search_fields: str | None = None,
+	gender_column: str | None = None,
+) -> str:
 	"""Generate, save, and return the panel SQL for inspection.
 
 	Called from the Query tab Refresh button on the Page Panel form.
 	Saves the result into panel_sql so get_panel_data can reuse it.
+
+	Optional ``column_order`` / ``search_fields`` / ``gender_column`` (comma-delimited
+	for the lists) apply the current Desk form values before building — used when
+	Refresh is clicked without a prior Save.
 	"""
 	doc = get_page_panel_doc_for_root(root_doctype)
 	if not doc:
 		return ""
+	if column_order is not None:
+		doc.column_order = column_order
+	if search_fields is not None:
+		doc.search_fields = search_fields
+	if gender_column is not None:
+		doc.gender_column = gender_column
 	return build_panel_sql_for_doc(doc)
 
 
