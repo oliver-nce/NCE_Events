@@ -205,7 +205,7 @@
       "label": "Open Card on Click"
     },
     {
-      "description": "Auto-generated SQL query used to fetch this panel's data. Rebuilt when you click the Query tab. Read-only — for inspection and troubleshooting.",
+      "description": "Auto-generated SQL query used to fetch this panel's data. Rebuilt automatically on Save from Display settings, or click Refresh SQL on the Query tab. Read-only — for inspection and troubleshooting.",
       "fieldname": "panel_sql",
       "fieldtype": "Code",
       "label": "Panel SQL",

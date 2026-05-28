@@ -116,6 +116,9 @@ function _show_tab(frm, tab_id) {
 		fontWeight: "600",
 	});
 	$(frm.layout.wrapper).data("pp-active-tab", tab_id);
+	if (tab_id === "query") {
+		_ensure_query_refresh_button(frm);
+	}
 }
 
 function _ensure_tab_bar(frm) {
@@ -145,7 +148,6 @@ function _ensure_tab_bar(frm) {
 		const tab_id = $(this).data("tab");
 		_show_tab(frm, tab_id);
 		if (tab_id === "display") _render_display(frm);
-		if (tab_id === "query") _refresh_query_tab(frm);
 		if (tab_id === "dialogs") _render_dialogs_tab(frm);
 	});
 
@@ -243,19 +245,51 @@ function _ensure_panel_id_controls(frm) {
 function _refresh_query_tab(frm) {
 	if (!frm.doc.root_doctype) return;
 	const fd = frm.fields_dict["panel_sql"];
+	const $btn = fd && fd.$wrapper ? fd.$wrapper.find(".pp-query-refresh-btn") : $();
 	if (fd && fd.$wrapper) {
 		fd.$wrapper.find(".control-value, .like-disabled-input").text("Generating…");
 	}
+	$btn.prop("disabled", true);
 	frappe.call({
 		method: "nce_events.api.panel_api_pkg.sql.build_panel_sql",
 		args: { root_doctype: frm.doc.root_doctype },
 		callback: function (r) {
+			$btn.prop("disabled", false);
 			if (r.message) {
 				frm.set_value("panel_sql", r.message);
 				frm.refresh_field("panel_sql");
 			}
 		},
+		error: function () {
+			$btn.prop("disabled", false);
+		},
 	});
+}
+
+function _ensure_query_refresh_button(frm) {
+	const fd = frm.fields_dict["panel_sql"];
+	if (!fd || !fd.$wrapper) return;
+	if (fd.$wrapper.find(".pp-query-refresh-btn").length) return;
+	const $row = $(
+		'<div class="pp-query-refresh-row" style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"></div>'
+	);
+	const $btn = $(
+		'<button type="button" class="btn btn-xs btn-primary pp-query-refresh-btn">' +
+			frappe.utils.escape_html(__("Refresh SQL")) +
+			"</button>"
+	);
+	const $hint = $(
+		'<span class="text-muted" style="font-size:11px;">' +
+			frappe.utils.escape_html(
+				__("Rebuild from saved Display settings. Also runs automatically on Save.")
+			) +
+			"</span>"
+	);
+	$btn.on("click", function () {
+		_refresh_query_tab(frm);
+	});
+	$row.append($btn).append($hint);
+	fd.$wrapper.prepend($row);
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -796,6 +830,7 @@ tr[draggable="true"]:active .matrix-drag-handle { cursor: grabbing; }
 	// Start on root sub-tab
 	_show_sub("_root");
 	_sync_all();
+	frm._pp_sync_display = _sync_all;
 }
 
 // ── Build a single field-selection matrix ─────────────────────────────────────
@@ -2780,6 +2815,7 @@ frappe.ui.form.on("Page Panel", {
 	refresh: function (frm) {
 		_ensure_tab_bar(frm);
 		_ensure_panel_id_controls(frm);
+		_ensure_query_refresh_button(frm);
 		_render_default_filters(frm);
 		// Hide Frappe's native tab bar (rendered when Tab Break fields exist in the DocType)
 		$(frm.layout.wrapper).find(".form-tabs-list, .nav-tabs").hide();
@@ -2845,5 +2881,22 @@ frappe.ui.form.on("Page Panel", {
 				frm.doc.__newname = ($inp.val() || "").trim();
 			}
 		}
+	},
+
+	before_save: function (frm) {
+		if (typeof frm._pp_sync_display === "function") {
+			frm._pp_sync_display();
+		}
+	},
+
+	after_save: function (frm) {
+		if (!frm.doc.root_doctype || !frm.doc.name) return;
+		frappe.db.get_value("Page Panel", frm.doc.name, "panel_sql").then(function (r) {
+			const sql = r && r.message && r.message.panel_sql;
+			if (sql != null && sql !== "") {
+				frm.set_value("panel_sql", sql);
+				frm.refresh_field("panel_sql");
+			}
+		});
 	},
 });

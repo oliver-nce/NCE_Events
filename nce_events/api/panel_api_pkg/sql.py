@@ -6,20 +6,29 @@ import frappe
 
 from nce_events.api.panel_api_pkg.page_panel_lookup import (
 	generate_auto_page_panel_name,
+	get_page_panel_doc_for_root,
 	page_panel_docname_for_root,
 )
 
 
-def _build_panel_sql(root_doctype: str, filters: dict | None = None) -> tuple[str, list[Any]]:
+def _build_panel_sql(
+	root_doctype: str,
+	filters: dict | None = None,
+	config: dict | None = None,
+) -> tuple[str, list[Any]]:
 	"""Build the main SELECT [LEFT JOIN...] SQL for a panel, without executing it.
 
 	Returns (sql, params) tuple. Used by build_panel_sql (to save + display)
 	and by get_panel_data (to execute). filters is only used for the WHERE
 	clause when a drill-down parent filter is active.
+
+	When ``config`` is supplied (e.g. from the Page Panel doc being saved), it is
+	used directly instead of re-loading config from the database.
 	"""
 	from nce_events.api.panel_api_pkg.panel_data import get_panel_config
 
-	config = get_panel_config(root_doctype)
+	if config is None:
+		config = get_panel_config(root_doctype)
 	display_fields: list[str] = config["column_order"] or []
 	fetch_only: list[str] = list(config.get("fetch_only_fields") or [])
 	all_fields: list[str] = list(display_fields)
@@ -116,19 +125,30 @@ def _build_panel_sql(root_doctype: str, filters: dict | None = None) -> tuple[st
 	return sql, params
 
 
+def build_panel_sql_for_doc(doc: Any) -> str:
+	"""Generate and persist panel SQL from a Page Panel doc (uses in-memory field values)."""
+	from nce_events.api.panel_api_pkg.panel_data import _panel_config_from_doc
+
+	root_doctype = (getattr(doc, "root_doctype", None) or "").strip()
+	if not root_doctype or not getattr(doc, "name", None):
+		return ""
+	config = _panel_config_from_doc(doc)
+	sql, _ = _build_panel_sql(root_doctype, config=config)
+	frappe.db.set_value("Page Panel", doc.name, "panel_sql", sql, update_modified=False)
+	return sql
+
+
 @frappe.whitelist()
 def build_panel_sql(root_doctype: str) -> str:
 	"""Generate, save, and return the panel SQL for inspection.
 
-	Called from the Query tab in the Page Panel form.
+	Called from the Query tab Refresh button on the Page Panel form.
 	Saves the result into panel_sql so get_panel_data can reuse it.
 	"""
-	sql, _ = _build_panel_sql(root_doctype)
-	pp_name = page_panel_docname_for_root(root_doctype)
-	if pp_name:
-		frappe.db.set_value("Page Panel", pp_name, "panel_sql", sql)
-		frappe.db.commit()
-	return sql
+	doc = get_page_panel_doc_for_root(root_doctype)
+	if not doc:
+		return ""
+	return build_panel_sql_for_doc(doc)
 
 
 @frappe.whitelist()

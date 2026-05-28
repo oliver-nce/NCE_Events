@@ -67,47 +67,10 @@ _SKIP_FIELDNAMES: frozenset[str] = frozenset(
 _ROSTER_HASH: str = "wwe78f6q87ey97f86q9e8fqw98ef"
 
 
-@frappe.whitelist()
-def get_panel_config(root_doctype: str) -> dict[str, Any]:
-	"""Fetch display configuration for a single Page Panel."""
-	if not page_panel_exists_for_root(root_doctype):
-		auto_email, auto_sms = _auto_detect_contact_fields(root_doctype)
-		return {
-			"root_doctype": root_doctype,
-			"header_text": root_doctype,
-			"default_filters": [],
-			"order_by": "",
-			"column_order": [],
-			"bold_fields": [],
-			"gender_column": "",
-			"gender_color_fields": [],
-			"title_field": "",
-			"required_fields": [],
-			"search_fields": [],
-			"search_only_columns": [],
-			"effective_searchable": [],
-			"tint_by_gender": {},
-			"computed_columns": [],
-			"show_filter": 1,
-			"show_sheets": 1,
-			"show_email": 1,
-			"show_sms": 1,
-			"email_field": auto_email,
-			"sms_field": auto_sms,
-			"show_card_email": 0,
-			"show_card_sms": 0,
-			"open_card_on_click": 0,
-			"allow_new_record_creation": 0,
-			"form_dialog": None,
-			"male_hex": MALE_HEX,
-			"female_hex": FEMALE_HEX,
-		}
-
-	doc = get_page_panel_doc_for_root(root_doctype)
-	if (doc.root_doctype or "").strip() != root_doctype:
-		computed_columns = []
-	else:
-		computed_columns = _get_computed_columns(doc)
+def _panel_config_from_doc(doc: Any) -> dict[str, Any]:
+	"""Build panel config dict from a Page Panel document (in-memory or loaded)."""
+	root_doctype = (doc.root_doctype or "").strip()
+	computed_columns = _get_computed_columns(doc)
 
 	column_order = _parse_csv(doc.column_order)
 	email_field = (doc.email_field or "").strip()
@@ -211,6 +174,46 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 		"male_hex": MALE_HEX,
 		"female_hex": FEMALE_HEX,
 	}
+
+
+@frappe.whitelist()
+def get_panel_config(root_doctype: str) -> dict[str, Any]:
+	"""Fetch display configuration for a single Page Panel."""
+	if not page_panel_exists_for_root(root_doctype):
+		auto_email, auto_sms = _auto_detect_contact_fields(root_doctype)
+		return {
+			"root_doctype": root_doctype,
+			"header_text": root_doctype,
+			"default_filters": [],
+			"order_by": "",
+			"column_order": [],
+			"bold_fields": [],
+			"gender_column": "",
+			"gender_color_fields": [],
+			"title_field": "",
+			"required_fields": [],
+			"search_fields": [],
+			"search_only_columns": [],
+			"effective_searchable": [],
+			"tint_by_gender": {},
+			"computed_columns": [],
+			"show_filter": 1,
+			"show_sheets": 1,
+			"show_email": 1,
+			"show_sms": 1,
+			"email_field": auto_email,
+			"sms_field": auto_sms,
+			"show_card_email": 0,
+			"show_card_sms": 0,
+			"open_card_on_click": 0,
+			"allow_new_record_creation": 0,
+			"form_dialog": None,
+			"male_hex": MALE_HEX,
+			"female_hex": FEMALE_HEX,
+		}
+
+	doc = get_page_panel_doc_for_root(root_doctype)
+	return _panel_config_from_doc(doc)
 
 
 @frappe.whitelist()
