@@ -38,6 +38,7 @@ from ._helpers import (
 	_sanitize_get_list_fields,
 	_sync_related_doctypes,
 )
+from .action_registry import list_portal_action_methods
 from .capture import (
 	capture_form_dialog_from_desk,
 	get_form_dialog_definition,
@@ -49,9 +50,14 @@ from .portal_fields import (
 	_normalize_portal_field_config_for_save,
 	_parse_portal_field_config_entries,
 	_portal_meta_field_eligible_for_editor,
+	get_inline_child_portal_field_editor,
 	get_related_portal_field_editor,
+	save_inline_child_portal_actions,
+	save_inline_child_portal_field_config,
+	save_related_portal_actions,
 	save_related_portal_field_config,
 )
+from .portal_actions import get_portal_actions_for_row, run_portal_action
 from .related_rows import (
 	_allowed_child_names_for_related_tab,
 	_editable_related_fieldnames_for_save,
@@ -93,11 +99,17 @@ __all__ = [
 	"get_form_dialog_button_hidden_map",
 	"get_form_dialog_footer_visibility",
 	"get_form_dialog_related_rows",
+	"get_portal_actions_for_row",
 	"get_related_portal_field_editor",
 	"list_form_dialogs_for_doctype",
+	"list_portal_action_methods",
 	"rebuild_form_dialog",
+	"run_portal_action",
 	"save_form_dialog_document",
 	"validate_hide_if_sql",
 	"save_form_dialog_related_rows",
+	"save_inline_child_portal_actions",
+	"save_inline_child_portal_field_config",
+	"save_related_portal_actions",
 	"save_related_portal_field_config",
 ]

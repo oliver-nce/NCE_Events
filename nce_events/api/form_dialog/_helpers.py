@@ -239,6 +239,7 @@ def _related_doctype_child_rows(related_doctypes: str | list | None) -> list[dic
 
 def _sync_related_doctypes(doc: Any, related_doctypes: str | list | None) -> None:
 	preserved_portal: dict[str, str] = {}
+	preserved_actions: dict[str, str] = {}
 	for old in list(doc.get("related_doctypes") or []):
 		key = _related_tab_portal_config_key(
 			getattr(old, "child_doctype", None),
@@ -248,6 +249,9 @@ def _sync_related_doctypes(doc: Any, related_doctypes: str | list | None) -> Non
 		pfc = cstr(getattr(old, "portal_field_config", None) or "").strip()
 		if pfc:
 			preserved_portal[key] = pfc
+		pa = cstr(getattr(old, "portal_actions", None) or "").strip()
+		if pa:
+			preserved_actions[key] = pa
 
 	parsed_rows = _related_doctype_child_rows(related_doctypes)
 	if not parsed_rows and doc.get("related_doctypes"):
@@ -262,6 +266,8 @@ def _sync_related_doctypes(doc: Any, related_doctypes: str | list | None) -> Non
 		)
 		if key in preserved_portal:
 			row["portal_field_config"] = preserved_portal[key]
+		if key in preserved_actions:
+			row["portal_actions"] = preserved_actions[key]
 		doc.append("related_doctypes", row)
 
 
@@ -381,11 +387,15 @@ def _build_inline_child_row_dict(spec: dict[str, Any], root_meta: Any) -> dict[s
 
 def _sync_inline_child_tables(doc: Any, inline_child_tables: object, root_doctype: str) -> None:
 	preserved_portal: dict[str, str] = {}
+	preserved_actions: dict[str, str] = {}
 	for old in list(doc.get("inline_child_tables") or []):
 		pfn = cstr(getattr(old, "parent_fieldname", None) or "").strip()
 		pfc = cstr(getattr(old, "portal_field_config", None) or "").strip()
 		if pfn and pfc:
 			preserved_portal[pfn] = pfc
+		pa = cstr(getattr(old, "portal_actions", None) or "").strip()
+		if pfn and pa:
+			preserved_actions[pfn] = pa
 
 	doc.inline_child_tables = []
 	meta = frappe.get_meta(root_doctype)
@@ -396,6 +406,8 @@ def _sync_inline_child_tables(doc: Any, inline_child_tables: object, root_doctyp
 		pfn = cstr(row.get("parent_fieldname") or "").strip()
 		if pfn in preserved_portal:
 			row["portal_field_config"] = preserved_portal[pfn]
+		if pfn in preserved_actions:
+			row["portal_actions"] = preserved_actions[pfn]
 		doc.append("inline_child_tables", row)
 
 

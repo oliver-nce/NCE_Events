@@ -17,6 +17,8 @@ from frappe.utils import cint, cstr
 
 from ._helpers import _require_system_manager
 
+from .action_registry import get_action_method_spec
+
 # Fieldtypes excluded from the related-table portal field editor (layout / non-data).
 _PORTAL_EDITOR_SKIP_FIELDTYPES: frozenset[str] = frozenset(
 	{
@@ -41,6 +43,93 @@ def _portal_meta_field_eligible_for_editor(f: dict) -> bool:
 		return False
 	ft = cstr(f.get("fieldtype") or "").strip()
 	return ft not in _PORTAL_EDITOR_SKIP_FIELDTYPES
+
+
+def _parse_portal_actions_entries(raw: str | None) -> list[dict]:
+	if not raw or not cstr(raw).strip():
+		return []
+	try:
+		data = json.loads(raw)
+	except json.JSONDecodeError:
+		return []
+	if not isinstance(data, list):
+		return []
+	return [x for x in data if isinstance(x, dict)]
+
+
+_VALID_PARAM_SOURCES = frozenset({"row", "root", "prompt", "const"})
+
+
+def _normalize_portal_actions_for_save(portal_actions: list) -> list[dict[str, Any]]:
+	normalized: list[dict[str, Any]] = []
+	seen_ids: set[str] = set()
+	for entry in portal_actions:
+		if not isinstance(entry, dict):
+			continue
+		action_id = cstr(entry.get("action_id") or "").strip()
+		if not action_id:
+			action_id = frappe.generate_hash(length=10)
+		if action_id in seen_ids:
+			continue
+		seen_ids.add(action_id)
+
+		label = cstr(entry.get("label") or "").strip()
+		method = cstr(entry.get("method") or "").strip()
+		if not label or not method:
+			frappe.throw(_("Each portal action requires a label and method"))
+
+		spec = get_action_method_spec(method)
+		if not spec:
+			frappe.throw(_("Unknown portal action method: {0}").format(method))
+
+		roles_raw = entry.get("roles")
+		roles: list[str] = []
+		if isinstance(roles_raw, list):
+			roles = [cstr(r).strip() for r in roles_raw if cstr(r).strip()]
+		elif isinstance(roles_raw, str) and roles_raw.strip():
+			roles = [r.strip() for r in roles_raw.split(",") if r.strip()]
+
+		confirm = cstr(entry.get("confirm") or "").strip()
+		hide_if = cstr(entry.get("hide_if") or "").strip()
+
+		spec_arg_names = {
+			cstr(a.get("arg") or "").strip()
+			for a in (spec.get("args") or [])
+			if isinstance(a, dict) and cstr(a.get("arg") or "").strip()
+		}
+		params_out: list[dict[str, Any]] = []
+		for p in entry.get("params") or []:
+			if not isinstance(p, dict):
+				continue
+			arg = cstr(p.get("arg") or "").strip()
+			if not arg or arg not in spec_arg_names:
+				frappe.throw(_("Invalid param arg for method {0}: {1}").format(method, arg))
+			source = cstr(p.get("source") or "").strip().lower()
+			if source not in _VALID_PARAM_SOURCES:
+				frappe.throw(_("Invalid param source for {0}: {1}").format(arg, source))
+			param_rec: dict[str, Any] = {"arg": arg, "source": source}
+			if source in ("row", "root"):
+				field = cstr(p.get("field") or "").strip()
+				if field:
+					param_rec["field"] = field
+			elif source == "const":
+				param_rec["value"] = p.get("value")
+			params_out.append(param_rec)
+
+		rec: dict[str, Any] = {
+			"action_id": action_id,
+			"label": label,
+			"method": method,
+			"params": params_out,
+		}
+		if roles:
+			rec["roles"] = roles
+		if confirm:
+			rec["confirm"] = confirm
+		if hide_if:
+			rec["hide_if"] = hide_if
+		normalized.append(rec)
+	return normalized
 
 
 def _parse_portal_field_config_entries(raw: str | None) -> list[dict]:
@@ -179,6 +268,8 @@ def get_related_portal_field_editor(form_dialog: str, child_row_name: str) -> di
 	portal_raw = cstr(getattr(row, "portal_field_config", None) or "").strip()
 	portal_entries = _parse_portal_field_config_entries(portal_raw)
 	rows = _build_portal_editor_rows(meta_fields, portal_entries)
+	actions_raw = cstr(getattr(row, "portal_actions", None) or "").strip()
+	actions = _parse_portal_actions_entries(actions_raw)
 
 	return {
 		"form_dialog": doc.name,
@@ -186,6 +277,7 @@ def get_related_portal_field_editor(form_dialog: str, child_row_name: str) -> di
 		"child_doctype": row.child_doctype,
 		"tab_label": cstr(row.tab_label or "").strip() or row.child_doctype,
 		"rows": rows,
+		"actions": actions,
 		"capture_error": info.get("capture_error"),
 	}
 
@@ -240,6 +332,42 @@ def save_related_portal_field_config(
 	return {"ok": 1, "portal_field_config": normalized}
 
 
+@frappe.whitelist()
+def save_related_portal_actions(
+	form_dialog: str, child_row_name: str, portal_actions: str | list
+) -> dict:
+	"""Desk Page Panel: persist portal_actions JSON on a Form Dialog Related DocType row."""
+	_require_system_manager()
+
+	if isinstance(portal_actions, str):
+		s = portal_actions.strip()
+		if not s:
+			portal_actions = []
+		else:
+			try:
+				portal_actions = json.loads(s)
+			except json.JSONDecodeError:
+				frappe.throw(_("Invalid portal_actions JSON"))
+	if not isinstance(portal_actions, list):
+		frappe.throw(_("portal_actions must be a list"))
+
+	doc = frappe.get_doc("Form Dialog", form_dialog)
+	row = None
+	for r in doc.related_doctypes or []:
+		if cstr(r.name) == cstr(child_row_name).strip():
+			row = r
+			break
+	if not row:
+		frappe.throw(_("Related DocType row not found"))
+
+	normalized = _normalize_portal_actions_for_save(portal_actions)
+	row.portal_actions = json.dumps(normalized, indent=None)
+	doc.save(ignore_permissions=True)
+	frappe.db.commit()
+
+	return {"ok": 1, "actions": normalized}
+
+
 def _find_inline_child_row(doc: Any, child_row_name: str) -> Any:
 	for r in doc.get("inline_child_tables") or []:
 		if cstr(r.name) == cstr(child_row_name).strip():
@@ -268,6 +396,8 @@ def get_inline_child_portal_field_editor(form_dialog: str, child_row_name: str) 
 	portal_raw = cstr(getattr(row, "portal_field_config", None) or "").strip()
 	portal_entries = _parse_portal_field_config_entries(portal_raw)
 	rows = _build_portal_editor_rows(meta_fields, portal_entries)
+	actions_raw = cstr(getattr(row, "portal_actions", None) or "").strip()
+	actions = _parse_portal_actions_entries(actions_raw)
 
 	return {
 		"form_dialog": doc.name,
@@ -276,6 +406,7 @@ def get_inline_child_portal_field_editor(form_dialog: str, child_row_name: str) 
 		"parent_fieldname": cstr(row.parent_fieldname or "").strip(),
 		"tab_label": cstr(row.tab_label or "").strip() or row.child_doctype,
 		"rows": rows,
+		"actions": actions,
 		"capture_error": info.get("capture_error"),
 	}
 
@@ -324,3 +455,35 @@ def save_inline_child_portal_field_config(
 	frappe.db.commit()
 
 	return {"ok": 1, "portal_field_config": normalized}
+
+
+@frappe.whitelist()
+def save_inline_child_portal_actions(
+	form_dialog: str, child_row_name: str, portal_actions: str | list
+) -> dict:
+	"""Desk: persist portal_actions on a Form Dialog Inline Child Table row."""
+	_require_system_manager()
+
+	if isinstance(portal_actions, str):
+		s = portal_actions.strip()
+		if not s:
+			portal_actions = []
+		else:
+			try:
+				portal_actions = json.loads(s)
+			except json.JSONDecodeError:
+				frappe.throw(_("Invalid portal_actions JSON"))
+	if not isinstance(portal_actions, list):
+		frappe.throw(_("portal_actions must be a list"))
+
+	doc = frappe.get_doc("Form Dialog", form_dialog)
+	row = _find_inline_child_row(doc, child_row_name)
+	if not row:
+		frappe.throw(_("Inline child table row not found"))
+
+	normalized = _normalize_portal_actions_for_save(portal_actions)
+	row.portal_actions = json.dumps(normalized, indent=None)
+	doc.save(ignore_permissions=True)
+	frappe.db.commit()
+
+	return {"ok": 1, "actions": normalized}

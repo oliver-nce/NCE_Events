@@ -8,7 +8,8 @@
     "child_doctype",
     "tab_label",
     "info",
-    "portal_field_config"
+    "portal_field_config",
+    "portal_actions"
   ],
   "fields": [
     {
@@ -46,12 +47,18 @@
       "fieldname": "portal_field_config",
       "fieldtype": "Long Text",
       "label": "Portal field config"
+    },
+    {
+      "description": "JSON array of portal action buttons: [{action_id, label, method, roles, confirm, hide_if, params:[{arg, source, field, value, fieldtype, options, reqd}]}].",
+      "fieldname": "portal_actions",
+      "fieldtype": "Long Text",
+      "label": "Portal Actions"
     }
   ],
   "index_web_pages_for_search": 0,
   "istable": 1,
   "links": [],
-  "modified": "2026-05-17 00:00:00.000000",
+  "modified": "2026-05-29 00:00:00.000000",
   "modified_by": "Administrator",
   "module": "NCE Events",
   "name": "Form Dialog Inline Child Table",

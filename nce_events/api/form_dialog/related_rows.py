@@ -169,12 +169,17 @@ def get_form_dialog_related_rows(
 	columns, order_by = _related_list_columns_from_child_row(row)
 	field_list = _sanitize_get_list_fields(child_dt, [cstr(c.get("fieldname") or "") for c in columns])
 
+	from nce_events.api.form_dialog.portal_actions import get_portal_actions_for_row
+
+	actions = get_portal_actions_for_row(row)
+
 	if force_empty:
 		return {
 			"child_doctype": child_dt,
 			"columns": columns,
 			"rows": [],
 			"order_by": order_by,
+			"actions": actions,
 		}
 
 	rows = frappe.get_list(
@@ -189,6 +194,7 @@ def get_form_dialog_related_rows(
 		"columns": columns,
 		"rows": rows,
 		"order_by": order_by,
+		"actions": actions,
 	}
 
 

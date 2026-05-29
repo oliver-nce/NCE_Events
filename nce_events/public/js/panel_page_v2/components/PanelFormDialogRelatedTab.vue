@@ -51,6 +51,12 @@
 									*
 								</span>
 							</th>
+							<th
+								v-if="(relatedState[ti].actions || []).length"
+								class="ppv2-fd-related-th ppv2-fd-related-th-actions"
+							>
+								Actions
+							</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -128,6 +134,21 @@
 									formatRelatedCell(rw, col)
 								}}</span>
 							</td>
+							<td
+								v-if="(relatedState[ti].actions || []).length"
+								class="ppv2-fd-related-td ppv2-fd-related-td-actions"
+							>
+								<button
+									v-for="act in relatedState[ti].actions"
+									:key="act.action_id"
+									type="button"
+									class="btn btn-default btn-xs ppv2-fd-related-action-btn"
+									:disabled="actionRunningKey === actionRunKey(act, rw)"
+									@click="onRelatedActionClick(act, rw)"
+								>
+									{{ act.label || act.method }}
+								</button>
+							</td>
 						</tr>
 					</tbody>
 				</table>
@@ -136,6 +157,49 @@
 				</p>
 			</div>
 		</template>
+
+		<div
+			v-if="actionModal.open"
+			class="ppv2-fd-action-modal-backdrop"
+			@click.self="closeActionModal"
+		>
+			<div class="ppv2-fd-action-modal" role="dialog" aria-modal="true">
+				<h4 class="ppv2-fd-action-modal-title">{{ actionModal.title }}</h4>
+				<p v-if="actionModal.confirm" class="ppv2-fd-action-modal-confirm">
+					{{ actionModal.confirm }}
+				</p>
+				<div
+					v-for="pa in actionModal.promptArgs"
+					:key="pa.arg"
+					class="ppv2-fd-action-modal-field"
+				>
+					<label class="ppv2-fd-action-modal-label">
+						{{ pa.label || pa.arg
+						}}<span v-if="pa.reqd" class="ppv2-fd-reqd" aria-hidden="true"> *</span>
+					</label>
+					<input
+						type="text"
+						class="ppv2-fd-related-inp"
+						:value="String(actionModal.values[pa.arg] ?? '')"
+						@input="actionModal.values[pa.arg] = $event.target.value"
+					/>
+				</div>
+				<p v-if="actionModal.error" class="ppv2-fd-action-modal-error">{{ actionModal.error }}</p>
+				<div class="ppv2-fd-action-modal-actions">
+					<button type="button" class="btn btn-default btn-sm" @click="closeActionModal">
+						Cancel
+					</button>
+					<button
+						type="button"
+						class="btn btn-primary btn-sm"
+						:disabled="actionModal.running"
+						@click="submitActionModal"
+					>
+						{{ actionModal.running ? "Running…" : "Run" }}
+					</button>
+				</div>
+			</div>
+		</div>
 
 		<details v-if="tab.sections && tab.sections.length" class="ppv2-fd-related-schema">
 			<summary class="ppv2-fd-related-schema-sum">Field metadata</summary>
@@ -203,7 +267,7 @@
 </template>
 
 <script setup>
-import { reactive, watch, onUnmounted, nextTick } from "vue";
+import { reactive, ref, watch, onUnmounted, nextTick } from "vue";
 import { frappeCall } from "../utils/frappeCall.js";
 
 const props = defineProps({
@@ -228,10 +292,156 @@ function relatedColumnMandatory(col) {
 	return Number(col.reqd) === 1 || col.reqd === true || col.reqd === "1";
 }
 
-/** @type {Record<number, { loading?: boolean, error?: string|null, rows?: object[], columns?: object[], fetchKey?: string }>} */
+/** @type {Record<number, { loading?: boolean, error?: string|null, rows?: object[], columns?: object[], actions?: object[], fetchKey?: string }>} */
 const relatedState = reactive({});
 /** @type {Record<number, number>} */
 const relatedSeq = reactive({});
+
+const actionModal = reactive({
+	open: false,
+	title: "",
+	confirm: "",
+	promptArgs: [],
+	values: {},
+	error: null,
+	running: false,
+	action: null,
+	row: null,
+});
+
+const actionRunningKey = ref(null);
+
+function actionRunKey(act, rw) {
+	return `${act?.action_id || ""}:${rw?.name ?? ""}`;
+}
+
+function closeActionModal() {
+	actionModal.open = false;
+	actionModal.running = false;
+	actionModal.error = null;
+	actionModal.action = null;
+	actionModal.row = null;
+	actionModal.promptArgs = [];
+	actionModal.values = {};
+}
+
+function formatActionResultSummary(result) {
+	if (!result || typeof result !== "object") {
+		return "Action completed.";
+	}
+	const data = result.data || result;
+	const parts = [];
+	if (data.message) {
+		parts.push(String(data.message));
+	}
+	if (data.after && typeof data.after === "object") {
+		if (data.after.credit != null) {
+			parts.push(`Credit: ${data.after.credit}`);
+		}
+		if (data.after.charged != null) {
+			parts.push(`Charged: ${data.after.charged}`);
+		}
+	}
+	return parts.length ? parts.join(" · ") : "Action completed.";
+}
+
+async function runPortalAction(act, rw, promptValues) {
+	const defn = String(props.definitionName || "").trim();
+	const dt = String(props.rootDoctype || "").trim();
+	const dn = String(props.rootDocName || "").trim();
+	const crn = props.tab?._related?.child_row_name;
+	if (!defn || !dt || !dn || !crn || !rw?.name) {
+		throw new Error("Missing context for portal action");
+	}
+	return frappeCall("nce_events.api.form_dialog.portal_actions.run_portal_action", {
+		definition: defn,
+		context_kind: "related",
+		related_row_name: crn,
+		root_doctype: dt,
+		root_name: dn,
+		child_name: String(rw.name),
+		action_id: act.action_id,
+		prompt_values: promptValues || {},
+	});
+}
+
+async function submitActionModal() {
+	if (!actionModal.action || !actionModal.row) {
+		return;
+	}
+	for (const pa of actionModal.promptArgs || []) {
+		if (pa.reqd && !String(actionModal.values[pa.arg] ?? "").trim()) {
+			actionModal.error = `${pa.label || pa.arg} is required.`;
+			return;
+		}
+	}
+	actionModal.error = null;
+	actionModal.running = true;
+	const key = actionRunKey(actionModal.action, actionModal.row);
+	actionRunningKey.value = key;
+	try {
+		const r = await runPortalAction(actionModal.action, actionModal.row, { ...actionModal.values });
+		closeActionModal();
+		if (typeof frappe !== "undefined" && frappe.show_alert) {
+			frappe.show_alert({
+				message: formatActionResultSummary(r?.result),
+				indicator: "green",
+			});
+		}
+		await fetchRelatedForTab(props.ti);
+	} catch (e) {
+		actionModal.error = e?.message || String(e) || "Action failed";
+	} finally {
+		actionModal.running = false;
+		actionRunningKey.value = null;
+	}
+}
+
+function onRelatedActionClick(act, rw) {
+	const promptArgs = Array.isArray(act.promptArgs) ? act.promptArgs : [];
+	const needsModal = promptArgs.length > 0 || !!act.confirm;
+	if (!needsModal) {
+		actionModal.action = act;
+		actionModal.row = rw;
+		void submitActionModalDirect(act, rw);
+		return;
+	}
+	actionModal.open = true;
+	actionModal.title = act.label || act.method || "Action";
+	actionModal.confirm = act.confirm || "";
+	actionModal.promptArgs = promptArgs;
+	actionModal.values = {};
+	actionModal.error = null;
+	actionModal.running = false;
+	actionModal.action = act;
+	actionModal.row = rw;
+}
+
+async function submitActionModalDirect(act, rw) {
+	const key = actionRunKey(act, rw);
+	actionRunningKey.value = key;
+	try {
+		const r = await runPortalAction(act, rw, {});
+		if (typeof frappe !== "undefined" && frappe.show_alert) {
+			frappe.show_alert({
+				message: formatActionResultSummary(r?.result),
+				indicator: "green",
+			});
+		}
+		await fetchRelatedForTab(props.ti);
+	} catch (e) {
+		if (typeof frappe !== "undefined" && frappe.show_alert) {
+			frappe.show_alert({
+				message: e?.message || String(e) || "Action failed",
+				indicator: "red",
+			});
+		}
+	} finally {
+		actionRunningKey.value = null;
+		actionModal.action = null;
+		actionModal.row = null;
+	}
+}
 
 /** @type {Record<number, number>} */
 const relatedLabelColByTab = reactive({});
@@ -347,6 +557,7 @@ async function fetchRelatedForTab(ti) {
 		relatedState[ti].baseline = JSON.parse(JSON.stringify(rawRows));
 		relatedState[ti].rows = rawRows.map((r) => ({ ...r }));
 		relatedState[ti].columns = Array.isArray(msg.columns) ? msg.columns : [];
+		relatedState[ti].actions = Array.isArray(msg.actions) ? msg.actions : [];
 		emit("related-dirty", false);
 	} catch (e) {
 		if (relatedSeq[ti] !== seq) {
@@ -355,6 +566,7 @@ async function fetchRelatedForTab(ti) {
 		relatedState[ti].rows = [];
 		relatedState[ti].baseline = [];
 		relatedState[ti].columns = [];
+		relatedState[ti].actions = [];
 		relatedState[ti].error = e?.message || String(e) || "Failed to load related rows";
 	} finally {
 		if (relatedSeq[ti] === seq) {
@@ -943,5 +1155,61 @@ onUnmounted(() => {
 	min-height: 0;
 	flex-direction: column;
 	padding: 8px 0 0;
+}
+.ppv2-fd-related-th-actions,
+.ppv2-fd-related-td-actions {
+	white-space: nowrap;
+	min-width: 6rem;
+}
+.ppv2-fd-related-action-btn {
+	margin-right: 4px;
+	margin-bottom: 2px;
+}
+.ppv2-fd-action-modal-backdrop {
+	position: fixed;
+	inset: 0;
+	background: rgba(0, 0, 0, 0.35);
+	z-index: 1200;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 16px;
+}
+.ppv2-fd-action-modal {
+	background: var(--bg-card, #fff);
+	border-radius: var(--border-radius-sm, 6px);
+	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+	padding: 16px 18px;
+	min-width: min(420px, 92vw);
+	max-width: 520px;
+}
+.ppv2-fd-action-modal-title {
+	margin: 0 0 10px;
+	font-size: var(--font-size-base);
+	font-weight: var(--font-weight-bold, 600);
+}
+.ppv2-fd-action-modal-confirm {
+	margin: 0 0 12px;
+	font-size: var(--font-size-sm);
+	color: var(--text-muted);
+}
+.ppv2-fd-action-modal-field {
+	margin-bottom: 10px;
+}
+.ppv2-fd-action-modal-label {
+	display: block;
+	margin-bottom: 4px;
+	font-size: var(--font-size-sm);
+}
+.ppv2-fd-action-modal-error {
+	margin: 8px 0 0;
+	color: #c0392b;
+	font-size: var(--font-size-sm);
+}
+.ppv2-fd-action-modal-actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 14px;
 }
 </style>

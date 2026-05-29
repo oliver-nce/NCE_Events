@@ -1457,6 +1457,411 @@ function _close_related_portal_float() {
 	}
 }
 
+function _pp_portal_hide_if_options_html(selected) {
+	const opts = ["Never", "Record not saved", "Record saved", "SQL expression"];
+	const sel = String(selected || "Never");
+	return opts
+		.map(function (o) {
+			return (
+				'<option value="' +
+				frappe.utils.escape_html(o) +
+				'"' +
+				(o === sel ? " selected" : "") +
+				">" +
+				frappe.utils.escape_html(o) +
+				"</option>"
+			);
+		})
+		.join("");
+}
+
+function _pp_portal_fieldnames_from_rows(rows) {
+	const out = ["name"];
+	(rows || []).forEach(function (row) {
+		const fn = row && row.fieldname ? String(row.fieldname).trim() : "";
+		if (fn && out.indexOf(fn) < 0) {
+			out.push(fn);
+		}
+	});
+	return out;
+}
+
+function _pp_render_portal_actions_tab($pane, ctx) {
+	const methodSpecs = ctx.methodSpecs || [];
+	const fieldnames = ctx.fieldnames || ["name"];
+	let actions = JSON.parse(JSON.stringify(ctx.actions || []));
+
+	function methodSpecByKey(key) {
+		const k = String(key || "").trim();
+		return methodSpecs.find(function (m) {
+			return String(m.key || "") === k;
+		});
+	}
+
+	function renderList() {
+		let html =
+			'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
+			"<strong>" +
+			__("Portal buttons") +
+			'</strong><button type="button" class="btn btn-default btn-xs pp-portal-action-add">' +
+			__("Add button") +
+			"</button></div>";
+		if (!actions.length) {
+			html +=
+				'<p class="text-muted" style="margin:0 0 12px;">' +
+				__("No buttons configured.") +
+				"</p>";
+		} else {
+			html +=
+				'<table class="table table-bordered" style="font-size:12px;margin-bottom:12px;"><thead><tr>' +
+				"<th>" +
+				__("Label") +
+				"</th><th>" +
+				__("Method") +
+				'</th><th style="width:120px;"></th></tr></thead><tbody>';
+			actions.forEach(function (act, idx) {
+				const spec = methodSpecByKey(act.method);
+				const mlabel = spec ? spec.label : act.method;
+				html +=
+					"<tr>" +
+					"<td>" +
+					frappe.utils.escape_html(act.label || "") +
+					"</td><td>" +
+					frappe.utils.escape_html(mlabel || "") +
+					'</td><td class="text-right">' +
+					'<button type="button" class="btn btn-default btn-xs pp-portal-action-edit" data-idx="' +
+					idx +
+					'">' +
+					__("Edit") +
+					'</button> <button type="button" class="btn btn-default btn-xs pp-portal-action-del" data-idx="' +
+					idx +
+					'">' +
+					__("Delete") +
+					"</button></td></tr>";
+			});
+			html += "</tbody></table>";
+		}
+		html +=
+			'<div class="pp-portal-action-form" style="display:none;border:1px solid #d1d8dd;border-radius:4px;padding:12px;margin-bottom:12px;"></div>' +
+			'<div style="display:flex;gap:8px;justify-content:flex-end;">' +
+			'<button type="button" class="btn btn-primary btn-sm pp-portal-actions-save">' +
+			__("Save buttons") +
+			"</button></div>";
+		$pane.html(html);
+	}
+
+	function renderParamGrid(spec, existingParams) {
+		if (!spec || !spec.args || !spec.args.length) {
+			return '<p class="text-muted" style="margin:8px 0 0;">' + __("No parameters.") + "</p>";
+		}
+		const byArg = {};
+		(existingParams || []).forEach(function (p) {
+			if (p && p.arg) {
+				byArg[p.arg] = p;
+			}
+		});
+		let html =
+			'<table class="table table-bordered pp-portal-param-grid" style="margin:10px 0 0;font-size:12px;"><thead><tr>' +
+			"<th>" +
+			__("Parameter") +
+			"</th><th>" +
+			__("Source") +
+			"</th><th>" +
+			__("Field / value") +
+			"</th></tr></thead><tbody>";
+		spec.args.forEach(function (argSpec) {
+			const arg = argSpec.arg || "";
+			const cur = byArg[arg] || {};
+			const src = cur.source || argSpec.default_source || "prompt";
+			const fld = cur.field || argSpec.default_field || "";
+			const constVal = cur.value != null ? String(cur.value) : "";
+			const srcOpts = ["row", "root", "prompt", "const"]
+				.map(function (s) {
+					const lbl =
+						s === "row"
+							? __("From row")
+							: s === "root"
+								? __("From root")
+								: s === "prompt"
+									? __("Prompt")
+									: __("Constant");
+					return (
+						'<option value="' +
+						s +
+						'"' +
+						(s === src ? " selected" : "") +
+						">" +
+						lbl +
+						"</option>"
+					);
+				})
+				.join("");
+			let fieldCtrl = "";
+			if (src === "row") {
+				fieldCtrl =
+					'<select class="form-control input-xs pp-portal-param-field" data-arg="' +
+					frappe.utils.escape_html(arg) +
+					'">' +
+					fieldnames
+						.map(function (fn) {
+							return (
+								'<option value="' +
+								frappe.utils.escape_html(fn) +
+								'"' +
+								(fn === fld ? " selected" : "") +
+								">" +
+								frappe.utils.escape_html(fn) +
+								"</option>"
+							);
+						})
+						.join("") +
+					"</select>";
+			} else if (src === "root" || src === "const") {
+				const val = src === "const" ? constVal : fld;
+				fieldCtrl =
+					'<input type="text" class="form-control input-xs pp-portal-param-field" data-arg="' +
+					frappe.utils.escape_html(arg) +
+					'" value="' +
+					frappe.utils.escape_html(val) +
+					'" />';
+			} else {
+				fieldCtrl = '<span class="text-muted">' + __("Collected at runtime") + "</span>";
+			}
+			html +=
+				'<tr data-arg="' +
+				frappe.utils.escape_html(arg) +
+				'"><td>' +
+				frappe.utils.escape_html(argSpec.label || arg) +
+				'</td><td><select class="form-control input-xs pp-portal-param-source" data-arg="' +
+				frappe.utils.escape_html(arg) +
+				'">' +
+				srcOpts +
+				'</select></td><td class="pp-portal-param-field-cell">' +
+				fieldCtrl +
+				"</td></tr>";
+		});
+		html += "</tbody></table>";
+		return html;
+	}
+
+	function openForm(editIdx) {
+		const $form = $pane.find(".pp-portal-action-form");
+		const editing = editIdx != null && actions[editIdx];
+		const act = editing
+			? JSON.parse(JSON.stringify(actions[editIdx]))
+			: { label: "", method: "", roles: [], confirm: "", hide_if: "Never", params: [] };
+		if (!act.action_id) {
+			act.action_id = frappe.utils.get_random(10);
+		}
+		let methodOpts = '<option value="">' + __("Select method…") + "</option>";
+		methodSpecs.forEach(function (m) {
+			const sel = act.method === m.key ? " selected" : "";
+			methodOpts +=
+				'<option value="' +
+				frappe.utils.escape_html(m.key) +
+				'"' +
+				sel +
+				">" +
+				frappe.utils.escape_html(m.label || m.key) +
+				"</option>";
+		});
+		const spec = methodSpecByKey(act.method);
+		$form
+			.show()
+			.html(
+				'<h6 style="margin:0 0 10px;">' +
+					(editing ? __("Edit button") : __("New button")) +
+					"</h6>" +
+					'<div class="form-group" style="margin-bottom:8px;"><label>' +
+					__("Label") +
+					'</label><input type="text" class="form-control input-sm pp-portal-act-label" value="' +
+					frappe.utils.escape_html(act.label || "") +
+					'" /></div>' +
+					'<div class="form-group" style="margin-bottom:8px;"><label>' +
+					__("Method") +
+					'</label><select class="form-control input-sm pp-portal-act-method">' +
+					methodOpts +
+					"</select></div>" +
+					'<div class="form-group" style="margin-bottom:8px;"><label>' +
+					__("Roles (comma-separated, optional)") +
+					'</label><input type="text" class="form-control input-sm pp-portal-act-roles" value="' +
+					frappe.utils.escape_html((act.roles || []).join(", ")) +
+					'" /></div>' +
+					'<div class="form-group" style="margin-bottom:8px;"><label>' +
+					__("Confirm text (optional)") +
+					'</label><input type="text" class="form-control input-sm pp-portal-act-confirm" value="' +
+					frappe.utils.escape_html(act.confirm || "") +
+					'" /></div>' +
+					'<div class="form-group" style="margin-bottom:8px;"><label>' +
+					__("Hide if") +
+					'</label><select class="form-control input-sm pp-portal-act-hide">' +
+					_pp_portal_hide_if_options_html(act.hide_if) +
+					"</select></div>" +
+					'<div class="pp-portal-act-params">' +
+					renderParamGrid(spec, act.params) +
+					"</div>" +
+					'<div style="display:flex;gap:8px;margin-top:10px;">' +
+					'<button type="button" class="btn btn-primary btn-xs pp-portal-act-save-form">' +
+					__("Apply") +
+					'</button><button type="button" class="btn btn-default btn-xs pp-portal-act-cancel-form">' +
+					__("Cancel") +
+					"</button></div>"
+			)
+			.data("editIdx", editing ? editIdx : null);
+	}
+
+	function collectFormAction() {
+		const $form = $pane.find(".pp-portal-action-form");
+		const label = $form.find(".pp-portal-act-label").val().trim();
+		const method = $form.find(".pp-portal-act-method").val();
+		if (!label || !method) {
+			frappe.msgprint(__("Label and method are required."));
+			return null;
+		}
+		const rolesRaw = $form.find(".pp-portal-act-roles").val().trim();
+		const roles = rolesRaw
+			? rolesRaw
+					.split(",")
+					.map(function (s) {
+						return s.trim();
+					})
+					.filter(Boolean)
+			: [];
+		const confirm = $form.find(".pp-portal-act-confirm").val().trim();
+		const hide_if = $form.find(".pp-portal-act-hide").val() || "Never";
+		const params = [];
+		$form.find(".pp-portal-param-grid tbody tr").each(function () {
+			const arg = $(this).attr("data-arg");
+			const source = $(this).find(".pp-portal-param-source").val();
+			const rec = { arg: arg, source: source };
+			if (source === "row" || source === "root") {
+				const fld = $(this).find(".pp-portal-param-field").val();
+				if (fld) {
+					rec.field = String(fld).trim();
+				}
+			} else if (source === "const") {
+				rec.value = $(this).find(".pp-portal-param-field").val();
+			}
+			params.push(rec);
+		});
+		const editIdx = $form.data("editIdx");
+		const prev = editIdx != null && actions[editIdx] ? actions[editIdx] : {};
+		return {
+			action_id: prev.action_id || frappe.utils.get_random(10),
+			label: label,
+			method: method,
+			roles: roles,
+			confirm: confirm,
+			hide_if: hide_if === "Never" ? "" : hide_if,
+			params: params,
+		};
+	}
+
+	renderList();
+
+	$pane.off("click.ppPortalAct change.ppPortalAct");
+	$pane.on("click.ppPortalAct", ".pp-portal-action-add", function () {
+		openForm(null);
+	});
+	$pane.on("click.ppPortalAct", ".pp-portal-action-edit", function () {
+		openForm(parseInt($(this).attr("data-idx"), 10));
+	});
+	$pane.on("click.ppPortalAct", ".pp-portal-action-del", function () {
+		const idx = parseInt($(this).attr("data-idx"), 10);
+		if (idx >= 0 && idx < actions.length) {
+			actions.splice(idx, 1);
+			renderList();
+		}
+	});
+	$pane.on("click.ppPortalAct", ".pp-portal-act-cancel-form", function () {
+		$pane.find(".pp-portal-action-form").hide().empty();
+	});
+	$pane.on("click.ppPortalAct", ".pp-portal-act-save-form", function () {
+		const rec = collectFormAction();
+		if (!rec) {
+			return;
+		}
+		const editIdx = $pane.find(".pp-portal-action-form").data("editIdx");
+		if (editIdx != null && editIdx >= 0) {
+			actions[editIdx] = rec;
+		} else {
+			actions.push(rec);
+		}
+		renderList();
+	});
+	$pane.on("change.ppPortalAct", ".pp-portal-act-method", function () {
+		const method = $(this).val();
+		const spec = methodSpecByKey(method);
+		$pane.find(".pp-portal-act-params").html(renderParamGrid(spec, []));
+	});
+	$pane.on("change.ppPortalAct", ".pp-portal-param-source", function () {
+		const $tr = $(this).closest("tr");
+		const arg = $tr.attr("data-arg");
+		const src = $(this).val();
+		const spec = methodSpecByKey($pane.find(".pp-portal-act-method").val());
+		const argSpec = (spec && spec.args ? spec.args : []).find(function (a) {
+			return a.arg === arg;
+		});
+		let fieldCtrl = "";
+		if (src === "row") {
+			fieldCtrl =
+				'<select class="form-control input-xs pp-portal-param-field" data-arg="' +
+				frappe.utils.escape_html(arg) +
+				'">' +
+				fieldnames
+					.map(function (fn) {
+						return (
+							'<option value="' +
+							frappe.utils.escape_html(fn) +
+							'">' +
+							frappe.utils.escape_html(fn) +
+							"</option>"
+						);
+					})
+					.join("") +
+				"</select>";
+		} else if (src === "root" || src === "const") {
+			fieldCtrl =
+				'<input type="text" class="form-control input-xs pp-portal-param-field" data-arg="' +
+				frappe.utils.escape_html(arg) +
+				'" value="' +
+				frappe.utils.escape_html((argSpec && argSpec.default_field) || "") +
+				'" />';
+		} else {
+			fieldCtrl = '<span class="text-muted">' + __("Collected at runtime") + "</span>";
+		}
+		$tr.find(".pp-portal-param-field-cell").html(fieldCtrl);
+	});
+	$pane.on("click.ppPortalAct", ".pp-portal-actions-save", function () {
+		const saveActionsMethod =
+			ctx.kind === "inline"
+				? "nce_events.api.form_dialog.portal_fields.save_inline_child_portal_actions"
+				: "nce_events.api.form_dialog.portal_fields.save_related_portal_actions";
+		frappe.call({
+			method: saveActionsMethod,
+			args: {
+				form_dialog: ctx.form_dialog,
+				child_row_name: ctx.child_row_name,
+				portal_actions: JSON.stringify(actions),
+			},
+			freeze: true,
+			freeze_message: __("Saving…"),
+			callback: function (sv) {
+				if (sv && sv.exc) {
+					return;
+				}
+				frappe.show_alert({
+					message: __("Portal buttons saved"),
+					indicator: "green",
+				});
+				if (ctx.onSaved) {
+					ctx.onSaved();
+				}
+			},
+		});
+	});
+}
+
 function _open_related_portal_float(frm, opts) {
 	const form_dialog = opts.form_dialog;
 	const child_row_name = opts.child_row_name;
@@ -1644,9 +2049,38 @@ function _open_related_portal_float(frm, opts) {
 				__("Save") +
 				"</button></div>";
 
-			$body.empty().html(tableHtml);
+			function ppMountPortalEditor(methodSpecs) {
+				const shellHtml =
+					'<div class="pp-portal-tab-bar" style="display:flex;gap:4px;margin-bottom:10px;border-bottom:1px solid #e8e8e8;padding-bottom:6px;">' +
+					'<button type="button" class="btn btn-xs btn-primary pp-portal-tab-btn active" data-tab="columns">' +
+					__("Columns") +
+					'</button><button type="button" class="btn btn-xs btn-default pp-portal-tab-btn" data-tab="actions">' +
+					__("Buttons/Scripts") +
+					"</button></div>" +
+					'<div class="pp-portal-tab-pane pp-portal-tab-columns"></div>' +
+					'<div class="pp-portal-tab-pane pp-portal-tab-actions" style="display:none;overflow-y:auto;max-height:60vh;"></div>';
+				$body.empty().html(shellHtml);
+				$body.find(".pp-portal-tab-columns").html(tableHtml);
+				_pp_render_portal_actions_tab($body.find(".pp-portal-tab-actions"), {
+					kind: kind,
+					form_dialog: form_dialog,
+					child_row_name: child_row_name,
+					methodSpecs: methodSpecs || [],
+					fieldnames: _pp_portal_fieldnames_from_rows(rows),
+					actions: msg.actions || [],
+					onSaved: function () {
+						_render_dialogs_tab(frm);
+					},
+				});
+				$body.off("click.ppPortalTabs").on("click.ppPortalTabs", ".pp-portal-tab-btn", function () {
+					const tab = $(this).attr("data-tab");
+					$body.find(".pp-portal-tab-btn").removeClass("active btn-primary").addClass("btn-default");
+					$(this).addClass("active btn-primary").removeClass("btn-default");
+					$body.find(".pp-portal-tab-pane").hide();
+					$body.find(".pp-portal-tab-" + tab).show();
+				});
 
-			const $tbody = $body.find(".pp-portal-field-tbody");
+				const $tbody = $body.find(".pp-portal-field-tbody");
 
 			function ppMaxSortRank($tb) {
 				let m = 0;
@@ -1857,6 +2291,14 @@ function _open_related_portal_float(frm, opts) {
 						_render_dialogs_tab(frm);
 					},
 				});
+			});
+			}
+
+			frappe.call({
+				method: "nce_events.api.form_dialog.action_registry.list_portal_action_methods",
+				callback: function (mr) {
+					ppMountPortalEditor((mr && mr.message) || []);
+				},
 			});
 		},
 	});

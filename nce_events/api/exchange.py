@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import base64
 from typing import Any
 
 import requests
@@ -9,14 +8,20 @@ from frappe import _
 
 from nce_events.api.credentials import get_credentials
 
+# API Connector document name (Desk → API Connector). Application Password in password field.
+EXCHANGE_CONNECTOR = "WordPress REST"
+
 
 @frappe.whitelist()
 def execute_product_exchange(enrollment_name: str, new_product_id: int | str) -> dict[str, Any]:
     """Call the WordPress NCE Exchange endpoint to switch a player to a new event.
 
     Reads order_item_id from the Enrollments doc, fetches Basic Auth credentials
-    from the 'NCE Wordpress' API Connector, and POSTs to:
+    from the :data:`EXCHANGE_CONNECTOR` API Connector, and POSTs form fields to:
         {base_url}/wp-json/nce-exchange/v1/exchange
+
+    Auth is WordPress Application Password (Basic Auth). Payload is
+    ``application/x-www-form-urlencoded`` (same as curl ``-d``), not JSON.
 
     Returns the full parsed JSON response from WordPress on success.
     Raises frappe.ValidationError with a clear message on any failure.
@@ -33,25 +38,22 @@ def execute_product_exchange(enrollment_name: str, new_product_id: int | str) ->
     new_product_id = int(new_product_id)
 
     # --- 2. Fetch credentials ---
-    creds = get_credentials("NCE Wordpress")
+    creds = get_credentials(EXCHANGE_CONNECTOR)
 
     username = creds.get("username") or ""
     password = creds.get("password") or ""
     base_url = (creds.get("base_url") or "").rstrip("/")
 
     if not username or not password:
-        frappe.throw(_("NCE Wordpress API Connector is missing username or password."))
+        frappe.throw(
+            _("{0} API Connector is missing username or password.").format(EXCHANGE_CONNECTOR)
+        )
     if not base_url:
-        frappe.throw(_("NCE Wordpress API Connector has no base_url configured."))
+        frappe.throw(
+            _("{0} API Connector has no base_url configured.").format(EXCHANGE_CONNECTOR)
+        )
 
-    # --- 3. Build Basic Auth header ---
-    token = base64.b64encode(f"{username}:{password}".encode()).decode()
-    headers = {
-        "Authorization": f"Basic {token}",
-        "Content-Type": "application/json",
-    }
-
-    # --- 4. POST to WordPress endpoint ---
+    # --- 3. POST to WordPress endpoint (form body + Basic Auth, matches curl -u / -d) ---
     url = f"{base_url}/wp-json/nce-exchange/v1/exchange"
     payload = {
         "order_item_id": int(order_item_id),
@@ -59,7 +61,12 @@ def execute_product_exchange(enrollment_name: str, new_product_id: int | str) ->
     }
 
     try:
-        resp = requests.post(url, json=payload, headers=headers, timeout=30)
+        resp = requests.post(
+            url,
+            data=payload,
+            auth=(username, password),
+            timeout=30,
+        )
     except requests.exceptions.ConnectionError as e:
         frappe.throw(_("Could not connect to WordPress: {0}").format(str(e)))
     except requests.exceptions.Timeout:
@@ -69,7 +76,11 @@ def execute_product_exchange(enrollment_name: str, new_product_id: int | str) ->
 
     # --- 5. Handle response ---
     if resp.status_code == 401:
-        frappe.throw(_("WordPress returned 401 Unauthorised. Check the NCE Wordpress API Connector credentials."))
+        frappe.throw(
+            _("WordPress returned 401 Unauthorised. Check the {0} API Connector credentials.").format(
+                EXCHANGE_CONNECTOR
+            )
+        )
 
     if resp.status_code != 200:
         frappe.throw(
