@@ -41,6 +41,122 @@ _SKIP_FIELDNAMES: frozenset[str] = frozenset(
 )
 
 
+def _via_path_key(doctype: str, hop_chain: list[dict[str, str]]) -> str:
+	return f"{doctype}::{json.dumps(hop_chain, sort_keys=True)}"
+
+
+def _discover_via_link_paths(
+	root_doctype: str,
+	one_hop: list[dict[str, object]],
+	wp_doctypes: set[str],
+	label_map: dict[str, str],
+) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
+	"""Discover related tabs through a bridge DocType's outbound Link (reverse of inbound-only scan).
+
+	Frappe places Link fields on the many side (e.g. Enrollments → People / Events). Inbound
+	1-hop finds rows pointing at the root; this helper walks outbound links on the root **or**
+	on each inbound 1-hop bridge, then finds other DocTypes that share the same via target.
+
+	Examples:
+	- Enrollments (root) --player_id--> People <--person_id-- Eligibility
+	- Events (root) ← Enrollments --player_id--> People <--person_id-- Eligibility
+
+	Returns ``(one_hop_linked_parents, two_hop_co_linked)`` to merge into picker buckets.
+	"""
+	root_doctype = cstr(root_doctype or "").strip()
+	if not root_doctype:
+		return [], []
+
+	bridges: list[tuple[str, str]] = [(root_doctype, "name")]
+	seen_bridge: set[tuple[str, str]] = {(root_doctype, "name")}
+	for m1 in one_hop:
+		if m1.get("hop_chain"):
+			continue
+		b1 = cstr(m1.get("doctype") or "").strip()
+		l1r = cstr(m1.get("link_field") or "").strip()
+		if not b1 or not l1r:
+			continue
+		key = (b1, l1r)
+		if key in seen_bridge:
+			continue
+		seen_bridge.add(key)
+		bridges.append(key)
+
+	one_extra: list[dict[str, object]] = []
+	two_extra: list[dict[str, object]] = []
+	seen1: set[str] = set()
+	seen2: set[str] = set()
+
+	for bridge_dt, parent_link in bridges:
+		try:
+			meta_b = frappe.get_meta(bridge_dt)
+		except Exception:
+			continue
+		for out_field in meta_b.fields:
+			if out_field.fieldtype != "Link" or not out_field.options:
+				continue
+			via_dt = cstr(out_field.options).strip()
+			out_fn = cstr(out_field.fieldname or "").strip()
+			if not via_dt or not out_fn or via_dt not in wp_doctypes or via_dt == bridge_dt:
+				continue
+
+			hop_chain: list[dict[str, str]] = [
+				{"bridge": bridge_dt, "parent_link": parent_link, "child_link": out_fn},
+			]
+			via_label = label_map.get(via_dt, via_dt)
+
+			# Junction root → linked parent (People, Events on an Enrollment row).
+			if bridge_dt == root_doctype:
+				sig = _via_path_key(via_dt, hop_chain)
+				if sig not in seen1:
+					seen1.add(sig)
+					one_extra.append(
+						{
+							"doctype": via_dt,
+							"link_field": "name",
+							"label": via_label,
+							"hop_chain": hop_chain,
+						}
+					)
+
+			# Rows on another DocType that link to the same via target (Eligibility → People).
+			for dt in sorted(wp_doctypes):
+				if dt in (bridge_dt, via_dt, root_doctype):
+					continue
+				try:
+					meta = frappe.get_meta(dt)
+				except Exception:
+					continue
+				for in_field in meta.fields:
+					if in_field.fieldtype != "Link" or cstr(in_field.options).strip() != via_dt:
+						continue
+					in_fn = cstr(in_field.fieldname or "").strip()
+					if not in_fn:
+						continue
+					sig = _via_path_key(dt, hop_chain)
+					if sig in seen2:
+						break
+					seen2.add(sig)
+					bridge_label = label_map.get(bridge_dt, bridge_dt)
+					if bridge_dt == root_doctype:
+						via_phrase = via_label
+					else:
+						via_phrase = _("{0} → {1}").format(bridge_label, via_label)
+					two_extra.append(
+						{
+							"doctype": dt,
+							"link_field": in_fn,
+							"label": _("{0} (via {1})").format(label_map.get(dt, dt), via_phrase),
+							"hop_chain": hop_chain,
+						}
+					)
+					break
+
+	one_extra.sort(key=lambda r: cstr(r.get("label") or r.get("doctype")))
+	two_extra.sort(key=lambda r: cstr(r.get("label") or r.get("doctype")))
+	return one_extra, two_extra
+
+
 @frappe.whitelist()
 def get_child_doctypes(root_doctype: str) -> list[dict[str, str]]:
 	"""Return DocTypes that have a Link field pointing to root_doctype.
@@ -91,6 +207,11 @@ def get_multi_hop_children(root_doctype: str) -> dict[str, list[dict[str, object
 
 	Each item: doctype, link_field (use ``name`` for multi-hop), label, hop_chain (list or []).
 
+	1-hop: inbound children (Link → root) plus linked parents when root is a junction table.
+	2-hop: standard bridge paths (e.g. People via Enrollments) plus co-linked rows
+	(e.g. Eligibility via People, including through a 1-hop bridge when People has no Link back).
+	3-hop: inbound three-step paths where each bridge links back to the prior step.
+
 	hop_chain step: ``{bridge, parent_link, child_link}`` — on ``bridge`` DocType,
 	``parent_link`` points toward the root side, ``child_link`` toward the next level.
 	"""
@@ -130,11 +251,28 @@ def get_multi_hop_children(root_doctype: str) -> dict[str, list[dict[str, object
 					}
 				)
 				break
+
+	one_hop_extra, via_two_hop = _discover_via_link_paths(
+		root_doctype, one_hop, wp_doctypes, label_map
+	)
+	seen_one: set[str] = set()
+	for row in one_hop:
+		hc = row.get("hop_chain") or []
+		seen_one.add(_via_path_key(cstr(row.get("doctype") or ""), hc))
+	for row in one_hop_extra:
+		dt = cstr(row.get("doctype") or "").strip()
+		hc = row.get("hop_chain") or []
+		key = _via_path_key(dt, hc)
+		if key not in seen_one:
+			seen_one.add(key)
+			one_hop.append(row)
 	one_hop.sort(key=lambda r: cstr(r.get("label") or r.get("doctype")))
 
 	two_hop: list[dict[str, object]] = []
 	seen2: set[str] = set()
 	for m1 in one_hop:
+		if m1.get("hop_chain"):
+			continue
 		b1 = cstr(m1.get("doctype") or "").strip()
 		l1r = cstr(m1.get("link_field") or "").strip()
 		if not b1 or not l1r:
@@ -154,7 +292,7 @@ def get_multi_hop_children(root_doctype: str) -> dict[str, list[dict[str, object
 			hop_chain = [
 				{"bridge": b1, "parent_link": l1r, "child_link": f_down.fieldname},
 			]
-			key = f"{t_fin}::{json.dumps(hop_chain, sort_keys=True)}"
+			key = _via_path_key(t_fin, hop_chain)
 			if key in seen2:
 				continue
 			seen2.add(key)
@@ -166,11 +304,21 @@ def get_multi_hop_children(root_doctype: str) -> dict[str, list[dict[str, object
 					"hop_chain": hop_chain,
 				}
 			)
+	for row in via_two_hop:
+		dt_fin = cstr(row.get("doctype") or "").strip()
+		hc = row.get("hop_chain") or []
+		key = _via_path_key(dt_fin, hc)
+		if key in seen2:
+			continue
+		seen2.add(key)
+		two_hop.append(row)
 	two_hop.sort(key=lambda r: cstr(r.get("label") or r.get("doctype")))
 
 	three_hop: list[dict[str, object]] = []
 	seen3: set[str] = set()
 	for m1 in one_hop:
+		if m1.get("hop_chain"):
+			continue
 		b1 = cstr(m1.get("doctype") or "").strip()
 		l1r = cstr(m1.get("link_field") or "").strip()
 		if not b1:
