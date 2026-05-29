@@ -249,8 +249,12 @@ def _sync_related_doctypes(doc: Any, related_doctypes: str | list | None) -> Non
 		if pfc:
 			preserved_portal[key] = pfc
 
+	parsed_rows = _related_doctype_child_rows(related_doctypes)
+	if not parsed_rows and doc.get("related_doctypes"):
+		return
+
 	doc.related_doctypes = []
-	for row in _related_doctype_child_rows(related_doctypes):
+	for row in parsed_rows:
 		key = _related_tab_portal_config_key(
 			row.get("child_doctype"),
 			row.get("link_field"),

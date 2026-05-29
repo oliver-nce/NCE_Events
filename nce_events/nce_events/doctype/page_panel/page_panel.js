@@ -2042,13 +2042,40 @@ function _show_capture_wizard_dialog(opts, onSubmit) {
 	const one = buckets["1_hop"] || [];
 	const two = buckets["2_hop"] || [];
 	const three = buckets["3_hop"] || [];
-	const allRowsFlat = one.concat(two, three);
-
-	const inlineOpts = Array.isArray(opts.inlineOptions) ? opts.inlineOptions : [];
-	const discoveredTools = Array.isArray(opts.discoveredTools) ? opts.discoveredTools : [];
 
 	const preselectedRelated = opts.preselectedRelated || [];
 	const preRelSet = new Set(preselectedRelated.map(_relatedPickerFingerprint));
+
+	// Already-configured tabs not returned by discovery stay selectable (Rebuild).
+	const discoveryFp = new Set(one.concat(two, three).map(_relatedPickerFingerprint));
+	const configuredExtra = [];
+	for (let pri = 0; pri < preselectedRelated.length; pri++) {
+		const row = preselectedRelated[pri];
+		if (!row || typeof row !== "object") {
+			continue;
+		}
+		const dt = String(row.doctype || row.child_doctype || "").trim();
+		if (!dt) {
+			continue;
+		}
+		const normalized = {
+			doctype: dt,
+			link_field: String(row.link_field || "").trim(),
+			label: String(row.label || row.tab_label || dt).trim() || dt,
+			hop_chain: row.hop_chain || [],
+		};
+		const fp = _relatedPickerFingerprint(normalized);
+		if (discoveryFp.has(fp)) {
+			continue;
+		}
+		discoveryFp.add(fp);
+		configuredExtra.push(normalized);
+	}
+
+	const allRowsFlat = one.concat(two, three, configuredExtra);
+
+	const inlineOpts = Array.isArray(opts.inlineOptions) ? opts.inlineOptions : [];
+	const discoveredTools = Array.isArray(opts.discoveredTools) ? opts.discoveredTools : [];
 
 	const preInline =
 		opts.preselectedInlinePfns instanceof Set
@@ -2206,6 +2233,9 @@ function _show_capture_wizard_dialog(opts, onSubmit) {
 			"</p>";
 	}
 
+	const configuredCol = configuredExtra.length
+		? colHtml(__("Configured"), configuredExtra, one.length + two.length + three.length)
+		: "";
 	const relatedWrap =
 		'<div style="margin:0 0 10px;font-size:12px;font-weight:600;color:#36414c;">' +
 		_htmlEscAttr(__("Related tables (multi-hop)")) +
@@ -2213,6 +2243,7 @@ function _show_capture_wizard_dialog(opts, onSubmit) {
 		colHtml(__("1-hop"), one, 0) +
 		colHtml(__("2-hop"), two, one.length) +
 		colHtml(__("3-hop"), three, one.length + two.length) +
+		configuredCol +
 		"</div>";
 
 	const bodyHtml =
@@ -2449,10 +2480,16 @@ function _bind_dialogs_click_handlers(frm) {
 									.filter(Boolean)
 							);
 
+							const discoveryDoctype =
+								String(msg.target_doctype || "").trim() || doctype;
+
 							_load_capture_wizard_sources(
-								doctype,
+								discoveryDoctype,
 								function (buckets, inlineOpts, scripts) {
-									const discovered = _desk_discover_script_tool_groups(doctype, scripts);
+									const discovered = _desk_discover_script_tool_groups(
+										discoveryDoctype,
+										scripts
+									);
 									setTimeout(function () {
 										_show_capture_wizard_dialog(
 											{
