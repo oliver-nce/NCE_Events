@@ -5,7 +5,7 @@ import { parseClientHandlerSpec } from "../utils/parseClientHandlerSpec.js";
 
 /**
  * @param {{
- *   openFormDialogStandalone: (args: object) => boolean;
+ *   openFormDialogStandalone: (args: object) => Promise<boolean>;
  *   refreshPanelByDoctype: (doctype: string) => void;
  * }} deps
  */
@@ -75,13 +75,14 @@ export function usePanelActions({ openFormDialogStandalone, refreshPanelByDoctyp
 						return;
 					}
 				}
-				openFormDialogStandalone({
+				const opened = await openFormDialogStandalone({
 					formDialog: action.action_id || action.name,
 					doctype: action.target_doctype,
 					docName,
 					requiredFields: [],
 					definitionSource: "panel_action",
 				});
+				if (!opened) return;
 				return;
 			}
 			if (action.action_type === "Client Script") {

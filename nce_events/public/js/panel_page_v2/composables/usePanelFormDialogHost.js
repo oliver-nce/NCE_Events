@@ -2,6 +2,7 @@ import { ref, computed } from "vue";
 import { useFormDialogRecordNav, panelRowArray } from "./useFormDialogRecordNav.js";
 import { mergeFreshDocIntoPanel } from "./wpReadbackFlow.js";
 import { matchFindCriterion } from "../utils/findCriterion.js";
+import { assertDoctypeNotSyncBusy } from "../utils/syncGateClient.js";
 
 /* -----------------------------------------------------------------------
  * ARCHIVED (next phase: delete).
@@ -89,9 +90,10 @@ export function usePanelFormDialogHost(openPanels) {
 
 	// ── Open helpers ──────────────────────────────────────────────────────────
 
-	/** @returns {boolean} true if the form dialog was opened */
-	function openFormDialogFromPanelRow(panel, row) {
+	/** @returns {Promise<boolean>} true if the form dialog was opened */
+	async function openFormDialogFromPanelRow(panel, row) {
 		if (!panel?.config?.form_dialog || !row?.name) return false;
+		if (!(await assertDoctypeNotSyncBusy(panel.doctype))) return false;
 		formDialogDefinition.value = panel.config.form_dialog;
 		formDialogDoctype.value = panel.doctype;
 		formDialogDocName.value = row.name;
@@ -108,8 +110,9 @@ export function usePanelFormDialogHost(openPanels) {
 	}
 
 	/** New document in the same frozen Form Dialog as row edit — requires Page Panel Form Dialog link. */
-	function openFormDialogForNewRecord(panel) {
+	async function openFormDialogForNewRecord(panel) {
 		if (!panel?.config?.form_dialog) return false;
+		if (!(await assertDoctypeNotSyncBusy(panel.doctype))) return false;
 		_resetPendingSlot();
 		formDialogDefinition.value = panel.config.form_dialog;
 		formDialogDoctype.value = panel.doctype;
@@ -166,7 +169,7 @@ export function usePanelFormDialogHost(openPanels) {
 	 * Open Form Dialog without a parent panel context (e.g. from Actions panel).
 	 * @param {{ formDialog: string; doctype: string; docName?: string|null; requiredFields?: string[]; definitionSource?: 'form_dialog'|'panel_action' }} args
 	 */
-	function openFormDialogStandalone({
+	async function openFormDialogStandalone({
 		formDialog,
 		doctype,
 		docName = null,
@@ -174,6 +177,7 @@ export function usePanelFormDialogHost(openPanels) {
 		definitionSource = "form_dialog",
 	}) {
 		if (!formDialog || !doctype) return false;
+		if (!(await assertDoctypeNotSyncBusy(doctype))) return false;
 		_resetPendingSlot();
 		formDialogDefinition.value = formDialog;
 		formDialogDoctype.value = doctype;

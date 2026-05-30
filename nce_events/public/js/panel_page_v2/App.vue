@@ -777,10 +777,10 @@ async function onDrill(ev, parentPanel) {
 	openPanel(ev.doctype, filter, parentPanel.id, parentContextTitle);
 }
 
-function onDrilledRowClick(p, row) {
+async function onDrilledRowClick(p, row) {
 	if (!row?.name) return;
 
-	if (openFormDialogFromPanelRow(p, row)) {
+	if (await openFormDialogFromPanelRow(p, row)) {
 		return;
 	}
 
@@ -819,8 +819,8 @@ function onRefreshPanel(panel) {
 	}
 }
 
-function onNewRecord(panel) {
-	if (!openFormDialogForNewRecord(panel) && typeof frappe !== "undefined" && frappe.msgprint) {
+async function onNewRecord(panel) {
+	if (!(await openFormDialogForNewRecord(panel)) && typeof frappe !== "undefined" && frappe.msgprint) {
 		frappe.msgprint({
 			title: __("New record"),
 			message: __(
