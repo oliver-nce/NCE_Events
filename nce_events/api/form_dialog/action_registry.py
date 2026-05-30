@@ -19,6 +19,7 @@ PORTAL_ACTION_METHODS: dict[str, dict[str, Any]] = {
 		"label": "Switch Event (WooCommerce Exchange)",
 		"dotted_path": "nce_events.api.exchange.execute_product_exchange",
 		"applies_to_doctypes": ["Enrollments"],
+		"applies_to_root_doctypes": ["Enrollments"],
 		"args": [
 			{
 				"arg": "enrollment_name",

@@ -173,6 +173,7 @@ class TestRunPortalAction(FrappeTestCase):
 			"key": "execute_product_exchange",
 			"dotted_path": "nce_events.api.exchange.execute_product_exchange",
 			"applies_to_doctypes": ["Enrollments"],
+			"applies_to_root_doctypes": ["Enrollments"],
 			"args": [],
 		}
 
@@ -201,6 +202,71 @@ class TestRunPortalAction(FrappeTestCase):
 					"act1",
 					{},
 				)
+
+	@patch("nce_events.api.form_dialog.portal_actions.frappe.get_attr")
+	@patch("nce_events.api.form_dialog.portal_actions._allowed_child_names_for_context")
+	@patch("nce_events.api.form_dialog.portal_actions.get_action_method_spec")
+	@patch("nce_events.api.form_dialog.portal_actions.frappe.has_permission", return_value=True)
+	@patch("nce_events.api.form_dialog.portal_actions.frappe.get_doc")
+	def test_allows_eligibility_tab_when_root_is_enrollments(
+		self, mock_get_doc, mock_perm, mock_spec, mock_allowed, mock_get_attr
+	):
+		from nce_events.api.form_dialog.portal_actions import run_portal_action
+
+		mock_allowed.return_value = {"EL1"}
+		mock_spec.return_value = {
+			"key": "execute_product_exchange",
+			"dotted_path": "nce_events.api.exchange.execute_product_exchange",
+			"applies_to_doctypes": ["Enrollments"],
+			"applies_to_root_doctypes": ["Enrollments"],
+			"args": [
+				{"arg": "enrollment_name", "label": "Enrollment", "reqd": 1},
+				{"arg": "new_product_id", "label": "New Event", "reqd": 1},
+			],
+		}
+		action = {
+			"action_id": "act1",
+			"label": "Switch",
+			"method": "execute_product_exchange",
+			"params": [
+				{"arg": "enrollment_name", "source": "root", "field": "name"},
+				{"arg": "new_product_id", "source": "row", "field": "event_id"},
+			],
+		}
+
+		mock_row = MagicMock()
+		mock_row.name = "REL1"
+		mock_row.child_doctype = "Eligibility"
+		mock_row.portal_actions = json.dumps([action])
+
+		mock_doc = MagicMock()
+		mock_doc.is_active = 1
+		mock_doc.target_doctype = "Enrollments"
+		mock_doc.related_doctypes = [mock_row]
+
+		mock_child = MagicMock()
+		mock_child.get.return_value = "999"
+		mock_root = MagicMock()
+		mock_get_doc.side_effect = [mock_doc, mock_child, mock_root]
+
+		mock_fn = MagicMock(return_value={"success": True})
+		mock_get_attr.return_value = mock_fn
+
+		mock_session = MagicMock()
+		mock_session.user = "Administrator"
+		with patch("nce_events.api.form_dialog.portal_actions.frappe.session", mock_session):
+			run_portal_action(
+				"FD1",
+				"related",
+				"REL1",
+				"Enrollments",
+				"3229",
+				"EL1",
+				"act1",
+				{},
+			)
+
+		mock_fn.assert_called_once_with(enrollment_name="3229", new_product_id="999")
 
 
 if __name__ == "__main__":

@@ -132,6 +132,19 @@ def _allowed_child_names_for_context(
 	return set(allowed or [])
 
 
+def _action_applies_to_tab(spec: dict[str, Any], child_doctype: str, root_doctype: str) -> bool:
+	"""True when the method is allowed on this related tab (child grid) / root combo."""
+	applies_child = spec.get("applies_to_doctypes") or []
+	applies_root = spec.get("applies_to_root_doctypes") or []
+	if not applies_child and not applies_root:
+		return True
+	if applies_child and child_doctype in applies_child:
+		return True
+	if applies_root and root_doctype in applies_root:
+		return True
+	return False
+
+
 @frappe.whitelist()
 def run_portal_action(
 	definition: str,
@@ -214,8 +227,7 @@ def run_portal_action(
 		frappe.throw(_("Action method is not registered"))
 
 	child_dt = cstr(getattr(row, "child_doctype", None) or "").strip()
-	applies = spec.get("applies_to_doctypes") or []
-	if applies and child_dt not in applies:
+	if not _action_applies_to_tab(spec, child_dt, root_doctype):
 		frappe.throw(_("Action does not apply to this DocType"))
 
 	allowed_names = _allowed_child_names_for_context(kind, root_doctype, root_name, row)
