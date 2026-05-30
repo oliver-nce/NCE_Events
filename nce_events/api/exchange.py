@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from typing import Any
 
 import requests
@@ -13,6 +14,8 @@ EXCHANGE_CONNECTOR = "WordPress REST"
 
 _EXCHANGE_PATH = "/nce-exchange/v1/exchange"
 _LOG_BODY_LIMIT = 8000
+_SYNC_WAIT_TIMEOUT_SEC = 120
+_SYNC_POLL_INTERVAL_SEC = 2
 
 
 def _build_exchange_url(base_url: str) -> str:
@@ -61,6 +64,28 @@ def _log_exchange_http_error(
         )
     except Exception:
         pass
+
+
+def _wait_for_enrollments_sync_then_verify_exists(enrollment_name: str) -> None:
+    """Wait for WP→Frappe sync to release Enrollments, then confirm the record still exists."""
+    from nce_sync.utils.sync_gate import is_doctype_syncing
+
+    deadline = time.monotonic() + _SYNC_WAIT_TIMEOUT_SEC
+    while is_doctype_syncing("Enrollments"):
+        if time.monotonic() >= deadline:
+            frappe.throw(
+                _(
+                    "A WordPress sync is still running after waiting {0} seconds. Please try again shortly."
+                ).format(_SYNC_WAIT_TIMEOUT_SEC)
+            )
+        time.sleep(_SYNC_POLL_INTERVAL_SEC)
+
+    if not frappe.db.exists("Enrollments", enrollment_name):
+        frappe.throw(
+            _(
+                "This enrollment no longer exists — it was removed by a sync. No exchange was performed."
+            )
+        )
 
 
 @frappe.whitelist()
@@ -114,6 +139,8 @@ def execute_product_exchange(enrollment_name: str, new_product_id: int | str) ->
         "order_item_id": int(order_item_id),
         "new_product_id": new_product_id,
     }
+
+    _wait_for_enrollments_sync_then_verify_exists(enrollment_name)
 
     try:
         resp = requests.post(
