@@ -11,6 +11,57 @@ from nce_events.api.credentials import get_credentials
 # API Connector document name (Desk → API Connector). Application Password in password field.
 EXCHANGE_CONNECTOR = "WordPress REST"
 
+_EXCHANGE_PATH = "/nce-exchange/v1/exchange"
+_LOG_BODY_LIMIT = 8000
+
+
+def _build_exchange_url(base_url: str) -> str:
+    """Build exchange REST URL; accept site root or base_url already ending in /wp-json."""
+    raw = (base_url or "").strip().rstrip("/")
+    if not raw:
+        return ""
+    if raw.endswith("/wp-json"):
+        return f"{raw}{_EXCHANGE_PATH}"
+    return f"{raw}/wp-json{_EXCHANGE_PATH}"
+
+
+def _exchange_error_snippet(resp: requests.Response) -> str:
+    text = (resp.text or "").strip()
+    if not text:
+        return _("(empty response body — see Error Log » WordPress exchange HTTP error)")
+    try:
+        data = resp.json()
+    except Exception:
+        return text[:500]
+    if isinstance(data, dict):
+        for key in ("message", "error", "code"):
+            val = data.get(key)
+            if val:
+                return str(val)[:500]
+    return text[:500]
+
+
+def _log_exchange_http_error(
+    url: str,
+    payload: dict[str, Any],
+    resp: requests.Response,
+) -> None:
+    body = resp.text or ""
+    safe_payload = dict(payload)
+    try:
+        frappe.log_error(
+            title="WordPress exchange HTTP error",
+            message=(
+                f"status={resp.status_code}\n"
+                f"url={url}\n"
+                f"payload={safe_payload}\n"
+                f"response_headers={dict(resp.headers)}\n"
+                f"response_body={body[:_LOG_BODY_LIMIT]}"
+            ),
+        )
+    except Exception:
+        pass
+
 
 @frappe.whitelist()
 def execute_product_exchange(enrollment_name: str, new_product_id: int | str) -> dict[str, Any]:
@@ -54,7 +105,11 @@ def execute_product_exchange(enrollment_name: str, new_product_id: int | str) ->
         )
 
     # --- 3. POST to WordPress endpoint (form body + Basic Auth, matches curl -u / -d) ---
-    url = f"{base_url}/wp-json/nce-exchange/v1/exchange"
+    url = _build_exchange_url(base_url)
+    if not url:
+        frappe.throw(
+            _("{0} API Connector has no base_url configured.").format(EXCHANGE_CONNECTOR)
+        )
     payload = {
         "order_item_id": int(order_item_id),
         "new_product_id": new_product_id,
@@ -83,9 +138,11 @@ def execute_product_exchange(enrollment_name: str, new_product_id: int | str) ->
         )
 
     if resp.status_code != 200:
+        _log_exchange_http_error(url, payload, resp)
         frappe.throw(
             _("WordPress exchange endpoint returned {0}: {1}").format(
-                resp.status_code, resp.text[:500]
+                resp.status_code,
+                _exchange_error_snippet(resp),
             )
         )
 
