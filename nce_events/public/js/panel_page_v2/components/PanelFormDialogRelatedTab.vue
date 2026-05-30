@@ -345,6 +345,46 @@ function formatActionResultSummary(result) {
 	return parts.length ? parts.join(" · ") : "Action completed.";
 }
 
+function handleExchangeActionResult(result) {
+	const o = result.outcome || {};
+	const e = (s) => (typeof frappe !== "undefined" ? frappe.utils.escape_html(String(s ?? "")) : String(s ?? ""));
+	const money = (n) => (n != null ? `$${parseFloat(n).toFixed(2)}` : "—");
+
+	const rows = [
+		["Player", o.player_name],
+		["Switched from", o.old_event_name],
+		["Switched to", o.new_event_name],
+		["New order #", o.new_order_id],
+		["Credit issued", money(o.credit_issued)],
+		["Credit applied", money(o.credit_applied)],
+		o.amount_charged_to_card ? ["Charged to card", money(o.amount_charged_to_card)] : null,
+		o.amount_still_due ? ["Amount still due", money(o.amount_still_due)] : null,
+	]
+		.filter(Boolean)
+		.map(
+			([label, val]) =>
+				`<tr><td style="padding:3px 12px 3px 0;color:#6c757d">${e(label)}</td><td style="padding:3px 0"><strong>${e(val)}</strong></td></tr>`,
+		)
+		.join("");
+
+	const footer =
+		o.status === "payment_required"
+			? `<p class="text-muted" style="margin-top:12px">The new enrollment will appear here when ${money(o.amount_still_due)} has been paid by the customer.</p>`
+			: `<p class="text-muted" style="margin-top:12px">The new enrollment will appear here within ~10 minutes.</p>`;
+
+	const summary = result.summary ? `<p style="margin-bottom:10px">${e(result.summary)}</p>` : "";
+
+	if (typeof frappe !== "undefined" && frappe.msgprint) {
+		frappe.msgprint({
+			title: "Event Switch Successful",
+			message: `${summary}<table style="width:100%">${rows}</table><hr>${footer}`,
+			indicator: "green",
+		});
+	}
+	window._nce_refresh_panel?.("Enrollments");
+	window._nce_close_form_dialog?.();
+}
+
 async function runPortalAction(act, rw, promptValues) {
 	const defn = String(props.definitionName || "").trim();
 	const dt = String(props.rootDoctype || "").trim();
@@ -382,13 +422,17 @@ async function submitActionModal() {
 	try {
 		const r = await runPortalAction(actionModal.action, actionModal.row, { ...actionModal.values });
 		closeActionModal();
-		if (typeof frappe !== "undefined" && frappe.show_alert) {
-			frappe.show_alert({
-				message: formatActionResultSummary(r?.result),
-				indicator: "green",
-			});
+		if (r?.result?.outcome) {
+			handleExchangeActionResult(r.result);
+		} else {
+			if (typeof frappe !== "undefined" && frappe.show_alert) {
+				frappe.show_alert({
+					message: formatActionResultSummary(r?.result),
+					indicator: "green",
+				});
+			}
+			await fetchRelatedForTab(props.ti);
 		}
-		await fetchRelatedForTab(props.ti);
 	} catch (e) {
 		actionModal.error = e?.message || String(e) || "Action failed";
 	} finally {
@@ -422,13 +466,17 @@ async function submitActionModalDirect(act, rw) {
 	actionRunningKey.value = key;
 	try {
 		const r = await runPortalAction(act, rw, {});
-		if (typeof frappe !== "undefined" && frappe.show_alert) {
-			frappe.show_alert({
-				message: formatActionResultSummary(r?.result),
-				indicator: "green",
-			});
+		if (r?.result?.outcome) {
+			handleExchangeActionResult(r.result);
+		} else {
+			if (typeof frappe !== "undefined" && frappe.show_alert) {
+				frappe.show_alert({
+					message: formatActionResultSummary(r?.result),
+					indicator: "green",
+				});
+			}
+			await fetchRelatedForTab(props.ti);
 		}
-		await fetchRelatedForTab(props.ti);
 	} catch (e) {
 		if (typeof frappe !== "undefined" && frappe.show_alert) {
 			frappe.show_alert({
