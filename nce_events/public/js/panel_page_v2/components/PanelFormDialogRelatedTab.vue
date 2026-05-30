@@ -345,7 +345,7 @@ function formatActionResultSummary(result) {
 	return parts.length ? parts.join(" · ") : "Action completed.";
 }
 
-function handleExchangeActionResult(result, enrollmentId) {
+function handleExchangeActionResult(result, enrollmentId, elapsedMs) {
 	const o = result.outcome || {};
 	const e = (s) => (typeof frappe !== "undefined" ? frappe.utils.escape_html(String(s ?? "")) : String(s ?? ""));
 	const money = (n) => (n != null ? `$${parseFloat(n).toFixed(2)}` : "—");
@@ -374,10 +374,22 @@ function handleExchangeActionResult(result, enrollmentId) {
 
 	const summary = result.summary ? `<p style="margin-bottom:10px">${e(result.summary)}</p>` : "";
 
+	let rawJson = "";
+	try {
+		rawJson = JSON.stringify(result, null, 2);
+	} catch (err) {
+		rawJson = String(result);
+	}
+	const elapsedText =
+		typeof elapsedMs === "number" && isFinite(elapsedMs)
+			? `<p class="text-muted" style="margin-top:8px;font-size:11px">API round-trip: ${(elapsedMs / 1000).toFixed(2)}s (${Math.round(elapsedMs)} ms)</p>`
+			: "";
+	const rawSection = `<details style="margin-top:12px"><summary style="cursor:pointer;color:#6c757d">Full API response</summary><pre style="margin-top:8px;max-height:300px;overflow:auto;background:#f6f8fa;border:1px solid #e1e4e8;border-radius:4px;padding:8px;font-size:11px;white-space:pre-wrap;word-break:break-word">${e(rawJson)}</pre></details>`;
+
 	if (typeof frappe !== "undefined" && frappe.msgprint) {
 		frappe.msgprint({
 			title: "Event Switch Successful",
-			message: `${summary}<table style="width:100%">${rows}</table><hr>${footer}`,
+			message: `${summary}<table style="width:100%">${rows}</table><hr>${footer}${elapsedText}${rawSection}`,
 			indicator: "green",
 		});
 	}
@@ -425,11 +437,13 @@ async function submitActionModal() {
 	// Capture the enrollment being edited (root doc) before the async call —
 	// this is the record the exchange deletes, and the row to drop from the panel.
 	const enrollmentId = String(props.rootDocName || "").trim();
+	const startedAt = (typeof performance !== "undefined" ? performance.now() : Date.now());
 	try {
 		const r = await runPortalAction(actionModal.action, actionModal.row, { ...actionModal.values });
+		const elapsedMs = (typeof performance !== "undefined" ? performance.now() : Date.now()) - startedAt;
 		closeActionModal();
 		if (r?.result?.outcome) {
-			handleExchangeActionResult(r.result, enrollmentId);
+			handleExchangeActionResult(r.result, enrollmentId, elapsedMs);
 		} else {
 			if (typeof frappe !== "undefined" && frappe.show_alert) {
 				frappe.show_alert({
@@ -472,10 +486,12 @@ async function submitActionModalDirect(act, rw) {
 	actionRunningKey.value = key;
 	// Capture the enrollment being edited (root doc) before the async call.
 	const enrollmentId = String(props.rootDocName || "").trim();
+	const startedAt = (typeof performance !== "undefined" ? performance.now() : Date.now());
 	try {
 		const r = await runPortalAction(act, rw, {});
+		const elapsedMs = (typeof performance !== "undefined" ? performance.now() : Date.now()) - startedAt;
 		if (r?.result?.outcome) {
-			handleExchangeActionResult(r.result, enrollmentId);
+			handleExchangeActionResult(r.result, enrollmentId, elapsedMs);
 		} else {
 			if (typeof frappe !== "undefined" && frappe.show_alert) {
 				frappe.show_alert({

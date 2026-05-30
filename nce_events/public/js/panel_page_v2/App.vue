@@ -488,24 +488,32 @@ onMounted(() => {
 	window._nce_close_form_dialog = () => {
 		onFormDialogClose();
 	};
-	window._nce_remove_panel_row = (doctype, name) => {
+	// Reusable utility: drop a single row from the open panel for `panelDoctype`.
+	// The app only ever opens one panel per root table, so doctype uniquely
+	// identifies the panel. Returns true if a matching row was removed.
+	window._nce_remove_panel_row = (panelDoctype, name) => {
+		const p = openPanels.find((panel) => panel.doctype === panelDoctype);
+		if (!p) return false;
 		const nameStr = String(name);
 		const notMatch = (r) => String(r.name) !== nameStr;
-		const matchingPanels = openPanels.filter((panel) => panel.doctype === doctype);
-		for (const p of matchingPanels) {
-			// Remove from the underlying unfiltered cache so re-filtering can't bring it back.
-			if (p._allRows && Array.isArray(p._allRows.value)) {
-				p._allRows.value = p._allRows.value.filter(notMatch);
-			}
-			if (p._panelRows && Array.isArray(p._panelRows.value)) {
-				p._panelRows.value = p._panelRows.value.filter(notMatch);
-			}
-			if (Array.isArray(p.rows)) {
-				p.rows = p.rows.filter(notMatch);
-			}
-			if (p.total > 0) p.total--;
-			if (p.fullTotal > 0) p.fullTotal--;
+		const existed =
+			(Array.isArray(p._allRows?.value) && p._allRows.value.some((r) => !notMatch(r))) ||
+			(Array.isArray(p._panelRows?.value) && p._panelRows.value.some((r) => !notMatch(r))) ||
+			(Array.isArray(p.rows) && p.rows.some((r) => !notMatch(r)));
+		if (!existed) return false;
+		// Purge the underlying unfiltered cache too so re-filtering can't bring it back.
+		if (Array.isArray(p._allRows?.value)) {
+			p._allRows.value = p._allRows.value.filter(notMatch);
 		}
+		if (Array.isArray(p._panelRows?.value)) {
+			p._panelRows.value = p._panelRows.value.filter(notMatch);
+		}
+		if (Array.isArray(p.rows)) {
+			p.rows = p.rows.filter(notMatch);
+		}
+		if (p.total > 0) p.total--;
+		if (p.fullTotal > 0) p.fullTotal--;
+		return true;
 	};
 });
 
