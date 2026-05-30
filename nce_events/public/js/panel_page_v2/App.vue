@@ -327,6 +327,7 @@
 </template>
 
 <script setup>
+// v2026-05-30
 import { ref, reactive, computed, onMounted, onUnmounted, inject } from "vue";
 import { useNceCardStack, parseOpenCardOpts } from "./composables/useNceCardStack.js";
 import { usePanelFormDialogHost } from "./composables/usePanelFormDialogHost.js";
