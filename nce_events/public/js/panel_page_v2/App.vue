@@ -489,15 +489,23 @@ onMounted(() => {
 		onFormDialogClose();
 	};
 	window._nce_remove_panel_row = (doctype, name) => {
-		const p = openPanels.find((panel) => panel.doctype === doctype);
-		if (!p) return;
 		const nameStr = String(name);
-		if (p._panelRows) {
-			p._panelRows.value = p._panelRows.value.filter((r) => String(r.name) !== nameStr);
+		const notMatch = (r) => String(r.name) !== nameStr;
+		const matchingPanels = openPanels.filter((panel) => panel.doctype === doctype);
+		for (const p of matchingPanels) {
+			// Remove from the underlying unfiltered cache so re-filtering can't bring it back.
+			if (p._allRows && Array.isArray(p._allRows.value)) {
+				p._allRows.value = p._allRows.value.filter(notMatch);
+			}
+			if (p._panelRows && Array.isArray(p._panelRows.value)) {
+				p._panelRows.value = p._panelRows.value.filter(notMatch);
+			}
+			if (Array.isArray(p.rows)) {
+				p.rows = p.rows.filter(notMatch);
+			}
+			if (p.total > 0) p.total--;
+			if (p.fullTotal > 0) p.fullTotal--;
 		}
-		p.rows = p.rows.filter((r) => String(r.name) !== nameStr);
-		if (p.total > 0) p.total--;
-		if (p.fullTotal > 0) p.fullTotal--;
 	};
 });
 

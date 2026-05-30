@@ -345,7 +345,7 @@ function formatActionResultSummary(result) {
 	return parts.length ? parts.join(" · ") : "Action completed.";
 }
 
-function handleExchangeActionResult(result, rowName) {
+function handleExchangeActionResult(result, enrollmentId) {
 	const o = result.outcome || {};
 	const e = (s) => (typeof frappe !== "undefined" ? frappe.utils.escape_html(String(s ?? "")) : String(s ?? ""));
 	const money = (n) => (n != null ? `$${parseFloat(n).toFixed(2)}` : "—");
@@ -381,7 +381,10 @@ function handleExchangeActionResult(result, rowName) {
 			indicator: "green",
 		});
 	}
-	if (rowName) window._nce_remove_panel_row?.("Enrollments", rowName);
+	// The deleted record is the enrollment we were editing (root doc). Fall back to
+	// the server-reported old order item id if the click-time capture was empty.
+	const removeName = enrollmentId || (o.old_order_item_id != null ? String(o.old_order_item_id) : "");
+	if (removeName) window._nce_remove_panel_row?.(props.rootDoctype || "Enrollments", removeName);
 	window._nce_close_form_dialog?.();
 }
 
@@ -419,11 +422,14 @@ async function submitActionModal() {
 	actionModal.running = true;
 	const key = actionRunKey(actionModal.action, actionModal.row);
 	actionRunningKey.value = key;
+	// Capture the enrollment being edited (root doc) before the async call —
+	// this is the record the exchange deletes, and the row to drop from the panel.
+	const enrollmentId = String(props.rootDocName || "").trim();
 	try {
 		const r = await runPortalAction(actionModal.action, actionModal.row, { ...actionModal.values });
 		closeActionModal();
 		if (r?.result?.outcome) {
-			handleExchangeActionResult(r.result, actionModal.row?.name);
+			handleExchangeActionResult(r.result, enrollmentId);
 		} else {
 			if (typeof frappe !== "undefined" && frappe.show_alert) {
 				frappe.show_alert({
@@ -464,10 +470,12 @@ function onRelatedActionClick(act, rw) {
 async function submitActionModalDirect(act, rw) {
 	const key = actionRunKey(act, rw);
 	actionRunningKey.value = key;
+	// Capture the enrollment being edited (root doc) before the async call.
+	const enrollmentId = String(props.rootDocName || "").trim();
 	try {
 		const r = await runPortalAction(act, rw, {});
 		if (r?.result?.outcome) {
-			handleExchangeActionResult(r.result, rw?.name);
+			handleExchangeActionResult(r.result, enrollmentId);
 		} else {
 			if (typeof frappe !== "undefined" && frappe.show_alert) {
 				frappe.show_alert({
