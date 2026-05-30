@@ -63,7 +63,7 @@
 				<PanelHeaderToolbar
 					:loading="!!p.loading"
 					:show-click-hint="!!p.config?.open_card_on_click && !p._find?.mode"
-					:row-count="(p._panelRows || p.rows).length"
+					:row-count="panelLiveRows(p).length"
 					:row-count-label="p._find?.mode === 'find' ? '—' : undefined"
 					:total="p.fullTotal"
 					:find-header-minimal="p._find?.mode === 'find'"
@@ -153,7 +153,7 @@
 				v-else
 				:title="floatedPanelTitle(p)"
 				:columns="p.columns"
-				:rows="p._panelRows || p.rows"
+				:rows="panelLiveRows(p)"
 				:total="p.fullTotal"
 				:loading="p.loading"
 				:error="p.error"
@@ -328,7 +328,7 @@
 
 <script setup>
 // v2026-05-30
-import { ref, reactive, computed, onMounted, onUnmounted, inject } from "vue";
+import { ref, reactive, computed, onMounted, onUnmounted, inject, unref } from "vue";
 import { useNceCardStack, parseOpenCardOpts } from "./composables/useNceCardStack.js";
 import { usePanelFormDialogHost } from "./composables/usePanelFormDialogHost.js";
 import { usePanelActions } from "./composables/usePanelActions.js";
@@ -495,21 +495,21 @@ onMounted(() => {
 		const p = openPanels.find((panel) => panel.doctype === panelDoctype);
 		if (!p) return false;
 		const nameStr = String(name);
-		const notMatch = (r) => String(r.name) !== nameStr;
-		const existed =
-			(Array.isArray(p._allRows?.value) && p._allRows.value.some((r) => !notMatch(r))) ||
-			(Array.isArray(p._panelRows?.value) && p._panelRows.value.some((r) => !notMatch(r))) ||
-			(Array.isArray(p.rows) && p.rows.some((r) => !notMatch(r)));
-		if (!existed) return false;
-		// Purge the underlying unfiltered cache too so re-filtering can't bring it back.
+		let removed = false;
+		// Splice in place on the live arrays so Vue ref/array watchers re-render the table.
 		if (Array.isArray(p._allRows?.value)) {
-			p._allRows.value = p._allRows.value.filter(notMatch);
+			removed = splicePanelRowByName(p._allRows.value, nameStr) || removed;
 		}
-		if (Array.isArray(p._panelRows?.value)) {
-			p._panelRows.value = p._panelRows.value.filter(notMatch);
+		const live = panelLiveRows(p);
+		if (live.length) {
+			removed = splicePanelRowByName(live, nameStr) || removed;
 		}
-		if (Array.isArray(p.rows)) {
-			p.rows = p.rows.filter(notMatch);
+		if (Array.isArray(p.rows) && p.rows !== live) {
+			removed = splicePanelRowByName(p.rows, nameStr) || removed;
+		}
+		if (!removed) return false;
+		if (p._panelRows?.value) {
+			p.rows = p._panelRows.value;
 		}
 		if (p.total > 0) p.total--;
 		if (p.fullTotal > 0) p.fullTotal--;
@@ -543,9 +543,28 @@ function panelTableColumns(p) {
 	return p.columns;
 }
 
+/** Unwrap ``_panelRows`` ref so PanelTable receives a plain reactive array, not a Ref object. */
+function panelLiveRows(p) {
+	if (!p) return [];
+	const pr = p._panelRows;
+	if (pr != null && typeof pr === "object" && "value" in pr) {
+		const v = unref(pr);
+		return Array.isArray(v) ? v : [];
+	}
+	return Array.isArray(p.rows) ? p.rows : [];
+}
+
+function splicePanelRowByName(list, nameStr) {
+	if (!Array.isArray(list)) return false;
+	const idx = list.findIndex((r) => r && String(r.name) === nameStr);
+	if (idx < 0) return false;
+	list.splice(idx, 1);
+	return true;
+}
+
 function panelTableRows(p) {
 	if (p._find?.mode === "find") return [];
-	return p._panelRows || p.rows;
+	return panelLiveRows(p);
 }
 
 function panelApplyFoundSet(p, foundRows) {
@@ -833,11 +852,7 @@ async function onNewRecord(panel) {
 
 /** Same row list the table shows: drilled panels use `_panelRows` when set (live ref), else `rows`. */
 function panelDisplayRowsForExport(panelPayload) {
-	if (!panelPayload) return [];
-	const pr = panelPayload._panelRows;
-	if (Array.isArray(pr)) return pr;
-	const r = panelPayload.rows;
-	return Array.isArray(r) ? r : [];
+	return panelLiveRows(panelPayload);
 }
 
 function filteredPanelExportArgs(panelPayload) {
