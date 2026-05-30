@@ -152,8 +152,9 @@ def execute_product_exchange(enrollment_name: str, new_product_id: int | str) ->
         frappe.throw(_("WordPress returned a non-JSON response: {0}").format(resp.text[:500]))
 
     if not data.get("success"):
-        # WordPress returned 200 but success=false — surface the message if present
-        msg = data.get("message") or data.get("data") or "Unknown error from WordPress."
+        msg = data.get("error") or "Unknown error from WordPress."
         frappe.throw(_("Exchange failed: {0}").format(str(msg)))
+
+    frappe.delete_doc("Enrollments", enrollment_name, force=True)
 
     return data
