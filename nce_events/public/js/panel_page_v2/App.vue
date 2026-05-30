@@ -488,6 +488,17 @@ onMounted(() => {
 	window._nce_close_form_dialog = () => {
 		onFormDialogClose();
 	};
+	window._nce_remove_panel_row = (doctype, name) => {
+		const p = openPanels.find((panel) => panel.doctype === doctype);
+		if (!p) return;
+		const nameStr = String(name);
+		if (p._panelRows) {
+			p._panelRows.value = p._panelRows.value.filter((r) => String(r.name) !== nameStr);
+		}
+		p.rows = p.rows.filter((r) => String(r.name) !== nameStr);
+		if (p.total > 0) p.total--;
+		if (p.fullTotal > 0) p.fullTotal--;
+	};
 });
 
 onUnmounted(() => {
@@ -498,6 +509,7 @@ onUnmounted(() => {
 	delete window._nce_close_top_card;
 	delete window._nce_refresh_panel;
 	delete window._nce_close_form_dialog;
+	delete window._nce_remove_panel_row;
 });
 
 /** Child float header: "Enrollments" or "Enrollments for {parent title}" when drilled with context. */

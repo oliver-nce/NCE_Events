@@ -345,7 +345,7 @@ function formatActionResultSummary(result) {
 	return parts.length ? parts.join(" · ") : "Action completed.";
 }
 
-function handleExchangeActionResult(result) {
+function handleExchangeActionResult(result, rowName) {
 	const o = result.outcome || {};
 	const e = (s) => (typeof frappe !== "undefined" ? frappe.utils.escape_html(String(s ?? "")) : String(s ?? ""));
 	const money = (n) => (n != null ? `$${parseFloat(n).toFixed(2)}` : "—");
@@ -381,7 +381,7 @@ function handleExchangeActionResult(result) {
 			indicator: "green",
 		});
 	}
-	window._nce_refresh_panel?.("Enrollments");
+	if (rowName) window._nce_remove_panel_row?.("Enrollments", rowName);
 	window._nce_close_form_dialog?.();
 }
 
@@ -423,7 +423,7 @@ async function submitActionModal() {
 		const r = await runPortalAction(actionModal.action, actionModal.row, { ...actionModal.values });
 		closeActionModal();
 		if (r?.result?.outcome) {
-			handleExchangeActionResult(r.result);
+			handleExchangeActionResult(r.result, actionModal.row?.name);
 		} else {
 			if (typeof frappe !== "undefined" && frappe.show_alert) {
 				frappe.show_alert({
@@ -467,7 +467,7 @@ async function submitActionModalDirect(act, rw) {
 	try {
 		const r = await runPortalAction(act, rw, {});
 		if (r?.result?.outcome) {
-			handleExchangeActionResult(r.result);
+			handleExchangeActionResult(r.result, rw?.name);
 		} else {
 			if (typeof frappe !== "undefined" && frappe.show_alert) {
 				frappe.show_alert({
