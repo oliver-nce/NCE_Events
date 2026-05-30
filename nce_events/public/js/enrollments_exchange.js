@@ -94,5 +94,5 @@ function _show_success(frm, data) {
 	});
 
 	window._nce_refresh_panel?.("Enrollments");
-	frappe.set_route("List", "Enrollments");
+	window._nce_close_form_dialog?.();
 }

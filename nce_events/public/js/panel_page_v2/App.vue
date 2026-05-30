@@ -484,6 +484,9 @@ onMounted(() => {
 	window._nce_refresh_panel = (doctype) => {
 		refreshPanelByDoctype(doctype);
 	};
+	window._nce_close_form_dialog = () => {
+		onFormDialogClose();
+	};
 });
 
 onUnmounted(() => {
@@ -493,6 +496,7 @@ onUnmounted(() => {
 	delete window._nce_open_card;
 	delete window._nce_close_top_card;
 	delete window._nce_refresh_panel;
+	delete window._nce_close_form_dialog;
 });
 
 /** Child float header: "Enrollments" or "Enrollments for {parent title}" when drilled with context. */
