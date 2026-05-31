@@ -497,20 +497,15 @@ onMounted(() => {
 		const nameStr = String(name);
 		let removed = false;
 		// Splice in place on the live arrays so Vue ref/array watchers re-render the table.
-		if (Array.isArray(p._allRows?.value)) {
-			removed = splicePanelRowByName(p._allRows.value, nameStr) || removed;
+		// p._allRows and p._panelRows are refs stored on reactive() — Vue auto-unwraps them.
+		if (Array.isArray(p._allRows)) {
+			removed = splicePanelRowByName(p._allRows, nameStr) || removed;
 		}
 		const live = panelLiveRows(p);
 		if (live.length) {
 			removed = splicePanelRowByName(live, nameStr) || removed;
 		}
-		if (Array.isArray(p.rows) && p.rows !== live) {
-			removed = splicePanelRowByName(p.rows, nameStr) || removed;
-		}
 		if (!removed) return false;
-		if (p._panelRows?.value) {
-			p.rows = p._panelRows.value;
-		}
 		if (p.total > 0) p.total--;
 		if (p.fullTotal > 0) p.fullTotal--;
 		return true;
@@ -543,14 +538,12 @@ function panelTableColumns(p) {
 	return p.columns;
 }
 
-/** Unwrap ``_panelRows`` ref so PanelTable receives a plain reactive array, not a Ref object. */
+/** Return the live row array for a panel. p._panelRows is a Vue ref stored on a reactive()
+ * object — Vue auto-unwraps it, so accessing it always yields the current panel.rows.value. */
 function panelLiveRows(p) {
 	if (!p) return [];
-	const pr = p._panelRows;
-	if (pr != null && typeof pr === "object" && "value" in pr) {
-		const v = unref(pr);
-		return Array.isArray(v) ? v : [];
-	}
+	const rows = p._panelRows;
+	if (Array.isArray(rows)) return rows;
 	return Array.isArray(p.rows) ? p.rows : [];
 }
 
