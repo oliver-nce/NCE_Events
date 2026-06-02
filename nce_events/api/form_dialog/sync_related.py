@@ -72,17 +72,12 @@ def trigger_linked_sync_for_dialog_readback(
     from nce_sync.api import sync_linked_doctype_rows
 
     job_ids: list[str] = []
-    diag: list[str] = []
-    diag.append(f"definition={definition!r} root_doctype={root_doctype!r} root_name={root_name!r}")
-    diag.append(f"related_doctypes count={len(dialog_doc.related_doctypes or [])}")
 
     for row in dialog_doc.related_doctypes or []:
         child_dt = cstr(row.child_doctype or "").strip()
         link_field = cstr(row.link_field or "").strip()
-        diag.append(f"row: child_dt={child_dt!r} link_field={link_field!r}")
 
         if not child_dt or not link_field:
-            diag.append("  → skip: missing child_dt or link_field")
             continue
 
         hop_chain_raw = cstr(getattr(row, "hop_chain", "") or "").strip()
@@ -91,7 +86,6 @@ def trigger_linked_sync_for_dialog_readback(
         except (ValueError, TypeError):
             hop_chain_list = [hop_chain_raw]
         if hop_chain_list:
-            diag.append(f"  → skip: hop_chain={hop_chain_raw!r}")
             continue
 
         wp_rows = frappe.get_all(
@@ -104,7 +98,6 @@ def trigger_linked_sync_for_dialog_readback(
             limit_page_length=1,
         )
         if not wp_rows:
-            diag.append(f"  → skip: no WP Tables entry for {child_dt!r}")
             continue
 
         try:
@@ -114,21 +107,12 @@ def trigger_linked_sync_for_dialog_readback(
                 link_value=root_name,
             )
             job_id = cstr(result.get("job_id") or "").strip()
-            diag.append(f"  → queued job_id={job_id!r} result_keys={list(result.keys())}")
             if job_id:
                 job_ids.append(job_id)
-            else:
-                diag.append("  → WARNING: job_id was empty!")
         except Exception as e:
-            diag.append(f"  → EXCEPTION: {cstr(e)[:300]}")
             frappe.log_error(
                 title=f"trigger_linked_sync_for_dialog_readback: {child_dt}",
                 message=cstr(e),
             )
 
-    diag.append(f"final job_ids={job_ids!r}")
-    frappe.log_error(
-        title="trigger_linked_sync_for_dialog_readback DIAG",
-        message="\n".join(diag),
-    )
     return {"sync_job_ids": job_ids}
