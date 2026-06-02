@@ -179,6 +179,19 @@
       "label": "SMS Field"
     },
     {
+      "default": "0",
+      "description": "Show per-row button to open WordPress logged in as the family user",
+      "fieldname": "show_wp_switch",
+      "fieldtype": "Check",
+      "label": "Show WP Switch"
+    },
+    {
+      "description": "Fieldname on each row that holds the Families.ID value (e.g. id on Families, or the Link field to Families on People)",
+      "fieldname": "wp_family_id_field",
+      "fieldtype": "Data",
+      "label": "WP Family ID Field"
+    },
+    {
       "fieldname": "section_break_tile_actions",
       "fieldtype": "Section Break",
       "label": "Tile Actions"

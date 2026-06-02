@@ -75,6 +75,8 @@ def _panel_config_from_doc(doc: Any) -> dict[str, Any]:
 	column_order = _parse_csv(doc.column_order)
 	email_field = (doc.email_field or "").strip()
 	sms_field = (doc.sms_field or "").strip()
+	wp_family_id_field = (getattr(doc, "wp_family_id_field", None) or "").strip()
+	show_wp_switch = cint(getattr(doc, "show_wp_switch", 0))
 
 	if not email_field or not sms_field:
 		auto_email, auto_sms = _auto_detect_contact_fields(doc.root_doctype)
@@ -139,6 +141,8 @@ def _panel_config_from_doc(doc: Any) -> dict[str, Any]:
 		fetch_only_fields.append(email_field)
 	if sms_field:
 		fetch_only_fields.append(sms_field)
+	if wp_family_id_field:
+		fetch_only_fields.append(wp_family_id_field)
 	title_field = (doc.title_field or "").strip()
 	if title_field and title_field not in fetch_only_fields:
 		fetch_only_fields.append(title_field)
@@ -177,6 +181,8 @@ def _panel_config_from_doc(doc: Any) -> dict[str, Any]:
 		"show_sms": doc.show_sms,
 		"email_field": email_field,
 		"sms_field": sms_field,
+		"show_wp_switch": show_wp_switch,
+		"wp_family_id_field": wp_family_id_field,
 		"show_card_email": doc.show_card_email,
 		"show_card_sms": doc.show_card_sms,
 		"open_card_on_click": cint(doc.get("open_card_on_click")),
@@ -214,6 +220,8 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 			"show_sms": 1,
 			"email_field": auto_email,
 			"sms_field": auto_sms,
+			"show_wp_switch": 0,
+			"wp_family_id_field": "",
 			"show_card_email": 0,
 			"show_card_sms": 0,
 			"open_card_on_click": 0,

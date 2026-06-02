@@ -46,6 +46,7 @@
 				@filter-change="(f) => onFilterChange(null, f)"
 				@refresh="onRefreshRoot"
 				@show-filter="rootPanelShowFilter = true"
+				@switch-one="(row) => onSwitchOne({ config: config }, row)"
 			/>
 			<template #footer>{{ config?.header_text || "NCE Tables" }}</template>
 		</PanelFloat>
@@ -129,6 +130,7 @@
 					@refresh="onRefreshPanel(p)"
 					@email-one="(row) => onEmailOne(p, row)"
 					@sms-one="(row) => onSmsOne(p, row)"
+					@switch-one="(row) => onSwitchOne(p, row)"
 					@row-drop="(row) => onRowDrop(p, row)"
 					@show-filter="p._showFilter = true"
 				>
@@ -175,6 +177,7 @@
 				@refresh="onRefreshPanel(p)"
 				@email-one="(row) => onEmailOne(p, row)"
 				@sms-one="(row) => onSmsOne(p, row)"
+				@switch-one="(row) => onSwitchOne(p, row)"
 				@row-drop="(row) => onRowDrop(p, row)"
 				@show-filter="p._showFilter = true"
 			/>
@@ -346,6 +349,8 @@ import PanelFindActionBar from "./components/PanelFindActionBar.vue";
 import PanelFindRow from "./components/PanelFindRow.vue";
 import { useFindPanel } from "./composables/useFindPanel.js";
 import { buildFindColumns } from "./utils/findColumns.js";
+import { frappeCall } from "./utils/frappeCall.js";
+import { openWpUserSwitch, familyIdFromRow } from "./utils/wpUserSwitch.js";
 
 const panelMode = inject("panelMode", null);
 const panelLabel = inject("panelLabel", "NCE Tables");
@@ -433,6 +438,15 @@ async function onPanelActionSelect(action) {
 const { cardStack, openCardModal, closeTopCard, onOpenCard } = useNceCardStack();
 
 const { onEmail, onSms, onEmailOne, onSmsOne } = useSendDialogs();
+
+async function onSwitchOne(panel, row) {
+	const field = panel?.config?.wp_family_id_field || "";
+	const familyId = familyIdFromRow(row, field);
+	await openWpUserSwitch(familyId, {
+		frappeCall,
+		msgprint: (opts) => frappe.msgprint(opts),
+	});
+}
 
 function onRowDrop(panel, row) {
 	const arr = panel ? panel.rows : rows.value;

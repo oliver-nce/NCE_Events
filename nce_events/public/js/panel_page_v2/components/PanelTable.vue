@@ -50,7 +50,7 @@
 								@mousedown.prevent="startColResize($event, ci)"
 							/>
 						</th>
-						<th v-if="hasEmailAction || hasPhoneAction" class="ppv2-action-th" />
+						<th v-if="hasEmailAction || hasPhoneAction || hasWpSwitchAction" class="ppv2-action-th" />
 					</tr>
 				</thead>
 				<tbody>
@@ -95,7 +95,7 @@
 							>
 							<template v-else>{{ cellValue(row, col) }}</template>
 						</td>
-						<td v-if="hasEmailAction || hasPhoneAction" class="ppv2-action-td">
+						<td v-if="hasEmailAction || hasPhoneAction || hasWpSwitchAction" class="ppv2-action-td">
 							<button
 								v-if="hasEmailAction && rowHasEmail(row)"
 								class="ppv2-row-btn"
@@ -120,6 +120,14 @@
 							>
 								<i class="fa fa-comment"></i>
 							</button>
+							<button
+								v-if="hasWpSwitchAction && rowHasFamilyId(row)"
+								class="ppv2-row-btn"
+								title="View as on website"
+								@click.stop="$emit('switch-one', row)"
+							>
+								<i class="fa fa-external-link"></i>
+							</button>
 						</td>
 					</tr>
 				</tbody>
@@ -131,6 +139,7 @@
 <script setup>
 import { ref, reactive, computed, watch, nextTick, onUnmounted } from "vue";
 import PanelTableFilterBar from "./PanelTableFilterBar.vue";
+import { familyIdFromRow } from "../utils/wpUserSwitch.js";
 
 const props = defineProps({
 	title: { type: String, default: "" },
@@ -161,6 +170,7 @@ const emit = defineEmits([
 	"filter-change",
 	"email-one",
 	"sms-one",
+	"switch-one",
 	"refresh",
 	"show-filter",
 ]);
@@ -356,8 +366,12 @@ watch(
 
 const emailField = computed(() => (props.config.email_field || "").trim().toLowerCase());
 const smsField = computed(() => (props.config.sms_field || "").trim().toLowerCase());
+const wpFamilyIdField = computed(() => (props.config.wp_family_id_field || "").trim().toLowerCase());
 const hasEmailAction = computed(() => !!emailField.value);
 const hasPhoneAction = computed(() => !!smsField.value);
+const hasWpSwitchAction = computed(
+	() => !!props.config.show_wp_switch && !!wpFamilyIdField.value
+);
 
 const dataCols = computed(() => props.columns);
 
@@ -407,6 +421,10 @@ function rowHasEmail(row) {
 function rowHasPhone(row) {
 	const v = getVal(row, smsField.value);
 	return v && /[\d+]/.test(String(v));
+}
+
+function rowHasFamilyId(row) {
+	return !!familyIdFromRow(row, wpFamilyIdField.value);
 }
 
 function onCallRow(row) {
