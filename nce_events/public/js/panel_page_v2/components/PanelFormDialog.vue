@@ -71,11 +71,13 @@
 				:find-criteria="findCriteria"
 				:findable-fieldnames="findableFieldnames"
 				:read-only-host="findCriteriaActive"
+				:go-to-busy="goToPanelBusy"
 				v-model:active-tab="activeTab"
 				@field-change="onFieldChange"
 				@find-criteria-patch="patchFindCriterion"
 			@link-change="onLinkChange"
 			@related-dirty="onRelatedDirty"
+			@go-to-panel="onGoToPanel"
 		/>
 			<PanelFormDialogFooter
 				:footer-phase="readbackFooterPhase"
@@ -135,6 +137,7 @@ import {
 	isFindSearchableRootField,
 	firstNonRelatedTabIndex,
 } from "../utils/formDialogFindFields.js";
+import { buildRelatedTabPanelFilter } from "../utils/formDialogRelatedGoTo.js";
 
 
 function escapeForPreHtml(s) {
@@ -170,6 +173,8 @@ const props = defineProps({
 	findSearchOnlyColumns: { type: Array, default: () => [] },
 	/** True when a found set is active — passed to footer to enable Constrain Found Set in criteria phase. */
 	findMatchActive: { type: Boolean, default: false },
+	/** Host opens the related DocType panel (after save + sync poll). */
+	onGoToNavigate: { type: Function, default: null },
 });
 
 const emit = defineEmits([
@@ -184,6 +189,7 @@ const emit = defineEmits([
 	"find-show-all",
 	"find-modify",
 	"find-constrain",
+	"go-to-panel",
 ]);
 
 const activeTab = ref(0);
@@ -191,6 +197,7 @@ const findCriteria = reactive({});
 const fdBodyRef = ref(null);
 const backdropRef = ref(null);
 const relatedDirty = ref(false);
+const goToPanelBusy = ref(false);
 /** Bumped from this dialog when user clicks Show changes (related grids refetch). */
 const internalReloadTick = ref(0);
 /** Footer + chrome: normal | readback-waiting | readback-show-changes | readback-close-only */
@@ -497,6 +504,145 @@ function onFieldChange({ fieldname, value }) {
 async function onLinkChange({ fieldname, value }) {
 	form.formData[fieldname] = value;
 	await form.handleFetchFrom(fieldname, value);
+}
+
+/**
+ * Save main form + related grids before Go to. Returns false if blocked.
+ * Uses the same Frappe save + related-row APIs as Submit (including sync jobs), but skips
+ * the read-back footer UX — sync jobs are polled here so the opened panel sees fresh data.
+ * @returns {Promise<{ ok: boolean, mainSaved: boolean, relatedSaved: boolean, syncJobIds: string[] }>}
+ */
+async function savePendingEditsBeforeNavigate() {
+	if (findCriteriaActive.value) {
+		return { ok: false, mainSaved: false, relatedSaved: false, syncJobIds: [] };
+	}
+	if (!footerIsDirty.value) {
+		return { ok: true, mainSaved: false, relatedSaved: false, syncJobIds: [] };
+	}
+
+	const onSubmitMethod = (form.definition.value?.on_submit_method || "").trim();
+	if (onSubmitMethod && form.isDirty.value) {
+		form.validationError.value = __("Use Submit to save this form before opening the panel.");
+		if (typeof frappe !== "undefined" && frappe.msgprint) {
+			frappe.msgprint({
+				title: __("Save required"),
+				message: form.validationError.value,
+				indicator: "orange",
+			});
+		}
+		return { ok: false, mainSaved: false, relatedSaved: false, syncJobIds: [] };
+	}
+
+	const syncJobIds = [];
+	let mainSaved = false;
+	let relatedSaved = false;
+
+	if (form.isDirty.value) {
+		form.validationError.value = null;
+		const errors = form.validate();
+		if (errors.length) {
+			form.validationError.value = errors.map((e) => e.message).join(", ");
+			if (typeof frappe !== "undefined" && frappe.msgprint) {
+				frappe.msgprint({
+					title: __("Validation"),
+					message: form.validationError.value,
+					indicator: "red",
+				});
+			}
+			return { ok: false, mainSaved: false, relatedSaved: false, syncJobIds: [] };
+		}
+		await flushFrappeDateControlsIntoFormData();
+		const result = await form.save();
+		mainSaved = true;
+		if (Array.isArray(result?.sync_job_ids)) {
+			syncJobIds.push(...result.sync_job_ids);
+		}
+	}
+
+	if (relatedDirty.value) {
+		try {
+			const relIds = await fdBodyRef.value?.saveAllRelatedRows?.();
+			relatedSaved = true;
+			relatedDirty.value = false;
+			if (Array.isArray(relIds)) {
+				syncJobIds.push(...relIds);
+			}
+		} catch (relErr) {
+			const m = extractServerMessage(relErr);
+			if (typeof frappe !== "undefined" && frappe.msgprint) {
+				frappe.msgprint({
+					title: __("Related rows"),
+					message: m,
+					indicator: "red",
+				});
+			}
+			throw relErr;
+		}
+	}
+
+	return { ok: true, mainSaved, relatedSaved, syncJobIds };
+}
+
+async function onGoToPanel(ev) {
+	if (findCriteriaActive.value || goToPanelBusy.value) {
+		return;
+	}
+	const doctype = String(ev?.doctype || "").trim();
+	if (!doctype || !ev?.related) {
+		return;
+	}
+
+	goToPanelBusy.value = true;
+	form.saving.value = true;
+	try {
+		const { ok, mainSaved, relatedSaved, syncJobIds } = await savePendingEditsBeforeNavigate();
+		if (!ok) {
+			return;
+		}
+
+		const jobIds = [...new Set((syncJobIds || []).map((id) => String(id).trim()).filter(Boolean))];
+		if (jobIds.length) {
+			const { anyFailed } = await pollSyncJobsUntilDone(jobIds);
+			if (anyFailed && typeof frappe !== "undefined" && frappe.msgprint) {
+				frappe.msgprint({
+					title: __("Sync error"),
+					message: __("One or more sync jobs failed. The panel may show stale data."),
+					indicator: "orange",
+				});
+			}
+		}
+
+		const rootName = String(form.formData?.name ?? props.docName ?? "").trim();
+		const rows = fdBodyRef.value?.getRelatedRowsForTab?.(ev.ti) ?? [];
+		const parentFilter = buildRelatedTabPanelFilter(ev.related, rootName, rows);
+		if (!parentFilter) {
+			if (typeof frappe !== "undefined" && frappe.show_alert) {
+				frappe.show_alert({
+					message: __("No related rows to open in the panel."),
+					indicator: "orange",
+				});
+			}
+			return;
+		}
+
+		if (typeof props.onGoToNavigate === "function") {
+			await props.onGoToNavigate({ doctype, parentFilter });
+		} else {
+			emit("go-to-panel", { doctype, parentFilter });
+		}
+		if (mainSaved || relatedSaved) {
+			emit("saved");
+		}
+		emit("close");
+	} catch (e) {
+		const msg = e?.message || extractServerMessage(e) || String(e || "");
+		if (msg && typeof frappe !== "undefined" && frappe.msgprint) {
+			frappe.msgprint({ title: __("Error"), message: msg, indicator: "red" });
+		}
+	} finally {
+		goToPanelBusy.value = false;
+		form.saving.value = false;
+	}
 }
 
 async function onSubmit(opts = {}) {

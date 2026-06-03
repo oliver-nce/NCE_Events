@@ -238,6 +238,7 @@
 			@readback-merged="onReadbackMerged"
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
+			:on-go-to-navigate="onFormDialogGoToNavigate"
 		/>
 		<!-- Slot 1 pending (behind) -->
 		<PanelFormDialog
@@ -265,6 +266,7 @@
 			@readback-merged="onReadbackMerged"
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
+			:on-go-to-navigate="onFormDialogGoToNavigate"
 		/>
 		<!-- Slot 1 active -->
 		<PanelFormDialog
@@ -298,6 +300,7 @@
 			@readback-merged="onReadbackMerged"
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
+			:on-go-to-navigate="onFormDialogGoToNavigate"
 		/>
 		<!-- Slot 0 pending (behind) -->
 		<PanelFormDialog
@@ -325,6 +328,7 @@
 			@readback-merged="onReadbackMerged"
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
+			:on-go-to-navigate="onFormDialogGoToNavigate"
 		/>
 	</div>
 </template>
@@ -759,6 +763,7 @@ async function openPanel(doctype, parentFilter = {}, parentId = null, parentCont
 	} finally {
 		p.loading = false;
 	}
+	return id;
 }
 
 function closePanel(id) {
@@ -801,6 +806,35 @@ async function onDrill(ev, parentPanel) {
 		parentContextTitle = String(ev.parentRow[tf]).trim();
 	}
 	openPanel(ev.doctype, filter, parentPanel.id, parentContextTitle);
+}
+
+/** Form Dialog Go to — open related panel after save; caller awaits so data is loaded before dialog closes. */
+async function onFormDialogGoToNavigate({ doctype, parentFilter }) {
+	const dt = String(doctype || "").trim();
+	if (!dt || !parentFilter || typeof parentFilter !== "object") {
+		return;
+	}
+	let parentContextTitle = "";
+	const parentId = formDialogSourcePanelId.value;
+	const parentPanel = parentId != null ? openPanels.find((p) => p.id === parentId) : null;
+	const tf = (parentPanel?.config?.title_field || "").trim();
+	const rootName = formDialogDocName.value != null ? String(formDialogDocName.value).trim() : "";
+	if (tf && rootName && parentPanel) {
+		const row = panelLiveRows(parentPanel).find((r) => r && String(r.name) === rootName);
+		if (row && row[tf] != null && String(row[tf]).trim() !== "") {
+			parentContextTitle = String(row[tf]).trim();
+		}
+	}
+	const childPanelId = await openPanel(dt, parentFilter, parentId, parentContextTitle);
+	const child = childPanelId != null ? openPanels.find((p) => p.id === childPanelId) : null;
+	if (child?._reload) {
+		child.loading = true;
+		try {
+			await child._reload();
+		} finally {
+			child.loading = false;
+		}
+	}
 }
 
 async function onDrilledRowClick(p, row) {

@@ -34,9 +34,11 @@
 					:root-doctype="rootDoctype"
 					:root-doc-name="rootDocName"
 					:reload-tick="props.reloadTick"
+					:go-to-busy="goToBusy"
 					:form-data="formData"
 					:original-form-data="originalFormData"
 					@related-dirty="(v) => $emit('related-dirty', v)"
+					@go-to-panel="(ev) => $emit('go-to-panel', ev)"
 				/>
 
 				<PanelFormDialogInlineChildTab
@@ -150,9 +152,16 @@ const props = defineProps({
 	findableFieldnames: { type: Object, default: null },
 	/** Disable editing on inline child tabs (e.g. Find criteria mode). */
 	readOnlyHost: { type: Boolean, default: false },
+	goToBusy: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(["field-change", "link-change", "related-dirty", "find-criteria-patch"]);
+const emit = defineEmits([
+	"field-change",
+	"link-change",
+	"related-dirty",
+	"find-criteria-patch",
+	"go-to-panel",
+]);
 
 const findHelpOpen = ref(false);
 
@@ -249,7 +258,17 @@ function reloadRelatedFromServer() {
 	}
 }
 
-defineExpose({ saveAllRelatedRows, resetRelatedToBaseline, reloadRelatedFromServer });
+function getRelatedRowsForTab(ti) {
+	const ref = relatedTabRefs.value[ti];
+	return ref?.getDisplayRows?.() ?? [];
+}
+
+defineExpose({
+	saveAllRelatedRows,
+	resetRelatedToBaseline,
+	reloadRelatedFromServer,
+	getRelatedRowsForTab,
+});
 </script>
 
 <style scoped>

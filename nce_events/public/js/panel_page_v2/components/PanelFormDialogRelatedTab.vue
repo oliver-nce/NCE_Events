@@ -1,18 +1,29 @@
 <template>
 	<!-- Related DocType tab: data table + optional field-metadata details -->
 	<div v-if="tab._related" class="ppv2-fd-related-root">
-		<p class="ppv2-fd-related-meta">
-			{{ tab._related.doctype }}
-			<span v-if="tab._related.link_field" class="ppv2-fd-related-meta-link">
-				· {{ tab._related.link_field }}
-			</span>
-			<span
-				v-if="tab._related.hop_chain && tab._related.hop_chain.length"
-				class="ppv2-fd-related-meta-link"
+		<div class="ppv2-fd-related-meta-row">
+			<p class="ppv2-fd-related-meta">
+				{{ tab._related.doctype }}
+				<span v-if="tab._related.link_field" class="ppv2-fd-related-meta-link">
+					· {{ tab._related.link_field }}
+				</span>
+				<span
+					v-if="tab._related.hop_chain && tab._related.hop_chain.length"
+					class="ppv2-fd-related-meta-link"
+				>
+					· {{ tab._related.hop_chain.length }}-hop
+				</span>
+			</p>
+			<button
+				type="button"
+				class="btn btn-default btn-sm ppv2-fd-related-go-to"
+				:disabled="!goToEnabled || goToBusy"
+				title="Open panel for this related list"
+				@click="onGoToPanel"
 			>
-				· {{ tab._related.hop_chain.length }}-hop
-			</span>
-		</p>
+				Go to
+			</button>
+		</div>
 		<p v-if="tab._related.captureError" class="ppv2-fd-related-warn">
 			Schema note: {{ tab._related.captureError }}
 		</p>
@@ -267,8 +278,12 @@
 </template>
 
 <script setup>
-import { reactive, ref, watch, onUnmounted, nextTick } from "vue";
+import { reactive, ref, watch, onUnmounted, nextTick, computed } from "vue";
 import { frappeCall } from "../utils/frappeCall.js";
+import {
+	buildRelatedTabPanelFilter,
+	canGoToRelatedPanel,
+} from "../utils/formDialogRelatedGoTo.js";
 
 const props = defineProps({
 	ti: { type: Number, required: true },
@@ -278,11 +293,13 @@ const props = defineProps({
 	rootDocName: { type: String, default: null },
 	/** Bumped by host (e.g. after WP read-back) to trigger a fresh server fetch. */
 	reloadTick: { type: Number, default: 0 },
+	/** True while Go to is saving pending edits before navigation. */
+	goToBusy: { type: Boolean, default: false },
 	formData: { type: Object, required: true },
 	originalFormData: { type: Object, default: null },
 });
 
-const emit = defineEmits(["related-dirty"]);
+const emit = defineEmits(["related-dirty", "go-to-panel"]);
 
 /** Related table column: show red asterisk when child DocType marks field mandatory (`reqd`). */
 function relatedColumnMandatory(col) {
@@ -296,6 +313,39 @@ function relatedColumnMandatory(col) {
 const relatedState = reactive({});
 /** @type {Record<number, number>} */
 const relatedSeq = reactive({});
+
+const goToEnabled = computed(() =>
+	canGoToRelatedPanel(props.tab, props.rootDocName, relatedState, props.ti),
+);
+
+function onGoToPanel() {
+	const rel = props.tab?._related;
+	if (!rel?.doctype) {
+		return;
+	}
+	const parentFilter = buildRelatedTabPanelFilter(
+		rel,
+		props.rootDocName,
+		relatedState[props.ti]?.rows || [],
+	);
+	if (!parentFilter) {
+		if (typeof frappe !== "undefined" && frappe.show_alert) {
+			frappe.show_alert({
+				message: "No related rows to open in the panel.",
+				indicator: "orange",
+			});
+		}
+		return;
+	}
+	emit("go-to-panel", {
+		doctype: rel.doctype,
+		related: {
+			link_field: rel.link_field,
+			hop_chain: rel.hop_chain,
+		},
+		ti: props.ti,
+	});
+}
 
 const actionModal = reactive({
 	open: false,
@@ -962,7 +1012,16 @@ function reloadRelatedFromServer() {
 	fetchRelatedForTab(props.ti);
 }
 
-defineExpose({ saveAllRelatedRows, resetRelatedToBaseline, reloadRelatedFromServer });
+function getDisplayRows() {
+	return relatedState[props.ti]?.rows || [];
+}
+
+defineExpose({
+	saveAllRelatedRows,
+	resetRelatedToBaseline,
+	reloadRelatedFromServer,
+	getDisplayRows,
+});
 
 function relatedLabelColPx(ti) {
 	const w = relatedLabelColByTab[ti];
@@ -1028,10 +1087,22 @@ onUnmounted(() => {
 .ppv2-fd-related-preview {
 	padding: 4px 0 12px;
 }
+.ppv2-fd-related-meta-row {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: 12px;
+	margin: 0 0 12px;
+}
 .ppv2-fd-related-meta {
 	font-size: var(--font-size-sm);
 	color: var(--text-muted);
-	margin: 0 0 12px;
+	margin: 0;
+	flex: 1;
+	min-width: 0;
+}
+.ppv2-fd-related-go-to {
+	flex-shrink: 0;
 }
 .ppv2-fd-related-meta-link {
 	font-weight: normal;
