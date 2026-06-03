@@ -32,7 +32,7 @@
 		<div v-else-if="error" class="ppv2-error">{{ error }}</div>
 
 		<div v-else-if="config" class="ppv2-body">
-			<table class="ppv2-table">
+			<table class="ppv2-table" :style="tableMinWidthStyle">
 				<thead>
 					<tr>
 						<th
@@ -50,7 +50,7 @@
 								@mousedown.prevent="startColResize($event, ci)"
 							/>
 						</th>
-						<th v-if="hasEmailAction || hasPhoneAction || hasWpSwitchAction" class="ppv2-action-th" />
+						<th v-if="hasActionColumn" class="ppv2-action-th" :style="actionColumnStyle" />
 					</tr>
 				</thead>
 				<tbody>
@@ -95,7 +95,7 @@
 							>
 							<template v-else>{{ cellValue(row, col) }}</template>
 						</td>
-						<td v-if="hasEmailAction || hasPhoneAction || hasWpSwitchAction" class="ppv2-action-td">
+						<td v-if="hasActionColumn" class="ppv2-action-td" :style="actionColumnStyle">
 							<button
 								v-if="hasEmailAction && rowHasEmail(row)"
 								class="ppv2-row-btn"
@@ -320,11 +320,15 @@ function onRefresh() {
 	emit("refresh");
 }
 
-function calcColWidths(columns, rows, containerWidth) {
+const ACTION_BTN_SLOT_PX = 38;
+const ACTION_CELL_PAD_PX = 12;
+
+function calcColWidths(columns, rows, containerWidth, actionColWidth = 0) {
 	const sample = rows.slice(0, 20);
 	const MIN_COL = 50;
 	const MAX_COL = 500;
-	const available = Math.max(200, (containerWidth || 800) - 160);
+	const reserved = Math.max(0, actionColWidth) + 16;
+	const available = Math.max(200, (containerWidth || 800) - reserved);
 	const avgChars = columns.map((col) => {
 		let total = 0;
 		sample.forEach((row) => {
@@ -348,22 +352,6 @@ function calcColWidths(columns, rows, containerWidth) {
 	return widths;
 }
 
-watch(
-	() => [props.rows, props.columns],
-	() => {
-		if (!props.columns?.length) return;
-		nextTick(() => {
-			const el = panelRef.value;
-			const w = el?.offsetWidth ?? el?.clientWidth ?? 0;
-			const widths = calcColWidths(props.columns, props.rows || [], w);
-			widths.forEach((w, i) => {
-				colWidths[i] = w;
-			});
-		});
-	},
-	{ immediate: true }
-);
-
 const emailField = computed(() => (props.config.email_field || "").trim().toLowerCase());
 const smsField = computed(() => (props.config.sms_field || "").trim().toLowerCase());
 const wpFamilyIdField = computed(() => (props.config.wp_family_id_field || "").trim().toLowerCase());
@@ -371,6 +359,59 @@ const hasEmailAction = computed(() => !!emailField.value);
 const hasPhoneAction = computed(() => !!smsField.value);
 const hasWpSwitchAction = computed(
 	() => !!props.config.show_wp_switch && !!wpFamilyIdField.value
+);
+
+const actionSlotCount = computed(() => {
+	let n = 0;
+	if (hasEmailAction.value) n += 1;
+	if (hasPhoneAction.value) n += 2;
+	if (hasWpSwitchAction.value) n += 1;
+	return n;
+});
+
+const hasActionColumn = computed(() => actionSlotCount.value > 0);
+
+const actionColumnWidth = computed(() => {
+	if (!actionSlotCount.value) return 0;
+	return ACTION_CELL_PAD_PX + actionSlotCount.value * ACTION_BTN_SLOT_PX;
+});
+
+const actionColumnStyle = computed(() => {
+	const w = actionColumnWidth.value;
+	if (!w) return undefined;
+	return {
+		width: `${w}px`,
+		minWidth: `${w}px`,
+		maxWidth: `${w}px`,
+	};
+});
+
+const tableMinWidthStyle = computed(() => {
+	if (!hasActionColumn.value || !props.columns?.length) return undefined;
+	const dataSum = props.columns.reduce((s, _c, i) => s + (colWidths[i] || 0), 0);
+	const minW = dataSum + actionColumnWidth.value;
+	return minW > 0 ? { minWidth: `${minW}px` } : undefined;
+});
+
+watch(
+	() => [props.rows, props.columns, actionColumnWidth.value],
+	() => {
+		if (!props.columns?.length) return;
+		nextTick(() => {
+			const el = panelRef.value;
+			const w = el?.offsetWidth ?? el?.clientWidth ?? 0;
+			const widths = calcColWidths(
+				props.columns,
+				props.rows || [],
+				w,
+				actionColumnWidth.value
+			);
+			widths.forEach((w, i) => {
+				colWidths[i] = w;
+			});
+		});
+	},
+	{ immediate: true }
 );
 
 const dataCols = computed(() => props.columns);
@@ -550,8 +591,9 @@ function startColResize(e, ci) {
 }
 
 .ppv2-action-th {
-	width: 110px;
-	min-width: 110px;
+	padding-left: 4px;
+	padding-right: 4px;
+	overflow: visible;
 }
 
 .ppv2-table td {
@@ -598,6 +640,8 @@ function startColResize(e, ci) {
 	white-space: nowrap;
 	text-align: center;
 	overflow: visible;
+	padding-left: 4px;
+	padding-right: 4px;
 }
 
 .ppv2-row-btn {
