@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Manual overlay merged into CODE_INDEX.json by scripts/build_code_index.py. Edit per-file entries here; the generator preserves your curated 'purpose', 'sections', 'private_helpers', 'key_fields', and 'depends_on'.",
-    "generated": "2026-05-19",
+    "generated": "2026-06-03",
     "generator": "scripts/build_code_index.py",
     "usage": "Run `python scripts/build_code_index.py --write` to regenerate CODE_INDEX.json after editing this file or after adding/renaming/deleting source files. The pre-commit hook runs `--check` and blocks commits whose code changes have not been regenerated."
   },
@@ -62,10 +62,11 @@
       "exports": [
         "get_credentials"
       ],
-      "purpose": "Read credential_config JSON from API Connector doctype — returns auth_pattern, base_url, required credential values",
+      "purpose": "Read credential_config JSON from API Connector doctype — returns auth_pattern, base_url, and required credential values. Fallback auth_type map includes Secret (api_secret only, auth_pattern shared_secret).",
       "depends_on": [],
       "sections": [
-        "Credential lookup from API Connector"
+        "Credential lookup from API Connector",
+        "Secret auth fallback (api_secret only, no api_key)"
       ]
     },
     "nce_events/api/derived_fields.py": {
@@ -163,6 +164,17 @@
         "Related-doctypes argument parsing and child-row sync"
       ]
     },
+    "nce_events/api/form_dialog/action_registry.py": {
+      "exports": [
+        "get_action_method_spec",
+        "list_action_method_specs",
+        "list_portal_action_methods"
+      ],
+      "whitelist_endpoints": [
+        "list_portal_action_methods"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/api/form_dialog/button_visibility.py": {
       "exports": [
         "button_should_hide",
@@ -207,17 +219,31 @@
         "list_form_dialogs_for_doctype (System Manager)"
       ]
     },
+    "nce_events/api/form_dialog/portal_actions.py": {
+      "exports": [
+        "get_portal_actions_for_row",
+        "run_portal_action"
+      ],
+      "whitelist_endpoints": [
+        "run_portal_action"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/api/form_dialog/portal_fields.py": {
       "exports": [
         "get_inline_child_portal_field_editor",
         "get_related_portal_field_editor",
+        "save_inline_child_portal_actions",
         "save_inline_child_portal_field_config",
+        "save_related_portal_actions",
         "save_related_portal_field_config"
       ],
       "whitelist_endpoints": [
         "get_inline_child_portal_field_editor",
         "get_related_portal_field_editor",
+        "save_inline_child_portal_actions",
         "save_inline_child_portal_field_config",
+        "save_related_portal_actions",
         "save_related_portal_field_config"
       ],
       "purpose": "Portal-field editor endpoints for Form Dialog Related DocType rows: build the editor row list from frozen child meta and persist user-curated portal_field_config (show/editable/sort_rank/sort_dir).",
@@ -529,6 +555,7 @@
     "nce_events/api/panel_api_pkg/sql.py": {
       "exports": [
         "build_panel_sql",
+        "build_panel_sql_for_doc",
         "save_panel_sql"
       ],
       "whitelist_endpoints": [
@@ -598,10 +625,12 @@
     },
     "nce_events/api/sync_status.py": {
       "exports": [
-        "get_sync_job_status"
+        "get_sync_job_status",
+        "is_doctype_sync_busy"
       ],
       "whitelist_endpoints": [
-        "get_sync_job_status"
+        "get_sync_job_status",
+        "is_doctype_sync_busy"
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
@@ -658,6 +687,12 @@
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
+    "nce_events/api/tests/api/form_dialog/test_portal_actions.py": {
+      "exports": [
+        "TestRunPortalAction"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/api/tests/api/form_dialog/test_portal_fields.py": {
       "exports": [
         "TestNormalizePortalFieldConfig",
@@ -669,6 +704,18 @@
       "exports": [
         "TestGetFormDialogRelatedRows",
         "TestSaveFormDialogRelatedRows"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/api/tests/api/panel_api_pkg/test_discovery.py": {
+      "exports": [
+        "TestDiscoverViaLinkPaths"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/api/tests/api/test_credentials.py": {
+      "exports": [
+        "TestGetCredentialsSecretAuth"
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
@@ -780,6 +827,16 @@
         "get_derived_sql_specs_api",
         "get_wp_tables_column_mapping_api",
         "get_wp_tables_default_field_values_api"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/api/wp_user_switch.py": {
+      "exports": [
+        "build_wp_switch_url",
+        "get_wp_switch_url"
+      ],
+      "whitelist_endpoints": [
+        "get_wp_switch_url"
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
@@ -1113,6 +1170,33 @@
       "purpose": "Editable field widget for card form inputs",
       "depends_on": []
     },
+    "nce_events/public/js/panel_page_v2/components/FindPanel.vue": {
+      "vue": {
+        "uses_defineEmits": true
+      },
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFindActionBar.vue": {
+      "vue": {
+        "uses_defineProps": true,
+        "uses_defineEmits": true
+      },
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFindRow.vue": {
+      "vue": {
+        "uses_defineProps": true,
+        "uses_defineEmits": true
+      },
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFindToolbar.vue": {
+      "vue": {
+        "uses_defineProps": true,
+        "uses_defineEmits": true
+      },
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/public/js/panel_page_v2/components/PanelFloat.vue": {
       "purpose": "Floating overlay panel for contextual actions",
       "depends_on": []
@@ -1245,6 +1329,15 @@
       "purpose": "Filter widget at the top of PanelTable: column dropdown, op chips, value/date/days-ago inputs, add/remove rows, default-filter seeding. Emits filter-change and show-filter.",
       "depends_on": []
     },
+    "nce_events/public/js/panel_page_v2/components/SpaPageNavBar.vue": {
+      "vue": {
+        "uses_defineEmits": true
+      },
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/public/js/panel_page_v2/components/SpaPageSwitcherFloat.vue": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/public/js/panel_page_v2/components/TabBar.vue": {
       "vue": {
         "uses_defineEmits": true
@@ -1324,6 +1417,12 @@
     "nce_events/public/js/panel_page_v2/composables/useBackdropPointerDismiss.js": {
       "exports": [
         "useBackdropPointerDismiss"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/public/js/panel_page_v2/composables/useFindPanel.js": {
+      "exports": [
+        "useFindPanel"
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
@@ -1422,6 +1521,12 @@
         "../../js_dialogs/sms_dialog.js"
       ]
     },
+    "nce_events/public/js/panel_page_v2/composables/useSpaPageNav.js": {
+      "exports": [
+        "useSpaPageNav"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/public/js/panel_page_v2/composables/useTagFinder.js": {
       "exports": [
         "useTagFinder"
@@ -1481,6 +1586,18 @@
       ],
       "purpose": "Utility: maps every Frappe fieldtype string to a { component, props } config (or { layout } for structural types). Single source of truth for fieldtype→control mapping in V2 dialogs.",
       "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/utils/findColumns.js": {
+      "exports": [
+        "buildFindColumns"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/public/js/panel_page_v2/utils/findCriterion.js": {
+      "exports": [
+        "matchFindCriterion"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
     "nce_events/public/js/panel_page_v2/utils/formDialogFindFields.js": {
       "exports": [
@@ -1543,6 +1660,12 @@
       "purpose": "Utility: Frappe-style depends_on / *_depends_on evaluation and layout fieldtype list for frozen form meta.",
       "depends_on": []
     },
+    "nce_events/public/js/panel_page_v2/utils/measureDeskTitleAnchor.js": {
+      "exports": [
+        "measureDeskTitleAnchor"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/public/js/panel_page_v2/utils/openDeskDoctypeList.js": {
       "exports": [
         "openDeskDoctypeListInNewTab"
@@ -1569,9 +1692,23 @@
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
+    "nce_events/public/js/panel_page_v2/utils/syncGateClient.js": {
+      "exports": [
+        "assertDoctypeNotSyncBusy",
+        "isDoctypeSyncBusy"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/public/js/panel_page_v2/utils/wooPublishDocNormalize.js": {
       "exports": [
         "normalizeDocForWooEventsPublish"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/public/js/panel_page_v2/utils/wpUserSwitch.js": {
+      "exports": [
+        "familyIdFromRow",
+        "openWpUserSwitch"
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     }

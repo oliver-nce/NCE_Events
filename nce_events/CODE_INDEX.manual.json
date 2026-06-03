@@ -216,10 +216,11 @@
       ]
     },
     "nce_events/api/credentials.py": {
-      "purpose": "Read credential_config JSON from API Connector doctype — returns auth_pattern, base_url, required credential values",
+      "purpose": "Read credential_config JSON from API Connector doctype — returns auth_pattern, base_url, and required credential values. Fallback auth_type map includes Secret (api_secret only, auth_pattern shared_secret).",
       "depends_on": [],
       "sections": [
-        "Credential lookup from API Connector"
+        "Credential lookup from API Connector",
+        "Secret auth fallback (api_secret only, no api_key)"
       ]
     },
     "nce_events/api/exchange.py": {

@@ -13,6 +13,7 @@ _PASSWORD_FIELDS: frozenset[str] = frozenset((
 
 _AUTH_TYPE_FIELDS: dict[str, list[str]] = {
 	"API Key": ["api_key", "api_secret"],
+	"Secret": ["api_secret"],
 	"Basic Auth": ["username", "password"],
 	"Bearer Token": ["bearer_token"],
 	"OAuth2": ["oauth_refresh_token"],
@@ -79,6 +80,7 @@ def _from_auth_type(connector: Any) -> dict[str, Any]:
 
 	auth_pattern_map = {
 		"API Key": "api_key_header",
+		"Secret": "shared_secret",
 		"Basic Auth": "basic_auth",
 		"Bearer Token": "bearer_token",
 		"OAuth2": "oauth2",

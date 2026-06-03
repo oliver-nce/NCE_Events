@@ -26,7 +26,7 @@ function _generate_credential_config(frm) {
 		"",
 		"The connector form has these credential fields available:",
 		"- api_key (Password) — shown when auth_type = API Key",
-		"- api_secret (Password) — shown when auth_type = API Key",
+		"- api_secret (Password) — shown when auth_type = API Key or Secret (label: Secret for Secret auth)",
 		"- username (Data) — shown when auth_type = Basic Auth",
 		"- password (Password) — shown when auth_type = Basic Auth",
 		"- bearer_token (Password) — shown when auth_type = Bearer Token",
