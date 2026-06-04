@@ -150,22 +150,22 @@ function label(msg) {
 .ppv2-find-tab-btn {
 	font-size: 11px;
 	padding: 4px 10px;
-	border: 1px solid rgba(255, 255, 255, 0.35);
+	border: 1px solid color-mix(in srgb, var(--nce-color-primary-fg, #ffffff) 35%, transparent);
 	border-radius: var(--border-radius-sm);
-	background: rgba(255, 255, 255, 0.12);
+	background: color-mix(in srgb, var(--nce-color-primary-fg, #ffffff) 12%, transparent);
 	cursor: pointer;
 	font-family: inherit;
 	white-space: nowrap;
 }
 
 .ppv2-find-tab-btn:hover {
-	background: rgba(255, 255, 255, 0.22);
+	background: color-mix(in srgb, var(--nce-color-primary-fg, #ffffff) 22%, transparent);
 }
 
 .ppv2-find-tab-btn--active {
-	background: #fff;
-	color: var(--bg-header);
-	border-color: #fff;
+	background: var(--nce-color-surface, #ffffff);
+	color: var(--nce-color-primary, #126bc4);
+	border-color: var(--nce-color-surface, #ffffff);
 	font-weight: var(--font-weight-bold);
 }
 </style>

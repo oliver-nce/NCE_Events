@@ -203,6 +203,6 @@ onMounted(async () => {
 	text-align: center;
 }
 .card-error {
-	color: red;
+	color: var(--nce-color-danger, #dd0000);
 }
 </style>

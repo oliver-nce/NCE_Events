@@ -31,7 +31,7 @@
 	--bg-surface: var(--nce-color-surface, #fafafa);
 	--bg-card: var(--nce-color-surface, #ffffff);
 	--bg-header: var(--nce-color-primary, #126bc4);
-	--text-header: #ffffff;
+	--text-header: var(--nce-color-primary-fg, #ffffff);
 
 	--row-alt-bg: var(--nce-color-row-alt, #f3f4f6);
 	--row-hover-bg: var(--nce-color-primary-100, #e3f0fc);

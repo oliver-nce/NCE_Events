@@ -17,7 +17,7 @@
 	background: var(--nce-color-surface, #FAFAFA);
 	border: 1px solid var(--nce-color-primary-300, #A2CCF6);
 	border-radius: 8px;
-	box-shadow: 0 8px 32px rgba(18, 107, 196, 0.22), 0 2px 8px rgba(0, 0, 0, 0.08);
+	box-shadow: 0 8px 32px color-mix(in srgb, var(--nce-color-primary, #126bc4) 22%, transparent), 0 2px 8px rgba(0, 0, 0, 0.08);
 	display: flex;
 	flex-direction: column;
 	overflow: hidden;
@@ -254,7 +254,7 @@
 	background: var(--nce-color-surface, #ffffff);
 	border: 1px solid var(--nce-color-primary-300, #A2CCF6);
 	border-radius: 8px;
-	box-shadow: 0 8px 32px rgba(18, 107, 196, 0.22), 0 2px 8px rgba(0, 0, 0, 0.08);
+	box-shadow: 0 8px 32px color-mix(in srgb, var(--nce-color-primary, #126bc4) 22%, transparent), 0 2px 8px rgba(0, 0, 0, 0.08);
 	display: flex;
 	flex-direction: column;
 	overflow: hidden;
