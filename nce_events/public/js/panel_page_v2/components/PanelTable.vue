@@ -159,9 +159,14 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, watch, nextTick, onUnmounted } from "vue";
+import { ref, reactive, computed, watch, nextTick, onMounted, onUnmounted } from "vue";
 import PanelTableFilterBar from "./PanelTableFilterBar.vue";
 import { familyIdFromRow } from "../utils/wpUserSwitch.js";
+import {
+	actionColumnWidthFromConfig,
+	calcColWidths,
+	panelRowVal,
+} from "../utils/panelTableColWidths.js";
 
 const props = defineProps({
 	title: { type: String, default: "" },
@@ -179,6 +184,8 @@ const props = defineProps({
 	searchOnlyColumns: { type: Array, default: () => [] },
 	/** Inside Find Panel etc.: no filter bar; table fills parent. */
 	embedded: { type: Boolean, default: false },
+	/** Pre-computed column widths from App.vue before first paint. */
+	initialColWidths: { type: Array, default: null },
 });
 
 const emit = defineEmits([
@@ -195,6 +202,8 @@ const emit = defineEmits([
 	"switch-one",
 	"refresh",
 	"show-filter",
+	/** Sum of data column widths + action column reserve (px). Used to size PanelFloat on open. */
+	"table-min-width",
 ]);
 
 const colWidths = reactive({});
@@ -364,38 +373,6 @@ function onRefresh() {
 	emit("refresh");
 }
 
-const ACTION_BTN_SLOT_PX = 38;
-const ACTION_CELL_PAD_PX = 12;
-
-function calcColWidths(columns, rows, containerWidth, actionColWidth = 0) {
-	const sample = rows.slice(0, 20);
-	const MIN_COL = 50;
-	const MAX_COL = 500;
-	const reserved = Math.max(0, actionColWidth) + 16;
-	const available = Math.max(200, (containerWidth || 800) - reserved);
-	const avgChars = columns.map((col) => {
-		let total = 0;
-		sample.forEach((row) => {
-			const v = getVal(row, col.fieldname);
-			total += String(v ?? "").length;
-		});
-		const headerLen = (col.label || col.fieldname).length;
-		const avg = sample.length > 0 ? total / sample.length : headerLen;
-		return Math.max(avg, headerLen, 2);
-	});
-	let totalChars = avgChars.reduce((s, c) => s + c, 0);
-	if (totalChars <= 0) totalChars = 1;
-	let widths = avgChars.map((c) =>
-		Math.min(MAX_COL, Math.max(MIN_COL, Math.round((c / totalChars) * available)))
-	);
-	const wSum = widths.reduce((s, w) => s + w, 0);
-	if (wSum > available && wSum > 0) {
-		const scale = available / wSum;
-		widths = widths.map((w) => Math.floor(w * scale));
-	}
-	return widths;
-}
-
 const emailField = computed(() => (props.config.email_field || "").trim().toLowerCase());
 const smsField = computed(() => (props.config.sms_field || "").trim().toLowerCase());
 const wpFamilyIdField = computed(() => (props.config.wp_family_id_field || "").trim().toLowerCase());
@@ -405,20 +382,8 @@ const hasWpSwitchAction = computed(
 	() => !!props.config.show_wp_switch && !!wpFamilyIdField.value
 );
 
-const actionSlotCount = computed(() => {
-	let n = 0;
-	if (hasEmailAction.value) n += 1;
-	if (hasPhoneAction.value) n += 2;
-	if (hasWpSwitchAction.value) n += 1;
-	return n;
-});
-
-const hasActionColumn = computed(() => actionSlotCount.value > 0);
-
-const actionColumnWidth = computed(() => {
-	if (!actionSlotCount.value) return 0;
-	return ACTION_CELL_PAD_PX + actionSlotCount.value * ACTION_BTN_SLOT_PX;
-});
+const actionColumnWidth = computed(() => actionColumnWidthFromConfig(props.config));
+const hasActionColumn = computed(() => actionColumnWidth.value > 0);
 
 const actionColumnStyle = computed(() => {
 	const w = actionColumnWidth.value;
@@ -431,32 +396,64 @@ const actionColumnStyle = computed(() => {
 });
 
 const tableMinWidthStyle = computed(() => {
-	if (!hasActionColumn.value || !props.columns?.length) return undefined;
+	if (!props.columns?.length) return undefined;
 	const dataSum = props.columns.reduce((s, _c, i) => s + (colWidths[i] || 0), 0);
 	const minW = dataSum + actionColumnWidth.value;
 	return minW > 0 ? { minWidth: `${minW}px` } : undefined;
 });
 
+function applyInitialColWidths() {
+	const arr = props.initialColWidths;
+	if (!Array.isArray(arr) || !arr.length) return;
+	arr.forEach((px, i) => {
+		colWidths[i] = px;
+	});
+}
+
+function syncColumnWidths() {
+	if (!props.columns?.length) return;
+	const el = panelRef.value;
+	const cw = el?.offsetWidth ?? el?.clientWidth ?? 0;
+	const { widths, tableMinWidth } = calcColWidths(
+		props.columns,
+		props.rows || [],
+		cw,
+		actionColumnWidth.value
+	);
+	widths.forEach((px, i) => {
+		colWidths[i] = px;
+	});
+	emit("table-min-width", tableMinWidth);
+}
+
+watch(
+	() => props.initialColWidths,
+	() => applyInitialColWidths(),
+	{ immediate: true }
+);
+
 watch(
 	() => [props.rows, props.columns, actionColumnWidth.value],
 	() => {
-		if (!props.columns?.length) return;
-		nextTick(() => {
-			const el = panelRef.value;
-			const w = el?.offsetWidth ?? el?.clientWidth ?? 0;
-			const widths = calcColWidths(
-				props.columns,
-				props.rows || [],
-				w,
-				actionColumnWidth.value
-			);
-			widths.forEach((w, i) => {
-				colWidths[i] = w;
-			});
-		});
+		nextTick(() => syncColumnWidths());
 	},
 	{ immediate: true }
 );
+
+let _colWidthResizeObs = null;
+onMounted(() => {
+	if (typeof ResizeObserver === "undefined") return;
+	_colWidthResizeObs = new ResizeObserver(() => {
+		syncColumnWidths();
+	});
+	nextTick(() => {
+		if (panelRef.value) _colWidthResizeObs.observe(panelRef.value);
+	});
+});
+onUnmounted(() => {
+	_colWidthResizeObs?.disconnect();
+	_colWidthResizeObs = null;
+});
 
 const dataCols = computed(() => props.columns);
 
@@ -482,8 +479,7 @@ const femaleHex = computed(() => (props.config.female_hex || "").trim());
 const tintByGender = computed(() => props.config.tint_by_gender || {});
 
 function getVal(row, key) {
-	if (!key) return null;
-	return row[key] ?? row[key.toLowerCase()] ?? row[key.toUpperCase()] ?? null;
+	return panelRowVal(row, key);
 }
 
 function cellValue(row, col) {

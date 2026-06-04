@@ -51,12 +51,12 @@
 			<template #footer>{{ config?.header_text || "NCE Tables" }}</template>
 		</PanelFloat>
 
+		<template v-for="p in openPanels" :key="p.id">
 		<PanelFloat
-			v-for="p in openPanels"
-			:key="p.id"
+			v-if="p._layoutReady"
 			:init-x="p.x"
 			:init-y="p.y"
-			:init-w="1200"
+			:init-w="panelFloatInitW(p)"
 			:init-h="600"
 		>
 			<template #header>
@@ -107,6 +107,8 @@
 				<PanelTable
 					class="ppv2-find-stack-table"
 					:title="floatedPanelTitle(p)"
+					:initial-col-widths="p._initialColWidths"
+					@table-min-width="(w) => onPanelTableMinWidth(p, w)"
 					:columns="panelTableColumns(p)"
 					:rows="panelTableRows(p)"
 					:total="p.fullTotal"
@@ -154,6 +156,8 @@
 			<PanelTable
 				v-else
 				:title="floatedPanelTitle(p)"
+				:initial-col-widths="p._initialColWidths"
+				@table-min-width="(w) => onPanelTableMinWidth(p, w)"
 				:columns="p.columns"
 				:rows="panelLiveRows(p)"
 				:total="p.fullTotal"
@@ -183,6 +187,7 @@
 			/>
 			<template #footer>{{ floatedPanelTitle(p) }}</template>
 		</PanelFloat>
+		</template>
 
 		<TagFinder
 			v-if="tagFinderDoctype"
@@ -353,6 +358,10 @@ import PanelFindActionBar from "./components/PanelFindActionBar.vue";
 import PanelFindRow from "./components/PanelFindRow.vue";
 import { useFindPanel } from "./composables/useFindPanel.js";
 import { buildFindColumns } from "./utils/findColumns.js";
+import {
+	PANEL_FLOAT_DEFAULT_W,
+	preparePanelTableLayout,
+} from "./utils/panelTableColWidths.js";
 import { frappeCall } from "./utils/frappeCall.js";
 import { openWpUserSwitch, familyIdFromRow } from "./utils/wpUserSwitch.js";
 
@@ -556,6 +565,27 @@ function panelTableColumns(p) {
 	return p.columns;
 }
 
+function applyPanelLayout(p) {
+	const layout = preparePanelTableLayout(
+		panelTableColumns(p),
+		panelLiveRows(p),
+		p.config || {}
+	);
+	p._floatInitW = layout.floatInitW;
+	p._initialColWidths = layout.initialColWidths;
+	p._tableMinWidth = layout.tableMinWidth;
+}
+
+function onPanelTableMinWidth(p, tableMinWidth) {
+	const n = Number(tableMinWidth);
+	if (!Number.isFinite(n) || n <= 0) return;
+	p._tableMinWidth = n;
+}
+
+function panelFloatInitW(p) {
+	return p._floatInitW || PANEL_FLOAT_DEFAULT_W;
+}
+
 /** Return the live row array for a panel. p._panelRows is a Vue ref stored on a reactive()
  * object — Vue auto-unwraps it, so accessing it always yields the current panel.rows.value. */
 function panelLiveRows(p) {
@@ -720,6 +750,10 @@ async function openPanel(doctype, parentFilter = {}, parentId = null, parentCont
 		_find: useFindPanel(),
 		_findColumns: null,
 		_panelApi: null,
+		_tableMinWidth: 0,
+		_floatInitW: 0,
+		_initialColWidths: null,
+		_layoutReady: false,
 	});
 	openPanels.push(p);
 
@@ -735,6 +769,7 @@ async function openPanel(doctype, parentFilter = {}, parentId = null, parentCont
 		p.total = panel.total.value;
 		p.fullTotal = panel.fullTotal.value;
 		p._allRows = panel.allRows; // live ref — full unfiltered row set, used by client-side Find
+		applyPanelLayout(p);
 		p._setFilters = (uf) => {
 			panel.setFilters(uf);
 		};
@@ -754,6 +789,7 @@ async function openPanel(doctype, parentFilter = {}, parentId = null, parentCont
 						p._findColumns
 					);
 				}
+				applyPanelLayout(p);
 			} finally {
 				p.loading = false;
 			}
@@ -762,6 +798,7 @@ async function openPanel(doctype, parentFilter = {}, parentId = null, parentCont
 		p.error = String(e);
 	} finally {
 		p.loading = false;
+		p._layoutReady = true;
 	}
 	return id;
 }

@@ -30,7 +30,8 @@ function getNextZ() { return ++_globalZ; }
 </script>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, watch } from "vue";
+import { PANEL_FLOAT_MAX_W } from "../utils/panelTableColWidths.js";
 
 const props = defineProps({
 	initX: { type: Number, default: 40 },
@@ -49,6 +50,19 @@ const w = ref(props.initW);
 const h = ref(props.initH);
 const z = ref(getNextZ());
 const floatEl = ref(null);
+
+/** Grow when parent recomputes table min-width; never shrink (user may have resized wider). */
+watch(
+	() => props.initW,
+	(nw) => {
+		const n = Number(nw);
+		if (!Number.isFinite(n) || n <= 0) return;
+		const capped = Math.min(PANEL_FLOAT_MAX_W, n);
+		if (capped > w.value) {
+			w.value = capped;
+		}
+	}
+);
 
 /*
  * Position via transform: translate3d() — this is composited on the GPU
