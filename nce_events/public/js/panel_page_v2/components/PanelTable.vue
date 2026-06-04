@@ -72,7 +72,6 @@
 						<td
 							v-for="col in dataCols"
 							:key="col.fieldname"
-							:class="cellTdClass(col)"
 							:style="cellStyle(row, col)"
 						>
 							<a
@@ -460,14 +459,6 @@ onUnmounted(() => {
 
 const dataCols = computed(() => props.columns);
 
-const boldSet = computed(() => {
-	const s = {};
-	(props.config.bold_fields || []).forEach((f) => {
-		s[f.toLowerCase()] = true;
-	});
-	return s;
-});
-
 const genderTintSet = computed(() => {
 	const s = {};
 	(props.config.gender_color_fields || []).forEach((f) => {
@@ -526,33 +517,37 @@ function looksLike(val, gender) {
 	return false;
 }
 
-function cellTdClass(col) {
+function fieldKeyMatchesColumn(fieldKey, col) {
+	const k = String(fieldKey || "").trim().toLowerCase();
+	if (!k || !col) return false;
+	const bare = k.includes(".") ? k.split(".").pop() : k;
+	const fn = String(col.fieldname || "").toLowerCase();
+	return fn === k || fn === bare;
+}
+
+function isBoldColumn(col) {
+	if (isTitleFieldColumn(col, props.config?.title_field)) return true;
+	return (props.config.bold_fields || []).some((f) => fieldKeyMatchesColumn(f, col));
+}
+
+function genderColor(row, col) {
 	const fn = col.fieldname.toLowerCase();
-	return {
-		"font-bold": boldSet.value[fn] || isTitleFieldColumn(col, props.config?.title_field),
-	};
+	if (!genderTintSet.value[fn]) return "";
+	const fixedGender = tintByGender.value[fn];
+	if (fixedGender === "Male") return maleHex.value || "";
+	if (fixedGender === "Female") return femaleHex.value || "";
+	const gv = getVal(row, genderCol.value);
+	if (looksLike(gv, "male")) return maleHex.value || "";
+	if (looksLike(gv, "female")) return femaleHex.value || "";
+	return "";
 }
 
 function cellStyle(row, col) {
-	const fn = col.fieldname.toLowerCase();
-	const style = {};
-
-	if (!genderTintSet.value[fn]) return style;
-
-	const fixedGender = tintByGender.value[fn];
-	if (fixedGender === "Male" && maleHex.value) {
-		style.color = maleHex.value;
-	} else if (fixedGender === "Female" && femaleHex.value) {
-		style.color = femaleHex.value;
-	} else {
-		const gv = getVal(row, genderCol.value);
-		if (looksLike(gv, "male") && maleHex.value) {
-			style.color = maleHex.value;
-		} else if (looksLike(gv, "female") && femaleHex.value) {
-			style.color = femaleHex.value;
-		}
-	}
-
+	// Body text color comes from the theme (Body Text picker → --nce-color-text);
+	// gender tint (categorical, panel-configured) overrides it when present.
+	const style = { color: genderColor(row, col) || "var(--nce-color-text)" };
+	// Panel bold_fields / title_field are appended to the inline style (bold is not a theme token).
+	if (isBoldColumn(col)) style.fontWeight = "700";
 	return style;
 }
 

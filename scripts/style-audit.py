@@ -32,6 +32,7 @@ NAMED_COLOR = re.compile(r":\s*(white|black|red|green|blue)\s*[;!}]", re.I)
 BRAND_RGBA = re.compile(r"rgba?\(\s*(18,\s*107,\s*196|65,\s*152,\s*240)", re.I)
 ARIAL_FONT = re.compile(r"font-family:\s*Arial\b", re.I)
 FIXED_FONT_PX = re.compile(r"font-size:\s*(?!calc\()\d+px", re.I)
+TAILWIND_FONT_BOLD = re.compile(r"['\"]font-bold['\"]|[^\w-]font-bold[^\w-]")
 SKIP_PATH_PARTS = (*SKIP_PARTS, "send-panel", "sms_dialog", "email_dialog")
 TYPOGRAPHY_SCOPE_DIRS = [
     PUBLIC / "js" / "panel_page_v2",
@@ -163,6 +164,13 @@ def main() -> int:
             typo_files,
             FIXED_FONT_PX,
             "fixed px font-size (use var(--font-size-*) / theme-text-* / calc):",
+        )
+    )
+    errors.extend(
+        check_pattern(
+            typo_files,
+            TAILWIND_FONT_BOLD,
+            "font-bold Tailwind utility (not in Vite bundle — use .ppv2-cell-bold or font-weight: 700):",
         )
     )
 

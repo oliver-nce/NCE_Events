@@ -6,7 +6,7 @@
 			:class="[
 				'tab-btn',
 				activeTab === tab.label
-					? 'theme-text-heading border-b-2 theme-border-primary font-bold'
+					? 'tab-btn--active theme-text-heading border-b-2 theme-border-primary'
 					: 'theme-text-muted',
 			]"
 			@click="$emit('update:activeTab', tab.label)"
@@ -54,5 +54,8 @@ const showBar = computed(() => {
 }
 .tab-btn:hover {
 	color: inherit;
+}
+.tab-btn--active {
+	font-weight: 700;
 }
 </style>

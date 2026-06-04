@@ -32,10 +32,7 @@
 				</div>
 			</div>
 		</div>
-		<div
-			class="ppv2-form-dialog ppv2-fd-dialog-root theme-font-sans theme-text-base"
-			:class="'ppv2-fd-size-' + form.dialogSize.value"
-		>
+		<div class="ppv2-form-dialog ppv2-fd-dialog-root" :class="'ppv2-fd-size-' + form.dialogSize.value">
 			<div
 				v-if="readbackFooterPhase === 'readback-waiting'"
 				class="ppv2-fd-readback-overlay"
