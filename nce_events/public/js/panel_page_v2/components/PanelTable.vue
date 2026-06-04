@@ -38,6 +38,7 @@
 						<th
 							v-for="(col, ci) in dataCols"
 							:key="col.fieldname"
+							class="col-header bg-secondary-100"
 							:style="{
 								width: colWidths[ci] ? colWidths[ci] + 'px' : 'auto',
 								minWidth: '40px',
@@ -50,7 +51,11 @@
 								@mousedown.prevent="startColResize($event, ci)"
 							/>
 						</th>
-						<th v-if="hasActionColumn" class="ppv2-action-th" :style="actionColumnStyle" />
+						<th
+							v-if="hasActionColumn"
+							class="ppv2-action-th col-header bg-secondary-100"
+							:style="actionColumnStyle"
+						/>
 					</tr>
 				</thead>
 				<tbody>
@@ -59,7 +64,7 @@
 						v-for="(row, ri) in displayRows"
 						:key="row.name || ri"
 						:class="{
-							'ppv2-alt': ri % 2 === 1,
+							'bg-row-alt': ri % 2 === 1,
 							'ppv2-selected': selectedName === row.name,
 						}"
 						@click="onRowClick($event, row)"
@@ -569,8 +574,6 @@ function startColResize(e, ci) {
 	position: sticky;
 	top: 0;
 	z-index: 2;
-	background: var(--column-header-bg);
-	color: var(--column-header-text);
 	font-weight: var(--font-weight-bold);
 	font-size: var(--font-size-sm);
 	text-transform: uppercase;
@@ -602,14 +605,11 @@ function startColResize(e, ci) {
 }
 
 .ppv2-table tbody tr:hover {
-	background: var(--primary-light);
+	background: var(--nce-color-primary-100);
 	cursor: pointer;
 }
-.ppv2-alt {
-	background: var(--row-alt);
-}
 .ppv2-selected {
-	background: var(--primary-light) !important;
+	background: var(--nce-color-primary-200) !important;
 }
 
 .ppv2-link-val {

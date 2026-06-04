@@ -1,12 +1,21 @@
 <template>
-	<div class="tf-tag-panel" :style="panelStyle" @mousedown="bringToFront">
+	<div
+		class="tf-tag-panel bg-surface border rounded shadow-theme"
+		:style="panelStyle"
+		@mousedown="bringToFront"
+	>
 		<div class="tf-tag-header bg-primary" @mousedown.prevent="startDrag">
 			<span>{{ field.label }}</span>
 			<button class="tf-close" @click="$emit('close')">&times;</button>
 		</div>
 		<div class="tf-tag-body">
-			<div class="tf-lbl">Fallback Value</div>
-			<input v-model="fallback" type="text" class="tf-input" placeholder="e.g. Student (leave empty for none)">
+			<div class="tf-lbl text-xs text-muted">Fallback Value</div>
+			<input
+				v-model="fallback"
+				type="text"
+				class="tf-input border-input-border rounded-sm"
+				placeholder="e.g. Student (leave empty for none)"
+			>
 
 			<div class="tf-actions">
 				<label class="tf-check-label">
@@ -119,12 +128,9 @@ function startDrag(e) {
 .tf-tag-panel {
 	position: fixed;
 	width: 320px;
-	background: #fff;
-	border: 1px solid #b0b8c0;
-	border-radius: 6px;
-	box-shadow: 0 4px 16px rgba(0,0,0,0.18);
 	z-index: 100050;
 	font-family: Arial, sans-serif;
+	overflow: hidden;
 }
 
 .tf-tag-header {
@@ -151,19 +157,20 @@ function startDrag(e) {
 .tf-tag-body { padding: 12px; }
 
 .tf-lbl {
-	font-size: 10px;
 	font-weight: 600;
 	text-transform: uppercase;
-	color: #8D949A;
 }
 
 .tf-input {
 	width: 100%;
 	padding: 4px 8px;
 	font-size: 12px;
-	border: 1px solid #d1d8dd;
-	border-radius: 4px;
 	margin-top: 4px;
+	box-sizing: border-box;
+}
+.tf-input:focus {
+	border-color: var(--nce-color-focus);
+	outline: none;
 }
 
 .tf-actions {
