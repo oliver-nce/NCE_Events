@@ -29,7 +29,7 @@
 
 		<div v-if="loading" class="ppv2-loading">Loading…</div>
 
-		<div v-else-if="error" class="ppv2-error">{{ error }}</div>
+		<div v-else-if="error" class="ppv2-error text-danger">{{ error }}</div>
 
 		<div v-else-if="config" class="ppv2-body">
 			<table class="ppv2-table" :style="tableMinWidthStyle">
@@ -546,9 +546,6 @@ function startColResize(e, ci) {
 }
 .ppv2-loading {
 	color: var(--color-primary);
-}
-.ppv2-error {
-	color: #e53e3e;
 }
 
 /* ── Table ── */

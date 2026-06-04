@@ -1,7 +1,7 @@
 <template>
 	<div class="ppv2-fd-body">
 		<div v-if="loading" class="ppv2-fd-loading">Loading…</div>
-		<div v-else-if="error" class="ppv2-fd-error">{{ error }}</div>
+		<div v-else-if="error" class="ppv2-fd-error text-danger">{{ error }}</div>
 		<template v-else-if="tabs.length">
 			<PanelFormDialogTabBar
 				:tabs="tabs"
@@ -109,7 +109,7 @@
 				</div>
 			</div>
 
-			<div v-if="validationError" class="ppv2-fd-validation-error">
+			<div v-if="validationError" class="ppv2-fd-validation-error text-danger">
 				{{ validationError }}
 			</div>
 		</template>
@@ -287,7 +287,6 @@ defineExpose({
 .ppv2-fd-error {
 	text-align: center;
 	padding: 32px;
-	color: #c0392b;
 	font-size: var(--font-size-base);
 }
 .ppv2-fd-tab-panels {
@@ -348,10 +347,9 @@ defineExpose({
 .ppv2-fd-validation-error {
 	margin-top: 8px;
 	padding: 8px 12px;
-	background: #fef0f0;
-	border: 1px solid #e74c3c;
+	background: var(--nce-color-danger-100, #fef0f0);
+	border: 1px solid var(--nce-color-danger, #e74c3c);
 	border-radius: var(--border-radius-sm, 4px);
-	color: #c0392b;
 	font-size: var(--font-size-sm);
 }
 </style>

@@ -66,6 +66,7 @@
       'ppv2-fd-field-bold': field.bold,
       'ppv2-fd-field-editable': !readOnly,
       'ppv2-fd-field-dirty': fieldDirty && !readOnly,
+      'text-danger': fieldDirty && !readOnly,
     }"
   >
     <label class="ppv2-fd-label">
@@ -382,23 +383,18 @@ function onLinkChangePayload(payload) {
 .ppv2-fd-field-editable .ppv2-fd-check-row {
   font-weight: var(--font-weight-bold, 600);
 }
-.ppv2-fd-field-dirty .ppv2-fd-input,
-.ppv2-fd-field-dirty .ppv2-fd-select,
-.ppv2-fd-field-dirty .ppv2-fd-readonly-plain {
-  color: #c0392b;
-}
 .ppv2-fd-field-dirty .ppv2-fd-link-frappe :deep(.form-control),
 .ppv2-fd-field-dirty .ppv2-fd-link-frappe :deep(input) {
-  color: #c0392b !important;
+  color: var(--nce-color-danger) !important;
   font-weight: var(--font-weight-bold, 600);
 }
 .ppv2-fd-field-dirty .ppv2-fd-datetime-frappe :deep(.form-control),
 .ppv2-fd-field-dirty .ppv2-fd-datetime-frappe :deep(input) {
-  color: #c0392b !important;
+  color: var(--nce-color-danger) !important;
   font-weight: var(--font-weight-bold, 600);
 }
 .ppv2-fd-field-dirty .ppv2-fd-check-row input {
-  accent-color: #c0392b;
+  accent-color: var(--nce-color-danger);
 }
 .ppv2-fd-field-find-criteria .ppv2-fd-input {
 	font-family: ui-monospace, monospace;

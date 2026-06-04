@@ -66,7 +66,7 @@
 			/>
 			<button
 				v-if="cond.field"
-				class="ppv2-filter-rm"
+				class="ppv2-filter-rm text-danger"
 				@click="
 					filters.splice(i, 1);
 					emitFilterChange();
@@ -254,7 +254,6 @@ function emitFilterDebounced() {
 .ppv2-filter-rm {
 	background: none;
 	border: none;
-	color: #c0392b;
 	font-size: 14px;
 	cursor: pointer;
 	padding: 0 4px;

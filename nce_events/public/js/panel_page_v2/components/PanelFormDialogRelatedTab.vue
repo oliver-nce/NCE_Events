@@ -38,7 +38,7 @@
 			<div v-if="relatedState[ti]?.loading" class="ppv2-fd-related-rows-loading">
 				Loading related rows…
 			</div>
-			<div v-else-if="relatedState[ti]?.error" class="ppv2-fd-related-rows-err">
+			<div v-else-if="relatedState[ti]?.error" class="ppv2-fd-related-rows-err text-danger">
 				{{ relatedState[ti].error }}
 			</div>
 			<div
@@ -82,6 +82,7 @@
 								:class="{
 									'ppv2-fd-related-td--editable': isRelatedColEditable(col),
 									'ppv2-fd-related-td--dirty': isRelatedCellDirty(ti, rw, col),
+									'text-danger': isRelatedCellDirty(ti, rw, col),
 								}"
 							>
 								<select
@@ -195,7 +196,7 @@
 						@input="actionModal.values[pa.arg] = $event.target.value"
 					/>
 				</div>
-				<p v-if="actionModal.error" class="ppv2-fd-action-modal-error">{{ actionModal.error }}</p>
+				<p v-if="actionModal.error" class="ppv2-fd-action-modal-error text-danger">{{ actionModal.error }}</p>
 				<div class="ppv2-fd-action-modal-actions">
 					<button type="button" class="btn btn-default btn-sm" @click="closeActionModal">
 						Cancel
@@ -1184,9 +1185,6 @@ onUnmounted(() => {
 	font-size: var(--font-size-sm);
 	margin: 0 0 12px;
 }
-.ppv2-fd-related-rows-err {
-	color: #c0392b;
-}
 .ppv2-fd-related-table-wrap {
 	max-height: min(52vh, 520px);
 	overflow: auto;
@@ -1231,14 +1229,8 @@ onUnmounted(() => {
 .ppv2-fd-related-td--editable .ppv2-fd-related-cell-text {
 	font-weight: var(--font-weight-bold, 600);
 }
-.ppv2-fd-related-td--dirty .ppv2-fd-related-select,
-.ppv2-fd-related-td--dirty .ppv2-fd-related-inp,
-.ppv2-fd-related-td--dirty .ppv2-fd-related-textarea,
-.ppv2-fd-related-td--dirty .ppv2-fd-related-cell-text {
-	color: #c0392b;
-}
 .ppv2-fd-related-td--dirty .ppv2-fd-related-check {
-	accent-color: #c0392b;
+	accent-color: var(--nce-color-danger);
 }
 .ppv2-fd-related-cell-text {
 	font-size: var(--font-size-base);
@@ -1346,7 +1338,6 @@ onUnmounted(() => {
 }
 .ppv2-fd-action-modal-error {
 	margin: 8px 0 0;
-	color: #c0392b;
 	font-size: var(--font-size-sm);
 }
 .ppv2-fd-action-modal-actions {

@@ -28,7 +28,7 @@
 						<td v-if="hasEditableColumn" class="ppv2-fd-related-td ppv2-fd-inline-del-cell">
 							<button
 								type="button"
-								class="ppv2-fd-inline-del-btn"
+								class="ppv2-fd-inline-del-btn text-danger"
 								:disabled="readOnlyHost"
 								@click="removeRow(ri)"
 							>
@@ -300,7 +300,6 @@ function removeRow(index) {
 .ppv2-fd-inline-del-btn {
 	border: none;
 	background: transparent;
-	color: #c0392b;
 	font-size: 18px;
 	line-height: 1;
 	cursor: pointer;
