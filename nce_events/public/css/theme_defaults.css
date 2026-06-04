@@ -1,21 +1,11 @@
 /*
- * NCE Events — Panel Theme
- * ========================
- * All visual tokens are consumed from NCE Builder's site-wide CSS variables
- * (--nce-color-*, --nce-shadow, --nce-border-radius, --nce-font-*, etc.).
- *
- * Each var() has a hardcoded fallback so panels render correctly even when
- * nce_builder is not installed or the theme has not been saved yet.
- *
- * DO NOT put hardcoded colours, shadows, or radii anywhere else.
- * To retheme: change NCE Builder → NCE Theme Settings → Save.
- * Every panel updates automatically. Zero per-component changes needed.
+ * NCE Events — panel alias bridge (post theme-contract migration)
+ * Maps legacy var(--primary), var(--bg-card), etc. to --nce-color-* for components
+ * that still use scoped CSS aliases. V2 chrome prefers template classes (text-danger,
+ * bg-primary, bg-surface, …) from nce_theme.css. Each var() keeps a hex fallback when
+ * Themes is not loaded.
  */
 
-/*
- * Scoped to our panel components only — NOT :root — so we never
- * stomp on Frappe's own --primary, --text-color, --border-color, etc.
- */
 .ppv2-root,
 .ppv2-float,
 .ppv2-form-dialog,
@@ -26,27 +16,21 @@
 .send-template-list,
 .send-recipients-popup,
 .send-review-panel,
-.se-tag-panel,
 .card-modal-backdrop,
-.tf-float,
-.tf-tag-panel {
-	/* ── Primary / brand ─────────────────────────────────────────────────── */
+.tf-float {
+	/* consumed by: panel V2 + V1, send dialogs, cards, Tag Finder */
 	--primary: var(--nce-color-primary, #126bc4);
 	--primary-light: var(--nce-color-focus, #e8f0fe);
+	--color-primary: var(--nce-color-primary, #126bc4);
 
-	/* ── Surfaces ─────────────────────────────────────────────────────────── */
 	--bg-surface: var(--nce-color-surface, #fafafa);
 	--bg-card: var(--nce-color-bg, #ffffff);
-
-	/* Panel header uses primary as background, white text on top */
 	--bg-header: var(--nce-color-primary, #126bc4);
 	--text-header: #ffffff;
 
-	/* ── Row states ───────────────────────────────────────────────────────── */
 	--row-hover-bg: var(--nce-color-primary-100, #e3f0fc);
 	--row-selected-bg: var(--nce-color-primary-200, #c7e0fa);
 
-	/* ── Typography ───────────────────────────────────────────────────────── */
 	--text-color: var(--nce-color-text, #333333);
 	--text-muted: var(--nce-color-muted, #888888);
 
@@ -58,50 +42,33 @@
 	--font-weight-bold: 600;
 	--line-height: var(--nce-line-height, 1.5);
 
-	/* ── Borders ──────────────────────────────────────────────────────────── */
 	--border-color: var(--nce-color-border, #b0b8c0);
 	--border-radius: var(--nce-border-radius, 6px);
 	--border-radius-sm: 4px;
 
-	/* ── Shadow ───────────────────────────────────────────────────────────── */
 	--shadow: var(--nce-shadow, 0 4px 16px rgba(0, 0, 0, 0.15));
 
-	/* ── Spacing ──────────────────────────────────────────────────────────── */
 	--spacing-xs: 4px;
 	--spacing-sm: 8px;
 	--spacing-md: 12px;
 	--spacing-lg: 16px;
 
-	/* ── Form inputs ──────────────────────────────────────────────────────── */
+	/* consumed by: FieldWidget.vue */
 	--input-border: var(--nce-color-border, #cccccc);
 	--input-focus-border: var(--nce-color-focus, var(--primary));
 
-	/* ── Buttons ──────────────────────────────────────────────────────────── */
-	--btn-primary-bg: var(--nce-color-primary, #126bc4);
-	--btn-primary-text: #ffffff;
-
-	/* ── Tab / accent ─────────────────────────────────────────────────────── */
-	--tab-active-border: var(--nce-color-primary, #126bc4);
-
-	/* ── Secondary colour ────────────────────────────────────────────────── */
+	/* consumed by: PanelFloat.vue (refreshing icon) */
 	--color-secondary: var(--nce-color-secondary, #10b981);
 
-	/* ── Table column-header chrome ──────────────────────────────────────── */
-	/* secondary-100: light tint for the sticky <th> background */
+	/* consumed by: panel_page.css (V1 table) */
 	--column-header-bg: var(--nce-color-secondary-100, #d1fae5);
-	/* secondary-700: dark shade for the <th> text */
 	--column-header-text: var(--nce-color-secondary-700, #047857);
+}
 
-	/* ── Table chrome ─────────────────────────────────────────────────────── */
-	/* Sticky thead background — kept as alias for non-column-header uses */
-	--portal-header-bg: var(--nce-color-surface, #e8ecf0);
-	/* Alternating row tint */
-	--portal-alt-row: var(--nce-color-row-alt, #f5f7f9);
-
-	/* ── Gender colour-coding (static — not part of brand theme) ──────────── */
+/* Static categorical palette — NOT brand-themed (reserved for gender / type UI) */
+.ppv2-root,
+.ppv2-float,
+.panel-float {
 	--male-hex: #dce6f0;
 	--female-hex: #f0dce6;
-
-	/* ── Transition ───────────────────────────────────────────────────────── */
-	--transition-speed: var(--nce-transition-speed, 200ms);
 }
