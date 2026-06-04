@@ -1,10 +1,19 @@
+/* ── Hierarchy Explorer (two-pane drill-down)
+ * Loaded by: nce_events/nce_events/page/hierarchy_explorer/hierarchy_explorer.js
+ * (page asset bundle — not in hooks.py::app_include_css).
+ * Theme tokens: --nce-color-surface, --nce-color-primary, --nce-color-primary-100,
+ * --nce-color-primary-200, --nce-color-primary-300, --nce-color-primary-500,
+ * --nce-color-text, --nce-color-muted, --nce-color-border, --nce-color-row-alt,
+ * --nce-color-primary-fg. Hex fallbacks when Themes is not loaded.
+ */
+
 .hierarchy-explorer {
 	display: flex;
 	flex-direction: row;
 	height: calc(100vh - 120px - 72pt);
 	overflow: hidden;
-	background: #FAFAFA;
-	border: 1px solid #D7D9DB;
+	background: var(--nce-color-surface, #FAFAFA);
+	border: 1px solid var(--nce-color-border, #D7D9DB);
 	border-radius: 6px;
 }
 
@@ -16,15 +25,15 @@
 	flex: 1 1 0%;
 	min-width: 200px;
 	overflow: hidden;
-	background: #FAFAFA;
+	background: var(--nce-color-surface, #FAFAFA);
 }
 
 /* ── Pane Header ── */
 
 .hierarchy-pane-header {
 	padding: 8px 12px;
-	background: #F4F5F5;
-	border-bottom: 1px solid #EAEBEC;
+	background: var(--nce-color-row-alt, #F4F5F5);
+	border-bottom: 1px solid var(--nce-color-border, #EAEBEC);
 	flex-shrink: 0;
 }
 
@@ -38,7 +47,7 @@
 .pane-label {
 	font-weight: 600;
 	font-size: 13px;
-	color: #464D53;
+	color: var(--nce-color-text, #464D53);
 	font-family: Arial, sans-serif;
 }
 
@@ -51,13 +60,13 @@
 
 .pane-hint {
 	font-size: 11px;
-	color: #6D757E;
+	color: var(--nce-color-muted, #6D757E);
 	font-family: Arial, sans-serif;
 }
 
 .pane-count {
 	font-size: 11px;
-	color: #6D757E;
+	color: var(--nce-color-muted, #6D757E);
 	font-family: Arial, sans-serif;
 }
 
@@ -75,14 +84,14 @@
 .pane-actions .btn {
 	font-size: 11px;
 	padding: 2px 8px;
-	background: #E3F0FC;
-	color: #126BC4;
-	border: 1px solid #C7E0FA;
+	background: var(--nce-color-primary-100, #E3F0FC);
+	color: var(--nce-color-primary, #126BC4);
+	border: 1px solid var(--nce-color-primary-200, #C7E0FA);
 	border-radius: 4px;
 }
 
 .pane-actions .btn:hover {
-	background: #C7E0FA;
+	background: var(--nce-color-primary-200, #C7E0FA);
 }
 
 .pane-actions .btn[disabled] {
@@ -110,14 +119,14 @@
 .hierarchy-table th {
 	position: sticky;
 	top: 0;
-	background: #F4F5F5;
-	color: #5A6168;
+	background: var(--nce-color-row-alt, #F4F5F5);
+	color: var(--nce-color-muted, #5A6168);
 	font-weight: 600;
 	font-size: 11px;
 	text-transform: uppercase;
 	letter-spacing: 0.3px;
 	padding: 6px 8px;
-	border-bottom: 1px solid #D7D9DB;
+	border-bottom: 1px solid var(--nce-color-border, #D7D9DB);
 	text-align: left;
 	white-space: nowrap;
 	z-index: 1;
@@ -125,8 +134,8 @@
 
 .hierarchy-table td {
 	padding: 5px 8px;
-	border-bottom: 1px solid #EAEBEC;
-	color: #464D53;
+	border-bottom: 1px solid var(--nce-color-border, #EAEBEC);
+	color: var(--nce-color-text, #464D53);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -139,23 +148,23 @@
 }
 
 .hierarchy-row:hover {
-	background: #F1F7FE;
+	background: var(--nce-color-primary-100, #F1F7FE);
 }
 
 .hierarchy-row.alt {
-	background: #FAFAFA;
+	background: var(--nce-color-surface, #FAFAFA);
 }
 
 .hierarchy-row.alt:hover {
-	background: #F1F7FE;
+	background: var(--nce-color-primary-100, #F1F7FE);
 }
 
 .hierarchy-row.selected {
-	background: #E3F0FC;
+	background: var(--nce-color-primary-100, #E3F0FC);
 }
 
 .hierarchy-row.selected:hover {
-	background: #E3F0FC;
+	background: var(--nce-color-primary-100, #E3F0FC);
 }
 
 /* ── Load More ── */
@@ -167,9 +176,9 @@
 
 .load-more-btn {
 	font-size: 11px;
-	background: #E3F0FC;
-	color: #126BC4;
-	border: 1px solid #C7E0FA;
+	background: var(--nce-color-primary-100, #E3F0FC);
+	color: var(--nce-color-primary, #126BC4);
+	border: 1px solid var(--nce-color-primary-200, #C7E0FA);
 }
 
 /* ── Loading ── */
@@ -177,7 +186,7 @@
 .hierarchy-loading {
 	padding: 24px;
 	text-align: center;
-	color: #8D949A;
+	color: var(--nce-color-muted, #8D949A);
 	font-size: 13px;
 }
 
@@ -186,7 +195,7 @@
 .hierarchy-divider {
 	width: 5px;
 	flex-shrink: 0;
-	background: #D7D9DB;
+	background: var(--nce-color-border, #D7D9DB);
 	cursor: col-resize;
 	transition: background-color 0.15s;
 	position: relative;
@@ -200,24 +209,24 @@
 	transform: translate(-50%, -50%);
 	width: 3px;
 	height: 24px;
-	border-left: 1px solid #B7BABE;
-	border-right: 1px solid #B7BABE;
+	border-left: 1px solid var(--nce-color-border, #B7BABE);
+	border-right: 1px solid var(--nce-color-border, #B7BABE);
 }
 
 .hierarchy-divider:hover {
-	background: #73B3F2;
+	background: var(--nce-color-primary-300, #73B3F2);
 }
 
 .hierarchy-divider:hover::after {
-	border-color: #fff;
+	border-color: var(--nce-color-primary-fg, #ffffff);
 }
 
 .hierarchy-divider.active {
-	background: #4198F0;
+	background: var(--nce-color-primary-500, #4198F0);
 }
 
 .hierarchy-divider.active::after {
-	border-color: #fff;
+	border-color: var(--nce-color-primary-fg, #ffffff);
 }
 
 body.hierarchy-resizing {

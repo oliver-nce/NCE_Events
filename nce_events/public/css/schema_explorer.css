@@ -1,4 +1,10 @@
-/* ── Tag Finder (Schema Explorer) ── */
+/* ── Tag Finder (Schema Explorer) ──
+ * Theme tokens (nce_theme.css / :root): --nce-color-surface, --nce-color-primary,
+ * --nce-color-primary-fg, --nce-color-primary-100, --nce-color-primary-200,
+ * --nce-color-primary-300, --nce-color-primary-500, --nce-color-primary-700,
+ * --nce-color-text, --nce-color-muted, --nce-color-border, --nce-color-row-alt,
+ * --nce-color-focus. Hex fallbacks preserve layout when Themes is not loaded.
+ */
 
 /* ── Floating window ── */
 
@@ -8,8 +14,8 @@
 	height: 60vh;
 	min-width: 260px;
 	min-height: 220px;
-	background: #FAFAFA;
-	border: 1px solid #A2CCF6;
+	background: var(--nce-color-surface, #FAFAFA);
+	border: 1px solid var(--nce-color-primary-300, #A2CCF6);
 	border-radius: 8px;
 	box-shadow: 0 8px 32px rgba(18, 107, 196, 0.22), 0 2px 8px rgba(0, 0, 0, 0.08);
 	display: flex;
@@ -25,8 +31,8 @@
 	align-items: center;
 	justify-content: space-between;
 	padding: 8px 12px;
-	background: #126BC4;
-	color: #fff;
+	background: var(--nce-color-primary, #126BC4);
+	color: var(--nce-color-primary-fg, #ffffff);
 	cursor: move;
 	flex-shrink: 0;
 }
@@ -40,7 +46,7 @@
 .se-close {
 	background: none;
 	border: none;
-	color: #fff;
+	color: inherit;
 	font-size: 18px;
 	line-height: 1;
 	cursor: pointer;
@@ -58,8 +64,9 @@
 	height: 24px;
 	line-height: 24px;
 	padding: 0 12px;
-	background: #126BC4;
-	color: rgba(255, 255, 255, 0.75);
+	background: var(--nce-color-primary, #126BC4);
+	color: var(--nce-color-primary-fg, #ffffff);
+	opacity: 0.85;
 	font-size: 11px;
 	font-weight: 600;
 	font-family: Arial, sans-serif;
@@ -68,7 +75,7 @@
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	border-top: 1px solid #105EAD;
+	border-top: 1px solid var(--nce-color-primary-700, #105EAD);
 }
 
 /* ── Body ── */
@@ -88,18 +95,18 @@
 	max-width: 320px;
 	display: flex;
 	flex-direction: column;
-	border-right: 1px solid #A2CCF6;
+	border-right: 1px solid var(--nce-color-primary-300, #A2CCF6);
 	flex-shrink: 0;
 }
 
 .se-col-header {
 	padding: 8px 10px;
-	background: #E3F0FC;
-	color: #105EAD;
+	background: var(--nce-color-primary-100, #E3F0FC);
+	color: var(--nce-color-primary-700, #105EAD);
 	font-weight: 600;
 	font-size: 13px;
 	font-family: Arial, sans-serif;
-	border-bottom: 2px solid #A2CCF6;
+	border-bottom: 2px solid var(--nce-color-primary-300, #A2CCF6);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -112,7 +119,7 @@
 
 .se-col-count {
 	font-size: 10px;
-	color: #6D757E;
+	color: var(--nce-color-muted, #6D757E);
 	font-weight: 400;
 	white-space: nowrap;
 }
@@ -131,23 +138,24 @@
 	border-radius: 5px;
 	cursor: pointer;
 	transition: background 0.12s;
-	border: 1px solid #A2CCF6;
+	border: 1px solid var(--nce-color-primary-300, #A2CCF6);
 	border-left: 3px solid transparent;
 }
 
 .se-tile:hover {
-	background: #F1F7FE;
+	background: var(--nce-color-primary-100, #F1F7FE);
 }
 
 .se-tile-link {
-	border-left-color: #4198F0;
-	background: #F1F7FE;
+	border-left-color: var(--nce-color-primary-500, #4198F0);
+	background: var(--nce-color-primary-100, #F1F7FE);
 }
 
 .se-tile-link:hover {
-	background: #E3F0FC;
+	background: var(--nce-color-primary-100, #E3F0FC);
 }
 
+/* categorical color — table type indicator, not brand-themed */
 .se-tile-table {
 	border-left-color: #F2B90D;
 	background: #FEFBF0;
@@ -158,6 +166,7 @@
 	background: #FDF3D7;
 }
 
+/* categorical color — pronoun type indicator, not brand-themed */
 .se-tile-pronoun {
 	border-left-color: #8B5CF6;
 	background: #F5F3FF;
@@ -169,17 +178,17 @@
 }
 
 .se-tile-circular {
-	border-left-color: #D7D9DB;
-	background: #F4F5F5;
-	border-color: #D7D9DB;
+	border-left-color: var(--nce-color-border, #D7D9DB);
+	background: var(--nce-color-row-alt, #F4F5F5);
+	border-color: var(--nce-color-border, #D7D9DB);
 	opacity: 0.45;
 	cursor: not-allowed;
 }
 
 .se-tile-active {
-	background: #C7E0FA !important;
-	border-left-color: #126BC4;
-	border-color: #126BC4;
+	background: var(--nce-color-primary-200, #C7E0FA) !important;
+	border-left-color: var(--nce-color-primary, #126BC4);
+	border-color: var(--nce-color-primary, #126BC4);
 }
 
 .se-tile-top {
@@ -191,7 +200,7 @@
 .se-tile-label {
 	font-size: 14px;
 	font-weight: 500;
-	color: #464D53;
+	color: var(--nce-color-text, #464D53);
 	font-family: Arial, sans-serif;
 	flex: 1;
 	min-width: 0;
@@ -202,7 +211,7 @@
 
 .se-tile-arrow {
 	font-size: 9px;
-	color: #4198F0;
+	color: var(--nce-color-primary-500, #4198F0);
 	margin-left: 4px;
 	flex-shrink: 0;
 }
@@ -217,7 +226,7 @@
 
 .se-tile-fieldname {
 	font-size: 11px;
-	color: #8D949A;
+	color: var(--nce-color-muted, #8D949A);
 	font-family: monospace;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -227,8 +236,8 @@
 
 .se-tile-badge {
 	font-size: 10px;
-	color: #6D757E;
-	background: #EAEBEC;
+	color: var(--nce-color-muted, #6D757E);
+	background: var(--nce-color-row-alt, #EAEBEC);
 	padding: 1px 6px;
 	border-radius: 3px;
 	font-family: Arial, sans-serif;
@@ -242,8 +251,8 @@
 	position: fixed;
 	z-index: 100050;
 	width: 420px;
-	background: #fff;
-	border: 1px solid #A2CCF6;
+	background: var(--nce-color-surface, #ffffff);
+	border: 1px solid var(--nce-color-primary-300, #A2CCF6);
 	border-radius: 8px;
 	box-shadow: 0 8px 32px rgba(18, 107, 196, 0.22), 0 2px 8px rgba(0, 0, 0, 0.08);
 	display: flex;
@@ -259,8 +268,8 @@
 	align-items: center;
 	justify-content: space-between;
 	padding: 8px 12px;
-	background: #126BC4;
-	color: #fff;
+	background: var(--nce-color-primary, #126BC4);
+	color: var(--nce-color-primary-fg, #ffffff);
 	cursor: move;
 	flex-shrink: 0;
 }
@@ -269,14 +278,14 @@
 	padding: 14px 16px;
 	font-family: Arial, sans-serif;
 	font-size: 13px;
-	color: #464D53;
+	color: var(--nce-color-text, #464D53);
 	overflow-y: auto;
 	flex: 1;
 }
 
 .se-tag-lbl {
 	font-weight: 600;
-	color: #105EAD;
+	color: var(--nce-color-primary-700, #105EAD);
 	font-size: 12px;
 	text-transform: uppercase;
 	letter-spacing: 0.3px;
@@ -292,21 +301,21 @@
 	width: 100%;
 	padding: 5px 8px;
 	font-size: 13px;
-	border: 1px solid #C7E0FA;
+	border: 1px solid var(--nce-color-primary-200, #C7E0FA);
 	border-radius: 4px;
 	font-family: Arial, sans-serif;
-	color: #464D53;
+	color: var(--nce-color-text, #464D53);
 	outline: none;
 }
 
 .se-fallback-input:focus {
-	border-color: #4198F0;
-	box-shadow: 0 0 0 2px rgba(65, 152, 240, 0.2);
+	border-color: var(--nce-color-focus, #4198F0);
+	box-shadow: 0 0 0 2px color-mix(in srgb, var(--nce-color-focus, #4198F0) 20%, transparent);
 }
 
 .se-tag-pre {
-	background: #F1F7FE;
-	border: 1px solid #C7E0FA;
+	background: var(--nce-color-primary-100, #F1F7FE);
+	border: 1px solid var(--nce-color-primary-200, #C7E0FA);
 	border-radius: 6px;
 	padding: 12px 14px;
 	margin: 0;
@@ -315,14 +324,14 @@
 	word-break: break-all;
 	user-select: all;
 	cursor: text;
-	color: #105EAD;
+	color: var(--nce-color-primary-700, #105EAD);
 	font-family: monospace;
 	line-height: 1.5;
 }
 
 .se-html-check-label {
 	font-size: 12px;
-	color: #464D53;
+	color: var(--nce-color-text, #464D53);
 	display: flex;
 	align-items: center;
 	gap: 6px;
