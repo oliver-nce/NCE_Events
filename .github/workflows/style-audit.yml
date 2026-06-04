@@ -1,0 +1,24 @@
+name: Panel style audit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "nce_events/public/**"
+      - "scripts/style-audit.*"
+      - ".github/workflows/style-audit.yml"
+  pull_request:
+    paths:
+      - "nce_events/public/**"
+      - "scripts/style-audit.*"
+      - ".github/workflows/style-audit.yml"
+
+jobs:
+  theme-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: bash scripts/style-audit.sh

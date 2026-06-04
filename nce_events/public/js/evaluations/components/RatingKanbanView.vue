@@ -55,9 +55,9 @@ import { useEnrollments } from "../composables/useEnrollments.js";
 import { useNceEvalShellStore } from "../stores/shell.js";
 
 /** Navy / dark magenta per Evaluations spec */
-const COLOR_MALE = "#1b2a60";
-const COLOR_FEMALE = "#7a0e5c";
-const COLOR_NEUTRAL = "#36414c";
+const COLOR_MALE = "#1b2a60"; // theme-exempt: gender lane (evaluations spec)
+const COLOR_FEMALE = "#7a0e5c"; // theme-exempt: gender lane (evaluations spec)
+const COLOR_NEUTRAL = "#36414c"; // theme-exempt: gender lane (evaluations spec)
 
 const LANES = [0, 1, 2, 3, 4, 5, 6, 7];
 
@@ -104,7 +104,7 @@ function displayName(row) {
 }
 
 .rk-error {
-	color: #c0392b;
+	color: var(--nce-color-danger, #c0392b);
 	white-space: pre-wrap;
 }
 
@@ -173,7 +173,7 @@ function displayName(row) {
 	min-height: 2.25rem;
 	border-radius: 6px;
 	background: var(--fg-color, #36414c);
-	color: #fff;
+	color: var(--nce-color-surface, #ffffff);
 	font-weight: 700;
 	font-size: 0.875rem;
 }

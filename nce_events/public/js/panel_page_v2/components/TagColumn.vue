@@ -150,11 +150,11 @@ function onTileClick(f) {
 }
 /* categorical color — type indicator, not brand-themed */
 .tf-tile-table {
-	border-left: 3px solid #e67e22;
+	border-left: 3px solid #e67e22; /* theme-exempt: categorical type indicator */
 }
 /* categorical color — type indicator, not brand-themed */
 .tf-tile-pronoun {
-	border-left: 3px solid #9b59b6;
+	border-left: 3px solid #9b59b6; /* theme-exempt: categorical type indicator */
 }
 .tf-tile-circular {
 	opacity: 0.4;

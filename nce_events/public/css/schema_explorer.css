@@ -157,24 +157,24 @@
 
 /* categorical color — table type indicator, not brand-themed */
 .se-tile-table {
-	border-left-color: #F2B90D;
-	background: #FEFBF0;
-	border-color: #F2B90D;
+	border-left-color: #F2B90D; /* theme-exempt */
+	background: #FEFBF0; /* theme-exempt */
+	border-color: #F2B90D; /* theme-exempt */
 }
 
 .se-tile-table:hover {
-	background: #FDF3D7;
+	background: #FDF3D7; /* theme-exempt */
 }
 
 /* categorical color — pronoun type indicator, not brand-themed */
 .se-tile-pronoun {
-	border-left-color: #8B5CF6;
-	background: #F5F3FF;
-	border-color: #C4B5FD;
+	border-left-color: #8B5CF6; /* theme-exempt */
+	background: #F5F3FF; /* theme-exempt */
+	border-color: #C4B5FD; /* theme-exempt */
 }
 
 .se-tile-pronoun:hover {
-	background: #EDE9FE;
+	background: #EDE9FE; /* theme-exempt */
 }
 
 .se-tile-circular {

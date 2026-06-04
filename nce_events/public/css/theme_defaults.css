@@ -59,6 +59,9 @@
 	--spacing-md: 12px;
 	--spacing-lg: 16px;
 
+	/* consumed by: evaluations kanban tiles */
+	--fg-color: var(--nce-color-text, #36414c);
+
 	/* consumed by: FieldWidget.vue */
 	--input-border: var(--nce-color-border, #cccccc);
 	--input-focus-border: var(--nce-color-focus, var(--primary));

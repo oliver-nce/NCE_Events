@@ -1034,7 +1034,7 @@ async function onPlaceholderButton(btn) {
 .ppv2-fd-size-3xl {
 	width: 1100px;
 }
-/* Load debug overlay — enable with localStorage nce_fd_load_debug = "1" */
+/* Load debug overlay — theme-exempt: dev-only (localStorage nce_fd_load_debug) */
 .ppv2-fd-load-debug {
 	position: fixed;
 	right: 12px;
@@ -1047,9 +1047,9 @@ async function onPlaceholderButton(btn) {
 	pointer-events: auto;
 }
 .ppv2-fd-load-debug-inner {
-	background: #1a1d24;
-	color: #e8eaed;
-	border: 1px solid #3d4450;
+	background: #1a1d24; /* theme-exempt */
+	color: #e8eaed; /* theme-exempt */
+	border: 1px solid #3d4450; /* theme-exempt */
 	border-radius: 6px;
 	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
 	display: flex;
@@ -1058,7 +1058,7 @@ async function onPlaceholderButton(btn) {
 }
 .ppv2-fd-load-debug-hd {
 	padding: 8px 10px;
-	background: #252830;
+	background: #252830; /* theme-exempt */
 	font-weight: 600;
 	display: flex;
 	flex-wrap: wrap;
@@ -1080,7 +1080,7 @@ async function onPlaceholderButton(btn) {
 	grid-template-columns: 5.5em 1fr;
 	gap: 2px 8px;
 	padding: 4px 0;
-	border-bottom: 1px solid #2e323c;
+	border-bottom: 1px solid #2e323c; /* theme-exempt */
 	word-break: break-word;
 }
 .ppv2-fd-load-debug-row:last-child {
@@ -1101,14 +1101,14 @@ async function onPlaceholderButton(btn) {
 }
 .ppv2-fd-load-debug-e {
 	grid-column: 1 / -1;
-	color: #ff8b8b;
+	color: #ff8b8b; /* theme-exempt */
 	font-size: 10px;
 	margin-top: 2px;
 }
 .ppv2-fd-load-debug-ok .ppv2-fd-load-debug-s {
-	color: #7dcea0;
+	color: #7dcea0; /* theme-exempt */
 }
 .ppv2-fd-load-debug-bad .ppv2-fd-load-debug-s {
-	color: #f5b7b1;
+	color: #f5b7b1; /* theme-exempt */
 }
 </style>
