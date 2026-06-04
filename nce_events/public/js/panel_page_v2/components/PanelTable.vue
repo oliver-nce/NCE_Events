@@ -719,7 +719,7 @@ function startColResize(e, ci) {
 }
 </style>
 
-<!-- Menu is teleported to <body>; unscoped so background always applies -->
+<!-- Teleported to <body>: use --nce-color-* from :root, not scoped bridge aliases -->
 <style>
 .ppv2-header-ctx-menu {
 	position: fixed;
@@ -727,12 +727,11 @@ function startColResize(e, ci) {
 	min-width: 180px;
 	padding: 4px 0;
 	margin: 0;
-	border: 1px solid var(--border-color, #d1d5db);
+	border: 1px solid var(--nce-color-border, #d1d5db);
 	border-radius: 4px;
 	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
-	/* Opaque fill: teleported node + theme vars may otherwise compute to transparent */
-	background-color: #ffffff;
-	color: var(--text-color, #252525);
+	background-color: var(--nce-color-surface, #ffffff);
+	color: var(--nce-color-text, #252525);
 }
 .ppv2-header-ctx-item {
 	display: block;
@@ -747,6 +746,6 @@ function startColResize(e, ci) {
 	font-family: inherit;
 }
 .ppv2-header-ctx-item:hover {
-	background-color: var(--primary-light, #e8f0fe);
+	background-color: var(--nce-color-primary-100, #e3f0fc);
 }
 </style>

@@ -17,11 +17,16 @@
 .send-recipients-popup,
 .send-review-panel,
 .card-modal-backdrop,
-.tf-float {
+.tf-float,
+.rk-root {
 	/* consumed by: panel V2 + V1, send dialogs, cards, Tag Finder */
 	--primary: var(--nce-color-primary, #126bc4);
 	--primary-light: var(--nce-color-focus, #e8f0fe);
 	--color-primary: var(--nce-color-primary, #126bc4);
+
+	/* consumed by: form controls, help modal, script tool tab, evaluations kanban */
+	--control-bg: var(--nce-color-surface, #fafafa);
+	--bg-blue: var(--nce-color-focus, #e8f0fe);
 
 	--bg-surface: var(--nce-color-surface, #fafafa);
 	--bg-card: var(--nce-color-surface, #ffffff);
