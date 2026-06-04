@@ -70,7 +70,7 @@
     }"
   >
     <label class="ppv2-fd-label">
-      {{ field.label }}<span v-if="mandatory" class="ppv2-fd-reqd" aria-hidden="true"> *</span>
+      {{ field.label }}<span v-if="mandatory" class="ppv2-fd-reqd text-danger" aria-hidden="true"> *</span>
     </label>
 
     <!-- Select + Autocomplete with newline options (same static list format as Desk Select) -->
@@ -295,7 +295,6 @@ function onLinkChangePayload(payload) {
   margin-bottom: 3px;
 }
 .ppv2-fd-reqd {
-  color: red;
   font-weight: 700;
 }
 .ppv2-fd-input {

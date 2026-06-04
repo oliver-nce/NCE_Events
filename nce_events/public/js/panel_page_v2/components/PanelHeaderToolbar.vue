@@ -1,6 +1,6 @@
 <template>
 	<div class="ppv2-header-right" @mousedown.stop>
-		<span v-if="props.showClickHint" class="ppv2-click-hint"
+		<span v-if="props.showClickHint" class="ppv2-click-hint text-primary-fg-tonal"
 			>Click row for details · Ctrl-click to remove</span
 		>
 		<div class="ppv2-header-controls">
@@ -16,7 +16,10 @@
 				</button>
 				<button
 					class="ppv2-hdr-btn"
-					:class="{ 'ppv2-hdr-btn--refreshing': props.loading }"
+					:class="{
+						'ppv2-hdr-btn--refreshing': props.loading,
+						'text-secondary': props.loading,
+					}"
 					title="Refresh"
 					@click="$emit('refresh')"
 				>
@@ -61,7 +64,9 @@
 					<i class="fa fa-comment"></i>
 				</button>
 			</template>
-			<span class="ppv2-count">{{ displayRowCount }} / {{ props.total }} records</span>
+			<span class="ppv2-count text-sm text-primary-fg-tonal"
+				>{{ displayRowCount }} / {{ props.total }} records</span
+			>
 			<button
 				v-if="props.showClose"
 				class="ppv2-hdr-btn ppv2-close-btn"

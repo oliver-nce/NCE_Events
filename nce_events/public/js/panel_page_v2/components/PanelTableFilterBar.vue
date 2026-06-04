@@ -1,5 +1,5 @@
 <template>
-	<div v-if="props.showFilter" class="ppv2-filter-widget">
+	<div v-if="props.showFilter" class="ppv2-filter-widget bg-primary-100 border-b border">
 		<div v-for="(cond, i) in filters" :key="i" class="ppv2-filter-row">
 			<select
 				v-model="cond.field"
@@ -27,7 +27,10 @@
 				<button
 					v-for="op in opsForCond(cond)"
 					:key="op"
-					:class="['ppv2-op-btn', { active: cond.op === op }]"
+					:class="[
+						'ppv2-op-btn border rounded-sm',
+						cond.op === op ? 'bg-primary border-primary' : 'bg-card',
+					]"
 					@click="
 						cond.op = op;
 						emitFilterChange();
@@ -75,7 +78,10 @@
 				&times;
 			</button>
 		</div>
-		<button class="ppv2-filter-add" @click="filters.push({ field: '', op: '>', value: '' })">
+		<button
+			class="ppv2-filter-add bg-card border rounded-sm text-primary"
+			@click="filters.push({ field: '', op: '>', value: '' })"
+		>
 			Add Filter &#9660;
 		</button>
 	</div>
@@ -203,8 +209,6 @@ function emitFilterDebounced() {
 <style scoped>
 .ppv2-filter-widget {
 	padding: 6px 10px;
-	background: var(--primary-light);
-	border-bottom: 1px solid var(--border-color);
 	flex-shrink: 0;
 }
 
@@ -231,15 +235,7 @@ function emitFilterDebounced() {
 .ppv2-op-btn {
 	font-size: calc(var(--font-size-base) + 2px);
 	padding: 3px 8px;
-	border: 1px solid var(--border-color);
-	background: var(--bg-card);
 	cursor: pointer;
-	border-radius: 2px;
-}
-.ppv2-op-btn.active {
-	background: var(--bg-header);
-	color: var(--text-header);
-	border-color: var(--bg-header);
 }
 
 .ppv2-filter-val {
@@ -262,10 +258,6 @@ function emitFilterDebounced() {
 .ppv2-filter-add {
 	font-size: 10px;
 	padding: 2px 8px;
-	background: var(--bg-card);
-	border: 1px solid var(--border-color);
-	border-radius: var(--border-radius-sm);
 	cursor: pointer;
-	color: var(--color-primary);
 }
 </style>

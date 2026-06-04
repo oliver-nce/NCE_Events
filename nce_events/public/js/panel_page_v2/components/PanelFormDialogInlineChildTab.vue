@@ -19,7 +19,7 @@
 							class="ppv2-fd-related-th"
 						>
 							{{ col.label || col.fieldname
-							}}<span v-if="columnMandatory(col)" class="ppv2-fd-reqd" aria-hidden="true"> *</span>
+							}}<span v-if="columnMandatory(col)" class="ppv2-fd-reqd text-danger" aria-hidden="true"> *</span>
 						</th>
 					</tr>
 				</thead>

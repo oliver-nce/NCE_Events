@@ -1,10 +1,14 @@
 <template>
-	<div class="ppv2-find-actions" :class="{ 'ppv2-find-actions--browse': mode === 'browse' }" @mousedown.stop>
+	<div
+		class="ppv2-find-actions bg-primary-100 border-b border"
+		:class="{ 'ppv2-find-actions--browse': mode === 'browse' }"
+		@mousedown.stop
+	>
 		<template v-if="mode === 'find'">
 			<div class="ppv2-find-actions-main">
 				<button
 					type="button"
-					class="ppv2-find-tab-btn ppv2-find-tab-btn--primary"
+					class="ppv2-find-tab-btn ppv2-find-tab-btn--primary bg-primary border-primary font-bold"
 					@click="$emit('find-perform')"
 				>
 					{{ label("Perform Find") }}
@@ -12,7 +16,10 @@
 				<button
 					v-if="findMatchActive"
 					type="button"
-					class="ppv2-find-tab-btn"
+					class="ppv2-find-tab-btn bg-card border rounded-sm"
+					:class="{ 'bg-surface': hoveredFindBtn === 'constrain' }"
+					@mouseenter="hoveredFindBtn = 'constrain'"
+					@mouseleave="hoveredFindBtn = null"
 					@click="$emit('find-constrain')"
 				>
 					{{ label("Constrain Found Set") }}
@@ -20,30 +27,46 @@
 				<button
 					v-if="findMatchActive"
 					type="button"
-					class="ppv2-find-tab-btn"
+					class="ppv2-find-tab-btn bg-card border rounded-sm"
+					:class="{ 'bg-surface': hoveredFindBtn === 'extend' }"
+					@mouseenter="hoveredFindBtn = 'extend'"
+					@mouseleave="hoveredFindBtn = null"
 					@click="$emit('find-extend')"
 				>
 					{{ label("Extend Found Set") }}
 				</button>
-				<button type="button" class="ppv2-find-tab-btn" @click="$emit('find-cancel-criteria')">
+				<button
+					type="button"
+					class="ppv2-find-tab-btn bg-card border rounded-sm"
+					:class="{ 'bg-surface': hoveredFindBtn === 'cancel-find' }"
+					@mouseenter="hoveredFindBtn = 'cancel-find'"
+					@mouseleave="hoveredFindBtn = null"
+					@click="$emit('find-cancel-criteria')"
+				>
 					{{ label("Cancel Find") }}
 				</button>
 			</div>
 			<div class="ppv2-find-actions-or">
 				<button
 					type="button"
-					class="ppv2-find-tab-btn ppv2-find-or-btn"
+					class="ppv2-find-tab-btn ppv2-find-or-btn bg-card border rounded-sm font-bold"
+					:class="{ 'bg-surface': hoveredFindBtn === 'or' }"
 					title="Add OR find request"
 					:disabled="!findOrEnabled"
+					@mouseenter="hoveredFindBtn = 'or'"
+					@mouseleave="hoveredFindBtn = null"
 					@click="$emit('find-or')"
 				>
 					OR
 				</button>
 				<button
 					type="button"
-					class="ppv2-find-tab-btn ppv2-find-or-btn"
+					class="ppv2-find-tab-btn ppv2-find-or-btn bg-card border rounded-sm font-bold"
+					:class="{ 'bg-surface': hoveredFindBtn === 'duplicate' }"
 					title="Duplicate this find request"
 					:disabled="!findDuplicateEnabled"
+					@mouseenter="hoveredFindBtn = 'duplicate'"
+					@mouseleave="hoveredFindBtn = null"
 					@click="$emit('find-or-duplicate')"
 				>
 					<i class="fa fa-clipboard" aria-hidden="true"></i>
@@ -51,13 +74,34 @@
 			</div>
 		</template>
 		<template v-else-if="mode === 'browse'">
-			<button type="button" class="ppv2-find-tab-btn" @click="$emit('find-new')">
+			<button
+				type="button"
+				class="ppv2-find-tab-btn bg-card border rounded-sm"
+				:class="{ 'bg-surface': hoveredFindBtn === 'new' }"
+				@mouseenter="hoveredFindBtn = 'new'"
+				@mouseleave="hoveredFindBtn = null"
+				@click="$emit('find-new')"
+			>
 				{{ label("New Find") }}
 			</button>
-			<button type="button" class="ppv2-find-tab-btn" @click="$emit('find-modify')">
+			<button
+				type="button"
+				class="ppv2-find-tab-btn bg-card border rounded-sm"
+				:class="{ 'bg-surface': hoveredFindBtn === 'modify' }"
+				@mouseenter="hoveredFindBtn = 'modify'"
+				@mouseleave="hoveredFindBtn = null"
+				@click="$emit('find-modify')"
+			>
 				{{ label("Modify Find") }}
 			</button>
-			<button type="button" class="ppv2-find-tab-btn" @click="$emit('find-exit')">
+			<button
+				type="button"
+				class="ppv2-find-tab-btn bg-card border rounded-sm"
+				:class="{ 'bg-surface': hoveredFindBtn === 'exit' }"
+				@mouseenter="hoveredFindBtn = 'exit'"
+				@mouseleave="hoveredFindBtn = null"
+				@click="$emit('find-exit')"
+			>
 				{{ label("Cancel") }}
 			</button>
 		</template>
@@ -65,6 +109,8 @@
 </template>
 
 <script setup>
+import { ref } from "vue";
+
 defineProps({
 	mode: { type: String, required: true },
 	findMatchActive: { type: Boolean, default: false },
@@ -84,6 +130,8 @@ defineEmits([
 	"find-exit",
 ]);
 
+const hoveredFindBtn = ref(null);
+
 function label(msg) {
 	return typeof window.__ === "function" ? window.__(msg) : msg;
 }
@@ -97,8 +145,6 @@ function label(msg) {
 	justify-content: space-between;
 	gap: 8px;
 	padding: 6px 10px;
-	background: var(--primary-light);
-	border-bottom: 1px solid var(--border-color);
 	flex-shrink: 0;
 }
 
@@ -115,34 +161,19 @@ function label(msg) {
 }
 
 .ppv2-find-actions--browse {
-	border-bottom: 1px dashed var(--border-color);
+	border-bottom-style: dashed;
 }
 
 .ppv2-find-tab-btn {
 	font-size: 12px;
 	padding: 4px 14px;
-	border: 1px solid var(--border-color);
-	border-radius: var(--border-radius-sm);
-	background: var(--bg-card);
 	cursor: pointer;
 	font-family: inherit;
 	white-space: nowrap;
 }
 
-.ppv2-find-tab-btn:hover {
-	background: var(--bg-surface);
-}
-
-.ppv2-find-tab-btn--primary {
-	background: var(--bg-header);
-	color: var(--text-header);
-	border-color: var(--bg-header);
-	font-weight: var(--font-weight-bold);
-}
-
 .ppv2-find-or-btn {
 	min-width: 2.5em;
-	font-weight: var(--font-weight-bold);
 }
 
 .ppv2-find-or-btn:disabled {

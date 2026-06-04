@@ -27,7 +27,7 @@
 			@show-filter="(v) => $emit('show-filter', v)"
 		/>
 
-		<div v-if="loading" class="ppv2-loading">Loading…</div>
+		<div v-if="loading" class="ppv2-loading text-primary">Loading…</div>
 
 		<div v-else-if="error" class="ppv2-error text-danger">{{ error }}</div>
 
@@ -63,12 +63,11 @@
 					<tr
 						v-for="(row, ri) in displayRows"
 						:key="row.name || ri"
-						:class="{
-							'bg-row-alt': ri % 2 === 1,
-							'ppv2-selected': selectedName === row.name,
-						}"
+						:class="rowTrClasses(ri, row)"
 						@click="onRowClick($event, row)"
 						@contextmenu="onContextMenu($event, row)"
+						@mouseenter="hoveredRowIndex = ri"
+						@mouseleave="hoveredRowIndex = null"
 					>
 						<td
 							v-for="col in dataCols"
@@ -80,6 +79,9 @@
 									col.is_link && col.link_doctype && getVal(row, col.fieldname)
 								"
 								class="ppv2-link-val text-link"
+								:class="{ 'text-primary': hoveredLinkKey === linkKey(row, col) }"
+								@mouseenter="hoveredLinkKey = linkKey(row, col)"
+								@mouseleave="hoveredLinkKey = null"
 								:href="formRoute(col.link_doctype, getVal(row, col.fieldname))"
 								target="_blank"
 								@click.stop
@@ -88,6 +90,9 @@
 							<span
 								v-else-if="col.is_related_link && col.related_doctype"
 								class="ppv2-related-link text-link"
+								:class="{ 'text-primary': hoveredLinkKey === linkKey(row, col) }"
+								@mouseenter="hoveredLinkKey = linkKey(row, col)"
+								@mouseleave="hoveredLinkKey = null"
 								@click.stop="
 									$emit('drill', {
 										doctype: col.related_doctype,
@@ -103,32 +108,44 @@
 						<td v-if="hasActionColumn" class="ppv2-action-td" :style="actionColumnStyle">
 							<button
 								v-if="hasEmailAction && rowHasEmail(row)"
-								class="ppv2-row-btn"
+								class="ppv2-row-btn bg-card border rounded-sm"
+								:class="{ 'bg-surface': hoveredRowBtn === rowBtnKey(row, 'email') }"
 								title="Send email"
+								@mouseenter="hoveredRowBtn = rowBtnKey(row, 'email')"
+								@mouseleave="hoveredRowBtn = null"
 								@click.stop="$emit('email-one', row)"
 							>
 								<i class="fa fa-envelope"></i>
 							</button>
 							<button
 								v-if="hasPhoneAction && rowHasPhone(row)"
-								class="ppv2-row-btn"
+								class="ppv2-row-btn bg-card border rounded-sm"
+								:class="{ 'bg-surface': hoveredRowBtn === rowBtnKey(row, 'call') }"
 								title="Call"
+								@mouseenter="hoveredRowBtn = rowBtnKey(row, 'call')"
+								@mouseleave="hoveredRowBtn = null"
 								@click.stop="onCallRow(row)"
 							>
 								<i class="fa fa-phone"></i>
 							</button>
 							<button
 								v-if="hasPhoneAction && rowHasPhone(row)"
-								class="ppv2-row-btn"
+								class="ppv2-row-btn bg-card border rounded-sm"
+								:class="{ 'bg-surface': hoveredRowBtn === rowBtnKey(row, 'sms') }"
 								title="Send SMS"
+								@mouseenter="hoveredRowBtn = rowBtnKey(row, 'sms')"
+								@mouseleave="hoveredRowBtn = null"
 								@click.stop="$emit('sms-one', row)"
 							>
 								<i class="fa fa-comment"></i>
 							</button>
 							<button
 								v-if="hasWpSwitchAction && rowHasFamilyId(row)"
-								class="ppv2-row-btn"
+								class="ppv2-row-btn bg-card border rounded-sm"
+								:class="{ 'bg-surface': hoveredRowBtn === rowBtnKey(row, 'switch') }"
 								title="View as on website"
+								@mouseenter="hoveredRowBtn = rowBtnKey(row, 'switch')"
+								@mouseleave="hoveredRowBtn = null"
 								@click.stop="$emit('switch-one', row)"
 							>
 								<i class="fa fa-external-link"></i>
@@ -192,7 +209,29 @@ const headerMenuCol = ref(null);
 const headerMenuX = ref(0);
 const headerMenuY = ref(0);
 const headerMenuRef = ref(null);
+const hoveredRowIndex = ref(null);
+const hoveredLinkKey = ref(null);
+const hoveredRowBtn = ref(null);
 let _closeHeaderMenuHandler = null;
+
+function rowTrClasses(ri, row) {
+	const selected = props.selectedName === row.name;
+	const hovered = hoveredRowIndex.value === ri;
+	if (selected) return { "bg-primary-200": true };
+	if (hovered) return { "bg-primary-100": true };
+	return {
+		"bg-surface": ri % 2 === 0,
+		"bg-row-alt": ri % 2 === 1,
+	};
+}
+
+function linkKey(row, col) {
+	return `${row.name || ""}:${col.fieldname}`;
+}
+
+function rowBtnKey(row, action) {
+	return `${row.name || ""}:${action}`;
+}
 
 function closeHeaderMenu() {
 	headerMenuOpen.value = false;
@@ -549,10 +588,6 @@ function startColResize(e, ci) {
 	text-align: center;
 	font-size: var(--font-size-base);
 }
-.ppv2-loading {
-	color: var(--color-primary);
-}
-
 /* ── Table ── */
 
 .ppv2-body {
@@ -604,28 +639,18 @@ function startColResize(e, ci) {
 	text-overflow: ellipsis;
 }
 
-.ppv2-table tbody tr:hover {
-	background: var(--nce-color-primary-100);
+.ppv2-table tbody tr {
 	cursor: pointer;
-}
-.ppv2-selected {
-	background: var(--nce-color-primary-200) !important;
 }
 
 .ppv2-link-val {
 	text-decoration: underline;
 	cursor: pointer;
 }
-.ppv2-link-val:hover {
-	color: var(--nce-color-primary);
-}
 
 .ppv2-related-link {
 	text-decoration: underline;
 	cursor: pointer;
-}
-.ppv2-related-link:hover {
-	color: var(--nce-color-primary);
 }
 
 /* ── Row action buttons ── */
@@ -644,16 +669,9 @@ function startColResize(e, ci) {
 	justify-content: center;
 	padding: 3px 7px;
 	margin: 0 2px;
-	background: var(--bg-card);
-	border: 1px solid var(--border-color);
-	border-radius: var(--border-radius-sm);
 	cursor: pointer;
 	font-size: var(--font-size-base);
 	line-height: 1;
-}
-.ppv2-row-btn:hover {
-	background: var(--bg-surface);
-	border-color: var(--border-color);
 }
 .ppv2-row-btn i {
 	margin: 0;
@@ -684,9 +702,6 @@ function startColResize(e, ci) {
 	box-sizing: border-box;
 	padding: 2px 4px;
 	font-size: calc(var(--font-size-base) + 1px);
-	border: 1px solid var(--border-color);
-	border-radius: var(--border-radius-sm);
-	background: var(--bg-card);
 }
 </style>
 

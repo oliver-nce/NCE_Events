@@ -1,7 +1,8 @@
 <template>
 	<div class="field-widget">
-		<label class="field-label text-muted" :class="{ required: fieldMeta?.reqd }">
-			{{ fieldMeta?.label || config.path }}
+		<label class="field-label text-muted">
+			{{ fieldMeta?.label || config.path
+			}}<span v-if="fieldMeta?.reqd" class="text-danger" aria-hidden="true"> *</span>
 		</label>
 		<input
 			v-if="inputType === 'text'"
@@ -159,11 +160,6 @@ function onCheckChange(e) {
 .field-label {
 	font-size: var(--font-size-sm);
 	margin-bottom: 2px;
-}
-.field-label.required::after {
-	content: " *";
-	color: red;
-	font-weight: 700;
 }
 .field-input {
 	flex: 1;

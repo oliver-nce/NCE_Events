@@ -1,9 +1,9 @@
 /*
  * NCE Events — panel alias bridge (post theme-contract migration)
  * Maps legacy var(--primary), var(--bg-card), etc. to --nce-color-* for components
- * that still use scoped CSS aliases. V2 chrome prefers template classes (text-danger,
- * bg-primary, bg-surface, …) from nce_theme.css. Each var() keeps a hex fallback when
- * Themes is not loaded.
+ * that still use scoped CSS aliases (V1 panel_page.css, legacy dialogs, find inputs).
+ * V2 panel floats/tables use contract classes from nce_theme.css where possible.
+ * Each var() keeps a hex fallback when Themes is not loaded.
  */
 
 .ppv2-root,

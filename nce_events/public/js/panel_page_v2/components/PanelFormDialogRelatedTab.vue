@@ -56,7 +56,7 @@
 								{{ col.label || col.fieldname
 								}}<span
 									v-if="relatedColumnMandatory(col)"
-									class="ppv2-fd-reqd"
+									class="ppv2-fd-reqd text-danger"
 									aria-hidden="true"
 								>
 									*
@@ -187,7 +187,7 @@
 				>
 					<label class="ppv2-fd-action-modal-label">
 						{{ pa.label || pa.arg
-						}}<span v-if="pa.reqd" class="ppv2-fd-reqd" aria-hidden="true"> *</span>
+						}}<span v-if="pa.reqd" class="ppv2-fd-reqd text-danger" aria-hidden="true"> *</span>
 					</label>
 					<input
 						type="text"
@@ -254,7 +254,7 @@
 									{{ field.label || field.fieldname
 									}}<span
 										v-if="relatedColumnMandatory(field)"
-										class="ppv2-fd-reqd"
+										class="ppv2-fd-reqd text-danger"
 										aria-hidden="true"
 									>
 										*
@@ -1154,7 +1154,6 @@ onUnmounted(() => {
 	word-break: break-word;
 }
 .ppv2-fd-related-fn .ppv2-fd-reqd {
-	color: red;
 	font-weight: 700;
 }
 .ppv2-fd-related-ft {
@@ -1204,7 +1203,6 @@ onUnmounted(() => {
 	z-index: 1;
 }
 .ppv2-fd-related-th .ppv2-fd-reqd {
-	color: red;
 	font-weight: 700;
 }
 .ppv2-fd-related-td {

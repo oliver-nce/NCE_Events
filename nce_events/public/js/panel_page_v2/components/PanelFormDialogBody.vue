@@ -109,7 +109,10 @@
 				</div>
 			</div>
 
-			<div v-if="validationError" class="ppv2-fd-validation-error text-danger">
+			<div
+				v-if="validationError"
+				class="ppv2-fd-validation-error text-danger bg-danger-100 border rounded-sm"
+			>
 				{{ validationError }}
 			</div>
 		</template>
@@ -343,9 +346,6 @@ defineExpose({
 .ppv2-fd-validation-error {
 	margin-top: 8px;
 	padding: 8px 12px;
-	background: var(--nce-color-danger-100, #fef0f0);
-	border: 1px solid var(--nce-color-danger, #e74c3c);
-	border-radius: var(--border-radius-sm, 4px);
 	font-size: var(--font-size-sm);
 }
 </style>

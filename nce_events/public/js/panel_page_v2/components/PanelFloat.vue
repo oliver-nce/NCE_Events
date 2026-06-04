@@ -1,7 +1,7 @@
 <template>
 	<div
 		ref="floatEl"
-		class="ppv2-float"
+		class="ppv2-float bg-surface border rounded shadow-theme"
 		:style="floatStyle"
 	>
 		<div class="ppv2-float-header bg-primary" @mousedown="startDrag">
@@ -14,7 +14,7 @@
 
 		<div
 			v-if="$slots.footer"
-			class="ppv2-float-footer text-muted"
+			class="ppv2-float-footer bg-primary text-primary-fg-tonal"
 			@mousedown.prevent="startDrag"
 		>
 			<slot name="footer" />
@@ -124,7 +124,7 @@ function startResize(e) {
 	// Create outline div that shows target size during resize
 	const rect = el.getBoundingClientRect();
 	const outline = document.createElement("div");
-	outline.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.top}px;width:${ow}px;height:${oh}px;border:1px solid var(--bg-header, #4a5568);z-index:999998;pointer-events:none;box-sizing:border-box;`;
+	outline.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.top}px;width:${ow}px;height:${oh}px;border:1px solid var(--nce-color-primary, #4a5568);z-index:999998;pointer-events:none;box-sizing:border-box;`;
 	document.body.appendChild(outline);
 
 	function onMove(ev) {
@@ -157,10 +157,6 @@ function startResize(e) {
 	top: 0;
 	display: flex;
 	flex-direction: column;
-	background: var(--bg-surface);
-	border: 1px solid var(--border-color);
-	border-radius: var(--border-radius);
-	box-shadow: var(--shadow);
 	overflow: hidden;
 
 	/* GPU layer promotion — avoids repaint of siblings during drag */
@@ -232,7 +228,6 @@ function startResize(e) {
 }
 
 .ppv2-float-header :deep(.ppv2-hdr-btn--refreshing) {
-	color: var(--color-secondary) !important;
 	opacity: 1;
 }
 .ppv2-float-header :deep(.ppv2-hdr-btn--refreshing .fa-refresh) {
@@ -244,8 +239,7 @@ function startResize(e) {
 }
 
 .ppv2-float-header :deep(.ppv2-count) {
-	font-size: var(--font-size-sm);
-	opacity: 0.8;
+	opacity: 0.9;
 }
 
 .ppv2-float-header :deep(.ppv2-close-btn) {
@@ -260,8 +254,6 @@ function startResize(e) {
 .ppv2-float-footer {
 	flex-shrink: 0;
 	padding: 4px 12px;
-	background: var(--bg-header);
-	font-size: var(--font-size-sm);
 	cursor: move;
 	user-select: none;
 	text-align: center;

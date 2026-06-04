@@ -1,35 +1,23 @@
-# Current Task: Evaluations — Phase 6 of 9
-
-```
 [PLAN OVERVIEW]
-Phase 4 — get_event_enrollments API + tests ✅
-Phase 5 — Read-only RatingKanbanView + useEnrollments ✅
-Phase 6 — set_enrollment_rating API + tests
-Phase 7 — Drag tile → save on drop
-Phase 8 — Polling merge
-Phase 9 — iPad polish
-```
+Plan: `plans/plan-v2-full-contract-classes.md`
+Status: **Implemented** (Phases A–G in working tree; Phase H = comment-only — aliases still required by V1 + unmigrated V2 files)
 
-**Phase 5 delivered**
+[CURRENT PHASE: complete]
 
-- `utils/frappeCall.js`, `composables/useEnrollments.js`, `components/RatingKanbanView.vue`
-- `App.vue` — `rating_kanban` → `RatingKanbanView`
-- Rebuild: `cd nce_events/public/js/evaluations && npm run build` then `bench build`
+## Done in this session
 
-Note: **`77c03a1` only added the API** — UI stayed on the placeholder until this phase. Deploy the new `evaluations_dist` after pull.
+- **A** `PanelFloat.vue` — `bg-surface border rounded shadow-theme`; footer `bg-primary text-primary-fg-tonal`
+- **B** `PanelFindActionBar.vue` — `bg-primary-100`; buttons `bg-card border rounded-sm`; primary `bg-primary border-primary`
+- **C** `PanelTable.vue` — zebra `bg-surface` / `bg-row-alt`; hover `bg-primary-100`; selected `bg-primary-200`; row actions + links + loading
+- **D** `PanelHeaderToolbar.vue` + `PanelFloat` deep — `text-primary-fg-tonal`, `text-secondary` when refreshing
+- **E** `PanelTableFilterBar.vue` — filter strip `bg-primary-100`; active op `bg-primary border-primary`
+- **F** `text-danger` on required asterisks (`PanelFormField`, `RelatedTab`, `InlineChildTab`, `FieldWidget`)
+- **G** `TabBar`, `PanelFormDialogBody` validation banner, `PanelFindRow`
 
----
+## Before deploy
 
-```
-[CURRENT PHASE: 6 of 9] — set_enrollment_rating backend
+Run `npm run build` in `nce_events/public/js/panel_page_v2/`.
 
-File(s):
-  - nce_events/api/evaluations.py
-  - nce_events/api/tests/test_evaluations.py
+## Manual smoke
 
-Changes:
-  1. Whitelist set_enrollment_rating(enrollment_name, rating) — int 0–7, resolve enrollment doctype (same as get_event_enrollments), frappe.has_permission(enroll_dt, write, doc=enrollment_name), frappe.db.set_value + commit, return { ok, rating, name }.
-  2. Tests: guest, missing args, out-of-range rating, permission mocked happy path.
-
-Frappe notes: enrollment PK is Enrollments.name (order_item_id per exchange.py) or Registrations name on older sites.
-```
+Families — Found panel: zebra, hover, selected, find bar, footer/header, filter ops.
