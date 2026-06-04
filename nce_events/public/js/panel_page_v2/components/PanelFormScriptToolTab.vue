@@ -37,13 +37,13 @@ onUnmounted(() => {
 .ppv2-script-tool-tab :deep(.ppv2-script-tool-btn) {
 	margin: 4px 8px 4px 0;
 	padding: 6px 14px;
-	border: 1px solid var(--border-color, #d1d5db);
+	border: 1px solid var(--nce-color-border, #d1d5db);
 	border-radius: var(--border-radius-sm, 4px);
-	background: var(--control-bg, #f9fafb);
+	background: var(--nce-color-surface, #f9fafb);
 	font-size: var(--font-size-sm);
 	cursor: pointer;
 }
 .ppv2-script-tool-tab :deep(.ppv2-script-tool-btn:hover) {
-	background: var(--bg-blue, #e8f0fe);
+	background: var(--nce-color-focus, #e8f0fe);
 }
 </style>

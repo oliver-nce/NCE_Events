@@ -302,18 +302,18 @@ function onLinkChangePayload(payload) {
   padding: 5px 8px;
   font-size: var(--font-size-base);
   font-family: var(--font-family);
-  border: 1px solid var(--border-color);
+  border: 1px solid var(--nce-color-border);
   border-radius: var(--border-radius-sm, 4px);
-  background: var(--bg-card);
+  background: var(--nce-color-surface);
   box-sizing: border-box;
 }
 .ppv2-fd-input:focus {
   outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 1px var(--primary-light);
+  border-color: var(--nce-color-primary);
+  box-shadow: 0 0 0 1px var(--nce-color-focus);
 }
 .ppv2-fd-input:disabled {
-  background: var(--bg-surface);
+  background: var(--nce-color-surface);
   cursor: not-allowed;
 }
 .ppv2-fd-textarea {
@@ -325,7 +325,7 @@ function onLinkChangePayload(payload) {
   min-height: 2.5em;
   cursor: default;
   user-select: text;
-  background: var(--bg-surface);
+  background: var(--nce-color-surface);
 }
 .ppv2-fd-readonly-plain:focus {
   outline: none;
@@ -354,8 +354,8 @@ function onLinkChangePayload(payload) {
 }
 .ppv2-fd-table-placeholder {
   padding: 8px 12px;
-  background: var(--bg-surface);
-  border: 1px dashed var(--border-color);
+  background: var(--nce-color-surface);
+  border: 1px dashed var(--nce-color-border);
   border-radius: var(--border-radius-sm, 4px);
   font-size: var(--font-size-sm);
   margin-bottom: 10px;

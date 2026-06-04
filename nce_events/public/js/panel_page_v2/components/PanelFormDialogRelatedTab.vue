@@ -414,7 +414,7 @@ function handleExchangeActionResult(result, enrollmentId, elapsedMs) {
 		.filter(Boolean)
 		.map(
 			([label, val]) =>
-				`<tr><td style="padding:3px 12px 3px 0;color:#6c757d">${e(label)}</td><td style="padding:3px 0"><strong>${e(val)}</strong></td></tr>`,
+				`<tr><td class="theme-text-muted" style="padding:3px 12px 3px 0">${e(label)}</td><td style="padding:3px 0"><strong>${e(val)}</strong></td></tr>`,
 		)
 		.join("");
 
@@ -435,7 +435,7 @@ function handleExchangeActionResult(result, enrollmentId, elapsedMs) {
 		typeof elapsedMs === "number" && isFinite(elapsedMs)
 			? `<p class="theme-text-muted" style="margin-top:8px;font-size:11px">API round-trip: ${(elapsedMs / 1000).toFixed(2)}s (${Math.round(elapsedMs)} ms)</p>`
 			: "";
-	const rawSection = `<details style="margin-top:12px"><summary style="cursor:pointer;color:#6c757d">Full API response</summary><pre style="margin-top:8px;max-height:300px;overflow:auto;background:#f6f8fa;border:1px solid #e1e4e8;border-radius:4px;padding:8px;font-size:11px;white-space:pre-wrap;word-break:break-word">${e(rawJson)}</pre></details>`;
+	const rawSection = `<details style="margin-top:12px"><summary class="theme-text-muted" style="cursor:pointer">Full API response</summary><pre class="theme-bg-surface theme-border theme-rounded-sm" style="margin-top:8px;max-height:300px;overflow:auto;padding:8px;font-size:11px;white-space:pre-wrap;word-break:break-word">${e(rawJson)}</pre></details>`;
 
 	if (typeof frappe !== "undefined" && frappe.msgprint) {
 		frappe.msgprint({
@@ -1107,7 +1107,7 @@ onUnmounted(() => {
 }
 .ppv2-fd-related-warn {
 	font-size: var(--font-size-sm);
-	color: #a67c00;
+	color: var(--nce-color-warning, #a67c00);
 	margin: 0 0 12px;
 }
 .ppv2-fd-related-sizer-row {
@@ -1134,7 +1134,7 @@ onUnmounted(() => {
 }
 .ppv2-fd-related-sizer-grip:hover,
 .ppv2-fd-related-sizer-grip:focus-visible {
-	background: var(--border-color, #dfe2e5);
+	background: var(--nce-color-border, #dfe2e5);
 	outline: none;
 }
 .ppv2-fd-related-field-row {
@@ -1144,7 +1144,7 @@ onUnmounted(() => {
 	column-gap: 10px;
 	padding: 6px 8px;
 	margin-bottom: 4px;
-	border: 1px solid var(--border-color);
+	border: 1px solid var(--nce-color-border);
 	border-radius: var(--border-radius-sm, 4px);
 	font-size: var(--font-size-sm);
 }
@@ -1182,7 +1182,7 @@ onUnmounted(() => {
 	max-height: min(52vh, 520px);
 	overflow: auto;
 	margin: 0 0 12px;
-	border: 1px solid var(--border-color);
+	border: 1px solid var(--nce-color-border);
 	border-radius: var(--border-radius-sm, 4px);
 }
 .ppv2-fd-related-table {
@@ -1193,11 +1193,11 @@ onUnmounted(() => {
 .ppv2-fd-related-th {
 	text-align: left;
 	padding: 6px 8px;
-	background: var(--bg-header, #f0f4f8);
-	color: var(--text-header, #36414c);
+	background: var(--nce-color-secondary-100, #e3f0fc);
+	color: var(--nce-color-secondary-700, #105ead);
 	font-size: var(--font-size-base);
 	font-weight: var(--font-weight-bold, 600);
-	border-bottom: 1px solid var(--border-color);
+	border-bottom: 1px solid var(--nce-color-border);
 	position: sticky;
 	top: 0;
 	z-index: 1;
@@ -1207,7 +1207,7 @@ onUnmounted(() => {
 }
 .ppv2-fd-related-td {
 	padding: 4px 8px;
-	border-bottom: 1px solid var(--border-color);
+	border-bottom: 1px solid var(--nce-color-border);
 	vertical-align: middle;
 	min-width: 4rem;
 }
@@ -1232,9 +1232,9 @@ onUnmounted(() => {
 	min-width: 6rem;
 	min-height: 2.25em;
 	padding: 5px 8px;
-	border: 1px solid var(--border-color);
+	border: 1px solid var(--nce-color-border);
 	border-radius: var(--border-radius-sm, 4px);
-	background: var(--bg-card);
+	background: var(--nce-color-surface);
 	font-size: var(--font-size-base);
 	font-family: var(--font-family, inherit);
 	box-sizing: border-box;
@@ -1245,9 +1245,9 @@ onUnmounted(() => {
 	width: 100%;
 	box-sizing: border-box;
 	padding: 5px 8px;
-	border: 1px solid var(--border-color);
+	border: 1px solid var(--nce-color-border);
 	border-radius: var(--border-radius-sm, 4px);
-	background: var(--bg-card);
+	background: var(--nce-color-surface);
 	font-size: var(--font-size-base);
 	font-family: var(--font-family, inherit);
 }
@@ -1258,7 +1258,7 @@ onUnmounted(() => {
 .ppv2-fd-related-check {
 	width: 1.1rem;
 	height: 1.1rem;
-	accent-color: var(--bg-header, #2490ef);
+	accent-color: var(--nce-color-primary, #126bc4);
 }
 .ppv2-fd-related-empty {
 	margin: 10px 12px 12px;
@@ -1297,7 +1297,7 @@ onUnmounted(() => {
 	padding: 16px;
 }
 .ppv2-fd-action-modal {
-	background: var(--bg-card, #fff);
+	background: var(--nce-color-surface, #fff);
 	border-radius: var(--border-radius-sm, 6px);
 	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
 	padding: 16px 18px;

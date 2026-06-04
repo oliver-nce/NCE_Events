@@ -169,11 +169,11 @@ const rows = computed(() => [
 	max-height: min(90vh, 640px);
 	display: flex;
 	flex-direction: column;
-	background: var(--bg-card, #fff);
-	color: var(--text-color, #333);
+	background: var(--nce-color-surface, #fff);
+	color: var(--nce-color-text, #333);
 	border-radius: var(--border-radius, 8px);
-	box-shadow: var(--shadow, 0 12px 40px rgba(0, 0, 0, 0.2));
-	border: 1px solid var(--border-color, #cfd8dc);
+	box-shadow: var(--nce-shadow, 0 12px 40px rgba(0, 0, 0, 0.2));
+	border: 1px solid var(--nce-color-border, #cfd8dc);
 	font-family: var(--font-family, system-ui, sans-serif);
 	font-size: var(--font-size-base, 13px);
 }
@@ -184,8 +184,8 @@ const rows = computed(() => [
 	justify-content: space-between;
 	gap: 12px;
 	padding: 12px 14px;
-	border-bottom: 1px solid var(--border-color, #e2e8f0);
-	background: var(--bg-surface, #f8fafc);
+	border-bottom: 1px solid var(--nce-color-border, #e2e8f0);
+	background: var(--nce-color-surface, #f8fafc);
 	border-radius: var(--border-radius, 8px) var(--border-radius, 8px) 0 0;
 }
 
@@ -213,8 +213,8 @@ const rows = computed(() => [
 	border-radius: var(--border-radius-sm, 4px);
 }
 .ppv2-find-help-close:hover {
-	background: var(--row-hover-bg, #e8f0fe);
-	color: var(--text-color, #333);
+	background: var(--nce-color-primary-100, #e8f0fe);
+	color: var(--nce-color-text, #333);
 }
 
 .ppv2-find-help-scroll {
@@ -231,15 +231,15 @@ const rows = computed(() => [
 .ppv2-find-help-table th {
 	text-align: left;
 	padding: 8px 10px;
-	background: var(--control-bg, #f1f5f9);
-	border-bottom: 2px solid var(--border-color, #e2e8f0);
+	background: var(--nce-color-surface, #f1f5f9);
+	border-bottom: 2px solid var(--nce-color-border, #e2e8f0);
 	font-weight: var(--font-weight-bold, 600);
 	white-space: nowrap;
 }
 
 .ppv2-find-help-table td {
 	padding: 8px 10px;
-	border-bottom: 1px solid var(--border-color, #e8eef4);
+	border-bottom: 1px solid var(--nce-color-border, #e8eef4);
 	vertical-align: top;
 }
 
@@ -250,10 +250,10 @@ const rows = computed(() => [
 .ppv2-find-help-table code {
 	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 	font-size: 0.95em;
-	background: var(--control-bg, #f1f5f9);
+	background: var(--nce-color-surface, #f1f5f9);
 	padding: 2px 6px;
 	border-radius: 4px;
-	border: 1px solid var(--border-color, #e2e8f0);
+	border: 1px solid var(--nce-color-border, #e2e8f0);
 }
 
 .ppv2-find-help-footnote {

@@ -100,7 +100,7 @@ function displayName(row) {
 }
 
 .rk-hint {
-	color: var(--text-muted, #74808b);
+	color: var(--nce-color-muted, #74808b);
 }
 
 .rk-error {
@@ -132,8 +132,8 @@ function displayName(row) {
 	text-align: center;
 	font-size: 0.7rem;
 	font-weight: 600;
-	color: var(--text-muted, #74808b);
-	border-bottom: 1px solid var(--border-color, #e2e6ea);
+	color: var(--nce-color-muted, #74808b);
+	border-bottom: 1px solid var(--nce-color-border, #e2e6ea);
 	padding-bottom: 0.25rem;
 }
 
@@ -142,7 +142,7 @@ function displayName(row) {
 	font-weight: 600;
 	line-height: 1.3;
 	padding: 0.35rem 0.25rem;
-	border-bottom: 1px solid var(--border-color, #eef1f2);
+	border-bottom: 1px solid var(--nce-color-border, #eef1f2);
 }
 
 .rk-pos {
@@ -154,11 +154,11 @@ function displayName(row) {
 
 .rk-cell {
 	min-height: 2.5rem;
-	border-bottom: 1px solid var(--border-color, #eef1f2);
+	border-bottom: 1px solid var(--nce-color-border, #eef1f2);
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	background: var(--control-bg, #fafbfc);
+	background: var(--nce-color-surface, #fafbfc);
 }
 
 .rk-cell--hit {
@@ -172,7 +172,7 @@ function displayName(row) {
 	min-width: 2.25rem;
 	min-height: 2.25rem;
 	border-radius: 6px;
-	background: var(--fg-color, #36414c);
+	background: var(--nce-color-text, #36414c);
 	color: var(--nce-color-surface, #ffffff);
 	font-weight: 700;
 	font-size: 0.875rem;
@@ -182,6 +182,6 @@ code {
 	font-size: 0.8em;
 	padding: 0.1em 0.35em;
 	border-radius: 3px;
-	background: var(--control-bg, #f4f5f6);
+	background: var(--nce-color-surface, #f4f5f6);
 }
 </style>

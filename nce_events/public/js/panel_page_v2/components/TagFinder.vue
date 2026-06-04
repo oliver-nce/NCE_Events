@@ -147,10 +147,10 @@ function onSelectField(field, colIdx) {
 	min-width: 260px;
 	max-width: 90vw;
 	max-height: 70vh;
-	background: var(--bg-surface);
-	border: 1px solid var(--border-color);
+	background: var(--nce-color-surface);
+	border: 1px solid var(--nce-color-border);
 	border-radius: var(--border-radius);
-	box-shadow: var(--shadow);
+	box-shadow: var(--nce-shadow);
 	display: flex;
 	flex-direction: column;
 }
@@ -160,8 +160,8 @@ function onSelectField(field, colIdx) {
 	justify-content: space-between;
 	align-items: center;
 	padding: 8px 12px;
-	background: var(--bg-header);
-	color: var(--text-header);
+	background: var(--nce-color-primary);
+	color: var(--nce-color-primary-fg);
 	font-weight: 600;
 	font-size: var(--font-size-base);
 	border-radius: var(--border-radius) var(--border-radius) 0 0;
@@ -172,7 +172,7 @@ function onSelectField(field, colIdx) {
 .tf-close {
 	background: none;
 	border: none;
-	color: var(--text-header);
+	color: var(--nce-color-primary-fg);
 	font-size: 18px;
 	cursor: pointer;
 	opacity: 0.8;
@@ -188,7 +188,7 @@ function onSelectField(field, colIdx) {
 
 .tf-footer {
 	padding: 4px 12px;
-	background: var(--bg-header);
+	background: var(--nce-color-primary);
 	font-size: var(--font-size-sm);
 	text-align: center;
 	cursor: move;
@@ -203,7 +203,7 @@ function onSelectField(field, colIdx) {
 	width: 16px;
 	height: 16px;
 	cursor: nwse-resize;
-	background: linear-gradient(135deg, transparent 50%, var(--border-color) 50%, var(--border-color) 60%, transparent 60%, transparent 75%, var(--border-color) 75%, var(--border-color) 85%, transparent 85%);
+	background: linear-gradient(135deg, transparent 50%, var(--nce-color-border) 50%, var(--nce-color-border) 60%, transparent 60%, transparent 75%, var(--nce-color-border) 75%, var(--nce-color-border) 85%, transparent 85%);
 	border-radius: 0 0 var(--border-radius) 0;
 }
 </style>

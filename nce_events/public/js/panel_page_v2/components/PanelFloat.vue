@@ -266,7 +266,7 @@ function startResize(e) {
 	width: 16px;
 	height: 16px;
 	cursor: nwse-resize;
-	background: linear-gradient(135deg, transparent 50%, var(--border-color) 50%);
+	background: linear-gradient(135deg, transparent 50%, var(--nce-color-border) 50%);
 	border-radius: 0 0 var(--border-radius) 0;
 }
 </style>

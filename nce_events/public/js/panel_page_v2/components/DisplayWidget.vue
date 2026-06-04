@@ -40,7 +40,7 @@ const displayLabel = computed(() => {
 	margin-bottom: 2px;
 }
 .display-value {
-	background: var(--bg-surface);
+	background: var(--nce-color-surface);
 	padding: 4px 8px;
 	border-radius: var(--border-radius-sm);
 	flex: 1;

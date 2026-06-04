@@ -24,11 +24,6 @@ FILE_SUFFIXES = {".vue", ".css", ".js"}
 
 BRIDGE_FILE = PUBLIC / "css" / "theme_defaults.css"
 
-# Bare hex allowed until migrated (remove path substring when fixed).
-HEX_DEBT = (
-    "panel_page_v2/components/PanelFormDialogRelatedTab.vue",
-)
-
 VAR_USE = re.compile(r"var\(--([a-zA-Z0-9-]+)")
 BRIDGE_ALIAS = re.compile(r"^\s+--([a-zA-Z0-9-]+):", re.MULTILINE)
 VAR_FALLBACK_HEX = re.compile(r"var\([^)]*#[0-9A-Fa-f]{3,8}[^)]*\)", re.I)
@@ -57,11 +52,6 @@ def iter_source_files() -> list[Path]:
 def load_bridge_aliases() -> set[str]:
     text = BRIDGE_FILE.read_text(encoding="utf-8")
     return {m.group(1) for m in BRIDGE_ALIAS.finditer(text)}
-
-
-def is_hex_debt(path: Path) -> bool:
-    pos = path.as_posix()
-    return any(d in pos for d in HEX_DEBT)
 
 
 # Component-scoped custom properties (not theme bridge tokens).
@@ -100,8 +90,6 @@ def check_unknown_aliases(files: list[Path], bridge: set[str]) -> list[str]:
 def check_bare_hex(files: list[Path]) -> list[str]:
     violations: list[str] = []
     for path in files:
-        if is_hex_debt(path):
-            continue
         for lineno, line in enumerate(path.read_text(encoding="utf-8", errors="replace").splitlines(), 1):
             if "theme-exempt" in line or "&#" in line:
                 continue

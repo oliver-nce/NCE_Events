@@ -38,7 +38,7 @@
 						<th
 							v-for="(col, ci) in dataCols"
 							:key="col.fieldname"
-							class="col-header theme-bg-secondary-100"
+							class="col-header"
 							:style="{
 								width: colWidths[ci] ? colWidths[ci] + 'px' : 'auto',
 								minWidth: '40px',
@@ -53,7 +53,7 @@
 						</th>
 						<th
 							v-if="hasActionColumn"
-							class="ppv2-action-th col-header theme-bg-secondary-100"
+							class="ppv2-action-th col-header"
 							:style="actionColumnStyle"
 						/>
 					</tr>
@@ -108,8 +108,8 @@
 						<td v-if="hasActionColumn" class="ppv2-action-td" :style="actionColumnStyle">
 							<button
 								v-if="hasEmailAction && rowHasEmail(row)"
-								class="ppv2-row-btn theme-bg-card theme-border theme-rounded-sm"
-								:class="{ 'theme-bg-surface': hoveredRowBtn === rowBtnKey(row, 'email') }"
+								class="ppv2-row-btn"
+								:class="{ 'ppv2-row-btn--hover': hoveredRowBtn === rowBtnKey(row, 'email') }"
 								title="Send email"
 								@mouseenter="hoveredRowBtn = rowBtnKey(row, 'email')"
 								@mouseleave="hoveredRowBtn = null"
@@ -119,8 +119,8 @@
 							</button>
 							<button
 								v-if="hasPhoneAction && rowHasPhone(row)"
-								class="ppv2-row-btn theme-bg-card theme-border theme-rounded-sm"
-								:class="{ 'theme-bg-surface': hoveredRowBtn === rowBtnKey(row, 'call') }"
+								class="ppv2-row-btn"
+								:class="{ 'ppv2-row-btn--hover': hoveredRowBtn === rowBtnKey(row, 'call') }"
 								title="Call"
 								@mouseenter="hoveredRowBtn = rowBtnKey(row, 'call')"
 								@mouseleave="hoveredRowBtn = null"
@@ -130,8 +130,8 @@
 							</button>
 							<button
 								v-if="hasPhoneAction && rowHasPhone(row)"
-								class="ppv2-row-btn theme-bg-card theme-border theme-rounded-sm"
-								:class="{ 'theme-bg-surface': hoveredRowBtn === rowBtnKey(row, 'sms') }"
+								class="ppv2-row-btn"
+								:class="{ 'ppv2-row-btn--hover': hoveredRowBtn === rowBtnKey(row, 'sms') }"
 								title="Send SMS"
 								@mouseenter="hoveredRowBtn = rowBtnKey(row, 'sms')"
 								@mouseleave="hoveredRowBtn = null"
@@ -141,8 +141,8 @@
 							</button>
 							<button
 								v-if="hasWpSwitchAction && rowHasFamilyId(row)"
-								class="ppv2-row-btn theme-bg-card theme-border theme-rounded-sm"
-								:class="{ 'theme-bg-surface': hoveredRowBtn === rowBtnKey(row, 'switch') }"
+								class="ppv2-row-btn"
+								:class="{ 'ppv2-row-btn--hover': hoveredRowBtn === rowBtnKey(row, 'switch') }"
 								title="View as on website"
 								@mouseenter="hoveredRowBtn = rowBtnKey(row, 'switch')"
 								@mouseleave="hoveredRowBtn = null"
@@ -609,17 +609,19 @@ function startColResize(e, ci) {
 	position: sticky;
 	top: 0;
 	z-index: 2;
+	background-color: var(--nce-color-secondary-100, #e3f0fc);
+	color: var(--nce-color-secondary-700, #105ead);
 	font-weight: var(--font-weight-bold);
 	font-size: var(--font-size-sm);
 	text-transform: uppercase;
 	letter-spacing: 0.3px;
 	padding: 6px 8px;
-	border-bottom: 2px solid var(--border-color);
+	border-bottom: 2px solid var(--nce-color-border);
 	text-align: left;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	border-right: 1px solid var(--border-color);
+	border-right: 1px solid var(--nce-color-border);
 }
 .ppv2-table th:last-child {
 	border-right: none;
@@ -633,7 +635,7 @@ function startColResize(e, ci) {
 
 .ppv2-table td {
 	padding: 5px 8px;
-	border-bottom: 1px solid var(--border-color);
+	border-bottom: 1px solid var(--nce-color-border);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -651,10 +653,10 @@ function startColResize(e, ci) {
 	background-color: var(--nce-color-row-alt, #f3f4f6);
 }
 .ppv2-table tbody tr.ppv2-row-hovered {
-	background-color: var(--row-hover-bg, var(--nce-color-primary-100, #e3f0fc));
+	background-color: var(--nce-color-primary-100, #e3f0fc);
 }
 .ppv2-table tbody tr.ppv2-row-selected {
-	background-color: var(--row-selected-bg, var(--nce-color-primary-200, #c7e0fa));
+	background-color: var(--nce-color-primary-200, #c7e0fa);
 }
 
 .ppv2-link-val {
@@ -686,6 +688,13 @@ function startColResize(e, ci) {
 	cursor: pointer;
 	font-size: var(--font-size-base);
 	line-height: 1;
+	background-color: var(--nce-color-surface, #ffffff);
+	border: 1px solid var(--nce-color-border, #d1d5db);
+	border-radius: var(--border-radius-sm, 4px);
+}
+.ppv2-row-btn--hover,
+.ppv2-row-btn:hover {
+	background-color: var(--nce-color-primary-50, #f1f7fe);
 }
 .ppv2-row-btn i {
 	margin: 0;
@@ -703,12 +712,12 @@ function startColResize(e, ci) {
 	z-index: 2;
 }
 .ppv2-col-resize:hover {
-	background: color-mix(in srgb, var(--color-primary) 30%, transparent);
+	background: color-mix(in srgb, var(--nce-color-primary, #126bc4) 30%, transparent);
 }
 
 :deep(.ppv2-find-row td) {
 	padding: 2px 4px;
-	border-bottom: 1px solid var(--border-color);
+	border-bottom: 1px solid var(--nce-color-border);
 }
 
 :deep(.ppv2-find-input) {

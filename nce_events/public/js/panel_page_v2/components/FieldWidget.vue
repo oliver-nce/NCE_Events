@@ -163,19 +163,19 @@ function onCheckChange(e) {
 }
 .field-input {
 	flex: 1;
-	border: 1px solid var(--input-border);
+	border: 1px solid var(--nce-color-border);
 	border-radius: var(--border-radius-sm);
 	padding: 4px 8px;
 	font-size: var(--font-size-base);
 	min-height: 28px;
 }
 .field-input:focus {
-	border-color: var(--input-focus-border);
+	border-color: var(--nce-color-focus);
 	outline: none;
 }
 .field-input[readonly],
 .field-input:disabled {
-	background: var(--bg-surface);
+	background: var(--nce-color-surface);
 	cursor: default;
 }
 .field-input[type="checkbox"] {

@@ -59,7 +59,7 @@ const helpLabelEffective = computed(() => {
 	gap: 8px;
 	margin-bottom: 12px;
 	padding-bottom: 8px;
-	border-bottom: 1px solid var(--border-color);
+	border-bottom: 1px solid var(--nce-color-border);
 }
 .ppv2-fd-tab-buttons {
 	display: flex;

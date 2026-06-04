@@ -1,6 +1,6 @@
 <template>
 	<div
-		class="ppv2-find-actions theme-bg-primary-100 border-b theme-border"
+		class="ppv2-find-actions"
 		:class="{ 'ppv2-find-actions--browse': mode === 'browse' }"
 		@mousedown.stop
 	>
@@ -8,7 +8,7 @@
 			<div class="ppv2-find-actions-main">
 				<button
 					type="button"
-					class="ppv2-find-tab-btn ppv2-find-tab-btn--primary theme-bg-primary theme-border-primary font-bold"
+					class="ppv2-find-tab-btn ppv2-find-tab-btn--primary"
 					@click="$emit('find-perform')"
 				>
 					{{ label("Perform Find") }}
@@ -16,8 +16,8 @@
 				<button
 					v-if="findMatchActive"
 					type="button"
-					class="ppv2-find-tab-btn theme-bg-card theme-border theme-rounded-sm"
-					:class="{ 'theme-bg-surface': hoveredFindBtn === 'constrain' }"
+					class="ppv2-find-tab-btn"
+					:class="{ 'ppv2-find-tab-btn--hover': hoveredFindBtn === 'constrain' }"
 					@mouseenter="hoveredFindBtn = 'constrain'"
 					@mouseleave="hoveredFindBtn = null"
 					@click="$emit('find-constrain')"
@@ -27,8 +27,8 @@
 				<button
 					v-if="findMatchActive"
 					type="button"
-					class="ppv2-find-tab-btn theme-bg-card theme-border theme-rounded-sm"
-					:class="{ 'theme-bg-surface': hoveredFindBtn === 'extend' }"
+					class="ppv2-find-tab-btn"
+					:class="{ 'ppv2-find-tab-btn--hover': hoveredFindBtn === 'extend' }"
 					@mouseenter="hoveredFindBtn = 'extend'"
 					@mouseleave="hoveredFindBtn = null"
 					@click="$emit('find-extend')"
@@ -37,8 +37,8 @@
 				</button>
 				<button
 					type="button"
-					class="ppv2-find-tab-btn theme-bg-card theme-border theme-rounded-sm"
-					:class="{ 'theme-bg-surface': hoveredFindBtn === 'cancel-find' }"
+					class="ppv2-find-tab-btn"
+					:class="{ 'ppv2-find-tab-btn--hover': hoveredFindBtn === 'cancel-find' }"
 					@mouseenter="hoveredFindBtn = 'cancel-find'"
 					@mouseleave="hoveredFindBtn = null"
 					@click="$emit('find-cancel-criteria')"
@@ -49,8 +49,8 @@
 			<div class="ppv2-find-actions-or">
 				<button
 					type="button"
-					class="ppv2-find-tab-btn ppv2-find-or-btn theme-bg-card theme-border theme-rounded-sm font-bold"
-					:class="{ 'theme-bg-surface': hoveredFindBtn === 'or' }"
+					class="ppv2-find-tab-btn ppv2-find-or-btn"
+					:class="{ 'ppv2-find-tab-btn--hover': hoveredFindBtn === 'or' }"
 					title="Add OR find request"
 					:disabled="!findOrEnabled"
 					@mouseenter="hoveredFindBtn = 'or'"
@@ -61,8 +61,8 @@
 				</button>
 				<button
 					type="button"
-					class="ppv2-find-tab-btn ppv2-find-or-btn theme-bg-card theme-border theme-rounded-sm font-bold"
-					:class="{ 'theme-bg-surface': hoveredFindBtn === 'duplicate' }"
+					class="ppv2-find-tab-btn ppv2-find-or-btn"
+					:class="{ 'ppv2-find-tab-btn--hover': hoveredFindBtn === 'duplicate' }"
 					title="Duplicate this find request"
 					:disabled="!findDuplicateEnabled"
 					@mouseenter="hoveredFindBtn = 'duplicate'"
@@ -76,8 +76,8 @@
 		<template v-else-if="mode === 'browse'">
 			<button
 				type="button"
-				class="ppv2-find-tab-btn theme-bg-card theme-border theme-rounded-sm"
-				:class="{ 'theme-bg-surface': hoveredFindBtn === 'new' }"
+				class="ppv2-find-tab-btn"
+				:class="{ 'ppv2-find-tab-btn--hover': hoveredFindBtn === 'new' }"
 				@mouseenter="hoveredFindBtn = 'new'"
 				@mouseleave="hoveredFindBtn = null"
 				@click="$emit('find-new')"
@@ -86,8 +86,8 @@
 			</button>
 			<button
 				type="button"
-				class="ppv2-find-tab-btn theme-bg-card theme-border theme-rounded-sm"
-				:class="{ 'theme-bg-surface': hoveredFindBtn === 'modify' }"
+				class="ppv2-find-tab-btn"
+				:class="{ 'ppv2-find-tab-btn--hover': hoveredFindBtn === 'modify' }"
 				@mouseenter="hoveredFindBtn = 'modify'"
 				@mouseleave="hoveredFindBtn = null"
 				@click="$emit('find-modify')"
@@ -96,8 +96,8 @@
 			</button>
 			<button
 				type="button"
-				class="ppv2-find-tab-btn theme-bg-card theme-border theme-rounded-sm"
-				:class="{ 'theme-bg-surface': hoveredFindBtn === 'exit' }"
+				class="ppv2-find-tab-btn"
+				:class="{ 'ppv2-find-tab-btn--hover': hoveredFindBtn === 'exit' }"
 				@mouseenter="hoveredFindBtn = 'exit'"
 				@mouseleave="hoveredFindBtn = null"
 				@click="$emit('find-exit')"
@@ -146,6 +146,8 @@ function label(msg) {
 	gap: 8px;
 	padding: 6px 10px;
 	flex-shrink: 0;
+	background-color: var(--nce-color-primary-100, #e3f0fc);
+	border-bottom: 1px solid var(--nce-color-border, #d1d5db);
 }
 
 .ppv2-find-actions-main,
@@ -170,10 +172,32 @@ function label(msg) {
 	cursor: pointer;
 	font-family: inherit;
 	white-space: nowrap;
+	background-color: var(--nce-color-surface, #ffffff);
+	border: 1px solid var(--nce-color-border, #d1d5db);
+	border-radius: var(--border-radius-sm, 4px);
+}
+
+.ppv2-find-tab-btn--primary {
+	background-color: var(--nce-color-primary, #126bc4);
+	border-color: var(--nce-color-primary, #126bc4);
+	color: var(--nce-color-primary-fg, #ffffff);
+	font-weight: var(--font-weight-bold, 600);
+}
+
+.ppv2-find-tab-btn--hover,
+.ppv2-find-tab-btn:hover:not(:disabled) {
+	background-color: var(--nce-color-primary-50, #f1f7fe);
+}
+
+.ppv2-find-tab-btn--primary.ppv2-find-tab-btn--hover,
+.ppv2-find-tab-btn--primary:hover {
+	background-color: var(--nce-color-primary-600, #105ead);
+	border-color: var(--nce-color-primary-600, #105ead);
 }
 
 .ppv2-find-or-btn {
 	min-width: 2.5em;
+	font-weight: var(--font-weight-bold, 600);
 }
 
 .ppv2-find-or-btn:disabled {

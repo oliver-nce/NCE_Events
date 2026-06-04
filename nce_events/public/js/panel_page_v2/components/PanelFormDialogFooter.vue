@@ -284,7 +284,7 @@ watch(
 .ppv2-fd-footer {
 	flex-shrink: 0;
 	padding: 10px 16px;
-	border-top: 1px solid var(--border-color);
+	border-top: 1px solid var(--nce-color-border);
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
@@ -305,7 +305,7 @@ watch(
 	flex-wrap: wrap;
 	gap: 6px;
 	padding-bottom: 4px;
-	border-bottom: 1px dashed var(--border-color);
+	border-bottom: 1px dashed var(--nce-color-border);
 	margin-bottom: 2px;
 }
 .ppv2-fd-custom-buttons {

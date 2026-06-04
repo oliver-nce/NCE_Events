@@ -166,33 +166,33 @@ function onPerformFindConstrain() {
 	flex-wrap: wrap;
 	gap: 6px;
 	padding: 8px 10px;
-	background: var(--primary-light);
-	border-bottom: 1px solid var(--border-color);
+	background: var(--nce-color-focus);
+	border-bottom: 1px solid var(--nce-color-border);
 	flex-shrink: 0;
 }
 
 .ppv2-find-actions--browse {
-	border-bottom: 1px dashed var(--border-color);
+	border-bottom: 1px dashed var(--nce-color-border);
 }
 
 .ppv2-find-tab-btn {
 	font-size: 12px;
 	padding: 6px 12px;
-	border: 1px solid var(--border-color);
+	border: 1px solid var(--nce-color-border);
 	border-radius: var(--border-radius-sm);
-	background: var(--bg-card);
+	background: var(--nce-color-surface);
 	cursor: pointer;
 	font-family: inherit;
 }
 
 .ppv2-find-tab-btn:hover {
-	background: var(--bg-surface);
+	background: var(--nce-color-surface);
 }
 
 .ppv2-find-tab-btn--active {
-	background: var(--bg-header);
-	color: var(--text-header);
-	border-color: var(--bg-header);
+	background: var(--nce-color-primary);
+	color: var(--nce-color-primary-fg);
+	border-color: var(--nce-color-primary);
 	font-weight: var(--font-weight-bold);
 }
 
@@ -215,7 +215,7 @@ function onPerformFindConstrain() {
 
 .ppv2-find-row td {
 	padding: 2px 4px;
-	border-bottom: 1px solid var(--border-color);
+	border-bottom: 1px solid var(--nce-color-border);
 }
 
 .ppv2-find-input {
@@ -223,9 +223,9 @@ function onPerformFindConstrain() {
 	box-sizing: border-box;
 	padding: 2px 4px;
 	font-size: calc(var(--font-size-base) + 1px);
-	border: 1px solid var(--border-color);
+	border: 1px solid var(--nce-color-border);
 	border-radius: var(--border-radius-sm);
-	background: var(--bg-card);
+	background: var(--nce-color-surface);
 }
 
 .ppv2-find-empty {

@@ -222,7 +222,7 @@ function emitFilterDebounced() {
 .ppv2-filter-col {
 	font-size: calc(var(--font-size-base) + 2px);
 	padding: 3px 6px;
-	border: 1px solid var(--border-color);
+	border: 1px solid var(--nce-color-border);
 	border-radius: var(--border-radius-sm);
 	min-width: 120px;
 }
@@ -241,7 +241,7 @@ function emitFilterDebounced() {
 .ppv2-filter-val {
 	font-size: calc(var(--font-size-base) + 2px);
 	padding: 3px 8px;
-	border: 1px solid var(--border-color);
+	border: 1px solid var(--nce-color-border);
 	border-radius: var(--border-radius-sm);
 	flex: 1;
 	min-width: 60px;

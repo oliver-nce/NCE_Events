@@ -43,7 +43,7 @@ const currentView = computed(
 	flex-shrink: 0;
 	min-height: 3rem;
 	padding: 0.5rem 1rem;
-	border-bottom: 1px solid var(--border-color, #e2e6ea);
+	border-bottom: 1px solid var(--nce-color-border, #e2e6ea);
 	gap: 0.75rem;
 }
 

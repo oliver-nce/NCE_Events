@@ -155,15 +155,15 @@ onMounted(async () => {
 	display: flex;
 	flex-direction: column;
 	height: 100%;
-	background: var(--bg-card);
+	background: var(--nce-color-surface);
 	font-family: var(--font-family);
 }
 .card-form-header {
 	display: flex;
 	align-items: center;
 	padding: var(--spacing-sm) var(--spacing-md);
-	background: var(--bg-header);
-	color: var(--text-header);
+	background: var(--nce-color-primary);
+	color: var(--nce-color-primary-fg);
 	border-radius: var(--border-radius) var(--border-radius) 0 0;
 }
 .card-title {
@@ -179,7 +179,7 @@ onMounted(async () => {
 .card-close-btn {
 	background: none;
 	border: none;
-	color: var(--text-header);
+	color: var(--nce-color-primary-fg);
 	font-size: 20px;
 	cursor: pointer;
 	opacity: 0.8;

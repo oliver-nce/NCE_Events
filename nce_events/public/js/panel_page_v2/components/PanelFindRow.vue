@@ -1,5 +1,5 @@
 <template>
-	<tr class="ppv2-find-row" :class="{ 'theme-bg-primary-100': active }"
+	<tr class="ppv2-find-row" :class="{ 'ppv2-find-row--active': active }"
 		@mousedown="onRowActivate"
 	>
 		<td v-for="(col, ci) in columns" :key="col.fieldname">
@@ -7,7 +7,7 @@
 			<input
 				:value="criteria[col.fieldname] ?? ''"
 				type="text"
-				class="ppv2-find-input theme-bg-card theme-border theme-border-input-border theme-rounded-sm"
+				class="ppv2-find-input"
 				:placeholder="col.label"
 				@input="onInput(col.fieldname, $event)"
 				@focus="onRowActivate"
@@ -38,9 +38,13 @@ function onInput(fieldname, event) {
 </script>
 
 <style scoped>
+.ppv2-find-row--active {
+	background-color: var(--nce-color-primary-100, #e3f0fc);
+}
+
 .ppv2-find-row td {
 	padding: 2px 4px;
-	border-bottom: 1px solid var(--border-color);
+	border-bottom: 1px solid var(--nce-color-border);
 }
 
 .ppv2-find-or-label {
@@ -56,6 +60,9 @@ function onInput(fieldname, event) {
 	box-sizing: border-box;
 	padding: 2px 4px;
 	font-size: calc(var(--font-size-base) + 1px);
+	background-color: var(--nce-color-surface, #ffffff);
+	border: 1px solid var(--nce-color-border, #d1d5db);
+	border-radius: var(--border-radius-sm, 4px);
 }
 
 .ppv2-find-or-label + .ppv2-find-input {

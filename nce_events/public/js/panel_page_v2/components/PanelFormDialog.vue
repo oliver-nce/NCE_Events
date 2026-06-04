@@ -988,9 +988,9 @@ async function onPlaceholderButton(btn) {
 	transition: opacity 0.3s ease;
 }
 .ppv2-form-dialog {
-	background: var(--bg-card);
+	background: var(--nce-color-surface);
 	border-radius: var(--border-radius);
-	box-shadow: var(--shadow);
+	box-shadow: var(--nce-shadow);
 	display: flex;
 	flex-direction: column;
 	max-height: 90vh;
@@ -1001,7 +1001,7 @@ async function onPlaceholderButton(btn) {
 	position: absolute;
 	inset: 0;
 	z-index: 20;
-	background: color-mix(in srgb, var(--bg-card) 88%, transparent);
+	background: color-mix(in srgb, var(--nce-color-surface) 88%, transparent);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -1012,9 +1012,9 @@ async function onPlaceholderButton(btn) {
 	font-weight: 600;
 	padding: 16px 24px;
 	border-radius: var(--border-radius-sm, 6px);
-	background: var(--bg-card);
-	border: 1px solid var(--border-color);
-	box-shadow: var(--shadow);
+	background: var(--nce-color-surface);
+	border: 1px solid var(--nce-color-border);
+	box-shadow: var(--nce-shadow);
 }
 .ppv2-fd-size-sm {
 	width: 400px;

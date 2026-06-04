@@ -41,7 +41,7 @@ const showBar = computed(() => {
 .tab-bar {
 	display: flex;
 	gap: 0;
-	border-bottom: 1px solid var(--border-color);
+	border-bottom: 1px solid var(--nce-color-border);
 	margin-bottom: var(--spacing-md);
 }
 .tab-btn {

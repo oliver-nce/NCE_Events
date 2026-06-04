@@ -24,7 +24,7 @@ const shell = useNceEvalShellStore();
 	padding: 1rem 1.25rem;
 	font-size: 0.9375rem;
 	line-height: 1.5;
-	color: var(--text-color, #36414c);
+	color: var(--nce-color-text, #36414c);
 }
 
 .nce-eval-placeholder-line {
@@ -33,13 +33,13 @@ const shell = useNceEvalShellStore();
 
 .nce-eval-placeholder-note {
 	margin: 0;
-	color: var(--text-muted, #74808b);
+	color: var(--nce-color-muted, #74808b);
 }
 
 code {
 	font-size: 0.875em;
 	padding: 0.1em 0.35em;
 	border-radius: 3px;
-	background: var(--control-bg, #f4f5f6);
+	background: var(--nce-color-surface, #f4f5f6);
 }
 </style>

@@ -51,16 +51,16 @@ function navTitle(page) {
 	text-align: center;
 	cursor: pointer;
 	border-radius: var(--border-radius-sm, 4px);
-	border: 1px solid color-mix(in srgb, var(--primary) 35%, var(--border-color));
-	background: color-mix(in srgb, var(--primary) 12%, var(--bg-card));
+	border: 1px solid color-mix(in srgb, var(--nce-color-primary) 35%, var(--nce-color-border));
+	background: color-mix(in srgb, var(--nce-color-primary) 12%, var(--nce-color-surface));
 	line-height: 1.3;
 	white-space: nowrap;
 	transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .ppv2-spa-nav-btn:hover:not(:disabled) {
-	background: color-mix(in srgb, var(--primary) 22%, var(--bg-card));
-	border-color: var(--primary);
+	background: color-mix(in srgb, var(--nce-color-primary) 22%, var(--nce-color-surface));
+	border-color: var(--nce-color-primary);
 }
 
 .ppv2-spa-nav-btn--current,
