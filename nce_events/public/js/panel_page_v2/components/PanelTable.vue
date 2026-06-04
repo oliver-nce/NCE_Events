@@ -217,11 +217,11 @@ let _closeHeaderMenuHandler = null;
 function rowTrClasses(ri, row) {
 	const selected = props.selectedName === row.name;
 	const hovered = hoveredRowIndex.value === ri;
-	if (selected) return { "theme-bg-primary-200": true };
-	if (hovered) return { "theme-bg-primary-100": true };
+	if (selected) return { "ppv2-row-selected": true };
+	if (hovered) return { "ppv2-row-hovered": true };
 	return {
-		"theme-bg-surface": ri % 2 === 0,
-		"theme-bg-row-alt": ri % 2 === 1,
+		"ppv2-row-even": ri % 2 === 0,
+		"ppv2-row-odd": ri % 2 === 1,
 	};
 }
 
@@ -641,6 +641,20 @@ function startColResize(e, ci) {
 
 .ppv2-table tbody tr {
 	cursor: pointer;
+}
+
+/* Zebra stripes: read --nce-* from published theme (:root), not theme-bg-* utilities */
+.ppv2-table tbody tr.ppv2-row-even {
+	background-color: var(--nce-color-surface, #f9fafb);
+}
+.ppv2-table tbody tr.ppv2-row-odd {
+	background-color: var(--nce-color-row-alt, #f3f4f6);
+}
+.ppv2-table tbody tr.ppv2-row-hovered {
+	background-color: var(--row-hover-bg, var(--nce-color-primary-100, #e3f0fc));
+}
+.ppv2-table tbody tr.ppv2-row-selected {
+	background-color: var(--row-selected-bg, var(--nce-color-primary-200, #c7e0fa));
 }
 
 .ppv2-link-val {

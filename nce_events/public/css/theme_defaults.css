@@ -28,6 +28,7 @@
 	--bg-header: var(--nce-color-primary, #126bc4);
 	--text-header: #ffffff;
 
+	--row-alt-bg: var(--nce-color-row-alt, #f3f4f6);
 	--row-hover-bg: var(--nce-color-primary-100, #e3f0fc);
 	--row-selected-bg: var(--nce-color-primary-200, #c7e0fa);
 

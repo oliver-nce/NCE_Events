@@ -187,7 +187,7 @@ body.col-resizing * {
 }
 
 .panel-row.alt {
-	background: var(--bg-surface);
+	background: var(--row-alt-bg, var(--nce-color-row-alt, #f3f4f6));
 }
 
 .panel-row.alt:hover {
