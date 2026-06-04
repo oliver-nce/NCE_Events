@@ -1,8 +1,8 @@
 <template>
   <!-- Table fields: placeholder -->
-  <div v-if="config?.layout === 'table'" class="ppv2-fd-table-placeholder text-muted">
+  <div v-if="config?.layout === 'table'" class="ppv2-fd-table-placeholder theme-text-muted">
     <span>Child table: {{ field.label }} ({{ field.options }})</span>
-    <span class="ppv2-fd-muted text-muted">— not yet supported in dialog view</span>
+    <span class="ppv2-fd-muted theme-text-muted">— not yet supported in dialog view</span>
   </div>
 
   <!-- Heading -->
@@ -53,7 +53,7 @@
       placeholder=""
       @input="onChange($event.target.value)"
     />
-    <p v-if="field.description" class="ppv2-fd-desc text-muted">{{ field.description }}</p>
+    <p v-if="field.description" class="ppv2-fd-desc theme-text-muted">{{ field.description }}</p>
   </div>
 
   <!-- Data entry fields -->
@@ -66,11 +66,11 @@
       'ppv2-fd-field-bold': field.bold,
       'ppv2-fd-field-editable': !readOnly,
       'ppv2-fd-field-dirty': fieldDirty && !readOnly,
-      'text-danger': fieldDirty && !readOnly,
+      'theme-text-danger': fieldDirty && !readOnly,
     }"
   >
     <label class="ppv2-fd-label">
-      {{ field.label }}<span v-if="mandatory" class="ppv2-fd-reqd text-danger" aria-hidden="true"> *</span>
+      {{ field.label }}<span v-if="mandatory" class="ppv2-fd-reqd theme-text-danger" aria-hidden="true"> *</span>
     </label>
 
     <!-- Select + Autocomplete with newline options (same static list format as Desk Select) -->
@@ -80,7 +80,7 @@
       :required="mandatory"
       :disabled="readOnly"
       class="ppv2-fd-input ppv2-fd-select"
-      :class="{ 'text-muted': readOnly }"
+      :class="{ 'theme-text-muted': readOnly }"
       @change="onChange($event.target.value)"
     >
       <option value="">— Select —</option>
@@ -140,7 +140,7 @@
       :rows="config.props?.rows || 3"
       :placeholder="field.placeholder || ''"
       class="ppv2-fd-input ppv2-fd-textarea"
-      :class="{ 'text-muted': readOnly }"
+      :class="{ 'theme-text-muted': readOnly }"
       @input="onChange($event.target.value)"
     />
 
@@ -160,12 +160,12 @@
       :min="config.props?.min"
       :max="config.props?.max"
       class="ppv2-fd-input"
-      :class="{ 'text-muted': readOnly }"
+      :class="{ 'theme-text-muted': readOnly }"
       @change="onChange($event.target.value)"
     />
 
     <!-- Description -->
-    <p v-if="field.description" class="ppv2-fd-desc text-muted">{{ field.description }}</p>
+    <p v-if="field.description" class="ppv2-fd-desc theme-text-muted">{{ field.description }}</p>
   </div>
 </template>
 

@@ -1,8 +1,8 @@
 <template>
 	<div class="field-widget">
-		<label class="field-label text-muted">
+		<label class="field-label theme-text-muted">
 			{{ fieldMeta?.label || config.path
-			}}<span v-if="fieldMeta?.reqd" class="text-danger" aria-hidden="true"> *</span>
+			}}<span v-if="fieldMeta?.reqd" class="theme-text-danger" aria-hidden="true"> *</span>
 		</label>
 		<input
 			v-if="inputType === 'text'"

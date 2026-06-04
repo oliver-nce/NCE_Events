@@ -1,6 +1,6 @@
 <template>
 	<div class="display-widget">
-		<label class="display-label text-muted">{{ displayLabel }}</label>
+		<label class="display-label theme-text-muted">{{ displayLabel }}</label>
 		<span class="display-value">{{ displayValue }}</span>
 	</div>
 </template>

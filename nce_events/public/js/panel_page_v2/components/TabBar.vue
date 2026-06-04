@@ -6,8 +6,8 @@
 			:class="[
 				'tab-btn',
 				activeTab === tab.label
-					? 'text-heading border-b-2 border-primary font-bold'
-					: 'text-muted',
+					? 'theme-text-heading border-b-2 theme-border-primary font-bold'
+					: 'theme-text-muted',
 			]"
 			@click="$emit('update:activeTab', tab.label)"
 		>

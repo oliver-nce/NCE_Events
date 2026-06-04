@@ -1,13 +1,13 @@
 <template>
-	<tr class="ppv2-find-row" :class="{ 'bg-primary-100': active }"
+	<tr class="ppv2-find-row" :class="{ 'theme-bg-primary-100': active }"
 		@mousedown="onRowActivate"
 	>
 		<td v-for="(col, ci) in columns" :key="col.fieldname">
-			<span v-if="ci === 0 && showOrLabel" class="ppv2-find-or-label text-muted">OR</span>
+			<span v-if="ci === 0 && showOrLabel" class="ppv2-find-or-label theme-text-muted">OR</span>
 			<input
 				:value="criteria[col.fieldname] ?? ''"
 				type="text"
-				class="ppv2-find-input bg-card border border-input-border rounded-sm"
+				class="ppv2-find-input theme-bg-card theme-border theme-border-input-border theme-rounded-sm"
 				:placeholder="col.label"
 				@input="onInput(col.fieldname, $event)"
 				@focus="onRowActivate"

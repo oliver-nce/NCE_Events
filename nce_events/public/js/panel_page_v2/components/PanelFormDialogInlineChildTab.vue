@@ -19,7 +19,7 @@
 							class="ppv2-fd-related-th"
 						>
 							{{ col.label || col.fieldname
-							}}<span v-if="columnMandatory(col)" class="ppv2-fd-reqd text-danger" aria-hidden="true"> *</span>
+							}}<span v-if="columnMandatory(col)" class="ppv2-fd-reqd theme-text-danger" aria-hidden="true"> *</span>
 						</th>
 					</tr>
 				</thead>
@@ -28,7 +28,7 @@
 						<td v-if="hasEditableColumn" class="ppv2-fd-related-td ppv2-fd-inline-del-cell">
 							<button
 								type="button"
-								class="ppv2-fd-inline-del-btn text-danger"
+								class="ppv2-fd-inline-del-btn theme-text-danger"
 								:disabled="readOnlyHost"
 								@click="removeRow(ri)"
 							>

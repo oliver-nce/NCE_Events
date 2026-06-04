@@ -91,7 +91,7 @@ export function createSubmitPerfTrace({ liveDialog = false } = {}) {
 		frappe.msgprint({
 			title: __("Submit timings & trace"),
 			message:
-				`<p class="text-muted" style="font-size:12px;margin-bottom:8px">${__(
+				`<p class="theme-text-muted" style="font-size:12px;margin-bottom:8px">${__(
 					"Copy the block below. Disable popup:",
 				)} <code>localStorage.removeItem('nce_fd_submit_trace')</code></p>` +
 				`<pre style="white-space:pre-wrap;max-height:60vh;overflow:auto;user-select:all;font-size:11px;">${frappe.utils.escape_html(raw)}</pre>`,

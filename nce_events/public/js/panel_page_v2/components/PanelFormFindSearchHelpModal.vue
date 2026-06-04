@@ -19,7 +19,7 @@
 					</h2>
 					<button
 						type="button"
-						class="ppv2-find-help-close text-muted"
+						class="ppv2-find-help-close theme-text-muted"
 						:aria-label="closeAria"
 						@click="$emit('close')"
 					>
@@ -45,7 +45,7 @@
 							</tr>
 						</tbody>
 					</table>
-					<p class="ppv2-find-help-footnote text-muted">{{ footnote }}</p>
+					<p class="ppv2-find-help-footnote theme-text-muted">{{ footnote }}</p>
 				</div>
 			</div>
 		</div>

@@ -1,5 +1,5 @@
 <template>
-	<div class="ppv2-fd-header bg-primary">
+	<div class="ppv2-fd-header theme-bg-primary">
 		<div class="ppv2-fd-header-main">
 			<div v-if="rowNavEnabled" class="ppv2-fd-nav" @mousedown.stop>
 				<button

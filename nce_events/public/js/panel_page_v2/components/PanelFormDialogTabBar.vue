@@ -7,7 +7,7 @@
 				type="button"
 				class="ppv2-fd-tab-btn"
 				:class="{
-					'ppv2-fd-tab-active bg-primary border-primary': activeTab === ti,
+					'ppv2-fd-tab-active theme-bg-primary theme-border-primary': activeTab === ti,
 				}"
 				:disabled="blockRelatedTabs && (tab._related || tab._inlineChild || tab._scriptTool)"
 				@click="$emit('update:activeTab', ti)"

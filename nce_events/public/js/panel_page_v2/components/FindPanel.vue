@@ -82,7 +82,7 @@
 				</template>
 			</PanelTable>
 
-			<div v-if="mode === 'browse' && !rows.length" class="ppv2-find-empty text-muted">
+			<div v-if="mode === 'browse' && !rows.length" class="ppv2-find-empty theme-text-muted">
 				No records match your request.
 			</div>
 		</div>

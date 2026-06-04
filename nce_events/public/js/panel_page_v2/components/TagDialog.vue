@@ -1,19 +1,19 @@
 <template>
 	<div
-		class="tf-tag-panel bg-surface border rounded shadow-theme"
+		class="tf-tag-panel theme-bg-surface theme-border theme-rounded theme-shadow-theme"
 		:style="panelStyle"
 		@mousedown="bringToFront"
 	>
-		<div class="tf-tag-header bg-primary" @mousedown.prevent="startDrag">
+		<div class="tf-tag-header theme-bg-primary" @mousedown.prevent="startDrag">
 			<span>{{ field.label }}</span>
 			<button class="tf-close" @click="$emit('close')">&times;</button>
 		</div>
 		<div class="tf-tag-body">
-			<div class="tf-lbl text-xs text-muted">Fallback Value</div>
+			<div class="tf-lbl theme-text-xs theme-text-muted">Fallback Value</div>
 			<input
 				v-model="fallback"
 				type="text"
-				class="tf-input border-input-border rounded-sm"
+				class="tf-input theme-border-input-border theme-rounded-sm"
 				placeholder="e.g. Student (leave empty for none)"
 			>
 
@@ -63,8 +63,8 @@ function bringToFront() { zIndex.value = zIndex.value + 1; }
 function showToast(t, l) {
 	const el = document.createElement("div");
 	el.textContent = "Tag is on the clipboard";
-	// Theme contract: bg-primary sets background + paired fg — do not set inline background/color.
-	el.className = "bg-primary";
+	// Theme contract: theme-bg-primary sets background + paired fg — do not set inline background/color.
+	el.className = "theme-bg-primary";
 	Object.assign(el.style, {
 		position: "fixed",
 		top: t + "px",

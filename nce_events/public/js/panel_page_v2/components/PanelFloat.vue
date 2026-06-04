@@ -1,10 +1,10 @@
 <template>
 	<div
 		ref="floatEl"
-		class="ppv2-float bg-surface border rounded shadow-theme"
+		class="ppv2-float theme-bg-surface theme-border theme-rounded theme-shadow-theme"
 		:style="floatStyle"
 	>
-		<div class="ppv2-float-header bg-primary" @mousedown="startDrag">
+		<div class="ppv2-float-header theme-bg-primary" @mousedown="startDrag">
 			<slot name="header" />
 		</div>
 
@@ -14,7 +14,7 @@
 
 		<div
 			v-if="$slots.footer"
-			class="ppv2-float-footer bg-primary text-primary-fg-tonal"
+			class="ppv2-float-footer theme-bg-primary theme-text-primary-fg-tonal"
 			@mousedown.prevent="startDrag"
 		>
 			<slot name="footer" />

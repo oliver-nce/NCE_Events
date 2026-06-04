@@ -2,7 +2,7 @@
 	<!-- Related DocType tab: data table + optional field-metadata details -->
 	<div v-if="tab._related" class="ppv2-fd-related-root">
 		<div class="ppv2-fd-related-meta-row">
-			<p class="ppv2-fd-related-meta text-muted">
+			<p class="ppv2-fd-related-meta theme-text-muted">
 				{{ tab._related.doctype }}
 				<span v-if="tab._related.link_field" class="ppv2-fd-related-meta-link">
 					· {{ tab._related.link_field }}
@@ -28,17 +28,17 @@
 			Schema note: {{ tab._related.captureError }}
 		</p>
 
-		<p v-if="!tab._related.child_row_name" class="ppv2-fd-related-hint text-muted">
+		<p v-if="!tab._related.child_row_name" class="ppv2-fd-related-hint theme-text-muted">
 			Related tab is missing a server row id. Re-save the Form Dialog from Desk.
 		</p>
-		<p v-else-if="!rootDocName" class="ppv2-fd-related-hint text-muted">
+		<p v-else-if="!rootDocName" class="ppv2-fd-related-hint theme-text-muted">
 			Save the document to load related rows.
 		</p>
 		<template v-else>
-			<div v-if="relatedState[ti]?.loading" class="ppv2-fd-related-rows-loading text-muted">
+			<div v-if="relatedState[ti]?.loading" class="ppv2-fd-related-rows-loading theme-text-muted">
 				Loading related rows…
 			</div>
-			<div v-else-if="relatedState[ti]?.error" class="ppv2-fd-related-rows-err text-danger">
+			<div v-else-if="relatedState[ti]?.error" class="ppv2-fd-related-rows-err theme-text-danger">
 				{{ relatedState[ti].error }}
 			</div>
 			<div
@@ -56,7 +56,7 @@
 								{{ col.label || col.fieldname
 								}}<span
 									v-if="relatedColumnMandatory(col)"
-									class="ppv2-fd-reqd text-danger"
+									class="ppv2-fd-reqd theme-text-danger"
 									aria-hidden="true"
 								>
 									*
@@ -82,7 +82,7 @@
 								:class="{
 									'ppv2-fd-related-td--editable': isRelatedColEditable(col),
 									'ppv2-fd-related-td--dirty': isRelatedCellDirty(ti, rw, col),
-									'text-danger': isRelatedCellDirty(ti, rw, col),
+									'theme-text-danger': isRelatedCellDirty(ti, rw, col),
 								}"
 							>
 								<select
@@ -164,7 +164,7 @@
 						</tr>
 					</tbody>
 				</table>
-				<p v-if="!(relatedState[ti].rows || []).length" class="ppv2-fd-related-empty text-muted">
+				<p v-if="!(relatedState[ti].rows || []).length" class="ppv2-fd-related-empty theme-text-muted">
 					No related records.
 				</p>
 			</div>
@@ -177,7 +177,7 @@
 		>
 			<div class="ppv2-fd-action-modal" role="dialog" aria-modal="true">
 				<h4 class="ppv2-fd-action-modal-title">{{ actionModal.title }}</h4>
-				<p v-if="actionModal.confirm" class="ppv2-fd-action-modal-confirm text-muted">
+				<p v-if="actionModal.confirm" class="ppv2-fd-action-modal-confirm theme-text-muted">
 					{{ actionModal.confirm }}
 				</p>
 				<div
@@ -187,7 +187,7 @@
 				>
 					<label class="ppv2-fd-action-modal-label">
 						{{ pa.label || pa.arg
-						}}<span v-if="pa.reqd" class="ppv2-fd-reqd text-danger" aria-hidden="true"> *</span>
+						}}<span v-if="pa.reqd" class="ppv2-fd-reqd theme-text-danger" aria-hidden="true"> *</span>
 					</label>
 					<input
 						type="text"
@@ -196,7 +196,7 @@
 						@input="actionModal.values[pa.arg] = $event.target.value"
 					/>
 				</div>
-				<p v-if="actionModal.error" class="ppv2-fd-action-modal-error text-danger">{{ actionModal.error }}</p>
+				<p v-if="actionModal.error" class="ppv2-fd-action-modal-error theme-text-danger">{{ actionModal.error }}</p>
 				<div class="ppv2-fd-action-modal-actions">
 					<button type="button" class="btn btn-default btn-sm" @click="closeActionModal">
 						Cancel
@@ -214,7 +214,7 @@
 		</div>
 
 		<details v-if="tab.sections && tab.sections.length" class="ppv2-fd-related-schema">
-			<summary class="ppv2-fd-related-schema-sum text-muted">Field metadata</summary>
+			<summary class="ppv2-fd-related-schema-sum theme-text-muted">Field metadata</summary>
 			<div
 				class="ppv2-fd-related-preview"
 				:style="{ '--ppv2-fd-rel-lbl': relatedLabelColPx(ti) + 'px' }"
@@ -254,24 +254,24 @@
 									{{ field.label || field.fieldname
 									}}<span
 										v-if="relatedColumnMandatory(field)"
-										class="ppv2-fd-reqd text-danger"
+										class="ppv2-fd-reqd theme-text-danger"
 										aria-hidden="true"
 									>
 										*
 									</span>
 								</span>
-								<span class="ppv2-fd-related-ft text-muted">{{ field.fieldtype }}</span>
+								<span class="ppv2-fd-related-ft theme-text-muted">{{ field.fieldtype }}</span>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
 		</details>
-		<div v-else class="ppv2-fd-related-placeholder ppv2-fd-related-placeholder-compact text-muted">
+		<div v-else class="ppv2-fd-related-placeholder ppv2-fd-related-placeholder-compact theme-text-muted">
 			<p class="ppv2-fd-related-placeholder-text">
 				{{ tab._related.label || tab._related.doctype }}
 			</p>
-			<p v-if="!tab._related.captureError" class="ppv2-fd-related-placeholder-sub text-muted">
+			<p v-if="!tab._related.captureError" class="ppv2-fd-related-placeholder-sub theme-text-muted">
 				No field layout stored for this tab.
 			</p>
 		</div>
@@ -420,8 +420,8 @@ function handleExchangeActionResult(result, enrollmentId, elapsedMs) {
 
 	const footer =
 		o.status === "payment_required"
-			? `<p class="text-muted" style="margin-top:12px">The new enrollment will appear here when ${money(o.amount_still_due)} has been paid by the customer.</p>`
-			: `<p class="text-muted" style="margin-top:12px">The new enrollment will appear here within ~10 minutes.</p>`;
+			? `<p class="theme-text-muted" style="margin-top:12px">The new enrollment will appear here when ${money(o.amount_still_due)} has been paid by the customer.</p>`
+			: `<p class="theme-text-muted" style="margin-top:12px">The new enrollment will appear here within ~10 minutes.</p>`;
 
 	const summary = result.summary ? `<p style="margin-bottom:10px">${e(result.summary)}</p>` : "";
 
@@ -433,7 +433,7 @@ function handleExchangeActionResult(result, enrollmentId, elapsedMs) {
 	}
 	const elapsedText =
 		typeof elapsedMs === "number" && isFinite(elapsedMs)
-			? `<p class="text-muted" style="margin-top:8px;font-size:11px">API round-trip: ${(elapsedMs / 1000).toFixed(2)}s (${Math.round(elapsedMs)} ms)</p>`
+			? `<p class="theme-text-muted" style="margin-top:8px;font-size:11px">API round-trip: ${(elapsedMs / 1000).toFixed(2)}s (${Math.round(elapsedMs)} ms)</p>`
 			: "";
 	const rawSection = `<details style="margin-top:12px"><summary style="cursor:pointer;color:#6c757d">Full API response</summary><pre style="margin-top:8px;max-height:300px;overflow:auto;background:#f6f8fa;border:1px solid #e1e4e8;border-radius:4px;padding:8px;font-size:11px;white-space:pre-wrap;word-break:break-word">${e(rawJson)}</pre></details>`;
 

@@ -27,9 +27,9 @@
 			@show-filter="(v) => $emit('show-filter', v)"
 		/>
 
-		<div v-if="loading" class="ppv2-loading text-primary">Loading…</div>
+		<div v-if="loading" class="ppv2-loading theme-text-primary">Loading…</div>
 
-		<div v-else-if="error" class="ppv2-error text-danger">{{ error }}</div>
+		<div v-else-if="error" class="ppv2-error theme-text-danger">{{ error }}</div>
 
 		<div v-else-if="config" class="ppv2-body">
 			<table class="ppv2-table" :style="tableMinWidthStyle">
@@ -38,7 +38,7 @@
 						<th
 							v-for="(col, ci) in dataCols"
 							:key="col.fieldname"
-							class="col-header bg-secondary-100"
+							class="col-header theme-bg-secondary-100"
 							:style="{
 								width: colWidths[ci] ? colWidths[ci] + 'px' : 'auto',
 								minWidth: '40px',
@@ -53,7 +53,7 @@
 						</th>
 						<th
 							v-if="hasActionColumn"
-							class="ppv2-action-th col-header bg-secondary-100"
+							class="ppv2-action-th col-header theme-bg-secondary-100"
 							:style="actionColumnStyle"
 						/>
 					</tr>
@@ -78,8 +78,8 @@
 								v-if="
 									col.is_link && col.link_doctype && getVal(row, col.fieldname)
 								"
-								class="ppv2-link-val text-link"
-								:class="{ 'text-primary': hoveredLinkKey === linkKey(row, col) }"
+								class="ppv2-link-val theme-text-link"
+								:class="{ 'theme-text-primary': hoveredLinkKey === linkKey(row, col) }"
 								@mouseenter="hoveredLinkKey = linkKey(row, col)"
 								@mouseleave="hoveredLinkKey = null"
 								:href="formRoute(col.link_doctype, getVal(row, col.fieldname))"
@@ -89,8 +89,8 @@
 							>
 							<span
 								v-else-if="col.is_related_link && col.related_doctype"
-								class="ppv2-related-link text-link"
-								:class="{ 'text-primary': hoveredLinkKey === linkKey(row, col) }"
+								class="ppv2-related-link theme-text-link"
+								:class="{ 'theme-text-primary': hoveredLinkKey === linkKey(row, col) }"
 								@mouseenter="hoveredLinkKey = linkKey(row, col)"
 								@mouseleave="hoveredLinkKey = null"
 								@click.stop="
@@ -108,8 +108,8 @@
 						<td v-if="hasActionColumn" class="ppv2-action-td" :style="actionColumnStyle">
 							<button
 								v-if="hasEmailAction && rowHasEmail(row)"
-								class="ppv2-row-btn bg-card border rounded-sm"
-								:class="{ 'bg-surface': hoveredRowBtn === rowBtnKey(row, 'email') }"
+								class="ppv2-row-btn theme-bg-card theme-border theme-rounded-sm"
+								:class="{ 'theme-bg-surface': hoveredRowBtn === rowBtnKey(row, 'email') }"
 								title="Send email"
 								@mouseenter="hoveredRowBtn = rowBtnKey(row, 'email')"
 								@mouseleave="hoveredRowBtn = null"
@@ -119,8 +119,8 @@
 							</button>
 							<button
 								v-if="hasPhoneAction && rowHasPhone(row)"
-								class="ppv2-row-btn bg-card border rounded-sm"
-								:class="{ 'bg-surface': hoveredRowBtn === rowBtnKey(row, 'call') }"
+								class="ppv2-row-btn theme-bg-card theme-border theme-rounded-sm"
+								:class="{ 'theme-bg-surface': hoveredRowBtn === rowBtnKey(row, 'call') }"
 								title="Call"
 								@mouseenter="hoveredRowBtn = rowBtnKey(row, 'call')"
 								@mouseleave="hoveredRowBtn = null"
@@ -130,8 +130,8 @@
 							</button>
 							<button
 								v-if="hasPhoneAction && rowHasPhone(row)"
-								class="ppv2-row-btn bg-card border rounded-sm"
-								:class="{ 'bg-surface': hoveredRowBtn === rowBtnKey(row, 'sms') }"
+								class="ppv2-row-btn theme-bg-card theme-border theme-rounded-sm"
+								:class="{ 'theme-bg-surface': hoveredRowBtn === rowBtnKey(row, 'sms') }"
 								title="Send SMS"
 								@mouseenter="hoveredRowBtn = rowBtnKey(row, 'sms')"
 								@mouseleave="hoveredRowBtn = null"
@@ -141,8 +141,8 @@
 							</button>
 							<button
 								v-if="hasWpSwitchAction && rowHasFamilyId(row)"
-								class="ppv2-row-btn bg-card border rounded-sm"
-								:class="{ 'bg-surface': hoveredRowBtn === rowBtnKey(row, 'switch') }"
+								class="ppv2-row-btn theme-bg-card theme-border theme-rounded-sm"
+								:class="{ 'theme-bg-surface': hoveredRowBtn === rowBtnKey(row, 'switch') }"
 								title="View as on website"
 								@mouseenter="hoveredRowBtn = rowBtnKey(row, 'switch')"
 								@mouseleave="hoveredRowBtn = null"
@@ -217,11 +217,11 @@ let _closeHeaderMenuHandler = null;
 function rowTrClasses(ri, row) {
 	const selected = props.selectedName === row.name;
 	const hovered = hoveredRowIndex.value === ri;
-	if (selected) return { "bg-primary-200": true };
-	if (hovered) return { "bg-primary-100": true };
+	if (selected) return { "theme-bg-primary-200": true };
+	if (hovered) return { "theme-bg-primary-100": true };
 	return {
-		"bg-surface": ri % 2 === 0,
-		"bg-row-alt": ri % 2 === 1,
+		"theme-bg-surface": ri % 2 === 0,
+		"theme-bg-row-alt": ri % 2 === 1,
 	};
 }
 

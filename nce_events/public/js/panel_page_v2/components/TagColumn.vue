@@ -1,6 +1,6 @@
 <template>
 	<div class="tf-column">
-		<div class="tf-col-header bg-primary-100">
+		<div class="tf-col-header theme-bg-primary-100">
 			{{ col.doctype }}
 			<span class="tf-col-count">{{ col.fields.length }} fields</span>
 		</div>
@@ -16,12 +16,12 @@
 					<span class="tf-tile-label">{{ f.label }}</span>
 					<span
 						v-if="(f.is_link || f.is_table) && !isCircular(f)"
-						class="tf-tile-arrow text-link"
+						class="tf-tile-arrow theme-text-link"
 					>&#9654;</span>
 				</div>
 				<div class="tf-tile-meta">
-					<span class="tf-tile-fieldname text-muted">{{ f.fieldname }}</span>
-					<span class="tf-tile-badge text-muted bg-row-alt">{{ badgeText(f) }}</span>
+					<span class="tf-tile-fieldname theme-text-muted">{{ f.fieldname }}</span>
+					<span class="tf-tile-badge theme-text-muted theme-bg-row-alt">{{ badgeText(f) }}</span>
 				</div>
 			</div>
 		</div>
@@ -52,7 +52,7 @@ function tileClass(f) {
 	else if (f.is_link) cls.push("tf-tile-link");
 	else if (f.is_table) cls.push("tf-tile-table");
 	if (props.col.activeField === f.fieldname) {
-		cls.push("bg-primary-200", "border-primary");
+		cls.push("theme-bg-primary-200", "theme-border-primary");
 	}
 	return cls.join(" ");
 }

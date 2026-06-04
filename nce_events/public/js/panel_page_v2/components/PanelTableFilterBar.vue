@@ -1,5 +1,5 @@
 <template>
-	<div v-if="props.showFilter" class="ppv2-filter-widget bg-primary-100 border-b border">
+	<div v-if="props.showFilter" class="ppv2-filter-widget theme-bg-primary-100 border-b theme-border">
 		<div v-for="(cond, i) in filters" :key="i" class="ppv2-filter-row">
 			<select
 				v-model="cond.field"
@@ -28,8 +28,8 @@
 					v-for="op in opsForCond(cond)"
 					:key="op"
 					:class="[
-						'ppv2-op-btn border rounded-sm',
-						cond.op === op ? 'bg-primary border-primary' : 'bg-card',
+						'ppv2-op-btn theme-border theme-rounded-sm',
+						cond.op === op ? 'theme-bg-primary theme-border-primary' : 'theme-bg-card',
 					]"
 					@click="
 						cond.op = op;
@@ -69,7 +69,7 @@
 			/>
 			<button
 				v-if="cond.field"
-				class="ppv2-filter-rm text-danger"
+				class="ppv2-filter-rm theme-text-danger"
 				@click="
 					filters.splice(i, 1);
 					emitFilterChange();
@@ -79,7 +79,7 @@
 			</button>
 		</div>
 		<button
-			class="ppv2-filter-add bg-card border rounded-sm text-primary"
+			class="ppv2-filter-add theme-bg-card theme-border theme-rounded-sm theme-text-primary"
 			@click="filters.push({ field: '', op: '>', value: '' })"
 		>
 			Add Filter &#9660;

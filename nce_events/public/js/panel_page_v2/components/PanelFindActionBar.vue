@@ -1,6 +1,6 @@
 <template>
 	<div
-		class="ppv2-find-actions bg-primary-100 border-b border"
+		class="ppv2-find-actions theme-bg-primary-100 border-b theme-border"
 		:class="{ 'ppv2-find-actions--browse': mode === 'browse' }"
 		@mousedown.stop
 	>
@@ -8,7 +8,7 @@
 			<div class="ppv2-find-actions-main">
 				<button
 					type="button"
-					class="ppv2-find-tab-btn ppv2-find-tab-btn--primary bg-primary border-primary font-bold"
+					class="ppv2-find-tab-btn ppv2-find-tab-btn--primary theme-bg-primary theme-border-primary font-bold"
 					@click="$emit('find-perform')"
 				>
 					{{ label("Perform Find") }}
@@ -16,8 +16,8 @@
 				<button
 					v-if="findMatchActive"
 					type="button"
-					class="ppv2-find-tab-btn bg-card border rounded-sm"
-					:class="{ 'bg-surface': hoveredFindBtn === 'constrain' }"
+					class="ppv2-find-tab-btn theme-bg-card theme-border theme-rounded-sm"
+					:class="{ 'theme-bg-surface': hoveredFindBtn === 'constrain' }"
 					@mouseenter="hoveredFindBtn = 'constrain'"
 					@mouseleave="hoveredFindBtn = null"
 					@click="$emit('find-constrain')"
@@ -27,8 +27,8 @@
 				<button
 					v-if="findMatchActive"
 					type="button"
-					class="ppv2-find-tab-btn bg-card border rounded-sm"
-					:class="{ 'bg-surface': hoveredFindBtn === 'extend' }"
+					class="ppv2-find-tab-btn theme-bg-card theme-border theme-rounded-sm"
+					:class="{ 'theme-bg-surface': hoveredFindBtn === 'extend' }"
 					@mouseenter="hoveredFindBtn = 'extend'"
 					@mouseleave="hoveredFindBtn = null"
 					@click="$emit('find-extend')"
@@ -37,8 +37,8 @@
 				</button>
 				<button
 					type="button"
-					class="ppv2-find-tab-btn bg-card border rounded-sm"
-					:class="{ 'bg-surface': hoveredFindBtn === 'cancel-find' }"
+					class="ppv2-find-tab-btn theme-bg-card theme-border theme-rounded-sm"
+					:class="{ 'theme-bg-surface': hoveredFindBtn === 'cancel-find' }"
 					@mouseenter="hoveredFindBtn = 'cancel-find'"
 					@mouseleave="hoveredFindBtn = null"
 					@click="$emit('find-cancel-criteria')"
@@ -49,8 +49,8 @@
 			<div class="ppv2-find-actions-or">
 				<button
 					type="button"
-					class="ppv2-find-tab-btn ppv2-find-or-btn bg-card border rounded-sm font-bold"
-					:class="{ 'bg-surface': hoveredFindBtn === 'or' }"
+					class="ppv2-find-tab-btn ppv2-find-or-btn theme-bg-card theme-border theme-rounded-sm font-bold"
+					:class="{ 'theme-bg-surface': hoveredFindBtn === 'or' }"
 					title="Add OR find request"
 					:disabled="!findOrEnabled"
 					@mouseenter="hoveredFindBtn = 'or'"
@@ -61,8 +61,8 @@
 				</button>
 				<button
 					type="button"
-					class="ppv2-find-tab-btn ppv2-find-or-btn bg-card border rounded-sm font-bold"
-					:class="{ 'bg-surface': hoveredFindBtn === 'duplicate' }"
+					class="ppv2-find-tab-btn ppv2-find-or-btn theme-bg-card theme-border theme-rounded-sm font-bold"
+					:class="{ 'theme-bg-surface': hoveredFindBtn === 'duplicate' }"
 					title="Duplicate this find request"
 					:disabled="!findDuplicateEnabled"
 					@mouseenter="hoveredFindBtn = 'duplicate'"
@@ -76,8 +76,8 @@
 		<template v-else-if="mode === 'browse'">
 			<button
 				type="button"
-				class="ppv2-find-tab-btn bg-card border rounded-sm"
-				:class="{ 'bg-surface': hoveredFindBtn === 'new' }"
+				class="ppv2-find-tab-btn theme-bg-card theme-border theme-rounded-sm"
+				:class="{ 'theme-bg-surface': hoveredFindBtn === 'new' }"
 				@mouseenter="hoveredFindBtn = 'new'"
 				@mouseleave="hoveredFindBtn = null"
 				@click="$emit('find-new')"
@@ -86,8 +86,8 @@
 			</button>
 			<button
 				type="button"
-				class="ppv2-find-tab-btn bg-card border rounded-sm"
-				:class="{ 'bg-surface': hoveredFindBtn === 'modify' }"
+				class="ppv2-find-tab-btn theme-bg-card theme-border theme-rounded-sm"
+				:class="{ 'theme-bg-surface': hoveredFindBtn === 'modify' }"
 				@mouseenter="hoveredFindBtn = 'modify'"
 				@mouseleave="hoveredFindBtn = null"
 				@click="$emit('find-modify')"
@@ -96,8 +96,8 @@
 			</button>
 			<button
 				type="button"
-				class="ppv2-find-tab-btn bg-card border rounded-sm"
-				:class="{ 'bg-surface': hoveredFindBtn === 'exit' }"
+				class="ppv2-find-tab-btn theme-bg-card theme-border theme-rounded-sm"
+				:class="{ 'theme-bg-surface': hoveredFindBtn === 'exit' }"
 				@mouseenter="hoveredFindBtn = 'exit'"
 				@mouseleave="hoveredFindBtn = null"
 				@click="$emit('find-exit')"

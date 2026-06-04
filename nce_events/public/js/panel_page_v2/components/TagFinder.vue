@@ -21,7 +21,7 @@
 			/>
 		</div>
 
-		<div class="tf-footer text-muted" @mousedown.prevent="startDrag">
+		<div class="tf-footer theme-text-muted" @mousedown.prevent="startDrag">
 			Tag Finder: {{ rootDoctype }}
 		</div>
 

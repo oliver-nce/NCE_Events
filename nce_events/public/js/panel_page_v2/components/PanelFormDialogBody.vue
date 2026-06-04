@@ -1,7 +1,7 @@
 <template>
 	<div class="ppv2-fd-body">
-		<div v-if="loading" class="ppv2-fd-loading text-muted">Loading…</div>
-		<div v-else-if="error" class="ppv2-fd-error text-danger">{{ error }}</div>
+		<div v-if="loading" class="ppv2-fd-loading theme-text-muted">Loading…</div>
+		<div v-else-if="error" class="ppv2-fd-error theme-text-danger">{{ error }}</div>
 		<template v-else-if="tabs.length">
 			<PanelFormDialogTabBar
 				:tabs="tabs"
@@ -64,7 +64,7 @@
 							<h3 v-if="section.label" class="ppv2-fd-section-label">
 								{{ section.label }}
 							</h3>
-							<p v-if="section.description" class="ppv2-fd-section-desc text-muted">
+							<p v-if="section.description" class="ppv2-fd-section-desc theme-text-muted">
 								{{ section.description }}
 							</p>
 
@@ -111,7 +111,7 @@
 
 			<div
 				v-if="validationError"
-				class="ppv2-fd-validation-error text-danger bg-danger-100 border rounded-sm"
+				class="ppv2-fd-validation-error theme-text-danger theme-bg-danger-100 theme-border theme-rounded-sm"
 			>
 				{{ validationError }}
 			</div>
