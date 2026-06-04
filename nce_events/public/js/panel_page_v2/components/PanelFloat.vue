@@ -214,7 +214,7 @@ function startResize(e) {
 	cursor: pointer;
 	padding: 0 4px;
 	line-height: 1;
-	opacity: 0.8;
+	opacity: 0.9;
 }
 .ppv2-float-header :deep(.ppv2-hdr-btn:hover) { opacity: 1; }
 
@@ -239,7 +239,7 @@ function startResize(e) {
 }
 
 .ppv2-float-header :deep(.ppv2-count) {
-	opacity: 0.9;
+	opacity: 1;
 }
 
 .ppv2-float-header :deep(.ppv2-close-btn) {

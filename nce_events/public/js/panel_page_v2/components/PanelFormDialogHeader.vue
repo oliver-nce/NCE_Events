@@ -77,6 +77,7 @@ defineEmits(["close", "nav-prev", "nav-next"]);
 	width: 28px;
 	height: 28px;
 	padding: 0;
+	color: var(--nce-color-primary-fg);
 	border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
 	border-radius: var(--border-radius-sm, 4px);
 	background: color-mix(in srgb, currentColor 10%, transparent);
@@ -108,11 +109,12 @@ defineEmits(["close", "nav-prev", "nav-next"]);
 .ppv2-fd-close {
 	background: none;
 	border: none;
+	color: var(--nce-color-primary-fg);
 	font-size: 20px;
 	cursor: pointer;
 	padding: 0 4px;
 	line-height: 1;
-	opacity: 0.8;
+	opacity: 0.9;
 }
 .ppv2-fd-close:hover {
 	opacity: 1;

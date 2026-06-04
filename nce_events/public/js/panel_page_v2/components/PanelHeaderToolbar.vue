@@ -8,14 +8,14 @@
 				<button
 					v-if="props.showNewRecord"
 					type="button"
-					class="ppv2-hdr-btn ppv2-hdr-btn--new"
+					class="ppv2-hdr-btn ppv2-hdr-btn--new theme-text-primary-fg"
 					title="New record"
 					@click="$emit('new-record')"
 				>
 					+
 				</button>
 				<button
-					class="ppv2-hdr-btn"
+					class="ppv2-hdr-btn theme-text-primary-fg"
 					:class="{
 						'ppv2-hdr-btn--refreshing': props.loading,
 						'theme-text-secondary': props.loading,
@@ -25,13 +25,13 @@
 				>
 					<i class="fa fa-refresh"></i>
 				</button>
-				<button class="ppv2-hdr-btn" title="Filter" @click="$emit('toggle-filter')">
+				<button class="ppv2-hdr-btn theme-text-primary-fg" title="Filter" @click="$emit('toggle-filter')">
 					<i class="fa fa-filter"></i>
 				</button>
 			</template>
 			<button
 				v-if="props.showFind && !props.findHeaderMinimal"
-				class="ppv2-hdr-btn"
+				class="ppv2-hdr-btn theme-text-primary-fg"
 				title="Find records"
 				@click="$emit('find')"
 			>
@@ -39,14 +39,14 @@
 			</button>
 			<template v-if="!props.findHeaderMinimal">
 				<button
-					class="ppv2-hdr-btn"
+					class="ppv2-hdr-btn theme-text-primary-fg"
 					title="Export to Google Sheets (filtered view)"
 					@click="$emit('sheets')"
 				>
 					<i class="fa fa-table"></i>
 				</button>
 				<button
-					class="ppv2-hdr-btn"
+					class="ppv2-hdr-btn theme-text-primary-fg"
 					title="Download CSV (Excel, filtered view)"
 					@click="$emit('download-csv')"
 				>
@@ -54,22 +54,22 @@
 				</button>
 				<button
 					v-if="props.showEmail"
-					class="ppv2-hdr-btn"
+					class="ppv2-hdr-btn theme-text-primary-fg"
 					title="Email"
 					@click="$emit('email')"
 				>
 					<i class="fa fa-envelope"></i>
 				</button>
-				<button v-if="props.showSms" class="ppv2-hdr-btn" title="SMS" @click="$emit('sms')">
+				<button v-if="props.showSms" class="ppv2-hdr-btn theme-text-primary-fg" title="SMS" @click="$emit('sms')">
 					<i class="fa fa-comment"></i>
 				</button>
 			</template>
-			<span class="ppv2-count theme-text-sm theme-text-primary-fg-tonal"
+			<span class="ppv2-count theme-text-sm theme-text-primary-fg"
 				>{{ displayRowCount }} / {{ props.total }} records</span
 			>
 			<button
 				v-if="props.showClose"
-				class="ppv2-hdr-btn ppv2-close-btn"
+				class="ppv2-hdr-btn ppv2-close-btn theme-text-primary-fg"
 				title="Close"
 				@click="$emit('close')"
 			>

@@ -148,9 +148,10 @@ function startDrag(e) {
 .tf-close {
 	background: none;
 	border: none;
+	color: var(--nce-color-primary-fg);
 	font-size: 18px;
 	cursor: pointer;
-	opacity: 0.8;
+	opacity: 0.9;
 }
 .tf-close:hover { opacity: 1; }
 
