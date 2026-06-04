@@ -129,7 +129,6 @@ function startDrag(e) {
 	position: fixed;
 	width: 320px;
 	z-index: 100050;
-	font-family: Arial, sans-serif;
 	overflow: hidden;
 }
 
@@ -139,7 +138,7 @@ function startDrag(e) {
 	align-items: center;
 	padding: 8px 12px;
 	font-weight: 600;
-	font-size: 13px;
+	font-size: var(--font-size-base);
 	border-radius: 6px 6px 0 0;
 	cursor: move;
 	user-select: none;
@@ -149,7 +148,7 @@ function startDrag(e) {
 	background: none;
 	border: none;
 	color: var(--nce-color-primary-fg);
-	font-size: 18px;
+	font-size: calc(var(--font-size-base) * 1.35);
 	cursor: pointer;
 	opacity: 0.9;
 }
@@ -165,7 +164,7 @@ function startDrag(e) {
 .tf-input {
 	width: 100%;
 	padding: 4px 8px;
-	font-size: 12px;
+	font-size: var(--font-size-base);
 	margin-top: 4px;
 	box-sizing: border-box;
 }
@@ -180,7 +179,7 @@ function startDrag(e) {
 	flex-direction: column;
 	gap: 8px;
 }
-.tf-check-label { font-size: 11px; }
+.tf-check-label { font-size: var(--font-size-sm); }
 
 .tf-btn-group {
 	display: flex;

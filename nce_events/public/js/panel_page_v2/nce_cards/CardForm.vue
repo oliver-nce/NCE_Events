@@ -180,7 +180,7 @@ onMounted(async () => {
 	background: none;
 	border: none;
 	color: var(--nce-color-primary-fg);
-	font-size: 20px;
+	font-size: calc(var(--font-size-base) * 1.5);
 	cursor: pointer;
 	opacity: 0.8;
 }

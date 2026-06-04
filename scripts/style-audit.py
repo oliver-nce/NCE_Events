@@ -30,6 +30,27 @@ VAR_FALLBACK_HEX = re.compile(r"var\([^)]*#[0-9A-Fa-f]{3,8}[^)]*\)", re.I)
 HEX = re.compile(r"#[0-9A-Fa-f]{3,8}\b", re.I)
 NAMED_COLOR = re.compile(r":\s*(white|black|red|green|blue)\s*[;!}]", re.I)
 BRAND_RGBA = re.compile(r"rgba?\(\s*(18,\s*107,\s*196|65,\s*152,\s*240)", re.I)
+ARIAL_FONT = re.compile(r"font-family:\s*Arial\b", re.I)
+FIXED_FONT_PX = re.compile(r"font-size:\s*(?!calc\()\d+px", re.I)
+SKIP_PATH_PARTS = (*SKIP_PARTS, "send-panel", "sms_dialog", "email_dialog")
+TYPOGRAPHY_SCOPE_DIRS = [
+    PUBLIC / "js" / "panel_page_v2",
+    PUBLIC / "evaluations",
+]
+
+
+def iter_typography_files() -> list[Path]:
+    files: list[Path] = []
+    for d in TYPOGRAPHY_SCOPE_DIRS:
+        if not d.is_dir():
+            continue
+        for p in d.rglob("*"):
+            if not p.is_file() or p.suffix not in FILE_SUFFIXES:
+                continue
+            if any(s in p.as_posix() for s in SKIP_PATH_PARTS):
+                continue
+            files.append(p)
+    return files
 
 
 def iter_source_files() -> list[Path]:
@@ -40,7 +61,7 @@ def iter_source_files() -> list[Path]:
         for p in d.rglob("*"):
             if not p.is_file() or p.suffix not in FILE_SUFFIXES:
                 continue
-            if any(s in p.as_posix() for s in SKIP_PARTS):
+            if any(s in p.as_posix() for s in SKIP_PATH_PARTS):
                 continue
             files.append(p)
     for p in SCOPE_FILES:
@@ -129,6 +150,21 @@ def main() -> int:
 
     errors.extend(check_pattern(files, NAMED_COLOR, "named color literal (use --nce-color-*):"))
     errors.extend(check_pattern(files, BRAND_RGBA, "hardcoded brand rgba (use color-mix with --nce-color-primary*):"))
+    typo_files = iter_typography_files()
+    errors.extend(
+        check_pattern(
+            typo_files,
+            ARIAL_FONT,
+            "Arial font-family (use var(--nce-font-family) / theme-font-sans):",
+        )
+    )
+    errors.extend(
+        check_pattern(
+            typo_files,
+            FIXED_FONT_PX,
+            "fixed px font-size (use var(--font-size-*) / theme-text-* / calc):",
+        )
+    )
 
     if errors:
         for e in errors:

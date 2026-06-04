@@ -300,7 +300,7 @@ function removeRow(index) {
 .ppv2-fd-inline-del-btn {
 	border: none;
 	background: transparent;
-	font-size: 18px;
+	font-size: calc(var(--font-size-base) * 1.35);
 	line-height: 1;
 	cursor: pointer;
 	padding: 0 4px;

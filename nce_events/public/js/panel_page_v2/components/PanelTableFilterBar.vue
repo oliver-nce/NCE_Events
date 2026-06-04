@@ -250,13 +250,13 @@ function emitFilterDebounced() {
 .ppv2-filter-rm {
 	background: none;
 	border: none;
-	font-size: 14px;
+	font-size: var(--font-size-base);
 	cursor: pointer;
 	padding: 0 4px;
 }
 
 .ppv2-filter-add {
-	font-size: 10px;
+	font-size: var(--font-size-sm);
 	padding: 2px 8px;
 	cursor: pointer;
 }

@@ -206,7 +206,7 @@ const rows = computed(() => [
 .ppv2-find-help-close {
 	border: none;
 	background: transparent;
-	font-size: 24px;
+	font-size: calc(var(--font-size-base) * 1.75);
 	line-height: 1;
 	cursor: pointer;
 	padding: 4px 8px;

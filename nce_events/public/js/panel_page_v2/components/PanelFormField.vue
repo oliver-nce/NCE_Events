@@ -292,6 +292,7 @@ function onLinkChangePayload(payload) {
   display: block;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-bold);
+  color: var(--nce-color-text);
   margin-bottom: 3px;
 }
 .ppv2-fd-reqd {
@@ -350,6 +351,7 @@ function onLinkChangePayload(payload) {
 .ppv2-fd-heading {
   font-size: var(--font-size-lg, 16px);
   font-weight: var(--font-weight-bold);
+  color: var(--nce-color-heading);
   margin: 8px 0 4px;
 }
 .ppv2-fd-table-placeholder {

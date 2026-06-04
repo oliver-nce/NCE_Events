@@ -433,9 +433,9 @@ function handleExchangeActionResult(result, enrollmentId, elapsedMs) {
 	}
 	const elapsedText =
 		typeof elapsedMs === "number" && isFinite(elapsedMs)
-			? `<p class="theme-text-muted" style="margin-top:8px;font-size:11px">API round-trip: ${(elapsedMs / 1000).toFixed(2)}s (${Math.round(elapsedMs)} ms)</p>`
+			? `<p class="theme-text-muted theme-text-sm" style="margin-top:8px">API round-trip: ${(elapsedMs / 1000).toFixed(2)}s (${Math.round(elapsedMs)} ms)</p>`
 			: "";
-	const rawSection = `<details style="margin-top:12px"><summary class="theme-text-muted" style="cursor:pointer">Full API response</summary><pre class="theme-bg-surface theme-border theme-rounded-sm" style="margin-top:8px;max-height:300px;overflow:auto;padding:8px;font-size:11px;white-space:pre-wrap;word-break:break-word">${e(rawJson)}</pre></details>`;
+	const rawSection = `<details style="margin-top:12px"><summary class="theme-text-muted" style="cursor:pointer">Full API response</summary><pre class="theme-bg-surface theme-border theme-rounded-sm theme-text-sm" style="margin-top:8px;max-height:300px;overflow:auto;padding:8px;white-space:pre-wrap;word-break:break-word">${e(rawJson)}</pre></details>`;
 
 	if (typeof frappe !== "undefined" && frappe.msgprint) {
 		frappe.msgprint({

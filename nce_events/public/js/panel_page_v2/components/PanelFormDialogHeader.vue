@@ -82,7 +82,7 @@ defineEmits(["close", "nav-prev", "nav-next"]);
 	border-radius: var(--border-radius-sm, 4px);
 	background: color-mix(in srgb, currentColor 10%, transparent);
 	cursor: pointer;
-	font-size: 12px;
+	font-size: var(--font-size-sm);
 }
 .ppv2-fd-nav-btn:hover:not(:disabled) {
 	background: color-mix(in srgb, currentColor 18%, transparent);
@@ -92,7 +92,7 @@ defineEmits(["close", "nav-prev", "nav-next"]);
 	cursor: not-allowed;
 }
 .ppv2-fd-nav-pos {
-	font-size: 12px;
+	font-size: var(--font-size-sm);
 	font-weight: var(--font-weight-bold, 600);
 	opacity: 0.95;
 	min-width: 3.2em;
@@ -101,7 +101,7 @@ defineEmits(["close", "nav-prev", "nav-next"]);
 }
 .ppv2-fd-title {
 	font-weight: var(--font-weight-bold);
-	font-size: 14px;
+	font-size: var(--font-size-lg);
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
@@ -110,7 +110,7 @@ defineEmits(["close", "nav-prev", "nav-next"]);
 	background: none;
 	border: none;
 	color: var(--nce-color-primary-fg);
-	font-size: 20px;
+	font-size: calc(var(--font-size-base) * 1.5);
 	cursor: pointer;
 	padding: 0 4px;
 	line-height: 1;

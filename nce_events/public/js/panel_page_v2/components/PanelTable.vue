@@ -72,6 +72,7 @@
 						<td
 							v-for="col in dataCols"
 							:key="col.fieldname"
+							:class="cellTdClass(col)"
 							:style="cellStyle(row, col)"
 						>
 							<a
@@ -165,6 +166,7 @@ import { familyIdFromRow } from "../utils/wpUserSwitch.js";
 import {
 	actionColumnWidthFromConfig,
 	calcColWidths,
+	isTitleFieldColumn,
 	panelRowVal,
 } from "../utils/panelTableColWidths.js";
 
@@ -524,30 +526,31 @@ function looksLike(val, gender) {
 	return false;
 }
 
+function cellTdClass(col) {
+	const fn = col.fieldname.toLowerCase();
+	return {
+		"font-bold": boldSet.value[fn] || isTitleFieldColumn(col, props.config?.title_field),
+	};
+}
+
 function cellStyle(row, col) {
 	const fn = col.fieldname.toLowerCase();
 	const style = {};
 
-	if (genderTintSet.value[fn]) {
-		const fixedGender = tintByGender.value[fn];
-		if (fixedGender === "Male" && maleHex.value) {
-			style.fontWeight = "700";
+	if (!genderTintSet.value[fn]) return style;
+
+	const fixedGender = tintByGender.value[fn];
+	if (fixedGender === "Male" && maleHex.value) {
+		style.color = maleHex.value;
+	} else if (fixedGender === "Female" && femaleHex.value) {
+		style.color = femaleHex.value;
+	} else {
+		const gv = getVal(row, genderCol.value);
+		if (looksLike(gv, "male") && maleHex.value) {
 			style.color = maleHex.value;
-		} else if (fixedGender === "Female" && femaleHex.value) {
-			style.fontWeight = "700";
+		} else if (looksLike(gv, "female") && femaleHex.value) {
 			style.color = femaleHex.value;
-		} else {
-			const gv = getVal(row, genderCol.value);
-			if (looksLike(gv, "male") && maleHex.value) {
-				style.fontWeight = "700";
-				style.color = maleHex.value;
-			} else if (looksLike(gv, "female") && femaleHex.value) {
-				style.fontWeight = "700";
-				style.color = femaleHex.value;
-			}
 		}
-	} else if (boldSet.value[fn]) {
-		style.fontWeight = "700";
 	}
 
 	return style;
@@ -597,8 +600,6 @@ function startColResize(e, ci) {
 	/* separate + spacing 0: sticky thead works reliably (collapse breaks sticky in WebKit/Chromium). */
 	border-collapse: separate;
 	border-spacing: 0;
-	font-size: 12px;
-	font-family: Arial, sans-serif;
 	table-layout: fixed;
 }
 
@@ -746,7 +747,7 @@ function startColResize(e, ci) {
 	border: none;
 	background-color: transparent;
 	text-align: left;
-	font-size: 13px;
+	font-size: var(--font-size-base);
 	color: inherit;
 	cursor: pointer;
 	font-family: inherit;

@@ -50,7 +50,7 @@ function onInput(fieldname, event) {
 .ppv2-find-or-label {
 	display: inline-block;
 	margin-right: 6px;
-	font-size: 11px;
+	font-size: var(--font-size-sm);
 	font-weight: var(--font-weight-bold);
 	vertical-align: middle;
 }

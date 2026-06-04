@@ -194,7 +194,7 @@ function startResize(e) {
 
 .ppv2-float-header :deep(.ppv2-title) {
 	font-weight: var(--font-weight-bold);
-	font-size: 14px;
+	font-size: var(--font-size-lg);
 	flex: 1 1 auto;
 	min-width: 0;
 	line-height: 1.25;
@@ -224,7 +224,7 @@ function startResize(e) {
 .ppv2-float-header :deep(.ppv2-hdr-btn) {
 	background: none;
 	border: none;
-	font-size: 18px;
+	font-size: calc(var(--font-size-base) * 1.35);
 	cursor: pointer;
 	padding: 0 4px;
 	line-height: 1;
@@ -234,7 +234,7 @@ function startResize(e) {
 
 .ppv2-float-header :deep(.ppv2-hdr-btn--new) {
 	font-weight: 700;
-	font-size: 22px;
+	font-size: calc(var(--font-size-base) * 1.65);
 	opacity: 1;
 }
 .ppv2-float-header :deep(.ppv2-hdr-btn--new:hover) {
@@ -257,7 +257,7 @@ function startResize(e) {
 }
 
 .ppv2-float-header :deep(.ppv2-close-btn) {
-	font-size: 20px;
+	font-size: calc(var(--font-size-base) * 1.5);
 }
 
 .ppv2-float-body {

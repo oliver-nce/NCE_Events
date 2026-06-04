@@ -95,16 +95,24 @@ function columnMetrics(columns, rows) {
 	});
 }
 
-function findTitleColumnIndex(columns, titleField) {
+/** Whether a column is the Page Panel `title_field` (supports dotted fieldnames). */
+export function isTitleFieldColumn(col, titleField) {
 	const tf = String(titleField || "").trim();
-	if (!tf || !columns?.length) return -1;
+	if (!tf || !col) return false;
 	const bare = tf.includes(".") ? tf.split(".").pop() : tf;
+	const fn = String(col.fieldname || "");
+	return (
+		fn === tf ||
+		fn === bare ||
+		fn.toLowerCase() === tf.toLowerCase() ||
+		fn.toLowerCase() === bare.toLowerCase()
+	);
+}
+
+function findTitleColumnIndex(columns, titleField) {
+	if (!titleField || !columns?.length) return -1;
 	for (let i = 0; i < columns.length; i++) {
-		const fn = String(columns[i].fieldname || "");
-		if (fn === tf || fn === bare) return i;
-		if (fn.toLowerCase() === tf.toLowerCase() || fn.toLowerCase() === bare.toLowerCase()) {
-			return i;
-		}
+		if (isTitleFieldColumn(columns[i], titleField)) return i;
 	}
 	return -1;
 }

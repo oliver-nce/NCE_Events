@@ -32,7 +32,10 @@
 				</div>
 			</div>
 		</div>
-		<div class="ppv2-form-dialog ppv2-fd-dialog-root" :class="'ppv2-fd-size-' + form.dialogSize.value">
+		<div
+			class="ppv2-form-dialog ppv2-fd-dialog-root theme-font-sans theme-text-base"
+			:class="'ppv2-fd-size-' + form.dialogSize.value"
+		>
 			<div
 				v-if="readbackFooterPhase === 'readback-waiting'"
 				class="ppv2-fd-readback-overlay"
@@ -945,7 +948,7 @@ async function onPlaceholderButton(btn) {
 				if (typeof frappe !== "undefined" && frappe.msgprint) {
 					frappe.msgprint({
 						title: "WooCommerce publish preview (dry run)",
-						message: `<pre style="white-space:pre-wrap;max-height:65vh;overflow:auto;text-align:left;font-size:12px;">${escapeForPreHtml(body)}</pre>`,
+						message: `<pre style="white-space:pre-wrap;max-height:65vh;overflow:auto;text-align:left;font-size:var(--font-size-sm);">${escapeForPreHtml(body)}</pre>`,
 						wide: true,
 					});
 				}
@@ -1008,8 +1011,8 @@ async function onPlaceholderButton(btn) {
 	pointer-events: all;
 }
 .ppv2-fd-readback-spinner {
-	font-size: 15px;
-	font-weight: 600;
+	font-size: var(--font-size-lg);
+	font-weight: var(--font-weight-bold);
 	padding: 16px 24px;
 	border-radius: var(--border-radius-sm, 6px);
 	background: var(--nce-color-surface);
@@ -1042,7 +1045,7 @@ async function onPlaceholderButton(btn) {
 	z-index: 1060;
 	max-width: min(420px, 92vw);
 	max-height: 45vh;
-	font-size: 11px;
+	font-size: var(--font-size-sm); /* theme-exempt: dev overlay monospace */
 	font-family: ui-monospace, monospace;
 	pointer-events: auto;
 }
@@ -1068,7 +1071,7 @@ async function onPlaceholderButton(btn) {
 .ppv2-fd-load-debug-hint {
 	font-weight: 400;
 	opacity: 0.75;
-	font-size: 10px;
+	font-size: calc(var(--font-size-sm) * 0.9); /* theme-exempt */
 }
 .ppv2-fd-load-debug-body {
 	overflow-y: auto;
@@ -1097,12 +1100,12 @@ async function onPlaceholderButton(btn) {
 .ppv2-fd-load-debug-d {
 	grid-column: 2;
 	opacity: 0.9;
-	font-size: 10px;
+	font-size: calc(var(--font-size-sm) * 0.9); /* theme-exempt */
 }
 .ppv2-fd-load-debug-e {
 	grid-column: 1 / -1;
 	color: #ff8b8b; /* theme-exempt */
-	font-size: 10px;
+	font-size: calc(var(--font-size-sm) * 0.9); /* theme-exempt */
 	margin-top: 2px;
 }
 .ppv2-fd-load-debug-ok .ppv2-fd-load-debug-s {

@@ -23,7 +23,7 @@ export function createSubmitPerfTrace({ liveDialog = false } = {}) {
 			_dialog.show();
 			const pre = document.createElement("pre");
 			pre.style.cssText =
-				"white-space:pre-wrap;max-height:65vh;overflow:auto;font-size:11px;" +
+				"white-space:pre-wrap;max-height:65vh;overflow:auto;font-size:var(--font-size-sm);" +
 				"user-select:all;padding:8px;margin:0;line-height:1.5;";
 			_dialog.$body[0].appendChild(pre);
 			_pre = pre;
@@ -91,10 +91,10 @@ export function createSubmitPerfTrace({ liveDialog = false } = {}) {
 		frappe.msgprint({
 			title: __("Submit timings & trace"),
 			message:
-				`<p class="theme-text-muted" style="font-size:12px;margin-bottom:8px">${__(
+				`<p class="theme-text-muted theme-text-sm" style="margin-bottom:8px">${__(
 					"Copy the block below. Disable popup:",
 				)} <code>localStorage.removeItem('nce_fd_submit_trace')</code></p>` +
-				`<pre style="white-space:pre-wrap;max-height:60vh;overflow:auto;user-select:all;font-size:11px;">${frappe.utils.escape_html(raw)}</pre>`,
+				`<pre class="theme-text-sm" style="white-space:pre-wrap;max-height:60vh;overflow:auto;user-select:all;">${frappe.utils.escape_html(raw)}</pre>`,
 			indicator: "blue",
 			wide: true,
 		});

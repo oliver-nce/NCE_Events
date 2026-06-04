@@ -42,8 +42,8 @@
 
 	--font-family: var(--nce-font-family, "Inter", -apple-system, sans-serif);
 	--font-size-base: var(--nce-font-size, 13px);
-	--font-size-sm: 11px;
-	--font-size-lg: 16px;
+	--font-size-sm: calc(var(--nce-font-size, 13px) * 0.875);
+	--font-size-lg: calc(var(--nce-font-size, 13px) * 1.125);
 	--font-weight-base: var(--nce-font-weight, 400);
 	--font-weight-bold: 600;
 	--line-height: var(--nce-line-height, 1.5);
@@ -80,4 +80,31 @@
 .panel-float {
 	--male-hex: #dce6f0;
 	--female-hex: #f0dce6;
+}
+
+/*
+ * Display Settings body typography — panel table, floats, form dialogs, cards, tag UI.
+ * Send/SMS/email panels (.send-panel*) are excluded; they keep legacy sizing.
+ */
+.ppv2-root,
+.ppv2-panel,
+.ppv2-table,
+.ppv2-float,
+.ppv2-find-stack,
+.ppv2-form-dialog,
+.ppv2-fd-dialog-root,
+.card-modal,
+.tf-float,
+.tf-tag-panel {
+	font-family: var(--nce-font-family);
+	font-size: var(--nce-font-size);
+	font-weight: var(--nce-font-weight);
+	line-height: var(--nce-line-height);
+	color: var(--nce-color-text);
+}
+
+/* Primary chrome strips use header foreground, not body text */
+.ppv2-float-header,
+.ppv2-fd-header {
+	color: var(--nce-color-primary-fg);
 }

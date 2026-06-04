@@ -148,7 +148,7 @@ function label(msg) {
 }
 
 .ppv2-find-tab-btn {
-	font-size: 11px;
+	font-size: var(--font-size-sm);
 	padding: 4px 10px;
 	border: 1px solid color-mix(in srgb, var(--nce-color-primary-fg, #ffffff) 35%, transparent);
 	border-radius: var(--border-radius-sm);

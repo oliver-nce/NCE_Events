@@ -173,7 +173,7 @@ function onSelectField(field, colIdx) {
 	background: none;
 	border: none;
 	color: var(--nce-color-primary-fg);
-	font-size: 18px;
+	font-size: calc(var(--font-size-base) * 1.35);
 	cursor: pointer;
 	opacity: 0.8;
 }

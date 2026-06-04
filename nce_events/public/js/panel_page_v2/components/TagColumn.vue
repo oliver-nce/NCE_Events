@@ -87,7 +87,7 @@ function onTileClick(f) {
 .tf-col-header {
 	padding: 8px 10px;
 	font-weight: 600;
-	font-size: 12px;
+	font-size: var(--font-size-sm);
 	border-bottom: 2px solid var(--nce-color-primary-300);
 	display: flex;
 	justify-content: space-between;
@@ -96,7 +96,7 @@ function onTileClick(f) {
 
 .tf-col-count {
 	font-weight: 400;
-	font-size: 10px;
+	font-size: calc(var(--font-size-sm) * 0.9);
 	opacity: 0.7;
 }
 
@@ -124,11 +124,11 @@ function onTileClick(f) {
 	align-items: center;
 }
 .tf-tile-label {
-	font-size: 12px;
+	font-size: var(--font-size-sm);
 	font-weight: 500;
 }
 .tf-tile-arrow {
-	font-size: 10px;
+	font-size: calc(var(--font-size-sm) * 0.9);
 }
 
 .tf-tile-meta {
@@ -137,10 +137,10 @@ function onTileClick(f) {
 	margin-top: 2px;
 }
 .tf-tile-fieldname {
-	font-size: 10px;
+	font-size: calc(var(--font-size-sm) * 0.9);
 }
 .tf-tile-badge {
-	font-size: 9px;
+	font-size: calc(var(--font-size-sm) * 0.82);
 	padding: 1px 4px;
 	border-radius: 3px;
 }

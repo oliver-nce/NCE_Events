@@ -176,7 +176,7 @@ function onPerformFindConstrain() {
 }
 
 .ppv2-find-tab-btn {
-	font-size: 12px;
+	font-size: var(--font-size-sm);
 	padding: 6px 12px;
 	border: 1px solid var(--nce-color-border);
 	border-radius: var(--border-radius-sm);

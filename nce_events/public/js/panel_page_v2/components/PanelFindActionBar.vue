@@ -167,7 +167,7 @@ function label(msg) {
 }
 
 .ppv2-find-tab-btn {
-	font-size: 12px;
+	font-size: var(--font-size-sm);
 	padding: 4px 14px;
 	cursor: pointer;
 	font-family: inherit;
