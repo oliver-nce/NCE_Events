@@ -1,6 +1,6 @@
 <template>
 	<div class="field-widget">
-		<label class="field-label" :class="{ required: fieldMeta?.reqd }">
+		<label class="field-label text-muted" :class="{ required: fieldMeta?.reqd }">
 			{{ fieldMeta?.label || config.path }}
 		</label>
 		<input
@@ -158,7 +158,6 @@ function onCheckChange(e) {
 }
 .field-label {
 	font-size: var(--font-size-sm);
-	color: var(--text-muted);
 	margin-bottom: 2px;
 }
 .field-label.required::after {

@@ -5,7 +5,7 @@
 		@mousedown="onRowActivate"
 	>
 		<td v-for="(col, ci) in columns" :key="col.fieldname">
-			<span v-if="ci === 0 && showOrLabel" class="ppv2-find-or-label">OR</span>
+			<span v-if="ci === 0 && showOrLabel" class="ppv2-find-or-label text-muted">OR</span>
 			<input
 				:value="criteria[col.fieldname] ?? ''"
 				type="text"
@@ -54,7 +54,6 @@ function onInput(fieldname, event) {
 	margin-right: 6px;
 	font-size: 11px;
 	font-weight: var(--font-weight-bold);
-	color: var(--text-muted);
 	vertical-align: middle;
 }
 

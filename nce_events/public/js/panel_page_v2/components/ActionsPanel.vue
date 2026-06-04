@@ -14,7 +14,7 @@
 			>
 				{{ a.label }}
 			</button>
-			<div v-if="!actions.length" class="ppv2-actions-empty">No actions</div>
+			<div v-if="!actions.length" class="ppv2-actions-empty text-muted">No actions</div>
 		</div>
 		<template #footer>Actions</template>
 	</PanelFloat>
@@ -65,7 +65,6 @@ defineEmits(["select"]);
 
 .ppv2-actions-empty {
 	font-size: var(--font-size-sm);
-	color: var(--text-muted);
 	font-style: italic;
 	text-align: center;
 	padding: 6px 0;

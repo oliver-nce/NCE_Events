@@ -2,7 +2,7 @@
 	<!-- Related DocType tab: data table + optional field-metadata details -->
 	<div v-if="tab._related" class="ppv2-fd-related-root">
 		<div class="ppv2-fd-related-meta-row">
-			<p class="ppv2-fd-related-meta">
+			<p class="ppv2-fd-related-meta text-muted">
 				{{ tab._related.doctype }}
 				<span v-if="tab._related.link_field" class="ppv2-fd-related-meta-link">
 					· {{ tab._related.link_field }}
@@ -28,14 +28,14 @@
 			Schema note: {{ tab._related.captureError }}
 		</p>
 
-		<p v-if="!tab._related.child_row_name" class="ppv2-fd-related-hint">
+		<p v-if="!tab._related.child_row_name" class="ppv2-fd-related-hint text-muted">
 			Related tab is missing a server row id. Re-save the Form Dialog from Desk.
 		</p>
-		<p v-else-if="!rootDocName" class="ppv2-fd-related-hint">
+		<p v-else-if="!rootDocName" class="ppv2-fd-related-hint text-muted">
 			Save the document to load related rows.
 		</p>
 		<template v-else>
-			<div v-if="relatedState[ti]?.loading" class="ppv2-fd-related-rows-loading">
+			<div v-if="relatedState[ti]?.loading" class="ppv2-fd-related-rows-loading text-muted">
 				Loading related rows…
 			</div>
 			<div v-else-if="relatedState[ti]?.error" class="ppv2-fd-related-rows-err text-danger">
@@ -164,7 +164,7 @@
 						</tr>
 					</tbody>
 				</table>
-				<p v-if="!(relatedState[ti].rows || []).length" class="ppv2-fd-related-empty">
+				<p v-if="!(relatedState[ti].rows || []).length" class="ppv2-fd-related-empty text-muted">
 					No related records.
 				</p>
 			</div>
@@ -177,7 +177,7 @@
 		>
 			<div class="ppv2-fd-action-modal" role="dialog" aria-modal="true">
 				<h4 class="ppv2-fd-action-modal-title">{{ actionModal.title }}</h4>
-				<p v-if="actionModal.confirm" class="ppv2-fd-action-modal-confirm">
+				<p v-if="actionModal.confirm" class="ppv2-fd-action-modal-confirm text-muted">
 					{{ actionModal.confirm }}
 				</p>
 				<div
@@ -214,7 +214,7 @@
 		</div>
 
 		<details v-if="tab.sections && tab.sections.length" class="ppv2-fd-related-schema">
-			<summary class="ppv2-fd-related-schema-sum">Field metadata</summary>
+			<summary class="ppv2-fd-related-schema-sum text-muted">Field metadata</summary>
 			<div
 				class="ppv2-fd-related-preview"
 				:style="{ '--ppv2-fd-rel-lbl': relatedLabelColPx(ti) + 'px' }"
@@ -260,18 +260,18 @@
 										*
 									</span>
 								</span>
-								<span class="ppv2-fd-related-ft">{{ field.fieldtype }}</span>
+								<span class="ppv2-fd-related-ft text-muted">{{ field.fieldtype }}</span>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
 		</details>
-		<div v-else class="ppv2-fd-related-placeholder ppv2-fd-related-placeholder-compact">
+		<div v-else class="ppv2-fd-related-placeholder ppv2-fd-related-placeholder-compact text-muted">
 			<p class="ppv2-fd-related-placeholder-text">
 				{{ tab._related.label || tab._related.doctype }}
 			</p>
-			<p v-if="!tab._related.captureError" class="ppv2-fd-related-placeholder-sub">
+			<p v-if="!tab._related.captureError" class="ppv2-fd-related-placeholder-sub text-muted">
 				No field layout stored for this tab.
 			</p>
 		</div>
@@ -1074,7 +1074,6 @@ onUnmounted(() => {
 	align-items: center;
 	justify-content: center;
 	min-height: 120px;
-	color: var(--text-muted);
 }
 .ppv2-fd-related-placeholder-text {
 	font-size: var(--font-size-base);
@@ -1082,7 +1081,6 @@ onUnmounted(() => {
 }
 .ppv2-fd-related-placeholder-sub {
 	font-size: var(--font-size-sm);
-	color: var(--text-muted);
 	margin-top: 8px;
 }
 .ppv2-fd-related-preview {
@@ -1097,7 +1095,6 @@ onUnmounted(() => {
 }
 .ppv2-fd-related-meta {
 	font-size: var(--font-size-sm);
-	color: var(--text-muted);
 	margin: 0;
 	flex: 1;
 	min-width: 0;
@@ -1162,7 +1159,6 @@ onUnmounted(() => {
 	font-weight: 700;
 }
 .ppv2-fd-related-ft {
-	color: var(--text-muted);
 	min-width: 0;
 	overflow-wrap: anywhere;
 	word-break: break-word;
@@ -1177,7 +1173,6 @@ onUnmounted(() => {
 }
 .ppv2-fd-related-hint {
 	font-size: var(--font-size-sm);
-	color: var(--text-muted);
 	margin: 0 0 12px;
 }
 .ppv2-fd-related-rows-loading,
@@ -1275,7 +1270,6 @@ onUnmounted(() => {
 .ppv2-fd-related-empty {
 	margin: 10px 12px 12px;
 	font-size: var(--font-size-sm);
-	color: var(--text-muted);
 }
 .ppv2-fd-related-schema {
 	margin-top: 8px;
@@ -1283,7 +1277,6 @@ onUnmounted(() => {
 }
 .ppv2-fd-related-schema-sum {
 	cursor: pointer;
-	color: var(--text-muted);
 	font-weight: var(--font-weight-bold, 600);
 }
 .ppv2-fd-related-placeholder-compact {
@@ -1326,7 +1319,6 @@ onUnmounted(() => {
 .ppv2-fd-action-modal-confirm {
 	margin: 0 0 12px;
 	font-size: var(--font-size-sm);
-	color: var(--text-muted);
 }
 .ppv2-fd-action-modal-field {
 	margin-bottom: 10px;

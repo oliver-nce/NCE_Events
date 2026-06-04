@@ -19,7 +19,7 @@
 					</h2>
 					<button
 						type="button"
-						class="ppv2-find-help-close"
+						class="ppv2-find-help-close text-muted"
 						:aria-label="closeAria"
 						@click="$emit('close')"
 					>
@@ -45,7 +45,7 @@
 							</tr>
 						</tbody>
 					</table>
-					<p class="ppv2-find-help-footnote">{{ footnote }}</p>
+					<p class="ppv2-find-help-footnote text-muted">{{ footnote }}</p>
 				</div>
 			</div>
 		</div>
@@ -206,7 +206,6 @@ const rows = computed(() => [
 .ppv2-find-help-close {
 	border: none;
 	background: transparent;
-	color: var(--text-muted, #64748b);
 	font-size: 24px;
 	line-height: 1;
 	cursor: pointer;
@@ -260,7 +259,6 @@ const rows = computed(() => [
 .ppv2-find-help-footnote {
 	margin: 14px 0 0;
 	font-size: var(--font-size-sm, 11px);
-	color: var(--text-muted, #64748b);
 	line-height: 1.45;
 }
 </style>

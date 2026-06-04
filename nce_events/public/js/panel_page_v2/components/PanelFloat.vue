@@ -14,7 +14,7 @@
 
 		<div
 			v-if="$slots.footer"
-			class="ppv2-float-footer"
+			class="ppv2-float-footer text-muted"
 			@mousedown.prevent="startDrag"
 		>
 			<slot name="footer" />
@@ -267,7 +267,6 @@ function startResize(e) {
 	padding: 4px 12px;
 	background: var(--bg-header);
 	font-size: var(--font-size-sm);
-	color: var(--text-muted);
 	cursor: move;
 	user-select: none;
 	text-align: center;

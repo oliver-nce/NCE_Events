@@ -21,7 +21,7 @@
 			/>
 		</div>
 
-		<div class="tf-footer" @mousedown.prevent="startDrag">
+		<div class="tf-footer text-muted" @mousedown.prevent="startDrag">
 			Tag Finder: {{ rootDoctype }}
 		</div>
 
@@ -190,7 +190,6 @@ function onSelectField(field, colIdx) {
 	padding: 4px 12px;
 	background: var(--bg-header);
 	font-size: var(--font-size-sm);
-	color: var(--text-muted);
 	text-align: center;
 	cursor: move;
 	user-select: none;

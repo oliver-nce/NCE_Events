@@ -3,7 +3,7 @@
 		<button
 			v-for="tab in sortedTabs"
 			:key="tab.label"
-			:class="['tab-btn', { active: activeTab === tab.label }]"
+			:class="['tab-btn', 'text-muted', { active: activeTab === tab.label }]"
 			@click="$emit('update:activeTab', tab.label)"
 		>
 			{{ tab.label }}
@@ -45,7 +45,6 @@ const showBar = computed(() => {
 	background: none;
 	cursor: pointer;
 	font-size: var(--font-size-base);
-	color: var(--text-muted);
 	border-bottom: 2px solid transparent;
 }
 .tab-btn.active {

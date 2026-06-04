@@ -82,7 +82,7 @@
 				</template>
 			</PanelTable>
 
-			<div v-if="mode === 'browse' && !rows.length" class="ppv2-find-empty">
+			<div v-if="mode === 'browse' && !rows.length" class="ppv2-find-empty text-muted">
 				No records match your request.
 			</div>
 		</div>
@@ -231,7 +231,6 @@ function onPerformFindConstrain() {
 
 .ppv2-find-empty {
 	padding: 12px;
-	color: var(--text-muted, #666);
 	font-size: calc(var(--font-size-base) + 1px);
 	flex-shrink: 0;
 }

@@ -1,8 +1,8 @@
 <template>
   <!-- Table fields: placeholder -->
-  <div v-if="config?.layout === 'table'" class="ppv2-fd-table-placeholder">
+  <div v-if="config?.layout === 'table'" class="ppv2-fd-table-placeholder text-muted">
     <span>Child table: {{ field.label }} ({{ field.options }})</span>
-    <span class="ppv2-fd-muted">— not yet supported in dialog view</span>
+    <span class="ppv2-fd-muted text-muted">— not yet supported in dialog view</span>
   </div>
 
   <!-- Heading -->
@@ -53,7 +53,7 @@
       placeholder=""
       @input="onChange($event.target.value)"
     />
-    <p v-if="field.description" class="ppv2-fd-desc">{{ field.description }}</p>
+    <p v-if="field.description" class="ppv2-fd-desc text-muted">{{ field.description }}</p>
   </div>
 
   <!-- Data entry fields -->
@@ -80,6 +80,7 @@
       :required="mandatory"
       :disabled="readOnly"
       class="ppv2-fd-input ppv2-fd-select"
+      :class="{ 'text-muted': readOnly }"
       @change="onChange($event.target.value)"
     >
       <option value="">— Select —</option>
@@ -139,6 +140,7 @@
       :rows="config.props?.rows || 3"
       :placeholder="field.placeholder || ''"
       class="ppv2-fd-input ppv2-fd-textarea"
+      :class="{ 'text-muted': readOnly }"
       @input="onChange($event.target.value)"
     />
 
@@ -158,11 +160,12 @@
       :min="config.props?.min"
       :max="config.props?.max"
       class="ppv2-fd-input"
+      :class="{ 'text-muted': readOnly }"
       @change="onChange($event.target.value)"
     />
 
     <!-- Description -->
-    <p v-if="field.description" class="ppv2-fd-desc">{{ field.description }}</p>
+    <p v-if="field.description" class="ppv2-fd-desc text-muted">{{ field.description }}</p>
   </div>
 </template>
 
@@ -314,7 +317,6 @@ function onLinkChangePayload(payload) {
 }
 .ppv2-fd-input:disabled {
   background: var(--bg-surface);
-  color: var(--text-muted);
   cursor: not-allowed;
 }
 .ppv2-fd-textarea {
@@ -347,7 +349,6 @@ function onLinkChangePayload(payload) {
 }
 .ppv2-fd-desc {
   font-size: var(--font-size-sm);
-  color: var(--text-muted);
   margin: 2px 0 0;
 }
 .ppv2-fd-heading {
@@ -362,11 +363,9 @@ function onLinkChangePayload(payload) {
   border: 1px dashed var(--border-color);
   border-radius: var(--border-radius-sm, 4px);
   font-size: var(--font-size-sm);
-  color: var(--text-muted);
   margin-bottom: 10px;
 }
 .ppv2-fd-muted {
-  color: var(--text-muted);
   font-style: italic;
 }
 .ppv2-fd-html-display {

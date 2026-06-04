@@ -1,6 +1,6 @@
 <template>
 	<div class="ppv2-fd-body">
-		<div v-if="loading" class="ppv2-fd-loading">Loading…</div>
+		<div v-if="loading" class="ppv2-fd-loading text-muted">Loading…</div>
 		<div v-else-if="error" class="ppv2-fd-error text-danger">{{ error }}</div>
 		<template v-else-if="tabs.length">
 			<PanelFormDialogTabBar
@@ -64,7 +64,7 @@
 							<h3 v-if="section.label" class="ppv2-fd-section-label">
 								{{ section.label }}
 							</h3>
-							<p v-if="section.description" class="ppv2-fd-section-desc">
+							<p v-if="section.description" class="ppv2-fd-section-desc text-muted">
 								{{ section.description }}
 							</p>
 
@@ -281,7 +281,6 @@ defineExpose({
 .ppv2-fd-loading {
 	text-align: center;
 	padding: 32px;
-	color: var(--text-muted);
 	font-size: var(--font-size-base);
 }
 .ppv2-fd-error {
@@ -314,7 +313,6 @@ defineExpose({
 }
 .ppv2-fd-section-desc {
 	font-size: var(--font-size-sm);
-	color: var(--text-muted);
 	margin: 0 0 8px;
 }
 .ppv2-fd-columns {
