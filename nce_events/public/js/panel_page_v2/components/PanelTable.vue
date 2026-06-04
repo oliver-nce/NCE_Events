@@ -418,7 +418,8 @@ function syncColumnWidths() {
 		props.columns,
 		props.rows || [],
 		cw,
-		actionColumnWidth.value
+		actionColumnWidth.value,
+		props.config?.title_field
 	);
 	widths.forEach((px, i) => {
 		colWidths[i] = px;

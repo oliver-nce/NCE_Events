@@ -17,6 +17,8 @@ const LONG_MAX_PX = 280;
 const LONG_SHRINK_FLOOR_PX = 96;
 const LONG_WEIGHT_CAP_CHARS = 28;
 const RESIZE_MIN_PX = 40;
+/** Page Panel title_field: keep at least this fraction of the longest sample value visible. */
+const TITLE_VISIBLE_RATIO = 0.6;
 
 const LONG_FIELDTYPES = new Set([
 	"text",
@@ -93,6 +95,27 @@ function columnMetrics(columns, rows) {
 	});
 }
 
+function findTitleColumnIndex(columns, titleField) {
+	const tf = String(titleField || "").trim();
+	if (!tf || !columns?.length) return -1;
+	const bare = tf.includes(".") ? tf.split(".").pop() : tf;
+	for (let i = 0; i < columns.length; i++) {
+		const fn = String(columns[i].fieldname || "");
+		if (fn === tf || fn === bare) return i;
+		if (fn.toLowerCase() === tf.toLowerCase() || fn.toLowerCase() === bare.toLowerCase()) {
+			return i;
+		}
+	}
+	return -1;
+}
+
+/** Min width so at least 60% of the longest sample value stays visible (ellipsis after). */
+function titleColumnMinPx(m) {
+	const longest = Math.max(m.maxLen, m.headerLen, 1);
+	const visibleChars = Math.max(m.headerLen, Math.ceil(longest * TITLE_VISIBLE_RATIO));
+	return Math.ceil(visibleChars * CHAR_PX) + CELL_PAD_PX;
+}
+
 function isLongContentColumn(m) {
 	const ft = m.fieldtype.toLowerCase();
 	if (LONG_FIELDTYPES.has(ft)) return true;
@@ -109,8 +132,15 @@ function shortMaxPx(m) {
 	return Math.min(160, Math.ceil(Math.min(m.maxLen, 20) * CHAR_PX) + CELL_PAD_PX);
 }
 
-function idealWidthPx(m, isLong) {
+function idealWidthPx(m, isLong, isTitle) {
 	const headerMin = headerMinPx(m);
+	if (isTitle) {
+		const titleMin = titleColumnMinPx(m);
+		const weight = Math.min(m.avg, LONG_WEIGHT_CAP_CHARS);
+		const pref = Math.ceil(weight * CHAR_PX) + CELL_PAD_PX;
+		const longIdeal = Math.max(headerMin, Math.min(LONG_MAX_PX, Math.max(pref, 120)));
+		return Math.max(titleMin, longIdeal);
+	}
 	if (isLong) {
 		const weight = Math.min(m.avg, LONG_WEIGHT_CAP_CHARS);
 		const pref = Math.ceil(weight * CHAR_PX) + CELL_PAD_PX;
@@ -118,6 +148,16 @@ function idealWidthPx(m, isLong) {
 	}
 	const content = Math.ceil(Math.min(m.maxLen, 22) * CHAR_PX) + CELL_PAD_PX;
 	return Math.max(headerMin, Math.min(shortMaxPx(m), content));
+}
+
+function columnShrinkFloor(i, isLong, titleIdx, titleMinPx, headerMins) {
+	if (titleIdx >= 0 && i === titleIdx) {
+		return Math.max(headerMins[i], titleMinPx);
+	}
+	if (isLong[i]) {
+		return Math.max(headerMins[i], LONG_SHRINK_FLOOR_PX);
+	}
+	return headerMins[i];
 }
 
 function distributeSlack(widths, isLong, slack, caps) {
@@ -138,7 +178,7 @@ function distributeSlack(widths, isLong, slack, caps) {
 	return out;
 }
 
-function shrinkWidthsToFit(widths, isLong, headerMins, caps, available) {
+function shrinkWidthsToFit(widths, isLong, headerMins, caps, available, titleIdx, titleMinPx) {
 	let w = [...widths];
 	const sum = () => w.reduce((a, b) => a + b, 0);
 	if (sum() <= available) {
@@ -147,11 +187,17 @@ function shrinkWidthsToFit(widths, isLong, headerMins, caps, available) {
 
 	let deficit = sum() - available;
 
-	const longIdx = isLong.map((x, i) => (x ? i : -1)).filter((i) => i >= 0);
+	// Shrink non-title long columns first; title_field column keeps TITLE_VISIBLE_RATIO floor.
+	const longIdx = isLong
+		.map((x, i) => (x ? i : -1))
+		.filter((i) => i >= 0 && i !== titleIdx);
 	const longReducible = longIdx
 		.map((i) => ({
 			i,
-			amount: Math.max(0, w[i] - Math.max(headerMins[i], LONG_SHRINK_FLOOR_PX)),
+			amount: Math.max(
+				0,
+				w[i] - columnShrinkFloor(i, isLong, titleIdx, titleMinPx, headerMins)
+			),
 		}))
 		.filter((r) => r.amount > 0);
 	const longTotal = longReducible.reduce((s, r) => s + r.amount, 0);
@@ -165,7 +211,7 @@ function shrinkWidthsToFit(widths, isLong, headerMins, caps, available) {
 
 	if (deficit > 0) {
 		const floors = w.map((_, i) =>
-			isLong[i] ? Math.max(headerMins[i], LONG_SHRINK_FLOOR_PX) : headerMins[i]
+			columnShrinkFloor(i, isLong, titleIdx, titleMinPx, headerMins)
 		);
 		const flex = w.map((wi, i) => Math.max(0, wi - floors[i]));
 		const flexTotal = flex.reduce((a, b) => a + b, 0);
@@ -176,14 +222,14 @@ function shrinkWidthsToFit(widths, isLong, headerMins, caps, available) {
 			}
 		} else if (sum() > 0) {
 			const scale = available / sum();
-			w = w.map((wi) => Math.max(RESIZE_MIN_PX, Math.floor(wi * scale)));
+			w = w.map((wi, i) =>
+				Math.max(columnShrinkFloor(i, isLong, titleIdx, titleMinPx, headerMins), Math.floor(wi * scale))
+			);
 		}
 	}
 
 	for (let i = 0; i < w.length; i++) {
-		const floor = isLong[i]
-			? Math.max(headerMins[i], LONG_SHRINK_FLOOR_PX)
-			: headerMins[i];
+		const floor = columnShrinkFloor(i, isLong, titleIdx, titleMinPx, headerMins);
 		w[i] = Math.max(floor, Math.min(caps[i], w[i]));
 	}
 	return w;
@@ -191,13 +237,16 @@ function shrinkWidthsToFit(widths, isLong, headerMins, caps, available) {
 
 /**
  * @param {number} containerWidth - panel body width in px; 0 = ideal widths only
+ * @param {string} [titleField] - Page Panel `title_field`; when set and visible, keeps 60% of longest value visible
  */
-export function calcColWidths(columns, rows, containerWidth, actionColWidth = 0) {
+export function calcColWidths(columns, rows, containerWidth, actionColWidth = 0, titleField = "") {
 	const reserved = Math.max(0, actionColWidth) + TABLE_RESERVE_PX;
 	const metrics = columnMetrics(columns, rows || []);
-	const isLong = metrics.map(isLongContentColumn);
+	const titleIdx = findTitleColumnIndex(columns, titleField);
+	const titleMinPx = titleIdx >= 0 ? titleColumnMinPx(metrics[titleIdx]) : 0;
+	const isLong = metrics.map((m, i) => isLongContentColumn(m) || i === titleIdx);
 	const headerMins = metrics.map(headerMinPx);
-	const ideal = metrics.map((m, i) => idealWidthPx(m, isLong[i]));
+	const ideal = metrics.map((m, i) => idealWidthPx(m, isLong[i], i === titleIdx));
 	const idealSum = ideal.reduce((s, w) => s + w, 0);
 	const tableMinWidth = idealSum + reserved;
 
@@ -211,7 +260,15 @@ export function calcColWidths(columns, rows, containerWidth, actionColWidth = 0)
 	const widths =
 		idealSum <= available
 			? distributeSlack(ideal, isLong, available - idealSum, caps)
-			: shrinkWidthsToFit(ideal, isLong, headerMins, caps, available);
+			: shrinkWidthsToFit(
+					ideal,
+					isLong,
+					headerMins,
+					caps,
+					available,
+					titleIdx,
+					titleMinPx
+				);
 
 	return { widths, tableMinWidth };
 }
@@ -229,8 +286,9 @@ export function preparePanelTableLayout(columns, rows, config = {}) {
 		};
 	}
 	const list = rows || [];
-	const { tableMinWidth } = calcColWidths(columns, list, 0, actionW);
+	const titleField = String(config.title_field || "").trim();
+	const { tableMinWidth } = calcColWidths(columns, list, 0, actionW, titleField);
 	const floatInitW = panelFloatWidthFromTableMin(tableMinWidth);
-	const { widths } = calcColWidths(columns, list, floatInitW, actionW);
+	const { widths } = calcColWidths(columns, list, floatInitW, actionW, titleField);
 	return { floatInitW, initialColWidths: widths, tableMinWidth };
 }
