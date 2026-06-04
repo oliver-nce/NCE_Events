@@ -12,8 +12,6 @@ export function usePanel(doctype, parentFilter = {}) {
 
 	// Full unfiltered dataset from backend
 	const _allRows = ref([]);
-	// default_filters from backend config [{field, op, value}] — pre-populated in filter widget
-	let _defaultFilters = [];
 	// current active user filters [{field, op, value}]
 	const userFilters = ref([]);
 	/** When true, rows are pinned to a Find found set (skip _applyFilters). */
@@ -185,12 +183,13 @@ export function usePanel(doctype, parentFilter = {}) {
 	}
 
 	// ── Filter orchestration ──────────────────────────────────────────────────
-	// core filters always applied; user filters layered on top (both AND-combined)
+	// User filters from the filter bar only; empty = full loaded set (_allRows).
+	// default_filters seed the filter widget on open (PanelTableFilterBar), not a hidden fallback.
 	function _applyFilters() {
 		if (_foundSetPinned) return;
 		const active = userFilters.value.filter((f) => f.field && String(f.value ?? "") !== "");
-		const combined = active.length > 0 ? active : _defaultFilters;
-		rows.value = _applyUserFilters(_allRows.value, combined);
+		rows.value =
+			active.length > 0 ? _applyUserFilters(_allRows.value, active) : _allRows.value;
 		total.value = rows.value.length;
 	}
 
@@ -219,7 +218,6 @@ export function usePanel(doctype, parentFilter = {}) {
 			config.value = cfg;
 			columns.value = data.columns || [];
 			_allRows.value = data.rows || [];
-			_defaultFilters = data.default_filters || [];
 			if (!_foundSetPinned) _applyFilters();
 			fullTotal.value = data.full_count ?? 0;
 			loading.value = false;
@@ -244,7 +242,6 @@ export function usePanel(doctype, parentFilter = {}) {
 			config.value = cfg;
 			columns.value = data.columns || [];
 			_allRows.value = data.rows || [];
-			_defaultFilters = data.default_filters || [];
 			if (!_foundSetPinned) _applyFilters();
 			fullTotal.value = data.full_count ?? 0;
 			loading.value = false;
@@ -270,8 +267,8 @@ export function usePanel(doctype, parentFilter = {}) {
 		const active = userFilters.value.filter(
 			(f) => f.field && String(f.value ?? "") !== ""
 		);
-		const combined = active.length > 0 ? active : _defaultFilters;
-		rows.value = _applyUserFilters(sourceRows, combined);
+		rows.value =
+			active.length > 0 ? _applyUserFilters(sourceRows, active) : sourceRows;
 		total.value = rows.value.length;
 	}
 
