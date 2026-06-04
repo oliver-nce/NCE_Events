@@ -8,7 +8,7 @@
 			<div class="ppv2-fd-readback-actions">
 				<button
 					type="button"
-					class="ppv2-fd-tab-btn ppv2-fd-tab-active"
+					class="ppv2-fd-tab-btn ppv2-fd-tab-active bg-primary border-primary"
 					@click="$emit('readback-show-changes')"
 				>
 					{{ __("Show changes") }}
@@ -19,7 +19,7 @@
 		<!-- WP read-back: done — single Close -->
 		<template v-else-if="footerPhase === 'readback-close-only'">
 			<div class="ppv2-fd-readback-actions">
-				<button type="button" class="ppv2-fd-tab-btn ppv2-fd-tab-active" @click="$emit('readback-close')">
+				<button type="button" class="ppv2-fd-tab-btn ppv2-fd-tab-active bg-primary border-primary" @click="$emit('readback-close')">
 					{{ __("Close") }}
 				</button>
 			</div>
@@ -30,7 +30,7 @@
 			<div class="ppv2-fd-find-footer-only">
 				<button
 					type="button"
-					class="ppv2-fd-tab-btn ppv2-fd-tab-active"
+					class="ppv2-fd-tab-btn ppv2-fd-tab-active bg-primary border-primary"
 					@click="$emit('find-perform')"
 				>
 					{{ __("Perform Find") }}
@@ -96,7 +96,7 @@
 				<button
 					v-if="submitVisible"
 					type="button"
-					class="ppv2-fd-tab-btn ppv2-fd-tab-active"
+					class="ppv2-fd-tab-btn ppv2-fd-tab-active bg-primary border-primary"
 					:disabled="saving || browseActionsLocked"
 					@click="$emit('submit', { shift: $event.shiftKey })"
 				>
@@ -314,11 +314,6 @@ watch(
 	font-size: var(--font-size-base, 14px);
 	font-weight: var(--font-weight-bold, 600);
 	cursor: pointer;
-}
-.ppv2-fd-tab-active {
-	background: var(--bg-header);
-	color: var(--text-header);
-	border-color: var(--bg-header);
 }
 .ppv2-fd-action-buttons .ppv2-fd-tab-btn:disabled {
 	opacity: 0.6;

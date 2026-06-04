@@ -1,6 +1,6 @@
 <template>
 	<div class="tf-column">
-		<div class="tf-col-header">
+		<div class="tf-col-header bg-primary-100">
 			{{ col.doctype }}
 			<span class="tf-col-count">{{ col.fields.length }} fields</span>
 		</div>
@@ -14,11 +14,14 @@
 			>
 				<div class="tf-tile-top">
 					<span class="tf-tile-label">{{ f.label }}</span>
-					<span v-if="(f.is_link || f.is_table) && !isCircular(f)" class="tf-tile-arrow">&#9654;</span>
+					<span
+						v-if="(f.is_link || f.is_table) && !isCircular(f)"
+						class="tf-tile-arrow text-link"
+					>&#9654;</span>
 				</div>
 				<div class="tf-tile-meta">
-					<span class="tf-tile-fieldname">{{ f.fieldname }}</span>
-					<span class="tf-tile-badge">{{ badgeText(f) }}</span>
+					<span class="tf-tile-fieldname text-muted">{{ f.fieldname }}</span>
+					<span class="tf-tile-badge text-muted bg-row-alt">{{ badgeText(f) }}</span>
 				</div>
 			</div>
 		</div>
@@ -48,7 +51,9 @@ function tileClass(f) {
 	else if (isCircular(f)) cls.push("tf-tile-circular");
 	else if (f.is_link) cls.push("tf-tile-link");
 	else if (f.is_table) cls.push("tf-tile-table");
-	if (props.col.activeField === f.fieldname) cls.push("tf-tile-active");
+	if (props.col.activeField === f.fieldname) {
+		cls.push("bg-primary-200", "border-primary");
+	}
 	return cls.join(" ");
 }
 
@@ -74,18 +79,16 @@ function onTileClick(f) {
 	min-width: 220px;
 	max-width: 260px;
 	flex-shrink: 0;
-	border-right: 1px solid #d1d8dd;
+	border-right: 1px solid var(--nce-color-border, #d1d8dd);
 	display: flex;
 	flex-direction: column;
 }
 
 .tf-col-header {
 	padding: 8px 10px;
-	background: #E3F0FC;
-	color: #105EAD;
 	font-weight: 600;
 	font-size: 12px;
-	border-bottom: 2px solid #A2CCF6;
+	border-bottom: 2px solid var(--nce-color-primary-300);
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
@@ -111,27 +114,50 @@ function onTileClick(f) {
 	border: 1px solid transparent;
 	transition: background 0.1s;
 }
-.tf-tile:hover { background: #EAF3FD; }
+.tf-tile:hover {
+	background: var(--nce-color-primary-100);
+}
 
 .tf-tile-top {
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
 }
-.tf-tile-label { font-size: 12px; font-weight: 500; color: #333; }
-.tf-tile-arrow { color: #126BC4; font-size: 10px; }
+.tf-tile-label {
+	font-size: 12px;
+	font-weight: 500;
+}
+.tf-tile-arrow {
+	font-size: 10px;
+}
 
 .tf-tile-meta {
 	display: flex;
 	justify-content: space-between;
 	margin-top: 2px;
 }
-.tf-tile-fieldname { font-size: 10px; color: #8D949A; }
-.tf-tile-badge { font-size: 9px; color: #8D949A; background: #f0f2f4; padding: 1px 4px; border-radius: 3px; }
+.tf-tile-fieldname {
+	font-size: 10px;
+}
+.tf-tile-badge {
+	font-size: 9px;
+	padding: 1px 4px;
+	border-radius: 3px;
+}
 
-.tf-tile-link { border-left: 3px solid #126BC4; }
-.tf-tile-table { border-left: 3px solid #e67e22; }
-.tf-tile-pronoun { border-left: 3px solid #9b59b6; }
-.tf-tile-circular { opacity: 0.4; cursor: not-allowed; }
-.tf-tile-active { background: #D4E8FC; border-color: #126BC4; }
+.tf-tile-link {
+	border-left: 3px solid var(--nce-color-primary);
+}
+/* categorical color — type indicator, not brand-themed */
+.tf-tile-table {
+	border-left: 3px solid #e67e22;
+}
+/* categorical color — type indicator, not brand-themed */
+.tf-tile-pronoun {
+	border-left: 3px solid #9b59b6;
+}
+.tf-tile-circular {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
 </style>

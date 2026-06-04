@@ -1,5 +1,5 @@
 <template>
-	<div class="ppv2-fd-header">
+	<div class="ppv2-fd-header bg-primary">
 		<div class="ppv2-fd-header-main">
 			<div v-if="rowNavEnabled" class="ppv2-fd-nav" @mousedown.stop>
 				<button
@@ -50,8 +50,6 @@ defineEmits(["close", "nav-prev", "nav-next"]);
 <style scoped>
 .ppv2-fd-header {
 	padding: 10px 16px;
-	background: var(--bg-header);
-	color: var(--text-header);
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -79,15 +77,14 @@ defineEmits(["close", "nav-prev", "nav-next"]);
 	width: 28px;
 	height: 28px;
 	padding: 0;
-	border: 1px solid color-mix(in srgb, var(--text-header) 28%, transparent);
+	border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
 	border-radius: var(--border-radius-sm, 4px);
-	background: color-mix(in srgb, var(--text-header) 10%, transparent);
-	color: var(--text-header);
+	background: color-mix(in srgb, currentColor 10%, transparent);
 	cursor: pointer;
 	font-size: 12px;
 }
 .ppv2-fd-nav-btn:hover:not(:disabled) {
-	background: color-mix(in srgb, var(--text-header) 18%, transparent);
+	background: color-mix(in srgb, currentColor 18%, transparent);
 }
 .ppv2-fd-nav-btn:disabled {
 	opacity: 0.35;
@@ -111,7 +108,6 @@ defineEmits(["close", "nav-prev", "nav-next"]);
 .ppv2-fd-close {
 	background: none;
 	border: none;
-	color: var(--text-header);
 	font-size: 20px;
 	cursor: pointer;
 	padding: 0 4px;
