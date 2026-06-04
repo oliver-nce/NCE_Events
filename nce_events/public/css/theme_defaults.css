@@ -24,7 +24,7 @@
 	--color-primary: var(--nce-color-primary, #126bc4);
 
 	--bg-surface: var(--nce-color-surface, #fafafa);
-	--bg-card: var(--nce-color-bg, #ffffff);
+	--bg-card: var(--nce-color-surface, #ffffff);
 	--bg-header: var(--nce-color-primary, #126bc4);
 	--text-header: #ffffff;
 

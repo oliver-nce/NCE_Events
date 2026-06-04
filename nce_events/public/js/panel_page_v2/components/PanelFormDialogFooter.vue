@@ -39,12 +39,16 @@
 				<button
 					v-if="findMatchActive"
 					type="button"
-					class="ppv2-fd-tab-btn"
+					class="ppv2-fd-tab-btn theme-bg-primary-100 theme-border"
 					@click="$emit('find-perform-constrain')"
 				>
 					{{ __("Constrain Found Set") }}
 				</button>
-				<button type="button" class="ppv2-fd-tab-btn" @click="$emit('find-cancel')">
+				<button
+					type="button"
+					class="ppv2-fd-tab-btn theme-bg-primary-100 theme-border"
+					@click="$emit('find-cancel')"
+				>
 					{{ __("Cancel Find") }}
 				</button>
 			</div>
@@ -52,13 +56,25 @@
 
 		<template v-else>
 			<div v-if="findChromePhase === 'post-find'" class="ppv2-fd-find-followup">
-				<button type="button" class="ppv2-fd-tab-btn" @click="$emit('find-modify')">
+				<button
+					type="button"
+					class="ppv2-fd-tab-btn theme-bg-primary-100 theme-border"
+					@click="$emit('find-modify')"
+				>
 					{{ __("Modify Find") }}
 				</button>
-				<button type="button" class="ppv2-fd-tab-btn" @click="$emit('find-constrain')">
+				<button
+					type="button"
+					class="ppv2-fd-tab-btn theme-bg-primary-100 theme-border"
+					@click="$emit('find-constrain')"
+				>
 					{{ __("Constrain Found Set") }}
 				</button>
-				<button type="button" class="ppv2-fd-tab-btn" @click="$emit('find-show-all')">
+				<button
+					type="button"
+					class="ppv2-fd-tab-btn theme-bg-primary-100 theme-border"
+					@click="$emit('find-show-all')"
+				>
 					{{ __("Show All") }}
 				</button>
 			</div>
@@ -68,7 +84,7 @@
 					v-for="(btn, bi) in visibleButtons"
 					:key="'fd-btn-' + bi + '-' + (btn.label || bi) + '-' + (btn.name || '')"
 					type="button"
-					class="ppv2-fd-tab-btn"
+					class="ppv2-fd-tab-btn theme-bg-primary-100 theme-border"
 					:disabled="browseActionsLocked"
 					@click="$emit('custom-button', btn)"
 				>
@@ -79,7 +95,7 @@
 			<div class="ppv2-fd-action-buttons">
 				<button
 					type="button"
-					class="ppv2-fd-tab-btn"
+					class="ppv2-fd-tab-btn theme-bg-primary-100 theme-border"
 					:disabled="browseActionsLocked"
 					@click="$emit('cancel')"
 				>
@@ -87,7 +103,7 @@
 				</button>
 				<button
 					type="button"
-					class="ppv2-fd-tab-btn"
+					class="ppv2-fd-tab-btn theme-bg-primary-100 theme-border"
 					:disabled="saving || browseActionsLocked || !isDirty"
 					@click="$emit('revert')"
 				>
@@ -308,9 +324,7 @@ watch(
 }
 .ppv2-fd-tab-btn {
 	padding: 6px 14px;
-	border: 1px solid var(--border-color);
 	border-radius: var(--border-radius-sm, 4px);
-	background: var(--bg-card);
 	font-size: var(--font-size-base, 14px);
 	font-weight: var(--font-weight-bold, 600);
 	cursor: pointer;
