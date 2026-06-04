@@ -292,7 +292,6 @@ function onLinkChangePayload(payload) {
   display: block;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-bold);
-  color: var(--text-color);
   margin-bottom: 3px;
 }
 .ppv2-fd-reqd {
@@ -307,7 +306,6 @@ function onLinkChangePayload(payload) {
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius-sm, 4px);
   background: var(--bg-card);
-  color: var(--text-color);
   box-sizing: border-box;
 }
 .ppv2-fd-input:focus {
@@ -329,7 +327,6 @@ function onLinkChangePayload(payload) {
   cursor: default;
   user-select: text;
   background: var(--bg-surface);
-  color: var(--text-color);
 }
 .ppv2-fd-readonly-plain:focus {
   outline: none;
@@ -354,7 +351,6 @@ function onLinkChangePayload(payload) {
 .ppv2-fd-heading {
   font-size: var(--font-size-lg, 16px);
   font-weight: var(--font-weight-bold);
-  color: var(--text-color);
   margin: 8px 0 4px;
 }
 .ppv2-fd-table-placeholder {

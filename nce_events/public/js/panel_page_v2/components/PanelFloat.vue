@@ -4,7 +4,7 @@
 		class="ppv2-float"
 		:style="floatStyle"
 	>
-		<div class="ppv2-float-header" @mousedown="startDrag">
+		<div class="ppv2-float-header bg-primary" @mousedown="startDrag">
 			<slot name="header" />
 		</div>
 
@@ -173,8 +173,6 @@ function startResize(e) {
 .ppv2-float-header {
 	flex-shrink: 0;
 	padding: 5px 8px;
-	background: var(--bg-header);
-	color: var(--text-header);
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -203,7 +201,6 @@ function startResize(e) {
 
 .ppv2-float-header :deep(.ppv2-click-hint) {
 	font-size: calc(var(--font-size-sm) + 1pt);
-	color: #fff;
 	font-style: italic;
 	white-space: nowrap;
 }
@@ -217,7 +214,6 @@ function startResize(e) {
 .ppv2-float-header :deep(.ppv2-hdr-btn) {
 	background: none;
 	border: none;
-	color: var(--text-header);
 	font-size: 18px;
 	cursor: pointer;
 	padding: 0 4px;
@@ -227,7 +223,6 @@ function startResize(e) {
 .ppv2-float-header :deep(.ppv2-hdr-btn:hover) { opacity: 1; }
 
 .ppv2-float-header :deep(.ppv2-hdr-btn--new) {
-	color: #fff !important;
 	font-weight: 700;
 	font-size: 22px;
 	opacity: 1;

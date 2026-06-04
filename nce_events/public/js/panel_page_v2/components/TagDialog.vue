@@ -1,6 +1,6 @@
 <template>
 	<div class="tf-tag-panel" :style="panelStyle" @mousedown="bringToFront">
-		<div class="tf-tag-header" @mousedown.prevent="startDrag">
+		<div class="tf-tag-header bg-primary" @mousedown.prevent="startDrag">
 			<span>{{ field.label }}</span>
 			<button class="tf-close" @click="$emit('close')">&times;</button>
 		</div>
@@ -54,13 +54,13 @@ function bringToFront() { zIndex.value = zIndex.value + 1; }
 function showToast(t, l) {
 	const el = document.createElement("div");
 	el.textContent = "Tag is on the clipboard";
+	// Theme contract: bg-primary sets background + paired fg — do not set inline background/color.
+	el.className = "bg-primary";
 	Object.assign(el.style, {
 		position: "fixed",
 		top: t + "px",
 		left: l + "px",
 		padding: "10px 18px",
-		background: "#126BC4",
-		color: "#fff",
 		fontWeight: "600",
 		fontSize: "13px",
 		borderRadius: "6px",
@@ -132,8 +132,6 @@ function startDrag(e) {
 	justify-content: space-between;
 	align-items: center;
 	padding: 8px 12px;
-	background: #126BC4;
-	color: #fff;
 	font-weight: 600;
 	font-size: 13px;
 	border-radius: 6px 6px 0 0;
@@ -144,7 +142,6 @@ function startDrag(e) {
 .tf-close {
 	background: none;
 	border: none;
-	color: #fff;
 	font-size: 18px;
 	cursor: pointer;
 	opacity: 0.8;

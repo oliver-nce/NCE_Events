@@ -153,7 +153,6 @@ function label(msg) {
 	border: 1px solid rgba(255, 255, 255, 0.35);
 	border-radius: var(--border-radius-sm);
 	background: rgba(255, 255, 255, 0.12);
-	color: var(--text-header);
 	cursor: pointer;
 	font-family: inherit;
 	white-space: nowrap;

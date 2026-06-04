@@ -1010,7 +1010,6 @@ async function onPlaceholderButton(btn) {
 .ppv2-fd-readback-spinner {
 	font-size: 15px;
 	font-weight: 600;
-	color: var(--text-color);
 	padding: 16px 24px;
 	border-radius: var(--border-radius-sm, 6px);
 	background: var(--bg-card);

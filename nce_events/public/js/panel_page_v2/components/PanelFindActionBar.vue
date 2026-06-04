@@ -124,7 +124,6 @@ function label(msg) {
 	border: 1px solid var(--border-color);
 	border-radius: var(--border-radius-sm);
 	background: var(--bg-card);
-	color: var(--text-color);
 	cursor: pointer;
 	font-family: inherit;
 	white-space: nowrap;

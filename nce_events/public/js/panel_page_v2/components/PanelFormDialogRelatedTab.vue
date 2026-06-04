@@ -1149,7 +1149,6 @@ onUnmounted(() => {
 	font-size: var(--font-size-sm);
 }
 .ppv2-fd-related-fn {
-	color: var(--text-color);
 	min-width: 0;
 	overflow-wrap: anywhere;
 	word-break: break-word;
@@ -1191,7 +1190,6 @@ onUnmounted(() => {
 	width: 100%;
 	border-collapse: collapse;
 	font-size: var(--font-size-base);
-	color: var(--text-color);
 }
 .ppv2-fd-related-th {
 	text-align: left;
@@ -1229,7 +1227,6 @@ onUnmounted(() => {
 }
 .ppv2-fd-related-cell-text {
 	font-size: var(--font-size-base);
-	color: var(--text-color);
 	word-break: break-word;
 }
 .ppv2-fd-related-select {
@@ -1240,7 +1237,6 @@ onUnmounted(() => {
 	border: 1px solid var(--border-color);
 	border-radius: var(--border-radius-sm, 4px);
 	background: var(--bg-card);
-	color: var(--text-color);
 	font-size: var(--font-size-base);
 	font-family: var(--font-family, inherit);
 	box-sizing: border-box;
@@ -1254,7 +1250,6 @@ onUnmounted(() => {
 	border: 1px solid var(--border-color);
 	border-radius: var(--border-radius-sm, 4px);
 	background: var(--bg-card);
-	color: var(--text-color);
 	font-size: var(--font-size-base);
 	font-family: var(--font-family, inherit);
 }

@@ -156,7 +156,6 @@ onMounted(async () => {
 	flex-direction: column;
 	height: 100%;
 	background: var(--bg-card);
-	color: var(--text-color);
 	font-family: var(--font-family);
 }
 .card-form-header {

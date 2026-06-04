@@ -49,7 +49,6 @@ defineEmits(["select"]);
 	border-radius: var(--border-radius-sm, 4px);
 	border: 1px solid color-mix(in srgb, var(--primary) 35%, var(--border-color));
 	background: color-mix(in srgb, var(--primary) 12%, var(--bg-card));
-	color: var(--text-color);
 	line-height: 1.3;
 	transition: background 0.15s ease, border-color 0.15s ease;
 }

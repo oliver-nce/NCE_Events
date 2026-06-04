@@ -1047,7 +1047,6 @@ function onSheets(panelPayload) {
 	font-size: 24pt;
 	font-weight: var(--font-weight-bold, 600);
 	font-family: var(--font-family);
-	color: var(--text-color);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;

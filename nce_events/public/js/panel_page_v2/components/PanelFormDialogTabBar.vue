@@ -84,7 +84,6 @@ const helpLabelEffective = computed(() => {
 	border: 1px solid var(--border-color);
 	border-radius: var(--border-radius-sm, 4px);
 	background: var(--bg-card);
-	color: var(--text-color);
 	font-size: var(--font-size-base, 14px);
 	font-weight: var(--font-weight-bold, 600);
 	cursor: pointer;

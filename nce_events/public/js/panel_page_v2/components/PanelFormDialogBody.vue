@@ -308,7 +308,6 @@ defineExpose({
 .ppv2-fd-section-label {
 	font-size: var(--font-size-base);
 	font-weight: var(--font-weight-bold);
-	color: var(--text-color);
 	margin: 0 0 8px;
 }
 .ppv2-fd-section-desc {
@@ -329,7 +328,6 @@ defineExpose({
 	padding: 10px 12px;
 	font-size: var(--font-size-base);
 	font-family: var(--font-family);
-	color: var(--text-color);
 	background: var(--control-bg, #f7fafc);
 	border: 1px solid var(--border-color, #e2e8f0);
 	border-radius: var(--border-radius-sm, 4px);

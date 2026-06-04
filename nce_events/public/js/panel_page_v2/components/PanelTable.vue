@@ -74,7 +74,7 @@
 								v-if="
 									col.is_link && col.link_doctype && getVal(row, col.fieldname)
 								"
-								class="ppv2-link-val"
+								class="ppv2-link-val text-link"
 								:href="formRoute(col.link_doctype, getVal(row, col.fieldname))"
 								target="_blank"
 								@click.stop
@@ -82,7 +82,7 @@
 							>
 							<span
 								v-else-if="col.is_related_link && col.related_doctype"
-								class="ppv2-related-link"
+								class="ppv2-related-link text-link"
 								@click.stop="
 									$emit('drill', {
 										doctype: col.related_doctype,
@@ -596,7 +596,6 @@ function startColResize(e, ci) {
 .ppv2-table td {
 	padding: 5px 8px;
 	border-bottom: 1px solid var(--border-color);
-	color: var(--text-color);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -614,21 +613,19 @@ function startColResize(e, ci) {
 }
 
 .ppv2-link-val {
-	color: royalblue;
 	text-decoration: underline;
 	cursor: pointer;
 }
 .ppv2-link-val:hover {
-	color: #1a3fb5;
+	color: var(--nce-color-primary);
 }
 
 .ppv2-related-link {
-	color: royalblue;
 	text-decoration: underline;
 	cursor: pointer;
 }
 .ppv2-related-link:hover {
-	color: #1a3fb5;
+	color: var(--nce-color-primary);
 }
 
 /* ── Row action buttons ── */
@@ -650,7 +647,6 @@ function startColResize(e, ci) {
 	background: var(--bg-card);
 	border: 1px solid var(--border-color);
 	border-radius: var(--border-radius-sm);
-	color: var(--text-color);
 	cursor: pointer;
 	font-size: var(--font-size-base);
 	line-height: 1;
@@ -658,7 +654,6 @@ function startColResize(e, ci) {
 .ppv2-row-btn:hover {
 	background: var(--bg-surface);
 	border-color: var(--border-color);
-	color: var(--text-color);
 }
 .ppv2-row-btn i {
 	margin: 0;
