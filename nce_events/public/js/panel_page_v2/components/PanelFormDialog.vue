@@ -32,7 +32,12 @@
 				</div>
 			</div>
 		</div>
-		<div class="ppv2-form-dialog ppv2-fd-dialog-root" :class="'ppv2-fd-size-' + form.dialogSize.value">
+		<div
+			ref="dialogEl"
+			class="ppv2-form-dialog ppv2-fd-dialog-root"
+			:class="'ppv2-fd-size-' + form.dialogSize.value"
+			:style="dialogStyle"
+		>
 			<div
 				v-if="readbackFooterPhase === 'readback-waiting'"
 				class="ppv2-fd-readback-overlay"
@@ -40,18 +45,20 @@
 			>
 				<div class="ppv2-fd-readback-spinner">{{ readbackUpdatingText }}</div>
 			</div>
-			<PanelFormDialogHeader
-				:row-nav-enabled="rowNavEnabledEffective"
-				:freeze-nav="findCriteriaActive"
-				:can-navigate-prev="canNavigatePrev"
-				:can-navigate-next="canNavigateNext"
-				:row-nav-label="rowNavLabel"
-				:title="form.dialogTitle.value"
-				:closable="headerClosable"
-				@close="onCancel"
-				@nav-prev="onNavPrevClick"
-				@nav-next="onNavNextClick"
-			/>
+			<div class="ppv2-fd-drag-handle" @mousedown="startDrag">
+				<PanelFormDialogHeader
+					:row-nav-enabled="rowNavEnabledEffective"
+					:freeze-nav="findCriteriaActive"
+					:can-navigate-prev="canNavigatePrev"
+					:can-navigate-next="canNavigateNext"
+					:row-nav-label="rowNavLabel"
+					:title="form.dialogTitle.value"
+					:closable="headerClosable"
+					@close="onCancel"
+					@nav-prev="onNavPrevClick"
+					@nav-next="onNavNextClick"
+				/>
+			</div>
 		<PanelFormDialogBody
 			ref="fdBodyRef"
 			:definition-name="definitionName"
@@ -105,6 +112,7 @@
 				@find-modify="emit('find-modify')"
 				@find-show-all="emit('find-show-all')"
 			/>
+			<div class="ppv2-fd-resize-handle" @mousedown.prevent="startResize" />
 		</div>
 	</div>
 </template>
@@ -196,6 +204,106 @@ const activeTab = ref(0);
 const findCriteria = reactive({});
 const fdBodyRef = ref(null);
 const backdropRef = ref(null);
+const dialogEl = ref(null);
+/** Drag offset from flex-centered origin; reset on each open. */
+const dx = ref(0);
+const dy = ref(0);
+/** Explicit size after corner resize; null = use dialog_size class width + auto height. */
+const dlgW = ref(null);
+const dlgH = ref(null);
+
+const dialogStyle = computed(() => {
+	const s = {
+		transform: `translate3d(${dx.value}px, ${dy.value}px, 0)`,
+	};
+	if (dlgW.value != null) s.width = `${dlgW.value}px`;
+	if (dlgH.value != null) s.height = `${dlgH.value}px`;
+	return s;
+});
+
+function resetDialogPositionAndSize() {
+	dx.value = 0;
+	dy.value = 0;
+	dlgW.value = null;
+	dlgH.value = null;
+}
+
+function _addDragResizeOverlay(cursor) {
+	const overlay = document.createElement("div");
+	overlay.style.cssText = `position:fixed;top:0;left:0;width:100%;height:100%;z-index:999999;cursor:${cursor};`;
+	document.body.appendChild(overlay);
+	return overlay;
+}
+
+function startDrag(e) {
+	if (
+		e.target.closest(
+			"button, input, select, textarea, a, [role='button'], .ppv2-fd-nav, .ppv2-fd-close",
+		)
+	) {
+		return;
+	}
+	e.preventDefault();
+	const sx = e.clientX;
+	const sy = e.clientY;
+	const odx = dx.value;
+	const ody = dy.value;
+	const el = dialogEl.value;
+	if (!el) return;
+	const overlay = _addDragResizeOverlay("move");
+
+	function onMove(ev) {
+		const ndx = odx + ev.clientX - sx;
+		const ndy = ody + ev.clientY - sy;
+		el.style.transform = `translate3d(${ndx}px, ${ndy}px, 0)`;
+	}
+	function onUp(ev) {
+		document.body.removeChild(overlay);
+		dx.value = odx + ev.clientX - sx;
+		dy.value = ody + ev.clientY - sy;
+		document.removeEventListener("mousemove", onMove);
+		document.removeEventListener("mouseup", onUp);
+	}
+	document.addEventListener("mousemove", onMove);
+	document.addEventListener("mouseup", onUp);
+}
+
+function startResize(e) {
+	const el = dialogEl.value;
+	if (!el) return;
+	const rect = el.getBoundingClientRect();
+	const sx = e.clientX;
+	const sy = e.clientY;
+	const ow = dlgW.value != null ? dlgW.value : rect.width;
+	const oh = dlgH.value != null ? dlgH.value : rect.height;
+	const overlay = _addDragResizeOverlay("nwse-resize");
+
+	const outline = document.createElement("div");
+	outline.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.top}px;width:${ow}px;height:${oh}px;border:1px solid var(--nce-color-primary, #4a5568);z-index:999998;pointer-events:none;box-sizing:border-box;`;
+	document.body.appendChild(outline);
+
+	const maxW = Math.floor(window.innerWidth * 0.95);
+	const maxH = Math.floor(window.innerHeight * 0.95);
+	const minW = 360;
+	const minH = 200;
+
+	function onMove(ev) {
+		const nw = Math.min(maxW, Math.max(minW, ow + ev.clientX - sx));
+		const nh = Math.min(maxH, Math.max(minH, oh + ev.clientY - sy));
+		outline.style.width = `${nw}px`;
+		outline.style.height = `${nh}px`;
+	}
+	function onUp(ev) {
+		document.body.removeChild(overlay);
+		document.body.removeChild(outline);
+		dlgW.value = Math.min(maxW, Math.max(minW, ow + ev.clientX - sx));
+		dlgH.value = Math.min(maxH, Math.max(minH, oh + ev.clientY - sy));
+		document.removeEventListener("mousemove", onMove);
+		document.removeEventListener("mouseup", onUp);
+	}
+	document.addEventListener("mousemove", onMove);
+	document.addEventListener("mouseup", onUp);
+}
 const relatedDirty = ref(false);
 const goToPanelBusy = ref(false);
 /** Bumped from this dialog when user clicks Show changes (related grids refetch). */
@@ -335,6 +443,7 @@ watch(
 			clearFindCriteriaBag();
 			return;
 		}
+		resetDialogPositionAndSize();
 		showFdLoadDebug.value = isFdLoadDebugEnabled();
 		readbackFooterPhase.value = "normal";
 		internalReloadTick.value = 0;
@@ -996,6 +1105,26 @@ async function onPlaceholderButton(btn) {
 	max-height: 90vh;
 	overflow: hidden;
 	position: relative;
+	will-change: transform;
+}
+.ppv2-fd-drag-handle {
+	flex-shrink: 0;
+	cursor: move;
+	user-select: none;
+}
+.ppv2-form-dialog :deep(.ppv2-fd-body) {
+	min-height: 0;
+}
+.ppv2-fd-resize-handle {
+	position: absolute;
+	bottom: 0;
+	right: 0;
+	width: 16px;
+	height: 16px;
+	cursor: nwse-resize;
+	background: linear-gradient(135deg, transparent 50%, var(--nce-color-border) 50%);
+	border-radius: 0 0 var(--border-radius) 0;
+	z-index: 5;
 }
 .ppv2-fd-readback-overlay {
 	position: absolute;
