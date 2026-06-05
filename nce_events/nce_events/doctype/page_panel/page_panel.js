@@ -3518,7 +3518,6 @@ frappe.ui.form.on("Page Panel", {
 		_ensure_tab_bar(frm);
 		_ensure_panel_id_controls(frm);
 		_ensure_query_refresh_button(frm);
-		_hide_format_rules_grid(frm);
 		_render_default_filters(frm);
 		// Hide Frappe's native tab bar (rendered when Tab Break fields exist in the DocType)
 		$(frm.layout.wrapper).find(".form-tabs-list, .nav-tabs").hide();
