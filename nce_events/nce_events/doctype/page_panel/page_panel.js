@@ -721,7 +721,15 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 				parent: frm.doc.name || "",
 			});
 		});
-		frm.doc.format_rules = formatRuleRows;
+		// Direct assignment to frm.doc bypasses Frappe's dirty tracking, so the form
+		// would report "No changes" on Save. Compare against the current rows and only
+		// assign + flag dirty when they actually differ — guarding against the no-op
+		// case keeps plain form loads (where _sync_all also runs) from dirtying.
+		if (_format_rules_signature(formatRuleRows) !== _format_rules_signature(frm.doc.format_rules)) {
+			frm.doc.format_rules = formatRuleRows;
+			frm.dirty();
+			frm.refresh_field("format_rules");
+		}
 		_refresh_fmt_buttons(matrices, sub_tabs, saved);
 	}
 
@@ -888,6 +896,24 @@ tr[draggable="true"]:active .matrix-drag-handle { cursor: grabbing; }
 function _pp_fmt_has_rule(saved, key) {
 	const fmtRule = (saved.format_rules || {})[key];
 	return !!(fmtRule && (fmtRule.condition_sql || "").trim());
+}
+
+/** Canonical signature of format-rule rows (meaningful fields only, order-independent) so
+ *  _sync_all can detect a real change before flagging the form dirty. */
+function _format_rules_signature(rows) {
+	return (rows || [])
+		.map(function (r) {
+			return [
+				(r.field_name || "").trim(),
+				(r.condition_sql || "").trim(),
+				(r.color || "").trim(),
+				(r.font_weight || "").trim(),
+				r.italic ? 1 : 0,
+				r.underline ? 1 : 0,
+			].join("\u0001");
+		})
+		.sort()
+		.join("\u0002");
 }
 
 function _pp_fmt_button_html(saved, key) {
