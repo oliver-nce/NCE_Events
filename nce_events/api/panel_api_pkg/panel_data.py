@@ -67,6 +67,37 @@ _SKIP_FIELDNAMES: frozenset[str] = frozenset(
 _ROSTER_HASH: str = "wwe78f6q87ey97f86q9e8fqw98ef"
 
 
+def _derived_order_clause(config: dict, display_fields: list[str]) -> str:
+	"""Build an outer ``ORDER BY`` for the wrapped ``( panel_sql ) AS rows`` query.
+
+	Returns an empty string when the order column isn't selectable in the derived
+	table (so we never error on an unknown column — we just fall back to the inner
+	query's best-effort order).
+	"""
+	order_by = (config.get("order_by") or "").strip() or "name ASC"
+	parts = order_by.split()
+	if not parts:
+		return ""
+	col = parts[0].strip("`")
+	direction = (" ".join(parts[1:]).strip() or "ASC").upper()
+	if direction not in ("ASC", "DESC"):
+		direction = "ASC"
+
+	known = {str(f).strip().lower() for f in display_fields if str(f).strip()}
+	known |= {str(f).strip().lower() for f in (config.get("search_fields") or []) if str(f).strip()}
+	known.add("name")
+	gender_column = (config.get("gender_column") or "").strip().lower()
+	if gender_column:
+		known.add(gender_column)
+	for f in display_fields:
+		if "." in f:
+			known.add(f.split(".", 1)[0].lower())
+
+	if col.lower() not in known:
+		return ""
+	return f" ORDER BY `{col}` {direction}"
+
+
 def _panel_config_from_doc(doc: Any) -> dict[str, Any]:
 	"""Build panel config dict from a Page Panel document (in-memory or loaded)."""
 	root_doctype = (doc.root_doctype or "").strip()
@@ -323,10 +354,38 @@ def get_panel_data(
 		stored_sql = (frappe.db.get_value("Page Panel", pp_name, "panel_sql") or "").strip()
 
 	if stored_sql:
-		rows = frappe.db.sql(stored_sql, as_dict=True)
+		base_sql, base_params = stored_sql, []
 	else:
-		sql, params = _build_panel_sql(root_doctype, filters=parsed_filters)
-		rows = frappe.db.sql(sql, params, as_dict=True)
+		base_sql, base_params = _build_panel_sql(
+			root_doctype, filters=parsed_filters, config=config
+		)
+
+	# Conditional formatting: fold a `_fmt_<field>` flag (1/0) per rule into the
+	# single data fetch by wrapping panel_sql as a derived table. The flag value
+	# rides along in the cached row data, so the client just reads `row._fmt_*` at
+	# render (like gender tinting) — no second query, no render-time SQL. Flags
+	# are computed fresh on every fetch, so they can never go stale, and panel_sql
+	# itself stays data-only.
+	fmt_rules = config.get("format_rules") or []
+	if fmt_rules:
+		from nce_events.api.panel_api_pkg.format_rules import build_format_case_columns
+
+		allowed_fields = {
+			str(f).strip().lower()
+			for f in (list(display_fields) + list(config.get("search_fields") or []))
+			if str(f).strip()
+		}
+		case_cols = build_format_case_columns(root_doctype, fmt_rules, allowed_fields=allowed_fields)
+		if case_cols:
+			# Re-apply ordering on the wrapper: MariaDB may drop a derived table's
+			# inner ORDER BY (no LIMIT), and the client preserves server order when
+			# no column sort is active.
+			order_clause = _derived_order_clause(config, display_fields)
+			base_sql = (
+				f"SELECT rows.*, {', '.join(case_cols)} FROM ({base_sql}) AS rows{order_clause}"
+			)
+
+	rows = frappe.db.sql(base_sql, base_params, as_dict=True)
 
 	child_doctypes = get_child_doctypes(root_doctype)
 	related_label_map: dict[str, str] = {f"_related_{c['doctype']}": c["label"] for c in child_doctypes}

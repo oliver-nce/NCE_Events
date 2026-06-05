@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import re
 
 import frappe
@@ -54,16 +55,22 @@ def _build_resolution_maps(root_doctype: str) -> tuple[dict, dict, set]:
 	return root_fields, related_lookup, sql_keywords
 
 
-def _resolve_references(condition_sql: str, root_doctype: str) -> str:
-	"""Translate user-friendly references into qualified SQL.
+def _rewrite_condition(condition_sql: str, root_doctype: str) -> str:
+	"""Rewrite friendly references to match the derived ``( panel_sql ) AS rows`` columns.
 
-	- bare `fieldname` → `` `tabRoot`.`fieldname` `` if it's a root field
-	- `related_dt.fieldname` → `` `tabRelated`.`fieldname` ``
+	The wrapped ``panel_sql`` already exposes every shown/search column with its
+	display alias, so we never qualify with ``tabRoot`` or inject joins — we only
+	point dotted references at the matching alias:
 
-	Anything not matching is left alone (keywords, literals, function calls).
+	- bare ``fieldname``      → left untouched (root columns are bare in panel_sql)
+	- ``RelatedDT.field``     → `` `linkfield.field` `` (mapped via the single Link)
+	- ``linkfield.field``     → `` `linkfield.field` `` (just backticked)
+
+	Keywords, literals and function calls are left alone. Anything that doesn't
+	resolve to a real column simply fails validation with "Unknown column", which
+	is exactly the shown/search-only guarantee.
 	"""
 	root_fields, related_lookup, keywords = _build_resolution_maps(root_doctype)
-	root_table = f"`tab{root_doctype}`"
 
 	def repl(m: re.Match) -> str:
 		left = m.group(1)
@@ -71,97 +78,104 @@ def _resolve_references(condition_sql: str, root_doctype: str) -> str:
 		left_l = left.lower()
 
 		if right is None:
-			if left_l in keywords:
-				return m.group(0)
-			if left_l in root_fields:
-				return f"{root_table}.`{root_fields[left_l]}`"
+			# Bare token: root columns are bare in panel_sql, so leave as-is.
 			return m.group(0)
 
 		if left_l in related_lookup:
-			_, target_dt = related_lookup[left_l]
-			return f"`tab{target_dt}`.`{right}`"
+			link_fn, _target_dt = related_lookup[left_l]
+			return f"`{link_fn}.{right}`"
 
 		if left_l in root_fields:
-			meta = frappe.get_meta(root_doctype)
-			for f in meta.fields:
-				if f.fieldname.lower() == left_l and f.fieldtype == "Link" and f.options:
-					return f"`tab{f.options}`.`{right}`"
+			return f"`{root_fields[left_l]}.{right}`"
 
 		return m.group(0)
 
 	return _TOKEN_RE.sub(repl, condition_sql)
 
 
-def _format_rules_need_related_joins(root_doctype: str, format_rules: list) -> bool:
-	"""True when any active rule references a table other than the root."""
-	root_table = f"`tab{root_doctype}`"
-	for rule in format_rules:
-		expr = (rule.get("condition_sql") or "").strip()
-		if not expr:
-			continue
-		try:
-			resolved = _resolve_references(expr, root_doctype)
-		except Exception:
-			continue
-		for token in re.findall(r"`tab([^`]+)`", resolved):
-			if token != root_doctype:
-				return True
-		if resolved != root_table and "`tab" in resolved and root_table not in resolved:
-			return True
-	return False
+def _referenced_field_keys(condition_sql: str, root_doctype: str) -> set[str]:
+	"""Display keys referenced by an expression (lowercased).
+
+	- bare root field            → ``fieldname``
+	- ``RelatedDT.field``        → ``<linkfield>.field`` (mapped via the single Link)
+	- ``linkfield.child``        → ``linkfield.child``
+
+	Quoted string literals are stripped first so values aren't mistaken for
+	field references. Used to enforce the shown/search-only restriction; the keys
+	line up with how columns are stored in ``column_order`` / ``search_fields``.
+	"""
+	root_fields, related_lookup, keywords = _build_resolution_maps(root_doctype)
+	expr = re.sub(r"'[^']*'", "", condition_sql or "")
+	expr = re.sub(r'"[^"]*"', "", expr)
+
+	keys: set[str] = set()
+	for m in _TOKEN_RE.finditer(expr):
+		left = m.group(1)
+		right = m.group(2)
+		ll = left.lower()
+		if right is None:
+			if ll in keywords:
+				continue
+			if ll in root_fields:
+				keys.add(ll)
+		else:
+			if ll in related_lookup:
+				link_fn, _dt = related_lookup[ll]
+				keys.add(f"{link_fn}.{right}".lower())
+			elif ll in root_fields:
+				keys.add(f"{ll}.{right}".lower())
+	return keys
 
 
-def _append_format_rule_sql(
+def build_format_case_columns(
 	root_doctype: str,
-	config: dict,
-	root_table: str,
-	select_parts: list[str],
-	join_clauses: list[str],
-	seen_joins: set[str],
-	link_targets: dict[str, str],
-) -> None:
-	"""Append CASE WHEN columns and any required JOINs for format rules."""
-	format_rules = config.get("format_rules") or []
-	if not format_rules:
-		return
+	format_rules: list[dict],
+	allowed_fields: set[str] | None = None,
+) -> list[str]:
+	"""Build ``CASE WHEN (...) THEN 1 ELSE 0 END AS `_fmt_<field>``` columns.
 
-	_, related_lookup, _ = _build_resolution_maps(root_doctype)
+	These are folded into the single data fetch by wrapping ``panel_sql`` as a
+	derived table (see ``get_panel_data``), so the flag value rides along in the
+	cached row data — no separate query, no render-time SQL. Flags are computed
+	fresh on every fetch, so they can never go stale relative to the rules.
 
+	Rules whose expression references fields outside ``allowed_fields`` (when
+	provided) are skipped defensively, mirroring the Validate-time restriction.
+	"""
+	cols: list[str] = []
 	for rule in format_rules:
 		expr = (rule.get("condition_sql") or "").strip()
 		field_name = (rule.get("field_name") or "").strip()
 		if not expr or not field_name:
 			continue
-		try:
-			resolved = _resolve_references(expr, root_doctype)
-		except Exception:
+		if allowed_fields is not None and (
+			_referenced_field_keys(expr, root_doctype) - allowed_fields
+		):
 			continue
-
+		rewritten = _rewrite_condition(expr, root_doctype)
 		flag = f"_fmt_{field_name.replace('.', '__')}"
-		select_parts.append(f"CASE WHEN ({resolved}) THEN 1 ELSE 0 END AS `{flag}`")
-
-		for _related_lower, (link_fn, target_dt) in related_lookup.items():
-			target_table = f"`tab{target_dt}`"
-			if target_table in resolved:
-				join_key = f"_fmt_{target_dt}"
-				if join_key not in seen_joins:
-					join_clauses.append(
-						f"LEFT JOIN {target_table} ON {root_table}.`{link_fn}` = {target_table}.`name`"
-					)
-					seen_joins.add(join_key)
-
-		for link_fn, target_dt in link_targets.items():
-			target_table = f"`tab{target_dt}`"
-			if target_table in resolved and link_fn not in seen_joins:
-				join_clauses.append(
-					f"LEFT JOIN {target_table} ON {root_table}.`{link_fn}` = {target_table}.`name`"
-				)
-				seen_joins.add(link_fn)
+		cols.append(f"CASE WHEN ({rewritten}) THEN 1 ELSE 0 END AS `{flag}`")
+	return cols
 
 
 @frappe.whitelist()
-def validate_format_rule(root_doctype: str, field_name: str, condition_sql: str) -> dict:
-	"""Resolve references and execute the expression against the root table with LIMIT 1.
+def validate_format_rule(
+	root_doctype: str,
+	field_name: str,
+	condition_sql: str,
+	allowed_fields: str | list | None = None,
+) -> dict:
+	"""Validate an expression by testing it against the panel's own query.
+
+	The condition is rewritten to the derived-table column names and probed via
+	``SELECT 1 FROM ( panel_sql ) AS rows WHERE (cond) LIMIT 1``. Because this is
+	the exact construct used at render time, a passing validation guarantees the
+	rule will evaluate at render. Referencing a column that isn't shown/search-only
+	fails here with "Unknown column".
+
+	When ``allowed_fields`` is supplied (shown ∪ search-only columns), a friendlier
+	pre-check is run first so the user sees a clear message instead of a raw SQL
+	error.
 
 	Returns {ok: True, resolved_sql} or {ok: False, error}.
 	"""
@@ -172,29 +186,38 @@ def validate_format_rule(root_doctype: str, field_name: str, condition_sql: str)
 	if not condition_sql:
 		return {"ok": False, "error": "Expression is empty."}
 
+	if allowed_fields is not None:
+		if isinstance(allowed_fields, str):
+			try:
+				allowed_list = json.loads(allowed_fields) if allowed_fields.strip() else []
+			except (ValueError, TypeError):
+				allowed_list = []
+		else:
+			allowed_list = allowed_fields
+		allowed_set = {str(f).strip().lower() for f in (allowed_list or []) if str(f).strip()}
+		missing = sorted(_referenced_field_keys(condition_sql, root_doctype) - allowed_set)
+		if missing:
+			return {
+				"ok": False,
+				"error": "Only shown or search-only columns may be referenced. Not allowed: "
+				+ ", ".join(missing),
+			}
+
+	rewritten = _rewrite_condition(condition_sql, root_doctype)
+
 	try:
-		resolved = _resolve_references(condition_sql, root_doctype)
+		from nce_events.api.panel_api_pkg.panel_data import get_panel_config
+		from nce_events.api.panel_api_pkg.sql import _build_panel_sql
+
+		panel_sql, params = _build_panel_sql(
+			root_doctype, config=get_panel_config(root_doctype)
+		)
 	except Exception as e:
-		return {"ok": False, "error": f"Reference resolution failed: {e}"}
+		return {"ok": False, "error": f"Could not build panel query: {e}"}
 
-	root_table = f"`tab{root_doctype}`"
-
-	join_clauses: list[str] = []
-	seen: set[str] = set()
-	_, related_lookup, _ = _build_resolution_maps(root_doctype)
-	for _related_lower, (link_fn, target_dt) in related_lookup.items():
-		if f"`tab{target_dt}`" in resolved and target_dt not in seen:
-			join_clauses.append(
-				f"LEFT JOIN `tab{target_dt}` ON {root_table}.`{link_fn}` = `tab{target_dt}`.`name`"
-			)
-			seen.add(target_dt)
-
-	probe = (
-		f"SELECT CASE WHEN ({resolved}) THEN 1 ELSE 0 END AS _fmt "
-		f"FROM {root_table} {' '.join(join_clauses)} LIMIT 1"
-	)
+	probe = f"SELECT 1 FROM ({panel_sql}) AS rows WHERE ({rewritten}) LIMIT 1"
 	try:
-		frappe.db.sql(probe)
-		return {"ok": True, "resolved_sql": resolved}
+		frappe.db.sql(probe, params)
+		return {"ok": True, "resolved_sql": rewritten}
 	except Exception as e:
 		return {"ok": False, "error": str(e)}

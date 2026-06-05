@@ -100,17 +100,11 @@ def _build_panel_sql(
 			params.append(val)
 	where_sql = f"WHERE {' AND '.join(where_parts)}" if where_parts else ""
 
-	from nce_events.api.panel_api_pkg.format_rules import (
-		_append_format_rule_sql,
-		_format_rules_need_related_joins,
-	)
-
-	format_rules = config.get("format_rules") or []
-	use_join_branch = bool(linked_fields) or _format_rules_need_related_joins(
-		root_doctype, format_rules
-	)
-
-	if use_join_branch:
+	# Conditional formatting flags are NOT part of panel_sql. At fetch time
+	# get_panel_data wraps this query as `( panel_sql ) AS rows` and appends one
+	# `_fmt_<field>` CASE column per rule (see format_rules.build_format_case_columns),
+	# so the cached panel_sql stays data-only and flags can never go stale.
+	if linked_fields:
 		select_parts: list[str] = [f"{root_table}.`{f}`" for f in simple_fields]
 		join_clauses: list[str] = []
 		seen_joins: set[str] = set()
@@ -127,16 +121,6 @@ def _build_panel_sql(
 			for cf in cfs:
 				select_parts.append(f"{target_table}.`{cf}` AS `{lf}.{cf}`")
 
-		_append_format_rule_sql(
-			root_doctype,
-			config,
-			root_table,
-			select_parts,
-			join_clauses,
-			seen_joins,
-			link_targets,
-		)
-
 		sql = (
 			f"SELECT {', '.join(select_parts)} "
 			f"FROM {root_table} "
@@ -146,20 +130,8 @@ def _build_panel_sql(
 		).strip()
 	else:
 		select_parts = [f"{root_table}.`{f}`" for f in simple_fields]
-		join_clauses: list[str] = []
-		seen_joins: set[str] = set()
-		_append_format_rule_sql(
-			root_doctype,
-			config,
-			root_table,
-			select_parts,
-			join_clauses,
-			seen_joins,
-			link_targets,
-		)
-		join_sql = f" {' '.join(join_clauses)} " if join_clauses else " "
 		sql = (
-			f"SELECT {', '.join(select_parts)} FROM {root_table}{join_sql}{where_sql} ORDER BY {qualified_order}"
+			f"SELECT {', '.join(select_parts)} FROM {root_table} {where_sql} ORDER BY {qualified_order}"
 		).strip()
 
 	return sql, params

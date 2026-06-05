@@ -78,8 +78,9 @@
 								v-if="
 									col.is_link && col.link_doctype && getVal(row, col.fieldname)
 								"
-								class="ppv2-link-val theme-text-link"
-								:class="{ 'theme-text-primary': hoveredLinkKey === linkKey(row, col) }"
+								class="ppv2-link-val"
+								:class="linkCellClasses(row, col, linkKey(row, col))"
+								:style="linkCellStyle(row, col)"
 								@mouseenter="hoveredLinkKey = linkKey(row, col)"
 								@mouseleave="hoveredLinkKey = null"
 								:href="formRoute(col.link_doctype, getVal(row, col.fieldname))"
@@ -89,8 +90,9 @@
 							>
 							<span
 								v-else-if="col.is_related_link && col.related_doctype"
-								class="ppv2-related-link theme-text-link"
-								:class="{ 'theme-text-primary': hoveredLinkKey === linkKey(row, col) }"
+								class="ppv2-related-link"
+								:class="linkCellClasses(row, col, linkKey(row, col))"
+								:style="linkCellStyle(row, col)"
 								@mouseenter="hoveredLinkKey = linkKey(row, col)"
 								@mouseleave="hoveredLinkKey = null"
 								@click.stop="
@@ -467,13 +469,19 @@ const genderTintSet = computed(() => {
 	return s;
 });
 
-const formatRulesByCol = computed(() => {
-	const m = {};
-	(props.config.format_rules || []).forEach((r) => {
-		m[r.field_name.toLowerCase()] = r;
-	});
-	return m;
-});
+function formatRuleForColumn(col) {
+	const rules = props.config?.format_rules || [];
+	for (let i = 0; i < rules.length; i++) {
+		if (fieldKeyMatchesColumn(rules[i].field_name, col)) return rules[i];
+	}
+	return null;
+}
+
+function isFormatRuleActive(row, col) {
+	const rule = formatRuleForColumn(col);
+	if (!rule) return false;
+	return Number(panelRowVal(row, rule.flag_key)) === 1;
+}
 
 const genderCol = computed(() => (props.config.gender_column || "").trim().toLowerCase());
 const maleHex = computed(() => (props.config.male_hex || "").trim());
@@ -550,21 +558,50 @@ function genderColor(row, col) {
 	return "";
 }
 
+function activeFormatRule(row, col) {
+	return isFormatRuleActive(row, col) ? formatRuleForColumn(col) : null;
+}
+
+/** Same layering as bold: base panel styles on <td>, format overrides only what it sets. */
 function cellStyle(row, col) {
-	// Body text color comes from the theme (Body Text picker → --nce-color-text);
-	// gender tint (categorical, panel-configured) overrides it when present.
-	const style = { color: genderColor(row, col) || "var(--nce-color-text)" };
-	// Panel bold_fields / title_field are appended to the inline style (bold is not a theme token).
+	const style = {
+		color: genderColor(row, col) || "var(--nce-color-text)",
+	};
 	if (isBoldColumn(col)) style.fontWeight = "700";
 
-	const rule = formatRulesByCol.value[String(col.fieldname).toLowerCase()];
-	if (rule && Number(row[rule.flag_key]) === 1) {
+	const rule = activeFormatRule(row, col);
+	if (rule) {
 		if (rule.color) style.color = rule.color;
 		if (rule.font_weight) style.fontWeight = rule.font_weight;
 		if (rule.italic) style.fontStyle = "italic";
 		if (rule.underline) style.textDecoration = "underline";
 	}
 	return style;
+}
+
+/** Link cells need inline color when format/gender tint beats theme-text-link. */
+function linkCellStyle(row, col) {
+	const rule = activeFormatRule(row, col);
+	const style = {};
+	if (rule?.color) {
+		style.color = rule.color;
+	} else {
+		const gc = genderColor(row, col);
+		if (gc) style.color = gc;
+	}
+	return style;
+}
+
+function linkCellClasses(row, col, hoverKey) {
+	const rule = activeFormatRule(row, col);
+	const hovered = hoveredLinkKey.value === hoverKey;
+	const hasColorOverride = !!(rule?.color || genderColor(row, col));
+	const classes = {};
+	if (!hasColorOverride) {
+		classes["theme-text-link"] = true;
+		if (hovered) classes["theme-text-primary"] = true;
+	}
+	return classes;
 }
 
 function startColResize(e, ci) {

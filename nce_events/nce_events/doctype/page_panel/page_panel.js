@@ -1085,6 +1085,9 @@ function _open_format_rule_dialog(frm, saved, fieldKey, _sync_all) {
 			rootDoctype: frm.doc.root_doctype,
 			fieldName: fieldKey,
 			rule: rule,
+			allowedFields: _parse_csv(frm.doc.column_order).concat(
+				_parse_csv(frm.doc.search_fields)
+			),
 			onUpdate: function (r) {
 				Object.assign(rule, r);
 			},

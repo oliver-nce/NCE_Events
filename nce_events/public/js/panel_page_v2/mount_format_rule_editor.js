@@ -11,6 +11,7 @@ export function mountFormatRuleEditor(containerEl, options) {
 					rootDoctype: options.rootDoctype,
 					fieldName: options.fieldName,
 					rule,
+					allowedFields: options.allowedFields || [],
 					"onUpdate:rule": (r) => {
 						Object.assign(rule, r);
 						options.onUpdate?.(r);

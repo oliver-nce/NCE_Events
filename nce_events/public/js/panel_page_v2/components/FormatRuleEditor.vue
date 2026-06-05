@@ -112,6 +112,7 @@ const props = defineProps({
 	rootDoctype: { type: String, required: true },
 	fieldName: { type: String, required: true },
 	rule: { type: Object, required: true },
+	allowedFields: { type: Array, default: () => [] },
 });
 
 const emit = defineEmits(["update:rule", "validated", "apply", "clear", "cancel"]);
@@ -202,6 +203,7 @@ function validate() {
 			root_doctype: props.rootDoctype,
 			field_name: props.fieldName,
 			condition_sql,
+			allowed_fields: JSON.stringify(props.allowedFields || []),
 		},
 		callback(r) {
 			validating.value = false;
@@ -229,8 +231,8 @@ function validate() {
 
 <style scoped>
 .pp-fmt-editor {
-	font-size: 13px;
-	color: #36414c;
+	font-size: var(--nce-font-size, 13px);
+	color: var(--nce-color-text, #36414c);
 }
 
 .pp-fmt-header {
@@ -243,7 +245,7 @@ function validate() {
 .pp-fmt-section {
 	margin-bottom: 14px;
 	padding-top: 8px;
-	border-top: 1px solid #d1d8dd;
+	border-top: 1px solid var(--nce-color-border, #d1d8dd);
 }
 
 .pp-fmt-label {
@@ -256,17 +258,17 @@ function validate() {
 	width: 100%;
 	box-sizing: border-box;
 	font-family: monospace;
-	font-size: 12px;
+	font-size: calc(var(--nce-font-size, 13px) * 0.92);
 	padding: 8px;
-	border: 1px solid #d1d8dd;
+	border: 1px solid var(--nce-color-border, #d1d8dd);
 	border-radius: 4px;
 	resize: vertical;
 }
 
 .pp-fmt-hint {
 	margin: 4px 0 8px;
-	font-size: 11px;
-	color: #8d949a;
+	font-size: calc(var(--nce-font-size, 13px) * 0.85);
+	color: var(--nce-color-muted, #8d949a);
 }
 
 .pp-fmt-validate-row {
@@ -276,13 +278,13 @@ function validate() {
 }
 
 .pp-fmt-ok {
-	color: #28a745;
-	font-size: 12px;
+	color: var(--nce-color-success, #28a745);
+	font-size: calc(var(--nce-font-size, 13px) * 0.92);
 }
 
 .pp-fmt-err {
-	color: #e74c3c;
-	font-size: 12px;
+	color: var(--nce-color-danger, #e74c3c);
+	font-size: calc(var(--nce-font-size, 13px) * 0.92);
 }
 
 .pp-fmt-style-row {
@@ -302,7 +304,7 @@ function validate() {
 .pp-fmt-select {
 	min-width: 90px;
 	padding: 4px 6px;
-	border: 1px solid #d1d8dd;
+	border: 1px solid var(--nce-color-border, #d1d8dd);
 	border-radius: 4px;
 }
 
@@ -311,6 +313,6 @@ function validate() {
 	justify-content: flex-end;
 	gap: 8px;
 	padding-top: 8px;
-	border-top: 1px solid #d1d8dd;
+	border-top: 1px solid var(--nce-color-border, #d1d8dd);
 }
 </style>

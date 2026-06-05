@@ -9,9 +9,9 @@
 		>
 			<span
 				class="w-6 h-6 rounded shrink-0 border border-gray-100"
-				:style="{ backgroundColor: modelValue || '#3B82F6' }"
+				:style="{ backgroundColor: modelValue || defaultHex }"
 			/>
-			<span class="text-xs font-mono text-gray-600 truncate">{{ modelValue || "#3B82F6" }}</span>
+			<span class="text-xs font-mono text-gray-600 truncate">{{ modelValue || defaultHex }}</span>
 			<span class="ml-auto text-gray-400 text-[10px]">&#9660;</span>
 		</button>
 
@@ -185,6 +185,8 @@ const props = defineProps({
 
 const emit = defineEmits(["update:modelValue"]);
 
+const defaultHex = "#3B82F6"; // theme-exempt: literal default picker swatch
+
 const open = ref(false);
 const showCopied = ref(false);
 const selectedHex = ref("");
@@ -266,166 +268,26 @@ function clamp(v, lo, hi) {
 
 const currentHex = computed(() => hsvToHex(hsv.h, hsv.s, hsv.v));
 
-const satGradient = computed(() => `linear-gradient(to right, #888, hsl(${hsv.h},100%,50%))`);
-const valGradient = computed(() => `linear-gradient(to right, #000, hsl(${hsv.h},100%,50%))`);
+const satGradient = computed(() => `linear-gradient(to right, #888, hsl(${hsv.h},100%,50%))`); // theme-exempt: literal saturation gradient
+const valGradient = computed(() => `linear-gradient(to right, #000, hsl(${hsv.h},100%,50%))`); // theme-exempt: literal value gradient
 
-const topRow = [
-	"#FF2600",
-	"#FF9300",
-	"#FFFB00",
-	"#00F900",
-	"#00FDFF",
-	"#0433FF",
-	"#FF40FF",
-	"#942192",
-	"#AA7942",
-	"#FFFFFF",
-	"#8E8E93",
-	"#000000",
-];
+// prettier-ignore
+const topRow = ["#FF2600", "#FF9300", "#FFFB00", "#00F900", "#00FDFF", "#0433FF", "#FF40FF", "#942192", "#AA7942", "#FFFFFF", "#8E8E93", "#000000"]; // theme-exempt: literal picker swatches
 
-const grayRow = [
-	null,
-	"#FFFFFF",
-	"#EBEBEB",
-	"#D6D6D6",
-	"#C0C0C0",
-	"#ABABAB",
-	"#939393",
-	"#7A7A7A",
-	"#5F5F5F",
-	"#444444",
-	"#232323",
-	"#000000",
-];
+// prettier-ignore
+const grayRow = [null, "#FFFFFF", "#EBEBEB", "#D6D6D6", "#C0C0C0", "#ABABAB", "#939393", "#7A7A7A", "#5F5F5F", "#444444", "#232323", "#000000"]; // theme-exempt: literal picker swatches
 
+// prettier-ignore
 const gridRows = [
-	[
-		"#00313F",
-		"#001D4C",
-		"#12013B",
-		"#2E043E",
-		"#3D071C",
-		"#5C0700",
-		"#5B1B01",
-		"#573501",
-		"#563D01",
-		"#666101",
-		"#4F5604",
-		"#263D0F",
-	],
-	[
-		"#014D63",
-		"#002F7B",
-		"#1B0853",
-		"#430E59",
-		"#56102A",
-		"#821100",
-		"#7C2A01",
-		"#7B4A02",
-		"#775801",
-		"#8C8700",
-		"#707607",
-		"#375819",
-	],
-	[
-		"#026E8E",
-		"#0142A9",
-		"#2C1276",
-		"#61187C",
-		"#781A3E",
-		"#B61A01",
-		"#AD3F00",
-		"#A96801",
-		"#A77B01",
-		"#C4BC01",
-		"#9BA60E",
-		"#4F7A28",
-	],
-	[
-		"#018DB4",
-		"#0157D7",
-		"#371A96",
-		"#7B209E",
-		"#9A234E",
-		"#E22400",
-		"#DA5100",
-		"#D48601",
-		"#D29F01",
-		"#F5EC00",
-		"#C5D117",
-		"#679C33",
-	],
-	[
-		"#00A2D7",
-		"#0062FE",
-		"#4E22B3",
-		"#992ABD",
-		"#BF2E66",
-		"#FF4112",
-		"#FF6A01",
-		"#FEAA00",
-		"#FEC802",
-		"#FFFC40",
-		"#DAEB38",
-		"#77BB40",
-	],
-	[
-		"#00C7FC",
-		"#3A8AFC",
-		"#5E30EA",
-		"#BD39F3",
-		"#E53C7A",
-		"#FF6251",
-		"#FF8548",
-		"#FEB440",
-		"#FECA3E",
-		"#FFF86B",
-		"#E4EF65",
-		"#97D25F",
-	],
-	[
-		"#52D4FD",
-		"#74A7FF",
-		"#864EFE",
-		"#D258FE",
-		"#EC719F",
-		"#FF8D81",
-		"#FEA57D",
-		"#FFC879",
-		"#FFD876",
-		"#FFF894",
-		"#EAF48F",
-		"#B1DE8B",
-	],
-	[
-		"#93D9F7",
-		"#A4C7FF",
-		"#B18CFF",
-		"#DF90FC",
-		"#F4A4C1",
-		"#FFB5AE",
-		"#FFC4AA",
-		"#FED9A8",
-		"#FFE4A9",
-		"#FEFBB8",
-		"#F2F8B8",
-		"#CBE8B5",
-	],
-	[
-		"#D1E6F1",
-		"#D4E4FE",
-		"#D7CEFD",
-		"#F0CAFD",
-		"#F9D2E2",
-		"#FFDBD9",
-		"#FEE2D5",
-		"#FFEDD6",
-		"#FFF2D4",
-		"#FEFCDD",
-		"#F7FADB",
-		"#E0EDD4",
-	],
+	["#00313F", "#001D4C", "#12013B", "#2E043E", "#3D071C", "#5C0700", "#5B1B01", "#573501", "#563D01", "#666101", "#4F5604", "#263D0F"], // theme-exempt: literal picker swatches
+	["#014D63", "#002F7B", "#1B0853", "#430E59", "#56102A", "#821100", "#7C2A01", "#7B4A02", "#775801", "#8C8700", "#707607", "#375819"], // theme-exempt: literal picker swatches
+	["#026E8E", "#0142A9", "#2C1276", "#61187C", "#781A3E", "#B61A01", "#AD3F00", "#A96801", "#A77B01", "#C4BC01", "#9BA60E", "#4F7A28"], // theme-exempt: literal picker swatches
+	["#018DB4", "#0157D7", "#371A96", "#7B209E", "#9A234E", "#E22400", "#DA5100", "#D48601", "#D29F01", "#F5EC00", "#C5D117", "#679C33"], // theme-exempt: literal picker swatches
+	["#00A2D7", "#0062FE", "#4E22B3", "#992ABD", "#BF2E66", "#FF4112", "#FF6A01", "#FEAA00", "#FEC802", "#FFFC40", "#DAEB38", "#77BB40"], // theme-exempt: literal picker swatches
+	["#00C7FC", "#3A8AFC", "#5E30EA", "#BD39F3", "#E53C7A", "#FF6251", "#FF8548", "#FEB440", "#FECA3E", "#FFF86B", "#E4EF65", "#97D25F"], // theme-exempt: literal picker swatches
+	["#52D4FD", "#74A7FF", "#864EFE", "#D258FE", "#EC719F", "#FF8D81", "#FEA57D", "#FFC879", "#FFD876", "#FFF894", "#EAF48F", "#B1DE8B"], // theme-exempt: literal picker swatches
+	["#93D9F7", "#A4C7FF", "#B18CFF", "#DF90FC", "#F4A4C1", "#FFB5AE", "#FFC4AA", "#FED9A8", "#FFE4A9", "#FEFBB8", "#F2F8B8", "#CBE8B5"], // theme-exempt: literal picker swatches
+	["#D1E6F1", "#D4E4FE", "#D7CEFD", "#F0CAFD", "#F9D2E2", "#FFDBD9", "#FEE2D5", "#FFEDD6", "#FFF2D4", "#FEFCDD", "#F7FADB", "#E0EDD4"], // theme-exempt: literal picker swatches
 ];
 
 function selectFromGrid(hex) {
@@ -481,7 +343,7 @@ function apply() {
 	z-index: 50;
 	margin-top: 4px;
 	left: 0;
-	background: white;
+	background: var(--nce-color-surface, #ffffff);
 	border: 1px solid rgba(0, 0, 0, 0.12);
 	border-radius: 12px;
 	padding: 16px;
@@ -538,21 +400,14 @@ function apply() {
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 .grid-cell.selected {
-	outline: 2px solid #333;
+	outline: 2px solid var(--nce-color-text, #333333);
 	outline-offset: 1px;
 }
 .grid-spacer {
 	height: 6px;
 }
 .grid-cell.no-fill {
-	background: #fff
-		linear-gradient(
-			to bottom left,
-			transparent calc(50% - 1px),
-			#ff3b30 calc(50% - 1px),
-			#ff3b30 calc(50% + 1px),
-			transparent calc(50% + 1px)
-		) !important;
+	background: #fff linear-gradient(to bottom left, transparent calc(50% - 1px), #ff3b30 calc(50% - 1px), #ff3b30 calc(50% + 1px), transparent calc(50% + 1px)) !important; /* theme-exempt: literal no-fill marker */
 	cursor: default;
 }
 
@@ -577,9 +432,9 @@ function apply() {
 }
 .hsv-row label {
 	width: 14px;
-	font-size: 11px;
+	font-size: calc(var(--nce-font-size, 13px) * 0.85);
 	font-weight: 600;
-	color: #666;
+	color: var(--nce-color-muted, #666666);
 }
 .hsv-row input[type="range"] {
 	flex: 1;
@@ -593,17 +448,17 @@ function apply() {
 	width: 16px;
 	height: 16px;
 	border-radius: 50%;
-	background: white;
-	border: 2px solid #666;
+	background: var(--nce-color-surface, #ffffff);
+	border: 2px solid var(--nce-color-muted, #666666);
 	cursor: pointer;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 .hsv-row input[type="number"] {
 	width: 48px;
 	padding: 3px 4px;
-	border: 1px solid #ccc;
+	border: 1px solid var(--nce-color-border, #cccccc);
 	border-radius: 4px;
-	font-size: 11px;
+	font-size: calc(var(--nce-font-size, 13px) * 0.85);
 	text-align: center;
 }
 .hue-slider {
@@ -628,10 +483,10 @@ function apply() {
 .hex-input {
 	flex: 1;
 	padding: 5px 7px;
-	border: 1px solid #ccc;
+	border: 1px solid var(--nce-color-border, #cccccc);
 	border-radius: 4px;
 	font-family: monospace;
-	font-size: 12px;
+	font-size: calc(var(--nce-font-size, 13px) * 0.92);
 }
 .hex-btn {
 	width: 28px;
@@ -644,31 +499,31 @@ function apply() {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: #666;
+	color: var(--nce-color-muted, #666666);
 }
 .hex-btn:hover {
-	background: #e5e5e5;
-	color: #333;
+	background: var(--nce-color-row-alt, #e5e5e5);
+	color: var(--nce-color-text, #333333);
 }
 .copied-text {
-	font-size: 10px;
-	color: #10b981;
+	font-size: calc(var(--nce-font-size, 13px) * 0.77);
+	color: var(--nce-color-success, #10b981);
 	white-space: nowrap;
 }
 
 .apply-btn {
 	width: 100%;
 	padding: 7px 0;
-	background: #111;
-	color: white;
+	background: #111; /* theme-exempt: deliberate black apply button */
+	color: white; /* theme-exempt: deliberate black apply button */
 	border: none;
 	border-radius: 6px;
-	font-size: 12px;
+	font-size: calc(var(--nce-font-size, 13px) * 0.92);
 	font-weight: 600;
 	cursor: pointer;
 	transition: background 0.15s;
 }
 .apply-btn:hover {
-	background: #333;
+	background: #333; /* theme-exempt: deliberate black apply button */
 }
 </style>
