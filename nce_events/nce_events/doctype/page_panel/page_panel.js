@@ -704,19 +704,24 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		frm.set_value("title_field", ntf);
 		frm.set_value("search_fields", ns.join(", "));
 
-		frm.clear_table("format_rules");
+		const formatRuleRows = [];
 		Object.entries(saved.format_rules || {}).forEach(function ([fn, r]) {
 			if (!(r.condition_sql || "").trim()) return;
-			const row = frm.add_child("format_rules");
-			row.field_name = fn;
-			row.condition_sql = r.condition_sql;
-			row.color = r.color || "";
-			row.font_weight = r.font_weight || "";
-			row.italic = r.italic ? 1 : 0;
-			row.underline = r.underline ? 1 : 0;
-			row.last_validated_sql = r.last_validated_sql || "";
+			formatRuleRows.push({
+				field_name: fn,
+				condition_sql: r.condition_sql,
+				color: r.color || "",
+				font_weight: r.font_weight || "",
+				italic: r.italic ? 1 : 0,
+				underline: r.underline ? 1 : 0,
+				last_validated_sql: r.last_validated_sql || "",
+				doctype: "Page Panel Format Rule",
+				parenttype: "Page Panel",
+				parentfield: "format_rules",
+				parent: frm.doc.name || "",
+			});
 		});
-		frm.refresh_field("format_rules");
+		frm.doc.format_rules = formatRuleRows;
 	}
 
 	// Show ↔ Search Only mutual exclusion: checking one clears the other on the same row
@@ -1013,8 +1018,8 @@ function _open_format_rule_dialog(frm, saved, fieldKey, _sync_all) {
 			onUpdate: function (r) {
 				Object.assign(rule, r);
 			},
-			onApply: function () {
-				saved.format_rules[fieldKey] = Object.assign({}, rule);
+			onApply: function (appliedRule) {
+				saved.format_rules[fieldKey] = Object.assign({}, rule, appliedRule || {});
 				_sync_all();
 				_teardown();
 				d.hide();

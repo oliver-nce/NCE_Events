@@ -18,7 +18,7 @@ export function mountFormatRuleEditor(containerEl, options) {
 					onValidated: (sql) => {
 						rule.last_validated_sql = sql;
 					},
-					onApply: () => options.onApply?.(),
+					onApply: (appliedRule) => options.onApply?.(appliedRule),
 					onClear: () => options.onClear?.(),
 					onCancel: () => options.onCancel?.(),
 				});

@@ -4802,7 +4802,7 @@ const di = (e, t) => {
             class: "pp-fmt-select",
             onChange: F
           }, [...v[15] || (v[15] = [
-            to('<option value="200" data-v-960ef005>200</option><option value="300" data-v-960ef005>300</option><option value="400" data-v-960ef005>400</option><option value="500" data-v-960ef005>500</option><option value="600" data-v-960ef005>600</option><option value="700" data-v-960ef005>700</option><option value="800" data-v-960ef005>800</option>', 7)
+            to('<option value="200" data-v-1422b6d2>200</option><option value="300" data-v-1422b6d2>300</option><option value="400" data-v-1422b6d2>400</option><option value="500" data-v-1422b6d2>500</option><option value="600" data-v-1422b6d2>600</option><option value="700" data-v-1422b6d2>700</option><option value="800" data-v-1422b6d2>800</option>', 7)
           ])], 544)), [
             [Bo, r.font_weight]
           ]) : et("", !0)
@@ -4846,12 +4846,12 @@ const di = (e, t) => {
           type: "button",
           class: "btn btn-sm btn-primary",
           disabled: !x.value,
-          onClick: v[9] || (v[9] = (I) => M.$emit("apply"))
+          onClick: v[9] || (v[9] = (I) => M.$emit("apply", { ...r }))
         }, " Apply ", 8, Mc)
       ])
     ]));
   }
-}, Ic = /* @__PURE__ */ di(Oc, [["__scopeId", "data-v-960ef005"]]);
+}, Ic = /* @__PURE__ */ di(Oc, [["__scopeId", "data-v-1422b6d2"]]);
 function Rc(e, t) {
   const s = t.rule || {}, n = No({
     setup() {
@@ -4866,9 +4866,9 @@ function Rc(e, t) {
         onValidated: (r) => {
           s.last_validated_sql = r;
         },
-        onApply: () => {
-          var r;
-          return (r = t.onApply) == null ? void 0 : r.call(t);
+        onApply: (r) => {
+          var i;
+          return (i = t.onApply) == null ? void 0 : i.call(t, r);
         },
         onClear: () => {
           var r;

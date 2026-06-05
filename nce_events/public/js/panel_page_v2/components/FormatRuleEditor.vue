@@ -91,7 +91,12 @@
 
 		<div class="pp-fmt-footer">
 			<button type="button" class="btn btn-sm btn-default" @click="$emit('cancel')">Cancel</button>
-			<button type="button" class="btn btn-sm btn-primary" :disabled="!canApply" @click="$emit('apply')">
+			<button
+				type="button"
+				class="btn btn-sm btn-primary"
+				:disabled="!canApply"
+				@click="$emit('apply', { ...localRule })"
+			>
 				Apply
 			</button>
 		</div>
