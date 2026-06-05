@@ -1,0 +1,76 @@
+{
+  "actions": [],
+  "creation": "2026-06-05 00:00:00.000000",
+  "doctype": "DocType",
+  "engine": "InnoDB",
+  "field_order": [
+    "field_name",
+    "condition_sql",
+    "color",
+    "font_weight",
+    "italic",
+    "underline",
+    "last_validated_sql"
+  ],
+  "fields": [
+    {
+      "fieldname": "field_name",
+      "fieldtype": "Data",
+      "in_list_view": 1,
+      "label": "Field Name",
+      "reqd": 1,
+      "description": "Column key this rule targets. Either a root field (event_name) or related-DocType field (venues.location)."
+    },
+    {
+      "fieldname": "condition_sql",
+      "fieldtype": "Small Text",
+      "in_list_view": 1,
+      "label": "Condition SQL",
+      "reqd": 1,
+      "description": "Boolean expression. Wrapped as CASE WHEN (<expr>) THEN 1 ELSE 0 END. No `tab` prefix needed. Use bare field names for root fields, <related_dt>.<field> for joined fields."
+    },
+    {
+      "fieldname": "color",
+      "fieldtype": "Data",
+      "label": "Color",
+      "description": "Hex color (#RRGGBB). Blank = do not override color."
+    },
+    {
+      "fieldname": "font_weight",
+      "fieldtype": "Select",
+      "label": "Font Weight",
+      "options": "\n200\n300\n400\n500\n600\n700\n800",
+      "description": "Blank = do not override weight."
+    },
+    {
+      "default": "0",
+      "fieldname": "italic",
+      "fieldtype": "Check",
+      "label": "Italic"
+    },
+    {
+      "default": "0",
+      "fieldname": "underline",
+      "fieldtype": "Check",
+      "label": "Underline"
+    },
+    {
+      "fieldname": "last_validated_sql",
+      "fieldtype": "Small Text",
+      "hidden": 1,
+      "label": "Last Validated SQL",
+      "description": "Resolved SQL captured by the Validate button. Used to verify save-time text matches what was validated."
+    }
+  ],
+  "istable": 1,
+  "modified": "2026-06-05 00:00:00.000000",
+  "modified_by": "Administrator",
+  "module": "NCE Events",
+  "name": "Page Panel Format Rule",
+  "owner": "Administrator",
+  "permissions": [],
+  "sort_field": "modified",
+  "sort_order": "DESC",
+  "states": [],
+  "track_changes": 0
+}

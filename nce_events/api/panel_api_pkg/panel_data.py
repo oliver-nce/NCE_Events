@@ -153,6 +153,24 @@ def _panel_config_from_doc(doc: Any) -> dict[str, Any]:
 		g = cc.get("gender")
 		if g in ("Male", "Female"):
 			tint_by_gender[cc["field_name"].lower()] = g
+
+	format_rules = []
+	for r in doc.format_rules or []:
+		fn = (r.field_name or "").strip()
+		if not fn or not (r.condition_sql or "").strip():
+			continue
+		format_rules.append(
+			{
+				"field_name": fn,
+				"condition_sql": r.condition_sql,
+				"color": (r.color or "").strip() or None,
+				"font_weight": (r.font_weight or "").strip() or None,
+				"italic": bool(r.italic),
+				"underline": bool(r.underline),
+				"flag_key": f"_fmt_{fn.replace('.', '__')}",
+			}
+		)
+
 	default_filters = [
 		{"field": row.field, "op": row.op, "value": row.value}
 		for row in (doc.default_filters or [])
@@ -174,6 +192,7 @@ def _panel_config_from_doc(doc: Any) -> dict[str, Any]:
 		"search_only_columns": search_only_cols,
 		"effective_searchable": list(dict.fromkeys(column_order + search_only_fields)),
 		"tint_by_gender": tint_by_gender,
+		"format_rules": format_rules,
 		"computed_columns": computed_columns,
 		"show_filter": doc.show_filter,
 		"show_sheets": doc.show_sheets,
@@ -213,6 +232,7 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 			"search_only_columns": [],
 			"effective_searchable": [],
 			"tint_by_gender": {},
+			"format_rules": [],
 			"computed_columns": [],
 			"show_filter": 1,
 			"show_sheets": 1,

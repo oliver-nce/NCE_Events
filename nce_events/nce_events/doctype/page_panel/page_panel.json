@@ -12,6 +12,7 @@
     "order_by",
     "section_break_computed",
     "unstored_calculation_fields",
+    "format_rules",
     "column_order",
     "bold_fields",
     "gender_column",
@@ -76,6 +77,13 @@
       "fieldtype": "Table",
       "label": "Computed Columns",
       "options": "Page Panel Computed Column"
+    },
+    {
+      "description": "Per-column conditional formatting rules (managed by Display tab).",
+      "fieldname": "format_rules",
+      "fieldtype": "Table",
+      "label": "Conditional Formatting Rules",
+      "options": "Page Panel Format Rule"
     },
     {
       "description": "Comma-delimited visible fields in display order (managed by Display tab)",

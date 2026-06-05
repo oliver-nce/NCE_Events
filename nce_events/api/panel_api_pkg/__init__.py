@@ -24,6 +24,7 @@ from nce_events.api.panel_api_pkg.core_filters import (
 	_ensure_tab_prefix,
 	_query_with_core_filter,
 )
+from nce_events.api.panel_api_pkg.format_rules import validate_format_rule
 from nce_events.api.panel_api_pkg.discovery import (
 	debug_child_lookup,
 	get_child_doctypes,
@@ -70,4 +71,5 @@ __all__ = [
 	"get_panel_config",
 	"get_panel_data",
 	"save_panel_sql",
+	"validate_format_rule",
 ]

@@ -467,6 +467,14 @@ const genderTintSet = computed(() => {
 	return s;
 });
 
+const formatRulesByCol = computed(() => {
+	const m = {};
+	(props.config.format_rules || []).forEach((r) => {
+		m[r.field_name.toLowerCase()] = r;
+	});
+	return m;
+});
+
 const genderCol = computed(() => (props.config.gender_column || "").trim().toLowerCase());
 const maleHex = computed(() => (props.config.male_hex || "").trim());
 const femaleHex = computed(() => (props.config.female_hex || "").trim());
@@ -548,6 +556,14 @@ function cellStyle(row, col) {
 	const style = { color: genderColor(row, col) || "var(--nce-color-text)" };
 	// Panel bold_fields / title_field are appended to the inline style (bold is not a theme token).
 	if (isBoldColumn(col)) style.fontWeight = "700";
+
+	const rule = formatRulesByCol.value[String(col.fieldname).toLowerCase()];
+	if (rule && Number(row[rule.flag_key]) === 1) {
+		if (rule.color) style.color = rule.color;
+		if (rule.font_weight) style.fontWeight = rule.font_weight;
+		if (rule.italic) style.fontStyle = "italic";
+		if (rule.underline) style.textDecoration = "underline";
+	}
 	return style;
 }
 

@@ -529,7 +529,20 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		gender_tint: _parse_csv(frm.doc.gender_color_fields),
 		title_field: (frm.doc.title_field || "").trim(),
 		search: _parse_csv(frm.doc.search_fields),
+		format_rules: {},
 	};
+	(frm.doc.format_rules || []).forEach(function (row) {
+		const fn = (row.field_name || "").trim();
+		if (!fn) return;
+		saved.format_rules[fn] = {
+			condition_sql: row.condition_sql || "",
+			color: row.color || "",
+			font_weight: row.font_weight || "",
+			italic: row.italic ? 1 : 0,
+			underline: row.underline ? 1 : 0,
+			last_validated_sql: row.last_validated_sql || "",
+		};
+	});
 	if (!saved.title_field && dtTitle && root_names[dtTitle]) {
 		saved.title_field = dtTitle;
 	}
@@ -690,6 +703,20 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		frm.set_value("gender_color_fields", nt.join(", "));
 		frm.set_value("title_field", ntf);
 		frm.set_value("search_fields", ns.join(", "));
+
+		frm.clear_table("format_rules");
+		Object.entries(saved.format_rules || {}).forEach(function ([fn, r]) {
+			if (!(r.condition_sql || "").trim()) return;
+			const row = frm.add_child("format_rules");
+			row.field_name = fn;
+			row.condition_sql = r.condition_sql;
+			row.color = r.color || "";
+			row.font_weight = r.font_weight || "";
+			row.italic = r.italic ? 1 : 0;
+			row.underline = r.underline ? 1 : 0;
+			row.last_validated_sql = r.last_validated_sql || "";
+		});
+		frm.refresh_field("format_rules");
 	}
 
 	// Show ↔ Search Only mutual exclusion: checking one clears the other on the same row
@@ -722,6 +749,10 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		const m = matrices[st.id];
 		if (!m || !m.$matrix) return;
 		m.$matrix.on("change", "input[type=checkbox], input[type=radio]", _sync_all);
+		m.$matrix.on("click", ".pp-fmt-edit", function () {
+			const key = $(this).data("key");
+			_open_format_rule_dialog(frm, saved, key, _sync_all);
+		});
 	});
 
 	// Show sub-tab handler
@@ -859,7 +890,8 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set, matrix_opts)
 			<th ${th_style}>Bold</th>
 			<th ${th_style}>Required</th>
 			<th ${th_style}>Gender</th>
-			<th ${th_style}>Tint</th>`;
+			<th ${th_style}>Tint</th>
+			<th ${th_style} style="text-align:center;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;white-space:normal;line-height:1.1;min-width:90px;">Conditional<br>Formatting</th>`;
 	if (showTitleColumn) {
 		html += `<th ${th_style}>Title</th>`;
 	}
@@ -924,13 +956,82 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set, matrix_opts)
 		}></td>
 			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="tint"${
 			saved.gender_tint.indexOf(key) !== -1 ? " checked" : ""
-		}></td>
+		}></td>`;
+		const fmtRule = (saved.format_rules || {})[key];
+		const fmtHasRule = !!(fmtRule && (fmtRule.condition_sql || "").trim());
+		const fmtIcon = fmtHasRule
+			? '<span style="color:#4198F0;">●</span>'
+			: '<span style="color:#b7babe;">○</span>';
+		html += `<td ${td}><button type="button" class="btn btn-xs pp-fmt-edit" data-key="${esc_key}" style="padding:0 6px;font-size:11px;">${fmtIcon} Edit</button></td>
 			${title_cell}
 		</tr>`;
 	});
 	html += "</tbody></table>";
 
 	return { $matrix: $(html) };
+}
+
+function _open_format_rule_dialog(frm, saved, fieldKey, _sync_all) {
+	const rule = Object.assign(
+		{
+			condition_sql: "",
+			color: "",
+			font_weight: "",
+			italic: 0,
+			underline: 0,
+			last_validated_sql: "",
+		},
+		saved.format_rules[fieldKey] || {}
+	);
+	const d = new frappe.ui.Dialog({
+		title: __("Conditional Formatting — {0}", [fieldKey]),
+		size: "large",
+		fields: [{ fieldtype: "HTML", fieldname: "host" }],
+	});
+	d.show();
+	const host = d.fields_dict.host.$wrapper[0];
+	let app = null;
+
+	function _teardown() {
+		if (app) {
+			app.unmount();
+			app = null;
+		}
+	}
+
+	if (!document.getElementById("pp-fmt-editor-css")) {
+		$("head").append(
+			'<link id="pp-fmt-editor-css" rel="stylesheet" href="/assets/nce_events/js/panel_page_v2_dist/mount_format_rule_editor.css">'
+		);
+	}
+
+	import("/assets/nce_events/js/panel_page_v2_dist/mount_format_rule_editor.js").then(function (mod) {
+		app = mod.mountFormatRuleEditor(host, {
+			rootDoctype: frm.doc.root_doctype,
+			fieldName: fieldKey,
+			rule: rule,
+			onUpdate: function (r) {
+				Object.assign(rule, r);
+			},
+			onApply: function () {
+				saved.format_rules[fieldKey] = Object.assign({}, rule);
+				_sync_all();
+				_teardown();
+				d.hide();
+			},
+			onClear: function () {
+				delete saved.format_rules[fieldKey];
+				_sync_all();
+				_teardown();
+				d.hide();
+			},
+			onCancel: function () {
+				_teardown();
+				d.hide();
+			},
+		});
+		d.$wrapper.on("hidden.bs.modal", _teardown);
+	});
 }
 
 // ── Order tab — drag-reorder union of all selected fields ─────────────────────
