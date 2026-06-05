@@ -82,7 +82,6 @@
       "description": "Per-column conditional formatting rules (managed by Display tab).",
       "fieldname": "format_rules",
       "fieldtype": "Table",
-      "hidden": 1,
       "label": "Conditional Formatting Rules",
       "options": "Page Panel Format Rule"
     },
