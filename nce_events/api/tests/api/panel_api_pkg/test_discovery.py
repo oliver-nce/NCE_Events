@@ -77,5 +77,47 @@ class TestDiscoverViaLinkPaths(unittest.TestCase):
 		self.assertEqual(elig["hop_chain"][0]["child_link"], "player_id")
 
 
+class TestGetChildDoctypes(unittest.TestCase):
+	def test_excludes_single_doctype_with_link_to_root(self):
+		from nce_events.api.panel_api_pkg.discovery import get_child_doctypes
+
+		wp_rows = [
+			{"frappe_doctype": "Events", "nce_name": "Events", "table_name": "events"},
+			{
+				"frappe_doctype": "New Woo Commerce Product",
+				"nce_name": "New Woo",
+				"table_name": "new_woo",
+			},
+		]
+
+		def fake_get_meta(doctype: str):
+			if doctype == "Events":
+				return SimpleNamespace(
+					issingle=0,
+					is_virtual=0,
+					fields=[_field("event_type_id", "Link", "Event Types")],
+				)
+			if doctype == "New Woo Commerce Product":
+				return SimpleNamespace(
+					issingle=1,
+					is_virtual=0,
+					fields=[_field("type_id", "Link", "Event Types")],
+				)
+			return _meta()
+
+		with patch(
+			"nce_events.api.panel_api_pkg.discovery.frappe.get_all",
+			return_value=wp_rows,
+		), patch(
+			"nce_events.api.panel_api_pkg.discovery.frappe.get_meta",
+			side_effect=fake_get_meta,
+		):
+			result = get_child_doctypes("Event Types")
+
+		self.assertEqual(len(result), 1)
+		self.assertEqual(result[0]["doctype"], "Events")
+		self.assertEqual(result[0]["link_field"], "event_type_id")
+
+
 if __name__ == "__main__":
 	unittest.main()

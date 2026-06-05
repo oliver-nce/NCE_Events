@@ -157,11 +157,17 @@ def _discover_via_link_paths(
 	return one_extra, two_extra
 
 
+def _skip_as_panel_child_table(meta: Any) -> bool:
+	"""Singles and virtual DocTypes have no ``tab{Doctype}`` table for row COUNT queries."""
+	return bool(getattr(meta, "issingle", 0)) or bool(getattr(meta, "is_virtual", 0))
+
+
 @frappe.whitelist()
 def get_child_doctypes(root_doctype: str) -> list[dict[str, str]]:
 	"""Return DocTypes that have a Link field pointing to root_doctype.
 
 	Scans all WP Tables DocTypes for Link fields targeting root_doctype.
+	Excludes Singles and virtual DocTypes (no physical child table to query).
 	Returns [{doctype, link_field, label}].
 	"""
 	wp_rows = frappe.get_all(
@@ -185,6 +191,8 @@ def get_child_doctypes(root_doctype: str) -> list[dict[str, str]]:
 		try:
 			meta = frappe.get_meta(dt)
 		except Exception:
+			continue
+		if _skip_as_panel_child_table(meta):
 			continue
 		for field in meta.fields:
 			if field.fieldtype == "Link" and field.options == root_doctype:

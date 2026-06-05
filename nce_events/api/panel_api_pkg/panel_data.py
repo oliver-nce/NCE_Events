@@ -385,6 +385,9 @@ def get_panel_data(
 
 	if child_doctypes and rows:
 		for child in child_doctypes:
+			child_meta = frappe.get_meta(child["doctype"])
+			if child_meta.issingle or getattr(child_meta, "is_virtual", 0):
+				continue
 			# Full GROUP BY scan — no IN clause, DB uses index on link_field
 			child_table = f"`tab{child['doctype']}`"
 			link_col = child["link_field"]
