@@ -715,19 +715,25 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 				italic: r.italic ? 1 : 0,
 				underline: r.underline ? 1 : 0,
 				last_validated_sql: r.last_validated_sql || "",
-				doctype: "Page Panel Format Rule",
-				parenttype: "Page Panel",
-				parentfield: "format_rules",
-				parent: frm.doc.name || "",
 			});
 		});
-		// Direct assignment to frm.doc bypasses Frappe's dirty tracking, so the form
-		// would report "No changes" on Save. Compare against the current rows and only
-		// assign + flag dirty when they actually differ — guarding against the no-op
-		// case keeps plain form loads (where _sync_all also runs) from dirtying.
+		// Rebuild the child table only on a real change. Use frm.add_child (not direct
+		// assignment) so each row gets proper grid metadata (name/idx) — hand-built rows
+		// crash grid_row.refresh once the grid is visible — and so Frappe marks the form
+		// dirty itself. The guard keeps plain form loads (where _sync_all reruns and rows
+		// already match) from rebuilding and falsely dirtying.
 		if (_format_rules_signature(formatRuleRows) !== _format_rules_signature(frm.doc.format_rules)) {
-			frm.doc.format_rules = formatRuleRows;
-			frm.dirty();
+			frm.clear_table("format_rules");
+			formatRuleRows.forEach(function (r) {
+				const child = frm.add_child("format_rules");
+				child.field_name = r.field_name;
+				child.condition_sql = r.condition_sql;
+				child.color = r.color;
+				child.font_weight = r.font_weight;
+				child.italic = r.italic;
+				child.underline = r.underline;
+				child.last_validated_sql = r.last_validated_sql;
+			});
 			frm.refresh_field("format_rules");
 		}
 		_refresh_fmt_buttons(matrices, sub_tabs, saved);
