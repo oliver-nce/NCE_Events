@@ -16,8 +16,9 @@ export default defineConfig({
 		emptyOutDir: false,
 		lib: {
 			entry: resolve(__dirname, "mount_format_rule_editor.js"),
+			name: "nceMountFormatRuleEditor",
 			fileName: () => "mount_format_rule_editor.js",
-			formats: ["es"],
+			formats: ["iife"],
 		},
 		rollupOptions: {
 			external: [],

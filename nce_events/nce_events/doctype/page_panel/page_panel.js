@@ -722,6 +722,7 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 			});
 		});
 		frm.doc.format_rules = formatRuleRows;
+		_refresh_fmt_buttons(matrices, sub_tabs, saved);
 	}
 
 	// Show ↔ Search Only mutual exclusion: checking one clears the other on the same row
@@ -754,8 +755,11 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		const m = matrices[st.id];
 		if (!m || !m.$matrix) return;
 		m.$matrix.on("change", "input[type=checkbox], input[type=radio]", _sync_all);
-		m.$matrix.on("click", ".pp-fmt-edit", function () {
-			const key = $(this).data("key");
+		m.$matrix.on("click", ".pp-fmt-edit", function (e) {
+			e.preventDefault();
+			e.stopPropagation();
+			const key = $(this).attr("data-key") || $(this).data("key");
+			if (!key) return;
 			_open_format_rule_dialog(frm, saved, key, _sync_all);
 		});
 	});
@@ -868,6 +872,9 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 .matrix-drag-over { border-top: 2px solid #4198F0 !important; }
 .matrix-drag-handle:hover { color: #464D53 !important; cursor: grab; }
 tr[draggable="true"]:active .matrix-drag-handle { cursor: grabbing; }
+.pp-fmt-dot { display:inline-block; width:9px; height:9px; border-radius:50%; vertical-align:middle; margin-right:2px; box-sizing:border-box; }
+.pp-fmt-dot--empty { border:1.5px solid #b7babe; background:transparent; }
+.pp-fmt-dot--set { background:#4198F0; border:1.5px solid #4198F0; }
 </style>`);
 	}
 
@@ -875,6 +882,37 @@ tr[draggable="true"]:active .matrix-drag-handle { cursor: grabbing; }
 	_show_sub("_root");
 	_sync_all();
 	frm._pp_sync_display = _sync_all;
+	frm._pp_fmt_saved = saved;
+}
+
+function _pp_fmt_has_rule(saved, key) {
+	const fmtRule = (saved.format_rules || {})[key];
+	return !!(fmtRule && (fmtRule.condition_sql || "").trim());
+}
+
+function _pp_fmt_button_html(saved, key) {
+	const has = _pp_fmt_has_rule(saved, key);
+	const icon = has
+		? '<span class="pp-fmt-dot pp-fmt-dot--set" title="' +
+			frappe.utils.escape_html(__("Rule configured")) +
+			'"></span> '
+		: '<span class="pp-fmt-dot pp-fmt-dot--empty" title="' +
+			frappe.utils.escape_html(__("No rule")) +
+			'"></span> ';
+	return icon + (has ? __("Edit") : __("Add"));
+}
+
+function _refresh_fmt_buttons(matrices, sub_tabs, saved) {
+	sub_tabs.forEach(function (st) {
+		if (st.id === "_order") return;
+		const m = matrices[st.id];
+		if (!m || !m.$matrix) return;
+		m.$matrix.find(".pp-fmt-edit").each(function () {
+			const key = $(this).attr("data-key") || $(this).data("key");
+			if (!key) return;
+			$(this).html(_pp_fmt_button_html(saved, key));
+		});
+	});
 }
 
 // ── Build a single field-selection matrix ─────────────────────────────────────
@@ -962,12 +1000,7 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set, matrix_opts)
 			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="tint"${
 			saved.gender_tint.indexOf(key) !== -1 ? " checked" : ""
 		}></td>`;
-		const fmtRule = (saved.format_rules || {})[key];
-		const fmtHasRule = !!(fmtRule && (fmtRule.condition_sql || "").trim());
-		const fmtIcon = fmtHasRule
-			? '<span style="color:#4198F0;">●</span>'
-			: '<span style="color:#b7babe;">○</span>';
-		html += `<td ${td}><button type="button" class="btn btn-xs pp-fmt-edit" data-key="${esc_key}" style="padding:0 6px;font-size:11px;">${fmtIcon} Edit</button></td>
+		html += `<td ${td}><button type="button" class="btn btn-xs pp-fmt-edit" data-key="${esc_key}" style="padding:0 6px;font-size:11px;">${_pp_fmt_button_html(saved, key)}</button></td>
 			${title_cell}
 		</tr>`;
 	});
@@ -976,7 +1009,46 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set, matrix_opts)
 	return { $matrix: $(html) };
 }
 
+/** Drop blank child rows — the visible Table grid leaves an empty stub row that fails reqd validation. */
+function _prune_empty_format_rules(frm) {
+	frm.doc.format_rules = (frm.doc.format_rules || []).filter(function (row) {
+		return (row.field_name || "").trim() && (row.condition_sql || "").trim();
+	});
+}
+
+function _ensure_format_rule_mount(done) {
+	function finish() {
+		const mod = window.nceMountFormatRuleEditor;
+		if (mod && typeof mod.mountFormatRuleEditor === "function") {
+			done(mod);
+			return;
+		}
+		frappe.msgprint({
+			title: __("Load failed"),
+			indicator: "red",
+			message: __(
+				"Could not load the conditional formatting editor. Rebuild panel_page_v2 assets and refresh."
+			),
+		});
+	}
+	if (window.nceMountFormatRuleEditor && window.nceMountFormatRuleEditor.mountFormatRuleEditor) {
+		finish();
+		return;
+	}
+	frappe.require(
+		[
+			"/assets/nce_events/js/panel_page_v2_dist/mount_format_rule_editor.css",
+			"/assets/nce_events/js/panel_page_v2_dist/mount_format_rule_editor.js",
+		],
+		finish
+	);
+}
+
 function _open_format_rule_dialog(frm, saved, fieldKey, _sync_all) {
+	if (!fieldKey) {
+		frappe.msgprint(__("No field selected for conditional formatting."));
+		return;
+	}
 	const rule = Object.assign(
 		{
 			condition_sql: "",
@@ -995,6 +1067,9 @@ function _open_format_rule_dialog(frm, saved, fieldKey, _sync_all) {
 	});
 	d.show();
 	const host = d.fields_dict.host.$wrapper[0];
+	d.fields_dict.host.$wrapper.html(
+		'<p class="text-muted" style="padding:12px;">' + __("Loading editor…") + "</p>"
+	);
 	let app = null;
 
 	function _teardown() {
@@ -1004,13 +1079,8 @@ function _open_format_rule_dialog(frm, saved, fieldKey, _sync_all) {
 		}
 	}
 
-	if (!document.getElementById("pp-fmt-editor-css")) {
-		$("head").append(
-			'<link id="pp-fmt-editor-css" rel="stylesheet" href="/assets/nce_events/js/panel_page_v2_dist/mount_format_rule_editor.css">'
-		);
-	}
-
-	import("/assets/nce_events/js/panel_page_v2_dist/mount_format_rule_editor.js").then(function (mod) {
+	_ensure_format_rule_mount(function (mod) {
+		d.fields_dict.host.$wrapper.empty();
 		app = mod.mountFormatRuleEditor(host, {
 			rootDoctype: frm.doc.root_doctype,
 			fieldName: fieldKey,
@@ -1213,6 +1283,16 @@ function _filter_fields_from_columns(frm, allFields) {
 
 	const visible = [...real_fields, ...related_fields, ...computed_fields];
 	return visible.length ? visible : allFields;
+}
+
+function _hide_format_rules_grid(frm) {
+	const fd = frm.fields_dict["format_rules"];
+	if (!fd || !fd.$wrapper) return;
+	fd.$wrapper.find(".frappe-control").hide();
+	fd.$wrapper.find(".grid-heading-row").hide();
+	fd.$wrapper.find(".grid-body").hide();
+	fd.$wrapper.find(".btn.grid-add-row").hide();
+	fd.$wrapper.find("[data-fieldname='format_rules']").hide();
 }
 
 function _render_default_filters(frm) {
@@ -3409,6 +3489,7 @@ frappe.ui.form.on("Page Panel", {
 		_ensure_tab_bar(frm);
 		_ensure_panel_id_controls(frm);
 		_ensure_query_refresh_button(frm);
+		_hide_format_rules_grid(frm);
 		_render_default_filters(frm);
 		// Hide Frappe's native tab bar (rendered when Tab Break fields exist in the DocType)
 		$(frm.layout.wrapper).find(".form-tabs-list, .nav-tabs").hide();
@@ -3474,12 +3555,14 @@ frappe.ui.form.on("Page Panel", {
 				frm.doc.__newname = ($inp.val() || "").trim();
 			}
 		}
+		_prune_empty_format_rules(frm);
 	},
 
 	before_save: function (frm) {
 		if (typeof frm._pp_sync_display === "function") {
 			frm._pp_sync_display();
 		}
+		_prune_empty_format_rules(frm);
 	},
 
 	after_save: function (frm) {

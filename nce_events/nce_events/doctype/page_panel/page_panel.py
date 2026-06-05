@@ -46,6 +46,11 @@ class PagePanel(Document):
 	def before_save(self):
 		if not self.header_text:
 			self.header_text = self.root_doctype
+		self.format_rules = [
+			row
+			for row in (self.format_rules or [])
+			if (row.field_name or "").strip() and (row.condition_sql or "").strip()
+		]
 
 	def after_save(self):
 		if self.root_doctype:

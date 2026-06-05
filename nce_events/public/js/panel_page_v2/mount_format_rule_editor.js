@@ -27,3 +27,8 @@ export function mountFormatRuleEditor(containerEl, options) {
 	app.mount(containerEl);
 	return app;
 }
+
+if (typeof window !== "undefined") {
+	window.nceMountFormatRuleEditor = window.nceMountFormatRuleEditor || {};
+	window.nceMountFormatRuleEditor.mountFormatRuleEditor = mountFormatRuleEditor;
+}
