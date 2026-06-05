@@ -56,7 +56,7 @@ def _build_resolution_maps(root_doctype: str) -> tuple[dict, dict, set]:
 
 
 def _rewrite_condition(condition_sql: str, root_doctype: str) -> str:
-	"""Rewrite friendly references to match the derived ``( panel_sql ) AS rows`` columns.
+	"""Rewrite friendly references to match the derived ``( panel_sql ) AS pp_rows`` columns.
 
 	The wrapped ``panel_sql`` already exposes every shown/search column with its
 	display alias, so we never qualify with ``tabRoot`` or inject joins — we only
@@ -168,7 +168,7 @@ def validate_format_rule(
 	"""Validate an expression by testing it against the panel's own query.
 
 	The condition is rewritten to the derived-table column names and probed via
-	``SELECT 1 FROM ( panel_sql ) AS rows WHERE (cond) LIMIT 1``. Because this is
+	``SELECT 1 FROM ( panel_sql ) AS pp_rows WHERE (cond) LIMIT 1``. Because this is
 	the exact construct used at render time, a passing validation guarantees the
 	rule will evaluate at render. Referencing a column that isn't shown/search-only
 	fails here with "Unknown column".
@@ -215,7 +215,7 @@ def validate_format_rule(
 	except Exception as e:
 		return {"ok": False, "error": f"Could not build panel query: {e}"}
 
-	probe = f"SELECT 1 FROM ({panel_sql}) AS rows WHERE ({rewritten}) LIMIT 1"
+	probe = f"SELECT 1 FROM ({panel_sql}) AS pp_rows WHERE ({rewritten}) LIMIT 1"
 	try:
 		frappe.db.sql(probe, params)
 		return {"ok": True, "resolved_sql": rewritten}

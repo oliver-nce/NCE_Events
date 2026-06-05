@@ -101,7 +101,7 @@ def _build_panel_sql(
 	where_sql = f"WHERE {' AND '.join(where_parts)}" if where_parts else ""
 
 	# Conditional formatting flags are NOT part of panel_sql. At fetch time
-	# get_panel_data wraps this query as `( panel_sql ) AS rows` and appends one
+	# get_panel_data wraps this query as `( panel_sql ) AS pp_rows` and appends one
 	# `_fmt_<field>` CASE column per rule (see format_rules.build_format_case_columns),
 	# so the cached panel_sql stays data-only and flags can never go stale.
 	if linked_fields:

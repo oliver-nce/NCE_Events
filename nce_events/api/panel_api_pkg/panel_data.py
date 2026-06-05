@@ -68,7 +68,7 @@ _ROSTER_HASH: str = "wwe78f6q87ey97f86q9e8fqw98ef"
 
 
 def _derived_order_clause(config: dict, display_fields: list[str]) -> str:
-	"""Build an outer ``ORDER BY`` for the wrapped ``( panel_sql ) AS rows`` query.
+	"""Build an outer ``ORDER BY`` for the wrapped ``( panel_sql ) AS pp_rows`` query.
 
 	Returns an empty string when the order column isn't selectable in the derived
 	table (so we never error on an unknown column — we just fall back to the inner
@@ -382,7 +382,7 @@ def get_panel_data(
 			# no column sort is active.
 			order_clause = _derived_order_clause(config, display_fields)
 			base_sql = (
-				f"SELECT rows.*, {', '.join(case_cols)} FROM ({base_sql}) AS rows{order_clause}"
+				f"SELECT pp_rows.*, {', '.join(case_cols)} FROM ({base_sql}) AS pp_rows{order_clause}"
 			)
 
 	rows = frappe.db.sql(base_sql, base_params, as_dict=True)
