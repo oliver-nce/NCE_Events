@@ -38,7 +38,7 @@
 						<th
 							v-for="(col, ci) in dataCols"
 							:key="col.fieldname"
-							class="col-header"
+							class="col-header theme-bg-secondary-600"
 							:style="{
 								width: colWidths[ci] ? colWidths[ci] + 'px' : 'auto',
 								minWidth: '40px',
@@ -53,7 +53,7 @@
 						</th>
 						<th
 							v-if="hasActionColumn"
-							class="ppv2-action-th col-header"
+							class="ppv2-action-th col-header theme-bg-secondary-600"
 							:style="actionColumnStyle"
 						/>
 					</tr>
@@ -602,8 +602,9 @@ function startColResize(e, ci) {
 	position: sticky;
 	top: 0;
 	z-index: 2;
-	background-color: var(--nce-color-secondary-100, #e3f0fc);
-	color: var(--nce-color-secondary-700, #105ead);
+	/* Background + auto-paired text color come from the theme class
+	   theme-bg-secondary-600 on the <th> (see template). Do not set color
+	   here — a scoped rule would override the theme class. */
 	font-weight: var(--font-weight-bold);
 	font-size: var(--font-size-sm);
 	text-transform: uppercase;
