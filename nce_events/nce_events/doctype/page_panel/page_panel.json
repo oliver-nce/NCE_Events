@@ -8,8 +8,8 @@
   "field_order": [
     "root_doctype",
     "header_text",
-    "theme",
     "section_break_colours",
+    "theme",
     "frame_bg_class",
     "header_bg_class",
     "footer_bg_class",
@@ -64,17 +64,18 @@
       "label": "Header Text"
     },
     {
-      "description": "Optional palette override. Only Active themes take effect. Empty uses the site base theme.",
-      "fieldname": "theme",
-      "fieldtype": "Link",
-      "label": "Theme",
-      "options": "NCE Theme"
-    },
-    {
       "fieldname": "section_break_colours",
       "fieldtype": "Section Break",
       "hidden": 1,
       "label": "Panel Colours"
+    },
+    {
+      "description": "Palette for this panel and for colour picking on the Colours tab. Only Active themes take effect. Empty uses the site base theme.",
+      "fieldname": "theme",
+      "fieldtype": "Link",
+      "hidden": 1,
+      "label": "Theme",
+      "options": "NCE Theme"
     },
     {
       "description": "Float outer frame background (Colours tab). Empty uses theme-bg-surface.",

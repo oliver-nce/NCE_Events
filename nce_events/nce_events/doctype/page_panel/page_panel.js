@@ -51,7 +51,6 @@ const TAB_GROUPS = {
 	config: [
 		"root_doctype",
 		"header_text",
-		"theme",
 		"default_filters",
 		"order_by",
 		"section_break_computed",
@@ -86,6 +85,7 @@ const TAB_LABELS = {
 
 const COLOUR_FIELDS = [
 	"section_break_colours",
+	"theme",
 	"frame_bg_class",
 	"header_bg_class",
 	"footer_bg_class",
@@ -3574,50 +3574,78 @@ function _hide_colour_schema_fields(frm) {
 	});
 }
 
-function _render_colours_tab(frm) {
-	const $container = $(frm.layout.wrapper).find(".pp-colours-wrap");
-	if (!$container.length) return;
+/** Matches ThemeSwatchPicker curated class strings (theme-{kind}-{role}-{shade}). */
+const PP_COLOUR_CLASS_RE =
+	/^theme-(bg|text|border)-(primary|secondary|accent|success|info|warning|danger)-(100|200|300|500|600|700|900)$/;
 
-	const themeLink = (frm.doc.theme || "").trim();
-	const themeHint = themeLink
-		? frappe.utils.escape_html(themeLink)
-		: `<span style="color:#c0392b;">${__("None — pick a Theme on the Config tab first")}</span>`;
-
-	let rows = "";
-	COLOUR_SLOTS.forEach(function (slot) {
-		const raw = (frm.doc[slot.field] || "").trim();
-		const display = raw || `<span style="color:#8d99a6;">${frappe.utils.escape_html(slot.fallback)}</span>`;
-		rows += `<tr style="border-bottom:1px solid #ededed;">
-			<td style="padding:8px 10px;vertical-align:middle;width:28%;">${frappe.utils.escape_html(slot.label)}</td>
-			<td style="padding:8px 10px;vertical-align:middle;font-family:monospace;font-size:12px;">${display}</td>
-			<td style="padding:8px 10px;vertical-align:middle;width:120px;">
-				<button type="button" class="btn btn-xs btn-default pp-colour-pick" data-field="${frappe.utils.escape_html(
-					slot.field
-				)}">${__("Pick…")}</button>
-			</td>
-		</tr>`;
+function _resolve_nce_theme_slug_for_colours(themeLink, callback) {
+	const theme = (themeLink || "").trim();
+	if (!theme) {
+		callback("");
+		return;
+	}
+	frappe.db.get_value("NCE Theme", theme, ["slug", "status"]).then(function (r) {
+		const row = r && r.message ? r.message : r;
+		const slug =
+			row && row.status === "Active" && row.slug ? String(row.slug).trim() : "";
+		callback(slug);
 	});
+}
 
-	const html = `
-		<p style="margin:0 0 10px;font-size:12px;color:#6c7680;">
-			${__(
-				"Assign theme background classes per surface for this panel. Requires an Active Theme on the Config tab. Empty slots use the default class shown in grey."
-			)}
-		</p>
-		<p style="margin:0 0 12px;font-size:12px;"><strong>${__("Theme")}:</strong> ${themeHint}</p>
-		<table class="table table-bordered" style="max-width:720px;background:#fff;">
-			<thead>
-				<tr style="background:#f7f7f7;">
-					<th style="padding:6px 10px;">${__("Surface")}</th>
-					<th style="padding:6px 10px;">${__("Class")}</th>
-					<th style="padding:6px 10px;"></th>
-				</tr>
-			</thead>
-			<tbody>${rows}</tbody>
-		</table>`;
+function _colour_effective_class(raw, fallback) {
+	return (raw || "").trim() || (fallback || "").trim();
+}
 
-	$container.html(html);
+/** Preview tile always uses a theme-bg-* class (same visual language as the picker strip). */
+function _colour_preview_bg_class(className) {
+	const raw = (className || "").trim();
+	if (!raw) return "";
+	if (raw.indexOf("theme-bg-") === 0) return raw;
+	const match = PP_COLOUR_CLASS_RE.exec(raw);
+	if (match) return "theme-bg-" + match[2] + "-" + match[3];
+	return raw;
+}
 
+/** Primary / Secondary only — mirrors theme-swatch-picker-core overlay rule. */
+function _colour_overlay_fg_class(bgClass) {
+	const raw = (bgClass || "").trim();
+	if (raw.indexOf("theme-bg-") !== 0) return "";
+	const body = raw.slice("theme-bg-".length);
+	if (body === "primary") return "theme-text-primary-fg";
+	if (body === "secondary") return "theme-text-secondary-fg";
+	const m = body.match(/^(primary|secondary)-(\d+)$/);
+	if (m) return "theme-text-" + m[1] + "-" + m[2] + "-fg";
+	return "";
+}
+
+function _colour_preview_swatch_html(className, isDefault) {
+	const bg = _colour_preview_bg_class(className);
+	if (!bg) {
+		return '<span style="color:#8d99a6;font-size:11px;">—</span>';
+	}
+	const fg = _colour_overlay_fg_class(bg);
+	const defaultCls = isDefault ? " pp-colour-swatch--default" : "";
+	let inner = "";
+	if (fg) {
+		inner =
+			'<span class="nce-theme-swatch-picker__swatch-label ' +
+			frappe.utils.escape_html(fg) +
+			'">Text</span>';
+	}
+	return (
+		'<span class="nce-theme-swatch-picker__swatch' +
+		defaultCls +
+		" " +
+		frappe.utils.escape_html(bg) +
+		'" title="' +
+		frappe.utils.escape_html(className) +
+		'">' +
+		inner +
+		"</span>"
+	);
+}
+
+function _bind_colours_tab_pickers(frm, $container) {
 	$container.off("click", ".pp-colour-pick").on("click", ".pp-colour-pick", function () {
 		const valueField = $(this).data("field");
 		if (!valueField) return;
@@ -3644,6 +3672,84 @@ function _render_colours_tab(frm) {
 	});
 }
 
+function _mount_theme_field_on_colours_tab(frm, $container) {
+	const fd = frm.fields_dict.theme;
+	if (!fd || !fd.$wrapper) return;
+	const $host = $container.find(".pp-colours-theme-field");
+	if (!$host.length) return;
+	$host.empty().append(fd.$wrapper);
+	$(fd.$wrapper).show();
+}
+
+function _render_colours_tab_html(frm, themeSlug) {
+	const $container = $(frm.layout.wrapper).find(".pp-colours-wrap");
+	if (!$container.length) return;
+
+	const scopeAttr = themeSlug
+		? ' data-nce-theme="' + frappe.utils.escape_html(themeSlug) + '"'
+		: "";
+
+	let rows = "";
+	COLOUR_SLOTS.forEach(function (slot) {
+		const raw = (frm.doc[slot.field] || "").trim();
+		const isDefault = !raw;
+		const effective = _colour_effective_class(raw, slot.fallback);
+		const display =
+			raw ||
+			'<span style="color:#8d99a6;">' + frappe.utils.escape_html(slot.fallback) + "</span>";
+		const swatch = _colour_preview_swatch_html(effective, isDefault);
+		rows += `<tr style="border-bottom:1px solid #ededed;">
+			<td style="padding:8px 10px;vertical-align:middle;width:26%;">${frappe.utils.escape_html(slot.label)}</td>
+			<td style="padding:8px 10px;vertical-align:middle;width:52px;">${swatch}</td>
+			<td style="padding:8px 10px;vertical-align:middle;font-family:monospace;font-size:12px;">${display}</td>
+			<td style="padding:8px 10px;vertical-align:middle;width:100px;">
+				<button type="button" class="btn btn-xs btn-default pp-colour-pick" data-field="${frappe.utils.escape_html(
+					slot.field
+				)}">${__("Pick…")}</button>
+			</td>
+		</tr>`;
+	});
+
+	const html = `
+		<style>
+			.pp-colours-wrap .pp-colour-swatch--default { opacity: 0.55; }
+			.pp-colours-wrap .pp-colours-theme-scope { display: inline-block; max-width: 100%; }
+		</style>
+		<p style="margin:0 0 10px;font-size:12px;color:#6c7680;">
+			${__(
+				"Choose a palette Theme, then assign background classes per surface. Pick requires an Active theme. Empty slots use the default class shown in grey."
+			)}
+		</p>
+		<div class="pp-colours-theme-field" style="margin-bottom:14px;max-width:480px;"></div>
+		<div class="pp-colours-theme-scope"${scopeAttr}>
+			<table class="table table-bordered" style="max-width:760px;background:#fff;">
+				<thead>
+					<tr style="background:#f7f7f7;">
+						<th style="padding:6px 10px;">${__("Surface")}</th>
+						<th style="padding:6px 10px;">${__("Preview")}</th>
+						<th style="padding:6px 10px;">${__("Class")}</th>
+						<th style="padding:6px 10px;"></th>
+					</tr>
+				</thead>
+				<tbody>${rows}</tbody>
+			</table>
+		</div>`;
+
+	$container.html(html);
+	_mount_theme_field_on_colours_tab(frm, $container);
+	_bind_colours_tab_pickers(frm, $container);
+}
+
+function _render_colours_tab(frm) {
+	const $container = $(frm.layout.wrapper).find(".pp-colours-wrap");
+	if (!$container.length) return;
+
+	const themeLink = (frm.doc.theme || "").trim();
+	_resolve_nce_theme_slug_for_colours(themeLink, function (slug) {
+		_render_colours_tab_html(frm, slug);
+	});
+}
+
 // ── Page Panel form events ────────────────────────────────────────────────────
 frappe.ui.form.on("Page Panel", {
 	refresh: function (frm) {
@@ -3665,6 +3771,16 @@ frappe.ui.form.on("Page Panel", {
 					},
 				};
 			});
+		}
+
+		if ($(frm.layout.wrapper).data("pp-active-tab") === "colours") {
+			_render_colours_tab(frm);
+		}
+	},
+
+	theme: function (frm) {
+		if ($(frm.layout.wrapper).data("pp-active-tab") === "colours") {
+			_render_colours_tab(frm);
 		}
 	},
 
