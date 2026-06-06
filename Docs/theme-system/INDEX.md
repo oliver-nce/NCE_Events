@@ -9,6 +9,7 @@ This folder explains HOW the theme system works. For the catalog of available cl
 | Question | File |
 |---|---|
 | How does the editor change classes' values? Architecture overview. | `01-architecture.md` |
+| How do multi-theme scoped palettes work? `data-nce-theme`? base vs Active? | `01-architecture.md` |
 | What's the naming convention for tokens and classes? | `02-token-naming.md` |
 | What is primary vs secondary vs accent vs success/info/warning/danger? | `03-color-roles.md` |
 | How does the 11-stop shade scale work? Which stops have classes? | `04-shade-scale.md` |
@@ -17,7 +18,6 @@ This folder explains HOW the theme system works. For the catalog of available cl
 | When do I use theme classes vs `:style` with `var()`? Examples for Vue. | `07-using-in-vue.md` |
 | How do I add a new role / shade / utility to the system? | `08-extending.md` |
 | Which classes for a button? Primary / outline / ghost / destructive? Decision tree + ready recipes. | `09-buttons.md` |
-| CI / local guard for panel Vue styles? Fragile table surfaces? | `10-panel-style-audit.md` |
 
 ## Quick Answers (vague-question → file)
 
@@ -29,6 +29,8 @@ This folder explains HOW the theme system works. For the catalog of available cl
 | "what class should I use for X" | (use `THEME_CLASS_CONTRACT.json` instead) |
 | "how do themes work in this app" | `01-architecture.md` |
 | "I want to add a brand color" | `08-extending.md` |
+| "how do I give a panel its own colour palette" / "data-nce-theme" | `01-architecture.md` |
+| "what is base theme" / "what is Active vs Inactive" | `01-architecture.md` |
 
 ## Source of Truth
 
