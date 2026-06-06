@@ -3672,12 +3672,59 @@ function _bind_colours_tab_pickers(frm, $container) {
 	});
 }
 
-function _mount_theme_field_on_colours_tab(frm, $container) {
+function _ensure_theme_link_control(frm) {
+	if (!frm.fields_dict.theme) {
+		return null;
+	}
 	const fd = frm.fields_dict.theme;
-	if (!fd || !fd.$wrapper) return;
+	const inDoc =
+		fd.$wrapper &&
+		fd.$wrapper.length &&
+		$.contains(document.documentElement, fd.$wrapper[0]);
+	if (!inDoc) {
+		frm.refresh_field("theme");
+	}
+	return frm.fields_dict.theme;
+}
+
+function _mount_theme_field_on_colours_tab(frm, $container) {
 	const $host = $container.find(".pp-colours-theme-field");
-	if (!$host.length) return;
-	$host.empty().append(fd.$wrapper);
+	if (!$host.length) {
+		return;
+	}
+
+	const fd = _ensure_theme_link_control(frm);
+	if (!fd || !fd.$wrapper) {
+		$host.html(
+			'<p class="text-muted small" style="margin:0;">' +
+				__("Theme field is missing on this form. Run bench migrate and reload.") +
+				"</p>"
+		);
+		return;
+	}
+
+	frm.set_query("theme", function () {
+		return { filters: { status: "Active" } };
+	});
+
+	$host.empty();
+	$host.append(
+		$("<label>")
+			.addClass("control-label")
+			.text(__("Theme"))
+			.css({ display: "block", marginBottom: "6px", fontWeight: 600 })
+	);
+	$host.append(
+		$("<p>")
+			.addClass("help-box small text-muted")
+			.css({ marginTop: 0, marginBottom: "8px" })
+			.text(
+				__(
+					"Optional. Active NCE Theme for this panel's palette and colour picker. Empty uses the site base theme."
+				)
+			)
+	);
+	$host.append(fd.$wrapper);
 	$(fd.$wrapper).show();
 }
 
@@ -3772,6 +3819,10 @@ frappe.ui.form.on("Page Panel", {
 				};
 			});
 		}
+
+		frm.set_query("theme", function () {
+			return { filters: { status: "Active" } };
+		});
 
 		if ($(frm.layout.wrapper).data("pp-active-tab") === "colours") {
 			_render_colours_tab(frm);
