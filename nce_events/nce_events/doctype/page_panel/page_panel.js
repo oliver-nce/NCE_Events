@@ -3722,8 +3722,10 @@ function _bind_colours_tab_pickers(frm, $container) {
 				valueField: valueField,
 				fgTypeField: fgTypeField || _colour_fg_type_field(valueField),
 			})
-			.then(function () {
-				_render_colours_tab_previews(frm, null, $container);
+			.then(function (saved) {
+				if (saved) {
+					_render_colours_tab_previews(frm, null, $container);
+				}
 			});
 	});
 }
