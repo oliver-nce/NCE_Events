@@ -64,7 +64,6 @@
       "label": "Header Text"
     },
     {
-      "description": "Palette for this panel and for colour picking on the Colours tab. Only Active themes take effect. Empty uses the site base theme.",
       "fieldname": "theme",
       "fieldtype": "Link",
       "label": "Theme",

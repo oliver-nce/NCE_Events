@@ -3687,6 +3687,29 @@ function _ensure_theme_link_control(frm) {
 	return frm.fields_dict.theme;
 }
 
+function _theme_editor_url(themeDoc) {
+	const theme = (themeDoc || "").trim();
+	if (!theme) {
+		return "";
+	}
+	return frappe.urllib.get_full_url(
+		"/themes/theme-settings?theme=" + encodeURIComponent(theme)
+	);
+}
+
+function _update_colours_theme_edit_btn(frm, $btn) {
+	const themeDoc = (frm.doc.theme || "").trim();
+	if (!themeDoc) {
+		$btn.prop("disabled", true).text(__("Edit theme"));
+		return;
+	}
+	frappe.db.get_value("NCE Theme", themeDoc, "theme_name").then(function (r) {
+		const row = r && r.message ? r.message : r;
+		const label = (row && row.theme_name ? row.theme_name : themeDoc).trim();
+		$btn.prop("disabled", false).text(__("Edit {0}", [label]));
+	});
+}
+
 function _mount_theme_field_on_colours_tab(frm, $container) {
 	const $host = $container.find(".pp-colours-theme-field");
 	if (!$host.length) {
@@ -3708,24 +3731,38 @@ function _mount_theme_field_on_colours_tab(frm, $container) {
 	});
 
 	$host.empty();
-	$host.append(
+	const $row = $('<div class="pp-colours-theme-row"></div>');
+	const $fieldCol = $('<div class="pp-colours-theme-field-col"></div>');
+	$fieldCol.append(
 		$("<label>")
-			.addClass("control-label")
+			.addClass("control-label pp-colours-theme-label")
 			.text(__("Theme"))
-			.css({ display: "block", marginBottom: "6px", fontWeight: 600 })
 	);
-	$host.append(
-		$("<p>")
-			.addClass("help-box small text-muted")
-			.css({ marginTop: 0, marginBottom: "8px" })
-			.text(
-				__(
-					"Optional. Active NCE Theme for this panel's palette and colour picker. Empty uses the site base theme."
-				)
-			)
+
+	$(fd.$wrapper).find("label.control-label, .help-box").hide();
+	$fieldCol.append(fd.$wrapper);
+	$row.append($fieldCol);
+
+	const $editBtn = $(
+		'<button type="button" class="btn btn-default btn-sm pp-colours-theme-edit"></button>'
 	);
-	$host.append(fd.$wrapper);
+	$editBtn.on("click", function () {
+		const url = _theme_editor_url(frm.doc.theme);
+		if (url) {
+			window.open(url, "_blank", "noopener,noreferrer");
+		}
+	});
+	$row.append($editBtn);
+	$host.append($row);
+
 	$(fd.$wrapper).show();
+	_update_colours_theme_edit_btn(frm, $editBtn);
+
+	const $input = $(fd.$wrapper).find("input");
+	$input.off("change.pp-colours-theme-edit");
+	$input.on("change.pp-colours-theme-edit", function () {
+		_update_colours_theme_edit_btn(frm, $editBtn);
+	});
 }
 
 function _render_colours_tab_html(frm, themeSlug) {
@@ -3761,13 +3798,32 @@ function _render_colours_tab_html(frm, themeSlug) {
 		<style>
 			.pp-colours-wrap .pp-colour-swatch--default { opacity: 0.55; }
 			.pp-colours-wrap .pp-colours-theme-scope { display: inline-block; max-width: 100%; }
+			.pp-colours-wrap .pp-colours-theme-row {
+				display: flex;
+				align-items: flex-end;
+				flex-wrap: wrap;
+				gap: 8px;
+				max-width: 560px;
+			}
+			.pp-colours-wrap .pp-colours-theme-field-col {
+				flex: 1 1 220px;
+				min-width: 200px;
+			}
+			.pp-colours-wrap .pp-colours-theme-label {
+				display: block;
+				font-weight: 600;
+				margin-bottom: 4px;
+			}
+			.pp-colours-wrap .pp-colours-theme-field-col .form-group {
+				margin-bottom: 0;
+			}
+			.pp-colours-wrap .pp-colours-theme-edit {
+				flex-shrink: 0;
+				margin-bottom: 2px;
+				white-space: nowrap;
+			}
 		</style>
-		<p style="margin:0 0 10px;font-size:12px;color:#6c7680;">
-			${__(
-				"Choose a palette Theme, then assign background classes per surface. Pick requires an Active theme. Empty slots use the default class shown in grey."
-			)}
-		</p>
-		<div class="pp-colours-theme-field" style="margin-bottom:14px;max-width:480px;"></div>
+		<div class="pp-colours-theme-field" style="margin-bottom:14px;"></div>
 		<div class="pp-colours-theme-scope"${scopeAttr}>
 			<table class="table table-bordered" style="max-width:760px;background:#fff;">
 				<thead>
