@@ -17,10 +17,12 @@
 			:init-w="900"
 			:init-h="550"
 			:theme-slug="config?.theme_slug || ''"
+			:chrome-config="config || null"
 		>
 			<template #header>
 				<span class="ppv2-title">{{ config?.header_text || panelLabel }}</span>
 				<PanelHeaderToolbar
+					:chrome-config="config || null"
 					:loading="loading"
 					:show-click-hint="!!config?.open_card_on_click"
 					:row-count="rows.length"
@@ -65,10 +67,12 @@
 			:init-w="panelFloatInitW(p)"
 			:init-h="600"
 			:theme-slug="p.config?.theme_slug || ''"
+			:chrome-config="p.config || null"
 		>
 			<template #header>
 				<span class="ppv2-title">{{ floatedPanelTitle(p) }}</span>
 				<PanelHeaderToolbar
+					:chrome-config="p.config || null"
 					:loading="!!p.loading"
 					:show-click-hint="!!p.config?.open_card_on_click && !p._find?.mode"
 					:row-count="panelLiveRows(p).length"
@@ -222,6 +226,8 @@
 		<PanelFormDialog
 			v-if="formDialogSlot === 0 && formDialogDefinition"
 			:open="true"
+			:theme-slug="formDialogThemeSlug"
+			:dialog-header-bg-class="formDialogHeaderBgClass"
 			:definition-name="formDialogDefinition"
 			:definition-source="formDialogDefinitionSource"
 			:doctype="formDialogDoctype"
@@ -256,6 +262,8 @@
 		<PanelFormDialog
 			v-if="formDialogSlot === 0 && formDialogPendingDefinition"
 			:open="true"
+			:theme-slug="formDialogThemeSlug"
+			:dialog-header-bg-class="formDialogHeaderBgClass"
 			:definition-name="formDialogPendingDefinition"
 			:definition-source="formDialogDefinitionSource"
 			:doctype="formDialogPendingDoctype"
@@ -284,6 +292,8 @@
 		<PanelFormDialog
 			v-if="formDialogSlot === 1 && formDialogDefinition"
 			:open="true"
+			:theme-slug="formDialogThemeSlug"
+			:dialog-header-bg-class="formDialogHeaderBgClass"
 			:definition-name="formDialogDefinition"
 			:definition-source="formDialogDefinitionSource"
 			:doctype="formDialogDoctype"
@@ -318,6 +328,8 @@
 		<PanelFormDialog
 			v-if="formDialogSlot === 1 && formDialogPendingDefinition"
 			:open="true"
+			:theme-slug="formDialogThemeSlug"
+			:dialog-header-bg-class="formDialogHeaderBgClass"
 			:definition-name="formDialogPendingDefinition"
 			:definition-source="formDialogDefinitionSource"
 			:doctype="formDialogPendingDoctype"
@@ -439,6 +451,19 @@ const {
 	formDialogDissolving,
 	formDialogDissolveOpacity,
 } = usePanelFormDialogHost(openPanels);
+
+const formDialogChromeConfig = computed(() => {
+	const id = formDialogSourcePanelId.value;
+	if (id == null) return null;
+	return openPanels.find((p) => p.id === id)?.config || null;
+});
+
+const formDialogThemeSlug = computed(
+	() => formDialogChromeConfig.value?.theme_slug || ""
+);
+const formDialogHeaderBgClass = computed(
+	() => formDialogChromeConfig.value?.dialog_header_bg_class || ""
+);
 
 function refreshPanelByDoctype(doctype) {
 	const panel = openPanels.find((p) => p.doctype === doctype);

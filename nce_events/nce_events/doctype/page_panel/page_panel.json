@@ -9,6 +9,15 @@
     "root_doctype",
     "header_text",
     "theme",
+    "section_break_colours",
+    "frame_bg_class",
+    "header_bg_class",
+    "footer_bg_class",
+    "col_header_bg_class",
+    "filter_bar_bg_class",
+    "row_bg_class",
+    "row_alt_bg_class",
+    "dialog_header_bg_class",
     "default_filters",
     "order_by",
     "section_break_computed",
@@ -60,6 +69,68 @@
       "fieldtype": "Link",
       "label": "Theme",
       "options": "NCE Theme"
+    },
+    {
+      "fieldname": "section_break_colours",
+      "fieldtype": "Section Break",
+      "hidden": 1,
+      "label": "Panel Colours"
+    },
+    {
+      "description": "Float outer frame background (Colours tab). Empty uses theme-bg-surface.",
+      "fieldname": "frame_bg_class",
+      "fieldtype": "Data",
+      "hidden": 1,
+      "label": "Frame Background Class"
+    },
+    {
+      "description": "Panel header bar background. Empty uses theme-bg-primary.",
+      "fieldname": "header_bg_class",
+      "fieldtype": "Data",
+      "hidden": 1,
+      "label": "Header Background Class"
+    },
+    {
+      "description": "Panel footer bar background. Empty uses theme-bg-primary.",
+      "fieldname": "footer_bg_class",
+      "fieldtype": "Data",
+      "hidden": 1,
+      "label": "Footer Background Class"
+    },
+    {
+      "description": "Table column header cells. Empty uses theme-bg-secondary-600.",
+      "fieldname": "col_header_bg_class",
+      "fieldtype": "Data",
+      "hidden": 1,
+      "label": "Column Header Background Class"
+    },
+    {
+      "description": "Filter bar container. Empty uses theme-bg-primary-100.",
+      "fieldname": "filter_bar_bg_class",
+      "fieldtype": "Data",
+      "hidden": 1,
+      "label": "Filter Bar Background Class"
+    },
+    {
+      "description": "Even table rows. Empty uses theme-bg-surface.",
+      "fieldname": "row_bg_class",
+      "fieldtype": "Data",
+      "hidden": 1,
+      "label": "Row Background Class"
+    },
+    {
+      "description": "Odd (zebra) table rows. Empty uses theme-bg-row-alt.",
+      "fieldname": "row_alt_bg_class",
+      "fieldtype": "Data",
+      "hidden": 1,
+      "label": "Alternate Row Background Class"
+    },
+    {
+      "description": "Viewer Form Dialog header when opened from this panel. Empty uses theme-bg-primary.",
+      "fieldname": "dialog_header_bg_class",
+      "fieldtype": "Data",
+      "hidden": 1,
+      "label": "Dialog Header Background Class"
     },
     {
       "description": "Default filters pre-applied when the panel opens. Visible and editable in the filter widget.",

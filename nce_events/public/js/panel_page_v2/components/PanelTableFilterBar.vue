@@ -1,5 +1,9 @@
 <template>
-	<div v-if="props.showFilter" class="ppv2-filter-widget theme-bg-primary-100 border-b theme-border">
+	<div
+		v-if="props.showFilter"
+		class="ppv2-filter-widget border-b theme-border"
+		:class="filterBarBgClass"
+	>
 		<div v-for="(cond, i) in filters" :key="i" class="ppv2-filter-row">
 			<select
 				v-model="cond.field"
@@ -88,14 +92,20 @@
 </template>
 
 <script setup>
-import { reactive, watch } from "vue";
+import { reactive, watch, computed } from "vue";
+import { panelChromeBg } from "../utils/panelChromeClasses.js";
 
 const props = defineProps({
 	columns: { type: Array, default: () => [] },
 	searchOnlyColumns: { type: Array, default: () => [] },
 	defaultFilters: { type: Array, default: () => [] },
 	showFilter: { type: Boolean, default: false },
+	config: { type: Object, default: () => ({}) },
 });
+
+const filterBarBgClass = computed(() =>
+	panelChromeBg(props.config, "filter_bar_bg_class")
+);
 
 const emit = defineEmits(["filter-change", "show-filter"]);
 

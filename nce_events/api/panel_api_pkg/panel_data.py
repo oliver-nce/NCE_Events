@@ -98,6 +98,11 @@ def _derived_order_clause(config: dict, display_fields: list[str]) -> str:
 	return f" ORDER BY `{col}` {direction}"
 
 
+def _panel_chrome_class(doc: Any, field: str) -> str:
+	"""Trimmed per-panel theme bg class from Page Panel, or empty for runtime default."""
+	return (getattr(doc, field, None) or "").strip()
+
+
 def _resolve_theme_slug(theme_link: str | None) -> str | None:
 	"""Resolve Page Panel theme Link to an Active NCE Theme slug, or None for site base."""
 	theme = (theme_link or "").strip()
@@ -257,6 +262,14 @@ def _panel_config_from_doc(doc: Any) -> dict[str, Any]:
 		"allow_new_record_creation": cint(doc.get("allow_new_record_creation")),
 		"form_dialog": (doc.form_dialog or "").strip() or None,
 		"theme_slug": _resolve_theme_slug(getattr(doc, "theme", None)),
+		"frame_bg_class": _panel_chrome_class(doc, "frame_bg_class"),
+		"header_bg_class": _panel_chrome_class(doc, "header_bg_class"),
+		"footer_bg_class": _panel_chrome_class(doc, "footer_bg_class"),
+		"col_header_bg_class": _panel_chrome_class(doc, "col_header_bg_class"),
+		"filter_bar_bg_class": _panel_chrome_class(doc, "filter_bar_bg_class"),
+		"row_bg_class": _panel_chrome_class(doc, "row_bg_class"),
+		"row_alt_bg_class": _panel_chrome_class(doc, "row_alt_bg_class"),
+		"dialog_header_bg_class": _panel_chrome_class(doc, "dialog_header_bg_class"),
 		"male_hex": MALE_HEX,
 		"female_hex": FEMALE_HEX,
 	}
@@ -298,6 +311,14 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 			"allow_new_record_creation": 0,
 			"form_dialog": None,
 			"theme_slug": None,
+			"frame_bg_class": "",
+			"header_bg_class": "",
+			"footer_bg_class": "",
+			"col_header_bg_class": "",
+			"filter_bar_bg_class": "",
+			"row_bg_class": "",
+			"row_alt_bg_class": "",
+			"dialog_header_bg_class": "",
 			"male_hex": MALE_HEX,
 			"female_hex": FEMALE_HEX,
 		}

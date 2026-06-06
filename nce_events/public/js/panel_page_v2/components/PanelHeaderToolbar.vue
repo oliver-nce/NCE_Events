@@ -1,6 +1,6 @@
 <template>
 	<div class="ppv2-header-right" @mousedown.stop>
-		<span v-if="props.showClickHint" class="ppv2-click-hint theme-text-primary-fg-tonal"
+		<span v-if="props.showClickHint" class="ppv2-click-hint" :class="hintFgTonalClass"
 			>Click row for details · Ctrl-click to remove</span
 		>
 		<div class="ppv2-header-controls">
@@ -8,14 +8,14 @@
 				<button
 					v-if="props.showNewRecord"
 					type="button"
-					class="ppv2-hdr-btn ppv2-hdr-btn--new theme-text-primary-fg"
+					class="ppv2-hdr-btn ppv2-hdr-btn--new"
 					title="New record"
 					@click="$emit('new-record')"
 				>
 					+
 				</button>
 				<button
-					class="ppv2-hdr-btn theme-text-primary-fg"
+					class="ppv2-hdr-btn"
 					:class="{
 						'ppv2-hdr-btn--refreshing': props.loading,
 						'theme-text-secondary': props.loading,
@@ -25,13 +25,13 @@
 				>
 					<i class="fa fa-refresh"></i>
 				</button>
-				<button class="ppv2-hdr-btn theme-text-primary-fg" title="Filter" @click="$emit('toggle-filter')">
+				<button class="ppv2-hdr-btn" title="Filter" @click="$emit('toggle-filter')">
 					<i class="fa fa-filter"></i>
 				</button>
 			</template>
 			<button
 				v-if="props.showFind && !props.findHeaderMinimal"
-				class="ppv2-hdr-btn theme-text-primary-fg"
+				class="ppv2-hdr-btn"
 				title="Find records"
 				@click="$emit('find')"
 			>
@@ -39,14 +39,14 @@
 			</button>
 			<template v-if="!props.findHeaderMinimal">
 				<button
-					class="ppv2-hdr-btn theme-text-primary-fg"
+					class="ppv2-hdr-btn"
 					title="Export to Google Sheets (filtered view)"
 					@click="$emit('sheets')"
 				>
 					<i class="fa fa-table"></i>
 				</button>
 				<button
-					class="ppv2-hdr-btn theme-text-primary-fg"
+					class="ppv2-hdr-btn"
 					title="Download CSV (Excel, filtered view)"
 					@click="$emit('download-csv')"
 				>
@@ -54,22 +54,22 @@
 				</button>
 				<button
 					v-if="props.showEmail"
-					class="ppv2-hdr-btn theme-text-primary-fg"
+					class="ppv2-hdr-btn"
 					title="Email"
 					@click="$emit('email')"
 				>
 					<i class="fa fa-envelope"></i>
 				</button>
-				<button v-if="props.showSms" class="ppv2-hdr-btn theme-text-primary-fg" title="SMS" @click="$emit('sms')">
+				<button v-if="props.showSms" class="ppv2-hdr-btn" title="SMS" @click="$emit('sms')">
 					<i class="fa fa-comment"></i>
 				</button>
 			</template>
-			<span class="ppv2-count theme-text-sm theme-text-primary-fg"
+			<span class="ppv2-count theme-text-sm"
 				>{{ displayRowCount }} / {{ props.total }} records</span
 			>
 			<button
 				v-if="props.showClose"
-				class="ppv2-hdr-btn ppv2-close-btn theme-text-primary-fg"
+				class="ppv2-hdr-btn ppv2-close-btn"
 				title="Close"
 				@click="$emit('close')"
 			>
@@ -81,6 +81,7 @@
 
 <script setup>
 import { computed } from "vue";
+import { panelChromeBg, themeBgToFgTonal } from "../utils/panelChromeClasses.js";
 
 const props = defineProps({
 	title: { type: String, default: "" },
@@ -96,7 +97,13 @@ const props = defineProps({
 	/** Find criteria mode: header shows only count + close. */
 	findHeaderMinimal: { type: Boolean, default: false },
 	rowCountLabel: { type: [Number, String], default: undefined },
+	/** Page Panel chrome config — used for click-hint tonal fg. */
+	chromeConfig: { type: Object, default: null },
 });
+
+const hintFgTonalClass = computed(() =>
+	themeBgToFgTonal(panelChromeBg(props.chromeConfig, "header_bg_class"))
+);
 
 const displayRowCount = computed(() => {
 	const v = props.rowCountLabel;

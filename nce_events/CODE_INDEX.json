@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Manual overlay merged into CODE_INDEX.json by scripts/build_code_index.py. Edit per-file entries here; the generator preserves your curated 'purpose', 'sections', 'private_helpers', 'key_fields', and 'depends_on'.",
-    "generated": "2026-06-05",
+    "generated": "2026-06-06",
     "generator": "scripts/build_code_index.py",
     "usage": "Run `python scripts/build_code_index.py --write` to regenerate CODE_INDEX.json after editing this file or after adding/renaming/deleting source files. The pre-commit hook runs `--check` and blocks commits whose code changes have not been regenerated."
   },
@@ -17,7 +17,8 @@
       "Form Dialog: frozen_meta_json (snapshot of frappe.get_meta fields) is parsed by parseLayout.js + rendered by PanelFormDialog.vue. Only DocTypes in WP Tables are eligible.",
       "Form Dialog buttons: script text is copied from Desk at capture/rebuild time — not live-linked. Rebuild is manual.",
       "Panel Page split (Mirror / Native): one Vue bundle, three Frappe Pages. main.js mount(selector, opts) provides panelMode + panelLabel; App.vue injects them, applies { doctype_source: panelMode } to the root usePanel, and passes scope: panelMode to usePanelActions. Cross-page navigation is a Panel Action of type Client Script using switch_page(slug), implemented as a full-reload window.location.assign for KISS state reset. See Docs/handoff_panel_page_split.md.",
-      "NCE Sync mirror refresh (separate app): whitelisted nce_sync.api.sync_doctype_rows (by doc names) and nce_sync.api.sync_linked_doctype_rows (rebuild child rows for one parent Link). Full call shapes, enqueue helpers, and permission notes: architecture.nce_sync_mirror_refresh_apis."
+      "NCE Sync mirror refresh (separate app): whitelisted nce_sync.api.sync_doctype_rows (by doc names) and nce_sync.api.sync_linked_doctype_rows (rebuild child rows for one parent Link). Full call shapes, enqueue helpers, and permission notes: architecture.nce_sync_mirror_refresh_apis.",
+      "ThemeSwatchPicker (Themes app): Desk Page Panel Colours tab uses frappe.ui.themeSwatchPicker.open({ frm, themeField: 'theme', valueField }) per chrome slot (header_bg_class, row_alt_bg_class, etc.). Runtime: panelChromeClasses.js resolves config → theme-bg-* with fallbacks; PanelFloat/PanelTable/PanelFormDialog bind dynamically. theme-bg-* auto-pairs fg — toolbar buttons inherit, do not hardcode theme-text-primary-fg."
     ],
     "nce_sync_mirror_refresh_apis": {
       "source_app": "nce_sync Frappe app (dependency of NCE Events; implementation not in this repo).",
@@ -547,7 +548,7 @@
         "get_panel_config",
         "get_panel_data"
       ],
-      "purpose": "Panel data endpoints — get_panel_config for Page Panel settings (includes theme_slug from optional Page Panel.theme Link), get_panel_data for paginated/filtered panel rows with computed columns and child doctype counts, export_panel_data for CSV export to public files.",
+      "purpose": "Panel data endpoints — get_panel_config for Page Panel settings (theme_slug + eight per-surface chrome class fields: frame/header/footer/col_header/filter_bar/row/row_alt/dialog_header), get_panel_data for paginated/filtered panel rows with computed columns and child doctype counts, export_panel_data for CSV export to public files.",
       "depends_on": [
         "nce_events/api/panel_api_pkg/_helpers.py",
         "nce_events/api/panel_api_pkg/computed_columns.py",
@@ -559,6 +560,7 @@
       "sections": [
         "Panel config fetch",
         "theme_slug resolution (_resolve_theme_slug)",
+        "per-panel chrome class fields (_panel_chrome_class)",
         "Panel data fetch with filters/pagination",
         "CSV export"
       ]
@@ -1001,11 +1003,19 @@
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
     "nce_events/nce_events/doctype/page_panel/": {
-      "purpose": "Core config doctype — one record per root DocType being displayed. Stores column order, filters, gender config, email/SMS fields, computed columns, optional theme palette override (Link NCE Theme), and optional link to a Form Dialog for V2 row editing.",
+      "purpose": "Core config doctype — one record per root DocType being displayed. Stores column order, filters, gender config, email/SMS fields, computed columns, optional theme palette override (Link NCE Theme), per-surface theme-bg class slots (Colours tab + ThemeSwatchPicker), and optional link to a Form Dialog for V2 row editing.",
       "key_fields": [
         "root_doctype",
         "header_text",
         "theme",
+        "header_bg_class",
+        "footer_bg_class",
+        "col_header_bg_class",
+        "filter_bar_bg_class",
+        "frame_bg_class",
+        "row_bg_class",
+        "row_alt_bg_class",
+        "dialog_header_bg_class",
         "core_filter",
         "order_by",
         "column_order",
@@ -1227,8 +1237,10 @@
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
     "nce_events/public/js/panel_page_v2/components/PanelFloat.vue": {
-      "purpose": "Floating overlay panel for contextual actions",
-      "depends_on": []
+      "purpose": "Floating panel chrome — data-nce-theme + dynamic per-surface theme-bg classes from chromeConfig (frame/header/footer).",
+      "depends_on": [
+        "utils/panelChromeClasses.js"
+      ]
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDateTimeField.vue": {
       "vue": {
@@ -1713,6 +1725,15 @@
         "openDeskDoctypeListInNewTab"
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js": {
+      "exports": [
+        "PANEL_CHROME_DEFAULTS",
+        "panelChromeBg",
+        "themeBgToFgTonal"
+      ],
+      "purpose": "PANEL_CHROME_DEFAULTS, panelChromeBg(config, field), themeBgToFgTonal(bgClass) — resolves Page Panel chrome slots for V2 runtime.",
+      "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/utils/panelTableColWidths.js": {
       "exports": [

@@ -71,11 +71,46 @@ const TAB_GROUPS = {
 		"open_card_on_click",
 	],
 	display: [],
+	colours: [],
 	query: ["panel_sql"],
 	dialogs: [],
 };
-const TAB_ORDER = ["config", "display", "query", "dialogs"];
-const TAB_LABELS = { config: "Config", display: "Display", query: "Query", dialogs: "Dialogs" };
+const TAB_ORDER = ["config", "display", "colours", "query", "dialogs"];
+const TAB_LABELS = {
+	config: "Config",
+	display: "Display",
+	colours: "Colours",
+	query: "Query",
+	dialogs: "Dialogs",
+};
+
+const COLOUR_FIELDS = [
+	"section_break_colours",
+	"frame_bg_class",
+	"header_bg_class",
+	"footer_bg_class",
+	"col_header_bg_class",
+	"filter_bar_bg_class",
+	"row_bg_class",
+	"row_alt_bg_class",
+	"dialog_header_bg_class",
+];
+
+/** Per-panel chrome slots — valueField for ThemeSwatchPicker; default when empty. */
+const COLOUR_SLOTS = [
+	{ field: "frame_bg_class", label: __("Float frame"), fallback: "theme-bg-surface" },
+	{ field: "header_bg_class", label: __("Header bar"), fallback: "theme-bg-primary" },
+	{ field: "footer_bg_class", label: __("Footer bar"), fallback: "theme-bg-primary" },
+	{ field: "col_header_bg_class", label: __("Column headers"), fallback: "theme-bg-secondary-600" },
+	{ field: "filter_bar_bg_class", label: __("Filter bar"), fallback: "theme-bg-primary-100" },
+	{ field: "row_bg_class", label: __("Table rows (even)"), fallback: "theme-bg-surface" },
+	{ field: "row_alt_bg_class", label: __("Table rows (odd)"), fallback: "theme-bg-row-alt" },
+	{
+		field: "dialog_header_bg_class",
+		label: __("Viewer dialog header"),
+		fallback: "theme-bg-primary",
+	},
+];
 
 const MATRIX_FIELDS = [
 	"column_order",
@@ -94,7 +129,10 @@ const BREAK_FIELDS = [
 
 // ── Top-level tab show/hide ───────────────────────────────────────────────────
 function _show_tab(frm, tab_id) {
-	const all_fields = TAB_GROUPS.config.concat(MATRIX_FIELDS).concat(TAB_GROUPS.query || []);
+	const all_fields = TAB_GROUPS.config
+		.concat(MATRIX_FIELDS)
+		.concat(COLOUR_FIELDS)
+		.concat(TAB_GROUPS.query || []);
 	all_fields.forEach(function (fn) {
 		const fd = frm.fields_dict[fn];
 		if (fd && fd.$wrapper) $(fd.$wrapper).hide();
@@ -108,6 +146,7 @@ function _show_tab(frm, tab_id) {
 
 	const $wrap = $(frm.fields_dict["root_doctype"].$wrapper).parent();
 	$wrap.find(".pp-matrix-wrap").toggle(tab_id === "display");
+	$wrap.find(".pp-colours-wrap").toggle(tab_id === "colours");
 	$wrap.find(".pp-dialogs-wrap").toggle(tab_id === "dialogs");
 
 	$(frm.layout.wrapper).find(".pp-tab-btn").css({ background: "", color: "", fontWeight: "" });
@@ -139,16 +178,24 @@ function _ensure_tab_bar(frm) {
 	const $matrix_wrap = $(
 		'<div class="pp-matrix-wrap" style="display:none;padding-bottom:8px;"></div>'
 	);
+	const $colours_wrap = $(
+		'<div class="pp-colours-wrap" style="display:none;padding-bottom:8px;"></div>'
+	);
 	const $dialogs_wrap = $(
 		'<div class="pp-dialogs-wrap" style="display:none;padding-bottom:8px;"></div>'
 	);
 
-	$(first_fd.$wrapper).before($tab_bar).before($matrix_wrap).before($dialogs_wrap);
+	$(first_fd.$wrapper)
+		.before($tab_bar)
+		.before($matrix_wrap)
+		.before($colours_wrap)
+		.before($dialogs_wrap);
 
 	$tab_bar.on("click", ".pp-tab-btn", function () {
 		const tab_id = $(this).data("tab");
 		_show_tab(frm, tab_id);
 		if (tab_id === "display") _render_display(frm);
+		if (tab_id === "colours") _render_colours_tab(frm);
 		if (tab_id === "dialogs") _render_dialogs_tab(frm);
 	});
 
@@ -3519,12 +3566,91 @@ function _build_dialogs_tab_html(frm, $container, dialogs) {
 
 	$container.html(current_html + list_html + create_html);
 }
+
+function _hide_colour_schema_fields(frm) {
+	COLOUR_FIELDS.forEach(function (fn) {
+		const fd = frm.fields_dict[fn];
+		if (fd && fd.$wrapper) $(fd.$wrapper).hide();
+	});
+}
+
+function _render_colours_tab(frm) {
+	const $container = $(frm.layout.wrapper).find(".pp-colours-wrap");
+	if (!$container.length) return;
+
+	const themeLink = (frm.doc.theme || "").trim();
+	const themeHint = themeLink
+		? frappe.utils.escape_html(themeLink)
+		: `<span style="color:#c0392b;">${__("None — pick a Theme on the Config tab first")}</span>`;
+
+	let rows = "";
+	COLOUR_SLOTS.forEach(function (slot) {
+		const raw = (frm.doc[slot.field] || "").trim();
+		const display = raw || `<span style="color:#8d99a6;">${frappe.utils.escape_html(slot.fallback)}</span>`;
+		rows += `<tr style="border-bottom:1px solid #ededed;">
+			<td style="padding:8px 10px;vertical-align:middle;width:28%;">${frappe.utils.escape_html(slot.label)}</td>
+			<td style="padding:8px 10px;vertical-align:middle;font-family:monospace;font-size:12px;">${display}</td>
+			<td style="padding:8px 10px;vertical-align:middle;width:120px;">
+				<button type="button" class="btn btn-xs btn-default pp-colour-pick" data-field="${frappe.utils.escape_html(
+					slot.field
+				)}">${__("Pick…")}</button>
+			</td>
+		</tr>`;
+	});
+
+	const html = `
+		<p style="margin:0 0 10px;font-size:12px;color:#6c7680;">
+			${__(
+				"Assign theme background classes per surface for this panel. Requires an Active Theme on the Config tab. Empty slots use the default class shown in grey."
+			)}
+		</p>
+		<p style="margin:0 0 12px;font-size:12px;"><strong>${__("Theme")}:</strong> ${themeHint}</p>
+		<table class="table table-bordered" style="max-width:720px;background:#fff;">
+			<thead>
+				<tr style="background:#f7f7f7;">
+					<th style="padding:6px 10px;">${__("Surface")}</th>
+					<th style="padding:6px 10px;">${__("Class")}</th>
+					<th style="padding:6px 10px;"></th>
+				</tr>
+			</thead>
+			<tbody>${rows}</tbody>
+		</table>`;
+
+	$container.html(html);
+
+	$container.off("click", ".pp-colour-pick").on("click", ".pp-colour-pick", function () {
+		const valueField = $(this).data("field");
+		if (!valueField) return;
+		const picker = frappe.ui && frappe.ui.themeSwatchPicker;
+		if (!picker || typeof picker.open !== "function") {
+			frappe.msgprint({
+				title: __("ThemeSwatchPicker unavailable"),
+				message: __(
+					"Install/build the Themes app widget (theme-swatch-picker.umd.js) and reload Desk."
+				),
+				indicator: "orange",
+			});
+			return;
+		}
+		picker
+			.open({
+				frm: frm,
+				themeField: "theme",
+				valueField: valueField,
+			})
+			.then(function () {
+				_render_colours_tab(frm);
+			});
+	});
+}
+
 // ── Page Panel form events ────────────────────────────────────────────────────
 frappe.ui.form.on("Page Panel", {
 	refresh: function (frm) {
 		_ensure_tab_bar(frm);
 		_ensure_panel_id_controls(frm);
 		_ensure_query_refresh_button(frm);
+		_hide_colour_schema_fields(frm);
 		_render_default_filters(frm);
 		// Hide Frappe's native tab bar (rendered when Tab Break fields exist in the DocType)
 		$(frm.layout.wrapper).find(".form-tabs-list, .nav-tabs").hide();

@@ -1,11 +1,12 @@
 <template>
 	<div
 		ref="floatEl"
-		class="ppv2-float theme-bg-surface theme-border theme-rounded theme-shadow-theme"
+		class="ppv2-float theme-border theme-rounded theme-shadow-theme"
+		:class="frameBgClass"
 		:data-nce-theme="themeSlug || undefined"
 		:style="floatStyle"
 	>
-		<div class="ppv2-float-header theme-bg-primary" @mousedown="startDrag">
+		<div class="ppv2-float-header" :class="headerBgClass" @mousedown="startDrag">
 			<slot name="header" />
 		</div>
 
@@ -15,7 +16,8 @@
 
 		<div
 			v-if="$slots.footer"
-			class="ppv2-float-footer theme-bg-primary theme-text-primary-fg-tonal"
+			class="ppv2-float-footer"
+			:class="[footerBgClass, footerFgTonalClass]"
 			@mousedown.prevent="startDrag"
 		>
 			<slot name="footer" />
@@ -33,6 +35,11 @@ function getNextZ() { return ++_globalZ; }
 <script setup>
 import { ref, computed, watch } from "vue";
 import { PANEL_FLOAT_MAX_W } from "../utils/panelTableColWidths.js";
+import {
+	panelChromeBg,
+	themeBgToFgTonal,
+	PANEL_CHROME_DEFAULTS,
+} from "../utils/panelChromeClasses.js";
 
 const props = defineProps({
 	initX: { type: Number, default: 40 },
@@ -43,7 +50,22 @@ const props = defineProps({
 	minY: { type: Number, default: 0 },
 	/** Active NCE Theme slug; omit for site base palette (:root). */
 	themeSlug: { type: String, default: "" },
+	/** Page Panel chrome config (subset of get_panel_config). */
+	chromeConfig: { type: Object, default: null },
 });
+
+const frameBgClass = computed(() =>
+	panelChromeBg(props.chromeConfig, "frame_bg_class")
+);
+const headerBgClass = computed(() =>
+	panelChromeBg(props.chromeConfig, "header_bg_class")
+);
+const footerBgClass = computed(() =>
+	panelChromeBg(props.chromeConfig, "footer_bg_class")
+);
+const footerFgTonalClass = computed(() =>
+	themeBgToFgTonal(footerBgClass.value || PANEL_CHROME_DEFAULTS.footer_bg_class)
+);
 
 const emit = defineEmits(["close"]);
 

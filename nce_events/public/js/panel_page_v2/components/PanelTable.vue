@@ -23,6 +23,7 @@
 			:search-only-columns="searchOnlyColumns"
 			:default-filters="defaultFilters"
 			:show-filter="showFilter"
+			:config="config"
 			@filter-change="(f) => $emit('filter-change', f)"
 			@show-filter="(v) => $emit('show-filter', v)"
 		/>
@@ -38,7 +39,8 @@
 						<th
 							v-for="(col, ci) in dataCols"
 							:key="col.fieldname"
-							class="col-header theme-bg-secondary-600"
+							class="col-header"
+							:class="colHeaderBgClass"
 							:style="{
 								width: colWidths[ci] ? colWidths[ci] + 'px' : 'auto',
 								minWidth: '40px',
@@ -53,7 +55,8 @@
 						</th>
 						<th
 							v-if="hasActionColumn"
-							class="ppv2-action-th col-header theme-bg-secondary-600"
+							class="ppv2-action-th col-header"
+							:class="colHeaderBgClass"
 							:style="actionColumnStyle"
 						/>
 					</tr>
@@ -170,6 +173,7 @@ import {
 	isTitleFieldColumn,
 	panelRowVal,
 } from "../utils/panelTableColWidths.js";
+import { panelChromeBg } from "../utils/panelChromeClasses.js";
 
 const props = defineProps({
 	title: { type: String, default: "" },
@@ -226,15 +230,21 @@ const hoveredLinkKey = ref(null);
 const hoveredRowBtn = ref(null);
 let _closeHeaderMenuHandler = null;
 
+const colHeaderBgClass = computed(() =>
+	panelChromeBg(props.config, "col_header_bg_class")
+);
+
 function rowTrClasses(ri, row) {
 	const selected = props.selectedName === row.name;
 	const hovered = hoveredRowIndex.value === ri;
 	if (selected) return { "ppv2-row-selected": true };
 	if (hovered) return { "ppv2-row-hovered": true };
-	return {
-		"ppv2-row-even": ri % 2 === 0,
-		"ppv2-row-odd": ri % 2 === 1,
-	};
+	const even = ri % 2 === 0;
+	const bgClass = panelChromeBg(
+		props.config,
+		even ? "row_bg_class" : "row_alt_bg_class"
+	);
+	return { [bgClass]: true };
 }
 
 function linkKey(row, col) {
@@ -692,13 +702,7 @@ function startColResize(e, ci) {
 	cursor: pointer;
 }
 
-/* Zebra stripes: read --nce-* from published theme (:root), not theme-bg-* utilities */
-.ppv2-table tbody tr.ppv2-row-even {
-	background-color: var(--nce-color-surface, #f9fafb);
-}
-.ppv2-table tbody tr.ppv2-row-odd {
-	background-color: var(--nce-color-row-alt, #f3f4f6);
-}
+/* Row even/odd use per-panel theme-bg-* classes (row_bg_class / row_alt_bg_class). */
 .ppv2-table tbody tr.ppv2-row-hovered {
 	background-color: var(--nce-color-primary-100, #e3f0fc);
 }

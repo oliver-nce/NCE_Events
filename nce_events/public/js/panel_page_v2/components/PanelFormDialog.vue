@@ -36,6 +36,7 @@
 			ref="dialogEl"
 			class="ppv2-form-dialog ppv2-fd-dialog-root"
 			:class="'ppv2-fd-size-' + form.dialogSize.value"
+			:data-nce-theme="themeSlug || undefined"
 			:style="dialogStyle"
 		>
 			<div
@@ -47,6 +48,7 @@
 			</div>
 			<div class="ppv2-fd-drag-handle" @mousedown="startDrag">
 				<PanelFormDialogHeader
+					:header-bg-class="dialogHeaderBgClass"
 					:row-nav-enabled="rowNavEnabledEffective"
 					:freeze-nav="findCriteriaActive"
 					:can-navigate-prev="canNavigatePrev"
@@ -183,6 +185,10 @@ const props = defineProps({
 	findMatchActive: { type: Boolean, default: false },
 	/** Host opens the related DocType panel (after save + sync poll). */
 	onGoToNavigate: { type: Function, default: null },
+	/** Opening panel theme slug — scopes dialog palette when set. */
+	themeSlug: { type: String, default: "" },
+	/** Opening panel dialog_header_bg_class (empty = default theme-bg-primary). */
+	dialogHeaderBgClass: { type: String, default: "" },
 });
 
 const emit = defineEmits([

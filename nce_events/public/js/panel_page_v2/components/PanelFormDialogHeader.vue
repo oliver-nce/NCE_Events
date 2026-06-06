@@ -1,5 +1,5 @@
 <template>
-	<div class="ppv2-fd-header theme-bg-primary">
+	<div class="ppv2-fd-header" :class="resolvedHeaderBgClass">
 		<div class="ppv2-fd-header-main">
 			<div v-if="rowNavEnabled" class="ppv2-fd-nav" @mousedown.stop>
 				<button
@@ -33,7 +33,11 @@
 </template>
 
 <script setup>
-defineProps({
+import { computed } from "vue";
+import { panelChromeBg } from "../utils/panelChromeClasses.js";
+
+const props = defineProps({
+	headerBgClass: { type: String, default: "" },
 	rowNavEnabled: { type: Boolean, default: false },
 	canNavigatePrev: { type: Boolean, default: false },
 	canNavigateNext: { type: Boolean, default: false },
@@ -42,6 +46,11 @@ defineProps({
 	closable: { type: Boolean, default: true },
 	/** Disable prev/next while typing find criteria (footer owns Perform/Cancel). */
 	freezeNav: { type: Boolean, default: false },
+});
+
+const resolvedHeaderBgClass = computed(() => {
+	const v = (props.headerBgClass || "").trim();
+	return v || panelChromeBg(null, "dialog_header_bg_class");
 });
 
 defineEmits(["close", "nav-prev", "nav-next"]);
@@ -77,7 +86,7 @@ defineEmits(["close", "nav-prev", "nav-next"]);
 	width: 28px;
 	height: 28px;
 	padding: 0;
-	color: var(--nce-color-primary-fg);
+	color: inherit;
 	border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
 	border-radius: var(--border-radius-sm, 4px);
 	background: color-mix(in srgb, currentColor 10%, transparent);
@@ -109,7 +118,7 @@ defineEmits(["close", "nav-prev", "nav-next"]);
 .ppv2-fd-close {
 	background: none;
 	border: none;
-	color: var(--nce-color-primary-fg);
+	color: inherit;
 	font-size: calc(var(--font-size-base) * 1.5);
 	cursor: pointer;
 	padding: 0 4px;
