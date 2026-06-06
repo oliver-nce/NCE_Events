@@ -90,6 +90,8 @@ const COLOUR_FIELDS = [
 	"frame_fg_type",
 	"header_bg_class",
 	"header_fg_type",
+	"header_toolbar_bg_class",
+	"header_toolbar_fg_type",
 	"footer_bg_class",
 	"footer_fg_type",
 	"col_header_bg_class",
@@ -115,8 +117,14 @@ const COLOUR_SLOTS = [
 	{
 		field: "header_bg_class",
 		fgTypeField: "header_fg_type",
-		label: __("Header bar"),
+		label: __("Header title"),
 		fallback: "theme-bg-primary",
+	},
+	{
+		field: "header_toolbar_bg_class",
+		fgTypeField: "header_toolbar_fg_type",
+		label: __("Header toolbar (actions)"),
+		fallback: "theme-bg-secondary-900",
 	},
 	{
 		field: "footer_bg_class",

@@ -14,6 +14,8 @@
     "frame_fg_type",
     "header_bg_class",
     "header_fg_type",
+    "header_toolbar_bg_class",
+    "header_toolbar_fg_type",
     "footer_bg_class",
     "footer_fg_type",
     "col_header_bg_class",
@@ -100,18 +102,33 @@
       "options": "mono\ntonal"
     },
     {
-      "description": "Panel header bar background. Empty uses theme-bg-primary.",
+      "description": "Panel header title area (left). Empty uses theme-bg-primary.",
       "fieldname": "header_bg_class",
       "fieldtype": "Data",
       "hidden": 1,
-      "label": "Header Background Class"
+      "label": "Header Title Background Class"
     },
     {
       "default": "mono",
       "fieldname": "header_fg_type",
       "fieldtype": "Select",
       "hidden": 1,
-      "label": "Header Foreground Type",
+      "label": "Header Title Foreground Type",
+      "options": "mono\ntonal"
+    },
+    {
+      "description": "Header toolbar with action icons (right). Empty uses theme-bg-secondary-900.",
+      "fieldname": "header_toolbar_bg_class",
+      "fieldtype": "Data",
+      "hidden": 1,
+      "label": "Header Toolbar Background Class"
+    },
+    {
+      "default": "mono",
+      "fieldname": "header_toolbar_fg_type",
+      "fieldtype": "Select",
+      "hidden": 1,
+      "label": "Header Toolbar Foreground Type",
       "options": "mono\ntonal"
     },
     {

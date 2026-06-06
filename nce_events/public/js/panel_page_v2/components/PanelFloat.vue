@@ -6,8 +6,12 @@
 		:data-nce-theme="themeSlug || undefined"
 		:style="floatStyle"
 	>
-		<div class="ppv2-float-header" :class="[headerBgClass, headerFgTextClass]" @mousedown="startDrag">
-			<slot name="header" />
+		<div class="ppv2-float-header" @mousedown="startDrag">
+			<slot
+				name="header"
+				:title-classes="headerTitleClasses"
+				:toolbar-classes="headerToolbarClasses"
+			/>
 		</div>
 
 		<div class="ppv2-float-body">
@@ -56,12 +60,16 @@ const props = defineProps({
 const frameBgClass = computed(() =>
 	panelChromeBg(props.chromeConfig, "frame_bg_class")
 );
-const headerBgClass = computed(() =>
-	panelChromeBg(props.chromeConfig, "header_bg_class")
-);
-const headerFgTextClass = computed(() =>
-	panelChromeFgTextClass(props.chromeConfig, "header_bg_class")
-);
+const headerTitleClasses = computed(() => {
+	const bg = panelChromeBg(props.chromeConfig, "header_bg_class");
+	const fg = panelChromeFgTextClass(props.chromeConfig, "header_bg_class");
+	return [bg, fg].filter(Boolean);
+});
+const headerToolbarClasses = computed(() => {
+	const bg = panelChromeBg(props.chromeConfig, "header_toolbar_bg_class");
+	const fg = panelChromeFgTextClass(props.chromeConfig, "header_toolbar_bg_class");
+	return [bg, fg].filter(Boolean);
+});
 const footerBgClass = computed(() =>
 	panelChromeBg(props.chromeConfig, "footer_bg_class")
 );
@@ -209,9 +217,9 @@ function startResize(e) {
 
 .ppv2-float-header {
 	flex-shrink: 0;
-	padding: 5px 8px;
+	padding: 0;
 	display: flex;
-	align-items: center;
+	align-items: stretch;
 	justify-content: space-between;
 	cursor: move;
 	user-select: none;
@@ -225,7 +233,10 @@ function startResize(e) {
 	flex: 1 1 auto;
 	min-width: 0;
 	line-height: 1.25;
+	padding: 5px 8px;
 	padding-right: var(--spacing-sm);
+	display: flex;
+	align-items: center;
 }
 
 /* Hint + icon cluster — stays right; avoids sandwiching hint between long title and buttons */
@@ -234,6 +245,7 @@ function startResize(e) {
 	align-items: center;
 	gap: var(--spacing-sm);
 	flex-shrink: 0;
+	padding: 5px 8px;
 }
 
 .ppv2-float-header :deep(.ppv2-click-hint) {

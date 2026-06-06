@@ -19,8 +19,10 @@
 			:theme-slug="config?.theme_slug || ''"
 			:chrome-config="config || null"
 		>
-			<template #header>
-				<span class="ppv2-title">{{ config?.header_text || panelLabel }}</span>
+			<template #header="{ titleClasses }">
+				<span class="ppv2-title" :class="titleClasses">{{
+					config?.header_text || panelLabel
+				}}</span>
 				<PanelHeaderToolbar
 					:chrome-config="config || null"
 					:loading="loading"
@@ -69,8 +71,8 @@
 			:theme-slug="p.config?.theme_slug || ''"
 			:chrome-config="p.config || null"
 		>
-			<template #header>
-				<span class="ppv2-title">{{ floatedPanelTitle(p) }}</span>
+			<template #header="{ titleClasses }">
+				<span class="ppv2-title" :class="titleClasses">{{ floatedPanelTitle(p) }}</span>
 				<PanelHeaderToolbar
 					:chrome-config="p.config || null"
 					:loading="!!p.loading"

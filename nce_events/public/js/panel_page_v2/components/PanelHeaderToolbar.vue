@@ -1,5 +1,5 @@
 <template>
-	<div class="ppv2-header-right" @mousedown.stop>
+	<div class="ppv2-header-right" :class="toolbarClasses" @mousedown.stop>
 		<span v-if="props.showClickHint" class="ppv2-click-hint" :class="hintFgTextClass"
 			>Click row for details · Ctrl-click to remove</span
 		>
@@ -81,7 +81,10 @@
 
 <script setup>
 import { computed } from "vue";
-import { panelChromeBg, panelChromeFgTextClass } from "../utils/panelChromeClasses.js";
+import {
+	panelChromeBg,
+	panelChromeFgTextClass,
+} from "../utils/panelChromeClasses.js";
 
 const props = defineProps({
 	title: { type: String, default: "" },
@@ -101,8 +104,14 @@ const props = defineProps({
 	chromeConfig: { type: Object, default: null },
 });
 
+const toolbarClasses = computed(() => {
+	const bg = panelChromeBg(props.chromeConfig, "header_toolbar_bg_class");
+	const fg = panelChromeFgTextClass(props.chromeConfig, "header_toolbar_bg_class");
+	return [bg, fg].filter(Boolean);
+});
+
 const hintFgTextClass = computed(() =>
-	panelChromeFgTextClass(props.chromeConfig, "header_bg_class")
+	panelChromeFgTextClass(props.chromeConfig, "header_toolbar_bg_class")
 );
 
 const displayRowCount = computed(() => {
