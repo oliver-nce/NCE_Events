@@ -42,6 +42,7 @@
 | `get_credentials(connector_name)` | `api/credentials.py` | Read credential_config JSON from API Connector — returns auth_pattern, base_url, and required credential values |
 | `usePanel(doctype, parentFilter)` | `public/js/panel_page_v2/composables/usePanel.js` | V2 composable — load, refetch with user_filters |
 | `useTagFinder()` | `public/js/panel_page_v2/composables/useTagFinder.js` | V2 composable — Tag Finder field loading + tag generation |
+| **ThemeSwatchPicker** (Themes app) | `Docs/theme-swatch-picker.md` §8 | Picks `theme-{kind}-{role}-{shade}` class strings. **Desk:** `frappe.ui.themeSwatchPicker.open({ frm, themeField, valueField })`. **Vue Form Dialog:** must pass `:set-field` / `:get-field` → `formData` from `usePanelFormDialog` — otherwise Save will not persist the pick. Page Panel config is Desk-only today. |
 
 ---
 

@@ -144,17 +144,26 @@ All 147 are real shipping classes in `nce_theme.css` — verified against the em
 
 Three host contexts, one shared core.
 
-### 8.1 Vue (`panel_page_v2` and other Vue apps)
+### 8.1 Vue (`panel_page_v2` Form Dialog and other Vue apps)
+
+Component: `Themes/frontend/src/components/ThemeSwatchPicker.vue` (Themes app).
+
+**Agent requirement — Vue save path (mandatory when embedding in a real app).**
+
+The Desk adapter writes via `frm.set_value` — Frappe dirty-tracking and Save work automatically. The Vue wrapper **does not** call `frm.set_value`. NCE Events Form Dialog saves via reactive `formData` in `usePanelFormDialog` → `saveFrozenFormDocument` (posts `{ ...formData }` to the server). **You must** pass `:get-field` and `:set-field` that read/write that same `formData`. Without `setField`, the picked class string is not in the save payload and **will not persist**; `isDirty` may also stay false.
 
 ```vue
 <ThemeSwatchPicker
   theme-field="theme"
   value-field="header_color"
   v-model:open="pickerOpen"
+  :get-field="(fn) => formData[fn]"
+  :set-field="(fn, val) => { formData[fn] = val }"
 />
 ```
 
-Component: `Themes/frontend/src/components/ThemeSwatchPicker.vue`.
+- **Page Panel config today:** Desk only (`page_panel.js` / Client Script + `frappe.ui.themeSwatchPicker.open({ frm, ... })`).
+- **Vue Form Dialog:** always wire `setField` → `formData` as above.
 
 ### 8.2 Frappe Desk forms (any app)
 
@@ -305,4 +314,7 @@ When any of those change, this spec and the widget implementation must be update
 
 ## 14. Open items / questions for follow-up
 
-None at sign-off time. If implementation discovers an issue — e.g. a Desk-side dirty-tracking edge case when `frm.set_value` is called from outside the form's event loop, or a Vite library-mode quirk with CSS extraction — log it as a TODO comment in the widget core and surface it back in the PR description.
+| Item | Status |
+|------|--------|
+| Vue Form Dialog must pass `setField` → host `formData` (§8.1) | **Documented** — not optional for NCE Events `usePanelFormDialog` save path |
+| Other implementation surprises (Vite CSS extraction, etc.) | Log as TODO in Themes widget core + PR description |

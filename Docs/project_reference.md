@@ -480,7 +480,7 @@ add_to_apps_screen = [
 
 ## 15. NCE Theme Tokens
 
-Page Panel `theme` (Link → NCE Theme) optionally overrides the palette for that panel's float only: V2 sets `data-nce-theme="<slug>"` on `PanelFloat` when the linked theme is Active; empty or invalid falls back to the site base theme (`:root`).
+Page Panel `theme` (Link → NCE Theme **doc name**, not slug) optionally overrides the palette for that panel's float only: `_resolve_theme_slug()` in `panel_data.py` maps the link to `theme_slug`; V2 sets `data-nce-theme="<slug>"` on `PanelFloat` when the linked theme is Active; empty or invalid falls back to the site base theme (`:root`). **ThemeSwatchPicker on Desk** uses the same resolution — pass `themeField: "theme"`; see `Docs/theme-swatch-picker.md`.
 
 Key color tokens from `Docs/nce_theme.json`:
 

@@ -27,7 +27,7 @@ Lets a user pick one **shipping** theme utility class (`theme-{bg|text|border}-{
 | Standalone adapter | `frontend/src/widget/adapters/standalone-adapter.ts` |
 | Blocked-open dialogs | `frontend/src/widget/blocked-dialog.ts` |
 | Vue wrapper | `frontend/src/components/ThemeSwatchPicker.vue` |
-| Build | `frontend/package.json` → `npm run build:widget` → `themes/public/dist/` (gitignored) |
+| Build | `frontend/package.json` → `npm run build:widget` → `themes/public/dist/` (**committed** in Themes repo — umd/css/es.js) |
 | Desk assets | `themes/hooks.py` — `theme-swatch-picker.umd.js` + CSS |
 
 **Desk API:**
@@ -92,11 +92,9 @@ For `themeField` on Vue: value must be the **slug** for swatch preview (Desk ada
 
 ## Likely next tasks
 
-1. **Add `header_color` Data field** to Page Panel DocType (if product wants per-panel header class).
-2. **Desk:** button or custom field UI in `page_panel.js` → `frappe.ui.themeSwatchPicker.open({ frm, themeField: "theme", valueField: "header_color" })`.
-3. **Consume picked class at runtime** — apply `header_color` class on `PanelFloat` / `PanelHeaderToolbar` (today headers use hardcoded `theme-bg-primary`).
-4. **Deploy Themes widget** — run `npm run build:widget` in Themes `frontend/` before bench build; dist is gitignored.
-5. **Spec §12 verification** — class existence grep, blocked theme dialog, backdrop blocks Theme field, round-trip save, etc.
+1. **Deploy** — pull Themes (`b60677d+` ships widget dist), `bench build`, hard-refresh Desk.
+2. **Spec §12 verification** — class existence grep, blocked theme dialog, backdrop blocks Theme field, Colours tab round-trip save, V2 chrome render.
+3. **Widget source changes** — run `npm run build:widget` in Themes `frontend/` and commit updated dist before push.
 
 ---
 
@@ -129,5 +127,5 @@ Rules:
 - Desk: frappe.ui.themeSwatchPicker.open({ frm, themeField, valueField })
 - Vue Form Dialog: MUST pass :set-field/:get-field → formData or Save won't persist
 - Do not re-add watchThemeSlug or read_only theme locking
-- Widget source lives in Themes repo; run npm run build:widget on change
+- Widget dist is in Themes git; rebuild and recommit dist when widget source changes
 ```
