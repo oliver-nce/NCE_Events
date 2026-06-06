@@ -1,6 +1,6 @@
 <template>
 	<div class="ppv2-header-right" @mousedown.stop>
-		<span v-if="props.showClickHint" class="ppv2-click-hint" :class="hintFgTonalClass"
+		<span v-if="props.showClickHint" class="ppv2-click-hint" :class="hintFgTextClass"
 			>Click row for details · Ctrl-click to remove</span
 		>
 		<div class="ppv2-header-controls">
@@ -81,7 +81,7 @@
 
 <script setup>
 import { computed } from "vue";
-import { panelChromeBg, themeBgToFgTonal } from "../utils/panelChromeClasses.js";
+import { panelChromeBg, panelChromeFgTextClass } from "../utils/panelChromeClasses.js";
 
 const props = defineProps({
 	title: { type: String, default: "" },
@@ -101,8 +101,8 @@ const props = defineProps({
 	chromeConfig: { type: Object, default: null },
 });
 
-const hintFgTonalClass = computed(() =>
-	themeBgToFgTonal(panelChromeBg(props.chromeConfig, "header_bg_class"))
+const hintFgTextClass = computed(() =>
+	panelChromeFgTextClass(props.chromeConfig, "header_bg_class")
 );
 
 const displayRowCount = computed(() => {

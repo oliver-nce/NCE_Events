@@ -49,6 +49,7 @@
 			<div class="ppv2-fd-drag-handle" @mousedown="startDrag">
 				<PanelFormDialogHeader
 					:header-bg-class="dialogHeaderBgClass"
+					:header-fg-text-class="dialogHeaderFgTextClass"
 					:row-nav-enabled="rowNavEnabledEffective"
 					:freeze-nav="findCriteriaActive"
 					:can-navigate-prev="canNavigatePrev"
@@ -189,6 +190,7 @@ const props = defineProps({
 	themeSlug: { type: String, default: "" },
 	/** Opening panel dialog_header_bg_class (empty = default theme-bg-primary). */
 	dialogHeaderBgClass: { type: String, default: "" },
+	dialogHeaderFgTextClass: { type: String, default: "" },
 });
 
 const emit = defineEmits([

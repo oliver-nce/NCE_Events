@@ -1,5 +1,5 @@
 <template>
-	<div class="ppv2-fd-header" :class="resolvedHeaderBgClass">
+	<div class="ppv2-fd-header" :class="[resolvedHeaderBgClass, headerFgTextClass]">
 		<div class="ppv2-fd-header-main">
 			<div v-if="rowNavEnabled" class="ppv2-fd-nav" @mousedown.stop>
 				<button
@@ -38,6 +38,7 @@ import { panelChromeBg } from "../utils/panelChromeClasses.js";
 
 const props = defineProps({
 	headerBgClass: { type: String, default: "" },
+	headerFgTextClass: { type: String, default: "" },
 	rowNavEnabled: { type: Boolean, default: false },
 	canNavigatePrev: { type: Boolean, default: false },
 	canNavigateNext: { type: Boolean, default: false },

@@ -87,30 +87,83 @@ const COLOUR_FIELDS = [
 	"section_break_colours",
 	"theme",
 	"frame_bg_class",
+	"frame_fg_type",
 	"header_bg_class",
+	"header_fg_type",
 	"footer_bg_class",
+	"footer_fg_type",
 	"col_header_bg_class",
+	"col_header_fg_type",
 	"filter_bar_bg_class",
+	"filter_bar_fg_type",
 	"row_bg_class",
+	"row_fg_type",
 	"row_alt_bg_class",
+	"row_alt_fg_type",
 	"dialog_header_bg_class",
+	"dialog_header_fg_type",
 ];
 
 /** Per-panel chrome slots — valueField for ThemeSwatchPicker; default when empty. */
 const COLOUR_SLOTS = [
-	{ field: "frame_bg_class", label: __("Float frame"), fallback: "theme-bg-surface" },
-	{ field: "header_bg_class", label: __("Header bar"), fallback: "theme-bg-primary" },
-	{ field: "footer_bg_class", label: __("Footer bar"), fallback: "theme-bg-primary" },
-	{ field: "col_header_bg_class", label: __("Column headers"), fallback: "theme-bg-secondary-600" },
-	{ field: "filter_bar_bg_class", label: __("Filter bar"), fallback: "theme-bg-primary-100" },
-	{ field: "row_bg_class", label: __("Table rows (even)"), fallback: "theme-bg-surface" },
-	{ field: "row_alt_bg_class", label: __("Table rows (odd)"), fallback: "theme-bg-row-alt" },
+	{
+		field: "frame_bg_class",
+		fgTypeField: "frame_fg_type",
+		label: __("Float frame"),
+		fallback: "theme-bg-surface",
+	},
+	{
+		field: "header_bg_class",
+		fgTypeField: "header_fg_type",
+		label: __("Header bar"),
+		fallback: "theme-bg-primary",
+	},
+	{
+		field: "footer_bg_class",
+		fgTypeField: "footer_fg_type",
+		label: __("Footer bar"),
+		fallback: "theme-bg-primary",
+	},
+	{
+		field: "col_header_bg_class",
+		fgTypeField: "col_header_fg_type",
+		label: __("Column headers"),
+		fallback: "theme-bg-secondary-600",
+	},
+	{
+		field: "filter_bar_bg_class",
+		fgTypeField: "filter_bar_fg_type",
+		label: __("Filter bar"),
+		fallback: "theme-bg-primary-100",
+	},
+	{
+		field: "row_bg_class",
+		fgTypeField: "row_fg_type",
+		label: __("Table rows (even)"),
+		fallback: "theme-bg-surface",
+	},
+	{
+		field: "row_alt_bg_class",
+		fgTypeField: "row_alt_fg_type",
+		label: __("Table rows (odd)"),
+		fallback: "theme-bg-row-alt",
+	},
 	{
 		field: "dialog_header_bg_class",
+		fgTypeField: "dialog_header_fg_type",
 		label: __("Viewer dialog header"),
 		fallback: "theme-bg-primary",
 	},
 ];
+
+function _colour_fg_type_field(bgField) {
+	return String(bgField || "").replace(/_bg_class$/, "_fg_type");
+}
+
+function _colour_fg_type_value(frm, bgField) {
+	const raw = (frm.doc[_colour_fg_type_field(bgField)] || "").trim().toLowerCase();
+	return raw === "tonal" ? "tonal" : "mono";
+}
 
 const MATRIX_FIELDS = [
 	"column_order",
@@ -3606,24 +3659,25 @@ function _colour_preview_bg_class(className) {
 	return raw;
 }
 
-/** Primary / Secondary only — mirrors theme-swatch-picker-core overlay rule. */
-function _colour_overlay_fg_class(bgClass) {
+/** Palette role shades — overlay uses mono or tonal -fg class on swatch preview. */
+function _colour_overlay_fg_class(bgClass, fgType) {
 	const raw = (bgClass || "").trim();
 	if (raw.indexOf("theme-bg-") !== 0) return "";
 	const body = raw.slice("theme-bg-".length);
-	if (body === "primary") return "theme-text-primary-fg";
-	if (body === "secondary") return "theme-text-secondary-fg";
-	const m = body.match(/^(primary|secondary)-(\d+)$/);
-	if (m) return "theme-text-" + m[1] + "-" + m[2] + "-fg";
-	return "";
+	const suffix = (fgType || "mono") === "tonal" ? "-fg-tonal" : "-fg";
+	const m = body.match(
+		/^(primary|secondary|accent|success|info|warning|danger)(?:-(\d+))?$/
+	);
+	if (!m) return "";
+	return "theme-text-" + m[1] + (m[2] ? "-" + m[2] : "") + suffix;
 }
 
-function _colour_preview_swatch_html(className, isDefault) {
+function _colour_preview_swatch_html(className, fgType, isDefault) {
 	const bg = _colour_preview_bg_class(className);
 	if (!bg) {
 		return '<span style="color:#8d99a6;font-size:11px;">—</span>';
 	}
-	const fg = _colour_overlay_fg_class(bg);
+	const fg = _colour_overlay_fg_class(bg, fgType);
 	const defaultCls = isDefault ? " pp-colour-swatch--default" : "";
 	let inner = "";
 	if (fg) {
@@ -3648,6 +3702,7 @@ function _colour_preview_swatch_html(className, isDefault) {
 function _bind_colours_tab_pickers(frm, $container) {
 	$container.off("click", ".pp-colour-pick").on("click", ".pp-colour-pick", function () {
 		const valueField = $(this).data("field");
+		const fgTypeField = $(this).data("fg-type-field");
 		if (!valueField) return;
 		const picker = frappe.ui && frappe.ui.themeSwatchPicker;
 		if (!picker || typeof picker.open !== "function") {
@@ -3665,6 +3720,7 @@ function _bind_colours_tab_pickers(frm, $container) {
 				frm: frm,
 				themeField: "theme",
 				valueField: valueField,
+				fgTypeField: fgTypeField || _colour_fg_type_field(valueField),
 			})
 			.then(function () {
 				_render_colours_tab_previews(frm, null, $container);
@@ -3876,17 +3932,24 @@ function _build_colours_preview_table_html(frm) {
 		const raw = (frm.doc[slot.field] || "").trim();
 		const isDefault = !raw;
 		const effective = _colour_effective_class(raw, slot.fallback);
+		const fgType = _colour_fg_type_value(frm, slot.field);
 		const display =
 			raw ||
 			'<span style="color:#8d99a6;">' + frappe.utils.escape_html(slot.fallback) + "</span>";
-		const swatch = _colour_preview_swatch_html(effective, isDefault);
+		const fgLabel =
+			fgType === "tonal"
+				? '<span style="color:#8d99a6;margin-left:6px;">(' + __("tonal") + ")</span>"
+				: "";
+		const swatch = _colour_preview_swatch_html(effective, fgType, isDefault);
 		rows += `<tr style="border-bottom:1px solid #ededed;">
 			<td style="padding:8px 10px;vertical-align:middle;width:26%;">${frappe.utils.escape_html(slot.label)}</td>
 			<td style="padding:8px 10px;vertical-align:middle;width:52px;">${swatch}</td>
-			<td style="padding:8px 10px;vertical-align:middle;font-family:monospace;font-size:12px;">${display}</td>
+			<td style="padding:8px 10px;vertical-align:middle;font-family:monospace;font-size:12px;">${display}${fgLabel}</td>
 			<td style="padding:8px 10px;vertical-align:middle;width:100px;">
 				<button type="button" class="btn btn-xs btn-default pp-colour-pick" data-field="${frappe.utils.escape_html(
 					slot.field
+				)}" data-fg-type-field="${frappe.utils.escape_html(
+					slot.fgTypeField || _colour_fg_type_field(slot.field)
 				)}">${__("Pick…")}</button>
 			</td>
 		</tr>`;

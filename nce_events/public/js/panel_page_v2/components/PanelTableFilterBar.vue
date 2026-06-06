@@ -2,7 +2,7 @@
 	<div
 		v-if="props.showFilter"
 		class="ppv2-filter-widget border-b theme-border"
-		:class="filterBarBgClass"
+		:class="[filterBarBgClass, filterBarFgTextClass]"
 	>
 		<div v-for="(cond, i) in filters" :key="i" class="ppv2-filter-row">
 			<select
@@ -93,7 +93,7 @@
 
 <script setup>
 import { reactive, watch, computed } from "vue";
-import { panelChromeBg } from "../utils/panelChromeClasses.js";
+import { panelChromeBg, panelChromeFgTextClass } from "../utils/panelChromeClasses.js";
 
 const props = defineProps({
 	columns: { type: Array, default: () => [] },
@@ -105,6 +105,9 @@ const props = defineProps({
 
 const filterBarBgClass = computed(() =>
 	panelChromeBg(props.config, "filter_bar_bg_class")
+);
+const filterBarFgTextClass = computed(() =>
+	panelChromeFgTextClass(props.config, "filter_bar_bg_class")
 );
 
 const emit = defineEmits(["filter-change", "show-filter"]);

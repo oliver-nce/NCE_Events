@@ -11,13 +11,21 @@
     "theme",
     "section_break_colours",
     "frame_bg_class",
+    "frame_fg_type",
     "header_bg_class",
+    "header_fg_type",
     "footer_bg_class",
+    "footer_fg_type",
     "col_header_bg_class",
+    "col_header_fg_type",
     "filter_bar_bg_class",
+    "filter_bar_fg_type",
     "row_bg_class",
+    "row_fg_type",
     "row_alt_bg_class",
+    "row_alt_fg_type",
     "dialog_header_bg_class",
+    "dialog_header_fg_type",
     "default_filters",
     "order_by",
     "section_break_computed",
@@ -84,11 +92,27 @@
       "label": "Frame Background Class"
     },
     {
+      "default": "mono",
+      "fieldname": "frame_fg_type",
+      "fieldtype": "Select",
+      "hidden": 1,
+      "label": "Frame Foreground Type",
+      "options": "mono\ntonal"
+    },
+    {
       "description": "Panel header bar background. Empty uses theme-bg-primary.",
       "fieldname": "header_bg_class",
       "fieldtype": "Data",
       "hidden": 1,
       "label": "Header Background Class"
+    },
+    {
+      "default": "mono",
+      "fieldname": "header_fg_type",
+      "fieldtype": "Select",
+      "hidden": 1,
+      "label": "Header Foreground Type",
+      "options": "mono\ntonal"
     },
     {
       "description": "Panel footer bar background. Empty uses theme-bg-primary.",
@@ -98,11 +122,27 @@
       "label": "Footer Background Class"
     },
     {
+      "default": "mono",
+      "fieldname": "footer_fg_type",
+      "fieldtype": "Select",
+      "hidden": 1,
+      "label": "Footer Foreground Type",
+      "options": "mono\ntonal"
+    },
+    {
       "description": "Table column header cells. Empty uses theme-bg-secondary-600.",
       "fieldname": "col_header_bg_class",
       "fieldtype": "Data",
       "hidden": 1,
       "label": "Column Header Background Class"
+    },
+    {
+      "default": "mono",
+      "fieldname": "col_header_fg_type",
+      "fieldtype": "Select",
+      "hidden": 1,
+      "label": "Column Header Foreground Type",
+      "options": "mono\ntonal"
     },
     {
       "description": "Filter bar container. Empty uses theme-bg-primary-100.",
@@ -112,11 +152,27 @@
       "label": "Filter Bar Background Class"
     },
     {
+      "default": "mono",
+      "fieldname": "filter_bar_fg_type",
+      "fieldtype": "Select",
+      "hidden": 1,
+      "label": "Filter Bar Foreground Type",
+      "options": "mono\ntonal"
+    },
+    {
       "description": "Even table rows. Empty uses theme-bg-surface.",
       "fieldname": "row_bg_class",
       "fieldtype": "Data",
       "hidden": 1,
       "label": "Row Background Class"
+    },
+    {
+      "default": "mono",
+      "fieldname": "row_fg_type",
+      "fieldtype": "Select",
+      "hidden": 1,
+      "label": "Row Foreground Type",
+      "options": "mono\ntonal"
     },
     {
       "description": "Odd (zebra) table rows. Empty uses theme-bg-row-alt.",
@@ -126,11 +182,27 @@
       "label": "Alternate Row Background Class"
     },
     {
+      "default": "mono",
+      "fieldname": "row_alt_fg_type",
+      "fieldtype": "Select",
+      "hidden": 1,
+      "label": "Alternate Row Foreground Type",
+      "options": "mono\ntonal"
+    },
+    {
       "description": "Viewer Form Dialog header when opened from this panel. Empty uses theme-bg-primary.",
       "fieldname": "dialog_header_bg_class",
       "fieldtype": "Data",
       "hidden": 1,
       "label": "Dialog Header Background Class"
+    },
+    {
+      "default": "mono",
+      "fieldname": "dialog_header_fg_type",
+      "fieldtype": "Select",
+      "hidden": 1,
+      "label": "Dialog Header Foreground Type",
+      "options": "mono\ntonal"
     },
     {
       "description": "Default filters pre-applied when the panel opens. Visible and editable in the filter widget.",

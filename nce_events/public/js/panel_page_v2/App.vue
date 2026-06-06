@@ -228,6 +228,7 @@
 			:open="true"
 			:theme-slug="formDialogThemeSlug"
 			:dialog-header-bg-class="formDialogHeaderBgClass"
+			:dialog-header-fg-text-class="formDialogHeaderFgTextClass"
 			:definition-name="formDialogDefinition"
 			:definition-source="formDialogDefinitionSource"
 			:doctype="formDialogDoctype"
@@ -264,6 +265,7 @@
 			:open="true"
 			:theme-slug="formDialogThemeSlug"
 			:dialog-header-bg-class="formDialogHeaderBgClass"
+			:dialog-header-fg-text-class="formDialogHeaderFgTextClass"
 			:definition-name="formDialogPendingDefinition"
 			:definition-source="formDialogDefinitionSource"
 			:doctype="formDialogPendingDoctype"
@@ -294,6 +296,7 @@
 			:open="true"
 			:theme-slug="formDialogThemeSlug"
 			:dialog-header-bg-class="formDialogHeaderBgClass"
+			:dialog-header-fg-text-class="formDialogHeaderFgTextClass"
 			:definition-name="formDialogDefinition"
 			:definition-source="formDialogDefinitionSource"
 			:doctype="formDialogDoctype"
@@ -330,6 +333,7 @@
 			:open="true"
 			:theme-slug="formDialogThemeSlug"
 			:dialog-header-bg-class="formDialogHeaderBgClass"
+			:dialog-header-fg-text-class="formDialogHeaderFgTextClass"
 			:definition-name="formDialogPendingDefinition"
 			:definition-source="formDialogDefinitionSource"
 			:doctype="formDialogPendingDoctype"
@@ -371,6 +375,7 @@ import PanelHeaderToolbar from "./components/PanelHeaderToolbar.vue";
 import TagFinder from "./components/TagFinder.vue";
 import CardModal from "./nce_cards/CardModal.vue";
 import PanelFormDialog from "./components/PanelFormDialog.vue";
+import { panelChromeFgTextClass } from "./utils/panelChromeClasses.js";
 import ActionsPanel from "./components/ActionsPanel.vue";
 import SpaPageSwitcherFloat from "./components/SpaPageSwitcherFloat.vue";
 import PanelFindActionBar from "./components/PanelFindActionBar.vue";
@@ -463,6 +468,9 @@ const formDialogThemeSlug = computed(
 );
 const formDialogHeaderBgClass = computed(
 	() => formDialogChromeConfig.value?.dialog_header_bg_class || ""
+);
+const formDialogHeaderFgTextClass = computed(() =>
+	panelChromeFgTextClass(formDialogChromeConfig.value, "dialog_header_bg_class")
 );
 
 function refreshPanelByDoctype(doctype) {

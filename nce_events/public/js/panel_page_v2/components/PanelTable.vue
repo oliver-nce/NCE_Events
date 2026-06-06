@@ -40,7 +40,7 @@
 							v-for="(col, ci) in dataCols"
 							:key="col.fieldname"
 							class="col-header"
-							:class="colHeaderBgClass"
+							:class="colHeaderCellClasses"
 							:style="{
 								width: colWidths[ci] ? colWidths[ci] + 'px' : 'auto',
 								minWidth: '40px',
@@ -56,7 +56,7 @@
 						<th
 							v-if="hasActionColumn"
 							class="ppv2-action-th col-header"
-							:class="colHeaderBgClass"
+							:class="colHeaderCellClasses"
 							:style="actionColumnStyle"
 						/>
 					</tr>
@@ -173,7 +173,7 @@ import {
 	isTitleFieldColumn,
 	panelRowVal,
 } from "../utils/panelTableColWidths.js";
-import { panelChromeBg } from "../utils/panelChromeClasses.js";
+import { panelChromeBg, panelChromeFgTextClass } from "../utils/panelChromeClasses.js";
 
 const props = defineProps({
 	title: { type: String, default: "" },
@@ -233,6 +233,11 @@ let _closeHeaderMenuHandler = null;
 const colHeaderBgClass = computed(() =>
 	panelChromeBg(props.config, "col_header_bg_class")
 );
+const colHeaderCellClasses = computed(() => {
+	const bg = colHeaderBgClass.value;
+	const fg = panelChromeFgTextClass(props.config, "col_header_bg_class");
+	return fg ? [bg, fg] : [bg];
+});
 
 function rowTrClasses(ri, row) {
 	const selected = props.selectedName === row.name;
@@ -240,11 +245,12 @@ function rowTrClasses(ri, row) {
 	if (selected) return { "ppv2-row-selected": true };
 	if (hovered) return { "ppv2-row-hovered": true };
 	const even = ri % 2 === 0;
-	const bgClass = panelChromeBg(
-		props.config,
-		even ? "row_bg_class" : "row_alt_bg_class"
-	);
-	return { [bgClass]: true };
+	const bgField = even ? "row_bg_class" : "row_alt_bg_class";
+	const bgClass = panelChromeBg(props.config, bgField);
+	const fgClass = panelChromeFgTextClass(props.config, bgField);
+	const classes = { [bgClass]: true };
+	if (fgClass) classes[fgClass] = true;
+	return classes;
 }
 
 function linkKey(row, col) {

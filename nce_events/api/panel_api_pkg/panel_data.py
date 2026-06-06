@@ -103,6 +103,13 @@ def _panel_chrome_class(doc: Any, field: str) -> str:
 	return (getattr(doc, field, None) or "").strip()
 
 
+def _panel_chrome_fg_type(doc: Any, bg_field: str) -> str:
+	"""Foreground pairing mode for a chrome bg slot: mono (default) or tonal."""
+	fg_field = bg_field.replace("_bg_class", "_fg_type")
+	raw = (getattr(doc, fg_field, None) or "").strip().lower()
+	return "tonal" if raw == "tonal" else "mono"
+
+
 def _resolve_theme_slug(theme_link: str | None) -> str | None:
 	"""Resolve Page Panel theme Link to an Active NCE Theme slug, or None for site base."""
 	theme = (theme_link or "").strip()
@@ -263,13 +270,21 @@ def _panel_config_from_doc(doc: Any) -> dict[str, Any]:
 		"form_dialog": (doc.form_dialog or "").strip() or None,
 		"theme_slug": _resolve_theme_slug(getattr(doc, "theme", None)),
 		"frame_bg_class": _panel_chrome_class(doc, "frame_bg_class"),
+		"frame_fg_type": _panel_chrome_fg_type(doc, "frame_bg_class"),
 		"header_bg_class": _panel_chrome_class(doc, "header_bg_class"),
+		"header_fg_type": _panel_chrome_fg_type(doc, "header_bg_class"),
 		"footer_bg_class": _panel_chrome_class(doc, "footer_bg_class"),
+		"footer_fg_type": _panel_chrome_fg_type(doc, "footer_bg_class"),
 		"col_header_bg_class": _panel_chrome_class(doc, "col_header_bg_class"),
+		"col_header_fg_type": _panel_chrome_fg_type(doc, "col_header_bg_class"),
 		"filter_bar_bg_class": _panel_chrome_class(doc, "filter_bar_bg_class"),
+		"filter_bar_fg_type": _panel_chrome_fg_type(doc, "filter_bar_bg_class"),
 		"row_bg_class": _panel_chrome_class(doc, "row_bg_class"),
+		"row_fg_type": _panel_chrome_fg_type(doc, "row_bg_class"),
 		"row_alt_bg_class": _panel_chrome_class(doc, "row_alt_bg_class"),
+		"row_alt_fg_type": _panel_chrome_fg_type(doc, "row_alt_bg_class"),
 		"dialog_header_bg_class": _panel_chrome_class(doc, "dialog_header_bg_class"),
+		"dialog_header_fg_type": _panel_chrome_fg_type(doc, "dialog_header_bg_class"),
 		"male_hex": MALE_HEX,
 		"female_hex": FEMALE_HEX,
 	}
@@ -312,13 +327,21 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 			"form_dialog": None,
 			"theme_slug": None,
 			"frame_bg_class": "",
+			"frame_fg_type": "mono",
 			"header_bg_class": "",
+			"header_fg_type": "mono",
 			"footer_bg_class": "",
+			"footer_fg_type": "mono",
 			"col_header_bg_class": "",
+			"col_header_fg_type": "mono",
 			"filter_bar_bg_class": "",
+			"filter_bar_fg_type": "mono",
 			"row_bg_class": "",
+			"row_fg_type": "mono",
 			"row_alt_bg_class": "",
+			"row_alt_fg_type": "mono",
 			"dialog_header_bg_class": "",
+			"dialog_header_fg_type": "mono",
 			"male_hex": MALE_HEX,
 			"female_hex": FEMALE_HEX,
 		}

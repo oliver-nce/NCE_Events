@@ -6,7 +6,7 @@
 		:data-nce-theme="themeSlug || undefined"
 		:style="floatStyle"
 	>
-		<div class="ppv2-float-header" :class="headerBgClass" @mousedown="startDrag">
+		<div class="ppv2-float-header" :class="[headerBgClass, headerFgTextClass]" @mousedown="startDrag">
 			<slot name="header" />
 		</div>
 
@@ -17,7 +17,7 @@
 		<div
 			v-if="$slots.footer"
 			class="ppv2-float-footer"
-			:class="[footerBgClass, footerFgTonalClass]"
+			:class="[footerBgClass, footerFgTextClass]"
 			@mousedown.prevent="startDrag"
 		>
 			<slot name="footer" />
@@ -37,8 +37,7 @@ import { ref, computed, watch } from "vue";
 import { PANEL_FLOAT_MAX_W } from "../utils/panelTableColWidths.js";
 import {
 	panelChromeBg,
-	themeBgToFgTonal,
-	PANEL_CHROME_DEFAULTS,
+	panelChromeFgTextClass,
 } from "../utils/panelChromeClasses.js";
 
 const props = defineProps({
@@ -60,11 +59,14 @@ const frameBgClass = computed(() =>
 const headerBgClass = computed(() =>
 	panelChromeBg(props.chromeConfig, "header_bg_class")
 );
+const headerFgTextClass = computed(() =>
+	panelChromeFgTextClass(props.chromeConfig, "header_bg_class")
+);
 const footerBgClass = computed(() =>
 	panelChromeBg(props.chromeConfig, "footer_bg_class")
 );
-const footerFgTonalClass = computed(() =>
-	themeBgToFgTonal(footerBgClass.value || PANEL_CHROME_DEFAULTS.footer_bg_class)
+const footerFgTextClass = computed(() =>
+	panelChromeFgTextClass(props.chromeConfig, "footer_bg_class")
 );
 
 const emit = defineEmits(["close"]);
