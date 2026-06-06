@@ -363,7 +363,11 @@
       ]
     },
     "nce_events/nce_events/doctype/page_panel/": {
-      "purpose": "Core config doctype — one record per root DocType being displayed. Stores column order, filters, gender config, email/SMS fields, computed columns, optional theme palette override (Link NCE Theme), per-surface theme-bg class slots (Colours tab + ThemeSwatchPicker), and optional link to a Form Dialog for V2 row editing.",
+      "purpose": "Core config doctype — one record per root DocType being displayed. Stores column order, filters, gender config, email/SMS fields, computed columns, optional theme palette override (Link NCE Theme), per-surface theme-bg class slots (Colours tab + ThemeSwatchPicker), and optional link to a Form Dialog for V2 row editing. Desk UI: page_panel.js tabs Config / Display / Colours / Query / Dialogs; Colours tab (_render_colours_tab) picks eight chrome slots via frappe.ui.themeSwatchPicker.open({ frm, themeField: 'theme', valueField }).",
+      "sections": [
+        "Colours tab (COLOUR_SLOTS, ThemeSwatchPicker per surface)",
+        "Display matrix, Query SQL, Form Dialogs tab"
+      ],
       "key_fields": [
         "root_doctype",
         "header_text",
@@ -538,7 +542,7 @@
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/App.vue": {
-      "purpose": "V2 SPA root: composes PanelFloat + PanelTable for the root WP Tables panel and per-doctype drilled panels, hosts TagFinder/CardModal/PanelFormDialog overlays. Uses PanelHeaderToolbar for the float headers and useSendDialogs for the plain-JS email/SMS dialog launchers. Reads injected panelMode + panelLabel (provided by main.js from the per-page mount opts); when panelMode is set the root panel applies { doctype_source: panelMode } as its parent filter and the same value is passed to usePanelActions as scope. panelLabel falls back to the header title.",
+      "purpose": "V2 SPA root: composes PanelFloat + PanelTable for the root WP Tables panel and per-doctype drilled panels, hosts TagFinder/CardModal/PanelFormDialog overlays. Passes chromeConfig (eight theme-bg class fields) to PanelFloat/PanelHeaderToolbar; formDialogChromeConfig from formDialogSourcePanelId scopes viewer dialog theme_slug + dialog_header_bg_class. Uses PanelHeaderToolbar for float headers and useSendDialogs for plain-JS email/SMS (out of chrome scope). Reads injected panelMode + panelLabel for Mirror/Native page split.",
       "depends_on": [
         "composables/usePanel.js",
         "composables/usePanelActions.js",
@@ -650,18 +654,23 @@
       ]
     },
     "nce_events/public/js/panel_page_v2/components/PanelTable.vue": {
-      "purpose": "Scrollable data table with sortable-width columns, link/related-link cells, gender-tint and bold styling, optional per-row email/phone/sms action buttons. Filter widget delegated to PanelTableFilterBar.",
+      "purpose": "Scrollable data table with sortable-width columns, link/related-link cells, gender-tint and bold styling, optional per-row email/phone/sms action buttons. Dynamic chrome: col_header_bg_class on <th>, row_bg_class/row_alt_bg_class on zebra rows (hover/selected stay token-based). Filter widget delegated to PanelTableFilterBar.",
       "depends_on": [
-        "components/PanelTableFilterBar.vue"
+        "components/PanelTableFilterBar.vue",
+        "utils/panelChromeClasses.js"
       ]
     },
     "nce_events/public/js/panel_page_v2/components/PanelHeaderToolbar.vue": {
-      "purpose": "Reusable header toolbar for PanelFloat: title, optional click-hint, refresh/filter/sheets/email/sms/close buttons, record count. Pure presentational.",
-      "depends_on": []
+      "purpose": "Header toolbar inside PanelFloat: click-hint, refresh/filter/sheets/email/sms/find/close, record count. Toolbar buttons inherit fg from header bg class (no hardcoded theme-text-primary-fg); click-hint uses themeBgToFgTonal from chromeConfig.",
+      "depends_on": [
+        "utils/panelChromeClasses.js"
+      ]
     },
     "nce_events/public/js/panel_page_v2/components/PanelTableFilterBar.vue": {
-      "purpose": "Filter widget at the top of PanelTable: column dropdown, op chips, value/date/days-ago inputs, add/remove rows, default-filter seeding. Emits filter-change and show-filter.",
-      "depends_on": []
+      "purpose": "Filter widget at the top of PanelTable: column dropdown, op chips, value/date/days-ago inputs, add/remove rows, default-filter seeding. Container uses config.filter_bar_bg_class via panelChromeBg.",
+      "depends_on": [
+        "utils/panelChromeClasses.js"
+      ]
     },
     "nce_events/public/js/panel_page_v2/composables/useSendDialogs.js": {
       "purpose": "Composable wrapping the plain-JS frappe.require email/SMS dialog launchers (bulk + per-row). Owns the in-flight _sendDialog instance.",
@@ -742,8 +751,10 @@
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogHeader.vue": {
-      "purpose": "Form dialog header — title, row nav, close.",
-      "depends_on": []
+      "purpose": "Form dialog header — title, row nav, close. Dynamic headerBgClass (opening panel dialog_header_bg_class); nav/close inherit fg from bg class.",
+      "depends_on": [
+        "utils/panelChromeClasses.js"
+      ]
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormScriptToolTab.vue": {
       "purpose": "Mounts a captured JS tool UI into a real DOM container. On mount calls mountTool(tool, containerRef.value) from usePanelFormDialog, which re-runs the script's refresh handler with layout.wrapper pointing to the container so the script can inject its full HTML UI (tab bars, buttons, sections). Used for standard DocType form scripts like page_panel.js that do DOM injection rather than add_custom_button.",
@@ -775,7 +786,7 @@
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue": {
-      "purpose": "V2 form dialog root — composes Header/Body/Footer, usePanelFormDialog + useFormDialogChrome. Opened from panel when form_dialog is set.",
+      "purpose": "V2 form dialog root — composes Header/Body/Footer, usePanelFormDialog + useFormDialogChrome. data-nce-theme + dialogHeaderBgClass from opening panel (renders outside PanelFloat). Opened from panel when form_dialog is set.",
       "depends_on": [
         "composables/usePanelFormDialog.js",
         "composables/useFormDialogChrome.js",
