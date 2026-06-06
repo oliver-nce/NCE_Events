@@ -8,6 +8,7 @@
   "field_order": [
     "root_doctype",
     "header_text",
+    "theme",
     "default_filters",
     "order_by",
     "section_break_computed",
@@ -52,6 +53,13 @@
       "fieldtype": "Data",
       "in_list_view": 1,
       "label": "Header Text"
+    },
+    {
+      "description": "Optional palette override. Only Active themes take effect. Empty uses the site base theme.",
+      "fieldname": "theme",
+      "fieldtype": "Link",
+      "label": "Theme",
+      "options": "NCE Theme"
     },
     {
       "description": "Default filters pre-applied when the panel opens. Visible and editable in the filter widget.",

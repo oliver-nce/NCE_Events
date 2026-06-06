@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Manual overlay merged into CODE_INDEX.json by scripts/build_code_index.py. Edit per-file entries here; the generator preserves your curated 'purpose', 'sections', 'private_helpers', 'key_fields', and 'depends_on'.",
-    "generated": "2026-06-03",
+    "generated": "2026-06-05",
     "generator": "scripts/build_code_index.py",
     "usage": "Run `python scripts/build_code_index.py --write` to regenerate CODE_INDEX.json after editing this file or after adding/renaming/deleting source files. The pre-commit hook runs `--check` and blocks commits whose code changes have not been regenerated."
   },
@@ -517,6 +517,16 @@
         "Diagnostic child lookup"
       ]
     },
+    "nce_events/api/panel_api_pkg/format_rules.py": {
+      "exports": [
+        "build_format_case_columns",
+        "validate_format_rule"
+      ],
+      "whitelist_endpoints": [
+        "validate_format_rule"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/api/panel_api_pkg/page_panel_lookup.py": {
       "exports": [
         "generate_auto_page_panel_name",
@@ -537,7 +547,7 @@
         "get_panel_config",
         "get_panel_data"
       ],
-      "purpose": "Panel data endpoints — get_panel_config for Page Panel settings, get_panel_data for paginated/filtered panel rows with computed columns and child doctype counts, export_panel_data for CSV export to public files.",
+      "purpose": "Panel data endpoints — get_panel_config for Page Panel settings (includes theme_slug from optional Page Panel.theme Link), get_panel_data for paginated/filtered panel rows with computed columns and child doctype counts, export_panel_data for CSV export to public files.",
       "depends_on": [
         "nce_events/api/panel_api_pkg/_helpers.py",
         "nce_events/api/panel_api_pkg/computed_columns.py",
@@ -548,6 +558,7 @@
       ],
       "sections": [
         "Panel config fetch",
+        "theme_slug resolution (_resolve_theme_slug)",
         "Panel data fetch with filters/pagination",
         "CSV export"
       ]
@@ -709,7 +720,8 @@
     },
     "nce_events/api/tests/api/panel_api_pkg/test_discovery.py": {
       "exports": [
-        "TestDiscoverViaLinkPaths"
+        "TestDiscoverViaLinkPaths",
+        "TestGetChildDoctypes"
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
@@ -989,10 +1001,11 @@
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
     "nce_events/nce_events/doctype/page_panel/": {
-      "purpose": "Core config doctype — one record per root DocType being displayed. Stores column order, filters, gender config, email/SMS fields, computed columns, and optional link to a Form Dialog for V2 row editing.",
+      "purpose": "Core config doctype — one record per root DocType being displayed. Stores column order, filters, gender config, email/SMS fields, computed columns, optional theme palette override (Link NCE Theme), and optional link to a Form Dialog for V2 row editing.",
       "key_fields": [
         "root_doctype",
         "header_text",
+        "theme",
         "core_filter",
         "order_by",
         "column_order",
@@ -1015,6 +1028,9 @@
       "depends_on": []
     },
     "nce_events/nce_events/doctype/page_panel_default_filter/": {
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/nce_events/doctype/page_panel_format_rule/": {
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
     "nce_events/nce_events/doctype/panel_action/": {
@@ -1159,6 +1175,13 @@
       "purpose": "Side panel showing available actions (email, SMS, AI tools) for selected rows",
       "depends_on": []
     },
+    "nce_events/public/js/panel_page_v2/components/ColorPicker.vue": {
+      "vue": {
+        "uses_defineProps": true,
+        "uses_defineEmits": true
+      },
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/public/js/panel_page_v2/components/DisplayWidget.vue": {
       "purpose": "Read-only display widget for card fields",
       "depends_on": []
@@ -1171,6 +1194,12 @@
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/components/FindPanel.vue": {
+      "vue": {
+        "uses_defineEmits": true
+      },
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/public/js/panel_page_v2/components/FormatRuleEditor.vue": {
       "vue": {
         "uses_defineEmits": true
       },
@@ -1548,6 +1577,12 @@
         "App.vue"
       ]
     },
+    "nce_events/public/js/panel_page_v2/mount_format_rule_editor.js": {
+      "exports": [
+        "mountFormatRuleEditor"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/public/js/panel_page_v2/nce_cards/CardForm.vue": {
       "vue": {
         "uses_defineProps": true,
@@ -1628,6 +1663,13 @@
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
+    "nce_events/public/js/panel_page_v2/utils/formDialogRelatedGoTo.js": {
+      "exports": [
+        "buildRelatedTabPanelFilter",
+        "canGoToRelatedPanel"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/public/js/panel_page_v2/utils/formDialogSnapshot.js": {
       "exports": [
         "snapshotForCompare"
@@ -1669,6 +1711,20 @@
     "nce_events/public/js/panel_page_v2/utils/openDeskDoctypeList.js": {
       "exports": [
         "openDeskDoctypeListInNewTab"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
+    "nce_events/public/js/panel_page_v2/utils/panelTableColWidths.js": {
+      "exports": [
+        "PANEL_FLOAT_CHROME_PX",
+        "PANEL_FLOAT_DEFAULT_W",
+        "PANEL_FLOAT_MAX_W",
+        "actionColumnWidthFromConfig",
+        "calcColWidths",
+        "isTitleFieldColumn",
+        "panelFloatWidthFromTableMin",
+        "panelRowVal",
+        "preparePanelTableLayout"
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },

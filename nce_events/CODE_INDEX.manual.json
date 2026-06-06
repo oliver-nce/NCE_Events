@@ -152,7 +152,7 @@
       ]
     },
     "nce_events/api/panel_api_pkg/panel_data.py": {
-      "purpose": "Panel data endpoints — get_panel_config for Page Panel settings, get_panel_data for paginated/filtered panel rows with computed columns and child doctype counts, export_panel_data for CSV export to public files.",
+      "purpose": "Panel data endpoints — get_panel_config for Page Panel settings (includes theme_slug from optional Page Panel.theme Link), get_panel_data for paginated/filtered panel rows with computed columns and child doctype counts, export_panel_data for CSV export to public files.",
       "depends_on": [
         "nce_events/api/panel_api_pkg/_helpers.py",
         "nce_events/api/panel_api_pkg/computed_columns.py",
@@ -163,6 +163,7 @@
       ],
       "sections": [
         "Panel config fetch",
+        "theme_slug resolution (_resolve_theme_slug)",
         "Panel data fetch with filters/pagination",
         "CSV export"
       ]
@@ -360,10 +361,11 @@
       ]
     },
     "nce_events/nce_events/doctype/page_panel/": {
-      "purpose": "Core config doctype — one record per root DocType being displayed. Stores column order, filters, gender config, email/SMS fields, computed columns, and optional link to a Form Dialog for V2 row editing.",
+      "purpose": "Core config doctype — one record per root DocType being displayed. Stores column order, filters, gender config, email/SMS fields, computed columns, optional theme palette override (Link NCE Theme), and optional link to a Form Dialog for V2 row editing.",
       "key_fields": [
         "root_doctype",
         "header_text",
+        "theme",
         "core_filter",
         "order_by",
         "column_order",

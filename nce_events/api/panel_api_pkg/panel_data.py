@@ -98,6 +98,24 @@ def _derived_order_clause(config: dict, display_fields: list[str]) -> str:
 	return f" ORDER BY `{col}` {direction}"
 
 
+def _resolve_theme_slug(theme_link: str | None) -> str | None:
+	"""Resolve Page Panel theme Link to an Active NCE Theme slug, or None for site base."""
+	theme = (theme_link or "").strip()
+	if not theme:
+		return None
+	try:
+		if not frappe.db.exists("DocType", "NCE Theme"):
+			return None
+	except Exception:
+		return None
+	if not frappe.db.exists("NCE Theme", theme):
+		return None
+	slug, status = frappe.db.get_value("NCE Theme", theme, ["slug", "status"])
+	if status == "Active" and slug:
+		return slug
+	return None
+
+
 def _panel_config_from_doc(doc: Any) -> dict[str, Any]:
 	"""Build panel config dict from a Page Panel document (in-memory or loaded)."""
 	root_doctype = (doc.root_doctype or "").strip()
@@ -238,6 +256,7 @@ def _panel_config_from_doc(doc: Any) -> dict[str, Any]:
 		"open_card_on_click": cint(doc.get("open_card_on_click")),
 		"allow_new_record_creation": cint(doc.get("allow_new_record_creation")),
 		"form_dialog": (doc.form_dialog or "").strip() or None,
+		"theme_slug": _resolve_theme_slug(getattr(doc, "theme", None)),
 		"male_hex": MALE_HEX,
 		"female_hex": FEMALE_HEX,
 	}
@@ -278,6 +297,7 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 			"open_card_on_click": 0,
 			"allow_new_record_creation": 0,
 			"form_dialog": None,
+			"theme_slug": None,
 			"male_hex": MALE_HEX,
 			"female_hex": FEMALE_HEX,
 		}

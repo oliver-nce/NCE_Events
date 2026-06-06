@@ -11,7 +11,13 @@
 				<ActionsPanel :actions="panelActions" @select="onPanelActionSelect" />
 			</div>
 			<div class="ppv2-zone ppv2-zone-tables">
-		<PanelFloat :init-x="16" :init-y="16" :init-w="900" :init-h="550">
+		<PanelFloat
+			:init-x="16"
+			:init-y="16"
+			:init-w="900"
+			:init-h="550"
+			:theme-slug="config?.theme_slug || ''"
+		>
 			<template #header>
 				<span class="ppv2-title">{{ config?.header_text || panelLabel }}</span>
 				<PanelHeaderToolbar
@@ -58,6 +64,7 @@
 			:init-y="p.y"
 			:init-w="panelFloatInitW(p)"
 			:init-h="600"
+			:theme-slug="p.config?.theme_slug || ''"
 		>
 			<template #header>
 				<span class="ppv2-title">{{ floatedPanelTitle(p) }}</span>

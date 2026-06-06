@@ -2,6 +2,7 @@
 	<div
 		ref="floatEl"
 		class="ppv2-float theme-bg-surface theme-border theme-rounded theme-shadow-theme"
+		:data-nce-theme="themeSlug || undefined"
 		:style="floatStyle"
 	>
 		<div class="ppv2-float-header theme-bg-primary" @mousedown="startDrag">
@@ -40,6 +41,8 @@ const props = defineProps({
 	initH: { type: Number, default: 550 },
 	/** Minimum Y (px); use negative values to allow dragging above .ppv2-root top. */
 	minY: { type: Number, default: 0 },
+	/** Active NCE Theme slug; omit for site base palette (:root). */
+	themeSlug: { type: String, default: "" },
 });
 
 const emit = defineEmits(["close"]);

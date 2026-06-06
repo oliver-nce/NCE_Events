@@ -51,6 +51,7 @@ const TAB_GROUPS = {
 	config: [
 		"root_doctype",
 		"header_text",
+		"theme",
 		"default_filters",
 		"order_by",
 		"section_break_computed",

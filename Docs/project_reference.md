@@ -480,6 +480,8 @@ add_to_apps_screen = [
 
 ## 15. NCE Theme Tokens
 
+Page Panel `theme` (Link → NCE Theme) optionally overrides the palette for that panel's float only: V2 sets `data-nce-theme="<slug>"` on `PanelFloat` when the linked theme is Active; empty or invalid falls back to the site base theme (`:root`).
+
 Key color tokens from `Docs/nce_theme.json`:
 
 | Role | Token | Hex |
