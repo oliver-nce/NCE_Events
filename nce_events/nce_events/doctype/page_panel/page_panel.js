@@ -3667,8 +3667,55 @@ function _bind_colours_tab_pickers(frm, $container) {
 				valueField: valueField,
 			})
 			.then(function () {
-				_render_colours_tab(frm);
+				_render_colours_tab_previews(frm, null, $container);
 			});
+	});
+}
+
+function _reload_nce_theme_stylesheet(cssHash) {
+	const bust = (cssHash || "").trim() || String(Date.now());
+	$('link[rel="stylesheet"]').each(function () {
+		const href = $(this).attr("href") || "";
+		if (href.indexOf("nce_theme.css") === -1) {
+			return;
+		}
+		const base = href.split("?")[0];
+		this.href = base + "?v=" + encodeURIComponent(bust);
+	});
+}
+
+function _refresh_colours_theme_css(frm) {
+	const $container = $(frm.layout.wrapper).find(".pp-colours-wrap");
+	const $btn = $container.find(".pp-colours-theme-refresh");
+
+	function finish(cssHash) {
+		_reload_nce_theme_stylesheet(cssHash);
+		_render_colours_tab_previews(frm, null, $container);
+		$btn.prop("disabled", false);
+		frappe.show_alert({
+			message: __("Theme refreshed"),
+			indicator: "green",
+		});
+	}
+
+	$btn.prop("disabled", true);
+	frappe.call({
+		method: "themes.api.regenerate_theme_css",
+		freeze: true,
+		freeze_message: __("Republishing theme CSS…"),
+		callback: function (r) {
+			const msg = (r && r.message) || {};
+			finish(msg.css_hash);
+		},
+		error: function () {
+			_reload_nce_theme_stylesheet();
+			_render_colours_tab_previews(frm, null, $container);
+			$btn.prop("disabled", false);
+			frappe.show_alert({
+				message: __("Previews redrawn (could not republish theme CSS)"),
+				indicator: "orange",
+			});
+		},
 	});
 }
 
@@ -3710,9 +3757,29 @@ function _update_colours_theme_edit_btn(frm, $btn) {
 	});
 }
 
+function _bind_colours_theme_select_change(frm, fd, $editBtn) {
+	const $wrapper = $(fd.$wrapper);
+	const handler = function () {
+		setTimeout(function () {
+			_update_colours_theme_edit_btn(frm, $editBtn);
+			_render_colours_tab_previews(
+				frm,
+				null,
+				$(frm.layout.wrapper).find(".pp-colours-wrap")
+			);
+		}, 0);
+	};
+	$wrapper.find("select, input").off("change.pp-colours-theme").on("change.pp-colours-theme", handler);
+}
+
 function _mount_theme_field_on_colours_tab(frm, $container) {
 	const $host = $container.find(".pp-colours-theme-field");
 	if (!$host.length) {
+		return;
+	}
+	if ($host.find(".pp-colours-theme-row").length) {
+		const $editBtn = $host.find(".pp-colours-theme-edit");
+		_update_colours_theme_edit_btn(frm, $editBtn);
 		return;
 	}
 
@@ -3743,6 +3810,16 @@ function _mount_theme_field_on_colours_tab(frm, $container) {
 	$fieldCol.append(fd.$wrapper);
 	$row.append($fieldCol);
 
+	const $refreshBtn = $(
+		'<button type="button" class="btn btn-default btn-sm pp-colours-theme-refresh">' +
+			frappe.utils.escape_html(__("Refresh")) +
+			"</button>"
+	);
+	$refreshBtn.on("click", function () {
+		_refresh_colours_theme_css(frm);
+	});
+	$row.append($refreshBtn);
+
 	const $editBtn = $(
 		'<button type="button" class="btn btn-default btn-sm pp-colours-theme-edit"></button>'
 	);
@@ -3757,22 +3834,43 @@ function _mount_theme_field_on_colours_tab(frm, $container) {
 
 	$(fd.$wrapper).show();
 	_update_colours_theme_edit_btn(frm, $editBtn);
-
-	const $input = $(fd.$wrapper).find("input");
-	$input.off("change.pp-colours-theme-edit");
-	$input.on("change.pp-colours-theme-edit", function () {
-		_update_colours_theme_edit_btn(frm, $editBtn);
-	});
+	_bind_colours_theme_select_change(frm, fd, $editBtn);
 }
 
-function _render_colours_tab_html(frm, themeSlug) {
-	const $container = $(frm.layout.wrapper).find(".pp-colours-wrap");
-	if (!$container.length) return;
+function _colours_tab_styles_html() {
+	return `
+		<style>
+			.pp-colours-wrap .pp-colour-swatch--default { opacity: 0.55; }
+			.pp-colours-wrap .pp-colours-theme-scope { display: inline-block; max-width: 100%; }
+			.pp-colours-wrap .pp-colours-theme-row {
+				display: flex;
+				align-items: flex-end;
+				flex-wrap: wrap;
+				gap: 8px;
+				max-width: 640px;
+			}
+			.pp-colours-wrap .pp-colours-theme-field-col {
+				flex: 1 1 220px;
+				min-width: 200px;
+			}
+			.pp-colours-wrap .pp-colours-theme-label {
+				display: block;
+				font-weight: 600;
+				margin-bottom: 4px;
+			}
+			.pp-colours-wrap .pp-colours-theme-field-col .form-group {
+				margin-bottom: 0;
+			}
+			.pp-colours-wrap .pp-colours-theme-edit,
+			.pp-colours-wrap .pp-colours-theme-refresh {
+				flex-shrink: 0;
+				margin-bottom: 2px;
+				white-space: nowrap;
+			}
+		</style>`;
+}
 
-	const scopeAttr = themeSlug
-		? ' data-nce-theme="' + frappe.utils.escape_html(themeSlug) + '"'
-		: "";
-
+function _build_colours_preview_table_html(frm) {
 	let rows = "";
 	COLOUR_SLOTS.forEach(function (slot) {
 		const raw = (frm.doc[slot.field] || "").trim();
@@ -3794,52 +3892,64 @@ function _render_colours_tab_html(frm, themeSlug) {
 		</tr>`;
 	});
 
-	const html = `
-		<style>
-			.pp-colours-wrap .pp-colour-swatch--default { opacity: 0.55; }
-			.pp-colours-wrap .pp-colours-theme-scope { display: inline-block; max-width: 100%; }
-			.pp-colours-wrap .pp-colours-theme-row {
-				display: flex;
-				align-items: flex-end;
-				flex-wrap: wrap;
-				gap: 8px;
-				max-width: 560px;
-			}
-			.pp-colours-wrap .pp-colours-theme-field-col {
-				flex: 1 1 220px;
-				min-width: 200px;
-			}
-			.pp-colours-wrap .pp-colours-theme-label {
-				display: block;
-				font-weight: 600;
-				margin-bottom: 4px;
-			}
-			.pp-colours-wrap .pp-colours-theme-field-col .form-group {
-				margin-bottom: 0;
-			}
-			.pp-colours-wrap .pp-colours-theme-edit {
-				flex-shrink: 0;
-				margin-bottom: 2px;
-				white-space: nowrap;
-			}
-		</style>
-		<div class="pp-colours-theme-field" style="margin-bottom:14px;"></div>
-		<div class="pp-colours-theme-scope"${scopeAttr}>
-			<table class="table table-bordered" style="max-width:760px;background:#fff;">
-				<thead>
-					<tr style="background:#f7f7f7;">
-						<th style="padding:6px 10px;">${__("Surface")}</th>
-						<th style="padding:6px 10px;">${__("Preview")}</th>
-						<th style="padding:6px 10px;">${__("Class")}</th>
-						<th style="padding:6px 10px;"></th>
-					</tr>
-				</thead>
-				<tbody>${rows}</tbody>
-			</table>
+	return `<table class="table table-bordered" style="max-width:760px;background:#fff;">
+		<thead>
+			<tr style="background:#f7f7f7;">
+				<th style="padding:6px 10px;">${__("Surface")}</th>
+				<th style="padding:6px 10px;">${__("Preview")}</th>
+				<th style="padding:6px 10px;">${__("Class")}</th>
+				<th style="padding:6px 10px;"></th>
+			</tr>
+		</thead>
+		<tbody>${rows}</tbody>
+	</table>`;
+}
+
+function _ensure_colours_tab_shell(frm, $container) {
+	if ($container.find(".pp-colours-shell").length) {
+		return;
+	}
+
+	const html =
+		_colours_tab_styles_html() +
+		`<div class="pp-colours-shell">
+			<div class="pp-colours-theme-field" style="margin-bottom:14px;"></div>
+			<div class="pp-colours-previews"></div>
 		</div>`;
 
 	$container.html(html);
 	_mount_theme_field_on_colours_tab(frm, $container);
+}
+
+function _render_colours_tab_previews(frm, themeSlug, $container) {
+	if (!$container || !$container.length) {
+		return;
+	}
+
+	if (themeSlug === null) {
+		const themeLink = (frm.doc.theme || "").trim();
+		_resolve_nce_theme_slug_for_colours(themeLink, function (slug) {
+			_render_colours_tab_previews(frm, slug, $container);
+		});
+		return;
+	}
+
+	const scopeAttr = themeSlug
+		? ' data-nce-theme="' + frappe.utils.escape_html(themeSlug) + '"'
+		: "";
+
+	const $previews = $container.find(".pp-colours-previews");
+	if (!$previews.length) {
+		return;
+	}
+
+	$previews.html(
+		'<div class="pp-colours-theme-scope"' +
+			scopeAttr +
+			">" +
+			_build_colours_preview_table_html(frm) +
+			"</div>"
+	);
 	_bind_colours_tab_pickers(frm, $container);
 }
 
@@ -3847,10 +3957,8 @@ function _render_colours_tab(frm) {
 	const $container = $(frm.layout.wrapper).find(".pp-colours-wrap");
 	if (!$container.length) return;
 
-	const themeLink = (frm.doc.theme || "").trim();
-	_resolve_nce_theme_slug_for_colours(themeLink, function (slug) {
-		_render_colours_tab_html(frm, slug);
-	});
+	_ensure_colours_tab_shell(frm, $container);
+	_render_colours_tab_previews(frm, null, $container);
 }
 
 // ── Page Panel form events ────────────────────────────────────────────────────
