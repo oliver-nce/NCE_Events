@@ -67,6 +67,7 @@
       "fieldname": "theme",
       "fieldtype": "Link",
       "label": "Theme",
+      "only_select": 1,
       "options": "NCE Theme"
     },
     {
