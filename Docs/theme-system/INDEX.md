@@ -30,12 +30,13 @@ Reusable picker that writes a single `theme-{kind}-{role}-{shade}` class string 
 | Full spec (layout, API, embed targets, verification) | `../theme-swatch-picker.md` |
 | DOM core | `frontend/src/widget/theme-swatch-picker-core.ts` |
 | Vue wrapper | `frontend/src/components/ThemeSwatchPicker.vue` |
-| Desk API | `frappe.ui.themeSwatchPicker.open({ frm, themeField, valueField })` |
-| Standalone API | `window.themeSwatchPicker.open({ themeFieldEl, valueFieldEl })` |
+| Desk API | `await frappe.ui.themeSwatchPicker.open({ frm, themeField, valueField })` — **`themeField` = Link doc name → slug lookup** |
+| Slug resolver (Desk) | `frontend/src/widget/adapters/desk-adapter.ts` → `resolveNceThemeSlug()` |
+| Standalone API | `window.themeSwatchPicker.open({ themeFieldEl, valueFieldEl })` — **element value must be slug** |
 | Build | `npm run build:widget` → `themes/public/dist/` (gitignored; run on deploy) |
 | Desk assets | `hooks.py` — `app_include_js` + widget CSS |
 
-**Assumption:** `nce_theme.css` is published on the site (`publish_theme()` on save of Active/base themes). Swatches paint via `theme-bg-*` classes inside a `data-nce-theme="{slug}"` wrapper — zero color math in the widget.
+**Assumption:** `nce_theme.css` is published on the site (`publish_theme()` on save of Active/base themes). Swatches paint via `theme-bg-*` classes inside a `data-nce-theme="{slug}"` wrapper — zero color math in the widget. On Desk, `themeField` holds the **NCE Theme link** (doc name); the adapter looks up **`slug`** before scoping the modal (Page Panel `theme`, not the slug string).
 
 ## Quick Answers (vague-question → file)
 
@@ -45,6 +46,7 @@ Reusable picker that writes a single `theme-{kind}-{role}-{shade}` class string 
 | "what classes for a button" / "primary vs secondary button" / "outline button" / "ghost button" | `09-buttons.md` |
 | "color picker preview" / "user-selected color at runtime" | `06-escape-hatch.md` |
 | "pick a theme class" / "header_color" / "swatch picker" / "theme-text-secondary-500" | `../theme-swatch-picker.md` |
+| "theme field is Link not slug" / "Page Panel theme picker" | `../theme-swatch-picker.md` §3–§4 (Desk resolves Link → slug) |
 | "what class should I use for X" | (use `THEME_CLASS_CONTRACT.json` instead) |
 | "how do themes work in this app" | `01-architecture.md` |
 | "I want to add a brand color" | `08-extending.md` |

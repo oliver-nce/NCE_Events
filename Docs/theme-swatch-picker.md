@@ -56,7 +56,7 @@ Single modal. Two vertical radio columns on the left, live swatch strip on the r
 
 | Prop | Required | Description |
 |---|---|---|
-| `themeField` | yes | Name of the form field on the host that holds the theme slug (e.g. `"theme"`). Widget watches it reactively; when the slug changes, the swatches re-paint and the footer label updates. |
+| `themeField` | yes | Name of the form field on the host that holds the **NCE Theme link** (doc name, e.g. Page Panel `theme`). Desk adapter resolves this to the theme **slug** for `data-nce-theme`. Standalone/Vue hosts must pass a slug literal if not using the Desk adapter. |
 | `valueField` | yes | Name of the form field that receives the chosen class string (e.g. `"header_color"`). |
 
 That is the entire public API. No default-value prop, no static slug prop, no kind/role restrictions — the spec is intentionally minimal.
@@ -66,7 +66,7 @@ That is the entire public API. No default-value prop, no static slug prop, no ki
 ## 4. Behavior
 
 **On open:**
-1. Read `themeField` value → render modal inside `<div data-nce-theme="{slug}">`.
+1. Read `themeField` value. **Desk:** the field is typically Link → NCE Theme (doc name); the Desk adapter resolves it to the theme **`slug`** via `frappe.db.get_value` (Active themes only — same rule as `nce_events` `_resolve_theme_slug`). **Standalone/Vue:** the field value must already be the slug literal. Then render the modal inside `<div data-nce-theme="{slug}">`.
 2. Read `valueField` value. If it parses as `theme-{kind}-{role}-{shade}` with valid components, set the radios to match. Otherwise default (Bg / Primary).
 3. Render the swatch strip for the currently-selected role.
 
@@ -87,7 +87,7 @@ That is the entire public API. No default-value prop, no static slug prop, no ki
 - Close the modal. No write.
 
 **On `themeField` change while modal is open:**
-- Update the `data-nce-theme` attribute on the wrapper → swatches and Text overlay foreground colors re-paint automatically (pure CSS).
+- **Desk:** re-resolve Link → slug, then update `data-nce-theme` on the wrapper → swatches and Text overlay foreground colors re-paint automatically (pure CSS).
 - Update the footer `Theme: <slug>` label.
 
 ---
@@ -163,12 +163,13 @@ In a Client Script or `form.js`:
 ```js
 frappe.ui.themeSwatchPicker.open({
   frm,
-  themeField: "theme",
+  themeField: "theme",       // Link → NCE Theme doc name; resolved to slug
   valueField: "header_color",
 });
+// Returns Promise<boolean> — await or .then()
 ```
 
-The `frappe.ui.themeSwatchPicker` object is exposed by the UMD bundle. The init function reads the current values from `frm.doc`, opens the modal, and on swatch click calls `frm.set_value(valueField, "<chosen-class>")` so Frappe's standard dirty-tracking and save flow handle the rest.
+The `frappe.ui.themeSwatchPicker` object is exposed by the UMD bundle. The init function reads the current values from `frm.doc`, **resolves `themeField` (Link → NCE Theme doc name) to the theme's `slug` via `frappe.db.get_value`**, opens the modal, and on swatch click calls `frm.set_value(valueField, "<chosen-class>")` so Frappe's standard dirty-tracking and save flow handle the rest.
 
 ### 8.3 Standalone HTML page
 
