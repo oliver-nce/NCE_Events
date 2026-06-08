@@ -596,6 +596,59 @@ def _names_for_filtered_export(filtered_row_names: str | list | None) -> list[st
 	return out
 
 
+_COLOUR_COPY_FIELDS: tuple[str, ...] = (
+	"theme",
+	"frame_bg_class",
+	"frame_fg_type",
+	"header_bg_class",
+	"header_fg_type",
+	"header_toolbar_bg_class",
+	"header_toolbar_fg_type",
+	"footer_bg_class",
+	"footer_fg_type",
+	"col_header_bg_class",
+	"col_header_fg_type",
+	"filter_bar_bg_class",
+	"filter_bar_fg_type",
+	"row_bg_class",
+	"row_fg_type",
+	"row_alt_bg_class",
+	"row_alt_fg_type",
+	"dialog_header_bg_class",
+	"dialog_header_fg_type",
+)
+
+
+@frappe.whitelist()
+def get_other_page_panels(current_panel: str) -> list[dict[str, str]]:
+	"""Return all Page Panels except the current one, with name and theme."""
+	rows = frappe.get_all(
+		"Page Panel",
+		fields=["name", "theme"],
+		filters=[["name", "!=", current_panel]],
+		order_by="name asc",
+	)
+	return [{"name": r["name"], "theme": (r.get("theme") or "").strip()} for r in rows]
+
+
+@frappe.whitelist()
+def copy_panel_colours(source_name: str, target_names: str | list) -> dict[str, Any]:
+	"""Copy all colour fields from source Page Panel to one or more target panels."""
+	if isinstance(target_names, str):
+		import json as _json
+		target_names = _json.loads(target_names) if target_names.startswith("[") else [target_names]
+
+	source = frappe.get_doc("Page Panel", source_name)
+	updated: list[str] = []
+	for target_name in target_names:
+		target = frappe.get_doc("Page Panel", target_name)
+		for field in _COLOUR_COPY_FIELDS:
+			target.set(field, getattr(source, field, None) or "")
+		target.save(ignore_permissions=False)
+		updated.append(target_name)
+	return {"updated": updated}
+
+
 @frappe.whitelist()
 def export_panel_data(
 	root_doctype: str,

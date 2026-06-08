@@ -3933,6 +3933,96 @@ function _colours_tab_styles_html() {
 				margin-bottom: 2px;
 				white-space: nowrap;
 			}
+			/* Side-by-side layout */
+			.pp-colours-panels-row {
+				display: flex;
+				align-items: flex-start;
+				gap: 0;
+				margin-top: 10px;
+			}
+			.pp-colours-left {
+				flex: 0 0 auto;
+			}
+			.pp-colours-arrows {
+				flex: 0 0 auto;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				gap: 10px;
+				padding: 0 14px;
+				align-self: center;
+			}
+			.pp-colours-arrow-btn {
+				display: flex;
+				align-items: center;
+				gap: 6px;
+				padding: 8px 14px;
+				border: 2px solid #adb5bd;
+				border-radius: 6px;
+				background: transparent;
+				color: #495057;
+				font-size: 13px;
+				font-weight: 600;
+				cursor: pointer;
+				white-space: nowrap;
+				transition: border-color 0.15s, color 0.15s, background 0.15s;
+				line-height: 1;
+			}
+			.pp-colours-arrow-btn:hover:not(:disabled) {
+				border-color: #495057;
+				background: #f1f3f5;
+				color: #212529;
+			}
+			.pp-colours-arrow-btn:disabled,
+			.pp-colours-arrow-btn[aria-hidden="true"] {
+				opacity: 0;
+				pointer-events: none;
+			}
+			.pp-colours-arrow-icon {
+				font-size: 18px;
+				line-height: 1;
+			}
+			/* Other panels table */
+			.pp-colours-right {
+				flex: 0 0 auto;
+				min-width: 220px;
+			}
+			.pp-colours-other-table {
+				width: 100%;
+				border-collapse: collapse;
+				background: #fff;
+				font-size: 13px;
+			}
+			.pp-colours-other-table thead th {
+				padding: 6px 10px;
+				background: #f7f7f7;
+				border: 1px solid #dee2e6;
+				font-weight: 600;
+				text-align: left;
+			}
+			.pp-colours-other-table tbody td {
+				padding: 7px 10px;
+				border: 1px solid #dee2e6;
+				vertical-align: middle;
+				cursor: pointer;
+				user-select: none;
+			}
+			.pp-colours-other-table tbody tr:hover td {
+				background: #f1f3f5;
+			}
+			.pp-colours-other-table tbody tr.pp-panel-row--selected td {
+				background: #dbe4ff;
+				border-color: #748ffc;
+				font-weight: 600;
+			}
+			.pp-colours-other-theme {
+				color: #868e96;
+				font-size: 12px;
+			}
+			.pp-colours-other-table tbody tr.pp-panel-row--selected .pp-colours-other-theme {
+				color: #495057;
+			}
 		</style>`;
 }
 
@@ -3987,7 +4077,24 @@ function _ensure_colours_tab_shell(frm, $container) {
 		_colours_tab_styles_html() +
 		`<div class="pp-colours-shell">
 			<div class="pp-colours-theme-field" style="margin-bottom:14px;"></div>
-			<div class="pp-colours-previews"></div>
+			<div class="pp-colours-panels-row">
+				<div class="pp-colours-left">
+					<div class="pp-colours-previews"></div>
+				</div>
+				<div class="pp-colours-arrows">
+					<button type="button" class="pp-colours-arrow-btn pp-colours-btn-from" disabled aria-hidden="true">
+						<span class="pp-colours-arrow-icon">&#8592;</span>
+						<span>Copy From</span>
+					</button>
+					<button type="button" class="pp-colours-arrow-btn pp-colours-btn-to" disabled aria-hidden="true">
+						<span>Copy To</span>
+						<span class="pp-colours-arrow-icon">&#8594;</span>
+					</button>
+				</div>
+				<div class="pp-colours-right">
+					<div class="pp-colours-other-panels"></div>
+				</div>
+			</div>
 		</div>`;
 
 	$container.html(html);
@@ -4026,12 +4133,164 @@ function _render_colours_tab_previews(frm, themeSlug, $container) {
 	_bind_colours_tab_pickers(frm, $container);
 }
 
+function _colours_other_selected_names($container) {
+	const names = [];
+	$container.find(".pp-panel-row--selected").each(function () {
+		names.push($(this).data("panel-name"));
+	});
+	return names;
+}
+
+function _colours_update_arrow_buttons($container) {
+	const selected = _colours_other_selected_names($container);
+	const count = selected.length;
+	const $from = $container.find(".pp-colours-btn-from");
+	const $to = $container.find(".pp-colours-btn-to");
+
+	if (count === 0) {
+		$from.prop("disabled", true).attr("aria-hidden", "true");
+		$to.prop("disabled", true).attr("aria-hidden", "true");
+	} else if (count === 1) {
+		$from.prop("disabled", false).attr("aria-hidden", "false");
+		$to.prop("disabled", false).attr("aria-hidden", "false");
+	} else {
+		// multiple selected: hide Copy From, show Copy To
+		$from.prop("disabled", true).attr("aria-hidden", "true");
+		$to.prop("disabled", false).attr("aria-hidden", "false");
+	}
+}
+
+function _render_other_panels_table(frm, $container) {
+	const $host = $container.find(".pp-colours-other-panels");
+	if (!$host.length) return;
+
+	const currentName = frm.doc.name;
+	if (!currentName) {
+		$host.html('<p class="text-muted small" style="margin:0;">Save this panel first.</p>');
+		return;
+	}
+
+	frappe.call({
+		method: "nce_events.api.panel_api_pkg.panel_data.get_other_page_panels",
+		args: { current_panel: currentName },
+		callback: function (r) {
+			const panels = (r && r.message) || [];
+			if (!panels.length) {
+				$host.html('<p class="text-muted small" style="margin:0;">No other panels found.</p>');
+				return;
+			}
+
+			let rows = "";
+			panels.forEach(function (p) {
+				const themeLabel = p.theme
+					? frappe.utils.escape_html(p.theme)
+					: '<span class="pp-colours-other-theme">Default</span>';
+				rows +=
+					`<tr class="pp-colours-other-row" data-panel-name="${frappe.utils.escape_html(p.name)}">` +
+					`<td>${frappe.utils.escape_html(p.name)}</td>` +
+					`<td>${themeLabel}</td>` +
+					`</tr>`;
+			});
+
+			const tableHtml =
+				`<table class="pp-colours-other-table">` +
+				`<thead><tr><th>${__("Panel ID")}</th><th>${__("Theme")}</th></tr></thead>` +
+				`<tbody>${rows}</tbody>` +
+				`</table>`;
+
+			$host.html(tableHtml);
+
+			$host.off("click", ".pp-colours-other-row").on("click", ".pp-colours-other-row", function (e) {
+				const $row = $(this);
+				if (e.shiftKey) {
+					$row.toggleClass("pp-panel-row--selected");
+				} else {
+					const wasOnly =
+						$row.hasClass("pp-panel-row--selected") &&
+						$host.find(".pp-panel-row--selected").length === 1;
+					$host.find(".pp-panel-row--selected").removeClass("pp-panel-row--selected");
+					if (!wasOnly) {
+						$row.addClass("pp-panel-row--selected");
+					}
+				}
+				_colours_update_arrow_buttons($container);
+			});
+
+			_bind_copy_arrows(frm, $container);
+		},
+	});
+}
+
+function _bind_copy_arrows(frm, $container) {
+	$container.off("click", ".pp-colours-btn-from").on("click", ".pp-colours-btn-from", function () {
+		const selected = _colours_other_selected_names($container);
+		if (selected.length !== 1) return;
+		const sourceName = selected[0];
+
+		frappe.confirm(
+			__("Copy all colour settings FROM <b>{0}</b> into this panel? This will overwrite your current settings.", [sourceName]),
+			function () {
+				frappe.db.get_doc("Page Panel", sourceName).then(function (sourceDoc) {
+					const fields = [
+						"theme",
+						"frame_bg_class", "frame_fg_type",
+						"header_bg_class", "header_fg_type",
+						"header_toolbar_bg_class", "header_toolbar_fg_type",
+						"footer_bg_class", "footer_fg_type",
+						"col_header_bg_class", "col_header_fg_type",
+						"filter_bar_bg_class", "filter_bar_fg_type",
+						"row_bg_class", "row_fg_type",
+						"row_alt_bg_class", "row_alt_fg_type",
+						"dialog_header_bg_class", "dialog_header_fg_type",
+					];
+					fields.forEach(function (fn) {
+						frm.set_value(fn, sourceDoc[fn] || "");
+					});
+					_render_colours_tab(frm);
+					frappe.show_alert({ message: __("Colours copied from {0}", [sourceName]), indicator: "green" });
+				});
+			}
+		);
+	});
+
+	$container.off("click", ".pp-colours-btn-to").on("click", ".pp-colours-btn-to", function () {
+		const selected = _colours_other_selected_names($container);
+		if (!selected.length) return;
+
+		const label = selected.length === 1
+			? __("Copy all colour settings from this panel TO <b>{0}</b>? This will overwrite that panel's settings.", [selected[0]])
+			: __("Copy all colour settings from this panel TO {0} other panels? This will overwrite their settings.", [selected.length]);
+
+		frappe.confirm(label, function () {
+			frappe.call({
+				method: "nce_events.api.panel_api_pkg.panel_data.copy_panel_colours",
+				args: {
+					source_name: frm.doc.name,
+					target_names: JSON.stringify(selected),
+				},
+				freeze: true,
+				freeze_message: __("Copying colour settings…"),
+				callback: function (r) {
+					const updated = (r && r.message && r.message.updated) || [];
+					frappe.show_alert({
+						message: updated.length === 1
+							? __("Colours copied to {0}", [updated[0]])
+							: __("Colours copied to {0} panels", [updated.length]),
+						indicator: "green",
+					});
+				},
+			});
+		});
+	});
+}
+
 function _render_colours_tab(frm) {
 	const $container = $(frm.layout.wrapper).find(".pp-colours-wrap");
 	if (!$container.length) return;
 
 	_ensure_colours_tab_shell(frm, $container);
 	_render_colours_tab_previews(frm, null, $container);
+	_render_other_panels_table(frm, $container);
 }
 
 // ── Page Panel form events ────────────────────────────────────────────────────
