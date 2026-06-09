@@ -152,22 +152,36 @@
         "save_panel_sql public endpoint"
       ]
     },
+    "nce_events/api/panel_api_pkg/panel_config.py": {
+      "purpose": "Page Panel config dict construction: _panel_config_from_doc, theme_slug resolution, per-surface chrome bg/fg slots, derived ORDER BY for format-rule SQL wrapper, gender tint metadata.",
+      "depends_on": [
+        "nce_events/api/panel_api_pkg/_helpers.py",
+        "nce_events/api/panel_api_pkg/computed_columns.py"
+      ]
+    },
+    "nce_events/api/panel_api_pkg/panel_export.py": {
+      "purpose": "Panel CSV export implementation: filtered_row_names parsing, cell serialization, public file write. Called by panel_data.export_panel_data whitelist (path must stay on panel_data module).",
+      "depends_on": [
+        "nce_events/api/panel_api_pkg/_helpers.py",
+        "nce_events/api/panel_api_pkg/panel_data.py"
+      ]
+    },
     "nce_events/api/panel_api_pkg/panel_data.py": {
-      "purpose": "Panel data endpoints — get_panel_config for Page Panel settings (theme_slug + eight per-surface chrome class fields: frame/header/footer/col_header/filter_bar/row/row_alt/dialog_header), get_panel_data for paginated/filtered panel rows with computed columns and child doctype counts, export_panel_data for CSV export to public files.",
+      "purpose": "Panel data read endpoints — get_panel_config, get_panel_data (hot path), get_other_page_panels, copy_panel_colours, and export_panel_data whitelist wrapper. Config/export logic lives in panel_config.py and panel_export.py; _panel_config_from_doc re-exported for sql.py.",
       "depends_on": [
         "nce_events/api/panel_api_pkg/_helpers.py",
         "nce_events/api/panel_api_pkg/computed_columns.py",
-        "nce_events/api/panel_api_pkg/core_filters.py",
+        "nce_events/api/panel_api_pkg/panel_config.py",
+        "nce_events/api/panel_api_pkg/panel_export.py",
         "nce_events/api/panel_api_pkg/sql.py",
         "nce_events/api/panel_api_pkg/discovery.py",
         "nce_events/nce_events/doctype/page_panel/"
       ],
       "sections": [
-        "Panel config fetch",
-        "theme_slug resolution (_resolve_theme_slug)",
-        "per-panel chrome class fields (_panel_chrome_class)",
-        "Panel data fetch with filters/pagination",
-        "CSV export"
+        "get_panel_config whitelist",
+        "get_panel_data hot path",
+        "get_other_page_panels / copy_panel_colours",
+        "export_panel_data whitelist delegate"
       ]
     },
     "nce_events/api/panel_api_pkg/discovery.py": {
