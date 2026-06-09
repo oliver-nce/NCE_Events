@@ -103,8 +103,8 @@
 	color: var(--nce-color-text);
 }
 
-/* Primary chrome strips use header foreground, not body text */
-.ppv2-float-header,
+/* Primary chrome strips use header foreground when title/toolbar carry theme-bg-* */
+.ppv2-float-header :deep(.ppv2-title[class*="theme-bg-"]),
 .ppv2-fd-header {
 	color: var(--nce-color-primary-fg);
 }

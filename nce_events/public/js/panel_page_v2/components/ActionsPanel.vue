@@ -1,14 +1,21 @@
 <template>
-	<PanelFloat :init-x="8" :init-y="16" :init-w="200" :init-h="420">
-		<template #header>
-			<span class="ppv2-title">Actions</span>
+	<PanelFloat
+		:init-x="8"
+		:init-y="16"
+		:init-w="200"
+		:init-h="420"
+		:theme-slug="themeSlug"
+		:chrome-config="chromeConfig"
+	>
+		<template #header="{ titleClasses }">
+			<span class="ppv2-title" :class="titleClasses">Actions</span>
 		</template>
 		<div class="ppv2-actions-body">
 			<button
 				v-for="a in actions"
 				:key="a.action_id || a.name"
 				type="button"
-				class="ppv2-action-btn"
+				class="ppv2-action-btn theme-bg-card theme-border theme-rounded-sm theme-text-primary"
 				:title="a.action_id || a.name"
 				@click="$emit('select', a)"
 			>
@@ -25,6 +32,8 @@ import PanelFloat from "./PanelFloat.vue";
 
 defineProps({
 	actions: { type: Array, default: () => [] },
+	themeSlug: { type: String, default: "" },
+	chromeConfig: { type: Object, default: null },
 });
 
 defineEmits(["select"]);
@@ -46,16 +55,13 @@ defineEmits(["select"]);
 	font-family: var(--font-family);
 	text-align: left;
 	cursor: pointer;
-	border-radius: var(--border-radius-sm, 4px);
-	border: 1px solid color-mix(in srgb, var(--nce-color-primary) 35%, var(--nce-color-border));
-	background: color-mix(in srgb, var(--nce-color-primary) 12%, var(--nce-color-surface));
 	line-height: 1.3;
-	transition: background 0.15s ease, border-color 0.15s ease;
+	transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .ppv2-action-btn:hover {
-	background: color-mix(in srgb, var(--nce-color-primary) 22%, var(--nce-color-surface));
-	border-color: var(--nce-color-primary);
+	background-color: var(--nce-color-primary-100, #e3f0fc);
+	border-color: var(--nce-color-primary, #126bc4);
 }
 
 .ppv2-action-btn:active {

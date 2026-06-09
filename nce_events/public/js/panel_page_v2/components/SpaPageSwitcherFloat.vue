@@ -5,9 +5,11 @@
 		:init-y="anchor.y"
 		:init-w="anchor.w"
 		:init-h="anchor.h"
+		:theme-slug="themeSlug"
+		:chrome-config="chromeConfig"
 	>
-		<template #header>
-			<span class="ppv2-title">{{ headerLabel }}</span>
+		<template #header="{ titleClasses }">
+			<span class="ppv2-title" :class="titleClasses">{{ headerLabel }}</span>
 		</template>
 		<SpaPageNavBar
 			:pages="pages"
@@ -27,6 +29,11 @@ import { measureDeskTitleAnchor } from "../utils/measureDeskTitleAnchor.js";
 function tr(msg) {
 	return typeof window.__ === "function" ? window.__(msg) : msg;
 }
+
+defineProps({
+	themeSlug: { type: String, default: "" },
+	chromeConfig: { type: Object, default: null },
+});
 
 const pageSlug = inject("pageSlug", null);
 const { pages, loadPages, switchTo } = useSpaPageNav();

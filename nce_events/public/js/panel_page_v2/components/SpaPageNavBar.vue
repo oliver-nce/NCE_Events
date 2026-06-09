@@ -4,8 +4,12 @@
 			v-for="page in pages"
 			:key="page.page_slug"
 			type="button"
-			class="ppv2-spa-nav-btn"
-			:class="{ 'ppv2-spa-nav-btn--current': page.page_slug === currentSlug }"
+			class="ppv2-spa-nav-btn theme-border theme-rounded-sm"
+			:class="
+				page.page_slug === currentSlug
+					? 'theme-bg-primary theme-border-primary'
+					: 'theme-bg-card theme-text-primary'
+			"
 			:disabled="page.page_slug === currentSlug"
 			:title="navTitle(page)"
 			@click="$emit('select', page)"
@@ -50,22 +54,17 @@ function navTitle(page) {
 	font-family: var(--font-family);
 	text-align: center;
 	cursor: pointer;
-	border-radius: var(--border-radius-sm, 4px);
-	border: 1px solid color-mix(in srgb, var(--nce-color-primary) 35%, var(--nce-color-border));
-	background: color-mix(in srgb, var(--nce-color-primary) 12%, var(--nce-color-surface));
 	line-height: 1.3;
 	white-space: nowrap;
-	transition: background 0.15s ease, border-color 0.15s ease;
+	transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
 .ppv2-spa-nav-btn:hover:not(:disabled) {
-	background: color-mix(in srgb, var(--nce-color-primary) 22%, var(--nce-color-surface));
-	border-color: var(--nce-color-primary);
+	background-color: var(--nce-color-primary-100, #e3f0fc);
+	border-color: var(--nce-color-primary, #126bc4);
 }
 
-.ppv2-spa-nav-btn--current,
 .ppv2-spa-nav-btn:disabled {
-	opacity: 0.55;
 	cursor: default;
 }
 </style>
