@@ -35,17 +35,34 @@ export function panelChromeFgType(config, bgField) {
 	return v === "tonal" ? "tonal" : "mono";
 }
 
-/** Derive explicit theme-text-* fg class from a theme-bg-* class. Empty for mono (bg auto-pairs). */
-export function themeBgToFgTextClass(bgClass, fgType = "mono") {
-	if ((fgType || "mono").toLowerCase() !== "tonal") return "";
+function _fgClassFromBg(bgClass, variant) {
 	const s = String(bgClass || "").trim();
 	const m = s.match(/^theme-bg-([a-z]+)(?:-(\d+))?$/);
 	if (!m || !PALETTE_ROLES.has(m[1])) return "";
 	const role = m[1];
-	const shade = m[2];
-	return shade
-		? `theme-text-${role}-${shade}-fg-tonal`
-		: `theme-text-${role}-fg-tonal`;
+	const suffix = variant === "tonal" ? "-fg-tonal" : "-fg";
+	return `theme-text-${role}${suffix}`;
+}
+
+/** Mono paired fg class from a theme-bg-* class (for children that do not inherit). */
+export function themeBgToFgMonoClass(bgClass) {
+	return _fgClassFromBg(bgClass, "mono");
+}
+
+/** Derive explicit theme-text-* fg class from a theme-bg-* class. Empty for mono (bg auto-pairs). */
+export function themeBgToFgTextClass(bgClass, fgType = "mono") {
+	if ((fgType || "mono").toLowerCase() !== "tonal") return "";
+	return _fgClassFromBg(bgClass, "tonal");
+}
+
+/**
+ * Explicit fg for chrome children (e.g. Desk <button>) that ignore parent theme-bg color.
+ * Mono → theme-text-{role}-fg; tonal → theme-text-{role}-fg-tonal.
+ */
+export function panelChromeExplicitFgClass(config, bgField) {
+	const bg = panelChromeBg(config, bgField);
+	const fgType = panelChromeFgType(config, bgField);
+	return themeBgToFgTextClass(bg, fgType) || themeBgToFgMonoClass(bg);
 }
 
 /** Runtime text class for one chrome slot from saved bg + fg type. */

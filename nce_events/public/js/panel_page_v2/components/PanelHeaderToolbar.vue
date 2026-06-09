@@ -9,6 +9,7 @@
 					v-if="props.showNewRecord"
 					type="button"
 					class="ppv2-hdr-btn ppv2-hdr-btn--new"
+					:class="toolbarBtnFgClass"
 					title="New record"
 					@click="$emit('new-record')"
 				>
@@ -16,22 +17,31 @@
 				</button>
 				<button
 					class="ppv2-hdr-btn"
-					:class="{
-						'ppv2-hdr-btn--refreshing': props.loading,
-						'theme-text-secondary': props.loading,
-					}"
+					:class="[
+						toolbarBtnFgClass,
+						{
+							'ppv2-hdr-btn--refreshing': props.loading,
+							'theme-text-secondary': props.loading,
+						},
+					]"
 					title="Refresh"
 					@click="$emit('refresh')"
 				>
 					<i class="fa fa-refresh"></i>
 				</button>
-				<button class="ppv2-hdr-btn" title="Filter" @click="$emit('toggle-filter')">
+				<button
+					class="ppv2-hdr-btn"
+					:class="toolbarBtnFgClass"
+					title="Filter"
+					@click="$emit('toggle-filter')"
+				>
 					<i class="fa fa-filter"></i>
 				</button>
 			</template>
 			<button
 				v-if="props.showFind && !props.findHeaderMinimal"
 				class="ppv2-hdr-btn"
+				:class="toolbarBtnFgClass"
 				title="Find records"
 				@click="$emit('find')"
 			>
@@ -40,6 +50,7 @@
 			<template v-if="!props.findHeaderMinimal">
 				<button
 					class="ppv2-hdr-btn"
+					:class="toolbarBtnFgClass"
 					title="Export to Google Sheets (filtered view)"
 					@click="$emit('sheets')"
 				>
@@ -47,6 +58,7 @@
 				</button>
 				<button
 					class="ppv2-hdr-btn"
+					:class="toolbarBtnFgClass"
 					title="Download CSV (Excel, filtered view)"
 					@click="$emit('download-csv')"
 				>
@@ -55,12 +67,19 @@
 				<button
 					v-if="props.showEmail"
 					class="ppv2-hdr-btn"
+					:class="toolbarBtnFgClass"
 					title="Email"
 					@click="$emit('email')"
 				>
 					<i class="fa fa-envelope"></i>
 				</button>
-				<button v-if="props.showSms" class="ppv2-hdr-btn" title="SMS" @click="$emit('sms')">
+				<button
+					v-if="props.showSms"
+					class="ppv2-hdr-btn"
+					:class="toolbarBtnFgClass"
+					title="SMS"
+					@click="$emit('sms')"
+				>
 					<i class="fa fa-comment"></i>
 				</button>
 			</template>
@@ -70,6 +89,7 @@
 			<button
 				v-if="props.showClose"
 				class="ppv2-hdr-btn ppv2-close-btn"
+				:class="toolbarBtnFgClass"
 				title="Close"
 				@click="$emit('close')"
 			>
@@ -83,6 +103,7 @@
 import { computed } from "vue";
 import {
 	panelChromeBg,
+	panelChromeExplicitFgClass,
 	panelChromeFgTextClass,
 } from "../utils/panelChromeClasses.js";
 
@@ -106,9 +127,13 @@ const props = defineProps({
 
 const toolbarClasses = computed(() => {
 	const bg = panelChromeBg(props.chromeConfig, "header_toolbar_bg_class");
-	const fg = panelChromeFgTextClass(props.chromeConfig, "header_toolbar_bg_class");
-	return [bg, fg].filter(Boolean);
+	return bg ? [bg] : [];
 });
+
+/** Desk resets <button> color; apply paired fg explicitly (09-buttons Header recipe). */
+const toolbarBtnFgClass = computed(() =>
+	panelChromeExplicitFgClass(props.chromeConfig, "header_toolbar_bg_class")
+);
 
 const hintFgTextClass = computed(() =>
 	panelChromeFgTextClass(props.chromeConfig, "header_toolbar_bg_class")
