@@ -789,6 +789,22 @@
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue": {
       "purpose": "Form dialog related-doctype tab: scrollable rows table with portal-editable cells (Select/Check/number/date/text/textarea), label-column resizer, schema details panel, save_form_dialog_related_rows on Submit. Exposes saveAllRelatedRows + resetRelatedToBaseline.",
       "depends_on": [
+        "utils/frappeCall.js",
+        "utils/relatedCellFormat.js",
+        "composables/useRelatedActions.js",
+        "composables/useRelatedLabelWidths.js",
+        "utils/formDialogRelatedGoTo.js"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/utils/relatedCellFormat.js": {
+      "purpose": "Pure cell-format helpers for related-doctype portal grids: mandatory asterisk, Select options, raw/truthy/format values, editable/number/long-text column checks."
+    },
+    "nce_events/public/js/panel_page_v2/composables/useRelatedLabelWidths.js": {
+      "purpose": "Label-column width persistence for Form Dialog related-tab schema preview: localStorage per definition+tab index, default width from longest field label, drag-resize handlers."
+    },
+    "nce_events/public/js/panel_page_v2/composables/useRelatedActions.js": {
+      "purpose": "Portal-action modal and row-action execution for related-doctype tabs: run_portal_action via frappeCall, exchange outcome msgprint, action modal prompt/confirm flow.",
+      "depends_on": [
         "utils/frappeCall.js"
       ]
     },

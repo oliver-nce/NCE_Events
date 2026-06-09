@@ -279,12 +279,25 @@
 </template>
 
 <script setup>
-import { reactive, ref, watch, onUnmounted, nextTick, computed } from "vue";
+import { reactive, watch, nextTick, computed } from "vue";
 import { frappeCall } from "../utils/frappeCall.js";
 import {
 	buildRelatedTabPanelFilter,
 	canGoToRelatedPanel,
 } from "../utils/formDialogRelatedGoTo.js";
+import {
+	formatRelatedCell,
+	isRelatedColEditable,
+	isRelatedLongText,
+	isRelatedNumberField,
+	isSelectColumn,
+	relatedCellRaw,
+	relatedCellTruthy,
+	relatedColumnMandatory,
+	selectOptionsForCell,
+} from "../utils/relatedCellFormat.js";
+import { useRelatedActions } from "../composables/useRelatedActions.js";
+import { useRelatedLabelWidths } from "../composables/useRelatedLabelWidths.js";
 
 const props = defineProps({
 	ti: { type: Number, required: true },
@@ -301,14 +314,6 @@ const props = defineProps({
 });
 
 const emit = defineEmits(["related-dirty", "go-to-panel"]);
-
-/** Related table column: show red asterisk when child DocType marks field mandatory (`reqd`). */
-function relatedColumnMandatory(col) {
-	if (!col || col.reqd == null) {
-		return false;
-	}
-	return Number(col.reqd) === 1 || col.reqd === true || col.reqd === "1";
-}
 
 /** @type {Record<number, { loading?: boolean, error?: string|null, rows?: object[], columns?: object[], actions?: object[], fetchKey?: string }>} */
 const relatedState = reactive({});
@@ -347,285 +352,6 @@ function onGoToPanel() {
 		ti: props.ti,
 	});
 }
-
-const actionModal = reactive({
-	open: false,
-	title: "",
-	confirm: "",
-	promptArgs: [],
-	values: {},
-	error: null,
-	running: false,
-	action: null,
-	row: null,
-});
-
-const actionRunningKey = ref(null);
-
-function actionRunKey(act, rw) {
-	return `${act?.action_id || ""}:${rw?.name ?? ""}`;
-}
-
-function closeActionModal() {
-	actionModal.open = false;
-	actionModal.running = false;
-	actionModal.error = null;
-	actionModal.action = null;
-	actionModal.row = null;
-	actionModal.promptArgs = [];
-	actionModal.values = {};
-}
-
-function formatActionResultSummary(result) {
-	if (!result || typeof result !== "object") {
-		return "Action completed.";
-	}
-	const data = result.data || result;
-	const parts = [];
-	if (data.message) {
-		parts.push(String(data.message));
-	}
-	if (data.after && typeof data.after === "object") {
-		if (data.after.credit != null) {
-			parts.push(`Credit: ${data.after.credit}`);
-		}
-		if (data.after.charged != null) {
-			parts.push(`Charged: ${data.after.charged}`);
-		}
-	}
-	return parts.length ? parts.join(" · ") : "Action completed.";
-}
-
-function handleExchangeActionResult(result, enrollmentId, elapsedMs) {
-	const o = result.outcome || {};
-	const e = (s) => (typeof frappe !== "undefined" ? frappe.utils.escape_html(String(s ?? "")) : String(s ?? ""));
-	const money = (n) => (n != null ? `$${parseFloat(n).toFixed(2)}` : "—");
-
-	const rows = [
-		["Player", o.player_name],
-		["Switched from", o.old_event_name],
-		["Switched to", o.new_event_name],
-		["New order #", o.new_order_id],
-		["Credit issued", money(o.credit_issued)],
-		["Credit applied", money(o.credit_applied)],
-		o.amount_charged_to_card ? ["Charged to card", money(o.amount_charged_to_card)] : null,
-		o.amount_still_due ? ["Amount still due", money(o.amount_still_due)] : null,
-	]
-		.filter(Boolean)
-		.map(
-			([label, val]) =>
-				`<tr><td class="theme-text-muted" style="padding:3px 12px 3px 0">${e(label)}</td><td style="padding:3px 0"><strong>${e(val)}</strong></td></tr>`,
-		)
-		.join("");
-
-	const footer =
-		o.status === "payment_required"
-			? `<p class="theme-text-muted" style="margin-top:12px">The new enrollment will appear here when ${money(o.amount_still_due)} has been paid by the customer.</p>`
-			: `<p class="theme-text-muted" style="margin-top:12px">The new enrollment will appear here within ~10 minutes.</p>`;
-
-	const summary = result.summary ? `<p style="margin-bottom:10px">${e(result.summary)}</p>` : "";
-
-	let rawJson = "";
-	try {
-		rawJson = JSON.stringify(result, null, 2);
-	} catch (err) {
-		rawJson = String(result);
-	}
-	const elapsedText =
-		typeof elapsedMs === "number" && isFinite(elapsedMs)
-			? `<p class="theme-text-muted theme-text-sm" style="margin-top:8px">API round-trip: ${(elapsedMs / 1000).toFixed(2)}s (${Math.round(elapsedMs)} ms)</p>`
-			: "";
-	const rawSection = `<details style="margin-top:12px"><summary class="theme-text-muted" style="cursor:pointer">Full API response</summary><pre class="theme-bg-surface theme-border theme-rounded-sm theme-text-sm" style="margin-top:8px;max-height:300px;overflow:auto;padding:8px;white-space:pre-wrap;word-break:break-word">${e(rawJson)}</pre></details>`;
-
-	if (typeof frappe !== "undefined" && frappe.msgprint) {
-		frappe.msgprint({
-			title: "Event Switch Successful",
-			message: `${summary}<table style="width:100%">${rows}</table><hr>${footer}${elapsedText}${rawSection}`,
-			indicator: "green",
-		});
-	}
-	// The deleted record is the enrollment we were editing (root doc). Fall back to
-	// the server-reported old order item id if the click-time capture was empty.
-	const removeName = enrollmentId || (o.old_order_item_id != null ? String(o.old_order_item_id) : "");
-	if (removeName) window._nce_remove_panel_row?.(props.rootDoctype || "Enrollments", removeName);
-	window._nce_close_form_dialog?.();
-}
-
-async function runPortalAction(act, rw, promptValues) {
-	const defn = String(props.definitionName || "").trim();
-	const dt = String(props.rootDoctype || "").trim();
-	const dn = String(props.rootDocName || "").trim();
-	const crn = props.tab?._related?.child_row_name;
-	if (!defn || !dt || !dn || !crn || !rw?.name) {
-		throw new Error("Missing context for portal action");
-	}
-	return frappeCall("nce_events.api.form_dialog.portal_actions.run_portal_action", {
-		definition: defn,
-		context_kind: "related",
-		related_row_name: crn,
-		root_doctype: dt,
-		root_name: dn,
-		child_name: String(rw.name),
-		action_id: act.action_id,
-		prompt_values: promptValues || {},
-	});
-}
-
-async function submitActionModal() {
-	if (!actionModal.action || !actionModal.row) {
-		return;
-	}
-	for (const pa of actionModal.promptArgs || []) {
-		if (pa.reqd && !String(actionModal.values[pa.arg] ?? "").trim()) {
-			actionModal.error = `${pa.label || pa.arg} is required.`;
-			return;
-		}
-	}
-	actionModal.error = null;
-	actionModal.running = true;
-	const key = actionRunKey(actionModal.action, actionModal.row);
-	actionRunningKey.value = key;
-	// Capture the enrollment being edited (root doc) before the async call —
-	// this is the record the exchange deletes, and the row to drop from the panel.
-	const enrollmentId = String(props.rootDocName || "").trim();
-	const startedAt = (typeof performance !== "undefined" ? performance.now() : Date.now());
-	try {
-		const r = await runPortalAction(actionModal.action, actionModal.row, { ...actionModal.values });
-		const elapsedMs = (typeof performance !== "undefined" ? performance.now() : Date.now()) - startedAt;
-		closeActionModal();
-		if (r?.result?.outcome) {
-			handleExchangeActionResult(r.result, enrollmentId, elapsedMs);
-		} else {
-			if (typeof frappe !== "undefined" && frappe.show_alert) {
-				frappe.show_alert({
-					message: formatActionResultSummary(r?.result),
-					indicator: "green",
-				});
-			}
-			await fetchRelatedForTab(props.ti);
-		}
-	} catch (e) {
-		actionModal.error = e?.message || String(e) || "Action failed";
-	} finally {
-		actionModal.running = false;
-		actionRunningKey.value = null;
-	}
-}
-
-function onRelatedActionClick(act, rw) {
-	const promptArgs = Array.isArray(act.promptArgs) ? act.promptArgs : [];
-	const needsModal = promptArgs.length > 0 || !!act.confirm;
-	if (!needsModal) {
-		actionModal.action = act;
-		actionModal.row = rw;
-		void submitActionModalDirect(act, rw);
-		return;
-	}
-	actionModal.open = true;
-	actionModal.title = act.label || act.method || "Action";
-	actionModal.confirm = act.confirm || "";
-	actionModal.promptArgs = promptArgs;
-	actionModal.values = {};
-	actionModal.error = null;
-	actionModal.running = false;
-	actionModal.action = act;
-	actionModal.row = rw;
-}
-
-async function submitActionModalDirect(act, rw) {
-	const key = actionRunKey(act, rw);
-	actionRunningKey.value = key;
-	// Capture the enrollment being edited (root doc) before the async call.
-	const enrollmentId = String(props.rootDocName || "").trim();
-	const startedAt = (typeof performance !== "undefined" ? performance.now() : Date.now());
-	try {
-		const r = await runPortalAction(act, rw, {});
-		const elapsedMs = (typeof performance !== "undefined" ? performance.now() : Date.now()) - startedAt;
-		if (r?.result?.outcome) {
-			handleExchangeActionResult(r.result, enrollmentId, elapsedMs);
-		} else {
-			if (typeof frappe !== "undefined" && frappe.show_alert) {
-				frappe.show_alert({
-					message: formatActionResultSummary(r?.result),
-					indicator: "green",
-				});
-			}
-			await fetchRelatedForTab(props.ti);
-		}
-	} catch (e) {
-		if (typeof frappe !== "undefined" && frappe.show_alert) {
-			frappe.show_alert({
-				message: e?.message || String(e) || "Action failed",
-				indicator: "red",
-			});
-		}
-	} finally {
-		actionRunningKey.value = null;
-		actionModal.action = null;
-		actionModal.row = null;
-	}
-}
-
-/** @type {Record<number, number>} */
-const relatedLabelColByTab = reactive({});
-let relResizeTabIndex = null;
-let relResizeStartX = 0;
-let relResizeStartW = 0;
-
-function relatedLabelStorageKey(ti) {
-	return `nce_fd_rel_lblw:${(props.definitionName || "_").trim() || "_"}:${ti}`;
-}
-
-function readSavedRelatedLabelWidth(ti) {
-	try {
-		const raw = localStorage.getItem(relatedLabelStorageKey(ti));
-		const n = parseInt(String(raw), 10);
-		if (Number.isFinite(n) && n >= 72 && n <= 640) {
-			return n;
-		}
-	} catch {
-		/* ignore */
-	}
-	return null;
-}
-
-/** Default label column width from longest label / fieldname in that tab. */
-function defaultRelatedLabelWidthForTab(tab) {
-	let maxChars = 8;
-	for (const section of tab.sections || []) {
-		for (const col of section.columns || []) {
-			for (const f of col.fields || []) {
-				const t = String(f.label || f.fieldname || "").length;
-				if (t > maxChars) {
-					maxChars = t;
-				}
-			}
-		}
-	}
-	return Math.min(480, Math.max(120, Math.round(maxChars * 7.2 + 28)));
-}
-
-function syncRelatedLabelWidthsFromTabs() {
-	const saved = readSavedRelatedLabelWidth(props.ti);
-	if (saved != null) {
-		relatedLabelColByTab[props.ti] = saved;
-	} else if (props.tab.sections && props.tab.sections.length) {
-		relatedLabelColByTab[props.ti] = defaultRelatedLabelWidthForTab(props.tab);
-	} else {
-		relatedLabelColByTab[props.ti] = 200;
-	}
-}
-
-// Per-instance watch of props.tab; runs the same initialization as the parent's props.tabs watch.
-watch(
-	() => props.tab,
-	() => {
-		syncRelatedLabelWidthsFromTabs();
-		clearAllRelatedFetch();
-		fetchRelatedForTab(props.ti);
-	},
-	{ deep: true, immediate: true }
-);
 
 function clearAllRelatedFetch() {
 	for (const k of Object.keys(relatedState)) {
@@ -698,89 +424,27 @@ async function fetchRelatedForTab(ti) {
 	}
 }
 
-function parseSelectOptions(optionsStr) {
-	if (optionsStr == null || typeof optionsStr !== "string") {
-		return [];
-	}
-	return optionsStr
-		.split("\n")
-		.map((s) => s.trim())
-		.filter((s) => s.length > 0);
-}
+const {
+	actionModal,
+	actionRunningKey,
+	actionRunKey,
+	closeActionModal,
+	submitActionModal,
+	onRelatedActionClick,
+} = useRelatedActions(props, { fetchRelatedForTab });
 
-function isSelectColumn(col) {
-	return !!(col && col.fieldtype === "Select");
-}
+const { syncRelatedLabelWidthsFromTabs, relatedLabelColPx, onRelatedLabelResizeDown } =
+	useRelatedLabelWidths(props);
 
-/** Options from DocType meta plus current row value if missing from the list. */
-function selectOptionsForCell(col, rw) {
-	const base = parseSelectOptions(col.options);
-	const cur = String(relatedCellRaw(rw, col) ?? "").trim();
-	if (cur && !base.includes(cur)) {
-		return [...base, cur];
-	}
-	if (base.length) {
-		return base;
-	}
-	return cur ? [cur] : [];
-}
-
-function relatedCellRaw(rw, col) {
-	if (!rw || !col) {
-		return null;
-	}
-	return rw[col.fieldname];
-}
-
-function relatedCellTruthy(rw, col) {
-	const v = relatedCellRaw(rw, col);
-	return v === 1 || v === true || v === "1" || v === "Yes";
-}
-
-function formatRelatedCell(rw, col) {
-	const v = relatedCellRaw(rw, col);
-	if (v == null || v === "") {
-		return "";
-	}
-	if (typeof v === "object") {
-		try {
-			return JSON.stringify(v);
-		} catch {
-			return String(v);
-		}
-	}
-	return String(v);
-}
-
-const RELATED_GRID_NON_EDITABLE_TYPES = new Set([
-	"Link",
-	"Dynamic Link",
-	"Table",
-	"Attach",
-	"Attach Image",
-	"HTML",
-	"Read Only",
-	"Button",
-	"Barcode",
-	"Geolocation",
-]);
-
-function isRelatedColEditable(col) {
-	if (!col || !(Number(col.editable) === 1 || col.editable === true)) {
-		return false;
-	}
-	const ft = col.fieldtype;
-	return !RELATED_GRID_NON_EDITABLE_TYPES.has(ft);
-}
-
-function isRelatedNumberField(col) {
-	const ft = col?.fieldtype;
-	return ft === "Int" || ft === "Float" || ft === "Currency";
-}
-
-function isRelatedLongText(col) {
-	return col?.fieldtype === "Text" || col?.fieldtype === "Long Text";
-}
+watch(
+	() => props.tab,
+	() => {
+		syncRelatedLabelWidthsFromTabs();
+		clearAllRelatedFetch();
+		fetchRelatedForTab(props.ti);
+	},
+	{ deep: true, immediate: true },
+);
 
 function baselineRowForRelated(ti, name) {
 	const st = relatedState[ti];
@@ -1022,49 +686,6 @@ defineExpose({
 	resetRelatedToBaseline,
 	reloadRelatedFromServer,
 	getDisplayRows,
-});
-
-function relatedLabelColPx(ti) {
-	const w = relatedLabelColByTab[ti];
-	return typeof w === "number" && Number.isFinite(w) ? w : 200;
-}
-
-function onRelatedLabelResizeMove(ev) {
-	if (relResizeTabIndex == null) {
-		return;
-	}
-	const dx = ev.clientX - relResizeStartX;
-	const w = Math.min(640, Math.max(72, relResizeStartW + dx));
-	relatedLabelColByTab[relResizeTabIndex] = w;
-}
-
-function onRelatedLabelResizeUp() {
-	if (relResizeTabIndex != null) {
-		try {
-			localStorage.setItem(
-				relatedLabelStorageKey(relResizeTabIndex),
-				String(relatedLabelColByTab[relResizeTabIndex])
-			);
-		} catch {
-			/* ignore quota */
-		}
-	}
-	relResizeTabIndex = null;
-	window.removeEventListener("mousemove", onRelatedLabelResizeMove);
-	window.removeEventListener("mouseup", onRelatedLabelResizeUp);
-}
-
-function onRelatedLabelResizeDown(ti, ev) {
-	relResizeTabIndex = ti;
-	relResizeStartX = ev.clientX;
-	relResizeStartW = relatedLabelColPx(ti);
-	window.addEventListener("mousemove", onRelatedLabelResizeMove);
-	window.addEventListener("mouseup", onRelatedLabelResizeUp);
-}
-
-onUnmounted(() => {
-	window.removeEventListener("mousemove", onRelatedLabelResizeMove);
-	window.removeEventListener("mouseup", onRelatedLabelResizeUp);
 });
 </script>
 
