@@ -46,6 +46,22 @@ function _get_doctype_fields(doctype, callback) {
 	});
 }
 
+// ── PURE UTILS ────────────────────────────────────────────────────────────────
+function _parse_csv(val) {
+	return (val || "")
+		.split(",")
+		.map(function (s) {
+			return s.trim();
+		})
+		.filter(Boolean);
+}
+
+function _title_case(name) {
+	return name.replace(/_/g, " ").replace(/\b\w/g, function (c) {
+		return c.toUpperCase();
+	});
+}
+
 // ── Top-level tab definitions ─────────────────────────────────────────────────
 const TAB_GROUPS = {
 	config: [
@@ -351,6 +367,7 @@ function _ensure_panel_id_controls(frm) {
 	}
 }
 
+// ── Query tab ─────────────────────────────────────────────────────────────────
 function _refresh_query_tab(frm) {
 	if (!frm.doc.root_doctype) return;
 	if (typeof frm._pp_sync_display === "function") {
@@ -409,16 +426,7 @@ function _ensure_query_refresh_button(frm) {
 	fd.$wrapper.prepend($row);
 }
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function _parse_csv(val) {
-	return (val || "")
-		.split(",")
-		.map(function (s) {
-			return s.trim();
-		})
-		.filter(Boolean);
-}
-
+// ── Display helpers ───────────────────────────────────────────────────────────
 /** Clear cached get_doctype_fields results so the next fetch sees current DocType meta. */
 function _clear_doctype_field_cache() {
 	Object.keys(_dt_field_cache).forEach(function (k) {
@@ -504,12 +512,6 @@ function _display_has_orphan_keys(frm, valid) {
 	const tf = (frm.doc.title_field || "").trim();
 	if (tf && !valid[tf]) return true;
 	return false;
-}
-
-function _title_case(name) {
-	return name.replace(/_/g, " ").replace(/\b\w/g, function (c) {
-		return c.toUpperCase();
-	});
 }
 
 // ── Display tab — sub-tab architecture ────────────────────────────────────────
@@ -3628,6 +3630,7 @@ function _build_dialogs_tab_html(frm, $container, dialogs) {
 	$container.html(current_html + list_html + create_html);
 }
 
+// ── Colours tab ───────────────────────────────────────────────────────────────
 function _hide_colour_schema_fields(frm) {
 	COLOUR_FIELDS.forEach(function (fn) {
 		const fd = frm.fields_dict[fn];
