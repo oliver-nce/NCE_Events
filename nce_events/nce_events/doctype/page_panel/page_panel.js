@@ -3927,19 +3927,66 @@ function _refresh_colours_theme_css(frm) {
 	});
 }
 
-function _ensure_theme_link_control(frm) {
-	if (!frm.fields_dict.theme) {
-		return null;
+function _fetch_active_nce_themes_for_colours(callback) {
+	frappe.db
+		.get_list("NCE Theme", {
+			filters: { status: "Active" },
+			fields: ["name", "theme_name"],
+			order_by: "theme_name asc",
+			limit_page_length: 0,
+		})
+		.then(function (rows) {
+			callback(rows || []);
+		})
+		.catch(function () {
+			callback([]);
+		});
+}
+
+function _theme_select_options_html(frm, themes) {
+	const current = (frm.doc.theme || "").trim();
+	let html =
+		'<option value="">' +
+		frappe.utils.escape_html(__("Site default (:root)")) +
+		"</option>";
+	const seen = {};
+	(themes || []).forEach(function (t) {
+		const name = (t.name || "").trim();
+		if (!name || seen[name]) return;
+		seen[name] = true;
+		const label = (t.theme_name || name).trim();
+		const sel = name === current ? " selected" : "";
+		html +=
+			'<option value="' +
+			frappe.utils.escape_html(name) +
+			'"' +
+			sel +
+			">" +
+			frappe.utils.escape_html(label) +
+			"</option>";
+	});
+	if (current && !seen[current]) {
+		html +=
+			'<option value="' +
+			frappe.utils.escape_html(current) +
+			'" selected>' +
+			frappe.utils.escape_html(current) +
+			" (" +
+			frappe.utils.escape_html(__("not Active")) +
+			")</option>";
 	}
-	const fd = frm.fields_dict.theme;
-	const inDoc =
-		fd.$wrapper &&
-		fd.$wrapper.length &&
-		$.contains(document.documentElement, fd.$wrapper[0]);
-	if (!inDoc) {
-		frm.refresh_field("theme");
-	}
-	return frm.fields_dict.theme;
+	return html;
+}
+
+function _bind_colours_theme_dropdown(frm, $container, $editBtn) {
+	$container
+		.off("change", ".pp-colours-theme-select")
+		.on("change", ".pp-colours-theme-select", function () {
+			const val = ($(this).val() || "").trim();
+			frm.set_value("theme", val);
+			_update_colours_theme_edit_btn(frm, $editBtn);
+			_render_colours_tab_previews(frm, null, $container.closest(".pp-colours-wrap"));
+		});
 }
 
 function _theme_editor_url(themeDoc) {
@@ -3965,84 +4012,72 @@ function _update_colours_theme_edit_btn(frm, $btn) {
 	});
 }
 
-function _bind_colours_theme_select_change(frm, fd, $editBtn) {
-	const $wrapper = $(fd.$wrapper);
-	const handler = function () {
-		setTimeout(function () {
-			_update_colours_theme_edit_btn(frm, $editBtn);
-			_render_colours_tab_previews(
-				frm,
-				null,
-				$(frm.layout.wrapper).find(".pp-colours-wrap")
-			);
-		}, 0);
-	};
-	$wrapper.find("select, input").off("change.pp-colours-theme").on("change.pp-colours-theme", handler);
-}
-
 function _mount_theme_field_on_colours_tab(frm, $container) {
 	const $host = $container.find(".pp-colours-theme-field");
 	if (!$host.length) {
 		return;
 	}
-	if ($host.find(".pp-colours-theme-row").length) {
+
+	function sync_existing_row() {
 		const $editBtn = $host.find(".pp-colours-theme-edit");
-		_update_colours_theme_edit_btn(frm, $editBtn);
-		return;
-	}
-
-	const fd = _ensure_theme_link_control(frm);
-	if (!fd || !fd.$wrapper) {
-		$host.html(
-			'<p class="text-muted small" style="margin:0;">' +
-				__("Theme field is missing on this form. Run bench migrate and reload.") +
-				"</p>"
-		);
-		return;
-	}
-
-	frm.set_query("theme", function () {
-		return { filters: { status: "Active" } };
-	});
-
-	$host.empty();
-	const $row = $('<div class="pp-colours-theme-row"></div>');
-	const $fieldCol = $('<div class="pp-colours-theme-field-col"></div>');
-	$fieldCol.append(
-		$("<label>")
-			.addClass("control-label pp-colours-theme-label")
-			.text(__("Theme"))
-	);
-
-	$(fd.$wrapper).find("label.control-label, .help-box").hide();
-	$fieldCol.append(fd.$wrapper);
-	$row.append($fieldCol);
-
-	const $refreshBtn = $(
-		'<button type="button" class="btn btn-default btn-sm pp-colours-theme-refresh">' +
-			frappe.utils.escape_html(__("Refresh")) +
-			"</button>"
-	);
-	$refreshBtn.on("click", function () {
-		_refresh_colours_theme_css(frm);
-	});
-	$row.append($refreshBtn);
-
-	const $editBtn = $(
-		'<button type="button" class="btn btn-default btn-sm pp-colours-theme-edit"></button>'
-	);
-	$editBtn.on("click", function () {
-		const url = _theme_editor_url(frm.doc.theme);
-		if (url) {
-			window.open(url, "_blank", "noopener,noreferrer");
+		const $sel = $host.find(".pp-colours-theme-select");
+		if ($sel.length) {
+			$sel.val((frm.doc.theme || "").trim());
 		}
-	});
-	$row.append($editBtn);
-	$host.append($row);
+		_update_colours_theme_edit_btn(frm, $editBtn);
+	}
 
-	$(fd.$wrapper).show();
-	_update_colours_theme_edit_btn(frm, $editBtn);
-	_bind_colours_theme_select_change(frm, fd, $editBtn);
+	if ($host.find(".pp-colours-theme-row").length) {
+		sync_existing_row();
+		return;
+	}
+
+	_fetch_active_nce_themes_for_colours(function (themes) {
+		if ($host.find(".pp-colours-theme-row").length) {
+			sync_existing_row();
+			return;
+		}
+
+		$host.empty();
+		const $row = $('<div class="pp-colours-theme-row"></div>');
+		const $fieldCol = $('<div class="pp-colours-theme-field-col"></div>');
+		$fieldCol.append(
+			$("<label>")
+				.addClass("control-label pp-colours-theme-label")
+				.text(__("Theme"))
+		);
+		$fieldCol.append(
+			'<select class="form-control pp-colours-theme-select">' +
+				_theme_select_options_html(frm, themes) +
+				"</select>"
+		);
+		$row.append($fieldCol);
+
+		const $refreshBtn = $(
+			'<button type="button" class="btn btn-default btn-sm pp-colours-theme-refresh">' +
+				frappe.utils.escape_html(__("Refresh")) +
+				"</button>"
+		);
+		$refreshBtn.on("click", function () {
+			_refresh_colours_theme_css(frm);
+		});
+		$row.append($refreshBtn);
+
+		const $editBtn = $(
+			'<button type="button" class="btn btn-default btn-sm pp-colours-theme-edit"></button>'
+		);
+		$editBtn.on("click", function () {
+			const url = _theme_editor_url(frm.doc.theme);
+			if (url) {
+				window.open(url, "_blank", "noopener,noreferrer");
+			}
+		});
+		$row.append($editBtn);
+		$host.append($row);
+
+		_update_colours_theme_edit_btn(frm, $editBtn);
+		_bind_colours_theme_dropdown(frm, $host, $editBtn);
+	});
 }
 
 function _colours_tab_styles_html() {
@@ -4068,6 +4103,11 @@ function _colours_tab_styles_html() {
 			}
 			.pp-colours-wrap .pp-colours-theme-field-col .form-group {
 				margin-bottom: 0;
+			}
+			.pp-colours-wrap .pp-colours-theme-select {
+				min-width: 220px;
+				max-width: 360px;
+				font-size: 13px;
 			}
 			.pp-colours-wrap .pp-colours-theme-edit,
 			.pp-colours-wrap .pp-colours-theme-refresh {
