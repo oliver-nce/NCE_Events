@@ -8,9 +8,15 @@ import { parseClientHandlerSpec } from "../utils/parseClientHandlerSpec.js";
  * @param {{
  *   openFormDialogStandalone: (args: object) => Promise<boolean>;
  *   refreshPanelByDoctype: (doctype: string) => void;
+ *   cascadeOpenPanels: () => void;
  * }} deps
  */
-export function usePanelActions({ openFormDialogStandalone, refreshPanelByDoctype, scope = null }) {
+export function usePanelActions({
+	openFormDialogStandalone,
+	refreshPanelByDoctype,
+	cascadeOpenPanels,
+	scope = null,
+}) {
 	const actions = ref([]);
 	const loading = ref(false);
 	const error = ref(null);
@@ -42,6 +48,7 @@ export function usePanelActions({ openFormDialogStandalone, refreshPanelByDoctyp
 					frappe.confirm(msg, () => resolve(true), () => resolve(false));
 				}),
 			refreshPanel: refreshPanelByDoctype,
+			cascadePanels: cascadeOpenPanels,
 			args: Array.isArray(args) ? args : [],
 		};
 	}

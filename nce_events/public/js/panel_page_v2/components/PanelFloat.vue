@@ -105,6 +105,16 @@ watch(
 	}
 );
 
+watch(
+	() => [props.initX, props.initY],
+	([nx, ny]) => {
+		const xn = Number(nx);
+		const yn = Number(ny);
+		if (Number.isFinite(xn)) x.value = xn;
+		if (Number.isFinite(yn)) y.value = Math.max(props.minY, yn);
+	}
+);
+
 /*
  * Position via transform: translate3d() — this is composited on the GPU
  * and does NOT trigger layout or repaint of siblings during drag.

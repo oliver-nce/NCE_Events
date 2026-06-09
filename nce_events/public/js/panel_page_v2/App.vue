@@ -483,6 +483,7 @@ function refreshPanelByDoctype(doctype) {
 const { actions: panelActions, loadActions, executeAction: runPanelAction } = usePanelActions({
 	openFormDialogStandalone,
 	refreshPanelByDoctype,
+	cascadeOpenPanels,
 	scope: panelMode,
 });
 
@@ -756,6 +757,30 @@ function nextPos(parentId) {
 	}
 	/* Fallback */
 	return { x: 140, y: 120 };
+}
+
+const CASCADE_STEP_X = 80;
+const CASCADE_STEP_Y = 24;
+
+/** Stagger all open drilled panels from the root drill offset (Panel Action: cascade_panels). */
+function cascadeOpenPanels() {
+	if (!openPanels.length) {
+		if (typeof frappe !== "undefined" && frappe.show_alert) {
+			frappe.show_alert({ message: __("No open panels to arrange"), indicator: "orange" });
+		}
+		return;
+	}
+	const base = nextPos("root");
+	openPanels.forEach((p, i) => {
+		p.x = base.x + i * CASCADE_STEP_X;
+		p.y = base.y + i * CASCADE_STEP_Y;
+	});
+	if (typeof frappe !== "undefined" && frappe.show_alert) {
+		frappe.show_alert({
+			message: __("Cascaded {0} panel(s)", [openPanels.length]),
+			indicator: "green",
+		});
+	}
 }
 
 function openTagFinder(panel) {

@@ -9,4 +9,5 @@
 export const clientHandlers = {
 	show_dt: () => import("./handlers/showDt.js").then((m) => m.default),
 	switch_page: () => import("./handlers/switchPage.js").then((m) => m.default),
+	cascade_panels: () => import("./handlers/cascadePanels.js").then((m) => m.default),
 };
