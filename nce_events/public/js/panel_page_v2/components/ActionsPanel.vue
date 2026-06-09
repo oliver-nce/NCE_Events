@@ -1,12 +1,5 @@
 <template>
-	<PanelFloat
-		:init-x="8"
-		:init-y="16"
-		:init-w="200"
-		:init-h="420"
-		:theme-slug="themeSlug"
-		:chrome-config="chromeConfig"
-	>
+	<PanelFloat :init-x="8" :init-y="16" :init-w="200" :init-h="420">
 		<template #header="{ titleClasses }">
 			<span class="ppv2-title" :class="titleClasses">Actions</span>
 		</template>
@@ -32,8 +25,6 @@ import PanelFloat from "./PanelFloat.vue";
 
 defineProps({
 	actions: { type: Array, default: () => [] },
-	themeSlug: { type: String, default: "" },
-	chromeConfig: { type: Object, default: null },
 });
 
 defineEmits(["select"]);

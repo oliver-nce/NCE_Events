@@ -3,20 +3,12 @@
 		<div class="ppv2-top-row">
 			<div class="ppv2-zone ppv2-zone-title">{{ pageTitle }}</div>
 			<div class="ppv2-zone ppv2-zone-pages">
-				<SpaPageSwitcherFloat
-					:chrome-config="config || null"
-					:theme-slug="config?.theme_slug || ''"
-				/>
+				<SpaPageSwitcherFloat />
 			</div>
 		</div>
 		<div class="ppv2-bottom-row">
 			<div class="ppv2-zone ppv2-zone-actions">
-				<ActionsPanel
-					:actions="panelActions"
-					:chrome-config="config || null"
-					:theme-slug="config?.theme_slug || ''"
-					@select="onPanelActionSelect"
-				/>
+				<ActionsPanel :actions="panelActions" @select="onPanelActionSelect" />
 			</div>
 			<div class="ppv2-zone ppv2-zone-tables">
 		<PanelFloat

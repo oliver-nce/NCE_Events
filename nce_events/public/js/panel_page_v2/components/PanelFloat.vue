@@ -24,7 +24,7 @@
 			:class="[footerBgClass, footerFgTextClass]"
 			@mousedown.prevent="startDrag"
 		>
-			<slot name="footer" />
+			<span :class="footerFgExplicitClass"><slot name="footer" /></span>
 		</div>
 
 		<div class="ppv2-resize-handle" @mousedown.prevent="startResize" />
@@ -41,6 +41,7 @@ import { ref, computed, watch } from "vue";
 import { PANEL_FLOAT_MAX_W } from "../utils/panelTableColWidths.js";
 import {
 	panelChromeBg,
+	panelChromeExplicitFgClass,
 	panelChromeFgTextClass,
 } from "../utils/panelChromeClasses.js";
 
@@ -62,7 +63,9 @@ const frameBgClass = computed(() =>
 );
 const headerTitleClasses = computed(() => {
 	const bg = panelChromeBg(props.chromeConfig, "header_bg_class");
-	const fg = panelChromeFgTextClass(props.chromeConfig, "header_bg_class");
+	const fg =
+		panelChromeFgTextClass(props.chromeConfig, "header_bg_class") ||
+		panelChromeExplicitFgClass(props.chromeConfig, "header_bg_class");
 	return [bg, fg].filter(Boolean);
 });
 const headerToolbarClasses = computed(() => {
@@ -75,6 +78,9 @@ const footerBgClass = computed(() =>
 );
 const footerFgTextClass = computed(() =>
 	panelChromeFgTextClass(props.chromeConfig, "footer_bg_class")
+);
+const footerFgExplicitClass = computed(() =>
+	panelChromeExplicitFgClass(props.chromeConfig, "footer_bg_class")
 );
 
 const emit = defineEmits(["close"]);
