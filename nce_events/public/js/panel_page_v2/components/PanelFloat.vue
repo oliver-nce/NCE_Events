@@ -1,8 +1,8 @@
 <template>
 	<div
 		ref="floatEl"
-		class="ppv2-float theme-border theme-rounded theme-shadow-theme"
-		:class="frameBgClass"
+		class="ppv2-float theme-rounded theme-shadow-theme"
+		:class="[frameBgClass, ...frameBorderClasses]"
 		:data-nce-theme="themeSlug || undefined"
 		:style="floatStyle"
 	>
@@ -43,6 +43,7 @@ import {
 	panelChromeBg,
 	panelChromeExplicitFgClass,
 	panelChromeFgTextClass,
+	panelChromeFrameBorderClasses,
 } from "../utils/panelChromeClasses.js";
 
 const props = defineProps({
@@ -60,6 +61,9 @@ const props = defineProps({
 
 const frameBgClass = computed(() =>
 	panelChromeBg(props.chromeConfig, "frame_bg_class")
+);
+const frameBorderClasses = computed(() =>
+	panelChromeFrameBorderClasses(props.chromeConfig)
 );
 const headerTitleClasses = computed(() => {
 	const bg = panelChromeBg(props.chromeConfig, "header_bg_class");

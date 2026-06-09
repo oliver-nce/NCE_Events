@@ -3,6 +3,7 @@
 		v-if="props.showFilter"
 		class="ppv2-filter-widget"
 		:class="[filterBarBgClass, filterBarFgTextClass]"
+		:style="filterDividerStyleVars"
 	>
 		<div v-for="(cond, i) in filters" :key="i" class="ppv2-filter-row">
 			<select
@@ -93,7 +94,11 @@
 
 <script setup>
 import { reactive, watch, computed } from "vue";
-import { panelChromeBg, panelChromeFgTextClass } from "../utils/panelChromeClasses.js";
+import {
+	panelChromeBg,
+	panelChromeFgTextClass,
+	panelChromeFilterDividerStyleVars,
+} from "../utils/panelChromeClasses.js";
 
 const props = defineProps({
 	columns: { type: Array, default: () => [] },
@@ -108,6 +113,9 @@ const filterBarBgClass = computed(() =>
 );
 const filterBarFgTextClass = computed(() =>
 	panelChromeFgTextClass(props.config, "filter_bar_bg_class")
+);
+const filterDividerStyleVars = computed(() =>
+	panelChromeFilterDividerStyleVars(props.config)
 );
 
 const emit = defineEmits(["filter-change", "show-filter"]);
@@ -223,7 +231,7 @@ function emitFilterDebounced() {
 .ppv2-filter-widget {
 	padding: 6px 10px;
 	flex-shrink: 0;
-	border-bottom: var(--nce-border-width) solid var(--nce-color-border);
+	border-bottom: var(--ppv2-filter-divider-w) solid var(--ppv2-filter-divider-c);
 }
 
 .ppv2-filter-row {

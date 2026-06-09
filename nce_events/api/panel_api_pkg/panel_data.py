@@ -77,6 +77,16 @@ _COLOUR_COPY_FIELDS: tuple[str, ...] = (
 	"row_alt_fg_type",
 	"dialog_header_bg_class",
 	"dialog_header_fg_type",
+	"frame_border_class",
+	"frame_border_color_class",
+	"filter_divider_class",
+	"filter_divider_color_class",
+	"col_header_line_class",
+	"col_header_line_color_class",
+	"row_divider_class",
+	"row_divider_color_class",
+	"col_divider_class",
+	"col_divider_color_class",
 )
 
 

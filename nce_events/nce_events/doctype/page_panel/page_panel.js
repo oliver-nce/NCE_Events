@@ -120,6 +120,56 @@ const COLOUR_FIELDS = [
 	"row_alt_fg_type",
 	"dialog_header_bg_class",
 	"dialog_header_fg_type",
+	"frame_border_class",
+	"frame_border_color_class",
+	"filter_divider_class",
+	"filter_divider_color_class",
+	"col_header_line_class",
+	"col_header_line_color_class",
+	"row_divider_class",
+	"row_divider_color_class",
+	"col_divider_class",
+	"col_divider_color_class",
+];
+
+/** Lines & borders — width (theme-border*) + optional color (theme-border-{role}-{shade}). */
+const BORDER_LINE_SLOTS = [
+	{
+		widthField: "frame_border_class",
+		colorField: "frame_border_color_class",
+		label: __("Float frame border"),
+		widthFallback: "theme-border",
+	},
+	{
+		widthField: "filter_divider_class",
+		colorField: "filter_divider_color_class",
+		label: __("Filter bar divider"),
+		widthFallback: "theme-border-thin",
+	},
+	{
+		widthField: "col_header_line_class",
+		colorField: "col_header_line_color_class",
+		label: __("Column header underline"),
+		widthFallback: "theme-border-strong",
+	},
+	{
+		widthField: "row_divider_class",
+		colorField: "row_divider_color_class",
+		label: __("Table row dividers"),
+		widthFallback: "theme-border-thin",
+	},
+	{
+		widthField: "col_divider_class",
+		colorField: "col_divider_color_class",
+		label: __("Column dividers"),
+		widthFallback: "theme-border-thin",
+	},
+];
+
+const BORDER_WIDTH_OPTIONS = [
+	{ value: "theme-border-thin", label: __("Thin") },
+	{ value: "theme-border", label: __("Normal") },
+	{ value: "theme-border-strong", label: __("Strong") },
 ];
 
 /** Per-panel chrome slots — valueField for ThemeSwatchPicker; default when empty. */
@@ -3683,6 +3733,56 @@ function _colour_overlay_fg_class(bgClass, fgType) {
 	return "theme-text-" + m[1] + (m[2] ? "-" + m[2] : "") + suffix;
 }
 
+function _border_effective_width_class(raw, fallback) {
+	return (raw || "").trim() || (fallback || "").trim();
+}
+
+function _border_line_preview_html(frm, slot) {
+	const widthRaw = (frm.doc[slot.widthField] || "").trim();
+	const colorRaw = (frm.doc[slot.colorField] || "").trim();
+	const width = _border_effective_width_class(widthRaw, slot.widthFallback);
+	const classes = [width, colorRaw].filter(Boolean);
+	const defaultCls =
+		!widthRaw && !colorRaw ? " pp-border-line-preview--default" : "";
+	return (
+		'<span class="pp-border-line-preview' +
+		defaultCls +
+		" " +
+		classes.map(function (c) {
+			return frappe.utils.escape_html(c);
+		}).join(" ") +
+		'" title="' +
+		frappe.utils.escape_html(classes.join(" ")) +
+		'"></span>'
+	);
+}
+
+function _border_width_select_html(frm, slot) {
+	const current = _border_effective_width_class(
+		frm.doc[slot.widthField],
+		slot.widthFallback
+	);
+	let opts = "";
+	BORDER_WIDTH_OPTIONS.forEach(function (o) {
+		const sel = o.value === current ? " selected" : "";
+		opts +=
+			'<option value="' +
+			frappe.utils.escape_html(o.value) +
+			'"' +
+			sel +
+			">" +
+			frappe.utils.escape_html(o.label) +
+			"</option>";
+	});
+	return (
+		'<select class="form-control input-xs pp-border-width-select" data-field="' +
+		frappe.utils.escape_html(slot.widthField) +
+		'">' +
+		opts +
+		"</select>"
+	);
+}
+
 function _colour_preview_swatch_html(className, fgType, isDefault) {
 	const bg = _colour_preview_bg_class(className);
 	if (!bg) {
@@ -3711,6 +3811,45 @@ function _colour_preview_swatch_html(className, fgType, isDefault) {
 }
 
 function _bind_colours_tab_pickers(frm, $container) {
+	$container
+		.off("change", ".pp-border-width-select")
+		.on("change", ".pp-border-width-select", function () {
+			const field = $(this).data("field");
+			const val = $(this).val();
+			if (!field) return;
+			frm.set_value(field, val || "");
+			_render_colours_tab_previews(frm, null, $container);
+		});
+
+	$container
+		.off("click", ".pp-border-color-pick")
+		.on("click", ".pp-border-color-pick", function () {
+			const valueField = $(this).data("field");
+			if (!valueField) return;
+			const picker = frappe.ui && frappe.ui.themeSwatchPicker;
+			if (!picker || typeof picker.open !== "function") {
+				frappe.msgprint({
+					title: __("ThemeSwatchPicker unavailable"),
+					message: __(
+						"Install/build the Themes app widget (theme-swatch-picker.umd.js) and reload Desk."
+					),
+					indicator: "orange",
+				});
+				return;
+			}
+			picker
+				.open({
+					frm: frm,
+					themeField: "theme",
+					valueField: valueField,
+				})
+				.then(function (saved) {
+					if (saved) {
+						_render_colours_tab_previews(frm, null, $container);
+					}
+				});
+		});
+
 	$container.off("click", ".pp-colour-pick").on("click", ".pp-colour-pick", function () {
 		const valueField = $(this).data("field");
 		const fgTypeField = $(this).data("fg-type-field");
@@ -4026,6 +4165,33 @@ function _colours_tab_styles_html() {
 			.pp-colours-other-table tbody tr.pp-panel-row--selected .pp-colours-other-theme {
 				color: #495057;
 			}
+			.pp-colours-section-title {
+				margin: 18px 0 8px;
+				font-weight: 600;
+				font-size: 13px;
+			}
+			.pp-border-line-preview {
+				display: inline-block;
+				width: 52px;
+				height: 28px;
+				box-sizing: border-box;
+				background: var(--nce-color-surface, #fff);
+				border-radius: 2px;
+				vertical-align: middle;
+			}
+			.pp-border-line-preview--default { opacity: 0.55; }
+			.pp-border-width-select {
+				min-width: 88px;
+				max-width: 110px;
+				display: inline-block;
+				font-size: 12px;
+				height: 26px;
+				padding: 2px 6px;
+			}
+			.pp-border-color-muted {
+				color: #8d99a6;
+				font-size: 11px;
+			}
 		</style>`;
 }
 
@@ -4058,7 +4224,9 @@ function _build_colours_preview_table_html(frm) {
 		</tr>`;
 	});
 
-	return `<table class="table table-bordered" style="max-width:760px;background:#fff;">
+	return (
+		`<div class="pp-colours-section-title">${__("Backgrounds")}</div>` +
+		`<table class="table table-bordered" style="max-width:760px;background:#fff;">
 		<thead>
 			<tr style="background:#f7f7f7;">
 				<th style="padding:6px 10px;">${__("Surface")}</th>
@@ -4068,7 +4236,54 @@ function _build_colours_preview_table_html(frm) {
 			</tr>
 		</thead>
 		<tbody>${rows}</tbody>
-	</table>`;
+	</table>`
+	);
+}
+
+function _build_colours_border_table_html(frm) {
+	let rows = "";
+	BORDER_LINE_SLOTS.forEach(function (slot) {
+		const widthRaw = (frm.doc[slot.widthField] || "").trim();
+		const colorRaw = (frm.doc[slot.colorField] || "").trim();
+		const widthDisplay =
+			widthRaw ||
+			'<span style="color:#8d99a6;">' +
+				frappe.utils.escape_html(slot.widthFallback) +
+				"</span>";
+		const colorDisplay = colorRaw
+			? frappe.utils.escape_html(colorRaw)
+			: '<span class="pp-border-color-muted">' + __("default") + "</span>";
+		const preview = _border_line_preview_html(frm, slot);
+		const widthSelect = _border_width_select_html(frm, slot);
+		rows += `<tr style="border-bottom:1px solid #ededed;">
+			<td style="padding:8px 10px;vertical-align:middle;width:26%;">${frappe.utils.escape_html(slot.label)}</td>
+			<td style="padding:8px 10px;vertical-align:middle;width:52px;">${preview}</td>
+			<td style="padding:8px 10px;vertical-align:middle;font-family:monospace;font-size:12px;">${widthDisplay}</td>
+			<td style="padding:8px 10px;vertical-align:middle;font-family:monospace;font-size:12px;">${colorDisplay}</td>
+			<td style="padding:8px 10px;vertical-align:middle;white-space:nowrap;">
+				${widthSelect}
+				<button type="button" class="btn btn-xs btn-default pp-border-color-pick" style="margin-left:6px;" data-field="${frappe.utils.escape_html(
+					slot.colorField
+				)}">${__("Color…")}</button>
+			</td>
+		</tr>`;
+	});
+
+	return (
+		`<div class="pp-colours-section-title">${__("Lines & borders")}</div>` +
+		`<table class="table table-bordered" style="max-width:860px;background:#fff;">
+		<thead>
+			<tr style="background:#f7f7f7;">
+				<th style="padding:6px 10px;">${__("Line")}</th>
+				<th style="padding:6px 10px;">${__("Preview")}</th>
+				<th style="padding:6px 10px;">${__("Width class")}</th>
+				<th style="padding:6px 10px;">${__("Color class")}</th>
+				<th style="padding:6px 10px;"></th>
+			</tr>
+		</thead>
+		<tbody>${rows}</tbody>
+	</table>`
+	);
 }
 
 function _ensure_colours_tab_shell(frm, $container) {
@@ -4131,6 +4346,7 @@ function _render_colours_tab_previews(frm, themeSlug, $container) {
 			scopeAttr +
 			">" +
 			_build_colours_preview_table_html(frm) +
+			_build_colours_border_table_html(frm) +
 			"</div>"
 	);
 	_bind_colours_tab_pickers(frm, $container);

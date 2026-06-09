@@ -28,6 +28,16 @@
     "row_alt_fg_type",
     "dialog_header_bg_class",
     "dialog_header_fg_type",
+    "frame_border_class",
+    "frame_border_color_class",
+    "filter_divider_class",
+    "filter_divider_color_class",
+    "col_header_line_class",
+    "col_header_line_color_class",
+    "row_divider_class",
+    "row_divider_color_class",
+    "col_divider_class",
+    "col_divider_color_class",
     "default_filters",
     "order_by",
     "section_break_computed",
@@ -220,6 +230,76 @@
       "hidden": 1,
       "label": "Dialog Header Foreground Type",
       "options": "mono\ntonal"
+    },
+    {
+      "description": "Float outer frame border width (Colours tab). Empty uses theme-border.",
+      "fieldname": "frame_border_class",
+      "fieldtype": "Data",
+      "hidden": 1,
+      "label": "Frame Border Width Class"
+    },
+    {
+      "description": "Float frame border color (Colours tab). Empty uses site border color. Pick theme-border-{role}-{shade}.",
+      "fieldname": "frame_border_color_class",
+      "fieldtype": "Data",
+      "hidden": 1,
+      "label": "Frame Border Color Class"
+    },
+    {
+      "description": "Filter bar bottom divider width. Empty uses theme-border-thin.",
+      "fieldname": "filter_divider_class",
+      "fieldtype": "Data",
+      "hidden": 1,
+      "label": "Filter Divider Width Class"
+    },
+    {
+      "description": "Filter bar divider color. Empty uses site border color.",
+      "fieldname": "filter_divider_color_class",
+      "fieldtype": "Data",
+      "hidden": 1,
+      "label": "Filter Divider Color Class"
+    },
+    {
+      "description": "Table column header underline width. Empty uses theme-border-strong.",
+      "fieldname": "col_header_line_class",
+      "fieldtype": "Data",
+      "hidden": 1,
+      "label": "Column Header Line Width Class"
+    },
+    {
+      "description": "Column header underline color. Empty uses site border color.",
+      "fieldname": "col_header_line_color_class",
+      "fieldtype": "Data",
+      "hidden": 1,
+      "label": "Column Header Line Color Class"
+    },
+    {
+      "description": "Table row divider width. Empty uses theme-border-thin.",
+      "fieldname": "row_divider_class",
+      "fieldtype": "Data",
+      "hidden": 1,
+      "label": "Row Divider Width Class"
+    },
+    {
+      "description": "Table row divider color. Empty uses site border color.",
+      "fieldname": "row_divider_color_class",
+      "fieldtype": "Data",
+      "hidden": 1,
+      "label": "Row Divider Color Class"
+    },
+    {
+      "description": "Table column divider width (header vertical lines). Empty uses theme-border-thin.",
+      "fieldname": "col_divider_class",
+      "fieldtype": "Data",
+      "hidden": 1,
+      "label": "Column Divider Width Class"
+    },
+    {
+      "description": "Table column divider color. Empty uses site border color.",
+      "fieldname": "col_divider_color_class",
+      "fieldtype": "Data",
+      "hidden": 1,
+      "label": "Column Divider Color Class"
     },
     {
       "description": "Default filters pre-applied when the panel opens. Visible and editable in the filter widget.",

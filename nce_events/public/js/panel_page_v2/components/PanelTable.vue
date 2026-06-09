@@ -16,7 +16,7 @@
 			</button>
 		</div>
 	</Teleport>
-	<div ref="panelRef" class="ppv2-panel">
+	<div ref="panelRef" class="ppv2-panel" :style="panelBorderStyleVars">
 		<PanelTableFilterBar
 			v-if="!embedded"
 			:columns="columns"
@@ -173,7 +173,11 @@ import {
 	isTitleFieldColumn,
 	panelRowVal,
 } from "../utils/panelTableColWidths.js";
-import { panelChromeBg, panelChromeFgTextClass } from "../utils/panelChromeClasses.js";
+import {
+	panelChromeBg,
+	panelChromeFgTextClass,
+	panelChromeTableBorderStyleVars,
+} from "../utils/panelChromeClasses.js";
 
 const props = defineProps({
 	title: { type: String, default: "" },
@@ -230,6 +234,9 @@ const hoveredLinkKey = ref(null);
 const hoveredRowBtn = ref(null);
 let _closeHeaderMenuHandler = null;
 
+const panelBorderStyleVars = computed(() =>
+	panelChromeTableBorderStyleVars(props.config)
+);
 const colHeaderBgClass = computed(() =>
 	panelChromeBg(props.config, "col_header_bg_class")
 );
@@ -679,12 +686,12 @@ function startColResize(e, ci) {
 	text-transform: uppercase;
 	letter-spacing: 0.3px;
 	padding: 6px 8px;
-	border-bottom: var(--nce-border-width-strong) solid var(--nce-color-border);
+	border-bottom: var(--ppv2-col-header-line-w) solid var(--ppv2-col-header-line-c);
 	text-align: left;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	border-right: var(--nce-border-width) solid var(--nce-color-border);
+	border-right: var(--ppv2-col-divider-w) solid var(--ppv2-col-divider-c);
 }
 .ppv2-table th:last-child {
 	border-right: none;
@@ -698,7 +705,7 @@ function startColResize(e, ci) {
 
 .ppv2-table td {
 	padding: 5px 8px;
-	border-bottom: var(--nce-border-width) solid var(--nce-color-border);
+	border-bottom: var(--ppv2-row-divider-w) solid var(--ppv2-row-divider-c);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -773,7 +780,7 @@ function startColResize(e, ci) {
 
 :deep(.ppv2-find-row td) {
 	padding: 2px 4px;
-	border-bottom: var(--nce-border-width) solid var(--nce-color-border);
+	border-bottom: var(--ppv2-row-divider-w) solid var(--ppv2-row-divider-c);
 }
 
 :deep(.ppv2-find-input) {
