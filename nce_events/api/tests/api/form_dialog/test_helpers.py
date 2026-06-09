@@ -20,7 +20,7 @@ class TestAssertDoctypeInWPTables(FrappeTestCase):
 		"""Should raise ValidationError if DocType is not in WP Tables."""
 		from nce_events.api.form_dialog._helpers import _assert_doctype_in_wp_tables
 
-		with patch("nce_events.api.form_dialog._helpers.frappe.get_all", return_value=[]):
+		with patch("nce_events.api.form_dialog._fd_gating.frappe.get_all", return_value=[]):
 			with self.assertRaises(frappe.ValidationError):
 				_assert_doctype_in_wp_tables("Nonexistent DocType")
 
@@ -29,7 +29,7 @@ class TestAssertDoctypeInWPTables(FrappeTestCase):
 		from nce_events.api.form_dialog._helpers import _assert_doctype_in_wp_tables
 
 		with patch(
-			"nce_events.api.form_dialog._helpers.frappe.get_all",
+			"nce_events.api.form_dialog._fd_gating.frappe.get_all",
 			return_value=[{"name": "WP-001"}],
 		):
 			# Should not raise
@@ -90,7 +90,7 @@ class TestFiltersForRelatedRows(unittest.TestCase):
 		self.assertFalse(force_empty)
 		self.assertEqual(filters, {"event": "ROOT"})
 
-	@patch("nce_events.api.form_dialog._helpers._hop_walk_final_identifiers")
+	@patch("nce_events.api.form_dialog._fd_related._hop_walk_final_identifiers")
 	def test_multihop_no_bridge_rows_force_empty(self, mock_hop):
 		from nce_events.api.form_dialog._helpers import _filters_for_related_rows
 
@@ -100,7 +100,7 @@ class TestFiltersForRelatedRows(unittest.TestCase):
 		self.assertTrue(force_empty)
 		self.assertEqual(filters, {})
 
-	@patch("nce_events.api.form_dialog._helpers._hop_walk_final_identifiers")
+	@patch("nce_events.api.form_dialog._fd_related._hop_walk_final_identifiers")
 	def test_multihop_in_filter(self, mock_hop):
 		from nce_events.api.form_dialog._helpers import _filters_for_related_rows
 
@@ -110,7 +110,7 @@ class TestFiltersForRelatedRows(unittest.TestCase):
 		self.assertFalse(force_empty)
 		self.assertEqual(filters, {"name": ["in", ["A", "B"]]})
 
-	@patch("nce_events.api.form_dialog._helpers._hop_walk_final_identifiers")
+	@patch("nce_events.api.form_dialog._fd_related._hop_walk_final_identifiers")
 	def test_multihop_single_final_id(self, mock_hop):
 		from nce_events.api.form_dialog._helpers import _filters_for_related_rows
 
@@ -153,7 +153,7 @@ class TestRelatedListColumnsOptions(unittest.TestCase):
 
 
 class TestHopWalkFinalIdentifiers(unittest.TestCase):
-	@patch("nce_events.api.form_dialog._helpers.frappe.get_list")
+	@patch("nce_events.api.form_dialog._fd_related.frappe.get_list")
 	def test_single_step_collects_child_link(self, mock_gl):
 		from nce_events.api.form_dialog._helpers import _hop_walk_final_identifiers
 
@@ -176,7 +176,7 @@ class TestHopWalkFinalIdentifiers(unittest.TestCase):
 			},
 		)
 
-	@patch("nce_events.api.form_dialog._helpers.frappe.get_list")
+	@patch("nce_events.api.form_dialog._fd_related.frappe.get_list")
 	def test_two_steps_passes_bridge_names_then_final_ids(self, mock_gl):
 		from nce_events.api.form_dialog._helpers import _hop_walk_final_identifiers
 
@@ -212,7 +212,10 @@ class TestMainTabSkeletonAndTabNotes(unittest.TestCase):
 		self.assertEqual(sk[0]["anchor"], FD_LEAD_TAB_ANCHOR)
 
 	def test_second_tab_uses_tab_break_fieldname_anchor(self):
-		from nce_events.api.form_dialog._helpers import FD_LEAD_TAB_ANCHOR, _main_tab_skeleton_from_frozen_fields
+		from nce_events.api.form_dialog._helpers import (
+			FD_LEAD_TAB_ANCHOR,
+			_main_tab_skeleton_from_frozen_fields,
+		)
 
 		fields = [
 			{"hidden": 0, "fieldtype": "Data", "fieldname": "a"},
@@ -302,7 +305,7 @@ class TestSyncRelatedPreservesPortalConfig(unittest.TestCase):
 		]
 
 		with patch(
-			"nce_events.api.form_dialog._helpers._related_doctype_child_rows",
+			"nce_events.api.form_dialog._fd_related._related_doctype_child_rows",
 			return_value=fake_rows,
 		):
 			_sync_related_doctypes(doc, [{"doctype": "Event Sessions", "link_field": "product_id"}])
@@ -336,7 +339,7 @@ class TestSyncRelatedPreservesPortalConfig(unittest.TestCase):
 
 		doc = StubDoc()
 		with patch(
-			"nce_events.api.form_dialog._helpers._related_doctype_child_rows",
+			"nce_events.api.form_dialog._fd_related._related_doctype_child_rows",
 			return_value=[],
 		):
 			_sync_related_doctypes(doc, [])

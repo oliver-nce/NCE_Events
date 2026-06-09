@@ -268,33 +268,44 @@
         "__all__ for clarity"
       ]
     },
+    "nce_events/api/form_dialog/_fd_capture_meta.py": {
+      "purpose": "Frozen meta capture helpers: tab skeleton from frozen fields (FD_LEAD_TAB_ANCHOR), client-script capture from Client Script records and app-level doctype .js files, frozen_meta_json build, and tab_notes sync on rebuild.",
+      "depends_on": [
+        "nce_events/api/form_dialog/_fd_fetch_from.py"
+      ]
+    },
+    "nce_events/api/form_dialog/_fd_fetch_from.py": {
+      "purpose": "fetch_from field enrichment — copies display-relevant properties (fieldtype, options) from linked DocType source fields into frozen Form Dialog field dicts."
+    },
+    "nce_events/api/form_dialog/_fd_gating.py": {
+      "purpose": "Form Dialog gating: WP Tables validation, System Manager guard, capture-schema readiness check, and panel required-value emptiness check."
+    },
+    "nce_events/api/form_dialog/_fd_inline_children.py": {
+      "purpose": "Inline child-table helpers for Form Dialog capture: table_fields_for_capture_wizard picker, inline-child argument parsing, row dict build, and inline_child_tables child-row sync.",
+      "depends_on": [
+        "nce_events/api/form_dialog/_fd_fetch_from.py"
+      ]
+    },
+    "nce_events/api/form_dialog/_fd_related.py": {
+      "purpose": "Related-doctype helpers: hop-chain normalization/walk, related-doctypes argument parsing, child-row dict build and sync, related-row filters, column derivation, and get_list field sanitization.",
+      "depends_on": [
+        "nce_events/api/form_dialog/_fd_fetch_from.py",
+        "nce_events/api/form_dialog/_fd_gating.py",
+        "nce_events/api/form_dialog/portal_fields.py"
+      ]
+    },
+    "nce_events/api/form_dialog/_fd_script_tools.py": {
+      "purpose": "Script tool group argument parsing and script_tool_groups child-row sync on Form Dialog capture/rebuild."
+    },
     "nce_events/api/form_dialog/_helpers.py": {
-      "purpose": "Internal helpers shared by the form_dialog package: WP Tables validation, System Manager guard, hop-chain normalization/walk, related-row filter/column derivation, fetch_from enrichment, client-script capture (Client Script DocType records + app-level .js files), related-doctypes argument parsing, panel required-value emptiness check, get_list field sanitization.",
-      "private_helpers": [
-        "_assert_doctype_in_wp_tables",
-        "_require_system_manager",
-        "_normalize_hop_chain_value",
-        "_hop_walk_final_identifiers",
-        "_filters_for_related_rows",
-        "_related_list_columns_from_child_row",
-        "_enrich_fetch_from_fields",
-        "_capture_client_scripts",
-        "_parse_related_doctypes_argument",
-        "_panel_required_value_empty",
-        "_sanitize_get_list_fields",
-        "_related_doctype_child_rows",
-        "_related_row_signature",
-        "_sync_related_doctypes",
-        "_build_related_child_row_dict"
-      ],
-      "depends_on": [],
-      "sections": [
-        "WP Tables validation + role guard",
-        "Hop-chain normalization and walk",
-        "Related-row filters and column derivation",
-        "fetch_from enrichment",
-        "Client script capture (Client Script DocType records + app-level .js files on disk)",
-        "Related-doctypes argument parsing and child-row sync"
+      "purpose": "Back-compat façade re-exporting all form_dialog domain submodules (_fd_gating, _fd_fetch_from, _fd_related, _fd_inline_children, _fd_script_tools, _fd_capture_meta). Existing call sites import from here unchanged.",
+      "depends_on": [
+        "nce_events/api/form_dialog/_fd_capture_meta.py",
+        "nce_events/api/form_dialog/_fd_fetch_from.py",
+        "nce_events/api/form_dialog/_fd_gating.py",
+        "nce_events/api/form_dialog/_fd_inline_children.py",
+        "nce_events/api/form_dialog/_fd_related.py",
+        "nce_events/api/form_dialog/_fd_script_tools.py"
       ]
     },
     "nce_events/api/form_dialog/capture.py": {
