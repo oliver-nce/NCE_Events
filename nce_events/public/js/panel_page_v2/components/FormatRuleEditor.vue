@@ -9,7 +9,7 @@
 			<label class="pp-fmt-label">Condition (SQL):</label>
 			<textarea
 				v-model="localRule.condition_sql"
-				class="pp-fmt-textarea"
+				class="pp-fmt-textarea theme-border theme-rounded-sm"
 				rows="4"
 				placeholder="status = 'Cancelled' AND price > 0"
 				@input="onRuleChange"
@@ -55,7 +55,7 @@
 				<select
 					v-if="useWeight"
 					v-model="localRule.font_weight"
-					class="pp-fmt-select"
+					class="pp-fmt-select theme-border theme-rounded-sm"
 					@change="onRuleChange"
 				>
 					<option value="200">200</option>
@@ -245,7 +245,7 @@ async function validate() {
 .pp-fmt-section {
 	margin-bottom: 14px;
 	padding-top: 8px;
-	border-top: 1px solid var(--nce-color-border, #d1d8dd);
+	border-top: var(--nce-border-width) solid var(--nce-color-border, #d1d8dd);
 }
 
 .pp-fmt-label {
@@ -260,8 +260,6 @@ async function validate() {
 	font-family: monospace;
 	font-size: calc(var(--nce-font-size, 13px) * 0.92);
 	padding: 8px;
-	border: 1px solid var(--nce-color-border, #d1d8dd);
-	border-radius: 4px;
 	resize: vertical;
 }
 
@@ -304,8 +302,6 @@ async function validate() {
 .pp-fmt-select {
 	min-width: 90px;
 	padding: 4px 6px;
-	border: 1px solid var(--nce-color-border, #d1d8dd);
-	border-radius: 4px;
 }
 
 .pp-fmt-footer {
@@ -313,6 +309,6 @@ async function validate() {
 	justify-content: flex-end;
 	gap: 8px;
 	padding-top: 8px;
-	border-top: 1px solid var(--nce-color-border, #d1d8dd);
+	border-top: var(--nce-border-width) solid var(--nce-color-border, #d1d8dd);
 }
 </style>

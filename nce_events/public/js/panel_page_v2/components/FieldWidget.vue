@@ -9,7 +9,7 @@
 			type="text"
 			v-model="localValue"
 			:readonly="!config.editable"
-			class="field-input"
+			class="field-input theme-border theme-rounded-sm"
 			@blur="onSave"
 			@keydown.enter="onSave"
 		/>
@@ -19,7 +19,7 @@
 			:step="numberStep"
 			v-model="localValue"
 			:readonly="!config.editable"
-			class="field-input"
+			class="field-input theme-border theme-rounded-sm"
 			@blur="onSave"
 			@keydown.enter="onSave"
 		/>
@@ -28,7 +28,7 @@
 			type="date"
 			v-model="localValue"
 			:readonly="!config.editable"
-			class="field-input"
+			class="field-input theme-border theme-rounded-sm"
 			@blur="onSave"
 			@keydown.enter="onSave"
 		/>
@@ -37,14 +37,14 @@
 			type="checkbox"
 			:checked="localValue"
 			:disabled="!config.editable"
-			class="field-input"
+			class="field-input theme-border theme-rounded-sm"
 			@change="onCheckChange"
 		/>
 		<select
 			v-else-if="inputType === 'select'"
 			v-model="localValue"
 			:disabled="!config.editable"
-			class="field-input"
+			class="field-input theme-border theme-rounded-sm"
 			@change="onSave"
 		>
 			<option value=""></option>
@@ -54,7 +54,7 @@
 			v-else-if="inputType === 'textarea'"
 			v-model="localValue"
 			:readonly="!config.editable"
-			class="field-input"
+			class="field-input theme-border theme-rounded-sm"
 			rows="3"
 			@blur="onSave"
 		/>
@@ -63,7 +63,7 @@
 			type="text"
 			v-model="localValue"
 			:readonly="!config.editable"
-			class="field-input"
+			class="field-input theme-border theme-rounded-sm"
 			@blur="onSave"
 			@keydown.enter="onSave"
 		/>
@@ -163,8 +163,6 @@ function onCheckChange(e) {
 }
 .field-input {
 	flex: 1;
-	border: 1px solid var(--nce-color-border);
-	border-radius: var(--border-radius-sm);
 	padding: 4px 8px;
 	font-size: var(--font-size-base);
 	min-height: 28px;

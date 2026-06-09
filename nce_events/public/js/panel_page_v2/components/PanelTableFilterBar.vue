@@ -1,13 +1,13 @@
 <template>
 	<div
 		v-if="props.showFilter"
-		class="ppv2-filter-widget border-b theme-border"
+		class="ppv2-filter-widget"
 		:class="[filterBarBgClass, filterBarFgTextClass]"
 	>
 		<div v-for="(cond, i) in filters" :key="i" class="ppv2-filter-row">
 			<select
 				v-model="cond.field"
-				class="ppv2-filter-col"
+				class="ppv2-filter-col theme-border theme-rounded-sm"
 				@change="
 					onFilterFieldChange(cond);
 					emitFilterChange();
@@ -47,7 +47,7 @@
 			<template v-if="cond.field && isDateField(cond.field)">
 				<input
 					:value="cond._sqlDate || ''"
-					class="ppv2-filter-val"
+					class="ppv2-filter-val theme-border theme-rounded-sm"
 					placeholder="Enter a SQL date e.g. 1950-06-08"
 					@input="
 						onDateSqlInput(cond, $event.target.value);
@@ -56,7 +56,7 @@
 				/>
 				<input
 					:value="cond._daysAgo || ''"
-					class="ppv2-filter-val"
+					class="ppv2-filter-val theme-border theme-rounded-sm"
 					placeholder="OR enter days ago e.g. 30"
 					@input="
 						onDaysAgoInput(cond, $event.target.value);
@@ -67,7 +67,7 @@
 			<input
 				v-else-if="cond.field"
 				v-model="cond.value"
-				class="ppv2-filter-val"
+				class="ppv2-filter-val theme-border theme-rounded-sm"
 				placeholder="value"
 				@input="emitFilterDebounced"
 			/>
@@ -223,6 +223,7 @@ function emitFilterDebounced() {
 .ppv2-filter-widget {
 	padding: 6px 10px;
 	flex-shrink: 0;
+	border-bottom: var(--nce-border-width) solid var(--nce-color-border);
 }
 
 .ppv2-filter-row {
@@ -235,8 +236,6 @@ function emitFilterDebounced() {
 .ppv2-filter-col {
 	font-size: calc(var(--font-size-base) + 2px);
 	padding: 3px 6px;
-	border: 1px solid var(--nce-color-border);
-	border-radius: var(--border-radius-sm);
 	min-width: 120px;
 }
 
@@ -254,8 +253,6 @@ function emitFilterDebounced() {
 .ppv2-filter-val {
 	font-size: calc(var(--font-size-base) + 2px);
 	padding: 3px 8px;
-	border: 1px solid var(--nce-color-border);
-	border-radius: var(--border-radius-sm);
 	flex: 1;
 	min-width: 60px;
 }

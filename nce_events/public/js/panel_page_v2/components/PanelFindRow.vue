@@ -7,7 +7,7 @@
 			<input
 				:value="criteria[col.fieldname] ?? ''"
 				type="text"
-				class="ppv2-find-input"
+				class="ppv2-find-input theme-border theme-rounded-sm"
 				:placeholder="col.label"
 				@input="onInput(col.fieldname, $event)"
 				@focus="onRowActivate"
@@ -44,7 +44,7 @@ function onInput(fieldname, event) {
 
 .ppv2-find-row td {
 	padding: 2px 4px;
-	border-bottom: 1px solid var(--nce-color-border);
+	border-bottom: var(--nce-border-width) solid var(--nce-color-border);
 }
 
 .ppv2-find-or-label {
@@ -61,8 +61,6 @@ function onInput(fieldname, event) {
 	padding: 2px 4px;
 	font-size: calc(var(--font-size-base) + 1px);
 	background-color: var(--nce-color-surface, #ffffff);
-	border: 1px solid var(--nce-color-border, #d1d5db);
-	border-radius: var(--border-radius-sm, 4px);
 }
 
 .ppv2-find-or-label + .ppv2-find-input {

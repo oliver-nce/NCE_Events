@@ -44,7 +44,7 @@
 				class="ppv2-fd-readback-overlay"
 				@click.stop
 			>
-				<div class="ppv2-fd-readback-spinner">{{ readbackUpdatingText }}</div>
+				<div class="ppv2-fd-readback-spinner theme-border theme-rounded-sm">{{ readbackUpdatingText }}</div>
 			</div>
 			<div class="ppv2-fd-drag-handle" @mousedown="startDrag">
 				<PanelFormDialogHeader
@@ -1151,7 +1151,6 @@ async function onPlaceholderButton(btn) {
 	padding: 16px 24px;
 	border-radius: var(--border-radius-sm, 6px);
 	background: var(--nce-color-surface);
-	border: 1px solid var(--nce-color-border);
 	box-shadow: var(--nce-shadow);
 }
 .ppv2-fd-size-sm {

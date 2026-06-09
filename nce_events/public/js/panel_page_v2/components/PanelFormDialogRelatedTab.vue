@@ -43,7 +43,7 @@
 			</div>
 			<div
 				v-else-if="(relatedState[ti]?.columns || []).length"
-				class="ppv2-fd-related-table-wrap"
+				class="ppv2-fd-related-table-wrap theme-border theme-rounded-sm"
 			>
 				<table class="ppv2-fd-related-table">
 					<thead>
@@ -87,7 +87,7 @@
 							>
 								<select
 									v-if="isSelectColumn(col)"
-									class="ppv2-fd-related-select"
+									class="ppv2-fd-related-select theme-border theme-rounded-sm"
 									:value="String(relatedCellRaw(rw, col) ?? '')"
 									:disabled="!isRelatedColEditable(col)"
 									:aria-label="col.label || col.fieldname"
@@ -115,7 +115,7 @@
 										isRelatedColEditable(col) && isRelatedNumberField(col)
 									"
 									type="number"
-									class="ppv2-fd-related-inp"
+									class="ppv2-fd-related-inp theme-border theme-rounded-sm"
 									:value="relatedNumberInputValue(rw, col)"
 									@input="onRelatedNumberInput(rw, col, $event)"
 								/>
@@ -124,13 +124,13 @@
 										isRelatedColEditable(col) && col.fieldtype === 'Date'
 									"
 									type="date"
-									class="ppv2-fd-related-inp"
+									class="ppv2-fd-related-inp theme-border theme-rounded-sm"
 									:value="relatedDateInputValue(rw, col)"
 									@input="onRelatedDateInput(rw, col, $event)"
 								/>
 								<textarea
 									v-else-if="isRelatedColEditable(col) && isRelatedLongText(col)"
-									class="ppv2-fd-related-textarea"
+									class="ppv2-fd-related-textarea theme-border theme-rounded-sm"
 									rows="2"
 									:value="String(relatedCellRaw(rw, col) ?? '')"
 									@input="onRelatedTextInput(rw, col, $event)"
@@ -138,7 +138,7 @@
 								<input
 									v-else-if="isRelatedColEditable(col)"
 									type="text"
-									class="ppv2-fd-related-inp"
+									class="ppv2-fd-related-inp theme-border theme-rounded-sm"
 									:value="String(relatedCellRaw(rw, col) ?? '')"
 									@input="onRelatedTextInput(rw, col, $event)"
 								/>
@@ -191,7 +191,7 @@
 					</label>
 					<input
 						type="text"
-						class="ppv2-fd-related-inp"
+						class="ppv2-fd-related-inp theme-border theme-rounded-sm"
 						:value="String(actionModal.values[pa.arg] ?? '')"
 						@input="actionModal.values[pa.arg] = $event.target.value"
 					/>
@@ -248,7 +248,7 @@
 							<div
 								v-for="field in col.fields"
 								:key="field.fieldname"
-								class="ppv2-fd-related-field-row"
+								class="ppv2-fd-related-field-row theme-border theme-rounded-sm"
 							>
 								<span class="ppv2-fd-related-fn">
 									{{ field.label || field.fieldname
@@ -765,8 +765,6 @@ defineExpose({
 	column-gap: 10px;
 	padding: 6px 8px;
 	margin-bottom: 4px;
-	border: 1px solid var(--nce-color-border);
-	border-radius: var(--border-radius-sm, 4px);
 	font-size: var(--font-size-sm);
 }
 .ppv2-fd-related-fn {
@@ -803,8 +801,6 @@ defineExpose({
 	max-height: min(52vh, 520px);
 	overflow: auto;
 	margin: 0 0 12px;
-	border: 1px solid var(--nce-color-border);
-	border-radius: var(--border-radius-sm, 4px);
 }
 .ppv2-fd-related-table {
 	width: 100%;
@@ -818,7 +814,7 @@ defineExpose({
 	color: var(--nce-color-secondary-700, #105ead);
 	font-size: var(--font-size-base);
 	font-weight: var(--font-weight-bold, 600);
-	border-bottom: 1px solid var(--nce-color-border);
+	border-bottom: var(--nce-border-width) solid var(--nce-color-border);
 	position: sticky;
 	top: 0;
 	z-index: 1;
@@ -828,7 +824,7 @@ defineExpose({
 }
 .ppv2-fd-related-td {
 	padding: 4px 8px;
-	border-bottom: 1px solid var(--nce-color-border);
+	border-bottom: var(--nce-border-width) solid var(--nce-color-border);
 	vertical-align: middle;
 	min-width: 4rem;
 }
@@ -853,8 +849,6 @@ defineExpose({
 	min-width: 6rem;
 	min-height: 2.25em;
 	padding: 5px 8px;
-	border: 1px solid var(--nce-color-border);
-	border-radius: var(--border-radius-sm, 4px);
 	background: var(--nce-color-surface);
 	font-size: var(--font-size-base);
 	font-family: var(--font-family, inherit);
@@ -866,8 +860,6 @@ defineExpose({
 	width: 100%;
 	box-sizing: border-box;
 	padding: 5px 8px;
-	border: 1px solid var(--nce-color-border);
-	border-radius: var(--border-radius-sm, 4px);
 	background: var(--nce-color-surface);
 	font-size: var(--font-size-base);
 	font-family: var(--font-family, inherit);

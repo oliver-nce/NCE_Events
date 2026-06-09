@@ -35,7 +35,7 @@
     <!-- Select / static-Autocomplete: native dropdown; exact-match criterion. -->
     <select
       v-else-if="useNativeSelectUi"
-      class="ppv2-fd-input ppv2-fd-select"
+      class="ppv2-fd-input ppv2-fd-select theme-border theme-rounded-sm"
       :value="criteriaExactValue"
       @change="onExactCriteriaChange($event.target.value)"
     >
@@ -46,7 +46,7 @@
     <input
       v-else
       type="text"
-      class="ppv2-fd-input"
+      class="ppv2-fd-input theme-border theme-rounded-sm"
       :value="criteriaInputValue"
       spellcheck="false"
       autocomplete="off"
@@ -79,7 +79,7 @@
       :value="modelValue ?? ''"
       :required="mandatory"
       :disabled="readOnly"
-      class="ppv2-fd-input ppv2-fd-select"
+      class="ppv2-fd-input ppv2-fd-select theme-border theme-rounded-sm"
       :class="{ 'theme-text-muted': readOnly }"
       @change="onChange($event.target.value)"
     >
@@ -123,14 +123,14 @@
     <!-- HTML-label fields: always render value as HTML, never editable -->
     <div
       v-else-if="labelHasHtml"
-      class="ppv2-fd-input ppv2-fd-readonly-plain ppv2-fd-html-display"
+      class="ppv2-fd-input ppv2-fd-readonly-plain ppv2-fd-html-display theme-border theme-rounded-sm"
       v-html="modelValue ?? ''"
     />
 
     <!-- Textarea types — virtual / read-only: static text (no focus, resize, or edits) -->
     <div
       v-else-if="isTextarea && readOnly"
-      class="ppv2-fd-input ppv2-fd-textarea ppv2-fd-readonly-plain"
+      class="ppv2-fd-input ppv2-fd-textarea ppv2-fd-readonly-plain theme-border theme-rounded-sm"
     >{{ modelValue || "" }}</div>
     <textarea
       v-else-if="isTextarea"
@@ -139,7 +139,7 @@
       :disabled="readOnly"
       :rows="config.props?.rows || 3"
       :placeholder="field.placeholder || ''"
-      class="ppv2-fd-input ppv2-fd-textarea"
+      class="ppv2-fd-input ppv2-fd-textarea theme-border theme-rounded-sm"
       :class="{ 'theme-text-muted': readOnly }"
       @input="onChange($event.target.value)"
     />
@@ -147,7 +147,7 @@
     <!-- All other fields: text/number/date/time/etc -->
     <div
       v-else-if="readOnly"
-      class="ppv2-fd-input ppv2-fd-readonly-plain"
+      class="ppv2-fd-input ppv2-fd-readonly-plain theme-border theme-rounded-sm"
     >{{ inputDisplayValue }}</div>
     <input
       v-else
@@ -159,7 +159,7 @@
       :step="config.props?.step"
       :min="config.props?.min"
       :max="config.props?.max"
-      class="ppv2-fd-input"
+      class="ppv2-fd-input theme-border theme-rounded-sm"
       :class="{ 'theme-text-muted': readOnly }"
       @change="onChange($event.target.value)"
     />
@@ -303,8 +303,6 @@ function onLinkChangePayload(payload) {
   padding: 5px 8px;
   font-size: var(--font-size-base);
   font-family: var(--font-family);
-  border: 1px solid var(--nce-color-border);
-  border-radius: var(--border-radius-sm, 4px);
   background: var(--nce-color-surface);
   box-sizing: border-box;
 }
@@ -357,7 +355,7 @@ function onLinkChangePayload(payload) {
 .ppv2-fd-table-placeholder {
   padding: 8px 12px;
   background: var(--nce-color-surface);
-  border: 1px dashed var(--nce-color-border);
+  border: var(--nce-border-width) dashed var(--nce-color-border);
   border-radius: var(--border-radius-sm, 4px);
   font-size: var(--font-size-sm);
   margin-bottom: 10px;

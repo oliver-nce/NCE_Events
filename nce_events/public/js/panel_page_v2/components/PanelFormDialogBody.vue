@@ -100,7 +100,7 @@
 						</div>
 						<div
 							v-if="tab.tabGuidance && String(tab.tabGuidance).trim()"
-							class="ppv2-fd-tab-guidance"
+							class="ppv2-fd-tab-guidance theme-border theme-rounded-sm"
 						>
 							<strong class="ppv2-fd-tab-guidance-label">Note:</strong>
 							<span class="ppv2-fd-tab-guidance-text">{{ tab.tabGuidance }}</span>
@@ -332,8 +332,6 @@ defineExpose({
 	font-size: var(--font-size-base);
 	font-family: var(--font-family);
 	background: var(--nce-color-surface, #f7fafc);
-	border: 1px solid var(--nce-color-border, #e2e8f0);
-	border-radius: var(--border-radius-sm, 4px);
 	line-height: 1.45;
 }
 .ppv2-fd-tab-guidance-label {

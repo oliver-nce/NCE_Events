@@ -6,7 +6,7 @@
 			:class="[
 				'tab-btn',
 				activeTab === tab.label
-					? 'tab-btn--active theme-text-heading border-b-2 theme-border-primary'
+					? 'tab-btn--active tab-btn--active-border theme-text-heading theme-border-primary'
 					: 'theme-text-muted',
 			]"
 			@click="$emit('update:activeTab', tab.label)"
@@ -41,7 +41,7 @@ const showBar = computed(() => {
 .tab-bar {
 	display: flex;
 	gap: 0;
-	border-bottom: 1px solid var(--nce-color-border);
+	border-bottom: var(--nce-border-width) solid var(--nce-color-border);
 	margin-bottom: var(--spacing-md);
 }
 .tab-btn {
@@ -50,7 +50,10 @@ const showBar = computed(() => {
 	background: none;
 	cursor: pointer;
 	font-size: var(--font-size-base);
-	border-bottom: 2px solid transparent;
+	border-bottom: var(--nce-border-width-strong) solid transparent;
+}
+.tab-btn--active-border {
+	border-bottom: var(--nce-border-width-strong) solid var(--nce-color-primary);
 }
 .tab-btn:hover {
 	color: inherit;

@@ -6,7 +6,7 @@
 			@mousedown.self="$emit('close')"
 		>
 			<div
-				class="ppv2-find-help-dialog"
+				class="ppv2-find-help-dialog theme-border theme-rounded"
 				role="dialog"
 				aria-modal="true"
 				aria-labelledby="ppv2-find-help-title"
@@ -173,7 +173,6 @@ const rows = computed(() => [
 	color: var(--nce-color-text, #333);
 	border-radius: var(--border-radius, 8px);
 	box-shadow: var(--nce-shadow, 0 12px 40px rgba(0, 0, 0, 0.2));
-	border: 1px solid var(--nce-color-border, #cfd8dc);
 	font-family: var(--font-family, system-ui, sans-serif);
 	font-size: var(--font-size-base, 13px);
 }
@@ -184,7 +183,7 @@ const rows = computed(() => [
 	justify-content: space-between;
 	gap: 12px;
 	padding: 12px 14px;
-	border-bottom: 1px solid var(--nce-color-border, #e2e8f0);
+	border-bottom: var(--nce-border-width) solid var(--nce-color-border, #e2e8f0);
 	background: var(--nce-color-surface, #f8fafc);
 	border-radius: var(--border-radius, 8px) var(--border-radius, 8px) 0 0;
 }
@@ -232,14 +231,14 @@ const rows = computed(() => [
 	text-align: left;
 	padding: 8px 10px;
 	background: var(--nce-color-surface, #f1f5f9);
-	border-bottom: 2px solid var(--nce-color-border, #e2e8f0);
+	border-bottom: var(--nce-border-width-strong) solid var(--nce-color-border, #e2e8f0);
 	font-weight: var(--font-weight-bold, 600);
 	white-space: nowrap;
 }
 
 .ppv2-find-help-table td {
 	padding: 8px 10px;
-	border-bottom: 1px solid var(--nce-color-border, #e8eef4);
+	border-bottom: var(--nce-border-width) solid var(--nce-color-border, #e8eef4);
 	vertical-align: top;
 }
 
@@ -253,7 +252,7 @@ const rows = computed(() => [
 	background: var(--nce-color-surface, #f1f5f9);
 	padding: 2px 6px;
 	border-radius: 4px;
-	border: 1px solid var(--nce-color-border, #e2e8f0);
+	border: var(--nce-border-width) solid var(--nce-color-border, #e2e8f0);
 }
 
 .ppv2-find-help-footnote {

@@ -27,7 +27,7 @@
 			<div v-if="mode === 'find'" class="ppv2-find-actions" @mousedown.stop>
 				<button
 					type="button"
-					class="ppv2-find-tab-btn ppv2-find-tab-btn--active"
+					class="ppv2-find-tab-btn ppv2-find-tab-btn--active theme-border theme-rounded-sm"
 					@click="onPerformFind"
 				>
 					{{ label("Perform Find") }}
@@ -35,24 +35,24 @@
 				<button
 					v-if="findMatchActive"
 					type="button"
-					class="ppv2-find-tab-btn"
+					class="ppv2-find-tab-btn theme-border theme-rounded-sm"
 					@click="onPerformFindConstrain"
 				>
 					{{ label("Constrain Found Set") }}
 				</button>
-				<button type="button" class="ppv2-find-tab-btn" @click="$emit('close')">
+				<button type="button" class="ppv2-find-tab-btn theme-border theme-rounded-sm" @click="$emit('close')">
 					{{ label("Cancel Find") }}
 				</button>
 			</div>
 			<!-- Browse mode (post-find) -->
 			<div v-else class="ppv2-find-actions ppv2-find-actions--browse" @mousedown.stop>
-				<button type="button" class="ppv2-find-tab-btn" @click="modifyFind">
+				<button type="button" class="ppv2-find-tab-btn theme-border theme-rounded-sm" @click="modifyFind">
 					{{ label("Modify Find") }}
 				</button>
-				<button type="button" class="ppv2-find-tab-btn" @click="enterConstrainMode">
+				<button type="button" class="ppv2-find-tab-btn theme-border theme-rounded-sm" @click="enterConstrainMode">
 					{{ label("Constrain Found Set") }}
 				</button>
-				<button type="button" class="ppv2-find-tab-btn" @click="showAll">
+				<button type="button" class="ppv2-find-tab-btn theme-border theme-rounded-sm" @click="showAll">
 					{{ label("Show All") }}
 				</button>
 			</div>
@@ -73,7 +73,7 @@
 							<input
 								v-model="criteria[col.fieldname]"
 								type="text"
-								class="ppv2-find-input"
+								class="ppv2-find-input theme-border theme-rounded-sm"
 								:placeholder="col.label"
 								@keydown.enter.prevent="onPerformFind"
 							/>
@@ -167,18 +167,17 @@ function onPerformFindConstrain() {
 	gap: 6px;
 	padding: 8px 10px;
 	background: var(--nce-color-focus);
-	border-bottom: 1px solid var(--nce-color-border);
+	border-bottom: var(--nce-border-width) solid var(--nce-color-border);
 	flex-shrink: 0;
 }
 
 .ppv2-find-actions--browse {
-	border-bottom: 1px dashed var(--nce-color-border);
+	border-bottom: var(--nce-border-width) dashed var(--nce-color-border);
 }
 
 .ppv2-find-tab-btn {
 	font-size: var(--font-size-sm);
 	padding: 6px 12px;
-	border: 1px solid var(--nce-color-border);
 	border-radius: var(--border-radius-sm);
 	background: var(--nce-color-surface);
 	cursor: pointer;
@@ -215,7 +214,7 @@ function onPerformFindConstrain() {
 
 .ppv2-find-row td {
 	padding: 2px 4px;
-	border-bottom: 1px solid var(--nce-color-border);
+	border-bottom: var(--nce-border-width) solid var(--nce-color-border);
 }
 
 .ppv2-find-input {
@@ -223,7 +222,6 @@ function onPerformFindConstrain() {
 	box-sizing: border-box;
 	padding: 2px 4px;
 	font-size: calc(var(--font-size-base) + 1px);
-	border: 1px solid var(--nce-color-border);
 	border-radius: var(--border-radius-sm);
 	background: var(--nce-color-surface);
 }

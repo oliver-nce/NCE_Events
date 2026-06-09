@@ -88,7 +88,7 @@ defineEmits(["close", "nav-prev", "nav-next"]);
 	height: 28px;
 	padding: 0;
 	color: inherit;
-	border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
+	border: var(--nce-border-width) solid color-mix(in srgb, currentColor 28%, transparent);
 	border-radius: var(--border-radius-sm, 4px);
 	background: color-mix(in srgb, currentColor 10%, transparent);
 	cursor: pointer;

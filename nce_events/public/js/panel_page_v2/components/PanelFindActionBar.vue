@@ -8,7 +8,7 @@
 			<div class="ppv2-find-actions-main">
 				<button
 					type="button"
-					class="ppv2-find-tab-btn ppv2-find-tab-btn--primary"
+					class="ppv2-find-tab-btn ppv2-find-tab-btn--primary theme-border theme-rounded-sm"
 					@click="$emit('find-perform')"
 				>
 					{{ label("Perform Find") }}
@@ -16,7 +16,7 @@
 				<button
 					v-if="findMatchActive"
 					type="button"
-					class="ppv2-find-tab-btn"
+					class="ppv2-find-tab-btn theme-border theme-rounded-sm"
 					:class="{ 'ppv2-find-tab-btn--hover': hoveredFindBtn === 'constrain' }"
 					@mouseenter="hoveredFindBtn = 'constrain'"
 					@mouseleave="hoveredFindBtn = null"
@@ -27,7 +27,7 @@
 				<button
 					v-if="findMatchActive"
 					type="button"
-					class="ppv2-find-tab-btn"
+					class="ppv2-find-tab-btn theme-border theme-rounded-sm"
 					:class="{ 'ppv2-find-tab-btn--hover': hoveredFindBtn === 'extend' }"
 					@mouseenter="hoveredFindBtn = 'extend'"
 					@mouseleave="hoveredFindBtn = null"
@@ -37,7 +37,7 @@
 				</button>
 				<button
 					type="button"
-					class="ppv2-find-tab-btn"
+					class="ppv2-find-tab-btn theme-border theme-rounded-sm"
 					:class="{ 'ppv2-find-tab-btn--hover': hoveredFindBtn === 'cancel-find' }"
 					@mouseenter="hoveredFindBtn = 'cancel-find'"
 					@mouseleave="hoveredFindBtn = null"
@@ -49,7 +49,7 @@
 			<div class="ppv2-find-actions-or">
 				<button
 					type="button"
-					class="ppv2-find-tab-btn ppv2-find-or-btn"
+					class="ppv2-find-tab-btn ppv2-find-or-btn theme-border theme-rounded-sm"
 					:class="{ 'ppv2-find-tab-btn--hover': hoveredFindBtn === 'or' }"
 					title="Add OR find request"
 					:disabled="!findOrEnabled"
@@ -61,7 +61,7 @@
 				</button>
 				<button
 					type="button"
-					class="ppv2-find-tab-btn ppv2-find-or-btn"
+					class="ppv2-find-tab-btn ppv2-find-or-btn theme-border theme-rounded-sm"
 					:class="{ 'ppv2-find-tab-btn--hover': hoveredFindBtn === 'duplicate' }"
 					title="Duplicate this find request"
 					:disabled="!findDuplicateEnabled"
@@ -76,7 +76,7 @@
 		<template v-else-if="mode === 'browse'">
 			<button
 				type="button"
-				class="ppv2-find-tab-btn"
+				class="ppv2-find-tab-btn theme-border theme-rounded-sm"
 				:class="{ 'ppv2-find-tab-btn--hover': hoveredFindBtn === 'new' }"
 				@mouseenter="hoveredFindBtn = 'new'"
 				@mouseleave="hoveredFindBtn = null"
@@ -86,7 +86,7 @@
 			</button>
 			<button
 				type="button"
-				class="ppv2-find-tab-btn"
+				class="ppv2-find-tab-btn theme-border theme-rounded-sm"
 				:class="{ 'ppv2-find-tab-btn--hover': hoveredFindBtn === 'modify' }"
 				@mouseenter="hoveredFindBtn = 'modify'"
 				@mouseleave="hoveredFindBtn = null"
@@ -96,7 +96,7 @@
 			</button>
 			<button
 				type="button"
-				class="ppv2-find-tab-btn"
+				class="ppv2-find-tab-btn theme-border theme-rounded-sm"
 				:class="{ 'ppv2-find-tab-btn--hover': hoveredFindBtn === 'exit' }"
 				@mouseenter="hoveredFindBtn = 'exit'"
 				@mouseleave="hoveredFindBtn = null"
@@ -147,7 +147,7 @@ function label(msg) {
 	padding: 6px 10px;
 	flex-shrink: 0;
 	background-color: var(--nce-color-primary-100, #e3f0fc);
-	border-bottom: 1px solid var(--nce-color-border, #d1d5db);
+	border-bottom: var(--nce-border-width) solid var(--nce-color-border, #d1d5db);
 }
 
 .ppv2-find-actions-main,
@@ -173,8 +173,6 @@ function label(msg) {
 	font-family: inherit;
 	white-space: nowrap;
 	background-color: var(--nce-color-surface, #ffffff);
-	border: 1px solid var(--nce-color-border, #d1d5db);
-	border-radius: var(--border-radius-sm, 4px);
 }
 
 .ppv2-find-tab-btn--primary {

@@ -3,7 +3,7 @@
 		<div
 			v-if="headerMenuOpen && headerMenuCol"
 			ref="headerMenuRef"
-			class="ppv2-header-ctx-menu"
+			class="ppv2-header-ctx-menu theme-border theme-rounded"
 			:style="{ left: headerMenuX + 'px', top: headerMenuY + 'px' }"
 			@click.stop
 			@contextmenu.prevent
@@ -113,7 +113,7 @@
 						<td v-if="hasActionColumn" class="ppv2-action-td" :style="actionColumnStyle">
 							<button
 								v-if="hasEmailAction && rowHasEmail(row)"
-								class="ppv2-row-btn"
+								class="ppv2-row-btn theme-border theme-rounded-sm"
 								:class="{ 'ppv2-row-btn--hover': hoveredRowBtn === rowBtnKey(row, 'email') }"
 								title="Send email"
 								@mouseenter="hoveredRowBtn = rowBtnKey(row, 'email')"
@@ -124,7 +124,7 @@
 							</button>
 							<button
 								v-if="hasPhoneAction && rowHasPhone(row)"
-								class="ppv2-row-btn"
+								class="ppv2-row-btn theme-border theme-rounded-sm"
 								:class="{ 'ppv2-row-btn--hover': hoveredRowBtn === rowBtnKey(row, 'call') }"
 								title="Call"
 								@mouseenter="hoveredRowBtn = rowBtnKey(row, 'call')"
@@ -135,7 +135,7 @@
 							</button>
 							<button
 								v-if="hasPhoneAction && rowHasPhone(row)"
-								class="ppv2-row-btn"
+								class="ppv2-row-btn theme-border theme-rounded-sm"
 								:class="{ 'ppv2-row-btn--hover': hoveredRowBtn === rowBtnKey(row, 'sms') }"
 								title="Send SMS"
 								@mouseenter="hoveredRowBtn = rowBtnKey(row, 'sms')"
@@ -146,7 +146,7 @@
 							</button>
 							<button
 								v-if="hasWpSwitchAction && rowHasFamilyId(row)"
-								class="ppv2-row-btn"
+								class="ppv2-row-btn theme-border theme-rounded-sm"
 								:class="{ 'ppv2-row-btn--hover': hoveredRowBtn === rowBtnKey(row, 'switch') }"
 								title="View as on website"
 								@mouseenter="hoveredRowBtn = rowBtnKey(row, 'switch')"
@@ -679,12 +679,12 @@ function startColResize(e, ci) {
 	text-transform: uppercase;
 	letter-spacing: 0.3px;
 	padding: 6px 8px;
-	border-bottom: 2px solid var(--nce-color-border);
+	border-bottom: var(--nce-border-width-strong) solid var(--nce-color-border);
 	text-align: left;
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
-	border-right: 1px solid var(--nce-color-border);
+	border-right: var(--nce-border-width) solid var(--nce-color-border);
 }
 .ppv2-table th:last-child {
 	border-right: none;
@@ -698,7 +698,7 @@ function startColResize(e, ci) {
 
 .ppv2-table td {
 	padding: 5px 8px;
-	border-bottom: 1px solid var(--nce-color-border);
+	border-bottom: var(--nce-border-width) solid var(--nce-color-border);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -746,7 +746,6 @@ function startColResize(e, ci) {
 	font-size: var(--font-size-base);
 	line-height: 1;
 	background-color: var(--nce-color-surface, #ffffff);
-	border: 1px solid var(--nce-color-border, #d1d5db);
 	border-radius: var(--border-radius-sm, 4px);
 }
 .ppv2-row-btn--hover,
@@ -774,7 +773,7 @@ function startColResize(e, ci) {
 
 :deep(.ppv2-find-row td) {
 	padding: 2px 4px;
-	border-bottom: 1px solid var(--nce-color-border);
+	border-bottom: var(--nce-border-width) solid var(--nce-color-border);
 }
 
 :deep(.ppv2-find-input) {
@@ -793,7 +792,6 @@ function startColResize(e, ci) {
 	min-width: 180px;
 	padding: 4px 0;
 	margin: 0;
-	border: 1px solid var(--nce-color-border, #d1d5db);
 	border-radius: 4px;
 	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
 	background-color: var(--nce-color-surface, #ffffff);
