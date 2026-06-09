@@ -196,6 +196,23 @@
         "Diagnostic child lookup"
       ]
     },
+    "nce_events/api/panel_api_pkg/format_rules.py": {
+      "purpose": "Panel column format-rule SQL validation and resolution: tokenize condition_sql against root/related field maps, validate against allowed_fields whitelist, return resolved SQL for Page Panel computed styling.",
+      "depends_on": [
+        "nce_events/api/panel_api_pkg/page_panel_lookup.py"
+      ],
+      "sections": [
+        "validate_format_rule whitelist endpoint",
+        "_build_resolution_maps field/link lookup",
+        "Token resolution and SQL keyword guard"
+      ]
+    },
+    "nce_events/api/panel_api_pkg/page_panel_lookup.py": {
+      "purpose": "Resolve Page Panel documents by root_doctype (not autoname name): page_panel_docname_for_root, get_page_panel_doc_for_root. Used by form_dialog search and panel APIs when root_doctype is the stable key.",
+      "depends_on": [
+        "nce_events/nce_events/doctype/page_panel/"
+      ]
+    },
     "nce_events/api/messaging.py": {
       "purpose": "Email and SMS messaging: preview Jinja-rendered message, send bulk panel message, get email accounts",
       "private_helpers": [
@@ -211,6 +228,29 @@
         "Email account list",
         "Test send",
         "Bulk panel send"
+      ]
+    },
+    "nce_events/api/events_publish.py": {
+      "purpose": "WooCommerce Events product publish/update: normalize Events doc fields, REST API via woocommerce_client, slugify and track WC product linkage on save hooks.",
+      "depends_on": [
+        "nce_events/api/woocommerce_client.py",
+        "nce_events/api/panel_api_pkg/_helpers.py"
+      ],
+      "sections": [
+        "slugify_product_slug",
+        "Events → WooCommerce field mapping",
+        "publish/update whitelist endpoints"
+      ]
+    },
+    "nce_events/api/spa_page.py": {
+      "purpose": "SPA Page Definition boot config: resolve_spa_switch for Panel Actions switch_page(), get_spa_page_config, list_spa_pages_for_ui, inactive slug list.",
+      "depends_on": [
+        "nce_events/nce_events/doctype/spa_page_definition/"
+      ],
+      "sections": [
+        "resolve_spa_switch whitelist",
+        "get_spa_page_config / list_spa_pages_for_ui",
+        "_find_spa_definition_name slug/mode/handler lookup"
       ]
     },
     "nce_events/api/tags.py": {
@@ -333,6 +373,39 @@
         "rebuild_form_dialog (System Manager)",
         "get_form_dialog_definition (logged-in users; active only)",
         "list_form_dialogs_for_doctype (System Manager)"
+      ]
+    },
+    "nce_events/api/form_dialog/action_registry.py": {
+      "purpose": "Allow-listed server methods for Form Dialog portal row buttons. PORTAL_ACTION_METHODS maps action keys to dotted_path targets resolved via frappe.get_attr at call time.",
+      "depends_on": [
+        "nce_events/api/form_dialog/_helpers.py"
+      ]
+    },
+    "nce_events/api/form_dialog/button_visibility.py": {
+      "purpose": "Evaluate Form Dialog footer button visibility for V2 panel: hide_if modes (never/not_saved/saved/sql_expression) for custom buttons and default Submit.",
+      "depends_on": [
+        "nce_events/nce_events/doctype/form_dialog/"
+      ],
+      "sections": [
+        "get_form_dialog_footer_visibility whitelist",
+        "SQL expression hide evaluation with %(name)s"
+      ]
+    },
+    "nce_events/api/form_dialog/portal_actions.py": {
+      "purpose": "Run allow-listed portal actions from Form Dialog related/inline child grids: get_portal_actions_for_row, save_related/inline portal actions, execute via action_registry.",
+      "depends_on": [
+        "nce_events/api/form_dialog/action_registry.py",
+        "nce_events/api/form_dialog/related_rows.py"
+      ]
+    },
+    "nce_events/api/form_dialog/search.py": {
+      "purpose": "Form Dialog FileMaker-style find: match rows by frozen-meta searchable fields against user criteria; resolves Page Panel via page_panel_lookup.",
+      "depends_on": [
+        "nce_events/api/panel_api_pkg/page_panel_lookup.py"
+      ],
+      "sections": [
+        "find_form_dialog_rows whitelist",
+        "Safe fieldname and skip-fieldtype guards"
       ]
     },
     "nce_events/api/form_dialog/portal_fields.py": {
@@ -854,6 +927,10 @@
     },
     "nce_events/public/js/panel_page_v2/utils/frappeCall.js": {
       "purpose": "Utility: Promise wrapper for frappe.call (shared by usePanel, usePanelFormDialog stack, nce_cards/useCardForm).",
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/utils/ppv2Debug.js": {
+      "purpose": "Gated V2 debug logging — localStorage nce_ppv2_debug=1 enables ppv2DebugLog/ppv2DebugWarn (readback poll, client scripts, panel actions).",
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/utils/frappeFieldExpr.js": {

@@ -104,7 +104,16 @@
         "update_events_to_website",
         "update_woo_commerce_product"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "WooCommerce Events product publish/update: normalize Events doc fields, REST API via woocommerce_client, slugify and track WC product linkage on save hooks.",
+      "depends_on": [
+        "nce_events/api/woocommerce_client.py",
+        "nce_events/api/panel_api_pkg/_helpers.py"
+      ],
+      "sections": [
+        "slugify_product_slug",
+        "Events → WooCommerce field mapping",
+        "publish/update whitelist endpoints"
+      ]
     },
     "nce_events/api/exchange.py": {
       "exports": [
@@ -185,7 +194,10 @@
       "whitelist_endpoints": [
         "list_portal_action_methods"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Allow-listed server methods for Form Dialog portal row buttons. PORTAL_ACTION_METHODS maps action keys to dotted_path targets resolved via frappe.get_attr at call time.",
+      "depends_on": [
+        "nce_events/api/form_dialog/_helpers.py"
+      ]
     },
     "nce_events/api/form_dialog/button_visibility.py": {
       "exports": [
@@ -200,7 +212,14 @@
         "get_form_dialog_button_hidden_map",
         "get_form_dialog_footer_visibility"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Evaluate Form Dialog footer button visibility for V2 panel: hide_if modes (never/not_saved/saved/sql_expression) for custom buttons and default Submit.",
+      "depends_on": [
+        "nce_events/nce_events/doctype/form_dialog/"
+      ],
+      "sections": [
+        "get_form_dialog_footer_visibility whitelist",
+        "SQL expression hide evaluation with %(name)s"
+      ]
     },
     "nce_events/api/form_dialog/capture.py": {
       "exports": [
@@ -239,7 +258,11 @@
       "whitelist_endpoints": [
         "run_portal_action"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Run allow-listed portal actions from Form Dialog related/inline child grids: get_portal_actions_for_row, save_related/inline portal actions, execute via action_registry.",
+      "depends_on": [
+        "nce_events/api/form_dialog/action_registry.py",
+        "nce_events/api/form_dialog/related_rows.py"
+      ]
     },
     "nce_events/api/form_dialog/portal_fields.py": {
       "exports": [
@@ -324,7 +347,14 @@
         "get_form_dialog_search_matches",
         "get_form_dialog_search_matches_criteria"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Form Dialog FileMaker-style find: match rows by frozen-meta searchable fields against user criteria; resolves Page Panel via page_panel_lookup.",
+      "depends_on": [
+        "nce_events/api/panel_api_pkg/page_panel_lookup.py"
+      ],
+      "sections": [
+        "find_form_dialog_rows whitelist",
+        "Safe fieldname and skip-fieldtype guards"
+      ]
     },
     "nce_events/api/form_dialog/sync_related.py": {
       "exports": [
@@ -537,7 +567,15 @@
       "whitelist_endpoints": [
         "validate_format_rule"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Panel column format-rule SQL validation and resolution: tokenize condition_sql against root/related field maps, validate against allowed_fields whitelist, return resolved SQL for Page Panel computed styling.",
+      "depends_on": [
+        "nce_events/api/panel_api_pkg/page_panel_lookup.py"
+      ],
+      "sections": [
+        "validate_format_rule whitelist endpoint",
+        "_build_resolution_maps field/link lookup",
+        "Token resolution and SQL keyword guard"
+      ]
     },
     "nce_events/api/panel_api_pkg/page_panel_lookup.py": {
       "exports": [
@@ -546,7 +584,10 @@
         "page_panel_docname_for_root",
         "page_panel_exists_for_root"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Resolve Page Panel documents by root_doctype (not autoname name): page_panel_docname_for_root, get_page_panel_doc_for_root. Used by form_dialog search and panel APIs when root_doctype is the stable key.",
+      "depends_on": [
+        "nce_events/nce_events/doctype/page_panel/"
+      ]
     },
     "nce_events/api/panel_api_pkg/panel_config.py": {
       "purpose": "Page Panel config dict construction: _panel_config_from_doc, theme_slug resolution, per-surface chrome bg/fg slots, derived ORDER BY for format-rule SQL wrapper, gender tint metadata.",
@@ -652,7 +693,15 @@
         "list_spa_pages_for_ui",
         "resolve_spa_switch"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "SPA Page Definition boot config: resolve_spa_switch for Panel Actions switch_page(), get_spa_page_config, list_spa_pages_for_ui, inactive slug list.",
+      "depends_on": [
+        "nce_events/nce_events/doctype/spa_page_definition/"
+      ],
+      "sections": [
+        "resolve_spa_switch whitelist",
+        "get_spa_page_config / list_spa_pages_for_ui",
+        "_find_spa_definition_name slug/mode/handler lookup"
+      ]
     },
     "nce_events/api/sql_eval.py": {
       "exports": [
@@ -1828,6 +1877,16 @@
         "parseLayout"
       ],
       "purpose": "Utility: parse a flat Frappe DocField array into a nested Tabs→Sections→Columns→Fields tree. Used by usePanelFormDialog to render frozen_meta_json layout.",
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/utils/ppv2Debug.js": {
+      "exports": [
+        "PPV2_DEBUG_STORAGE_KEY",
+        "isPpv2DebugEnabled",
+        "ppv2DebugLog",
+        "ppv2DebugWarn"
+      ],
+      "purpose": "Gated V2 debug logging — localStorage nce_ppv2_debug=1 enables ppv2DebugLog/ppv2DebugWarn (readback poll, client scripts, panel actions).",
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/utils/relatedCellFormat.js": {
