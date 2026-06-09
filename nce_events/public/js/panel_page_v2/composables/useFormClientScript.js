@@ -1,3 +1,5 @@
+import { ppv2DebugWarn } from "../utils/ppv2Debug.js";
+
 /**
  * Runs captured Client Scripts inside the Panel Form Dialog.
  *
@@ -51,7 +53,7 @@ export function useFormClientScript({ definition, allFields, formData, scriptFie
 				// eslint-disable-next-line no-new-func
 				new Function('frappe', src)(window.frappe || {});
 			} catch (e) {
-				console.warn('[useFormClientScript] capture error:', e);
+				ppv2DebugWarn('[useFormClientScript] capture error:', e);
 			} finally {
 				if (window.frappe?.ui?.form && origOn) window.frappe.ui.form.on = origOn;
 			}
@@ -206,7 +208,7 @@ export function useFormClientScript({ definition, allFields, formData, scriptFie
 			try {
 				h.refresh(shim);
 			} catch (e) {
-				console.warn('[useFormClientScript] refresh error (discovery):', e);
+				ppv2DebugWarn('[useFormClientScript] refresh error (discovery):', e);
 			}
 		}
 
@@ -256,7 +258,7 @@ export function useFormClientScript({ definition, allFields, formData, scriptFie
 			btn.textContent = label;
 			btn.className = 'ppv2-script-tool-btn';
 			btn.addEventListener('click', () => {
-				try { handler(); } catch (e) { console.warn('[useFormClientScript] button error:', e); }
+				try { handler(); } catch (e) { ppv2DebugWarn('[useFormClientScript] button error:', e); }
 			});
 			domContainer.appendChild(btn);
 		};
@@ -272,7 +274,7 @@ export function useFormClientScript({ definition, allFields, formData, scriptFie
 			try {
 				h.refresh(shim);
 			} catch (e) {
-				console.warn('[useFormClientScript] mount error:', e);
+				ppv2DebugWarn('[useFormClientScript] mount error:', e);
 			}
 		}
 
@@ -284,7 +286,7 @@ export function useFormClientScript({ definition, allFields, formData, scriptFie
 					while (domContainer.firstChild) domContainer.removeChild(domContainer.firstChild);
 				}
 			} catch (e) {
-				console.warn('[useFormClientScript] dispose error:', e);
+				ppv2DebugWarn('[useFormClientScript] dispose error:', e);
 			}
 		};
 	}
@@ -306,7 +308,7 @@ export function useFormClientScript({ definition, allFields, formData, scriptFie
 			try {
 				fn(shim);
 			} catch (e) {
-				console.warn('[useFormClientScript] change error:', e);
+				ppv2DebugWarn('[useFormClientScript] change error:', e);
 			}
 		}
 

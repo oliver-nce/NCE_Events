@@ -4,6 +4,7 @@
  */
 
 import { frappeCall } from "./frappeCall.js";
+import { ppv2DebugWarn } from "./ppv2Debug.js";
 
 /**
  * @param {string} doctype
@@ -18,7 +19,7 @@ export async function isDoctypeSyncBusy(doctype) {
 		});
 		return !!r?.busy;
 	} catch (e) {
-		console.warn("[syncGateClient] is_doctype_sync_busy failed:", e);
+		ppv2DebugWarn("[syncGateClient] is_doctype_sync_busy failed:", e);
 		return false;
 	}
 }

@@ -1,4 +1,5 @@
 import { ref, reactive } from "vue";
+import { frappeCall } from "../utils/frappeCall.js";
 
 const SKIP_FIELDTYPES = {
 	"Section Break": 1, "Column Break": 1, "Tab Break": 1,
@@ -66,25 +67,20 @@ export function useTagFinder() {
 				});
 
 				if (colIdx === 0) {
-					frappe.call({
-						method: "nce_events.api.tags.get_pronoun_tags_for_doctype",
-						args: { doctype },
-						freeze: false,
-						callback(r) {
-							const tags = (r.message || []).map((t) => ({
+					frappeCall("nce_events.api.tags.get_pronoun_tags_for_doctype", { doctype })
+						.then((rows) => {
+							const tags = (rows || []).map((t) => ({
 								fieldname: t.field_name,
 								label: t.label || t.field_name,
 								jinja_tag: t.jinja_tag || "",
 								is_pronoun: true,
 							}));
 							col.fields = tags.concat(fields);
-							resolve();
-						},
-						error() {
+						})
+						.catch(() => {
 							col.fields = fields;
-							resolve();
-						},
-					});
+						})
+						.finally(() => resolve());
 				} else {
 					col.fields = fields;
 					resolve();

@@ -1,5 +1,6 @@
 import { ref } from "vue";
 import { frappeCall } from "../utils/frappeCall.js";
+import { ppv2DebugWarn } from "../utils/ppv2Debug.js";
 import { clientHandlers } from "../actions/registry.js";
 import { parseClientHandlerSpec } from "../utils/parseClientHandlerSpec.js";
 
@@ -98,7 +99,7 @@ export function usePanelActions({ openFormDialogStandalone, refreshPanelByDoctyp
 				}
 				const entry = clientHandlers[key];
 				if (!entry) {
-					console.warn(`[PanelAction] No handler registered for "${key}"`);
+					ppv2DebugWarn(`[PanelAction] No handler registered for "${key}"`);
 					frappe.msgprint({
 						title: __("Action unavailable"),
 						message: `${__("No handler registered for")} "${key}"`,
@@ -109,13 +110,13 @@ export function usePanelActions({ openFormDialogStandalone, refreshPanelByDoctyp
 				const modOrFn = typeof entry === "function" ? await entry() : entry;
 				const fn = typeof modOrFn === "function" ? modOrFn : modOrFn?.default;
 				if (typeof fn !== "function") {
-					console.warn(`[PanelAction] Handler "${key}" is not a function`);
+					ppv2DebugWarn(`[PanelAction] Handler "${key}" is not a function`);
 					return;
 				}
 				await fn(_ctx(spec.args));
 				return;
 			}
-			console.warn(`[PanelAction] Unknown action_type: ${action.action_type}`);
+			ppv2DebugWarn(`[PanelAction] Unknown action_type: ${action.action_type}`);
 		} catch (e) {
 			frappe.msgprint({
 				title: __("Action failed"),

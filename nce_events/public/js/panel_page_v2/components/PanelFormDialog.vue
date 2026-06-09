@@ -132,6 +132,7 @@ import PanelFormDialogFooter from "./PanelFormDialogFooter.vue";
 import { usePanelFormDialog } from "../composables/usePanelFormDialog.js";
 import { extractServerMessage } from "../composables/frozenFormSave.js";
 import { frappeCall } from "../utils/frappeCall.js";
+import { ppv2DebugLog, ppv2DebugWarn } from "../utils/ppv2Debug.js";
 import { normalizeDocForWooEventsPublish } from "../utils/wooPublishDocNormalize.js";
 import { readLiveFieldValue } from "../utils/formDialogLiveScrape.js";
 import {
@@ -935,7 +936,7 @@ async function onSubmit(opts = {}) {
 		const mainJobIds = Array.isArray(result?.sync_job_ids) ? result.sync_job_ids : [];
 		const relatedJobIds = Array.isArray(relatedSaveJobIds) ? relatedSaveJobIds : [];
 		const allJobIds = [...mainJobIds, ...relatedJobIds];
-		console.log("[NCE readback] save complete. mainJobIds:", mainJobIds, "relatedJobIds:", relatedJobIds);
+		ppv2DebugLog("[NCE readback] save complete. mainJobIds:", mainJobIds, "relatedJobIds:", relatedJobIds);
 		perf.push(
 			"jobs",
 			`main=${mainJobIds.length} related=${relatedJobIds.length} total=${allJobIds.length}`,
@@ -966,7 +967,7 @@ async function onSubmit(opts = {}) {
 			const freshName = savedName || oldRowName;
 			// Sync linked related DocTypes (e.g. Event Sessions) from WP before showing changes
 			try {
-				console.log("[NCE readback] triggering linked DocType syncs for", freshName);
+				ppv2DebugLog("[NCE readback] triggering linked DocType syncs for", freshName);
 				perf.push("linked", `trigger_linked_sync_for_dialog_readback name=${freshName}`);
 				const linkedResult = await frappeCall(
 					"nce_events.api.form_dialog.sync_related.trigger_linked_sync_for_dialog_readback",
@@ -979,14 +980,14 @@ async function onSubmit(opts = {}) {
 				const linkedJobIds = Array.isArray(linkedResult?.sync_job_ids)
 					? linkedResult.sync_job_ids
 					: [];
-				console.log("[NCE readback] linked sync job_ids:", linkedJobIds);
+				ppv2DebugLog("[NCE readback] linked sync job_ids:", linkedJobIds);
 				perf.push("linked", `sync_job_ids count=${linkedJobIds.length}`);
 				if (linkedJobIds.length) {
 					perf.push("readback", "poll linked sync jobs");
 					await pollSyncJobsUntilDone(linkedJobIds, { log: pollLog });
 				}
 			} catch (err) {
-				console.warn("[NCE readback] linked sync failed (non-fatal):", err);
+				ppv2DebugWarn("[NCE readback] linked sync failed (non-fatal):", err);
 				perf.push("linked_error", err?.message || String(err));
 			}
 			perf.push("readback", "fetchFreshDocAfterSync");

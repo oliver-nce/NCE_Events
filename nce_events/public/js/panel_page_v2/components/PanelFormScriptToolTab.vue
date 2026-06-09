@@ -4,6 +4,7 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from "vue";
+import { ppv2DebugWarn } from "../utils/ppv2Debug.js";
 
 const props = defineProps({
 	tab: { type: Object, required: true },
@@ -24,7 +25,7 @@ onMounted(() => {
 
 onUnmounted(() => {
 	if (typeof _dispose === "function") {
-		try { _dispose(); } catch (e) { console.warn("[ScriptToolTab] dispose error:", e); }
+		try { _dispose(); } catch (e) { ppv2DebugWarn("[ScriptToolTab] dispose error:", e); }
 		_dispose = null;
 	}
 });

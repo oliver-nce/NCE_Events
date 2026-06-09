@@ -5,6 +5,7 @@
  */
 
 import { frappeCall } from "../utils/frappeCall.js";
+import { ppv2DebugLog, ppv2DebugWarn } from "../utils/ppv2Debug.js";
 
 const DEFAULT_POLL_INTERVAL_MS = 600;
 const DEFAULT_TIMEOUT_MS = 120_000;
@@ -60,7 +61,7 @@ export async function pollSyncJobsUntilDone(
 	const deadline = Date.now() + timeoutMs;
 	const pollStart = Date.now();
 
-	console.log("[NCE readback] polling jobs:", jobIds);
+	ppv2DebugLog("[NCE readback] polling jobs:", jobIds);
 	log?.(
 		"poll",
 		`start (${jobIds.length} job(s), interval ${intervalMs}ms, timeout ${timeoutMs}ms)`,
@@ -77,14 +78,14 @@ export async function pollSyncJobsUntilDone(
 				const status = st ?? "missing";
 				statuses[id] = status;
 				errorCounts[id] = 0;
-				console.log(`[NCE readback] job ${id.slice(0, 8)}… → ${status}`);
+				ppv2DebugLog(`[NCE readback] job ${id.slice(0, 8)}… → ${status}`);
 				log?.("job_status", `${id.slice(0, 8)}… → ${status}`);
 				if (terminal.has(status) || status === "missing") {
 					pending.delete(id);
 				}
 			} catch (err) {
 				errorCounts[id] = (errorCounts[id] || 0) + 1;
-				console.warn("[NCE readback] poll error for job", id.slice(0, 8) + "…", err);
+				ppv2DebugWarn("[NCE readback] poll error for job", id.slice(0, 8) + "…", err);
 				log?.(
 					"job_poll_err",
 					`${id.slice(0, 8)}… ${err?.message || String(err)} (error ${errorCounts[id]}/${MAX_CONSECUTIVE_ERRORS})`,
@@ -92,7 +93,7 @@ export async function pollSyncJobsUntilDone(
 				if (errorCounts[id] >= MAX_CONSECUTIVE_ERRORS) {
 					statuses[id] = "missing";
 					pending.delete(id);
-					console.warn("[NCE readback] giving up on job", id.slice(0, 8) + "… after", MAX_CONSECUTIVE_ERRORS, "errors");
+					ppv2DebugWarn("[NCE readback] giving up on job", id.slice(0, 8) + "… after", MAX_CONSECUTIVE_ERRORS, "errors");
 					log?.("job_gave_up", `${id.slice(0, 8)}… removed after ${MAX_CONSECUTIVE_ERRORS} consecutive errors`);
 				}
 			}
@@ -102,7 +103,7 @@ export async function pollSyncJobsUntilDone(
 	if (timedOut) {
 		log?.("poll_timeout", `${pending.size} job(s) still pending after ${timeoutMs}ms`);
 	}
-	console.log("[NCE readback] poll done. allFinished:", pending.size === 0, "statuses:", statuses);
+	ppv2DebugLog("[NCE readback] poll done. allFinished:", pending.size === 0, "statuses:", statuses);
 	log?.("poll_done", `allFinished=${pending.size === 0} anyTimedOut=${timedOut}`);
 
 	const anyFailed = Object.values(statuses).some(

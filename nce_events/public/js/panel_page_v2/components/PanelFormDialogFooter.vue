@@ -126,6 +126,7 @@
 <script setup>
 import { ref, watch, computed } from "vue";
 import { frappeCall } from "../utils/frappeCall.js";
+import { ppv2DebugWarn } from "../utils/ppv2Debug.js";
 
 const HIDE_NEVER = "Never";
 const HIDE_NOT_SAVED = "Record not saved";
@@ -238,7 +239,7 @@ async function refreshFooterVisibility() {
 				submitHiddenFlag = Boolean(payload.submit_hidden);
 			}
 		} catch (e) {
-			console.error("[PanelFormDialogFooter] visibility", e);
+			ppv2DebugWarn("[PanelFormDialogFooter] visibility", e);
 		}
 	}
 

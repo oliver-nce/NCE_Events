@@ -942,17 +942,10 @@ function onFilterChange(panel, userFilters) {
 }
 
 function onRefreshRoot() {
-	console.log("[PanelReload] onRefreshRoot called, loading.value:", loading.value);
 	rootPanel.reload();
 }
 
 function onRefreshPanel(panel) {
-	console.log(
-		"[PanelReload] onRefreshPanel called for",
-		panel.doctype,
-		"has _reload:",
-		!!panel._reload
-	);
 	if (panel._reload) {
 		panel._reload();
 	}
@@ -1016,45 +1009,47 @@ function triggerCsvBrowserDownload(absUrl, filename, rowsExported) {
 		});
 }
 
-function onDownloadCsv(panelPayload) {
-	frappe.call({
-		method: "nce_events.api.panel_api_pkg.panel_data.export_panel_data",
-		args: filteredPanelExportArgs(panelPayload),
-		callback(r) {
-			const msg = r.message;
-			if (!msg?.url) {
-				frappe.show_alert({ message: __("Export failed"), indicator: "red" });
-				return;
-			}
-			const url = window.location.origin + msg.url;
-			triggerCsvBrowserDownload(url, msg.filename || "panel-export.csv", msg.rows_exported);
-		},
-	});
+async function onDownloadCsv(panelPayload) {
+	try {
+		const msg = await frappeCall(
+			"nce_events.api.panel_api_pkg.panel_data.export_panel_data",
+			filteredPanelExportArgs(panelPayload),
+		);
+		if (!msg?.url) {
+			frappe.show_alert({ message: __("Export failed"), indicator: "red" });
+			return;
+		}
+		const url = window.location.origin + msg.url;
+		triggerCsvBrowserDownload(url, msg.filename || "panel-export.csv", msg.rows_exported);
+	} catch {
+		frappe.show_alert({ message: __("Export failed"), indicator: "red" });
+	}
 }
 
-function onSheets(panelPayload) {
-	frappe.call({
-		method: "nce_events.api.panel_api_pkg.panel_data.export_panel_data",
-		args: filteredPanelExportArgs(panelPayload),
-		callback(r) {
-			if (!r.message) return;
-			const url = window.location.origin + r.message.url;
-			const formula = `=IMPORTDATA("${url}")`;
-			if (navigator.clipboard && navigator.clipboard.writeText) {
-				navigator.clipboard.writeText(formula).then(() => {
-					frappe.show_alert({
-						message: __("Link copied — paste in Google Sheets"),
-						indicator: "green",
-					});
-				});
-			} else {
-				frappe.show_alert({
-					message: __("Exported {0} rows", [r.message.rows_exported]),
-					indicator: "green",
-				});
-			}
-		},
-	});
+async function onSheets(panelPayload) {
+	try {
+		const msg = await frappeCall(
+			"nce_events.api.panel_api_pkg.panel_data.export_panel_data",
+			filteredPanelExportArgs(panelPayload),
+		);
+		if (!msg?.url) return;
+		const url = window.location.origin + msg.url;
+		const formula = `=IMPORTDATA("${url}")`;
+		if (navigator.clipboard && navigator.clipboard.writeText) {
+			await navigator.clipboard.writeText(formula);
+			frappe.show_alert({
+				message: __("Link copied — paste in Google Sheets"),
+				indicator: "green",
+			});
+		} else {
+			frappe.show_alert({
+				message: __("Exported {0} rows", [msg.rows_exported]),
+				indicator: "green",
+			});
+		}
+	} catch {
+		frappe.show_alert({ message: __("Export failed"), indicator: "red" });
+	}
 }
 </script>
 

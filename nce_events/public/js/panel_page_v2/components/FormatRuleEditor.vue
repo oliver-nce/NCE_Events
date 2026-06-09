@@ -107,6 +107,7 @@
 import { computed, reactive, ref, watch } from "vue";
 
 import ColorPicker from "./ColorPicker.vue";
+import { frappeCall } from "../utils/frappeCall.js";
 
 const props = defineProps({
 	rootDoctype: { type: String, required: true },
@@ -187,7 +188,7 @@ function onWeightToggle() {
 	}
 }
 
-function validate() {
+async function validate() {
 	const condition_sql = (localRule.condition_sql || "").trim();
 	if (!condition_sql) {
 		validateOk.value = false;
@@ -197,35 +198,34 @@ function validate() {
 	validating.value = true;
 	validateOk.value = false;
 	validateError.value = "";
-	frappe.call({
-		method: "nce_events.api.panel_api_pkg.format_rules.validate_format_rule",
-		args: {
-			root_doctype: props.rootDoctype,
-			field_name: props.fieldName,
-			condition_sql,
-			allowed_fields: JSON.stringify(props.allowedFields || []),
-		},
-		callback(r) {
-			validating.value = false;
-			const msg = r.message || {};
-			if (msg.ok) {
-				localRule.last_validated_sql = msg.resolved_sql || "";
-				validatedFor.value = condition_sql;
-				validateOk.value = true;
-				validateError.value = "";
-				emit("validated", localRule.last_validated_sql);
-				emit("update:rule", { ...localRule });
-			} else {
-				validateOk.value = false;
-				validateError.value = msg.error || "Validation failed.";
-			}
-		},
-		error() {
-			validating.value = false;
+	try {
+		const msg = await frappeCall(
+			"nce_events.api.panel_api_pkg.format_rules.validate_format_rule",
+			{
+				root_doctype: props.rootDoctype,
+				field_name: props.fieldName,
+				condition_sql,
+				allowed_fields: JSON.stringify(props.allowedFields || []),
+			},
+		);
+		validating.value = false;
+		const result = msg || {};
+		if (result.ok) {
+			localRule.last_validated_sql = result.resolved_sql || "";
+			validatedFor.value = condition_sql;
+			validateOk.value = true;
+			validateError.value = "";
+			emit("validated", localRule.last_validated_sql);
+			emit("update:rule", { ...localRule });
+		} else {
 			validateOk.value = false;
-			validateError.value = "Validation request failed.";
-		},
-	});
+			validateError.value = result.error || "Validation failed.";
+		}
+	} catch {
+		validating.value = false;
+		validateOk.value = false;
+		validateError.value = "Validation request failed.";
+	}
 }
 </script>
 
