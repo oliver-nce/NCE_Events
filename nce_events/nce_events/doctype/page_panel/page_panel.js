@@ -3744,16 +3744,16 @@ function _border_effective_width_class(raw, fallback) {
 	return (raw || "").trim() || (fallback || "").trim();
 }
 
-/** Resolve border color for preview tiles (mirrors panelChromeBorderColorCss). */
+/** Resolve border color for preview tiles.
+ *  Default (no color class) uses a visually clear mid-gray so previews
+ *  are legible regardless of whether nce_theme.css is loaded.
+ */
 function _border_preview_color_css(colorClass) {
-	const fallback = "var(--nce-color-border, #adb5bd)";
 	const raw = (colorClass || "").trim();
-	if (!raw) return fallback;
+	if (!raw) return "#8898a4";
 	const m = raw.match(/^theme-border-([a-z]+)(?:-(\d+))?$/);
-	if (!m) return fallback;
-	return (
-		"var(--nce-color-" + m[1] + (m[2] ? "-" + m[2] : "") + ", " + fallback + ")"
-	);
+	if (!m) return "#8898a4";
+	return "var(--nce-color-" + m[1] + (m[2] ? "-" + m[2] : "") + ", #8898a4)";
 }
 
 function _border_line_preview_html(frm, slot) {
@@ -4295,7 +4295,7 @@ function _colours_tab_styles_html() {
 			.pp-border-line-preview--frame {
 				background: var(--nce-color-surface, #fff);
 			}
-			.pp-border-line-preview--default { opacity: 0.85; }
+			.pp-border-line-preview--default { opacity: 1; }
 			.pp-border-width-select {
 				width: 100%;
 				max-width: 110px;
