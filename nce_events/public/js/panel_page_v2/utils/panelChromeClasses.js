@@ -65,13 +65,13 @@ export function panelChromeBorderWidthVar(config, field) {
 	return BORDER_WIDTH_CSS_VARS[cls] || BORDER_WIDTH_CSS_VARS["theme-border"];
 }
 
-/** CSS color value for a theme-border-{role}-{shade} class, or site border token when empty. */
+/** CSS color value for a theme-{bg|text|border}-{role}-{shade} class, or site border token when empty. */
 export function panelChromeBorderColorCss(config, colorField) {
 	const raw = (config?.[colorField] || "").trim();
 	if (!raw) return "var(--nce-color-border)";
-	const m = raw.match(/^theme-border-([a-z]+)(?:-(\d+))?$/);
+	const m = raw.match(/^theme-(?:bg|text|border)-([a-z]+)-(\d+)$/);
 	if (!m || !PALETTE_ROLES.has(m[1])) return "var(--nce-color-border)";
-	return `var(--nce-color-${m[1]}${m[2] ? `-${m[2]}` : ""})`;
+	return `var(--nce-color-${m[1]}-${m[2]})`;
 }
 
 /** Full-box frame border classes (width + optional color) for PanelFloat. */

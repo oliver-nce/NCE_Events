@@ -3744,50 +3744,28 @@ function _border_effective_width_class(raw, fallback) {
 	return (raw || "").trim() || (fallback || "").trim();
 }
 
-/** Resolve border color for preview tiles.
- *  Default (no color class) uses a visually clear mid-gray so previews
- *  are legible regardless of whether nce_theme.css is loaded.
- */
+/** Extract CSS color var from any theme-{bg|text|border}-{role}-{shade} class. */
 function _border_preview_color_css(colorClass) {
-	const raw = (colorClass || "").trim();
-	if (!raw) return "#8898a4";
-	const m = raw.match(/^theme-border-([a-z]+)(?:-(\d+))?$/);
+	const m = (colorClass || "").match(/^theme-(?:bg|text|border)-([a-z]+)-(\d+)$/);
 	if (!m) return "#8898a4";
-	return "var(--nce-color-" + m[1] + (m[2] ? "-" + m[2] : "") + ", #8898a4)";
+	return "var(--nce-color-" + m[1] + "-" + m[2] + ", #8898a4)";
 }
 
 function _border_line_preview_html(frm, slot) {
-	const widthRaw = (frm.doc[slot.widthField] || "").trim();
-	const colorRaw = (frm.doc[slot.colorField] || "").trim();
-	const widthClass = _border_effective_width_class(widthRaw, slot.widthFallback);
-	const widthPx = PP_BORDER_WIDTH_PX[widthClass] || PP_BORDER_WIDTH_PX["theme-border"];
-	const colorCss = _border_preview_color_css(colorRaw);
-	const isFrame = slot.widthField === "frame_border_class";
-	const defaultCls =
-		!widthRaw && !colorRaw ? " pp-border-line-preview--default" : "";
-	const strokeStyle = "border-bottom:" + widthPx + " solid " + colorCss + ";";
-	const title = [widthClass, colorRaw || __("default")].join(" · ");
-	if (isFrame) {
-		return (
-			'<span class="pp-border-line-preview pp-border-line-preview--frame' +
-			defaultCls +
-			'" style="border:' +
-			widthPx +
-			" solid " +
-			colorCss +
-			';" title="' +
-			frappe.utils.escape_html(title) +
-			'"></span>'
-		);
-	}
+	const widthClass = _border_effective_width_class(
+		frm.doc[slot.widthField],
+		slot.widthFallback
+	);
+	const widthPx = PP_BORDER_WIDTH_PX[widthClass] || "1px";
+	const colorCss = _border_preview_color_css(frm.doc[slot.colorField]);
 	return (
-		'<span class="pp-border-line-preview pp-border-line-preview--line' +
-		defaultCls +
-		'" title="' +
-		frappe.utils.escape_html(title) +
-		'"><span class="pp-border-line-preview__stroke" style="' +
-		strokeStyle +
-		'"></span></span>'
+		'<div style="width:60px;border-bottom:' +
+		widthPx +
+		" solid " +
+		colorCss +
+		';margin:11px 4px 4px;" title="' +
+		frappe.utils.escape_html(widthClass + " · " + (frm.doc[slot.colorField] || __("default"))) +
+		'"></div>'
 	);
 }
 
@@ -4271,31 +4249,6 @@ function _colours_tab_styles_html() {
 				font-weight: 600;
 				font-size: 13px;
 			}
-			.pp-border-line-preview {
-				display: inline-block;
-				width: 72px;
-				height: 28px;
-				box-sizing: border-box;
-				background: var(--nce-color-surface, #f8f9fa);
-				border: none;
-				border-radius: 2px;
-				vertical-align: middle;
-			}
-			.pp-border-line-preview--line {
-				display: inline-flex;
-				align-items: flex-end;
-				padding: 0 3px 4px;
-			}
-			.pp-border-line-preview__stroke {
-				display: block;
-				width: 100%;
-				height: 0;
-				box-sizing: border-box;
-			}
-			.pp-border-line-preview--frame {
-				background: var(--nce-color-surface, #fff);
-			}
-			.pp-border-line-preview--default { opacity: 1; }
 			.pp-border-width-select {
 				width: 100%;
 				max-width: 110px;
