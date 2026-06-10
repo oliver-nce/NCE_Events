@@ -3733,10 +3733,11 @@ function _colour_overlay_fg_class(bgClass, fgType) {
 	return "theme-text-" + m[1] + (m[2] ? "-" + m[2] : "") + suffix;
 }
 
-const PP_BORDER_WIDTH_VARS = {
-	"theme-border-thin": "--nce-border-width-thin",
-	"theme-border": "--nce-border-width",
-	"theme-border-strong": "--nce-border-width-strong",
+/** Literal px for preview tiles — matches theme defaults; avoids missing --nce-border-width-* in CSS. */
+const PP_BORDER_WIDTH_PX = {
+	"theme-border-thin": "0.5px",
+	"theme-border": "1px",
+	"theme-border-strong": "2px",
 };
 
 function _border_effective_width_class(raw, fallback) {
@@ -3745,39 +3746,48 @@ function _border_effective_width_class(raw, fallback) {
 
 /** Resolve border color for preview tiles (mirrors panelChromeBorderColorCss). */
 function _border_preview_color_css(colorClass) {
+	const fallback = "var(--nce-color-border, #adb5bd)";
 	const raw = (colorClass || "").trim();
-	if (!raw) return "var(--nce-color-border)";
+	if (!raw) return fallback;
 	const m = raw.match(/^theme-border-([a-z]+)(?:-(\d+))?$/);
-	if (!m) return "var(--nce-color-border)";
-	return "var(--nce-color-" + m[1] + (m[2] ? "-" + m[2] : "") + ")";
+	if (!m) return fallback;
+	return (
+		"var(--nce-color-" + m[1] + (m[2] ? "-" + m[2] : "") + ", " + fallback + ")"
+	);
 }
 
 function _border_line_preview_html(frm, slot) {
 	const widthRaw = (frm.doc[slot.widthField] || "").trim();
 	const colorRaw = (frm.doc[slot.colorField] || "").trim();
 	const widthClass = _border_effective_width_class(widthRaw, slot.widthFallback);
-	const widthVar =
-		PP_BORDER_WIDTH_VARS[widthClass] || PP_BORDER_WIDTH_VARS["theme-border"];
+	const widthPx = PP_BORDER_WIDTH_PX[widthClass] || PP_BORDER_WIDTH_PX["theme-border"];
 	const colorCss = _border_preview_color_css(colorRaw);
 	const isFrame = slot.widthField === "frame_border_class";
 	const defaultCls =
 		!widthRaw && !colorRaw ? " pp-border-line-preview--default" : "";
-	const modeCls = isFrame
-		? " pp-border-line-preview--frame"
-		: " pp-border-line-preview--line";
-	const borderStyle = isFrame
-		? "border:var(" + widthVar + ") solid " + colorCss + ";"
-		: "border-bottom:var(" + widthVar + ") solid " + colorCss + ";";
+	const strokeStyle = "border-bottom:" + widthPx + " solid " + colorCss + ";";
 	const title = [widthClass, colorRaw || __("default")].join(" · ");
+	if (isFrame) {
+		return (
+			'<span class="pp-border-line-preview pp-border-line-preview--frame' +
+			defaultCls +
+			'" style="border:' +
+			widthPx +
+			" solid " +
+			colorCss +
+			';" title="' +
+			frappe.utils.escape_html(title) +
+			'"></span>'
+		);
+	}
 	return (
-		'<span class="pp-border-line-preview' +
-		modeCls +
+		'<span class="pp-border-line-preview pp-border-line-preview--line' +
 		defaultCls +
-		'" style="' +
-		borderStyle +
 		'" title="' +
 		frappe.utils.escape_html(title) +
-		'"></span>'
+		'"><span class="pp-border-line-preview__stroke" style="' +
+		strokeStyle +
+		'"></span></span>'
 	);
 }
 
@@ -4271,10 +4281,21 @@ function _colours_tab_styles_html() {
 				border-radius: 2px;
 				vertical-align: middle;
 			}
+			.pp-border-line-preview--line {
+				display: inline-flex;
+				align-items: flex-end;
+				padding: 0 3px 4px;
+			}
+			.pp-border-line-preview__stroke {
+				display: block;
+				width: 100%;
+				height: 0;
+				box-sizing: border-box;
+			}
 			.pp-border-line-preview--frame {
 				background: var(--nce-color-surface, #fff);
 			}
-			.pp-border-line-preview--default { opacity: 0.7; }
+			.pp-border-line-preview--default { opacity: 0.85; }
 			.pp-border-width-select {
 				width: 100%;
 				max-width: 110px;
