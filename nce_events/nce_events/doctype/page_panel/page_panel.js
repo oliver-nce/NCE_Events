@@ -3733,26 +3733,50 @@ function _colour_overlay_fg_class(bgClass, fgType) {
 	return "theme-text-" + m[1] + (m[2] ? "-" + m[2] : "") + suffix;
 }
 
+const PP_BORDER_WIDTH_VARS = {
+	"theme-border-thin": "--nce-border-width-thin",
+	"theme-border": "--nce-border-width",
+	"theme-border-strong": "--nce-border-width-strong",
+};
+
 function _border_effective_width_class(raw, fallback) {
 	return (raw || "").trim() || (fallback || "").trim();
+}
+
+/** Resolve border color for preview tiles (mirrors panelChromeBorderColorCss). */
+function _border_preview_color_css(colorClass) {
+	const raw = (colorClass || "").trim();
+	if (!raw) return "var(--nce-color-border)";
+	const m = raw.match(/^theme-border-([a-z]+)(?:-(\d+))?$/);
+	if (!m) return "var(--nce-color-border)";
+	return "var(--nce-color-" + m[1] + (m[2] ? "-" + m[2] : "") + ")";
 }
 
 function _border_line_preview_html(frm, slot) {
 	const widthRaw = (frm.doc[slot.widthField] || "").trim();
 	const colorRaw = (frm.doc[slot.colorField] || "").trim();
-	const width = _border_effective_width_class(widthRaw, slot.widthFallback);
-	const classes = [width, colorRaw].filter(Boolean);
+	const widthClass = _border_effective_width_class(widthRaw, slot.widthFallback);
+	const widthVar =
+		PP_BORDER_WIDTH_VARS[widthClass] || PP_BORDER_WIDTH_VARS["theme-border"];
+	const colorCss = _border_preview_color_css(colorRaw);
+	const isFrame = slot.widthField === "frame_border_class";
 	const defaultCls =
 		!widthRaw && !colorRaw ? " pp-border-line-preview--default" : "";
+	const modeCls = isFrame
+		? " pp-border-line-preview--frame"
+		: " pp-border-line-preview--line";
+	const borderStyle = isFrame
+		? "border:var(" + widthVar + ") solid " + colorCss + ";"
+		: "border-bottom:var(" + widthVar + ") solid " + colorCss + ";";
+	const title = [widthClass, colorRaw || __("default")].join(" · ");
 	return (
 		'<span class="pp-border-line-preview' +
+		modeCls +
 		defaultCls +
-		" " +
-		classes.map(function (c) {
-			return frappe.utils.escape_html(c);
-		}).join(" ") +
+		'" style="' +
+		borderStyle +
 		'" title="' +
-		frappe.utils.escape_html(classes.join(" ")) +
+		frappe.utils.escape_html(title) +
 		'"></span>'
 	);
 }
@@ -4242,11 +4266,15 @@ function _colours_tab_styles_html() {
 				width: 72px;
 				height: 28px;
 				box-sizing: border-box;
-				background: var(--nce-color-surface, #fff);
+				background: var(--nce-color-surface, #f8f9fa);
+				border: none;
 				border-radius: 2px;
 				vertical-align: middle;
 			}
-			.pp-border-line-preview--default { opacity: 0.55; }
+			.pp-border-line-preview--frame {
+				background: var(--nce-color-surface, #fff);
+			}
+			.pp-border-line-preview--default { opacity: 0.7; }
 			.pp-border-width-select {
 				width: 100%;
 				max-width: 110px;
