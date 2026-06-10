@@ -3842,6 +3842,7 @@ function _bind_colours_tab_pickers(frm, $container) {
 					frm: frm,
 					themeField: "theme",
 					valueField: valueField,
+					lockKind: "border",
 				})
 				.then(function (saved) {
 					if (saved) {
@@ -4135,10 +4136,18 @@ function _colours_tab_styles_html() {
 				vertical-align: middle;
 				font-size: 12px;
 			}
+			.pp-colours-chrome-table .pp-colours-preview-cell {
+				width: 80px;
+				max-width: 80px;
+			}
 			.pp-colours-chrome-table .pp-colours-class-cell {
+				width: 30%;
+				max-width: 30%;
 				font-family: monospace;
 				font-size: 12px;
-				word-break: break-word;
+				overflow: hidden;
+				text-overflow: ellipsis;
+				white-space: nowrap;
 			}
 			.pp-colours-left .pp-colours-section-title:first-of-type,
 			.pp-colours-other-panels-title {
@@ -4230,7 +4239,7 @@ function _colours_tab_styles_html() {
 			}
 			.pp-border-line-preview {
 				display: inline-block;
-				width: 52px;
+				width: 72px;
 				height: 28px;
 				box-sizing: border-box;
 				background: var(--nce-color-surface, #fff);
@@ -4276,10 +4285,11 @@ function _build_colours_preview_table_html(frm) {
 				? '<span style="color:#8d99a6;margin-left:6px;">(' + __("tonal") + ")</span>"
 				: "";
 		const swatch = _colour_preview_swatch_html(effective, fgType, isDefault);
+		const classTitle = raw || slot.fallback;
 		rows += `<tr>
 			<td>${frappe.utils.escape_html(slot.label)}</td>
-			<td style="width:52px;">${swatch}</td>
-			<td class="pp-colours-class-cell">${display}${fgLabel}</td>
+			<td class="pp-colours-preview-cell">${swatch}</td>
+			<td class="pp-colours-class-cell" title="${frappe.utils.escape_html(classTitle)}">${display}${fgLabel}</td>
 			<td style="width:72px;text-align:right;">
 				<button type="button" class="btn btn-xs btn-default pp-colour-pick" data-field="${frappe.utils.escape_html(
 					slot.field
@@ -4295,9 +4305,9 @@ function _build_colours_preview_table_html(frm) {
 		`<table class="table table-bordered pp-colours-chrome-table">
 		<thead>
 			<tr>
-				<th style="width:26%;">${__("Surface")}</th>
-				<th style="width:52px;">${__("Preview")}</th>
-				<th>${__("Class")}</th>
+				<th style="width:24%;">${__("Surface")}</th>
+				<th class="pp-colours-preview-cell">${__("Preview")}</th>
+				<th style="width:30%;">${__("Class")}</th>
 				<th style="width:72px;"></th>
 			</tr>
 		</thead>
@@ -4315,11 +4325,12 @@ function _build_colours_border_table_html(frm) {
 			: '<span class="pp-border-color-muted">' + __("default") + "</span>";
 		const preview = _border_line_preview_html(frm, slot);
 		const widthSelect = _border_width_select_html(frm, slot);
+		const colorTitle = colorRaw || __("default");
 		rows += `<tr>
 			<td>${frappe.utils.escape_html(slot.label)}</td>
-			<td style="width:52px;">${preview}</td>
-			<td style="width:110px;">${widthSelect}</td>
-			<td class="pp-colours-class-cell">${colorDisplay}</td>
+			<td class="pp-colours-preview-cell">${preview}</td>
+			<td style="width:100px;">${widthSelect}</td>
+			<td class="pp-colours-class-cell" title="${frappe.utils.escape_html(colorTitle)}">${colorDisplay}</td>
 			<td class="pp-border-action-cell">
 				<button type="button" class="btn btn-xs btn-default pp-border-color-pick" data-field="${frappe.utils.escape_html(
 					slot.colorField
@@ -4333,10 +4344,10 @@ function _build_colours_border_table_html(frm) {
 		`<table class="table table-bordered pp-colours-chrome-table">
 		<thead>
 			<tr>
-				<th style="width:26%;">${__("Line")}</th>
-				<th style="width:52px;">${__("Preview")}</th>
-				<th style="width:110px;">${__("Width")}</th>
-				<th>${__("Color class")}</th>
+				<th style="width:24%;">${__("Line")}</th>
+				<th class="pp-colours-preview-cell">${__("Preview")}</th>
+				<th style="width:100px;">${__("Width")}</th>
+				<th style="width:30%;">${__("Color class")}</th>
 				<th style="width:88px;"></th>
 			</tr>
 		</thead>
