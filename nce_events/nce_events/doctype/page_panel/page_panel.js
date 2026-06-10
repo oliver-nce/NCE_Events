@@ -4115,6 +4115,35 @@ function _colours_tab_styles_html() {
 				margin-bottom: 2px;
 				white-space: nowrap;
 			}
+			/* Shared chrome tables (backgrounds, borders, other panels) */
+			.pp-colours-chrome-table {
+				width: 100%;
+				max-width: 760px;
+				background: #fff;
+				margin-bottom: 0;
+				table-layout: fixed;
+			}
+			.pp-colours-chrome-table thead th {
+				padding: 6px 10px;
+				background: #f7f7f7;
+				font-weight: 600;
+				font-size: 13px;
+				vertical-align: middle;
+			}
+			.pp-colours-chrome-table tbody td {
+				padding: 8px 10px;
+				vertical-align: middle;
+				font-size: 12px;
+			}
+			.pp-colours-chrome-table .pp-colours-class-cell {
+				font-family: monospace;
+				font-size: 12px;
+				word-break: break-word;
+			}
+			.pp-colours-left .pp-colours-section-title:first-of-type,
+			.pp-colours-other-panels-title {
+				margin-top: 0;
+			}
 			/* Side-by-side layout */
 			.pp-colours-panels-row {
 				display: flex;
@@ -4124,27 +4153,31 @@ function _colours_tab_styles_html() {
 			}
 			.pp-colours-left {
 				flex: 0 0 auto;
+				min-width: 0;
 			}
 			.pp-colours-arrows {
 				flex: 0 0 auto;
 				display: flex;
 				flex-direction: column;
-				align-items: center;
-				justify-content: center;
+				align-items: stretch;
+				justify-content: flex-start;
 				gap: 10px;
-				padding: 0 14px;
-				align-self: center;
+				padding: 28px 12px 0;
+				align-self: flex-start;
 			}
 			.pp-colours-arrow-btn {
 				display: flex;
 				align-items: center;
+				justify-content: center;
 				gap: 6px;
-				padding: 8px 14px;
-				border: 2px solid #adb5bd;
-				border-radius: 6px;
-				background: transparent;
+				width: 118px;
+				box-sizing: border-box;
+				padding: 8px 10px;
+				border: 1px solid #dee2e6;
+				border-radius: 4px;
+				background: #fff;
 				color: #495057;
-				font-size: 13px;
+				font-size: 12px;
 				font-weight: 600;
 				cursor: pointer;
 				white-space: nowrap;
@@ -4168,25 +4201,10 @@ function _colours_tab_styles_html() {
 			/* Other panels table */
 			.pp-colours-right {
 				flex: 0 0 auto;
-				min-width: 220px;
-			}
-			.pp-colours-other-table {
-				width: 100%;
-				border-collapse: collapse;
-				background: #fff;
-				font-size: 13px;
-			}
-			.pp-colours-other-table thead th {
-				padding: 6px 10px;
-				background: #f7f7f7;
-				border: 1px solid #dee2e6;
-				font-weight: 600;
-				text-align: left;
+				min-width: 240px;
+				max-width: 360px;
 			}
 			.pp-colours-other-table tbody td {
-				padding: 7px 10px;
-				border: 1px solid #dee2e6;
-				vertical-align: middle;
 				cursor: pointer;
 				user-select: none;
 			}
@@ -4221,12 +4239,20 @@ function _colours_tab_styles_html() {
 			}
 			.pp-border-line-preview--default { opacity: 0.55; }
 			.pp-border-width-select {
-				min-width: 88px;
+				width: 100%;
 				max-width: 110px;
-				display: inline-block;
+				display: block;
 				font-size: 12px;
 				height: 26px;
 				padding: 2px 6px;
+				box-sizing: border-box;
+			}
+			.pp-border-action-cell {
+				width: 88px;
+				max-width: 88px;
+				overflow: hidden;
+				text-align: right;
+				white-space: nowrap;
 			}
 			.pp-border-color-muted {
 				color: #8d99a6;
@@ -4250,11 +4276,11 @@ function _build_colours_preview_table_html(frm) {
 				? '<span style="color:#8d99a6;margin-left:6px;">(' + __("tonal") + ")</span>"
 				: "";
 		const swatch = _colour_preview_swatch_html(effective, fgType, isDefault);
-		rows += `<tr style="border-bottom:1px solid #ededed;">
-			<td style="padding:8px 10px;vertical-align:middle;width:26%;">${frappe.utils.escape_html(slot.label)}</td>
-			<td style="padding:8px 10px;vertical-align:middle;width:52px;">${swatch}</td>
-			<td style="padding:8px 10px;vertical-align:middle;font-family:monospace;font-size:12px;">${display}${fgLabel}</td>
-			<td style="padding:8px 10px;vertical-align:middle;width:100px;">
+		rows += `<tr>
+			<td>${frappe.utils.escape_html(slot.label)}</td>
+			<td style="width:52px;">${swatch}</td>
+			<td class="pp-colours-class-cell">${display}${fgLabel}</td>
+			<td style="width:72px;text-align:right;">
 				<button type="button" class="btn btn-xs btn-default pp-colour-pick" data-field="${frappe.utils.escape_html(
 					slot.field
 				)}" data-fg-type-field="${frappe.utils.escape_html(
@@ -4266,13 +4292,13 @@ function _build_colours_preview_table_html(frm) {
 
 	return (
 		`<div class="pp-colours-section-title">${__("Backgrounds")}</div>` +
-		`<table class="table table-bordered" style="max-width:760px;background:#fff;">
+		`<table class="table table-bordered pp-colours-chrome-table">
 		<thead>
-			<tr style="background:#f7f7f7;">
-				<th style="padding:6px 10px;">${__("Surface")}</th>
-				<th style="padding:6px 10px;">${__("Preview")}</th>
-				<th style="padding:6px 10px;">${__("Class")}</th>
-				<th style="padding:6px 10px;"></th>
+			<tr>
+				<th style="width:26%;">${__("Surface")}</th>
+				<th style="width:52px;">${__("Preview")}</th>
+				<th>${__("Class")}</th>
+				<th style="width:72px;"></th>
 			</tr>
 		</thead>
 		<tbody>${rows}</tbody>
@@ -4283,26 +4309,19 @@ function _build_colours_preview_table_html(frm) {
 function _build_colours_border_table_html(frm) {
 	let rows = "";
 	BORDER_LINE_SLOTS.forEach(function (slot) {
-		const widthRaw = (frm.doc[slot.widthField] || "").trim();
 		const colorRaw = (frm.doc[slot.colorField] || "").trim();
-		const widthDisplay =
-			widthRaw ||
-			'<span style="color:#8d99a6;">' +
-				frappe.utils.escape_html(slot.widthFallback) +
-				"</span>";
 		const colorDisplay = colorRaw
 			? frappe.utils.escape_html(colorRaw)
 			: '<span class="pp-border-color-muted">' + __("default") + "</span>";
 		const preview = _border_line_preview_html(frm, slot);
 		const widthSelect = _border_width_select_html(frm, slot);
-		rows += `<tr style="border-bottom:1px solid #ededed;">
-			<td style="padding:8px 10px;vertical-align:middle;width:26%;">${frappe.utils.escape_html(slot.label)}</td>
-			<td style="padding:8px 10px;vertical-align:middle;width:52px;">${preview}</td>
-			<td style="padding:8px 10px;vertical-align:middle;font-family:monospace;font-size:12px;">${widthDisplay}</td>
-			<td style="padding:8px 10px;vertical-align:middle;font-family:monospace;font-size:12px;">${colorDisplay}</td>
-			<td style="padding:8px 10px;vertical-align:middle;white-space:nowrap;">
-				${widthSelect}
-				<button type="button" class="btn btn-xs btn-default pp-border-color-pick" style="margin-left:6px;" data-field="${frappe.utils.escape_html(
+		rows += `<tr>
+			<td>${frappe.utils.escape_html(slot.label)}</td>
+			<td style="width:52px;">${preview}</td>
+			<td style="width:110px;">${widthSelect}</td>
+			<td class="pp-colours-class-cell">${colorDisplay}</td>
+			<td class="pp-border-action-cell">
+				<button type="button" class="btn btn-xs btn-default pp-border-color-pick" data-field="${frappe.utils.escape_html(
 					slot.colorField
 				)}">${__("Color…")}</button>
 			</td>
@@ -4311,14 +4330,14 @@ function _build_colours_border_table_html(frm) {
 
 	return (
 		`<div class="pp-colours-section-title">${__("Lines & borders")}</div>` +
-		`<table class="table table-bordered" style="max-width:860px;background:#fff;">
+		`<table class="table table-bordered pp-colours-chrome-table">
 		<thead>
-			<tr style="background:#f7f7f7;">
-				<th style="padding:6px 10px;">${__("Line")}</th>
-				<th style="padding:6px 10px;">${__("Preview")}</th>
-				<th style="padding:6px 10px;">${__("Width class")}</th>
-				<th style="padding:6px 10px;">${__("Color class")}</th>
-				<th style="padding:6px 10px;"></th>
+			<tr>
+				<th style="width:26%;">${__("Line")}</th>
+				<th style="width:52px;">${__("Preview")}</th>
+				<th style="width:110px;">${__("Width")}</th>
+				<th>${__("Color class")}</th>
+				<th style="width:88px;"></th>
 			</tr>
 		</thead>
 		<tbody>${rows}</tbody>
@@ -4452,7 +4471,8 @@ function _render_other_panels_table(frm, $container) {
 			});
 
 			const tableHtml =
-				`<table class="pp-colours-other-table">` +
+				`<div class="pp-colours-section-title pp-colours-other-panels-title">${__("Other panels")}</div>` +
+				`<table class="table table-bordered pp-colours-chrome-table pp-colours-other-table">` +
 				`<thead><tr><th>${__("Panel ID")}</th><th>${__("Theme")}</th></tr></thead>` +
 				`<tbody>${rows}</tbody>` +
 				`</table>`;
