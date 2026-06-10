@@ -40,11 +40,11 @@
 			:style="dialogStyle"
 		>
 			<div
-				v-if="readbackFooterPhase === 'readback-waiting'"
+				v-if="syncWaiting"
 				class="ppv2-fd-readback-overlay"
 				@click.stop
 			>
-				<div class="ppv2-fd-readback-spinner theme-border theme-rounded-sm">{{ readbackUpdatingText }}</div>
+				<div class="ppv2-fd-readback-spinner theme-border theme-rounded-sm">{{ syncWaitingText }}</div>
 			</div>
 			<div class="ppv2-fd-drag-handle" @mousedown="startDrag">
 				<PanelFormDialogHeader
@@ -90,7 +90,6 @@
 			@go-to-panel="onGoToPanel"
 		/>
 			<PanelFormDialogFooter
-				:footer-phase="readbackFooterPhase"
 				:buttons="form.buttons.value"
 				:definition-name="definitionName"
 				:doc-name="docName"
@@ -98,16 +97,16 @@
 				:submit-hide-if-sql="footerSubmitHideSql"
 				:submit-label="footerSubmitLabel"
 				:saving="form.saving.value"
+				:sync-waiting="syncWaiting"
 				:is-dirty="footerIsDirty"
 				:browse-actions-locked="findCriteriaActive"
 				:find-chrome-phase="findChromePhase"
 				:find-match-active="findMatchActive"
 				@cancel="onCancel"
 				@revert="onRevert"
-				@submit="onSubmit"
+				@submit-close="onSubmitClose"
+				@submit-refresh="onSubmitRefresh"
 				@custom-button="onPlaceholderButton"
-				@readback-show-changes="onReadbackShowChanges"
-				@readback-close="onReadbackFinalClose"
 				@find-perform="performFindLayout"
 				@find-perform-constrain="performConstrainFindLayout"
 				@find-cancel="emit('find-cancel-criteria')"
@@ -315,22 +314,18 @@ function startResize(e) {
 }
 const relatedDirty = ref(false);
 const goToPanelBusy = ref(false);
-/** Bumped from this dialog when user clicks Show changes (related grids refetch). */
+/** Bumped after Submit and Refresh so related grids refetch. */
 const internalReloadTick = ref(0);
-/** Footer + chrome: normal | readback-waiting | readback-show-changes | readback-close-only */
-const readbackFooterPhase = ref("normal");
+/** True while polling WP sync jobs after save — shows overlay, disables footer actions. */
+const syncWaiting = ref(false);
 
-const readbackUpdatingText =
+const syncWaitingText =
 	typeof window.__ === "function" ? window.__("Updating") + "…" : "Updating…";
 
-const headerClosable = computed(
-	() =>
-		readbackFooterPhase.value !== "readback-waiting" &&
-		readbackFooterPhase.value !== "readback-show-changes",
-);
+const headerClosable = computed(() => !syncWaiting.value);
 
 const rowNavEnabledEffective = computed(
-	() => props.rowNavEnabled && readbackFooterPhase.value === "normal",
+	() => props.rowNavEnabled && !syncWaiting.value,
 );
 
 const findCriteriaActive = computed(() => props.findChromePhase === "criteria");
@@ -454,30 +449,18 @@ watch(
 		}
 		resetDialogPositionAndSize();
 		showFdLoadDebug.value = isFdLoadDebugEnabled();
-		readbackFooterPhase.value = "normal";
+		syncWaiting.value = false;
 		internalReloadTick.value = 0;
 	},
 	{ immediate: true },
 );
-
-function onReadbackFinalClose() {
-	readbackFooterPhase.value = "normal";
-	emit("close");
-}
 
 function onCancel() {
 	if (props.findChromePhase === "criteria") {
 		emit("find-cancel-criteria");
 		return;
 	}
-	if (
-		readbackFooterPhase.value === "readback-waiting" ||
-		readbackFooterPhase.value === "readback-show-changes"
-	) {
-		return;
-	}
-	if (readbackFooterPhase.value === "readback-close-only") {
-		onReadbackFinalClose();
+	if (syncWaiting.value) {
 		return;
 	}
 	confirmDiscardIfDirty(() => footerIsDirty.value, () => {
@@ -506,7 +489,7 @@ function onRelatedDirty(v) {
 	relatedDirty.value = !!v;
 }
 
-async function onReadbackShowChanges() {
+async function refreshFormAfterSave() {
 	try {
 		/* Load root doc first so ``docName`` / link fields are in sync, then bump tick so related tabs refetch. */
 		await form.load();
@@ -516,7 +499,6 @@ async function onReadbackShowChanges() {
 		await nextTick();
 		fdBodyRef.value?.reloadRelatedFromServer?.();
 		await nextTick();
-		readbackFooterPhase.value = "readback-close-only";
 	} catch {
 		/* keep current form */
 	}
@@ -524,7 +506,7 @@ async function onReadbackShowChanges() {
 
 function onRevert() {
 	if (findCriteriaActive.value) return;
-	if (readbackFooterPhase.value !== "normal") return;
+	if (syncWaiting.value) return;
 	if (!footerIsDirty.value || form.saving.value) {
 		return;
 	}
@@ -549,14 +531,14 @@ function onRevert() {
 
 function onNavPrevClick() {
 	if (findCriteriaActive.value) return;
-	if (readbackFooterPhase.value !== "normal") return;
+	if (syncWaiting.value) return;
 	if (!props.canNavigatePrev) return;
 	confirmDiscardIfDirty(() => footerIsDirty.value, () => emit("nav-prev"));
 }
 
 function onNavNextClick() {
 	if (findCriteriaActive.value) return;
-	if (readbackFooterPhase.value !== "normal") return;
+	if (syncWaiting.value) return;
 	if (!props.canNavigateNext) return;
 	confirmDiscardIfDirty(() => footerIsDirty.value, () => emit("nav-next"));
 }
@@ -565,11 +547,11 @@ const onFormDialogKeydown = createRowNavKeydownHandler({
 	getOpen: () => props.open,
 	getCanPrev: () =>
 		props.canNavigatePrev &&
-		readbackFooterPhase.value === "normal" &&
+		!syncWaiting.value &&
 		!findCriteriaActive.value,
 	getCanNext: () =>
 		props.canNavigateNext &&
-		readbackFooterPhase.value === "normal" &&
+		!syncWaiting.value &&
 		!findCriteriaActive.value,
 	onNavPrev: onNavPrevClick,
 	onNavNext: onNavNextClick,
@@ -640,7 +622,7 @@ async function savePendingEditsBeforeNavigate() {
 
 	const onSubmitMethod = (form.definition.value?.on_submit_method || "").trim();
 	if (onSubmitMethod && form.isDirty.value) {
-		form.validationError.value = __("Use Submit to save this form before opening the panel.");
+		form.validationError.value = __("Use Submit and Close or Submit and Refresh to save this form before opening the panel.");
 		if (typeof frappe !== "undefined" && frappe.msgprint) {
 			frappe.msgprint({
 				title: __("Save required"),
@@ -763,12 +745,103 @@ async function onGoToPanel(ev) {
 	}
 }
 
+/**
+ * Poll WP sync jobs after save, trigger linked read-back syncs, patch panel row.
+ * @returns {Promise<boolean>} false when sync failed
+ */
+async function runSyncReadbackAfterSave({ result, relatedSaveJobIds, oldRowName, pollLog }) {
+	const mainJobIds = Array.isArray(result?.sync_job_ids) ? result.sync_job_ids : [];
+	const relatedJobIds = Array.isArray(relatedSaveJobIds) ? relatedSaveJobIds : [];
+	const allJobIds = [...mainJobIds, ...relatedJobIds];
+	ppv2DebugLog("[NCE readback] save complete. mainJobIds:", mainJobIds, "relatedJobIds:", relatedJobIds);
+
+	if (!allJobIds.length) {
+		const savedName =
+			result?.name != null && String(result.name).trim() !== ""
+				? String(result.name).trim()
+				: null;
+		if (result && (savedName || oldRowName)) {
+			emit("readback-merged", { fresh: result, oldRowName, savedName });
+		}
+		return true;
+	}
+
+	const savedName =
+		result?.name != null && String(result.name).trim() !== ""
+			? String(result.name).trim()
+			: null;
+	syncWaiting.value = true;
+	try {
+		pollLog?.("readback", "poll main + related sync jobs");
+		const { anyFailed } = await pollSyncJobsUntilDone(allJobIds, { log: pollLog });
+		if (anyFailed) {
+			pollLog?.("sync", "one or more main/related jobs failed");
+			if (typeof frappe !== "undefined" && frappe.msgprint) {
+				frappe.msgprint({
+					title: __("Sync error"),
+					message: __("One or more sync jobs failed. Check Error Log."),
+					indicator: "red",
+				});
+			}
+			return false;
+		}
+		const freshName = savedName || oldRowName;
+		try {
+			ppv2DebugLog("[NCE readback] triggering linked DocType syncs for", freshName);
+			pollLog?.("linked", `trigger_linked_sync_for_dialog_readback name=${freshName}`);
+			const linkedResult = await frappeCall(
+				"nce_events.api.form_dialog.sync_related.trigger_linked_sync_for_dialog_readback",
+				{
+					definition: props.definitionName,
+					root_doctype: props.doctype,
+					root_name: freshName,
+				},
+			);
+			const linkedJobIds = Array.isArray(linkedResult?.sync_job_ids)
+				? linkedResult.sync_job_ids
+				: [];
+			ppv2DebugLog("[NCE readback] linked sync job_ids:", linkedJobIds);
+			pollLog?.("linked", `sync_job_ids count=${linkedJobIds.length}`);
+			if (linkedJobIds.length) {
+				pollLog?.("readback", "poll linked sync jobs");
+				await pollSyncJobsUntilDone(linkedJobIds, { log: pollLog });
+			}
+		} catch (err) {
+			ppv2DebugWarn("[NCE readback] linked sync failed (non-fatal):", err);
+			pollLog?.("linked_error", err?.message || String(err));
+		}
+		pollLog?.("readback", "fetchFreshDocAfterSync");
+		const fresh = await fetchFreshDocAfterSync(props.doctype, freshName);
+		emit("readback-merged", { fresh, oldRowName, savedName });
+		await nextTick();
+		return true;
+	} catch (e) {
+		const msg = e?.message || String(e) || __("Read-back wait failed");
+		pollLog?.("readback_error", msg);
+		if (typeof frappe !== "undefined" && frappe.msgprint) {
+			frappe.msgprint({ title: __("Error"), message: msg, indicator: "red" });
+		}
+		return false;
+	} finally {
+		syncWaiting.value = false;
+	}
+}
+
+function onSubmitClose(opts) {
+	onSubmit({ ...opts, afterSave: "close" });
+}
+
+function onSubmitRefresh(opts) {
+	onSubmit({ ...opts, afterSave: "refresh" });
+}
+
 async function onSubmit(opts = {}) {
 	if (findCriteriaActive.value) return;
+	const afterSave = opts.afterSave === "refresh" ? "refresh" : "close";
 	const perf = createSubmitPerfTrace({ liveDialog: !!opts?.shift });
 	perf.push(
 		"start",
-		`submit ${props.doctype} def=${props.definitionName || ""} doc=${props.docName || "(new)"}`,
+		`submit(${afterSave}) ${props.doctype} def=${props.definitionName || ""} doc=${props.docName || "(new)"}`,
 	);
 	const pollLog = (cat, msg) => perf.push(cat, msg);
 	try {
@@ -852,9 +925,14 @@ async function onSubmit(opts = {}) {
 					perf.push("step", "reloadPanelAfterPublish()");
 					await props.reloadPanelAfterPublish();
 				}
-				perf.push("done", "custom submit path complete, closing dialog");
-				/* Do not emit saved — no Frappe form save; host must not run onFormDialogSaved panel refresh. */
-				emit("close");
+				if (afterSave === "refresh") {
+					perf.push("done", "custom submit refresh path complete");
+					await refreshFormAfterSave();
+				} else {
+					perf.push("done", "custom submit path complete, closing dialog");
+					/* Do not emit saved — no Frappe form save; host must not run onFormDialogSaved panel refresh. */
+					emit("close");
+				}
 			} catch (e) {
 				const msg = e?.message || String(e) || __("Submit failed");
 				form.validationError.value = msg;
@@ -933,79 +1011,22 @@ async function onSubmit(opts = {}) {
 			}
 		}
 
-		const mainJobIds = Array.isArray(result?.sync_job_ids) ? result.sync_job_ids : [];
-		const relatedJobIds = Array.isArray(relatedSaveJobIds) ? relatedSaveJobIds : [];
-		const allJobIds = [...mainJobIds, ...relatedJobIds];
-		ppv2DebugLog("[NCE readback] save complete. mainJobIds:", mainJobIds, "relatedJobIds:", relatedJobIds);
-		perf.push(
-			"jobs",
-			`main=${mainJobIds.length} related=${relatedJobIds.length} total=${allJobIds.length}`,
-		);
+		const oldRowName = props.docName;
+		const readbackOk = await runSyncReadbackAfterSave({
+			result,
+			relatedSaveJobIds,
+			oldRowName,
+			pollLog,
+		});
+		if (!readbackOk) {
+			return;
+		}
 
-		if (allJobIds.length) {
-			const oldRowName = props.docName;
-			const savedName =
-				result?.name != null && String(result.name).trim() !== ""
-					? String(result.name).trim()
-					: null;
-			readbackFooterPhase.value = "readback-waiting";
-			try {
-				perf.push("readback", "poll main + related sync jobs");
-				const { anyFailed } = await pollSyncJobsUntilDone(allJobIds, { log: pollLog });
-				if (anyFailed) {
-					perf.push("sync", "one or more main/related jobs failed");
-					if (typeof frappe !== "undefined" && frappe.msgprint) {
-						frappe.msgprint({
-							title: __("Sync error"),
-							message: __("One or more sync jobs failed. Check Error Log."),
-							indicator: "red",
-						});
-					}
-					readbackFooterPhase.value = "normal";
-					return;
-				}
-			const freshName = savedName || oldRowName;
-			// Sync linked related DocTypes (e.g. Event Sessions) from WP before showing changes
-			try {
-				ppv2DebugLog("[NCE readback] triggering linked DocType syncs for", freshName);
-				perf.push("linked", `trigger_linked_sync_for_dialog_readback name=${freshName}`);
-				const linkedResult = await frappeCall(
-					"nce_events.api.form_dialog.sync_related.trigger_linked_sync_for_dialog_readback",
-					{
-						definition: props.definitionName,
-						root_doctype: props.doctype,
-						root_name: freshName,
-					},
-				);
-				const linkedJobIds = Array.isArray(linkedResult?.sync_job_ids)
-					? linkedResult.sync_job_ids
-					: [];
-				ppv2DebugLog("[NCE readback] linked sync job_ids:", linkedJobIds);
-				perf.push("linked", `sync_job_ids count=${linkedJobIds.length}`);
-				if (linkedJobIds.length) {
-					perf.push("readback", "poll linked sync jobs");
-					await pollSyncJobsUntilDone(linkedJobIds, { log: pollLog });
-				}
-			} catch (err) {
-				ppv2DebugWarn("[NCE readback] linked sync failed (non-fatal):", err);
-				perf.push("linked_error", err?.message || String(err));
-			}
-			perf.push("readback", "fetchFreshDocAfterSync");
-			const fresh = await fetchFreshDocAfterSync(props.doctype, freshName);
-			emit("readback-merged", { fresh, oldRowName, savedName });
-			await nextTick();
-			readbackFooterPhase.value = "readback-show-changes";
-			perf.push("done", "readback complete, show changes");
-			} catch (e) {
-				readbackFooterPhase.value = "normal";
-				const msg = e?.message || String(e) || __("Read-back wait failed");
-				perf.push("readback_error", msg);
-				if (typeof frappe !== "undefined" && frappe.msgprint) {
-					frappe.msgprint({ title: __("Error"), message: msg, indicator: "red" });
-				}
-			}
+		if (afterSave === "refresh") {
+			perf.push("done", "submit refresh path complete");
+			await refreshFormAfterSave();
 		} else {
-			perf.push("saved", "no sync jobs queued, emit saved");
+			perf.push("saved", "emit saved");
 			emit("saved");
 		}
 	} catch (e) {

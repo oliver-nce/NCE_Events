@@ -1,32 +1,7 @@
 <template>
 	<div class="ppv2-fd-footer">
-		<!-- WP read-back: wait — no buttons (spinner is on dialog overlay) -->
-		<template v-if="footerPhase === 'readback-waiting'" />
-
-		<!-- WP read-back: user reloads form + related grids -->
-		<template v-else-if="footerPhase === 'readback-show-changes'">
-			<div class="ppv2-fd-readback-actions">
-				<button
-					type="button"
-					class="ppv2-fd-tab-btn ppv2-fd-tab-active theme-bg-primary theme-border-primary"
-					@click="$emit('readback-show-changes')"
-				>
-					{{ __("Show changes") }}
-				</button>
-			</div>
-		</template>
-
-		<!-- WP read-back: done — single Close -->
-		<template v-else-if="footerPhase === 'readback-close-only'">
-			<div class="ppv2-fd-readback-actions">
-				<button type="button" class="ppv2-fd-tab-btn ppv2-fd-tab-active theme-bg-primary theme-border-primary" @click="$emit('readback-close')">
-					{{ __("Close") }}
-				</button>
-			</div>
-		</template>
-
 		<!-- FileMaker-style find: criteria entry -->
-		<template v-else-if="footerPhase === 'normal' && findChromePhase === 'criteria'">
+		<template v-if="findChromePhase === 'criteria'">
 			<div class="ppv2-fd-find-footer-only">
 				<button
 					type="button"
@@ -85,7 +60,7 @@
 					:key="'fd-btn-' + bi + '-' + (btn.label || bi) + '-' + (btn.name || '')"
 					type="button"
 					class="ppv2-fd-tab-btn theme-bg-primary-100 theme-border"
-					:disabled="browseActionsLocked"
+					:disabled="browseActionsLocked || submitBusy"
 					@click="$emit('custom-button', btn)"
 				>
 					{{ btn.label }}
@@ -96,7 +71,7 @@
 				<button
 					type="button"
 					class="ppv2-fd-tab-btn theme-bg-primary-100 theme-border"
-					:disabled="browseActionsLocked"
+					:disabled="browseActionsLocked || submitBusy"
 					@click="$emit('cancel')"
 				>
 					Cancel
@@ -104,7 +79,7 @@
 				<button
 					type="button"
 					class="ppv2-fd-tab-btn theme-bg-primary-100 theme-border"
-					:disabled="saving || browseActionsLocked || !isDirty"
+					:disabled="submitBusy || browseActionsLocked || !isDirty"
 					@click="$emit('revert')"
 				>
 					Revert
@@ -112,11 +87,20 @@
 				<button
 					v-if="submitVisible"
 					type="button"
-					class="ppv2-fd-tab-btn ppv2-fd-tab-active theme-bg-primary theme-border-primary"
-					:disabled="saving || browseActionsLocked"
-					@click="$emit('submit', { shift: $event.shiftKey })"
+					class="ppv2-fd-tab-btn theme-bg-primary-100 theme-border"
+					:disabled="submitBusy || browseActionsLocked"
+					@click="$emit('submit-close', { shift: $event.shiftKey })"
 				>
-					{{ savingSubmitText }}
+					{{ submitCloseText }}
+				</button>
+				<button
+					v-if="submitVisible"
+					type="button"
+					class="ppv2-fd-tab-btn ppv2-fd-tab-active theme-bg-primary theme-border-primary"
+					:disabled="submitBusy || browseActionsLocked"
+					@click="$emit('submit-refresh', { shift: $event.shiftKey })"
+				>
+					{{ submitRefreshText }}
 				</button>
 			</div>
 		</template>
@@ -134,11 +118,6 @@ const HIDE_SAVED = "Record saved";
 const HIDE_SQL = "SQL expression";
 
 const props = defineProps({
-	/** normal | readback-waiting | readback-show-changes | readback-close-only */
-	footerPhase: {
-		type: String,
-		default: "normal",
-	},
 	buttons: { type: Array, default: () => [] },
 	definitionName: { type: String, default: "" },
 	docName: { type: String, default: null },
@@ -146,6 +125,8 @@ const props = defineProps({
 	submitHideIfSql: { type: String, default: "" },
 	submitLabel: { type: String, default: "" },
 	saving: { type: Boolean, default: false },
+	/** True while polling WP sync jobs after save (overlay shown on dialog). */
+	syncWaiting: { type: Boolean, default: false },
 	isDirty: { type: Boolean, default: false },
 	/** Disable footer actions while in FileMaker-style find layout (use header Cancel Find). */
 	browseActionsLocked: { type: Boolean, default: false },
@@ -158,10 +139,9 @@ const props = defineProps({
 defineEmits([
 	"cancel",
 	"revert",
-	"submit",
+	"submit-close",
+	"submit-refresh",
 	"custom-button",
-	"readback-show-changes",
-	"readback-close",
 	"find-perform",
 	"find-perform-constrain",
 	"find-cancel",
@@ -174,14 +154,23 @@ function __(s) {
 	return typeof window.__ === "function" ? window.__(s) : s;
 }
 
-const savingSubmitText = computed(() => {
-	if (!props.saving) {
-		const sl = String(props.submitLabel || "").trim();
-		return sl || "Submit";
-	}
+const submitBusy = computed(() => props.saving || props.syncWaiting);
+
+const submitVerb = computed(() => {
 	const sl = String(props.submitLabel || "").trim();
-	if (sl) return `${sl}…`;
-	return "Saving…";
+	return sl || __("Submit");
+});
+
+const submitCloseText = computed(() => {
+	if (props.syncWaiting) return __("Updating") + "…";
+	if (props.saving) return __("Saving") + "…";
+	return `${submitVerb.value} ${__("and Close")}`;
+});
+
+const submitRefreshText = computed(() => {
+	if (props.syncWaiting) return __("Updating") + "…";
+	if (props.saving) return __("Saving") + "…";
+	return `${submitVerb.value} ${__("and Refresh")}`;
 });
 
 const visibleButtons = ref([]);
@@ -270,11 +259,9 @@ watch(
 		props.submitHideIf,
 		props.submitHideIfSql,
 		props.submitLabel,
-		props.footerPhase,
 		props.findChromePhase,
 	],
 	() => {
-		if (props.footerPhase !== "normal") return;
 		refreshFooterVisibility();
 	},
 	{ deep: true, immediate: true },
@@ -317,11 +304,6 @@ watch(
 	display: flex;
 	gap: 6px;
 	margin-left: auto;
-}
-.ppv2-fd-readback-actions {
-	display: flex;
-	width: 100%;
-	justify-content: flex-end;
 }
 .ppv2-fd-tab-btn {
 	padding: 6px 14px;
