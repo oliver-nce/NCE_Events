@@ -3760,19 +3760,34 @@ function _border_line_preview_html(frm, slot) {
 	const widthRaw = (frm.doc[slot.widthField] || "").trim();
 	const colorRaw = (frm.doc[slot.colorField] || "").trim();
 	const widthClass = _border_effective_width_class(widthRaw, slot.widthFallback);
-	const widthPx = PP_BORDER_WIDTH_PX[widthClass] || "1px";
+	const widthPx = PP_BORDER_WIDTH_PX[widthClass] || PP_BORDER_WIDTH_PX["theme-border"];
 	const colorCss = _border_preview_color_css(colorRaw);
 	const isFrame = slot.widthField === "frame_border_class";
-	const title = widthClass + " · " + (colorRaw || __("default"));
-	const borderStyle = isFrame
-		? "border:" + widthPx + " solid " + colorCss
-		: "border-bottom:" + widthPx + " solid " + colorCss;
+	const defaultCls =
+		!widthRaw && !colorRaw ? " pp-border-line-preview--default" : "";
+	const strokeStyle = "border-bottom:" + widthPx + " solid " + colorCss + ";";
+	const title = [widthClass, colorRaw || __("default")].join(" · ");
+	if (isFrame) {
+		return (
+			'<span class="pp-border-line-preview pp-border-line-preview--frame' +
+			defaultCls +
+			'" style="border:' +
+			widthPx +
+			" solid " +
+			colorCss +
+			';" title="' +
+			frappe.utils.escape_html(title) +
+			'"></span>'
+		);
+	}
 	return (
-		'<span class="pp-border-line-preview" style="' +
-		borderStyle +
+		'<span class="pp-border-line-preview pp-border-line-preview--line' +
+		defaultCls +
 		'" title="' +
 		frappe.utils.escape_html(title) +
-		'"></span>'
+		'"><span class="pp-border-line-preview__stroke" style="' +
+		strokeStyle +
+		'"></span></span>'
 	);
 }
 
@@ -4260,11 +4275,27 @@ function _colours_tab_styles_html() {
 				display: inline-block;
 				width: 72px;
 				height: 28px;
-				background: #fff;
+				box-sizing: border-box;
+				background: var(--nce-color-surface, #f8f9fa);
+				border: none;
 				border-radius: 2px;
 				vertical-align: middle;
+			}
+			.pp-border-line-preview--line {
+				display: inline-flex;
+				align-items: flex-end;
+				padding: 0 3px 4px;
+			}
+			.pp-border-line-preview__stroke {
+				display: block;
+				width: 100%;
+				height: 0;
 				box-sizing: border-box;
 			}
+			.pp-border-line-preview--frame {
+				background: var(--nce-color-surface, #fff);
+			}
+			.pp-border-line-preview--default { opacity: 1; }
 			.pp-border-width-select {
 				width: 100%;
 				max-width: 110px;
