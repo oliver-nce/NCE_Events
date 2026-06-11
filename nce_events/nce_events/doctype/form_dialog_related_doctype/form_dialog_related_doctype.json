@@ -3,7 +3,7 @@
   "creation": "2026-04-07 00:00:00.000000",
   "doctype": "DocType",
   "engine": "InnoDB",
-  "field_order": ["child_doctype", "link_field", "tab_label", "hop_chain", "info", "portal_field_config", "portal_actions"],
+  "field_order": ["child_doctype", "link_field", "tab_label", "hop_chain", "info", "portal_field_config", "allow_add_remove", "edit_condition", "portal_actions"],
   "fields": [
     {
       "description": "DocType that links to the Form Dialog target (e.g. child table).",
@@ -46,6 +46,19 @@
       "fieldname": "portal_field_config",
       "fieldtype": "Long Text",
       "label": "Portal field config"
+    },
+    {
+      "default": "0",
+      "description": "When set, the related tab shows an X delete button per row and an Add row button. New rows auto-link to the root document via Link Field.",
+      "fieldname": "allow_add_remove",
+      "fieldtype": "Check",
+      "label": "Allow Add / Remove Rows"
+    },
+    {
+      "description": "Implicit IF condition evaluated against the root document. Empty = always editable. Reference root columns by fieldname (use the field picker). Example: status != 'Closed' AND docstatus = 0",
+      "fieldname": "edit_condition",
+      "fieldtype": "Small Text",
+      "label": "Edit Allowed When (SQL)"
     },
     {
       "description": "JSON array of portal action buttons: [{action_id, label, method, roles, confirm, hide_if, params:[{arg, source, field, value, fieldtype, options, reqd}]}].",

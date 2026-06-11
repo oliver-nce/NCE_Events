@@ -9,6 +9,8 @@
     "tab_label",
     "info",
     "portal_field_config",
+    "allow_add_remove",
+    "edit_condition",
     "portal_actions"
   ],
   "fields": [
@@ -47,6 +49,19 @@
       "fieldname": "portal_field_config",
       "fieldtype": "Long Text",
       "label": "Portal field config"
+    },
+    {
+      "default": "0",
+      "description": "When set, the related tab shows an X delete button per row and an Add row button. New rows auto-link to the root document via Link Field.",
+      "fieldname": "allow_add_remove",
+      "fieldtype": "Check",
+      "label": "Allow Add / Remove Rows"
+    },
+    {
+      "description": "Implicit IF condition evaluated against the root document. Empty = always editable. Reference root columns by fieldname (use the field picker). Example: status != 'Closed' AND docstatus = 0",
+      "fieldname": "edit_condition",
+      "fieldtype": "Small Text",
+      "label": "Edit Allowed When (SQL)"
     },
     {
       "description": "JSON array of portal action buttons: [{action_id, label, method, roles, confirm, hide_if, params:[{arg, source, field, value, fieldtype, options, reqd}]}].",
