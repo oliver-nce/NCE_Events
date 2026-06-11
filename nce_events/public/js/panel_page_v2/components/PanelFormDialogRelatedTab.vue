@@ -468,6 +468,13 @@ const addDraftActive = ref(false);
 const addDraftValues = reactive({});
 const rowMutating = ref(false);
 
+const STAGED_NEW_ROW_PREFIX = "__nce_new_";
+
+function isStagedNewRow(rw) {
+	const n = String(rw?.name ?? "").trim();
+	return n.startsWith(STAGED_NEW_ROW_PREFIX);
+}
+
 const editLocked = computed(() => relatedState[props.ti]?.edit_allowed === false);
 
 const showRowMutateTools = computed(() => {
@@ -632,6 +639,9 @@ function baselineRowForRelated(ti, name) {
 }
 
 function isRelatedCellDirty(ti, rw, col) {
+	if (isStagedNewRow(rw)) {
+		return isRelatedCellEditable(col);
+	}
 	if (!isRelatedCellEditable(col) || rw?.name == null || rw.name === "") {
 		return false;
 	}
@@ -691,13 +701,25 @@ function relatedRowsDirty(ti) {
 	if (!st?.rows || !st.baseline) {
 		return false;
 	}
+	if (st.rows.some(isStagedNewRow)) {
+		return true;
+	}
+	const currentNames = new Set(
+		st.rows.map((r) => r.name).filter((n) => n != null && n !== ""),
+	);
+	for (const b of st.baseline) {
+		const bn = b?.name;
+		if (bn && !currentNames.has(bn)) {
+			return true;
+		}
+	}
 	const cols = (st.columns || []).filter(isRelatedCellEditable);
 	if (!cols.length) {
 		return false;
 	}
 	for (const rw of st.rows) {
 		const name = rw.name;
-		if (!name) {
+		if (!name || isStagedNewRow(rw)) {
 			continue;
 		}
 		const base = st.baseline.find((b) => b.name === name);
@@ -713,6 +735,35 @@ function relatedRowsDirty(ti) {
 	return false;
 }
 
+function buildPendingDeletes(ti) {
+	const st = relatedState[ti];
+	if (!st?.baseline?.length) {
+		return [];
+	}
+	const currentNames = new Set(
+		(st.rows || []).map((r) => r.name).filter((n) => n != null && n !== ""),
+	);
+	return st.baseline
+		.map((b) => b.name)
+		.filter((n) => n && !currentNames.has(n));
+}
+
+function buildPendingAdds(ti) {
+	return (relatedState[ti]?.rows || []).filter(isStagedNewRow);
+}
+
+function rowValuesForAdd(rw, columns) {
+	const values = {};
+	for (const col of columns.filter(isRelatedCellEditable)) {
+		const fn = col.fieldname;
+		const v = rw[fn];
+		if (v != null && v !== "") {
+			values[fn] = v;
+		}
+	}
+	return values;
+}
+
 function buildRelatedUpdates(ti) {
 	const st = relatedState[ti];
 	if (!st?.rows?.length || !st.baseline?.length) {
@@ -725,7 +776,7 @@ function buildRelatedUpdates(ti) {
 	const updates = [];
 	for (const rw of st.rows) {
 		const name = rw.name;
-		if (!name) {
+		if (!name || isStagedNewRow(rw)) {
 			continue;
 		}
 		const base = st.baseline.find((b) => b.name === name);
@@ -871,49 +922,25 @@ function cancelAddRelatedRow() {
 	}
 }
 
-function _relatedCallParams() {
-	return {
-		definition: String(props.definitionName || "").trim(),
-		related_row_name: props.tab?._related?.child_row_name,
-		root_doctype: String(props.rootDoctype || "").trim(),
-		root_name: String(props.rootDocName || "").trim(),
-	};
-}
-
-async function confirmAddRelatedRow() {
-	const params = _relatedCallParams();
-	if (!params.definition || !params.related_row_name || !params.root_name) {
+function confirmAddRelatedRow() {
+	const st = relatedState[props.ti];
+	if (!st?.columns?.length) {
 		return;
 	}
-	const values = {};
-	for (const col of relatedState[props.ti]?.columns || []) {
-		if (!isRelatedCellEditable(col)) {
-			continue;
-		}
-		const fn = col.fieldname;
-		const v = addDraftValues[fn];
-		if (v != null && v !== "") {
-			values[fn] = v;
+	const newRow = {
+		name: `${STAGED_NEW_ROW_PREFIX}${Date.now()}_${Math.random().toString(36).slice(2, 9)}`,
+	};
+	for (const col of st.columns) {
+		if (isRelatedCellEditable(col)) {
+			newRow[col.fieldname] = addDraftValues[col.fieldname];
 		}
 	}
-	rowMutating.value = true;
-	try {
-		await frappeCall("nce_events.api.form_dialog.related_rows.add_form_dialog_related_row", {
-			...params,
-			values,
-		});
-		cancelAddRelatedRow();
-		await fetchRelatedForTab(props.ti);
-	} catch (e) {
-		if (typeof frappe !== "undefined" && frappe.show_alert) {
-			frappe.show_alert({
-				message: e?.message || String(e) || "Failed to add row",
-				indicator: "red",
-			});
-		}
-	} finally {
-		rowMutating.value = false;
+	if (!Array.isArray(st.rows)) {
+		st.rows = [];
 	}
+	st.rows.push(newRow);
+	cancelAddRelatedRow();
+	scheduleRelatedDirtyEmit();
 }
 
 async function onDeleteRelatedRow(rw) {
@@ -924,38 +951,29 @@ async function onDeleteRelatedRow(rw) {
 	if (!name) {
 		return;
 	}
-	const label = String(name);
+	const staged = isStagedNewRow(rw);
+	const confirmMsg = staged
+		? "Remove this unsaved row? Changes are not saved until you submit."
+		: `Remove row ${String(name)} from the form? It is not deleted until you submit.`;
 	if (typeof frappe !== "undefined" && frappe.confirm) {
 		const ok = await new Promise((resolve) => {
-			frappe.confirm(`Delete related row ${label}?`, () => resolve(true), () => resolve(false));
+			frappe.confirm(confirmMsg, () => resolve(true), () => resolve(false));
 		});
 		if (!ok) {
 			return;
 		}
-	} else if (!window.confirm(`Delete related row ${label}?`)) {
+	} else if (!window.confirm(confirmMsg)) {
 		return;
 	}
-	const params = _relatedCallParams();
-	if (!params.definition || !params.related_row_name || !params.root_name) {
+	const st = relatedState[props.ti];
+	if (!st?.rows) {
 		return;
 	}
-	rowMutating.value = true;
-	try {
-		await frappeCall("nce_events.api.form_dialog.related_rows.delete_form_dialog_related_row", {
-			...params,
-			child_name: name,
-		});
-		await fetchRelatedForTab(props.ti);
-	} catch (e) {
-		if (typeof frappe !== "undefined" && frappe.show_alert) {
-			frappe.show_alert({
-				message: e?.message || String(e) || "Failed to delete row",
-				indicator: "red",
-			});
-		}
-	} finally {
-		rowMutating.value = false;
+	const idx = st.rows.findIndex((r) => r.name === name);
+	if (idx >= 0) {
+		st.rows.splice(idx, 1);
 	}
+	scheduleRelatedDirtyEmit();
 }
 
 function onRelatedTextInput(rw, col, ev) {
@@ -964,6 +982,7 @@ function onRelatedTextInput(rw, col, ev) {
 }
 
 function resetRelatedToBaseline() {
+	cancelAddRelatedRow();
 	for (const k of Object.keys(relatedState)) {
 		const ti = Number(k);
 		const st = relatedState[ti];
@@ -991,23 +1010,54 @@ async function saveAllRelatedRows() {
 	if (!crn) {
 		return [];
 	}
-	const updates = buildRelatedUpdates(props.ti);
-	if (!updates.length) {
+	if (!relatedRowsDirty(props.ti)) {
 		return [];
 	}
-	const r = await frappeCall("nce_events.api.form_dialog.related_rows.save_form_dialog_related_rows", {
+	const params = {
 		definition: defn,
 		related_row_name: crn,
 		root_doctype: dt,
 		root_name: dn,
-		updates,
-	});
+	};
 	const st = relatedState[props.ti];
-	if (st?.rows) {
-		st.baseline = JSON.parse(JSON.stringify(st.rows));
+	const columns = st?.columns || [];
+	const syncJobIds = [];
+	rowMutating.value = true;
+	try {
+		for (const childName of buildPendingDeletes(props.ti)) {
+			const r = await frappeCall(
+				"nce_events.api.form_dialog.related_rows.delete_form_dialog_related_row",
+				{ ...params, child_name: childName },
+			);
+			if (Array.isArray(r?.sync_job_ids)) {
+				syncJobIds.push(...r.sync_job_ids);
+			}
+		}
+		for (const rw of buildPendingAdds(props.ti)) {
+			const r = await frappeCall(
+				"nce_events.api.form_dialog.related_rows.add_form_dialog_related_row",
+				{ ...params, values: rowValuesForAdd(rw, columns) },
+			);
+			if (Array.isArray(r?.sync_job_ids)) {
+				syncJobIds.push(...r.sync_job_ids);
+			}
+		}
+		const updates = buildRelatedUpdates(props.ti);
+		if (updates.length) {
+			const r = await frappeCall(
+				"nce_events.api.form_dialog.related_rows.save_form_dialog_related_rows",
+				{ ...params, updates },
+			);
+			if (Array.isArray(r?.sync_job_ids)) {
+				syncJobIds.push(...r.sync_job_ids);
+			}
+		}
+		await fetchRelatedForTab(props.ti);
+		emit("related-dirty", false);
+		return syncJobIds;
+	} finally {
+		rowMutating.value = false;
 	}
-	emit("related-dirty", false);
-	return Array.isArray(r?.sync_job_ids) ? r.sync_job_ids : [];
 }
 
 /** Refetch this grid whenever the host bumps reloadTick (e.g. after WP read-back). */
