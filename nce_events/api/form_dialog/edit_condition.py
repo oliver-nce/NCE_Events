@@ -20,6 +20,91 @@ from .button_visibility import _FORBIDDEN_SQL, _first_cell_truthy
 _LABEL_TOKEN_RE = re.compile(
 	r"(?:`([^`]+)`|\[([^\]]+)\])",
 )
+_STRING_LITERAL_RE = re.compile(r"'(?:[^'\\]|\\.)*'")
+
+
+def _parse_pending_root_values(pending_root_values: Any) -> dict[str, Any]:
+	if pending_root_values is None:
+		return {}
+	if isinstance(pending_root_values, str):
+		pending_root_values = frappe.parse_json(pending_root_values)
+	if not isinstance(pending_root_values, dict):
+		return {}
+	return pending_root_values
+
+
+def _valid_root_fieldnames(root_doctype: str) -> set[str]:
+	meta = frappe.get_meta(root_doctype)
+	return {f.fieldname for f in meta.fields} | {
+		"name",
+		"docstatus",
+		"owner",
+		"modified",
+		"creation",
+	}
+
+
+def _merged_root_row(
+	root_doctype: str,
+	root_name: str | None,
+	pending_root_values: Any = None,
+) -> dict[str, Any]:
+	"""DB row overlaid with unsaved Form Dialog root field values."""
+	row: dict[str, Any] = {}
+	dn = (root_name or "").strip()
+	if dn and frappe.db.exists(root_doctype, dn):
+		row = frappe.get_doc(root_doctype, dn).as_dict()
+	elif dn:
+		row = {"name": dn}
+	valid = _valid_root_fieldnames(root_doctype)
+	for k, v in _parse_pending_root_values(pending_root_values).items():
+		fn = cstr(k).strip()
+		if fn in valid:
+			row[fn] = v
+	return row
+
+
+def _sql_literal_for_eval(value: Any) -> str:
+	if value is None or value == "":
+		return "NULL"
+	if isinstance(value, bool):
+		return "1" if value else "0"
+	if isinstance(value, (int, float)):
+		return str(value)
+	return frappe.db.escape(cstr(value))
+
+
+def _substitute_row_fields_in_condition(expr: str, row: dict[str, Any], root_doctype: str) -> str:
+	"""Replace known root fieldnames in *expr* with SQL literals from *row*."""
+	literals: list[str] = []
+
+	def mask_lit(match: re.Match[str]) -> str:
+		literals.append(match.group(0))
+		return f"__NCE_LIT_{len(literals) - 1}__"
+
+	masked = _STRING_LITERAL_RE.sub(mask_lit, expr)
+	fieldnames = _valid_root_fieldnames(root_doctype)
+	for fn in sorted(fieldnames, key=len, reverse=True):
+		if not re.search(r"\b" + re.escape(fn) + r"\b", masked):
+			continue
+		lit = _sql_literal_for_eval(row.get(fn))
+		masked = re.sub(r"\b" + re.escape(fn) + r"\b", lit, masked)
+	for i, lit in enumerate(literals):
+		masked = masked.replace(f"__NCE_LIT_{i}__", lit)
+	return masked
+
+
+def _evaluate_edit_condition_on_row(expr: str, row: dict[str, Any], root_doctype: str) -> bool:
+	substituted = _substitute_row_fields_in_condition(expr, row, root_doctype)
+	try:
+		rows = frappe.db.sql(f"SELECT IF({substituted}, 1, 0) AS _nce_r", as_dict=False)
+	except Exception as err:
+		frappe.log_error(
+			title="form_dialog_edit_condition",
+			message=f"{expr[:300]!r}\n{substituted[:500]!r}\n{err!s}",
+		)
+		return False
+	return not _first_cell_truthy(rows)
 
 
 def validate_edit_condition(expr: str, root_doctype: str) -> str:
@@ -48,25 +133,26 @@ def validate_edit_condition(expr: str, root_doctype: str) -> str:
 	return raw
 
 
-def evaluate_edit_condition(expr: str, root_doctype: str, root_name: str | None) -> bool:
-	"""Return True when editing is allowed for the root document."""
+def evaluate_edit_condition(
+	expr: str,
+	root_doctype: str,
+	root_name: str | None,
+	pending_root_values: Any = None,
+) -> bool:
+	"""Return True when editing is allowed for the root document.
+
+	When *pending_root_values* is supplied, unsaved Form Dialog values overlay the
+	saved row before evaluating (used by related tabs before Submit).
+	"""
 	raw = (expr or "").strip().rstrip(";").strip()
 	if not raw:
 		return True
 	dn = (root_name or "").strip()
-	if not dn:
+	pending = _parse_pending_root_values(pending_root_values)
+	if not dn and not pending:
 		return False
-	table = physical_table_name(root_doctype)
-	sql = f"SELECT IF({raw}, 1, 0) FROM `{table}` WHERE name = %(name)s LIMIT 1"
-	try:
-		rows = frappe.db.sql(sql, {"name": dn}, as_dict=False)
-	except Exception as err:
-		frappe.log_error(
-			title="form_dialog_edit_condition",
-			message=f"{raw[:300]!r}\n{dn!r}\n{err!s}",
-		)
-		return False
-	return not _first_cell_truthy(rows)
+	row = _merged_root_row(root_doctype, dn or None, pending)
+	return _evaluate_edit_condition_on_row(raw, row, root_doctype)
 
 
 def _standard_edit_condition_fields() -> list[dict[str, str]]:

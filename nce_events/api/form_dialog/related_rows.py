@@ -119,13 +119,19 @@ def _load_related_tab_context(
 	return doc, row, child_dt, link_f, hc
 
 
-def _related_tab_flags(row: Any, root_doctype: str, root_name: str) -> dict[str, Any]:
+def _related_tab_flags(
+	row: Any,
+	root_doctype: str,
+	root_name: str,
+	pending_root_values: Any = None,
+) -> dict[str, Any]:
 	return {
 		"allow_add_remove": cint(getattr(row, "allow_add_remove", 0)),
 		"edit_allowed": evaluate_edit_condition(
 			getattr(row, "edit_condition", "") or "",
 			root_doctype,
 			root_name,
+			pending_root_values=pending_root_values,
 		),
 	}
 
@@ -179,6 +185,7 @@ def get_form_dialog_related_rows(
 	root_doctype: str,
 	root_name: str,
 	limit: int | str = 500,
+	pending_root_values: str | dict | None = None,
 ) -> dict[str, Any]:
 	"""
 	Fetch rows for one Form Dialog related tab (panel V2).
@@ -195,6 +202,7 @@ def get_form_dialog_related_rows(
 	    root_doctype: Must equal the Form Dialog's ``target_doctype``.
 	    root_name: Primary key of the root document open in the dialog.
 	    limit: Max rows (1-2000, default 500).
+	    pending_root_values: Optional JSON dict of unsaved root field values for edit_condition.
 
 	Returns:
 	    ``{ child_doctype, columns, rows, order_by, edit_allowed, allow_add_remove }``.
@@ -220,7 +228,7 @@ def get_form_dialog_related_rows(
 	from nce_events.api.form_dialog.portal_actions import get_portal_actions_for_row
 
 	actions = get_portal_actions_for_row(row)
-	flags = _related_tab_flags(row, root_doctype, root_name)
+	flags = _related_tab_flags(row, root_doctype, root_name, pending_root_values)
 
 	if force_empty:
 		return {
@@ -247,6 +255,25 @@ def get_form_dialog_related_rows(
 		"actions": actions,
 		**flags,
 	}
+
+
+@frappe.whitelist()
+def reevaluate_related_tab_edit_allowed(
+	definition: str,
+	related_row_name: str,
+	root_doctype: str,
+	root_name: str,
+	pending_root_values: str | dict | None = None,
+) -> dict[str, Any]:
+	"""Recompute edit_allowed / allow_add_remove without refetching child rows."""
+	_, row, _child_dt, _link_f, _hc = _load_related_tab_context(
+		definition,
+		related_row_name,
+		root_doctype,
+		root_name,
+		root_perm="read",
+	)
+	return _related_tab_flags(row, root_doctype, root_name, pending_root_values)
 
 
 # Fieldtypes not editable through the related grid (use Desk for links / files / tables).

@@ -84,6 +84,33 @@ class TestEvaluateEditCondition(FrappeTestCase):
 		mock_log.assert_called_once()
 
 
+class TestEvaluateEditConditionPending(FrappeTestCase):
+	@patch("nce_events.api.form_dialog.edit_condition.frappe.db.sql")
+	def test_pending_values_override_saved_doc(self, mock_sql):
+		from nce_events.api.form_dialog.edit_condition import evaluate_edit_condition
+
+		mock_doc = frappe._dict({"name": "DT-1", "docstatus": 0})
+		with patch(
+			"nce_events.api.form_dialog.edit_condition.frappe.get_doc",
+			return_value=mock_doc,
+		):
+			with patch(
+				"nce_events.api.form_dialog.edit_condition.frappe.db.exists",
+				return_value=True,
+			):
+				mock_sql.return_value = [(1,)]
+				out = evaluate_edit_condition(
+					"docstatus = 1",
+					"DocType",
+					"DT-1",
+					pending_root_values={"docstatus": 1},
+				)
+		self.assertFalse(out)
+		call_sql = mock_sql.call_args[0][0]
+		self.assertIn("SELECT IF(", call_sql)
+		self.assertNotIn("FROM", call_sql.upper())
+
+
 class TestResolveEditConditionLabels(FrappeTestCase):
 	@patch(
 		"nce_events.api.form_dialog.edit_condition._edit_condition_fieldnames_for_root",

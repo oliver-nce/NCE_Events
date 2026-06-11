@@ -550,6 +550,86 @@ function relatedFetchKey() {
 	return `${d}\0${dt}\0${dn}`;
 }
 
+/** Scalar root form values overlaid on the saved doc for edit_condition evaluation. */
+function pendingRootValuesForEditCondition() {
+	const fd = props.formData;
+	if (!fd || typeof fd !== "object") {
+		return {};
+	}
+	const out = {};
+	for (const [k, v] of Object.entries(fd)) {
+		if (!k || k.startsWith("_")) {
+			continue;
+		}
+		if (Array.isArray(v)) {
+			continue;
+		}
+		if (v !== null && typeof v === "object") {
+			continue;
+		}
+		out[k] = v;
+	}
+	return out;
+}
+
+let reevaluateEditSeq = 0;
+let reevaluateEditTimer = null;
+function scheduleReevaluateEditAllowed() {
+	if (!props.tab?._related?.child_row_name || !String(props.rootDocName || "").trim()) {
+		return;
+	}
+	const st = relatedState[props.ti];
+	if (!st || st.loading) {
+		return;
+	}
+	if (reevaluateEditTimer) {
+		clearTimeout(reevaluateEditTimer);
+	}
+	reevaluateEditTimer = setTimeout(() => {
+		reevaluateEditTimer = null;
+		reevaluateEditAllowed();
+	}, 250);
+}
+
+async function reevaluateEditAllowed() {
+	const tab = props.tab;
+	if (
+		!tab?._related?.child_row_name ||
+		!String(props.definitionName || "").trim() ||
+		!String(props.rootDoctype || "").trim() ||
+		!String(props.rootDocName || "").trim()
+	) {
+		return;
+	}
+	const st = relatedState[props.ti];
+	if (!st || st.loading) {
+		return;
+	}
+	const seq = ++reevaluateEditSeq;
+	try {
+		const msg = await frappeCall(
+			"nce_events.api.form_dialog.related_rows.reevaluate_related_tab_edit_allowed",
+			{
+				definition: String(props.definitionName).trim(),
+				related_row_name: tab._related.child_row_name,
+				root_doctype: String(props.rootDoctype).trim(),
+				root_name: String(props.rootDocName).trim(),
+				pending_root_values: pendingRootValuesForEditCondition(),
+			},
+		);
+		if (reevaluateEditSeq !== seq) {
+			return;
+		}
+		st.edit_allowed = msg.edit_allowed !== false;
+		st.allow_add_remove = !!msg.allow_add_remove;
+		if (!st.edit_allowed && addDraftActive.value) {
+			cancelAddRelatedRow();
+		}
+	} catch {
+		/* keep current flags */
+	}
+}
+
 async function fetchRelatedForTab(ti) {
 	const tab = props.tab;
 	if (
@@ -577,6 +657,7 @@ async function fetchRelatedForTab(ti) {
 				root_doctype: String(props.rootDoctype).trim(),
 				root_name: String(props.rootDocName).trim(),
 				limit: 500,
+				pending_root_values: pendingRootValuesForEditCondition(),
 			}
 		);
 		if (relatedSeq[ti] !== seq) {
@@ -628,6 +709,14 @@ watch(
 		fetchRelatedForTab(props.ti);
 	},
 	{ deep: true, immediate: true },
+);
+
+watch(
+	() => props.formData,
+	() => {
+		scheduleReevaluateEditAllowed();
+	},
+	{ deep: true },
 );
 
 function baselineRowForRelated(ti, name) {
