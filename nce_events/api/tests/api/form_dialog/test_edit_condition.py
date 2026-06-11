@@ -62,18 +62,18 @@ class TestEvaluateEditCondition(FrappeTestCase):
 		self.assertFalse(evaluate_edit_condition("docstatus = 0", "DocType", ""))
 
 	@patch("nce_events.api.form_dialog.edit_condition.frappe.db.sql")
-	def test_truthy_result(self, mock_sql):
+	def test_truthy_result_disables_edit(self, mock_sql):
 		from nce_events.api.form_dialog.edit_condition import evaluate_edit_condition
 
 		mock_sql.return_value = [(1,)]
-		self.assertTrue(evaluate_edit_condition("docstatus = 0", "DocType", "DT-1"))
+		self.assertFalse(evaluate_edit_condition("docstatus = 0", "DocType", "DT-1"))
 
 	@patch("nce_events.api.form_dialog.edit_condition.frappe.db.sql")
-	def test_falsy_result(self, mock_sql):
+	def test_falsy_result_allows_edit(self, mock_sql):
 		from nce_events.api.form_dialog.edit_condition import evaluate_edit_condition
 
 		mock_sql.return_value = [(0,)]
-		self.assertFalse(evaluate_edit_condition("docstatus = 0", "DocType", "DT-1"))
+		self.assertTrue(evaluate_edit_condition("docstatus = 0", "DocType", "DT-1"))
 
 	@patch("nce_events.api.form_dialog.edit_condition.frappe.log_error")
 	@patch("nce_events.api.form_dialog.edit_condition.frappe.db.sql", side_effect=Exception("boom"))

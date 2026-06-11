@@ -816,11 +816,11 @@
 				"</label>" +
 				'<div class="fd-portal-edit-condition-wrap">' +
 				"<strong>" +
-				__("Edit allowed when (SQL)") +
+				__("Edit disabled when (SQL)") +
 				"</strong>" +
 				'<p class="text-muted" style="margin:4px 0 0;font-size:11px;">' +
 				__(
-					"Editing is allowed when this condition is true for the open record. Leave blank to always allow."
+					"Editing is disabled when this condition is true for the open record. Leave blank to always allow."
 				) +
 				"</p>" +
 				'<select class="form-control fd-portal-edit-picker"><option value="">' +

@@ -55,10 +55,10 @@
       "label": "Allow Add / Remove Rows"
     },
     {
-      "description": "Implicit IF condition evaluated against the root document. Empty = always editable. Reference root columns by fieldname (use the field picker). Example: status != 'Closed' AND docstatus = 0",
+      "description": "Implicit IF condition evaluated against the root document. Empty = always editable. When true, editing is disabled. Example: status = 'Closed' OR docstatus = 1",
       "fieldname": "edit_condition",
       "fieldtype": "Small Text",
-      "label": "Edit Allowed When (SQL)"
+      "label": "Edit Disabled When (SQL)"
     },
     {
       "description": "JSON array of portal action buttons: [{action_id, label, method, roles, confirm, hide_if, params:[{arg, source, field, value, fieldtype, options, reqd}]}].",

@@ -1,7 +1,7 @@
 """
 Validate and evaluate Form Dialog related-tab edit conditions (implicit IF SQL).
 
-Empty expression => editing always allowed. Truthy IF result => allow edit/add/remove.
+Empty expression => editing always allowed. Truthy IF result => disable edit/add/remove.
 """
 
 from __future__ import annotations
@@ -66,7 +66,7 @@ def evaluate_edit_condition(expr: str, root_doctype: str, root_name: str | None)
 			message=f"{raw[:300]!r}\n{dn!r}\n{err!s}",
 		)
 		return False
-	return _first_cell_truthy(rows)
+	return not _first_cell_truthy(rows)
 
 
 def _standard_edit_condition_fields() -> list[dict[str, str]]:
