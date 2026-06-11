@@ -1175,8 +1175,8 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set, matrix_opts)
 			}></td>`;
 		}
 		html += `<tr data-key="${esc_key}"${bg}>
-			<td style="padding:4px 8px;color:#8d949a;font-size:11px;">${fn_display}</td>
-			<td style="padding:4px 8px;color:#4c5a67;">${frappe.utils.escape_html(label)}</td>
+			<td class="text-muted" style="padding:4px 8px;font-size:11px;">${fn_display}</td>
+			<td class="text-muted" style="padding:4px 8px;">${frappe.utils.escape_html(label)}</td>
 			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="show"${
 			shown_set[key] ? " checked" : ""
 		}></td>
@@ -1381,9 +1381,9 @@ function _render_order_tab(
 		html += `<tr draggable="true" data-key="${esc}"${bg}>
 			<td style="padding:4px;text-align:center;cursor:grab;">
 				<span class="matrix-drag-handle" style="color:#b7babe;font-size:14px;">&#x2630;</span></td>
-			<td style="padding:4px 8px;color:#8d949a;font-size:11px;">${esc}</td>
-			<td style="padding:4px 8px;color:#4c5a67;">${frappe.utils.escape_html(s.label)}</td>
-			<td style="padding:4px 8px;color:#8d949a;font-size:11px;">${frappe.utils.escape_html(
+			<td class="text-muted" style="padding:4px 8px;font-size:11px;">${esc}</td>
+			<td class="text-muted" style="padding:4px 8px;">${frappe.utils.escape_html(s.label)}</td>
+			<td class="text-muted" style="padding:4px 8px;font-size:11px;">${frappe.utils.escape_html(
 				s.source
 			)}</td>
 		</tr>`;
