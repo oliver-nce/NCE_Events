@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Manual overlay merged into CODE_INDEX.json by scripts/build_code_index.py. Edit per-file entries here; the generator preserves your curated 'purpose', 'sections', 'private_helpers', 'key_fields', and 'depends_on'.",
-    "generated": "2026-06-09",
+    "generated": "2026-06-11",
     "generator": "scripts/build_code_index.py",
     "usage": "Run `python scripts/build_code_index.py --write` to regenerate CODE_INDEX.json after editing this file or after adding/renaming/deleting source files. The pre-commit hook runs `--check` and blocks commits whose code changes have not been regenerated."
   },
@@ -18,7 +18,7 @@
       "Form Dialog buttons: script text is copied from Desk at capture/rebuild time — not live-linked. Rebuild is manual.",
       "Panel Page split (Mirror / Native): one Vue bundle, three Frappe Pages. main.js mount(selector, opts) provides panelMode + panelLabel; App.vue injects them, applies { doctype_source: panelMode } to the root usePanel, and passes scope: panelMode to usePanelActions. Cross-page navigation is a Panel Action of type Client Script using switch_page(slug), implemented as a full-reload window.location.assign for KISS state reset. See Docs/handoff_panel_page_split.md.",
       "NCE Sync mirror refresh (separate app): whitelisted nce_sync.api.sync_doctype_rows (by doc names) and nce_sync.api.sync_linked_doctype_rows (rebuild child rows for one parent Link). Full call shapes, enqueue helpers, and permission notes: architecture.nce_sync_mirror_refresh_apis.",
-      "ThemeSwatchPicker (Themes app): Desk Page Panel Colours tab uses frappe.ui.themeSwatchPicker.open({ frm, themeField: 'theme', valueField }) per chrome slot (header_bg_class, row_alt_bg_class, etc.). Runtime: panelChromeClasses.js resolves config → theme-bg-* with fallbacks; PanelFloat/PanelTable/PanelFormDialog bind dynamically. theme-bg-* auto-pairs fg — toolbar buttons inherit, do not hardcode theme-text-primary-fg."
+      "ThemeSwatchPicker (Themes app): Desk Page Panel Colours tab — Backgrounds: themeSwatchPicker per *_bg_class slot; Lines & borders: width Select (theme-border-thin|theme-border|theme-border-strong) + Color pick (theme-border-{role}-{shade}). Runtime: panelChromeClasses.js resolves bg + border slots; PanelFloat frame border classes, PanelTable/FilterBar CSS vars for directional dividers."
     ],
     "nce_sync_mirror_refresh_apis": {
       "source_app": "nce_sync Frappe app (dependency of NCE Events; implementation not in this repo).",
@@ -54,10 +54,10 @@
   },
   "backend": {
     "nce_events/__init__.py": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Frappe app package root for nce_events (version string, app metadata)."
     },
     "nce_events/api/__init__.py": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "API package marker — endpoints live in submodules (panel_api_pkg, form_dialog, messaging, etc.)."
     },
     "nce_events/api/credentials.py": {
       "exports": [
@@ -76,7 +76,11 @@
         "evaluate_derived_fields",
         "get_derived_field_specs"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "DocType-agnostic derived-field evaluation: compose WP Tables column_mapping specs with sql_eval substitution for panel/computed use.",
+      "depends_on": [
+        "nce_events/api/sql_eval.py",
+        "nce_events/api/wp_tables_mapping.py"
+      ]
     },
     "nce_events/api/evaluations.py": {
       "exports": [
@@ -85,7 +89,10 @@
       "whitelist_endpoints": [
         "get_event_enrollments"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Evaluations API — enrollment rows for event-scoped rating Kanban (get_event_enrollments whitelist).",
+      "depends_on": [
+        "nce_events/utils/sql_table.py"
+      ]
     },
     "nce_events/api/events_publish.py": {
       "exports": [
@@ -250,6 +257,18 @@
         "list_form_dialogs_for_doctype (System Manager)"
       ]
     },
+    "nce_events/api/form_dialog/edit_condition.py": {
+      "exports": [
+        "evaluate_edit_condition",
+        "get_edit_condition_fields",
+        "resolve_edit_condition_labels",
+        "validate_edit_condition"
+      ],
+      "whitelist_endpoints": [
+        "get_edit_condition_fields"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/api/form_dialog/portal_actions.py": {
       "exports": [
         "get_portal_actions_for_row",
@@ -299,10 +318,14 @@
     },
     "nce_events/api/form_dialog/related_rows.py": {
       "exports": [
+        "add_form_dialog_related_row",
+        "delete_form_dialog_related_row",
         "get_form_dialog_related_rows",
         "save_form_dialog_related_rows"
       ],
       "whitelist_endpoints": [
+        "add_form_dialog_related_row",
+        "delete_form_dialog_related_row",
         "get_form_dialog_related_rows",
         "save_form_dialog_related_rows"
       ],
@@ -363,7 +386,10 @@
       "whitelist_endpoints": [
         "trigger_linked_sync_for_dialog_readback"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Post-save linked DocType sync for Form Dialog WP read-back: trigger_linked_sync_for_dialog_readback queues nce_sync linked-row pulls before Show changes.",
+      "depends_on": [
+        "nce_events/api/form_dialog/_helpers.py"
+      ]
     },
     "nce_events/api/hierarchy_explorer.py": {
       "exports": [
@@ -715,7 +741,7 @@
         "evaluate_sql_expressions_api",
         "get_substitution_token_allowlist"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Generic SQL expression evaluation with {fieldname} substitution, literal splitting, and per-doctype token allowlist (evaluate_sql_expressions_api whitelist)."
     },
     "nce_events/api/sync_status.py": {
       "exports": [
@@ -726,7 +752,7 @@
         "get_sync_job_status",
         "is_doctype_sync_busy"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "NCE Sync job polling for V2 panel: is_doctype_sync_busy (Redis gate) and get_sync_job_status (RQ status by job_id)."
     },
     "nce_events/api/tags.py": {
       "exports": [
@@ -745,13 +771,13 @@
       ]
     },
     "nce_events/api/tests/__init__.py": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "nce_events API unit test package root."
     },
     "nce_events/api/tests/api/__init__.py": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "API submodule test package marker."
     },
     "nce_events/api/tests/api/form_dialog/__init__.py": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Form Dialog API test package marker."
     },
     "nce_events/api/tests/api/form_dialog/test_button_visibility.py": {
       "exports": [
@@ -759,13 +785,21 @@
         "TestHiddenMapIntegration",
         "TestValidateHideSql"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Unit tests for form_dialog button_visibility SQL hide modes and get_form_dialog_footer_visibility."
     },
     "nce_events/api/tests/api/form_dialog/test_capture.py": {
       "exports": [
         "TestCaptureFormDialog",
         "TestGetFormDialogDefinition",
         "TestListFormDialogsForDoctype"
+      ],
+      "purpose": "Unit tests for form_dialog capture/rebuild and get_form_dialog_definition endpoints."
+    },
+    "nce_events/api/tests/api/form_dialog/test_edit_condition.py": {
+      "exports": [
+        "TestEvaluateEditCondition",
+        "TestResolveEditConditionLabels",
+        "TestValidateEditCondition"
       ],
       "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
@@ -779,40 +813,41 @@
         "TestRelatedListColumnsOptions",
         "TestSyncRelatedPreservesPortalConfig"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Unit tests for form_dialog _helpers façade and _fd_* domain modules (gating, related, capture meta)."
     },
     "nce_events/api/tests/api/form_dialog/test_portal_actions.py": {
       "exports": [
         "TestRunPortalAction"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Unit tests for form_dialog portal_actions run_portal_action allow-list execution."
     },
     "nce_events/api/tests/api/form_dialog/test_portal_fields.py": {
       "exports": [
         "TestNormalizePortalFieldConfig",
         "TestRelatedPortalFieldEditor"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Unit tests for form_dialog portal_fields editor normalization and related portal config."
     },
     "nce_events/api/tests/api/form_dialog/test_related_rows.py": {
       "exports": [
+        "TestAddDeleteFormDialogRelatedRows",
         "TestGetFormDialogRelatedRows",
         "TestSaveFormDialogRelatedRows"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Unit tests for form_dialog related_rows fetch/save and portal column gating."
     },
     "nce_events/api/tests/api/panel_api_pkg/test_discovery.py": {
       "exports": [
         "TestDiscoverViaLinkPaths",
         "TestGetChildDoctypes"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Unit tests for panel_api_pkg child-doctype discovery and multi-hop link paths."
     },
     "nce_events/api/tests/api/test_credentials.py": {
       "exports": [
         "TestGetCredentialsSecretAuth"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Unit tests for credentials.get_credentials secret auth pattern parsing."
     },
     "nce_events/api/tests/api/test_derived_fields.py": {
       "exports": [
@@ -821,7 +856,7 @@
         "TestGetDerivedFieldSpecs",
         "TestSplitSqlLiterals"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Unit tests for derived_fields spec loading and SQL literal splitting."
     },
     "nce_events/api/tests/api/test_events_publish.py": {
       "exports": [
@@ -830,7 +865,7 @@
         "TestUpdateEventsToWebsite",
         "TestUpdateWooCommerceProduct"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Unit tests for events_publish WooCommerce product publish/update payloads."
     },
     "nce_events/api/tests/api/test_sql_eval.py": {
       "exports": [
@@ -839,13 +874,13 @@
         "TestSplitSqlLiterals",
         "TestSubstitutionTokenAllowlist"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Unit tests for sql_eval expression evaluation and substitution token allowlist."
     },
     "nce_events/api/tests/api/test_woocommerce_client.py": {
       "exports": [
         "TestWooCommerceClient"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Unit tests for woocommerce_client REST request helper and base URL normalization."
     },
     "nce_events/api/tests/api/test_wp_tables_mapping.py": {
       "exports": [
@@ -854,7 +889,7 @@
         "TestGetWpTablesDefaultFieldValues",
         "TestGetWpTablesDefaultFieldValuesApi"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Unit tests for wp_tables_mapping column mapping and default field values API."
     },
     "nce_events/api/tests/test_core_functions.py": {
       "exports": [
@@ -864,20 +899,20 @@
         "TestEnsureTabPrefix",
         "TestTranslateWpQuery"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Unit tests for core SQL/table helpers (physical_table_name, tab prefix, WP query translation)."
     },
     "nce_events/api/tests/test_evaluations.py": {
       "exports": [
         "TestGetEventEnrollments",
         "TestPhysicalTableName"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Unit tests for evaluations get_event_enrollments and physical table name resolution."
     },
     "nce_events/api/tests/test_spa_page.py": {
       "exports": [
         "TestSwitchPageTargetSlug"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Unit tests for spa_page resolve_spa_switch and SPA Page Definition slug lookup."
     },
     "nce_events/api/translator.py": {
       "exports": [
@@ -897,7 +932,10 @@
         "get_woocommerce_v3_base_url",
         "wc_request"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Generic WooCommerce REST v3 HTTP client using API Connector credentials (wc_request, get_woocommerce_v3_base_url).",
+      "depends_on": [
+        "nce_events/api/credentials.py"
+      ]
     },
     "nce_events/api/wp_readback_panel.py": {
       "exports": [
@@ -906,7 +944,7 @@
       "whitelist_endpoints": [
         "doctype_has_wp_sql_live_readback"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Panel V2 WP SQL live read-back detection: doctype_has_wp_sql_live_readback returns enabled flag and write_back_refresh_seconds from WP Tables."
     },
     "nce_events/api/wp_tables_mapping.py": {
       "exports": [
@@ -923,7 +961,7 @@
         "get_wp_tables_column_mapping_api",
         "get_wp_tables_default_field_values_api"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "WP Tables column_mapping and derived SQL spec helpers (get_wp_tables_column_mapping_api, get_wp_tables_default_field_values_api)."
     },
     "nce_events/api/wp_user_switch.py": {
       "exports": [
@@ -933,7 +971,7 @@
       "whitelist_endpoints": [
         "get_wp_switch_url"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "WordPress user-switch URL builder for panel row actions (get_wp_switch_url whitelist)."
     },
     "nce_events/hooks.py": {
       "purpose": "App config: metadata, required_apps (nce_sync), global JS/CSS includes, doctype_js overrides, apps screen entry",
@@ -948,20 +986,20 @@
   },
   "utils": {
     "nce_events/utils/__init__.py": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Shared Python utilities package marker for nce_events."
     },
     "nce_events/utils/sql_table.py": {
       "exports": [
         "physical_table_name"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "physical_table_name — map DocType name to Frappe tab-prefixed SQL table name."
     },
     "nce_events/utils/version.py": {
       "exports": [
         "get_frappe_major_version",
         "is_v16_or_later"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Frappe major-version helpers: get_frappe_major_version, is_v16_or_later."
     },
     "nce_events/utils/writeback.py": {
       "exports": [
@@ -980,7 +1018,12 @@
   },
   "doctypes": {
     "nce_events/nce_events/doctype/card_action/": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Child table of Card Definition — footer action button (label, action_script link to Card Script, sort_order).",
+      "key_fields": [
+        "label",
+        "action_script",
+        "sort_order"
+      ]
     },
     "nce_events/nce_events/doctype/card_definition/": {
       "purpose": "Card layout definition — composite display card with tabs, fields, actions, graphics",
@@ -1002,16 +1045,16 @@
       ]
     },
     "nce_events/nce_events/doctype/card_display/": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Child table of Card Definition — display widget row (layout slot for Card Field / Graphic / etc.)."
     },
     "nce_events/nce_events/doctype/card_field/": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Child table of Card Definition — single field display binding (fieldname, label override, format)."
     },
     "nce_events/nce_events/doctype/card_graphic/": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Child table of Card Definition — image/graphic widget (file URL, alt text, sizing)."
     },
     "nce_events/nce_events/doctype/card_pivot_table/": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Child table of Card Definition — pivot-table widget config (rows/cols/values field bindings)."
     },
     "nce_events/nce_events/doctype/card_portal/": {
       "purpose": "Portal page definition — ordered columns of cards",
@@ -1023,22 +1066,30 @@
       ]
     },
     "nce_events/nce_events/doctype/card_portal_column/": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Child table of Card Definition — portal grid column definition for editable child rows."
     },
     "nce_events/nce_events/doctype/card_script/": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Child table of Card Definition — named client script body referenced by Card Action rows.",
+      "key_fields": [
+        "script_name",
+        "script_body"
+      ]
     },
     "nce_events/nce_events/doctype/card_tab/": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Child table of Card Definition — tab container grouping display widgets.",
+      "key_fields": [
+        "tab_label",
+        "sort_order"
+      ]
     },
     "nce_events/nce_events/doctype/card_text_block/": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Child table of Card Definition — static HTML/Markdown text block widget."
     },
     "nce_events/nce_events/doctype/card_video/": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Child table of Card Definition — embedded video widget (URL, poster, autoplay flags)."
     },
     "nce_events/nce_events/doctype/card_web_viewer/": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Child table of Card Definition — iframe/web-viewer widget (URL, height)."
     },
     "nce_events/nce_events/doctype/display_settings/": {
       "purpose": "Global display settings singleton for NCE Events UI",
@@ -1072,21 +1123,37 @@
       "depends_on": []
     },
     "nce_events/nce_events/doctype/form_dialog_inline_child_table/": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Child table of Form Dialog — inline child table tab (child_doctype, portal_field_config, portal_actions).",
+      "key_fields": [
+        "child_doctype",
+        "tab_label",
+        "portal_field_config"
+      ]
     },
     "nce_events/nce_events/doctype/form_dialog_related_doctype/": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Child table of Form Dialog — related-doctype tab (child_doctype, link_field, hop_chain, portal_field_config, portal_actions).",
+      "key_fields": [
+        "child_doctype",
+        "link_field",
+        "tab_label",
+        "hop_chain",
+        "portal_field_config"
+      ]
     },
     "nce_events/nce_events/doctype/form_dialog_script_tool_group/": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Child table of Form Dialog — captured client-script tool tab group (label, sort_order, script bodies)."
     },
     "nce_events/nce_events/doctype/form_dialog_tab_note/": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Child table of Form Dialog — per-tab guidance note shown in V2 dialog tab bar.",
+      "key_fields": [
+        "tab_label",
+        "note_html"
+      ]
     },
     "nce_events/nce_events/doctype/page_panel/": {
-      "purpose": "Core config doctype — one record per root DocType being displayed. Stores column order, filters, gender config, email/SMS fields, computed columns, optional theme palette override (Link NCE Theme), per-surface theme-bg class slots (Colours tab + ThemeSwatchPicker), and optional link to a Form Dialog for V2 row editing. Desk UI: page_panel.js tabs Config / Display / Colours / Query / Dialogs; Colours tab (_render_colours_tab) picks eight chrome slots via frappe.ui.themeSwatchPicker.open({ frm, themeField: 'theme', valueField }).",
+      "purpose": "Core config doctype — one record per root DocType being displayed. Stores column order, filters, gender config, email/SMS fields, computed columns, optional theme palette override (Link NCE Theme), per-surface theme-bg + line/border class slots (Colours tab), and optional link to a Form Dialog for V2 row editing. Desk UI: page_panel.js tabs Config / Display / Colours / Query / Dialogs; Colours tab: Backgrounds (COLOUR_SLOTS + ThemeSwatchPicker) and Lines & borders (BORDER_LINE_SLOTS: width select + border color picker).",
       "sections": [
-        "Colours tab (COLOUR_SLOTS, ThemeSwatchPicker per surface)",
+        "Colours tab (COLOUR_SLOTS backgrounds + BORDER_LINE_SLOTS lines/borders)",
         "Display matrix, Query SQL, Form Dialogs tab"
       ],
       "key_fields": [
@@ -1101,6 +1168,12 @@
         "row_bg_class",
         "row_alt_bg_class",
         "dialog_header_bg_class",
+        "frame_border_class",
+        "frame_border_color_class",
+        "filter_divider_class",
+        "col_header_line_class",
+        "row_divider_class",
+        "col_divider_class",
         "core_filter",
         "order_by",
         "column_order",
@@ -1123,10 +1196,16 @@
       "depends_on": []
     },
     "nce_events/nce_events/doctype/page_panel_default_filter/": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Child table of Page Panel — default filter row applied on panel load (fieldname, operator, value)."
     },
     "nce_events/nce_events/doctype/page_panel_format_rule/": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Child table of Page Panel — per-column conditional cell styling (condition_sql, color, font_weight, last_validated_sql).",
+      "key_fields": [
+        "field_name",
+        "condition_sql",
+        "color",
+        "last_validated_sql"
+      ]
     },
     "nce_events/nce_events/doctype/panel_action/": {
       "purpose": "Configurable side-panel action shown in the V2 SPA. action_type drives behavior (Form Dialog, Client Script, Show DocType, etc.); role gating is enforced via the Panel Action Role child table. Scope (Both / Mirror / Native, default Both) controls which panel page the action appears on — a Mirror-scoped action only shows on /app/panel-page-mirrored, a Native-scoped one only on /app/panel-page-native; Both shows on every page. Backfilled by patch v0_0_2/set_panel_action_scope_default.",
@@ -1152,7 +1231,7 @@
       "depends_on": []
     },
     "nce_events/nce_events/doctype/panel_page_definition/": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Legacy panel page registry DocType — maps page slug/mode to panel configuration before SPA Page Definition."
     },
     "nce_events/nce_events/doctype/settings/": {
       "purpose": "App-level settings singleton",
@@ -1193,34 +1272,34 @@
   },
   "frontend_v2": {
     "nce_events/public/js/evaluations/App.vue": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Evaluations Vue root — event-scoped enrollment rating Kanban shell."
     },
     "nce_events/public/js/evaluations/components/RatingKanbanPlaceholder.vue": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Evaluations placeholder lane UI while enrollment data loads."
     },
     "nce_events/public/js/evaluations/components/RatingKanbanView.vue": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Evaluations rating Kanban board — drag lanes 0–7 for enrollment rows."
     },
     "nce_events/public/js/evaluations/composables/useEnrollments.js": {
       "exports": [
         "useEnrollments"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Evaluations composable — load and group enrollment rows by rating for Kanban."
     },
     "nce_events/public/js/evaluations/main.js": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Evaluations Vite entry — mounts App.vue on Frappe evaluations page."
     },
     "nce_events/public/js/evaluations/stores/shell.js": {
       "exports": [
         "useNceEvalShellStore"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Evaluations Pinia-style shell store (useNceEvalShellStore) — active event, layout chrome."
     },
     "nce_events/public/js/evaluations/utils/frappeCall.js": {
       "exports": [
         "frappeCall"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Evaluations-local Promise wrapper for frappe.call (mirrors panel_page_v2 frappeCall)."
     },
     "nce_events/public/js/panel_page_v2/App.vue": {
       "purpose": "V2 SPA root: composes PanelFloat + PanelTable for the root WP Tables panel and per-doctype drilled panels, hosts TagFinder/CardModal/PanelFormDialog overlays. Passes chromeConfig (eight theme-bg class fields) to PanelFloat/PanelHeaderToolbar; formDialogChromeConfig from formDialogSourcePanelId scopes viewer dialog theme_slug + dialog_header_bg_class. Uses PanelHeaderToolbar for float headers and useSendDialogs for plain-JS email/SMS (out of chrome scope). Reads injected panelMode + panelLabel for Mirror/Native page split.",
@@ -1240,11 +1319,17 @@
         "shared/ai_tools.js"
       ]
     },
+    "nce_events/public/js/panel_page_v2/actions/handlers/cascadePanels.js": {
+      "exports": [
+        "cascadePanels"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+    },
     "nce_events/public/js/panel_page_v2/actions/handlers/showDt.js": {
       "exports": [
         "showDt"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Panel action client handler show_dt — open a DocType list in Desk (new tab)."
     },
     "nce_events/public/js/panel_page_v2/actions/handlers/switchPage.js": {
       "exports": [
@@ -1275,7 +1360,7 @@
         "uses_defineProps": true,
         "uses_defineEmits": true
       },
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Reusable theme-aware color picker input used by FormatRuleEditor and panel chrome."
     },
     "nce_events/public/js/panel_page_v2/components/DisplayWidget.vue": {
       "purpose": "Read-only display widget for card fields",
@@ -1292,37 +1377,40 @@
       "vue": {
         "uses_defineEmits": true
       },
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "FileMaker-style Find panel float — criteria entry and found-set browse mode."
     },
     "nce_events/public/js/panel_page_v2/components/FormatRuleEditor.vue": {
       "vue": {
         "uses_defineEmits": true
       },
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Desk-mounted format-rule SQL editor — validate_format_rule, color/font styling, Apply to Page Panel row.",
+      "depends_on": [
+        "nce_events/public/js/panel_page_v2/utils/frappeCall.js"
+      ]
     },
     "nce_events/public/js/panel_page_v2/components/PanelFindActionBar.vue": {
       "vue": {
         "uses_defineProps": true,
         "uses_defineEmits": true
       },
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Find mode action bar — New Request, Extend Found Set, Constrain, Cancel Find."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFindRow.vue": {
       "vue": {
         "uses_defineProps": true,
         "uses_defineEmits": true
       },
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Single Find criterion row — field picker, operator, value input."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFindToolbar.vue": {
       "vue": {
         "uses_defineProps": true,
         "uses_defineEmits": true
       },
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Find mode toolbar — perform find, clear criteria, switch browse/criteria phases."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFloat.vue": {
-      "purpose": "Floating panel chrome — data-nce-theme + dynamic per-surface theme-bg classes from chromeConfig (frame/header/footer).",
+      "purpose": "Floating panel chrome — data-nce-theme + dynamic theme-bg and frame border classes from chromeConfig (frame/header/footer).",
       "depends_on": [
         "utils/panelChromeClasses.js"
       ]
@@ -1380,7 +1468,7 @@
       "vue": {
         "uses_defineProps": true
       },
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Form dialog inline child-table tab — portal-editable grid for frozen inline children."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue": {
       "vue": {
@@ -1418,7 +1506,7 @@
         "uses_defineProps": true,
         "uses_defineEmits": true
       },
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Help modal explaining FileMaker-style Find searchable fields in Form Dialog."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormLinkField.vue": {
       "vue": {
@@ -1470,10 +1558,10 @@
       "vue": {
         "uses_defineEmits": true
       },
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "SPA page top nav bar — lists active SPA Page Definitions and switch_page targets."
     },
     "nce_events/public/js/panel_page_v2/components/SpaPageSwitcherFloat.vue": {
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Floating SPA page switcher — quick navigation between registered SPA panels."
     },
     "nce_events/public/js/panel_page_v2/components/TabBar.vue": {
       "vue": {
@@ -1555,13 +1643,13 @@
       "exports": [
         "useBackdropPointerDismiss"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Click-outside-to-close for floating panels and form dialog backdrop (pointer vs mousedown guard)."
     },
     "nce_events/public/js/panel_page_v2/composables/useFindPanel.js": {
       "exports": [
         "useFindPanel"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Find panel state machine — criteria, found set, browse mode, panel API filter wiring."
     },
     "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js": {
       "exports": [
@@ -1677,7 +1765,10 @@
       "exports": [
         "useSpaPageNav"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "SPA page navigation — load list_spa_pages_for_ui, resolve switch_page routes.",
+      "depends_on": [
+        "nce_events/public/js/panel_page_v2/utils/frappeCall.js"
+      ]
     },
     "nce_events/public/js/panel_page_v2/composables/useTagFinder.js": {
       "exports": [
@@ -1692,7 +1783,11 @@
         "mergeFreshDocIntoPanel",
         "pollSyncJobsUntilDone"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "WP SQL read-back after Form Dialog save — poll sync job IDs, trigger linked sync, merge fresh doc into panel row.",
+      "depends_on": [
+        "nce_events/public/js/panel_page_v2/utils/frappeCall.js",
+        "nce_events/public/js/panel_page_v2/utils/ppv2Debug.js"
+      ]
     },
     "nce_events/public/js/panel_page_v2/main.js": {
       "purpose": "V2 SPA bundle entry point. Exposes window.NCEPanelPageV2.mount(selector, opts) — creates a fresh Vue app per mount call (so each Frappe Page gets a clean instance) and provides panelMode + panelLabel from opts so App.vue can scope the root WP Tables filter and Panel Actions list. opts.mode is 'Mirror' / 'Native' / null; opts.label is the header text.",
@@ -1704,7 +1799,7 @@
       "exports": [
         "mountFormatRuleEditor"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Vite mount entry for Desk Page Panel format-rule editor (mountFormatRuleEditor on DOM host)."
     },
     "nce_events/public/js/panel_page_v2/nce_cards/CardForm.vue": {
       "vue": {
@@ -1749,13 +1844,13 @@
       "exports": [
         "buildFindColumns"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Build Find-mode column definitions from frozen meta searchable fields."
     },
     "nce_events/public/js/panel_page_v2/utils/findCriterion.js": {
       "exports": [
         "matchFindCriterion"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Match a single Find criterion against a panel row value (operators, case rules)."
     },
     "nce_events/public/js/panel_page_v2/utils/formDialogFindFields.js": {
       "exports": [
@@ -1763,20 +1858,20 @@
         "isFindSearchableRootField",
         "stringifyFindCriterionSeed"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Find-mode searchable field discovery from frozen form meta (isFindSearchableRootField, criterion seeds)."
     },
     "nce_events/public/js/panel_page_v2/utils/formDialogLiveScrape.js": {
       "exports": [
         "readLiveFieldValue"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Read live field values from an open Desk form for dialog pre-fill (readLiveFieldValue)."
     },
     "nce_events/public/js/panel_page_v2/utils/formDialogLoadDebug.js": {
       "exports": [
         "FD_LOAD_DEBUG_STORAGE_KEY",
         "isFdLoadDebugEnabled"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Form Dialog load debug overlay — localStorage nce_fd_load_debug=1 enables step trace rows."
     },
     "nce_events/public/js/panel_page_v2/utils/formDialogPortalColumns.js": {
       "exports": [
@@ -1784,14 +1879,14 @@
         "parsePortalFieldConfigRaw",
         "portalColumnsForGrid"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Parse portal_field_config JSON into editable grid column defs for related/inline tabs."
     },
     "nce_events/public/js/panel_page_v2/utils/formDialogRelatedGoTo.js": {
       "exports": [
         "buildRelatedTabPanelFilter",
         "canGoToRelatedPanel"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Related-tab Go To panel — buildRelatedTabPanelFilter, canGoToRelatedPanel drill-down helper."
     },
     "nce_events/public/js/panel_page_v2/utils/formDialogSnapshot.js": {
       "exports": [
@@ -1814,7 +1909,7 @@
         "stubDocMatchesModel",
         "writeStubDocField"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Sync Frappe Date/Datetime controls with Vue reactive formData (stub doc read/write)."
     },
     "nce_events/public/js/panel_page_v2/utils/frappeFieldExpr.js": {
       "exports": [
@@ -1829,26 +1924,33 @@
       "exports": [
         "measureDeskTitleAnchor"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Measure Desk navbar title anchor for aligning floating panel chrome with Desk layout."
     },
     "nce_events/public/js/panel_page_v2/utils/openDeskDoctypeList.js": {
       "exports": [
         "openDeskDoctypeListInNewTab"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Open a DocType list view in Desk (new tab) from panel actions and form dialog links."
     },
     "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js": {
       "exports": [
+        "PANEL_BORDER_DEFAULTS",
         "PANEL_CHROME_DEFAULTS",
         "panelChromeBg",
+        "panelChromeBorder",
+        "panelChromeBorderColorCss",
+        "panelChromeBorderWidthVar",
         "panelChromeExplicitFgClass",
         "panelChromeFgTextClass",
         "panelChromeFgType",
+        "panelChromeFilterDividerStyleVars",
+        "panelChromeFrameBorderClasses",
+        "panelChromeTableBorderStyleVars",
         "themeBgToFgMonoClass",
         "themeBgToFgTextClass",
         "themeBgToFgTonal"
       ],
-      "purpose": "PANEL_CHROME_DEFAULTS, panelChromeBg(config, field), themeBgToFgTonal(bgClass) — resolves Page Panel chrome slots for V2 runtime.",
+      "purpose": "PANEL_CHROME_DEFAULTS + PANEL_BORDER_DEFAULTS; panelChromeBg/Border, border width/color CSS var helpers, frameBorderClasses, table/filter divider style vars for V2 runtime.",
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/utils/panelTableColWidths.js": {
@@ -1863,13 +1965,13 @@
         "panelRowVal",
         "preparePanelTableLayout"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Panel table column width persistence and layout prep (preparePanelTableLayout, panelRowVal)."
     },
     "nce_events/public/js/panel_page_v2/utils/parseClientHandlerSpec.js": {
       "exports": [
         "parseClientHandlerSpec"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Parse panel action client_handler spec strings (e.g. show_dt(error-log)) into key + args."
     },
     "nce_events/public/js/panel_page_v2/utils/parseLayout.js": {
       "exports": [
@@ -1909,27 +2011,30 @@
       "exports": [
         "createSubmitPerfTrace"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Form Dialog submit performance trace — localStorage nce_fd_submit_trace=1 logs timing lines."
     },
     "nce_events/public/js/panel_page_v2/utils/syncGateClient.js": {
       "exports": [
         "assertDoctypeNotSyncBusy",
         "isDoctypeSyncBusy"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Client wrapper for nce_sync per-DocType sync busy gate (isDoctypeSyncBusy, assertDoctypeNotSyncBusy).",
+      "depends_on": [
+        "nce_events/public/js/panel_page_v2/utils/frappeCall.js"
+      ]
     },
     "nce_events/public/js/panel_page_v2/utils/wooPublishDocNormalize.js": {
       "exports": [
         "normalizeDocForWooEventsPublish"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Normalize Events doc fields before WooCommerce publish hook (normalizeDocForWooEventsPublish)."
     },
     "nce_events/public/js/panel_page_v2/utils/wpUserSwitch.js": {
       "exports": [
         "familyIdFromRow",
         "openWpUserSwitch"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "WordPress user-switch flow from panel row — familyIdFromRow, openWpUserSwitch."
     }
   },
   "js_dialogs": {
