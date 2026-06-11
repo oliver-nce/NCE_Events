@@ -50,6 +50,7 @@
 			<div
 				v-else-if="(relatedState[ti]?.columns || []).length"
 				class="ppv2-fd-related-table-wrap theme-border theme-rounded-sm"
+				:class="{ 'ppv2-fd-related-table-wrap--locked': editLocked }"
 			>
 				<table class="ppv2-fd-related-table">
 					<thead>
@@ -69,8 +70,9 @@
 								</span>
 							</th>
 							<th
-								v-if="canMutateRows"
+								v-if="showRowMutateTools"
 								class="ppv2-fd-related-th ppv2-fd-related-th-del"
+								:class="{ 'ppv2-fd-related-tools-muted': editLocked }"
 								aria-label="Remove row"
 							/>
 							<th
@@ -92,15 +94,15 @@
 								class="ppv2-fd-related-td"
 								:class="{
 									'ppv2-fd-related-td--editable': isRelatedCellEditable(col),
+									'ppv2-fd-related-td--locked': isRelatedColEditable(col) && editLocked,
 									'ppv2-fd-related-td--dirty': isRelatedCellDirty(ti, rw, col),
 									'theme-text-danger': isRelatedCellDirty(ti, rw, col),
 								}"
 							>
 								<select
-									v-if="isSelectColumn(col)"
+									v-if="isSelectColumn(col) && isRelatedCellEditable(col)"
 									class="ppv2-fd-related-select theme-border theme-rounded-sm"
 									:value="String(relatedCellRaw(rw, col) ?? '')"
-									:disabled="!isRelatedCellEditable(col)"
 									:aria-label="col.label || col.fieldname"
 									@change="onRelatedSelectChange(rw, col, $event)"
 								>
@@ -114,10 +116,9 @@
 									</option>
 								</select>
 								<input
-									v-else-if="col.fieldtype === 'Check'"
+									v-else-if="col.fieldtype === 'Check' && isRelatedCellEditable(col)"
 									type="checkbox"
 									class="ppv2-fd-related-check"
-									:disabled="!isRelatedCellEditable(col)"
 									:checked="relatedCellTruthy(rw, col)"
 									@change="onRelatedCheckChange(rw, col, $event)"
 								/>
@@ -170,14 +171,18 @@
 									@input="onRelatedTextInput(rw, col, $event)"
 								/>
 								<span v-else class="ppv2-fd-related-cell-text">{{
-									formatRelatedCell(rw, col)
+									formatRelatedCellDisplay(rw, col)
 								}}</span>
 							</td>
-							<td v-if="canMutateRows" class="ppv2-fd-related-td ppv2-fd-related-td-del">
+							<td
+								v-if="showRowMutateTools"
+								class="ppv2-fd-related-td ppv2-fd-related-td-del"
+								:class="{ 'ppv2-fd-related-tools-muted': editLocked }"
+							>
 								<button
 									type="button"
 									class="ppv2-fd-related-del-btn theme-text-danger"
-									:disabled="rowMutating"
+									:disabled="!canMutateRows || rowMutating"
 									title="Delete row"
 									@click="onDeleteRelatedRow(rw)"
 								>
@@ -265,7 +270,7 @@
 								/>
 								<span v-else class="ppv2-fd-related-cell-text theme-text-muted">—</span>
 							</td>
-							<td v-if="canMutateRows" class="ppv2-fd-related-td ppv2-fd-related-td-del">
+							<td v-if="showRowMutateTools" class="ppv2-fd-related-td ppv2-fd-related-td-del">
 								<button
 									type="button"
 									class="btn btn-primary btn-xs"
@@ -293,11 +298,15 @@
 				<p v-if="!(relatedState[ti].rows || []).length && !addDraftActive" class="ppv2-fd-related-empty theme-text-muted">
 					No related records.
 				</p>
-				<div v-if="canMutateRows && !addDraftActive" class="ppv2-fd-related-add-wrap">
+				<div
+					v-if="showRowMutateTools && !addDraftActive"
+					class="ppv2-fd-related-add-wrap"
+					:class="{ 'ppv2-fd-related-tools-muted': editLocked }"
+				>
 					<button
 						type="button"
 						class="btn btn-default btn-xs ppv2-fd-related-add-btn"
-						:disabled="rowMutating"
+						:disabled="!canMutateRows || rowMutating"
 						@click="startAddRelatedRow"
 					>
 						Add row
@@ -459,13 +468,16 @@ const addDraftActive = ref(false);
 const addDraftValues = reactive({});
 const rowMutating = ref(false);
 
-const canMutateRows = computed(() => {
+const editLocked = computed(() => relatedState[props.ti]?.edit_allowed === false);
+
+const showRowMutateTools = computed(() => {
 	if (!props.tab?._related) {
 		return false;
 	}
-	const st = relatedState[props.ti];
-	return !!(st?.allow_add_remove && st?.edit_allowed);
+	return !!relatedState[props.ti]?.allow_add_remove;
 });
+
+const canMutateRows = computed(() => showRowMutateTools.value && !editLocked.value);
 
 function isRelatedCellEditable(col) {
 	if (!isRelatedColEditable(col)) {
@@ -473,6 +485,13 @@ function isRelatedCellEditable(col) {
 	}
 	const st = relatedState[props.ti];
 	return st?.edit_allowed !== false;
+}
+
+function formatRelatedCellDisplay(rw, col) {
+	if (col?.fieldtype === "Check") {
+		return relatedCellTruthy(rw, col) ? "Yes" : "No";
+	}
+	return formatRelatedCell(rw, col);
 }
 
 const goToEnabled = computed(() =>
@@ -827,6 +846,9 @@ function onDraftDatetimeInput(col, ev) {
 }
 
 function startAddRelatedRow() {
+	if (!canMutateRows.value) {
+		return;
+	}
 	const st = relatedState[props.ti];
 	if (!st?.columns?.length) {
 		return;
@@ -895,6 +917,9 @@ async function confirmAddRelatedRow() {
 }
 
 async function onDeleteRelatedRow(rw) {
+	if (!canMutateRows.value) {
+		return;
+	}
 	const name = rw?.name;
 	if (!name) {
 		return;
@@ -1222,9 +1247,32 @@ defineExpose({
 	white-space: nowrap;
 	min-width: 6rem;
 }
-.ppv2-fd-related-action-btn {
-	margin-right: 4px;
-	margin-bottom: 2px;
+.ppv2-fd-related-table-wrap--locked {
+	background: var(--nce-color-secondary-50, #f4f8fb);
+}
+.ppv2-fd-related-table-wrap--locked .ppv2-fd-related-th:not(.ppv2-fd-related-th-actions) {
+	opacity: 0.92;
+}
+.ppv2-fd-related-td--locked {
+	background: var(--nce-color-secondary-50, #f4f8fb);
+}
+.ppv2-fd-related-td--locked .ppv2-fd-related-cell-text {
+	color: var(--nce-color-text-muted, #8d99a6);
+	font-weight: var(--font-weight-normal, 400);
+}
+.ppv2-fd-related-table-wrap--locked .ppv2-fd-related-td:not(.ppv2-fd-related-td--locked):not(.ppv2-fd-related-td-actions):not(.ppv2-fd-related-td-del) {
+	color: var(--nce-color-text-muted, #8d99a6);
+}
+.ppv2-fd-related-table-wrap--locked .ppv2-fd-related-cell-text {
+	color: var(--nce-color-text-muted, #8d99a6);
+	font-weight: var(--font-weight-normal, 400);
+}
+.ppv2-fd-related-tools-muted {
+	opacity: 0.45;
+}
+.ppv2-fd-related-tools-muted .ppv2-fd-related-del-btn,
+.ppv2-fd-related-tools-muted .ppv2-fd-related-add-btn {
+	cursor: not-allowed;
 }
 .ppv2-fd-related-th-del,
 .ppv2-fd-related-td-del {
@@ -1249,6 +1297,10 @@ defineExpose({
 }
 .ppv2-fd-related-add-draft .btn-xs {
 	margin-right: 4px;
+}
+.ppv2-fd-related-action-btn {
+	margin-right: 4px;
+	margin-bottom: 2px;
 }
 .ppv2-fd-action-modal-backdrop {
 	position: fixed;
