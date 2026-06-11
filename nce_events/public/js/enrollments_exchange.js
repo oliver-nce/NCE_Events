@@ -173,7 +173,7 @@ function _show_refund_success(frm, data) {
 
 	const summary = data.summary ? `<p style="margin-bottom:10px">${e(data.summary)}</p>` : "";
 	const footer = `<p class="text-muted" style="margin-top:12px">${__(
-		"This enrollment will disappear from the panel within ~10 minutes.",
+		"The dialog will close and this enrollment has been removed from the panel and Frappe.",
 	)}</p>`;
 
 	frappe.msgprint({

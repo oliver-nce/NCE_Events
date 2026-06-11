@@ -113,10 +113,9 @@ export function buildRefundOutcomeHtml(result) {
 	const summary = result?.summary
 		? `<p style="margin-bottom:10px">${escapeHtml(result.summary)}</p>`
 		: "";
-	const footer =
-		o.status === "refunded"
-			? `<p class="theme-text-muted" style="margin-top:12px">${__("This enrollment will disappear from the panel within ~10 minutes.")}</p>`
-			: "";
+	const footer = `<p class="theme-text-muted" style="margin-top:12px">${__(
+		"The dialog will close and this enrollment has been removed from the panel and Frappe.",
+	)}</p>`;
 
 	return `${summary}<table style="width:100%">${rows}</table>${feeSection}${footer}`;
 }

@@ -93,8 +93,7 @@
 				:buttons="form.buttons.value"
 				:definition-name="definitionName"
 				:doc-name="docName"
-				:root-doctype="doctype"
-				:enrollment-action-busy="enrollmentActionBusy"
+				:custom-action-busy="customActionBusy"
 				:submit-hide-if="footerSubmitHideIf"
 				:submit-hide-if-sql="footerSubmitHideSql"
 				:submit-label="footerSubmitLabel"
@@ -109,7 +108,6 @@
 				@submit-close="onSubmitClose"
 				@submit-refresh="onSubmitRefresh"
 				@custom-button="onPlaceholderButton"
-				@enrollment-cancel="onEnrollmentCancel"
 				@find-perform="performFindLayout"
 				@find-perform-constrain="performConstrainFindLayout"
 				@find-cancel="emit('find-cancel-criteria')"
@@ -326,7 +324,7 @@ const goToPanelBusy = ref(false);
 const internalReloadTick = ref(0);
 /** True while polling WP sync jobs after save — shows overlay, disables footer actions. */
 const syncWaiting = ref(false);
-const enrollmentActionBusy = ref(false);
+const customActionBusy = ref(false);
 
 const syncWaitingText =
 	typeof window.__ === "function" ? window.__("Updating") + "…" : "Updating…";
@@ -1069,8 +1067,8 @@ async function onSubmit(opts = {}) {
 	}
 }
 
-async function onEnrollmentCancel() {
-	if (findCriteriaActive.value || enrollmentActionBusy.value) {
+async function runEnrollmentProductRefund() {
+	if (findCriteriaActive.value || customActionBusy.value) {
 		return;
 	}
 	if (props.doctype !== "Enrollments") {
@@ -1092,7 +1090,7 @@ async function onEnrollmentCancel() {
 	} catch {
 		return;
 	}
-	enrollmentActionBusy.value = true;
+	customActionBusy.value = true;
 	const startedAt = typeof performance !== "undefined" ? performance.now() : Date.now();
 	try {
 		const result = await runProductRefund(enrollmentName, cancellationFee);
@@ -1105,15 +1103,21 @@ async function onEnrollmentCancel() {
 			frappe.msgprint({ title: __("Error"), message: msg, indicator: "red" });
 		}
 	} finally {
-		enrollmentActionBusy.value = false;
+		customActionBusy.value = false;
 	}
 }
 
 async function onPlaceholderButton(btn) {
-	if (findCriteriaActive.value) return;
+	if (findCriteriaActive.value || customActionBusy.value) return;
 	const script = String(btn?.button_script || "").trim();
+	const scriptToken = (script.split(/\s+/)[0] || "").trim();
 
-	if (props.doctype === "Events" && script === "update_events_to_website") {
+	if (props.doctype === "Enrollments" && scriptToken === "execute_product_refund") {
+		await runEnrollmentProductRefund();
+		return;
+	}
+
+	if (props.doctype === "Events" && scriptToken === "update_events_to_website") {
 		form.validationError.value = null;
 		const errors = form.validateForWooPublish();
 		if (errors.length) {

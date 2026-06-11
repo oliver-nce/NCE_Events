@@ -37,7 +37,7 @@
       "options": "SQL"
     },
     {
-      "description": "Copied script body. Not executed yet — placeholder for future phase.",
+      "description": "Script token for the V2 panel handler (e.g. update_events_to_website, execute_product_refund). Not arbitrary JS.",
       "fieldname": "button_script",
       "fieldtype": "Code",
       "label": "Button Script",
