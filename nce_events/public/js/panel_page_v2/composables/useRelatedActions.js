@@ -1,5 +1,8 @@
 import { reactive, ref } from "vue";
 import { frappeCall } from "../utils/frappeCall.js";
+import {
+	showRefundActionResult,
+} from "../utils/enrollmentWpActions.js";
 
 /**
  * Portal-action modal and row-action execution for a related-doctype tab.
@@ -111,6 +114,15 @@ export function useRelatedActions(props, { fetchRelatedForTab }) {
 		window._nce_close_form_dialog?.();
 	}
 
+	function handleRefundActionResult(result, enrollmentId, elapsedMs) {
+		showRefundActionResult(result, enrollmentId, { elapsedMs });
+	}
+
+	function isRefundOutcome(result) {
+		const status = result?.outcome?.status;
+		return status === "refunded" || (result?.outcome?.event_name && !result?.outcome?.new_event_name);
+	}
+
 	async function runPortalAction(act, rw, promptValues) {
 		const defn = String(props.definitionName || "").trim();
 		const dt = String(props.rootDoctype || "").trim();
@@ -140,6 +152,13 @@ export function useRelatedActions(props, { fetchRelatedForTab }) {
 				actionModal.error = `${pa.label || pa.arg} is required.`;
 				return;
 			}
+			if (pa.arg === "cancellation_fee") {
+				const raw = String(actionModal.values[pa.arg] ?? "").trim();
+				if (raw && parseFloat(raw) < 0) {
+					actionModal.error = "Cancellation fee cannot be negative.";
+					return;
+				}
+			}
 		}
 		actionModal.error = null;
 		actionModal.running = true;
@@ -153,7 +172,11 @@ export function useRelatedActions(props, { fetchRelatedForTab }) {
 				(typeof performance !== "undefined" ? performance.now() : Date.now()) - startedAt;
 			closeActionModal();
 			if (r?.result?.outcome) {
-				handleExchangeActionResult(r.result, enrollmentId, elapsedMs);
+				if (isRefundOutcome(r.result)) {
+					handleRefundActionResult(r.result, enrollmentId, elapsedMs);
+				} else {
+					handleExchangeActionResult(r.result, enrollmentId, elapsedMs);
+				}
 			} else {
 				if (typeof frappe !== "undefined" && frappe.show_alert) {
 					frappe.show_alert({
@@ -201,7 +224,11 @@ export function useRelatedActions(props, { fetchRelatedForTab }) {
 			const elapsedMs =
 				(typeof performance !== "undefined" ? performance.now() : Date.now()) - startedAt;
 			if (r?.result?.outcome) {
-				handleExchangeActionResult(r.result, enrollmentId, elapsedMs);
+				if (isRefundOutcome(r.result)) {
+					handleRefundActionResult(r.result, enrollmentId, elapsedMs);
+				} else {
+					handleExchangeActionResult(r.result, enrollmentId, elapsedMs);
+				}
 			} else {
 				if (typeof frappe !== "undefined" && frappe.show_alert) {
 					frappe.show_alert({

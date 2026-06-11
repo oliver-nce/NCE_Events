@@ -13,19 +13,23 @@ from nce_events.api.credentials import get_credentials
 EXCHANGE_CONNECTOR = "WordPress REST"
 
 _EXCHANGE_PATH = "/nce-exchange/v1/exchange"
+_REFUND_PATH = "/nce-exchange/v1/refund-item"
 _LOG_BODY_LIMIT = 8000
 _SYNC_WAIT_TIMEOUT_SEC = 120
 _SYNC_POLL_INTERVAL_SEC = 2
 
 
-def _build_exchange_url(base_url: str) -> str:
-    """Build exchange REST URL; accept site root or base_url already ending in /wp-json."""
+def _build_wp_api_url(base_url: str, path: str) -> str:
+    """Build a WordPress REST URL under ``/wp-json``."""
     raw = (base_url or "").strip().rstrip("/")
     if not raw:
         return ""
+    segment = (path or "").strip()
+    if not segment.startswith("/"):
+        segment = f"/{segment}"
     if raw.endswith("/wp-json"):
-        return f"{raw}{_EXCHANGE_PATH}"
-    return f"{raw}/wp-json{_EXCHANGE_PATH}"
+        return f"{raw}{segment}"
+    return f"{raw}/wp-json{segment}"
 
 
 def _exchange_error_snippet(resp: requests.Response) -> str:
@@ -48,12 +52,14 @@ def _log_exchange_http_error(
     url: str,
     payload: dict[str, Any],
     resp: requests.Response,
+    *,
+    title: str = "WordPress exchange HTTP error",
 ) -> None:
     body = resp.text or ""
     safe_payload = dict(payload)
     try:
         frappe.log_error(
-            title="WordPress exchange HTTP error",
+            title=title,
             message=(
                 f"status={resp.status_code}\n"
                 f"url={url}\n"
@@ -64,6 +70,22 @@ def _log_exchange_http_error(
         )
     except Exception:
         pass
+
+
+def _parse_cancellation_fee(raw: object) -> float:
+    """Return a non-negative fee amount; empty/None → 0."""
+    if raw is None:
+        return 0.0
+    s = str(raw).strip()
+    if not s:
+        return 0.0
+    try:
+        fee = float(s)
+    except (TypeError, ValueError) as e:
+        frappe.throw(_("Cancellation fee must be a number.")) from e
+    if fee < 0:
+        frappe.throw(_("Cancellation fee cannot be negative."))
+    return fee
 
 
 def _wait_for_enrollments_sync_then_verify_exists(enrollment_name: str) -> None:
@@ -83,43 +105,16 @@ def _wait_for_enrollments_sync_then_verify_exists(enrollment_name: str) -> None:
     if not frappe.db.exists("Enrollments", enrollment_name):
         frappe.throw(
             _(
-                "This enrollment no longer exists — it was removed by a sync. No exchange was performed."
+                "This enrollment no longer exists — it was removed by a sync. No action was performed."
             )
         )
 
 
-@frappe.whitelist()
-def execute_product_exchange(enrollment_name: str, new_product_id: int | str) -> dict[str, Any]:
-    """Call the WordPress NCE Exchange endpoint to switch a player to a new event.
-
-    Reads order_item_id from the Enrollments doc, fetches Basic Auth credentials
-    from the :data:`EXCHANGE_CONNECTOR` API Connector, and POSTs form fields to:
-        {base_url}/wp-json/nce-exchange/v1/exchange
-
-    Auth is WordPress Application Password (Basic Auth). Payload is
-    ``application/x-www-form-urlencoded`` (same as curl ``-d``), not JSON.
-
-    Returns the full parsed JSON response from WordPress on success.
-    Raises frappe.ValidationError with a clear message on any failure.
-    """
-    # --- 1. Load the Enrollment record ---
-    if not frappe.db.exists("Enrollments", enrollment_name):
-        frappe.throw(_("Enrollment {0} not found.").format(enrollment_name))
-
-    doc = frappe.get_doc("Enrollments", enrollment_name)
-
-    # The Frappe primary key (name) is the WooCommerce order_item_id
-    order_item_id = doc.name
-
-    new_product_id = int(new_product_id)
-
-    # --- 2. Fetch credentials ---
+def _load_exchange_credentials() -> tuple[str, str, str]:
     creds = get_credentials(EXCHANGE_CONNECTOR)
-
     username = creds.get("username") or ""
     password = creds.get("password") or ""
     base_url = (creds.get("base_url") or "").rstrip("/")
-
     if not username or not password:
         frappe.throw(
             _("{0} API Connector is missing username or password.").format(EXCHANGE_CONNECTOR)
@@ -128,35 +123,46 @@ def execute_product_exchange(enrollment_name: str, new_product_id: int | str) ->
         frappe.throw(
             _("{0} API Connector has no base_url configured.").format(EXCHANGE_CONNECTOR)
         )
+    return username, password, base_url
 
-    # --- 3. POST to WordPress endpoint (form body + Basic Auth, matches curl -u / -d) ---
-    url = _build_exchange_url(base_url)
+
+def _post_wp_enrollment_action(
+    *,
+    path: str,
+    enrollment_name: str,
+    payload: dict[str, Any],
+    action_noun: str,
+    log_title: str,
+) -> dict[str, Any]:
+    """POST form fields to a WordPress enrollment endpoint; delete local row on success."""
+    if not frappe.db.exists("Enrollments", enrollment_name):
+        frappe.throw(_("Enrollment {0} not found.").format(enrollment_name))
+
+    order_item_id = enrollment_name
+    username, password, base_url = _load_exchange_credentials()
+    url = _build_wp_api_url(base_url, path)
     if not url:
         frappe.throw(
             _("{0} API Connector has no base_url configured.").format(EXCHANGE_CONNECTOR)
         )
-    payload = {
-        "order_item_id": int(order_item_id),
-        "new_product_id": new_product_id,
-    }
 
+    body = {"order_item_id": int(order_item_id), **payload}
     _wait_for_enrollments_sync_then_verify_exists(enrollment_name)
 
     try:
         resp = requests.post(
             url,
-            data=payload,
+            data=body,
             auth=(username, password),
             timeout=30,
         )
     except requests.exceptions.ConnectionError as e:
         frappe.throw(_("Could not connect to WordPress: {0}").format(str(e)))
     except requests.exceptions.Timeout:
-        frappe.throw(_("WordPress exchange endpoint timed out after 30 seconds."))
+        frappe.throw(_("WordPress {0} endpoint timed out after 30 seconds.").format(action_noun))
     except requests.exceptions.RequestException as e:
         frappe.throw(_("HTTP error calling WordPress: {0}").format(str(e)))
 
-    # --- 5. Handle response ---
     if resp.status_code == 401:
         frappe.throw(
             _("WordPress returned 401 Unauthorised. Check the {0} API Connector credentials.").format(
@@ -165,9 +171,10 @@ def execute_product_exchange(enrollment_name: str, new_product_id: int | str) ->
         )
 
     if resp.status_code != 200:
-        _log_exchange_http_error(url, payload, resp)
+        _log_exchange_http_error(url, body, resp, title=log_title)
         frappe.throw(
-            _("WordPress exchange endpoint returned {0}: {1}").format(
+            _("WordPress {0} endpoint returned {1}: {2}").format(
+                action_noun,
                 resp.status_code,
                 _exchange_error_snippet(resp),
             )
@@ -179,9 +186,76 @@ def execute_product_exchange(enrollment_name: str, new_product_id: int | str) ->
         frappe.throw(_("WordPress returned a non-JSON response: {0}").format(resp.text[:500]))
 
     if not data.get("success"):
-        msg = data.get("error") or "Unknown error from WordPress."
-        frappe.throw(_("Exchange failed: {0}").format(str(msg)))
+        msg = data.get("error") or f"Unknown error from WordPress {action_noun}."
+        frappe.throw(_("{0} failed: {1}").format(action_noun.capitalize(), str(msg)))
 
     frappe.delete_doc("Enrollments", enrollment_name, force=True)
-
     return data
+
+
+@frappe.whitelist()
+def execute_product_exchange(
+    enrollment_name: str,
+    new_product_id: int | str,
+    cancellation_fee: float | str | None = None,
+) -> dict[str, Any]:
+    """Call the WordPress NCE Exchange endpoint to switch a player to a new event.
+
+    Reads order_item_id from the Enrollments doc, fetches Basic Auth credentials
+    from the :data:`EXCHANGE_CONNECTOR` API Connector, and POSTs form fields to:
+        {base_url}/wp-json/nce-exchange/v1/exchange
+
+    Optional ``cancellation_fee`` (default 0) is added to the replacement order on
+    the WordPress side when greater than zero.
+
+    Auth is WordPress Application Password (Basic Auth). Payload is
+    ``application/x-www-form-urlencoded`` (same as curl ``-d``), not JSON.
+
+    Returns the full parsed JSON response from WordPress on success.
+    Raises frappe.ValidationError with a clear message on any failure.
+    """
+    # --- 1. Load the Enrollment record ---
+    if not frappe.db.exists("Enrollments", enrollment_name):
+        frappe.throw(_("Enrollment {0} not found.").format(enrollment_name))
+
+    new_product_id = int(new_product_id)
+    fee = _parse_cancellation_fee(cancellation_fee)
+
+    payload: dict[str, Any] = {"new_product_id": new_product_id}
+    if fee > 0:
+        payload["cancellation_fee"] = fee
+
+    return _post_wp_enrollment_action(
+        path=_EXCHANGE_PATH,
+        enrollment_name=enrollment_name,
+        payload=payload,
+        action_noun="exchange",
+        log_title="WordPress exchange HTTP error",
+    )
+
+
+@frappe.whitelist()
+def execute_product_refund(
+    enrollment_name: str,
+    cancellation_fee: float | str | None = None,
+) -> dict[str, Any]:
+    """Cancel an enrollment via WordPress ``/nce-exchange/v1/refund-item``.
+
+    Issues store credit and optionally charges a cancellation fee (separate fee order
+    when ``cancellation_fee`` > 0). Deletes the local Enrollments mirror on success.
+    """
+    if not frappe.db.exists("Enrollments", enrollment_name):
+        frappe.throw(_("Enrollment {0} not found.").format(enrollment_name))
+
+    fee = _parse_cancellation_fee(cancellation_fee)
+    payload: dict[str, Any] = {}
+    if fee > 0:
+        payload["cancellation_fee"] = fee
+
+    return _post_wp_enrollment_action(
+        path=_REFUND_PATH,
+        enrollment_name=enrollment_name,
+        payload=payload,
+        action_noun="refund",
+        log_title="WordPress refund HTTP error",
+    )

@@ -56,6 +56,15 @@
 
 			<div class="ppv2-fd-custom-buttons">
 				<button
+					v-if="showEnrollmentCancel"
+					type="button"
+					class="ppv2-fd-tab-btn ppv2-fd-enrollment-cancel-btn theme-bg-primary-100 theme-border theme-text-danger"
+					:disabled="browseActionsLocked || submitBusy || enrollmentActionBusy"
+					@click="$emit('enrollment-cancel')"
+				>
+					{{ __("Cancel Registration") }}
+				</button>
+				<button
 					v-for="(btn, bi) in visibleButtons"
 					:key="'fd-btn-' + bi + '-' + (btn.label || bi) + '-' + (btn.name || '')"
 					type="button"
@@ -88,7 +97,7 @@
 					v-if="submitVisible"
 					type="button"
 					class="ppv2-fd-tab-btn theme-bg-primary-100 theme-border"
-					:disabled="submitBusy || browseActionsLocked"
+					:disabled="submitBusy || browseActionsLocked || !isDirty"
 					@click="$emit('submit-close', { shift: $event.shiftKey })"
 				>
 					{{ submitCloseText }}
@@ -134,6 +143,9 @@ const props = defineProps({
 	findChromePhase: { type: String, default: "none" },
 	/** True when a found set is active — enables Constrain Found Set in criteria phase. */
 	findMatchActive: { type: Boolean, default: false },
+	/** Enrollments Form Dialog — show straight-cancellation footer button. */
+	rootDoctype: { type: String, default: "" },
+	enrollmentActionBusy: { type: Boolean, default: false },
 });
 
 defineEmits([
@@ -142,6 +154,7 @@ defineEmits([
 	"submit-close",
 	"submit-refresh",
 	"custom-button",
+	"enrollment-cancel",
 	"find-perform",
 	"find-perform-constrain",
 	"find-cancel",
@@ -155,6 +168,16 @@ function __(s) {
 }
 
 const submitBusy = computed(() => props.saving || props.syncWaiting);
+
+const showEnrollmentCancel = computed(() => {
+	if (props.findChromePhase !== "none") {
+		return false;
+	}
+	if (String(props.rootDoctype || "").trim() !== "Enrollments") {
+		return false;
+	}
+	return !!String(props.docName || "").trim();
+});
 
 const submitVerb = computed(() => {
 	const sl = String(props.submitLabel || "").trim();

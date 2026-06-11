@@ -334,7 +334,21 @@
 						{{ pa.label || pa.arg
 						}}<span v-if="pa.reqd" class="ppv2-fd-reqd theme-text-danger" aria-hidden="true"> *</span>
 					</label>
+					<p v-if="pa.description" class="ppv2-fd-action-modal-desc theme-text-muted theme-text-sm">
+						{{ pa.description }}
+					</p>
 					<input
+						v-if="isActionPromptNumeric(pa)"
+						type="number"
+						min="0"
+						step="any"
+						class="ppv2-fd-related-inp theme-border theme-rounded-sm"
+						:placeholder="pa.reqd ? '' : '0'"
+						:value="String(actionModal.values[pa.arg] ?? '')"
+						@input="actionModal.values[pa.arg] = $event.target.value"
+					/>
+					<input
+						v-else
 						type="text"
 						class="ppv2-fd-related-inp theme-border theme-rounded-sm"
 						:value="String(actionModal.values[pa.arg] ?? '')"
@@ -352,7 +366,7 @@
 						:disabled="actionModal.running"
 						@click="submitActionModal"
 					>
-						{{ actionModal.running ? "Running…" : "Run" }}
+						{{ actionModal.running ? "Running…" : "Confirm Switch" }}
 					</button>
 				</div>
 			</div>
@@ -473,6 +487,13 @@ const STAGED_NEW_ROW_PREFIX = "__nce_new_";
 function isStagedNewRow(rw) {
 	const n = String(rw?.name ?? "").trim();
 	return n.startsWith(STAGED_NEW_ROW_PREFIX);
+}
+
+const NUMERIC_ACTION_PROMPT_TYPES = new Set(["Int", "Float", "Currency"]);
+
+function isActionPromptNumeric(pa) {
+	const ft = String(pa?.fieldtype || "").trim();
+	return NUMERIC_ACTION_PROMPT_TYPES.has(ft);
 }
 
 const editLocked = computed(() => relatedState[props.ti]?.edit_allowed === false);

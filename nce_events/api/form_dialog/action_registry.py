@@ -37,6 +37,43 @@ PORTAL_ACTION_METHODS: dict[str, dict[str, Any]] = {
 				"default_source": "prompt",
 				"reqd": 1,
 			},
+			{
+				"arg": "cancellation_fee",
+				"label": "Cancellation Fee",
+				"fieldtype": "Currency",
+				"default_source": "prompt",
+				"reqd": 0,
+				"description": (
+					"Optional fee added to the replacement order. Leave blank or 0 for no fee."
+				),
+			},
+		],
+	},
+	"execute_product_refund": {
+		"key": "execute_product_refund",
+		"label": "Cancel Registration (WooCommerce Refund)",
+		"dotted_path": "nce_events.api.exchange.execute_product_refund",
+		"applies_to_doctypes": ["Enrollments"],
+		"applies_to_root_doctypes": ["Enrollments"],
+		"args": [
+			{
+				"arg": "enrollment_name",
+				"label": "Enrollment (Order Item)",
+				"fieldtype": "Data",
+				"default_source": "root",
+				"default_field": "name",
+				"reqd": 1,
+			},
+			{
+				"arg": "cancellation_fee",
+				"label": "Cancellation Fee",
+				"fieldtype": "Currency",
+				"default_source": "prompt",
+				"reqd": 0,
+				"description": (
+					"Optional fee charged on a separate fee order. Leave blank or 0 for no fee."
+				),
+			},
 		],
 	},
 }

@@ -61,15 +61,17 @@ def get_portal_actions_for_row(row: Any) -> list[dict[str, Any]]:
 					param = param_by_arg.get(arg_name) or {}
 					source = cstr(param.get("source") or arg_spec.get("default_source") or "prompt").strip()
 					if source == "prompt":
-						prompt_args.append(
-							{
-								"arg": arg_name,
-								"label": cstr(arg_spec.get("label") or "").strip() or arg_name,
-								"fieldtype": cstr(arg_spec.get("fieldtype") or "Data").strip() or "Data",
-								"options": cstr(arg_spec.get("options") or "").strip(),
-								"reqd": 1 if cint(arg_spec.get("reqd")) else 0,
-							}
-						)
+						prompt_entry: dict[str, Any] = {
+							"arg": arg_name,
+							"label": cstr(arg_spec.get("label") or "").strip() or arg_name,
+							"fieldtype": cstr(arg_spec.get("fieldtype") or "Data").strip() or "Data",
+							"options": cstr(arg_spec.get("options") or "").strip(),
+							"reqd": 1 if cint(arg_spec.get("reqd")) else 0,
+						}
+						desc = cstr(arg_spec.get("description") or "").strip()
+						if desc:
+							prompt_entry["description"] = desc
+						prompt_args.append(prompt_entry)
 
 			enriched = dict(action)
 			enriched["promptArgs"] = prompt_args

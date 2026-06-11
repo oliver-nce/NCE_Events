@@ -93,6 +93,8 @@
 				:buttons="form.buttons.value"
 				:definition-name="definitionName"
 				:doc-name="docName"
+				:root-doctype="doctype"
+				:enrollment-action-busy="enrollmentActionBusy"
 				:submit-hide-if="footerSubmitHideIf"
 				:submit-hide-if-sql="footerSubmitHideSql"
 				:submit-label="footerSubmitLabel"
@@ -107,6 +109,7 @@
 				@submit-close="onSubmitClose"
 				@submit-refresh="onSubmitRefresh"
 				@custom-button="onPlaceholderButton"
+				@enrollment-cancel="onEnrollmentCancel"
 				@find-perform="performFindLayout"
 				@find-perform-constrain="performConstrainFindLayout"
 				@find-cancel="emit('find-cancel-criteria')"
@@ -149,6 +152,11 @@ import {
 	firstNonRelatedTabIndex,
 } from "../utils/formDialogFindFields.js";
 import { buildRelatedTabPanelFilter } from "../utils/formDialogRelatedGoTo.js";
+import {
+	promptCancellationFee,
+	runProductRefund,
+	showRefundActionResult,
+} from "../utils/enrollmentWpActions.js";
 
 
 function escapeForPreHtml(s) {
@@ -318,6 +326,7 @@ const goToPanelBusy = ref(false);
 const internalReloadTick = ref(0);
 /** True while polling WP sync jobs after save — shows overlay, disables footer actions. */
 const syncWaiting = ref(false);
+const enrollmentActionBusy = ref(false);
 
 const syncWaitingText =
 	typeof window.__ === "function" ? window.__("Updating") + "…" : "Updating…";
@@ -845,6 +854,15 @@ async function onSubmit(opts = {}) {
 	);
 	const pollLog = (cat, msg) => perf.push(cat, msg);
 	try {
+		if (!footerIsDirty.value) {
+			if (afterSave === "refresh") {
+				perf.push("refresh", "clean form — reload only, no save");
+				await refreshFormAfterSave();
+			} else {
+				perf.push("skip", "clean form — submit-close has nothing to save");
+			}
+			return;
+		}
 		const onSubmitMethod = (form.definition.value?.on_submit_method || "").trim();
 		if (onSubmitMethod) {
 			perf.push("branch", "custom on_submit_method");
@@ -953,7 +971,7 @@ async function onSubmit(opts = {}) {
 		// Frappe so change-detection compares against the old stored DB values.
 		const submitHookMethod = (form.definition.value?.custom_presubmit_script || "").trim();
 		let hookResult = null;
-		if (submitHookMethod && String(form.formData.name || "").match(/^\d+$/)) {
+		if (submitHookMethod && form.isDirty.value && String(form.formData.name || "").match(/^\d+$/)) {
 			perf.push("step", `presubmit hook ${submitHookMethod}`);
 			await flushFrappeDateControlsIntoFormData();
 			const raw = JSON.parse(JSON.stringify(form.formData));
@@ -980,29 +998,39 @@ async function onSubmit(opts = {}) {
 			}
 		}
 
-		perf.push("save", "form.save() …");
-		const result = await form.save();
-		perf.push(
-			"save",
-			`form.save ok name=${result?.name ?? "?"} sync_job_ids=${JSON.stringify(result?.sync_job_ids || [])}`,
-		);
+		let result = null;
+		if (form.isDirty.value) {
+			perf.push("save", "form.save() …");
+			result = await form.save();
+			perf.push(
+				"save",
+				`form.save ok name=${result?.name ?? "?"} sync_job_ids=${JSON.stringify(result?.sync_job_ids || [])}`,
+			);
+		} else {
+			perf.push("save", "skip form.save (root unchanged)");
+			result = { name: form.formData.name, sync_job_ids: [] };
+		}
 		let relatedSaveJobIds = [];
-		try {
-			perf.push("related", "saveAllRelatedRows() …");
-			const relResult = await fdBodyRef.value?.saveAllRelatedRows?.();
-			if (Array.isArray(relResult)) relatedSaveJobIds = relResult;
-			perf.push("related", `related sync_job_ids=${JSON.stringify(relatedSaveJobIds)}`);
-		} catch (relErr) {
-			const m = extractServerMessage(relErr);
-			perf.push("related_error", m);
-			if (typeof frappe !== "undefined" && frappe.msgprint) {
-				frappe.msgprint({
-					title: "Related rows",
-					message: m,
-					indicator: "red",
-				});
+		if (relatedDirty.value) {
+			try {
+				perf.push("related", "saveAllRelatedRows() …");
+				const relResult = await fdBodyRef.value?.saveAllRelatedRows?.();
+				if (Array.isArray(relResult)) relatedSaveJobIds = relResult;
+				perf.push("related", `related sync_job_ids=${JSON.stringify(relatedSaveJobIds)}`);
+			} catch (relErr) {
+				const m = extractServerMessage(relErr);
+				perf.push("related_error", m);
+				if (typeof frappe !== "undefined" && frappe.msgprint) {
+					frappe.msgprint({
+						title: "Related rows",
+						message: m,
+						indicator: "red",
+					});
+				}
+				throw relErr;
 			}
-			throw relErr;
+		} else {
+			perf.push("related", "skip saveAllRelatedRows (unchanged)");
 		}
 
 		if (hookResult && !hookResult.skipped) {
@@ -1038,6 +1066,46 @@ async function onSubmit(opts = {}) {
 		// validationError (root) or related save error — stay open
 	} finally {
 		perf.showCopyDialog();
+	}
+}
+
+async function onEnrollmentCancel() {
+	if (findCriteriaActive.value || enrollmentActionBusy.value) {
+		return;
+	}
+	if (props.doctype !== "Enrollments") {
+		return;
+	}
+	const enrollmentName = String(props.docName || form.formData?.name || "").trim();
+	if (!enrollmentName) {
+		return;
+	}
+	let cancellationFee = null;
+	try {
+		cancellationFee = await promptCancellationFee({
+			title: __("Cancel Registration"),
+			primaryLabel: __("Confirm Cancellation"),
+			confirmMessage: __(
+				"This will cancel the registration in WooCommerce, issue store credit, and remove this enrollment from the panel.",
+			),
+		});
+	} catch {
+		return;
+	}
+	enrollmentActionBusy.value = true;
+	const startedAt = typeof performance !== "undefined" ? performance.now() : Date.now();
+	try {
+		const result = await runProductRefund(enrollmentName, cancellationFee);
+		const elapsedMs =
+			(typeof performance !== "undefined" ? performance.now() : Date.now()) - startedAt;
+		showRefundActionResult(result, enrollmentName, { elapsedMs });
+	} catch (e) {
+		const msg = e?.message || String(e) || __("Cancellation failed");
+		if (typeof frappe !== "undefined" && frappe.msgprint) {
+			frappe.msgprint({ title: __("Error"), message: msg, indicator: "red" });
+		}
+	} finally {
+		enrollmentActionBusy.value = false;
 	}
 }
 
