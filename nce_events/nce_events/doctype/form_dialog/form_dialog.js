@@ -127,6 +127,15 @@
 			.fd-portal-shell tr[draggable="true"]:active .fd-portal-drag-handle { cursor: grabbing; }
 			.fd-portal-shell .fd-sort-up.btn-primary,
 			.fd-portal-shell .fd-sort-down.btn-primary { color: #fff; }
+			.fd-portal-shell .fd-portal-sort-pill { display: inline-block; min-width: 36px; margin-right: 4px; font-size: 11px; font-weight: 600; color: #b7babe; }
+			.fd-portal-shell .fd-portal-sort-pill.fd-sort-active { background: #171717; color: #fff; border-radius: 10px; padding: 1px 7px; }
+			.fd-portal-shell .fd-portal-sort-rank { display: none; }
+			.fd-portal-shell .fd-portal-sort-summary { font-size: 12px; margin: 0 0 8px; color: #8d99a6; }
+			.fd-portal-shell .fd-portal-tab-options { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: flex-start; padding: 0 0 10px; margin-bottom: 4px; border-bottom: 1px solid var(--border-color, #eef1f5); font-size: 12px; }
+			.fd-portal-shell .fd-portal-tab-options label { margin: 0; font-weight: normal; }
+			.fd-portal-shell .fd-portal-edit-condition { width: 100%; min-height: 52px; font-size: 12px; font-family: monospace; margin-top: 4px; }
+			.fd-portal-shell .fd-portal-edit-condition-wrap { flex: 1 1 280px; min-width: 220px; }
+			.fd-portal-shell .fd-portal-edit-picker { max-width: 220px; font-size: 12px; margin-top: 4px; }
 		`;
 		$("<style>").attr("id", "fd-portal-matrix-css").text(css).appendTo("head");
 	}
@@ -190,20 +199,51 @@
 			$tr.attr("data-sort-rank", "0");
 			$tr.attr("data-sort-dir", "asc");
 		}
+		const $pill = $tr.find(".fd-portal-sort-pill");
 		const $rk = $tr.find(".fd-portal-sort-rank");
 		const $up = $tr.find(".fd-sort-up");
 		const $dn = $tr.find(".fd-sort-down");
 		if (!show || sr <= 0) {
+			$pill.text("—").removeClass("fd-sort-active");
 			$rk.text("—");
-			$up.removeClass("btn-primary").prop("disabled", true);
-			$dn.removeClass("btn-primary").prop("disabled", true);
+			$up.removeClass("btn-primary").prop("disabled", true).attr("aria-pressed", "false");
+			$dn.removeClass("btn-primary").prop("disabled", true).attr("aria-pressed", "false");
 			return;
 		}
+		$pill.text("#" + sr + (sd === "desc" ? " ↓" : " ↑")).addClass("fd-sort-active");
 		$rk.text(String(sr));
-		$up.prop("disabled", false);
-		$dn.prop("disabled", false);
-		$up.toggleClass("btn-primary", sd === "asc");
-		$dn.toggleClass("btn-primary", sd === "desc");
+		$up.prop("disabled", false).toggleClass("btn-primary", sd === "asc").attr("aria-pressed", sd === "asc");
+		$dn.prop("disabled", false).toggleClass("btn-primary", sd === "desc").attr("aria-pressed", sd === "desc");
+	}
+
+	function _updateSortSummary($tbody, $summary) {
+		if (!$summary || !$summary.length) {
+			return;
+		}
+		const parts = [];
+		const ranked = [];
+		$tbody.find("tr").each(function () {
+			const $tr = $(this);
+			const sr = parseInt($tr.attr("data-sort-rank") || "0", 10) || 0;
+			if ($tr.find(".fd-portal-show").prop("checked") && sr > 0) {
+				ranked.push({
+					sr: sr,
+					label: $tr.attr("data-label") || $tr.attr("data-fieldname") || "",
+					sd: $tr.attr("data-sort-dir") === "desc" ? "desc" : "asc",
+				});
+			}
+		});
+		ranked.sort(function (a, b) {
+			return a.sr - b.sr;
+		});
+		ranked.forEach(function (item) {
+			parts.push(item.label + (item.sd === "desc" ? " ↓" : " ↑"));
+		});
+		$summary.text(
+			parts.length
+				? __("Sorted by: {0}", [parts.join(" · ")])
+				: __("Sorted by: none")
+		);
 	}
 
 	function _maxSortRank($tbody) {
@@ -217,7 +257,7 @@
 		return m;
 	}
 
-	function _renumberSortRanks($tbody) {
+	function _renumberSortRanks($tbody, $summary) {
 		const ranked = [];
 		$tbody.find("tr").each(function () {
 			const $tr = $(this);
@@ -242,6 +282,7 @@
 		$tbody.find("tr").each(function () {
 			_applySortUi($(this));
 		});
+		_updateSortSummary($tbody, $summary);
 	}
 
 	function _fieldsTbodyForSync(frm) {
@@ -272,6 +313,7 @@
 	}
 
 	function _wireFieldsTabEvents(frm, rowName, $tbody, $innerContent) {
+		const $summary = $innerContent.find(".fd-portal-sort-summary");
 		let dragSrc = null;
 		$tbody
 			.find("tr")
@@ -314,7 +356,7 @@
 				$tr.attr("data-sort-rank", "0");
 				$tr.attr("data-sort-dir", "asc");
 			}
-			_renumberSortRanks($tbody);
+			_renumberSortRanks($tbody, $summary);
 			_syncRowToDoc(frm, rowName);
 		});
 		$innerContent.on("change.fdPortal", ".fd-portal-editable", function () {
@@ -335,7 +377,7 @@
 				$tr.attr("data-sort-rank", String(mx + 1));
 				$tr.attr("data-sort-dir", "asc");
 			}
-			_renumberSortRanks($tbody);
+			_renumberSortRanks($tbody, $summary);
 			_syncRowToDoc(frm, rowName);
 		});
 		$innerContent.on("click.fdPortal", ".fd-sort-up", function (e) {
@@ -348,6 +390,7 @@
 			}
 			$tr.attr("data-sort-dir", "asc");
 			_applySortUi($tr);
+			_updateSortSummary($tbody, $summary);
 			_syncRowToDoc(frm, rowName);
 		});
 		$innerContent.on("click.fdPortal", ".fd-sort-down", function (e) {
@@ -360,6 +403,7 @@
 			}
 			$tr.attr("data-sort-dir", "desc");
 			_applySortUi($tr);
+			_updateSortSummary($tbody, $summary);
 			_syncRowToDoc(frm, rowName);
 		});
 		$innerContent.on("click.fdPortal", ".fd-portal-sort-clear", function (e) {
@@ -371,12 +415,13 @@
 			$tbody.find("tr").each(function () {
 				_applySortUi($(this));
 			});
+			_updateSortSummary($tbody, $summary);
 			_syncRowToDoc(frm, rowName);
 		});
 		$innerContent.on("click.fdPortal", ".fd-portal-select-all", function (e) {
 			e.preventDefault();
 			$tbody.find(".fd-portal-show").prop("checked", true);
-			_renumberSortRanks($tbody);
+			_renumberSortRanks($tbody, $summary);
 			_syncRowToDoc(frm, rowName);
 		});
 		$innerContent.on("click.fdPortal", ".fd-portal-select-none", function (e) {
@@ -389,6 +434,7 @@
 			$tbody.find("tr").each(function () {
 				_applySortUi($(this));
 			});
+			_updateSortSummary($tbody, $summary);
 			_syncRowToDoc(frm, rowName);
 		});
 	}
@@ -566,6 +612,7 @@
 			'</strong><button type="button" class="btn btn-default btn-xs fd-portal-sort-clear">' +
 			__("Clear sort") +
 			"</button></div></div>" +
+			'<div class="fd-portal-sort-summary text-muted"></div>' +
 			'<div style="overflow-y:auto;max-height:52vh;border:1px solid #d1d8dd;border-radius:4px;">' +
 			'<table class="table table-bordered fd-portal-matrix" style="margin:0;font-size:12px;">' +
 			'<thead style="position:sticky;top:0;background:#f7fafc;z-index:1;"><tr>' +
@@ -595,6 +642,8 @@
 			tableHtml +=
 				'<tr draggable="true" data-fieldname="' +
 				frappe.utils.escape_html(fn) +
+				'" data-label="' +
+				frappe.utils.escape_html(row.label || fn) +
 				'" data-sort-rank="' +
 				effSr +
 				'" data-sort-dir="' +
@@ -614,6 +663,7 @@
 				'<td class="text-center"><input type="checkbox" class="fd-portal-editable"' +
 				ed +
 				' /></td><td class="text-center" style="white-space:nowrap;">' +
+				'<span class="fd-portal-sort-pill">—</span>' +
 				'<span class="fd-portal-sort-rank" style="display:inline-block;min-width:18px;font-weight:600;cursor:pointer;margin-right:4px;">' +
 				rankLabel +
 				'</span><span class="btn-group" role="group">' +
@@ -638,6 +688,7 @@
 		const $tbody = $innerContent.find(".fd-portal-field-tbody");
 		frm._fd_portal.lastFieldsTbody = $tbody;
 		_wireFieldsTabEvents(frm, rowName, $tbody, $innerContent);
+		_updateSortSummary($tbody, $innerContent.find(".fd-portal-sort-summary"));
 	}
 
 	function _showInnerTab(frm, rowName, innerId) {
@@ -671,6 +722,71 @@
 		}
 	}
 
+	function _wireTabOptions(frm, rowName, $tabOptions) {
+		const bundle = _getPortalRowBundle(frm, rowName);
+		const row = bundle && bundle.row;
+		if (!row) {
+			return;
+		}
+		const $allow = $tabOptions.find(".fd-portal-allow-add-remove");
+		const $picker = $tabOptions.find(".fd-portal-edit-picker");
+		const $textarea = $tabOptions.find(".fd-portal-edit-condition");
+
+		$allow.prop("checked", !!Number(row.allow_add_remove));
+		$textarea.val(row.edit_condition || "");
+
+		$allow.off("change.fdTabOpt").on("change.fdTabOpt", function () {
+			row.allow_add_remove = $(this).prop("checked") ? 1 : 0;
+			frm.dirty();
+		});
+		$textarea.off("input.fdTabOpt").on("input.fdTabOpt", function () {
+			row.edit_condition = $(this).val();
+			frm.dirty();
+		});
+		$picker.off("change.fdTabOpt").on("change.fdTabOpt", function () {
+			const fn = $(this).val();
+			if (!fn) {
+				return;
+			}
+			const el = $textarea.get(0);
+			const cur = $textarea.val() || "";
+			if (el && typeof el.selectionStart === "number") {
+				const start = el.selectionStart;
+				const end = el.selectionEnd;
+				const insert = (start > 0 && cur[start - 1] !== " " ? " " : "") + fn + " ";
+				$textarea.val(cur.slice(0, start) + insert + cur.slice(end));
+				el.focus();
+			} else {
+				$textarea.val(cur + (cur && !/\s$/.test(cur) ? " " : "") + fn + " ");
+			}
+			row.edit_condition = $textarea.val();
+			frm.dirty();
+			$(this).val("");
+		});
+
+		if ($picker.data("fd-loaded")) {
+			return;
+		}
+		$picker.data("fd-loaded", 1);
+		$picker.prop("disabled", true);
+		frappe.call({
+			method: "nce_events.api.form_dialog.edit_condition.get_edit_condition_fields",
+			args: { form_dialog: frm.doc.name },
+			callback: function (r) {
+				const fields = (r && r.message) || [];
+				$picker.empty().append('<option value="">' + __("Insert field…") + "</option>");
+				fields.forEach(function (f) {
+					$picker.append(
+						$("<option></option>")
+							.attr("value", f.fieldname)
+							.text(f.label || f.fieldname)
+					);
+				});
+				$picker.prop("disabled", false);
+			},
+		});
+	}
+
 	function _showOuterTab(frm, rowName) {
 		if (!frm._fd_portal) {
 			return;
@@ -691,6 +807,28 @@
 		});
 
 		$innerShell.empty();
+		const bundle = _getPortalRowBundle(frm, rowName);
+		const row = bundle && bundle.row;
+		const $tabOptions = $(
+			'<div class="fd-portal-tab-options">' +
+				'<label><input type="checkbox" class="fd-portal-allow-add-remove" /> ' +
+				__("Allow add / remove rows") +
+				"</label>" +
+				'<div class="fd-portal-edit-condition-wrap">' +
+				"<strong>" +
+				__("Edit allowed when (SQL)") +
+				"</strong>" +
+				'<p class="text-muted" style="margin:4px 0 0;font-size:11px;">' +
+				__(
+					"Editing is allowed when this condition is true for the open record. Leave blank to always allow."
+				) +
+				"</p>" +
+				'<select class="form-control fd-portal-edit-picker"><option value="">' +
+				__("Insert field…") +
+				"</option></select>" +
+				'<textarea class="form-control fd-portal-edit-condition" rows="2" spellcheck="false"></textarea>' +
+				"</div></div>"
+		);
 		const $innerBar = $(
 			'<div class="fd-portal-inner-bar">' +
 				'<button type="button" class="btn btn-xs btn-default fd-portal-inner-btn" data-inner="fields">' +
@@ -700,9 +838,12 @@
 				"</button></div>"
 		);
 		const $innerContent = $('<div class="fd-portal-inner-content"></div>');
-		$innerShell.append($innerBar).append($innerContent);
+		$innerShell.append($tabOptions).append($innerBar).append($innerContent);
 		frm._fd_portal.$innerBar = $innerBar;
 		frm._fd_portal.$innerContent = $innerContent;
+		if (row) {
+			_wireTabOptions(frm, rowName, $tabOptions);
+		}
 
 		$innerBar.on("click", ".fd-portal-inner-btn", function () {
 			const id = $(this).attr("data-inner");
