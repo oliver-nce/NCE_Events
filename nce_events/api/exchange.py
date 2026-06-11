@@ -81,8 +81,8 @@ def _parse_cancellation_fee(raw: object) -> float:
         return 0.0
     try:
         fee = float(s)
-    except (TypeError, ValueError) as e:
-        frappe.throw(_("Cancellation fee must be a number.")) from e
+    except (TypeError, ValueError):
+        frappe.throw(_("Cancellation fee must be a number."))
     if fee < 0:
         frappe.throw(_("Cancellation fee cannot be negative."))
     return fee
