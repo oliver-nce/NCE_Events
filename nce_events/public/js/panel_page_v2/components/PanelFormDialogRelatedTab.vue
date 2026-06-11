@@ -35,6 +35,12 @@
 			Save the document to load related rows.
 		</p>
 		<template v-else>
+			<p
+				v-if="relatedState[ti] && relatedState[ti].edit_allowed === false"
+				class="ppv2-fd-related-hint theme-text-muted"
+			>
+				Editing disabled for this record.
+			</p>
 			<div v-if="relatedState[ti]?.loading" class="ppv2-fd-related-rows-loading theme-text-muted">
 				Loading related rows…
 			</div>
@@ -63,6 +69,11 @@
 								</span>
 							</th>
 							<th
+								v-if="canMutateRows"
+								class="ppv2-fd-related-th ppv2-fd-related-th-del"
+								aria-label="Remove row"
+							/>
+							<th
 								v-if="(relatedState[ti].actions || []).length"
 								class="ppv2-fd-related-th ppv2-fd-related-th-actions"
 							>
@@ -80,7 +91,7 @@
 								:key="col.fieldname"
 								class="ppv2-fd-related-td"
 								:class="{
-									'ppv2-fd-related-td--editable': isRelatedColEditable(col),
+									'ppv2-fd-related-td--editable': isRelatedCellEditable(col),
 									'ppv2-fd-related-td--dirty': isRelatedCellDirty(ti, rw, col),
 									'theme-text-danger': isRelatedCellDirty(ti, rw, col),
 								}"
@@ -89,7 +100,7 @@
 									v-if="isSelectColumn(col)"
 									class="ppv2-fd-related-select theme-border theme-rounded-sm"
 									:value="String(relatedCellRaw(rw, col) ?? '')"
-									:disabled="!isRelatedColEditable(col)"
+									:disabled="!isRelatedCellEditable(col)"
 									:aria-label="col.label || col.fieldname"
 									@change="onRelatedSelectChange(rw, col, $event)"
 								>
@@ -106,13 +117,13 @@
 									v-else-if="col.fieldtype === 'Check'"
 									type="checkbox"
 									class="ppv2-fd-related-check"
-									:disabled="!isRelatedColEditable(col)"
+									:disabled="!isRelatedCellEditable(col)"
 									:checked="relatedCellTruthy(rw, col)"
 									@change="onRelatedCheckChange(rw, col, $event)"
 								/>
 								<input
 									v-else-if="
-										isRelatedColEditable(col) && isRelatedNumberField(col)
+										isRelatedCellEditable(col) && isRelatedNumberField(col)
 									"
 									type="number"
 									class="ppv2-fd-related-inp theme-border theme-rounded-sm"
@@ -121,22 +132,38 @@
 								/>
 								<input
 									v-else-if="
-										isRelatedColEditable(col) && col.fieldtype === 'Date'
+										isRelatedCellEditable(col) && col.fieldtype === 'Date'
 									"
 									type="date"
 									class="ppv2-fd-related-inp theme-border theme-rounded-sm"
 									:value="relatedDateInputValue(rw, col)"
 									@input="onRelatedDateInput(rw, col, $event)"
 								/>
+								<input
+									v-else-if="isRelatedCellEditable(col) && col.fieldtype === 'Time'"
+									type="time"
+									step="1"
+									class="ppv2-fd-related-inp theme-border theme-rounded-sm"
+									:value="relatedTimeInputValue(rw, col)"
+									@input="onRelatedTimeInput(rw, col, $event)"
+								/>
+								<input
+									v-else-if="isRelatedCellEditable(col) && col.fieldtype === 'Datetime'"
+									type="datetime-local"
+									step="1"
+									class="ppv2-fd-related-inp theme-border theme-rounded-sm"
+									:value="relatedDatetimeInputValue(rw, col)"
+									@input="onRelatedDatetimeInput(rw, col, $event)"
+								/>
 								<textarea
-									v-else-if="isRelatedColEditable(col) && isRelatedLongText(col)"
+									v-else-if="isRelatedCellEditable(col) && isRelatedLongText(col)"
 									class="ppv2-fd-related-textarea theme-border theme-rounded-sm"
 									rows="2"
 									:value="String(relatedCellRaw(rw, col) ?? '')"
 									@input="onRelatedTextInput(rw, col, $event)"
 								/>
 								<input
-									v-else-if="isRelatedColEditable(col)"
+									v-else-if="isRelatedCellEditable(col)"
 									type="text"
 									class="ppv2-fd-related-inp theme-border theme-rounded-sm"
 									:value="String(relatedCellRaw(rw, col) ?? '')"
@@ -145,6 +172,17 @@
 								<span v-else class="ppv2-fd-related-cell-text">{{
 									formatRelatedCell(rw, col)
 								}}</span>
+							</td>
+							<td v-if="canMutateRows" class="ppv2-fd-related-td ppv2-fd-related-td-del">
+								<button
+									type="button"
+									class="ppv2-fd-related-del-btn theme-text-danger"
+									:disabled="rowMutating"
+									title="Delete row"
+									@click="onDeleteRelatedRow(rw)"
+								>
+									×
+								</button>
 							</td>
 							<td
 								v-if="(relatedState[ti].actions || []).length"
@@ -162,11 +200,109 @@
 								</button>
 							</td>
 						</tr>
+						<tr v-if="addDraftActive" class="ppv2-fd-related-add-draft">
+							<td
+								v-for="col in relatedState[ti].columns"
+								:key="'draft-' + col.fieldname"
+								class="ppv2-fd-related-td ppv2-fd-related-td--editable"
+							>
+								<select
+									v-if="isSelectColumn(col) && isRelatedCellEditable(col)"
+									class="ppv2-fd-related-select theme-border theme-rounded-sm"
+									v-model="addDraftValues[col.fieldname]"
+								>
+									<option value="">—</option>
+									<option v-for="opt in selectOptionsForCell(col, addDraftValues)" :key="opt" :value="opt">
+										{{ opt }}
+									</option>
+								</select>
+								<input
+									v-else-if="col.fieldtype === 'Check' && isRelatedCellEditable(col)"
+									type="checkbox"
+									class="ppv2-fd-related-check"
+									:checked="!!addDraftValues[col.fieldname]"
+									@change="addDraftValues[col.fieldname] = $event.target.checked ? 1 : 0"
+								/>
+								<input
+									v-else-if="isRelatedCellEditable(col) && isRelatedNumberField(col)"
+									type="number"
+									class="ppv2-fd-related-inp theme-border theme-rounded-sm"
+									v-model="addDraftValues[col.fieldname]"
+								/>
+								<input
+									v-else-if="isRelatedCellEditable(col) && col.fieldtype === 'Date'"
+									type="date"
+									class="ppv2-fd-related-inp theme-border theme-rounded-sm"
+									v-model="addDraftValues[col.fieldname]"
+								/>
+								<input
+									v-else-if="isRelatedCellEditable(col) && col.fieldtype === 'Time'"
+									type="time"
+									step="1"
+									class="ppv2-fd-related-inp theme-border theme-rounded-sm"
+									:value="draftTimeValue(col)"
+									@input="onDraftTimeInput(col, $event)"
+								/>
+								<input
+									v-else-if="isRelatedCellEditable(col) && col.fieldtype === 'Datetime'"
+									type="datetime-local"
+									step="1"
+									class="ppv2-fd-related-inp theme-border theme-rounded-sm"
+									:value="draftDatetimeValue(col)"
+									@input="onDraftDatetimeInput(col, $event)"
+								/>
+								<textarea
+									v-else-if="isRelatedCellEditable(col) && isRelatedLongText(col)"
+									class="ppv2-fd-related-textarea theme-border theme-rounded-sm"
+									rows="2"
+									v-model="addDraftValues[col.fieldname]"
+								/>
+								<input
+									v-else-if="isRelatedCellEditable(col)"
+									type="text"
+									class="ppv2-fd-related-inp theme-border theme-rounded-sm"
+									v-model="addDraftValues[col.fieldname]"
+								/>
+								<span v-else class="ppv2-fd-related-cell-text theme-text-muted">—</span>
+							</td>
+							<td v-if="canMutateRows" class="ppv2-fd-related-td ppv2-fd-related-td-del">
+								<button
+									type="button"
+									class="btn btn-primary btn-xs"
+									:disabled="rowMutating"
+									@click="confirmAddRelatedRow"
+								>
+									{{ rowMutating ? "Adding…" : "Add" }}
+								</button>
+								<button
+									type="button"
+									class="btn btn-default btn-xs"
+									:disabled="rowMutating"
+									@click="cancelAddRelatedRow"
+								>
+									Cancel
+								</button>
+							</td>
+							<td
+								v-if="(relatedState[ti].actions || []).length"
+								class="ppv2-fd-related-td ppv2-fd-related-td-actions"
+							/>
+						</tr>
 					</tbody>
 				</table>
-				<p v-if="!(relatedState[ti].rows || []).length" class="ppv2-fd-related-empty theme-text-muted">
+				<p v-if="!(relatedState[ti].rows || []).length && !addDraftActive" class="ppv2-fd-related-empty theme-text-muted">
 					No related records.
 				</p>
+				<div v-if="canMutateRows && !addDraftActive" class="ppv2-fd-related-add-wrap">
+					<button
+						type="button"
+						class="btn btn-default btn-xs ppv2-fd-related-add-btn"
+						:disabled="rowMutating"
+						@click="startAddRelatedRow"
+					>
+						Add row
+					</button>
+				</div>
 			</div>
 		</template>
 
@@ -279,7 +415,7 @@
 </template>
 
 <script setup>
-import { reactive, watch, nextTick, computed } from "vue";
+import { reactive, watch, nextTick, computed, ref } from "vue";
 import { frappeCall } from "../utils/frappeCall.js";
 import {
 	buildRelatedTabPanelFilter,
@@ -315,10 +451,29 @@ const props = defineProps({
 
 const emit = defineEmits(["related-dirty", "go-to-panel"]);
 
-/** @type {Record<number, { loading?: boolean, error?: string|null, rows?: object[], columns?: object[], actions?: object[], fetchKey?: string }>} */
+/** @type {Record<number, { loading?: boolean, error?: string|null, rows?: object[], columns?: object[], actions?: object[], fetchKey?: string, edit_allowed?: boolean, allow_add_remove?: boolean }>} */
 const relatedState = reactive({});
 /** @type {Record<number, number>} */
 const relatedSeq = reactive({});
+const addDraftActive = ref(false);
+const addDraftValues = reactive({});
+const rowMutating = ref(false);
+
+const canMutateRows = computed(() => {
+	if (!props.tab?._related) {
+		return false;
+	}
+	const st = relatedState[props.ti];
+	return !!(st?.allow_add_remove && st?.edit_allowed);
+});
+
+function isRelatedCellEditable(col) {
+	if (!isRelatedColEditable(col)) {
+		return false;
+	}
+	const st = relatedState[props.ti];
+	return st?.edit_allowed !== false;
+}
 
 const goToEnabled = computed(() =>
 	canGoToRelatedPanel(props.tab, props.rootDocName, relatedState, props.ti),
@@ -407,6 +562,9 @@ async function fetchRelatedForTab(ti) {
 		relatedState[ti].rows = rawRows.map((r) => ({ ...r }));
 		relatedState[ti].columns = Array.isArray(msg.columns) ? msg.columns : [];
 		relatedState[ti].actions = Array.isArray(msg.actions) ? msg.actions : [];
+		relatedState[ti].edit_allowed = msg.edit_allowed !== false;
+		relatedState[ti].allow_add_remove = !!msg.allow_add_remove;
+		addDraftActive.value = false;
 		emit("related-dirty", false);
 	} catch (e) {
 		if (relatedSeq[ti] !== seq) {
@@ -455,7 +613,7 @@ function baselineRowForRelated(ti, name) {
 }
 
 function isRelatedCellDirty(ti, rw, col) {
-	if (!isRelatedColEditable(col) || rw?.name == null || rw.name === "") {
+	if (!isRelatedCellEditable(col) || rw?.name == null || rw.name === "") {
 		return false;
 	}
 	const base = baselineRowForRelated(ti, rw.name);
@@ -514,7 +672,7 @@ function relatedRowsDirty(ti) {
 	if (!st?.rows || !st.baseline) {
 		return false;
 	}
-	const cols = (st.columns || []).filter(isRelatedColEditable);
+	const cols = (st.columns || []).filter(isRelatedCellEditable);
 	if (!cols.length) {
 		return false;
 	}
@@ -541,7 +699,7 @@ function buildRelatedUpdates(ti) {
 	if (!st?.rows?.length || !st.baseline?.length) {
 		return [];
 	}
-	const cols = (st.columns || []).filter(isRelatedColEditable);
+	const cols = (st.columns || []).filter(isRelatedCellEditable);
 	if (!cols.length) {
 		return [];
 	}
@@ -604,6 +762,175 @@ function relatedDateInputValue(rw, col) {
 function onRelatedDateInput(rw, col, ev) {
 	rw[col.fieldname] = ev.target.value || null;
 	scheduleRelatedDirtyEmit();
+}
+
+function relatedTimeInputValue(rw, col) {
+	const v = relatedCellRaw(rw, col);
+	if (v == null || v === "") {
+		return "";
+	}
+	return String(v).slice(0, 8);
+}
+
+function onRelatedTimeInput(rw, col, ev) {
+	const s = ev.target.value;
+	rw[col.fieldname] = s ? (s.length === 5 ? s + ":00" : s) : null;
+	scheduleRelatedDirtyEmit();
+}
+
+function relatedDatetimeInputValue(rw, col) {
+	const v = relatedCellRaw(rw, col);
+	if (v == null || v === "") {
+		return "";
+	}
+	return String(v).replace(" ", "T").slice(0, 19);
+}
+
+function onRelatedDatetimeInput(rw, col, ev) {
+	const s = ev.target.value;
+	if (!s) {
+		rw[col.fieldname] = null;
+	} else {
+		rw[col.fieldname] = (s.length === 16 ? s + ":00" : s).replace("T", " ");
+	}
+	scheduleRelatedDirtyEmit();
+}
+
+function draftTimeValue(col) {
+	const v = addDraftValues[col.fieldname];
+	if (v == null || v === "") {
+		return "";
+	}
+	return String(v).slice(0, 8);
+}
+
+function onDraftTimeInput(col, ev) {
+	const s = ev.target.value;
+	addDraftValues[col.fieldname] = s ? (s.length === 5 ? s + ":00" : s) : null;
+}
+
+function draftDatetimeValue(col) {
+	const v = addDraftValues[col.fieldname];
+	if (v == null || v === "") {
+		return "";
+	}
+	return String(v).replace(" ", "T").slice(0, 19);
+}
+
+function onDraftDatetimeInput(col, ev) {
+	const s = ev.target.value;
+	if (!s) {
+		addDraftValues[col.fieldname] = null;
+	} else {
+		addDraftValues[col.fieldname] = (s.length === 16 ? s + ":00" : s).replace("T", " ");
+	}
+}
+
+function startAddRelatedRow() {
+	const st = relatedState[props.ti];
+	if (!st?.columns?.length) {
+		return;
+	}
+	for (const k of Object.keys(addDraftValues)) {
+		delete addDraftValues[k];
+	}
+	for (const col of st.columns) {
+		if (isRelatedCellEditable(col)) {
+			addDraftValues[col.fieldname] = col.fieldtype === "Check" ? 0 : "";
+		}
+	}
+	addDraftActive.value = true;
+}
+
+function cancelAddRelatedRow() {
+	addDraftActive.value = false;
+	for (const k of Object.keys(addDraftValues)) {
+		delete addDraftValues[k];
+	}
+}
+
+function _relatedCallParams() {
+	return {
+		definition: String(props.definitionName || "").trim(),
+		related_row_name: props.tab?._related?.child_row_name,
+		root_doctype: String(props.rootDoctype || "").trim(),
+		root_name: String(props.rootDocName || "").trim(),
+	};
+}
+
+async function confirmAddRelatedRow() {
+	const params = _relatedCallParams();
+	if (!params.definition || !params.related_row_name || !params.root_name) {
+		return;
+	}
+	const values = {};
+	for (const col of relatedState[props.ti]?.columns || []) {
+		if (!isRelatedCellEditable(col)) {
+			continue;
+		}
+		const fn = col.fieldname;
+		const v = addDraftValues[fn];
+		if (v != null && v !== "") {
+			values[fn] = v;
+		}
+	}
+	rowMutating.value = true;
+	try {
+		await frappeCall("nce_events.api.form_dialog.related_rows.add_form_dialog_related_row", {
+			...params,
+			values,
+		});
+		cancelAddRelatedRow();
+		await fetchRelatedForTab(props.ti);
+	} catch (e) {
+		if (typeof frappe !== "undefined" && frappe.show_alert) {
+			frappe.show_alert({
+				message: e?.message || String(e) || "Failed to add row",
+				indicator: "red",
+			});
+		}
+	} finally {
+		rowMutating.value = false;
+	}
+}
+
+async function onDeleteRelatedRow(rw) {
+	const name = rw?.name;
+	if (!name) {
+		return;
+	}
+	const label = String(name);
+	if (typeof frappe !== "undefined" && frappe.confirm) {
+		const ok = await new Promise((resolve) => {
+			frappe.confirm(`Delete related row ${label}?`, () => resolve(true), () => resolve(false));
+		});
+		if (!ok) {
+			return;
+		}
+	} else if (!window.confirm(`Delete related row ${label}?`)) {
+		return;
+	}
+	const params = _relatedCallParams();
+	if (!params.definition || !params.related_row_name || !params.root_name) {
+		return;
+	}
+	rowMutating.value = true;
+	try {
+		await frappeCall("nce_events.api.form_dialog.related_rows.delete_form_dialog_related_row", {
+			...params,
+			child_name: name,
+		});
+		await fetchRelatedForTab(props.ti);
+	} catch (e) {
+		if (typeof frappe !== "undefined" && frappe.show_alert) {
+			frappe.show_alert({
+				message: e?.message || String(e) || "Failed to delete row",
+				indicator: "red",
+			});
+		}
+	} finally {
+		rowMutating.value = false;
+	}
 }
 
 function onRelatedTextInput(rw, col, ev) {
@@ -898,6 +1225,30 @@ defineExpose({
 .ppv2-fd-related-action-btn {
 	margin-right: 4px;
 	margin-bottom: 2px;
+}
+.ppv2-fd-related-th-del,
+.ppv2-fd-related-td-del {
+	width: 2.5rem;
+	text-align: center;
+	white-space: nowrap;
+}
+.ppv2-fd-related-del-btn {
+	border: none;
+	background: transparent;
+	font-size: 1.25rem;
+	line-height: 1;
+	padding: 0 4px;
+	cursor: pointer;
+}
+.ppv2-fd-related-del-btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+.ppv2-fd-related-add-wrap {
+	padding: 8px 12px 12px;
+}
+.ppv2-fd-related-add-draft .btn-xs {
+	margin-right: 4px;
 }
 .ppv2-fd-action-modal-backdrop {
 	position: fixed;
