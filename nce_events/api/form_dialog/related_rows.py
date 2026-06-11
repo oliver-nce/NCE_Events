@@ -22,6 +22,7 @@ from ._helpers import (
 	_related_list_columns_from_child_row,
 	_sanitize_get_list_fields,
 )
+from .edit_condition import evaluate_edit_condition
 
 
 def _inline_child_tables_for_vue_api(doc: Any) -> list[dict[str, Any]]:
@@ -44,11 +45,89 @@ def _inline_child_tables_for_vue_api(doc: Any) -> list[dict[str, Any]]:
 		pfc = d.get("portal_field_config") or getattr(r, "portal_field_config", None)
 		if pfc is not None and cstr(pfc).strip():
 			row["portal_field_config"] = cstr(pfc)
+		row["allow_add_remove"] = cint(getattr(r, "allow_add_remove", 0))
+		ec = getattr(r, "edit_condition", None)
+		if ec is not None and cstr(ec).strip():
+			row["edit_condition"] = cstr(ec)
 		info_val = d.get("info")
 		if info_val is not None and cstr(info_val).strip():
 			row["info"] = cstr(info_val)
 		out.append(row)
 	return out
+
+
+def _enforce_related_edit_condition(row: Any, root_doctype: str, root_name: str) -> None:
+	if not evaluate_edit_condition(
+		getattr(row, "edit_condition", "") or "",
+		root_doctype,
+		root_name,
+	):
+		frappe.throw(_("Editing is not allowed for this record"), frappe.PermissionError)
+
+
+def _load_related_tab_context(
+	definition: str,
+	related_row_name: str,
+	root_doctype: str,
+	root_name: str,
+	*,
+	root_perm: str,
+) -> tuple[Any, Any, str, str, list[dict[str, str]]]:
+	"""Shared guard for related-tab read/write endpoints."""
+	if frappe.session.user == "Guest":
+		frappe.throw(_("Login required"), frappe.PermissionError)
+
+	definition = cstr(definition or "").strip()
+	related_row_name = cstr(related_row_name or "").strip()
+	root_doctype = cstr(root_doctype or "").strip()
+	root_name = cstr(root_name or "").strip()
+	if not definition or not related_row_name or not root_doctype or not root_name:
+		frappe.throw(_("Missing parameters"))
+
+	prev = frappe.flags.ignore_permissions
+	frappe.flags.ignore_permissions = True
+	try:
+		doc = frappe.get_doc("Form Dialog", definition)
+	finally:
+		frappe.flags.ignore_permissions = prev
+
+	if not cint(doc.is_active):
+		frappe.throw(_("This Form Dialog is not active."), frappe.PermissionError)
+
+	if cstr(doc.target_doctype or "").strip() != root_doctype:
+		frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+	if not frappe.has_permission(root_doctype, root_perm, doc=root_name):
+		frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+	row = None
+	for r in doc.related_doctypes or []:
+		if cstr(r.name) == related_row_name:
+			row = r
+			break
+	if not row:
+		frappe.throw(_("Related DocType row not found"))
+
+	child_dt = cstr(row.child_doctype or "").strip()
+	link_f = cstr(row.link_field or "").strip()
+	if not child_dt or not link_f:
+		frappe.throw(_("Invalid related row configuration"))
+
+	_assert_doctype_in_wp_tables(child_dt)
+
+	hc = _normalize_hop_chain_value(row.hop_chain or getattr(row, "hop_chain", None))
+	return doc, row, child_dt, link_f, hc
+
+
+def _related_tab_flags(row: Any, root_doctype: str, root_name: str) -> dict[str, Any]:
+	return {
+		"allow_add_remove": cint(getattr(row, "allow_add_remove", 0)),
+		"edit_allowed": evaluate_edit_condition(
+			getattr(row, "edit_condition", "") or "",
+			root_doctype,
+			root_name,
+		),
+	}
 
 
 def _script_tool_groups_for_vue_api(doc: Any) -> list[dict[str, Any]]:
@@ -82,6 +161,10 @@ def _related_rows_for_vue_api(doc: Any) -> list[dict[str, Any]]:
 		pfc = d.get("portal_field_config") or getattr(r, "portal_field_config", None)
 		if pfc is not None and cstr(pfc).strip():
 			row["portal_field_config"] = cstr(pfc)
+		row["allow_add_remove"] = cint(getattr(r, "allow_add_remove", 0))
+		ec = getattr(r, "edit_condition", None)
+		if ec is not None and cstr(ec).strip():
+			row["edit_condition"] = cstr(ec)
 		info_val = d.get("info")
 		if info_val is not None and cstr(info_val).strip():
 			row["info"] = cstr(info_val)
@@ -114,18 +197,15 @@ def get_form_dialog_related_rows(
 	    limit: Max rows (1-2000, default 500).
 
 	Returns:
-	    ``{ child_doctype, columns, rows, order_by }`` — columns from portal config
-	    (show=1); if none, only ``name`` is returned.
+	    ``{ child_doctype, columns, rows, order_by, edit_allowed, allow_add_remove }``.
 	"""
-	if frappe.session.user == "Guest":
-		frappe.throw(_("Login required"), frappe.PermissionError)
-
-	definition = cstr(definition or "").strip()
-	related_row_name = cstr(related_row_name or "").strip()
-	root_doctype = cstr(root_doctype or "").strip()
-	root_name = cstr(root_name or "").strip()
-	if not definition or not related_row_name or not root_doctype or not root_name:
-		frappe.throw(_("Missing parameters"))
+	_, row, child_dt, link_f, hc = _load_related_tab_context(
+		definition,
+		related_row_name,
+		root_doctype,
+		root_name,
+		root_perm="read",
+	)
 
 	limit_n = cint(limit)
 	if limit_n < 1:
@@ -133,38 +213,6 @@ def get_form_dialog_related_rows(
 	if limit_n > 2000:
 		limit_n = 2000
 
-	prev = frappe.flags.ignore_permissions
-	frappe.flags.ignore_permissions = True
-	try:
-		doc = frappe.get_doc("Form Dialog", definition)
-	finally:
-		frappe.flags.ignore_permissions = prev
-
-	if not cint(doc.is_active):
-		frappe.throw(_("This Form Dialog is not active."), frappe.PermissionError)
-
-	if cstr(doc.target_doctype or "").strip() != root_doctype:
-		frappe.throw(_("Not permitted"), frappe.PermissionError)
-
-	if not frappe.has_permission(root_doctype, "read", doc=root_name):
-		frappe.throw(_("Not permitted"), frappe.PermissionError)
-
-	row = None
-	for r in doc.related_doctypes or []:
-		if cstr(r.name) == related_row_name:
-			row = r
-			break
-	if not row:
-		frappe.throw(_("Related DocType row not found"))
-
-	child_dt = cstr(row.child_doctype or "").strip()
-	link_f = cstr(row.link_field or "").strip()
-	if not child_dt or not link_f:
-		frappe.throw(_("Invalid related row configuration"))
-
-	_assert_doctype_in_wp_tables(child_dt)
-
-	hc = _normalize_hop_chain_value(row.hop_chain or getattr(row, "hop_chain", None))
 	filters, force_empty = _filters_for_related_rows(root_name, child_dt, link_f, hc)
 	columns, order_by = _related_list_columns_from_child_row(row)
 	field_list = _sanitize_get_list_fields(child_dt, [cstr(c.get("fieldname") or "") for c in columns])
@@ -172,6 +220,7 @@ def get_form_dialog_related_rows(
 	from nce_events.api.form_dialog.portal_actions import get_portal_actions_for_row
 
 	actions = get_portal_actions_for_row(row)
+	flags = _related_tab_flags(row, root_doctype, root_name)
 
 	if force_empty:
 		return {
@@ -180,6 +229,7 @@ def get_form_dialog_related_rows(
 			"rows": [],
 			"order_by": order_by,
 			"actions": actions,
+			**flags,
 		}
 
 	rows = frappe.get_list(
@@ -195,6 +245,7 @@ def get_form_dialog_related_rows(
 		"rows": rows,
 		"order_by": order_by,
 		"actions": actions,
+		**flags,
 	}
 
 
@@ -276,15 +327,13 @@ def save_form_dialog_related_rows(
 	Returns:
 	    ``{ "ok": 1, "saved": <int> }`` — number of child documents saved (0 if updates empty).
 	"""
-	if frappe.session.user == "Guest":
-		frappe.throw(_("Login required"), frappe.PermissionError)
-
-	definition = cstr(definition or "").strip()
-	related_row_name = cstr(related_row_name or "").strip()
-	root_doctype = cstr(root_doctype or "").strip()
-	root_name = cstr(root_name or "").strip()
-	if not definition or not related_row_name or not root_doctype or not root_name:
-		frappe.throw(_("Missing parameters"))
+	_, row, child_dt, link_f, hc = _load_related_tab_context(
+		definition,
+		related_row_name,
+		root_doctype,
+		root_name,
+		root_perm="write",
+	)
 
 	updates = frappe.parse_json(updates) if isinstance(updates, str) else updates
 	if updates is None:
@@ -292,38 +341,8 @@ def save_form_dialog_related_rows(
 	if not isinstance(updates, list):
 		frappe.throw(_("updates must be a list"))
 
-	prev = frappe.flags.ignore_permissions
-	frappe.flags.ignore_permissions = True
-	try:
-		doc = frappe.get_doc("Form Dialog", definition)
-	finally:
-		frappe.flags.ignore_permissions = prev
+	_enforce_related_edit_condition(row, root_doctype, root_name)
 
-	if not cint(doc.is_active):
-		frappe.throw(_("This Form Dialog is not active."), frappe.PermissionError)
-
-	if cstr(doc.target_doctype or "").strip() != root_doctype:
-		frappe.throw(_("Not permitted"), frappe.PermissionError)
-
-	if not frappe.has_permission(root_doctype, "write", doc=root_name):
-		frappe.throw(_("Not permitted"), frappe.PermissionError)
-
-	row = None
-	for r in doc.related_doctypes or []:
-		if cstr(r.name) == related_row_name:
-			row = r
-			break
-	if not row:
-		frappe.throw(_("Related DocType row not found"))
-
-	child_dt = cstr(row.child_doctype or "").strip()
-	link_f = cstr(row.link_field or "").strip()
-	if not child_dt or not link_f:
-		frappe.throw(_("Invalid related row configuration"))
-
-	_assert_doctype_in_wp_tables(child_dt)
-
-	hc = _normalize_hop_chain_value(row.hop_chain or getattr(row, "hop_chain", None))
 	allowed_names = _allowed_child_names_for_related_tab(root_name, child_dt, link_f, hc)
 	allowed_fields = _editable_related_fieldnames_for_save(row, child_dt)
 
@@ -359,5 +378,87 @@ def save_form_dialog_related_rows(
 	return {
 		"ok": 1,
 		"saved": saved,
+		"sync_job_ids": list(getattr(frappe.local, "nce_sync_queued_job_ids", [])),
+	}
+
+
+@frappe.whitelist()
+def add_form_dialog_related_row(
+	definition: str,
+	related_row_name: str,
+	root_doctype: str,
+	root_name: str,
+	values: str | dict | None = None,
+) -> dict[str, Any]:
+	"""Create a child row linked to the open root document (direct child tabs only)."""
+	_, row, child_dt, link_f, hc = _load_related_tab_context(
+		definition,
+		related_row_name,
+		root_doctype,
+		root_name,
+		root_perm="write",
+	)
+
+	if not cint(getattr(row, "allow_add_remove", 0)):
+		frappe.throw(_("Add/remove is not enabled for this tab"), frappe.PermissionError)
+	_enforce_related_edit_condition(row, root_doctype, root_name)
+
+	if hc:
+		frappe.throw(_("Add row is only supported for direct child tabs (no hop chain)."))
+
+	if not frappe.has_permission(child_dt, "create"):
+		frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+	values = frappe.parse_json(values) if isinstance(values, str) else (values or {})
+	allowed_fields = _editable_related_fieldnames_for_save(row, child_dt)
+	new = frappe.new_doc(child_dt)
+	new.set(link_f, root_name)
+	for fn, v in (values or {}).items():
+		fn = cstr(fn).strip()
+		if fn and fn in allowed_fields:
+			new.set(fn, v)
+	new.insert()
+	return {
+		"ok": 1,
+		"name": new.name,
+		"sync_job_ids": list(getattr(frappe.local, "nce_sync_queued_job_ids", [])),
+	}
+
+
+@frappe.whitelist()
+def delete_form_dialog_related_row(
+	definition: str,
+	related_row_name: str,
+	root_doctype: str,
+	root_name: str,
+	child_name: str,
+) -> dict[str, Any]:
+	"""Delete one child row from a related tab."""
+	_, row, child_dt, link_f, hc = _load_related_tab_context(
+		definition,
+		related_row_name,
+		root_doctype,
+		root_name,
+		root_perm="write",
+	)
+
+	if not cint(getattr(row, "allow_add_remove", 0)):
+		frappe.throw(_("Add/remove is not enabled for this tab"), frappe.PermissionError)
+	_enforce_related_edit_condition(row, root_doctype, root_name)
+
+	child_name = cstr(child_name or "").strip()
+	if not child_name:
+		frappe.throw(_("Missing child_name"))
+
+	allowed = _allowed_child_names_for_related_tab(root_name, child_dt, link_f, hc)
+	if child_name not in allowed:
+		frappe.throw(_("Not permitted to delete this row"), frappe.PermissionError)
+	if not frappe.has_permission(child_dt, "delete", doc=child_name):
+		frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+	frappe.delete_doc(child_dt, child_name)
+	return {
+		"ok": 1,
+		"deleted": child_name,
 		"sync_job_ids": list(getattr(frappe.local, "nce_sync_queued_job_ids", [])),
 	}
