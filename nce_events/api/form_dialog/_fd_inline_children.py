@@ -82,6 +82,12 @@ def _build_inline_child_row_dict(spec: dict[str, Any], root_meta: Any) -> dict[s
 		child_meta = frappe.get_meta(child_dt)
 		child_fields = [cf.as_dict() for cf in child_meta.fields]
 		child_fields = _enrich_fetch_from_fields(child_fields, child_meta)
+		from .portal_fields import _portal_name_field_dict
+
+		name_row = _portal_name_field_dict(child_dt)
+		info_obj["name_field_label"] = name_row["label"]
+		if not any(cstr(f.get("fieldname") or "").strip() == "name" for f in child_fields):
+			child_fields.insert(0, name_row)
 		info_obj["fields"] = child_fields
 	except Exception as e:
 		info_obj["capture_error"] = cstr(e)[:500]

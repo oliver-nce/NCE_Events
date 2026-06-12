@@ -107,6 +107,12 @@ def _build_related_child_row_dict(spec: dict[str, Any]) -> dict[str, str]:
 		child_meta = frappe.get_meta(child_dt)
 		child_fields = [f.as_dict() for f in child_meta.fields]
 		child_fields = _enrich_fetch_from_fields(child_fields, child_meta)
+		from .portal_fields import _portal_name_field_dict
+
+		name_row = _portal_name_field_dict(child_dt)
+		info_obj["name_field_label"] = name_row["label"]
+		if not any(cstr(f.get("fieldname") or "").strip() == "name" for f in child_fields):
+			child_fields.insert(0, name_row)
 		info_obj["fields"] = child_fields
 	except Exception as e:
 		info_obj["capture_error"] = cstr(e)[:500]
@@ -245,7 +251,12 @@ def _related_list_columns_from_child_row(row: Any) -> tuple[list[dict[str, Any]]
 	# Local import to avoid a circular module-load between _helpers and portal_fields:
 	# portal_fields imports _require_system_manager from _helpers at module load,
 	# while this helper only needs portal_fields' parsers at call time.
-	from .portal_fields import _build_portal_editor_rows, _parse_portal_field_config_entries
+	from .portal_fields import (
+		_build_portal_editor_rows,
+		_parse_portal_field_config_entries,
+		_portal_meta_fields_for_editor,
+		_portal_name_field_dict,
+	)
 
 	info: dict[str, Any] = {}
 	if row.info:
@@ -253,13 +264,20 @@ def _related_list_columns_from_child_row(row: Any) -> tuple[list[dict[str, Any]]
 			info = json.loads(row.info)
 		except json.JSONDecodeError:
 			info = {}
+	child_dt = cstr(getattr(row, "child_doctype", None) or info.get("doctype") or "").strip()
 	meta_fields = info.get("fields") if isinstance(info.get("fields"), list) else []
+	name_field_label = cstr(info.get("name_field_label") or "").strip() or None
 	portal_raw = cstr(getattr(row, "portal_field_config", None) or "").strip()
 	portal_entries = _parse_portal_field_config_entries(portal_raw)
-	editor_rows = _build_portal_editor_rows(meta_fields, portal_entries)
+	editor_rows = _build_portal_editor_rows(
+		meta_fields,
+		portal_entries,
+		child_doctype=child_dt or None,
+		name_field_label=name_field_label,
+	)
 
 	by_fn: dict[str, dict] = {}
-	for f in meta_fields:
+	for f in _portal_meta_fields_for_editor(meta_fields, child_dt or None, name_field_label):
 		if not isinstance(f, dict):
 			continue
 		fn0 = cstr(f.get("fieldname") or "").strip()
@@ -268,16 +286,18 @@ def _related_list_columns_from_child_row(row: Any) -> tuple[list[dict[str, Any]]
 
 	shown = [r for r in editor_rows if cint(r.get("show")) == 1]
 	if not shown:
-		meta_name = by_fn.get("name", {})
+		name_meta = by_fn.get("name", {})
+		if child_dt and not name_meta:
+			name_meta = _portal_name_field_dict(child_dt)
 		return (
 			[
 				{
 					"fieldname": "name",
-					"label": _("ID"),
-					"fieldtype": cstr(meta_name.get("fieldtype") or "Data"),
-					"options": cstr(meta_name.get("options") or "").strip(),
+					"label": cstr(name_meta.get("label") or "").strip() or "name",
+					"fieldtype": cstr(name_meta.get("fieldtype") or "Data"),
+					"options": cstr(name_meta.get("options") or "").strip(),
 					"editable": 0,
-					"reqd": cint(meta_name.get("reqd")),
+					"reqd": cint(name_meta.get("reqd")),
 				}
 			],
 			"name asc",

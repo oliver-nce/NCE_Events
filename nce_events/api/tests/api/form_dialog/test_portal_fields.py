@@ -74,6 +74,31 @@ class TestRelatedPortalFieldEditor(FrappeTestCase):
 		frappe.db.commit()
 
 
+class TestPortalNameField(unittest.TestCase):
+	def test_build_portal_editor_rows_prepends_name_with_doctype_label(self):
+		from nce_events.api.form_dialog.portal_fields import _build_portal_editor_rows
+
+		rows = _build_portal_editor_rows(
+			[{"fieldname": "first_name", "label": "First Name", "fieldtype": "Data"}],
+			[],
+			child_doctype="User",
+		)
+		self.assertGreaterEqual(len(rows), 1)
+		self.assertEqual(rows[0]["fieldname"], "name")
+		self.assertEqual(rows[0]["label"], frappe.get_meta("User").get_label("name"))
+
+	def test_save_accepts_name_in_portal_field_config(self):
+		from nce_events.api.form_dialog.portal_fields import _normalize_portal_field_config_for_save
+
+		out = _normalize_portal_field_config_for_save(
+			[{"fieldname": "name", "show": 1, "editable": 0}],
+			{"name", "status"},
+		)
+		self.assertEqual(len(out), 1)
+		self.assertEqual(out[0]["fieldname"], "name")
+		self.assertEqual(out[0]["show"], 1)
+
+
 class TestNormalizePortalFieldConfig(unittest.TestCase):
 	def test_strips_sort_when_show_off(self):
 		from nce_events.api.form_dialog.portal_fields import _normalize_portal_field_config_for_save

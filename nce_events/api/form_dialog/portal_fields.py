@@ -45,6 +45,53 @@ def _portal_meta_field_eligible_for_editor(f: dict) -> bool:
 	return ft not in _PORTAL_EDITOR_SKIP_FIELDTYPES
 
 
+def _portal_name_field_dict(child_doctype: str) -> dict[str, Any]:
+	"""Frappe PK ``name`` — not in ``meta.fields``; label from ``meta.get_label('name')``."""
+	meta = frappe.get_meta(child_doctype)
+	label = cstr(meta.get_label("name") or "").strip() or "name"
+	return {
+		"fieldname": "name",
+		"label": label,
+		"fieldtype": "Data",
+		"read_only": 1,
+	}
+
+
+def _portal_meta_fields_for_editor(
+	meta_fields: list[dict],
+	child_doctype: str | None = None,
+	name_field_label: str | None = None,
+) -> list[dict]:
+	"""Eligible frozen fields plus ``name`` when missing (uses DocType label)."""
+	eligible = [f for f in meta_fields if _portal_meta_field_eligible_for_editor(f)]
+	if any(cstr(f.get("fieldname") or "").strip() == "name" for f in eligible):
+		return eligible
+	if name_field_label and cstr(name_field_label).strip():
+		name_row: dict[str, Any] = {
+			"fieldname": "name",
+			"label": cstr(name_field_label).strip(),
+			"fieldtype": "Data",
+			"read_only": 1,
+		}
+	elif child_doctype and cstr(child_doctype).strip():
+		name_row = _portal_name_field_dict(cstr(child_doctype).strip())
+	else:
+		name_row = {"fieldname": "name", "label": "name", "fieldtype": "Data", "read_only": 1}
+	return [name_row, *eligible]
+
+
+def _portal_allowed_fieldnames(
+	meta_fields: list[dict],
+	child_doctype: str | None = None,
+	name_field_label: str | None = None,
+) -> set[str]:
+	return {
+		cstr(f.get("fieldname") or "").strip()
+		for f in _portal_meta_fields_for_editor(meta_fields, child_doctype, name_field_label)
+		if cstr(f.get("fieldname") or "").strip()
+	}
+
+
 def _parse_portal_actions_entries(raw: str | None) -> list[dict]:
 	if not raw or not cstr(raw).strip():
 		return []
@@ -145,9 +192,12 @@ def _parse_portal_field_config_entries(raw: str | None) -> list[dict]:
 
 
 def _build_portal_editor_rows(
-	meta_fields: list[dict], portal_entries: list[dict]
+	meta_fields: list[dict],
+	portal_entries: list[dict],
+	child_doctype: str | None = None,
+	name_field_label: str | None = None,
 ) -> list[dict[str, str | int]]:
-	eligible = [f for f in meta_fields if _portal_meta_field_eligible_for_editor(f)]
+	eligible = _portal_meta_fields_for_editor(meta_fields, child_doctype, name_field_label)
 	by_fn: dict[str, dict] = {}
 	for f in eligible:
 		fn = cstr(f.get("fieldname") or "").strip()
@@ -265,9 +315,15 @@ def get_related_portal_field_editor(form_dialog: str, child_row_name: str) -> di
 			info = {}
 
 	meta_fields = info.get("fields") if isinstance(info.get("fields"), list) else []
+	name_field_label = cstr(info.get("name_field_label") or "").strip() or None
 	portal_raw = cstr(getattr(row, "portal_field_config", None) or "").strip()
 	portal_entries = _parse_portal_field_config_entries(portal_raw)
-	rows = _build_portal_editor_rows(meta_fields, portal_entries)
+	rows = _build_portal_editor_rows(
+		meta_fields,
+		portal_entries,
+		child_doctype=cstr(row.child_doctype or "").strip() or None,
+		name_field_label=name_field_label,
+	)
 	actions_raw = cstr(getattr(row, "portal_actions", None) or "").strip()
 	actions = _parse_portal_actions_entries(actions_raw)
 
@@ -317,11 +373,12 @@ def save_related_portal_field_config(
 		except json.JSONDecodeError:
 			info = {}
 	meta_fields = info.get("fields") if isinstance(info.get("fields"), list) else []
-	allowed = {
-		cstr(f.get("fieldname") or "").strip()
-		for f in meta_fields
-		if _portal_meta_field_eligible_for_editor(f)
-	}
+	name_field_label = cstr(info.get("name_field_label") or "").strip() or None
+	allowed = _portal_allowed_fieldnames(
+		meta_fields,
+		child_doctype=cstr(row.child_doctype or "").strip() or None,
+		name_field_label=name_field_label,
+	)
 
 	normalized = _normalize_portal_field_config_for_save(portal_field_config, allowed)
 
@@ -393,9 +450,15 @@ def get_inline_child_portal_field_editor(form_dialog: str, child_row_name: str) 
 			info = {}
 
 	meta_fields = info.get("fields") if isinstance(info.get("fields"), list) else []
+	name_field_label = cstr(info.get("name_field_label") or "").strip() or None
 	portal_raw = cstr(getattr(row, "portal_field_config", None) or "").strip()
 	portal_entries = _parse_portal_field_config_entries(portal_raw)
-	rows = _build_portal_editor_rows(meta_fields, portal_entries)
+	rows = _build_portal_editor_rows(
+		meta_fields,
+		portal_entries,
+		child_doctype=cstr(row.child_doctype or "").strip() or None,
+		name_field_label=name_field_label,
+	)
 	actions_raw = cstr(getattr(row, "portal_actions", None) or "").strip()
 	actions = _parse_portal_actions_entries(actions_raw)
 
@@ -442,11 +505,12 @@ def save_inline_child_portal_field_config(
 		except json.JSONDecodeError:
 			info = {}
 	meta_fields = info.get("fields") if isinstance(info.get("fields"), list) else []
-	allowed = {
-		cstr(f.get("fieldname") or "").strip()
-		for f in meta_fields
-		if _portal_meta_field_eligible_for_editor(f)
-	}
+	name_field_label = cstr(info.get("name_field_label") or "").strip() or None
+	allowed = _portal_allowed_fieldnames(
+		meta_fields,
+		child_doctype=cstr(row.child_doctype or "").strip() or None,
+		name_field_label=name_field_label,
+	)
 
 	normalized = _normalize_portal_field_config_for_save(portal_field_config, allowed)
 

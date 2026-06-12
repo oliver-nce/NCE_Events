@@ -54,9 +54,29 @@
 		return !SKIP_TYPES.has(ft);
 	}
 
-	/** Mirror api/form_dialog/portal_fields._build_portal_editor_rows */
-	function _buildEditorRows(metaFields, portalEntries) {
+	/** Mirror api/form_dialog/portal_fields._portal_meta_fields_for_editor */
+	function _metaFieldsForEditor(metaFields, info, childDoctype) {
 		const eligible = (metaFields || []).filter(_fieldEligible);
+		if (eligible.some((f) => String(f.fieldname).trim() === "name")) {
+			return eligible;
+		}
+		let label = (info && String(info.name_field_label || "").trim()) || "";
+		if (!label && childDoctype && frappe.meta && typeof frappe.meta.get_label === "function") {
+			try {
+				label = String(frappe.meta.get_label(childDoctype, "name") || "").trim();
+			} catch (e) {
+				label = "";
+			}
+		}
+		if (!label) {
+			label = "name";
+		}
+		return [{ fieldname: "name", label: label, fieldtype: "Data", read_only: 1 }, ...eligible];
+	}
+
+	/** Mirror api/form_dialog/portal_fields._build_portal_editor_rows */
+	function _buildEditorRows(metaFields, portalEntries, info, childDoctype) {
+		const eligible = _metaFieldsForEditor(metaFields, info, childDoctype);
 		const byFn = {};
 		eligible.forEach(function (f) {
 			byFn[String(f.fieldname).trim()] = f;
@@ -713,7 +733,8 @@
 		const info = _parseInfo(row);
 		const portalEntries = _parsePortalRaw(row.portal_field_config);
 		const metaFields = Array.isArray(info.fields) ? info.fields : [];
-		const rows = _buildEditorRows(metaFields, portalEntries);
+		const childDoctype = String(row.child_doctype || info.doctype || "").trim();
+		const rows = _buildEditorRows(metaFields, portalEntries, info, childDoctype);
 
 		if (innerId === "fields") {
 			_renderFieldsTab(frm, rowName, $innerContent, info, rows);

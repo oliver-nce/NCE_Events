@@ -130,21 +130,30 @@ const INLINE_NON_EDITABLE_TYPES = new Set([
 const ic = computed(() => props.tab._inlineChild || {});
 const pfn = computed(() => String(ic.value.parent_fieldname || "").trim());
 
-const metaFields = computed(() => {
+const parsedInfo = computed(() => {
 	const raw = ic.value.info;
 	if (raw == null || !String(raw).trim()) {
-		return [];
+		return {};
 	}
 	try {
 		const o = typeof raw === "string" ? JSON.parse(raw) : raw;
-		return Array.isArray(o?.fields) ? o.fields : [];
+		return o && typeof o === "object" ? o : {};
 	} catch {
-		return [];
+		return {};
 	}
 });
 
+const metaFields = computed(() => {
+	const fields = parsedInfo.value?.fields;
+	return Array.isArray(fields) ? fields : [];
+});
+
+const nameFieldLabel = computed(() => String(parsedInfo.value?.name_field_label || "").trim());
+
 const columns = computed(() =>
-	portalColumnsForGrid(metaFields.value, ic.value.portal_field_config || ""),
+	portalColumnsForGrid(metaFields.value, ic.value.portal_field_config || "", {
+		nameFieldLabel: nameFieldLabel.value,
+	}),
 );
 
 const hasEditableColumn = computed(() => columns.value.some((c) => isColEditable(c)));

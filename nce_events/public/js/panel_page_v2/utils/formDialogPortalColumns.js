@@ -41,9 +41,23 @@ function fieldEligible(f) {
 	return !SKIP_TYPES.has(ft);
 }
 
-/** Same merge rules as ``form_dialog.js`` `_buildEditorRows`. */
-export function buildPortalEditorRows(metaFields, portalEntries) {
+/** Mirror ``portal_fields._portal_meta_fields_for_editor``. */
+export function metaFieldsForPortalEditor(metaFields, portalOpts = {}) {
 	const eligible = (metaFields || []).filter(fieldEligible);
+	if (eligible.some((f) => String(f.fieldname).trim() === "name")) {
+		return eligible;
+	}
+	const nameFieldLabel = String(portalOpts.nameFieldLabel || "").trim();
+	const label = nameFieldLabel || "name";
+	return [
+		{ fieldname: "name", label, fieldtype: "Data", read_only: 1 },
+		...eligible,
+	];
+}
+
+/** Same merge rules as ``form_dialog.js`` `_buildEditorRows`. */
+export function buildPortalEditorRows(metaFields, portalEntries, portalOpts = {}) {
+	const eligible = metaFieldsForPortalEditor(metaFields, portalOpts);
 	const byFn = {};
 	eligible.forEach(function (f) {
 		byFn[String(f.fieldname).trim()] = f;
@@ -101,13 +115,14 @@ export function buildPortalEditorRows(metaFields, portalEntries) {
 
 /**
  * Columns for an editable/read-only grid (show=1 only), matching related-tab shape.
+ * @param {object} [portalOpts] - ``{ nameFieldLabel }`` from frozen tab ``info``
  */
-export function portalColumnsForGrid(metaFields, portalRaw) {
+export function portalColumnsForGrid(metaFields, portalRaw, portalOpts = {}) {
 	const portalEntries = parsePortalFieldConfigRaw(portalRaw);
-	const editorRows = buildPortalEditorRows(metaFields, portalEntries);
+	const editorRows = buildPortalEditorRows(metaFields, portalEntries, portalOpts);
 
 	const byFn = {};
-	for (const f of metaFields || []) {
+	for (const f of metaFieldsForPortalEditor(metaFields, portalOpts)) {
 		if (!f || typeof f !== "object") {
 			continue;
 		}
@@ -123,7 +138,7 @@ export function portalColumnsForGrid(metaFields, portalRaw) {
 		return [
 			{
 				fieldname: "name",
-				label: "ID",
+				label: String(metaName.label || "").trim() || "name",
 				fieldtype: String(metaName.fieldtype || "Data"),
 				options: String(metaName.options || "").trim(),
 				editable: 0,
