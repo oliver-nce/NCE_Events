@@ -34,11 +34,6 @@
 <script>
 let _globalZ = 100;
 function getNextZ() { return ++_globalZ; }
-/** Keep bringToFront() above managed table-panel z ladders. */
-export function syncPanelFloatGlobalZ(floor) {
-	const n = Number(floor);
-	if (Number.isFinite(n) && n > _globalZ) _globalZ = n;
-}
 </script>
 
 <script setup>
@@ -139,27 +134,6 @@ const floatStyle = computed(() => ({
 function bringToFront() {
 	z.value = getNextZ();
 }
-
-function setPosition(nx, ny) {
-	const xn = Number(nx);
-	const yn = Number(ny);
-	if (Number.isFinite(xn)) x.value = xn;
-	if (Number.isFinite(yn)) y.value = Math.max(props.minY, yn);
-}
-
-function setZ(newZ) {
-	const n = Number(newZ);
-	if (!Number.isFinite(n)) return;
-	z.value = n;
-	syncPanelFloatGlobalZ(n);
-}
-
-defineExpose({
-	setPosition,
-	setZ,
-	bringToFront,
-	getPosition: () => ({ x: x.value, y: y.value }),
-});
 
 // Full-screen overlay prevents expensive hit-testing on table DOM during drag/resize
 function _addOverlay(cursor) {
