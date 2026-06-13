@@ -77,6 +77,7 @@
 			:is-field-visible="form.isFieldVisible"
 			:is-field-mandatory="form.isFieldMandatory"
 			:is-field-read-only="form.isFieldReadOnly"
+				:is-field-display-dirty="isFieldDisplayDirty"
 				:find-layout-mode="findCriteriaActive"
 				:find-criteria="findCriteria"
 				:findable-fieldnames="findableFieldnames"
@@ -134,10 +135,7 @@ import { extractServerMessage } from "../composables/frozenFormSave.js";
 import { frappeCall } from "../utils/frappeCall.js";
 import { ppv2DebugLog, ppv2DebugWarn } from "../utils/ppv2Debug.js";
 import { normalizeDocForWooEventsPublish } from "../utils/wooPublishDocNormalize.js";
-import {
-	blurFocusedFrappeWidgetIfNeeded,
-	syncWritableControlsIntoFormData,
-} from "../utils/formDialogLiveScrape.js";
+import { useFormDialogDisplayDirty } from "../composables/useFormDialogDisplayDirty.js";
 import {
 	confirmDiscardIfDirty,
 	createRowNavKeydownHandler,
@@ -357,31 +355,13 @@ const form = usePanelFormDialog({
 	loadMode: toRef(props, "dialogLoadMode"),
 });
 
-/** Commit writable control values from DOM into formData before dirty checks or save. */
-async function syncFormDataFromLiveControls() {
-	const root = fdBodyRef.value?.$el;
-	if (!root || !form.allFields.value?.length) {
-		return { blurredField: null, patched: false, count: 0, fields: [] };
-	}
-	const writable = form.allFields.value.filter(
-		(f) => form.isFieldVisible(f) && !form.isFieldReadOnly(f),
-	);
-	const syncOpts = {
-		originalData: form.originalData.value,
-		isFieldMandatory: (f) => form.isFieldMandatory(f),
-	};
-	const blurredField = blurFocusedFrappeWidgetIfNeeded(root, {
-		writableFields: writable,
-		...syncOpts,
-	});
-	if (blurredField) {
-		await nextTick();
-	}
-	return {
-		blurredField,
-		...syncWritableControlsIntoFormData(root, form.formData, writable, syncOpts),
-	};
-}
+const {
+	displayDirty,
+	changedDisplayFields,
+	scheduleRecompute: scheduleDisplayDirtyRecompute,
+	refreshBaselineAfterRevert,
+	commitFocusedFrappeWidget,
+} = useFormDialogDisplayDirty({ fdBodyRef, form });
 
 // Provide the raw ref so Date/Link controls can read .value synchronously
 // in their Frappe df.change() callback — bypasses Vue prop propagation delay.
@@ -391,7 +371,11 @@ const showFdLoadDebug = ref(false);
 
 const loadDebugRows = computed(() => form.loadDebugLog.value);
 
-const footerIsDirty = computed(() => form.isDirty.value || relatedDirty.value);
+const footerIsDirty = computed(() => displayDirty.value || relatedDirty.value);
+
+function isFieldDisplayDirty(fieldname) {
+	return changedDisplayFields.value.includes(fieldname);
+}
 
 function clearFindCriteriaBag() {
 	for (const k of Object.keys(findCriteria)) delete findCriteria[k];
@@ -540,6 +524,7 @@ function onRevert() {
 		form.validationError.value = null;
 		fdBodyRef.value?.resetRelatedToBaseline?.();
 		relatedDirty.value = false;
+		refreshBaselineAfterRevert();
 	};
 	if (typeof frappe !== "undefined" && frappe.confirm) {
 		frappe.confirm(msg, proceed, () => {});
@@ -618,11 +603,13 @@ onUnmounted(() => {
 function onFieldChange({ fieldname, value }) {
 	form.formData[fieldname] = value;
 	form.onFieldChange(fieldname);
+	scheduleDisplayDirtyRecompute();
 }
 
 async function onLinkChange({ fieldname, value }) {
 	form.formData[fieldname] = value;
 	await form.handleFetchFrom(fieldname, value);
+	scheduleDisplayDirtyRecompute();
 }
 
 /**
@@ -635,13 +622,13 @@ async function savePendingEditsBeforeNavigate() {
 	if (findCriteriaActive.value) {
 		return { ok: false, mainSaved: false, relatedSaved: false, syncJobIds: [] };
 	}
-	await syncFormDataFromLiveControls();
+	await commitFocusedFrappeWidget();
 	if (!footerIsDirty.value) {
 		return { ok: true, mainSaved: false, relatedSaved: false, syncJobIds: [] };
 	}
 
 	const onSubmitMethod = (form.definition.value?.on_submit_method || "").trim();
-	if (onSubmitMethod && form.isDirty.value) {
+	if (onSubmitMethod && displayDirty.value) {
 		form.validationError.value = __("Use Submit and Close or Submit and Refresh to save this form before opening the panel.");
 		if (typeof frappe !== "undefined" && frappe.msgprint) {
 			frappe.msgprint({
@@ -657,7 +644,7 @@ async function savePendingEditsBeforeNavigate() {
 	let mainSaved = false;
 	let relatedSaved = false;
 
-	if (form.isDirty.value) {
+	if (displayDirty.value) {
 		form.validationError.value = null;
 		const errors = form.validate();
 		if (errors.length) {
@@ -864,14 +851,11 @@ async function onSubmit(opts = {}) {
 	);
 	const pollLog = (cat, msg) => perf.push(cat, msg);
 	try {
-		const syncResult = await syncFormDataFromLiveControls();
+		const blurredField = await commitFocusedFrappeWidget();
 		perf.push(
-			"sync",
-			`blurred=${syncResult.blurredField || "none"} patched=${syncResult.count} isDirty=${form.isDirty.value}`,
+			"dirty",
+			`blurred=${blurredField || "none"} displayDirty=${displayDirty.value} changed=${changedDisplayFields.value.join(", ") || "none"}`,
 		);
-		if (syncResult.fields?.length) {
-			perf.push("sync", `fields: ${syncResult.fields.join(", ")}`);
-		}
 		if (!footerIsDirty.value) {
 			if (afterSave === "refresh") {
 				perf.push("refresh", "clean form — reload only, no save");
@@ -898,7 +882,7 @@ async function onSubmit(opts = {}) {
 				}
 				return;
 			}
-			perf.push("step", "syncFormDataFromLiveControls (custom submit)");
+			perf.push("step", "commitFocusedFrappeWidget (custom submit)");
 			const raw = JSON.parse(JSON.stringify(form.formData));
 			let doc = { doctype: props.doctype, ...raw };
 			if (props.doctype === "Events") {
@@ -983,7 +967,7 @@ async function onSubmit(opts = {}) {
 		// Frappe so change-detection compares against the old stored DB values.
 		const submitHookMethod = (form.definition.value?.custom_presubmit_script || "").trim();
 		let hookResult = null;
-		if (submitHookMethod && form.isDirty.value && String(form.formData.name || "").match(/^\d+$/)) {
+		if (submitHookMethod && displayDirty.value && String(form.formData.name || "").match(/^\d+$/)) {
 			perf.push("step", `presubmit hook ${submitHookMethod}`);
 			const raw = JSON.parse(JSON.stringify(form.formData));
 			const doc = props.doctype === "Events"
@@ -1003,7 +987,7 @@ async function onSubmit(opts = {}) {
 		}
 
 		let result = null;
-		if (form.isDirty.value) {
+		if (displayDirty.value) {
 			perf.push("save", "form.save() …");
 			result = await form.save();
 			perf.push(
@@ -1138,7 +1122,7 @@ async function onPlaceholderButton(btn) {
 			return;
 		}
 		try {
-			await syncFormDataFromLiveControls();
+			await commitFocusedFrappeWidget();
 			const raw = JSON.parse(JSON.stringify(form.formData));
 			const doc = normalizeDocForWooEventsPublish({
 				doctype: props.doctype,

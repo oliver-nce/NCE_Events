@@ -89,8 +89,10 @@
 										"
 										:field-dirty="
 											!findLayoutMode &&
-											!isFieldReadOnly(field) &&
-											isRootFieldDirty(field.fieldname)
+											!fieldReadOnlyEffective(field) &&
+											(props.isFieldDisplayDirty
+												? props.isFieldDisplayDirty(field.fieldname)
+												: isRootFieldDirty(field.fieldname))
 										"
 										@change="(p) => onFieldOrCriterionChange(field, p)"
 										@link-change="(p) => $emit('link-change', p)"
@@ -145,6 +147,8 @@ const props = defineProps({
 	isFieldVisible: { type: Function, required: true },
 	isFieldMandatory: { type: Function, required: true },
 	isFieldReadOnly: { type: Function, required: true },
+	/** When set, field-level dirty highlight uses display baseline (not formData). */
+	isFieldDisplayDirty: { type: Function, default: null },
 	findLayoutMode: { type: Boolean, default: false },
 	/** Reactive bag of criterion strings while ``findLayoutMode``. */
 	findCriteria: { type: Object, required: true },
