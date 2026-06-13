@@ -134,7 +134,7 @@ import { extractServerMessage } from "../composables/frozenFormSave.js";
 import { frappeCall } from "../utils/frappeCall.js";
 import { ppv2DebugLog, ppv2DebugWarn } from "../utils/ppv2Debug.js";
 import { normalizeDocForWooEventsPublish } from "../utils/wooPublishDocNormalize.js";
-import { readLiveFieldValue } from "../utils/formDialogLiveScrape.js";
+import { syncWritableControlsIntoFormData } from "../utils/formDialogLiveScrape.js";
 import {
 	confirmDiscardIfDirty,
 	createRowNavKeydownHandler,
@@ -354,21 +354,38 @@ const form = usePanelFormDialog({
 	loadMode: toRef(props, "dialogLoadMode"),
 });
 
-/** Frappe Date/Datetime controls only emit into formData on change; blur commits open pickers. */
-async function flushFrappeDateControlsIntoFormData() {
+/** Blur Frappe Date/Link controls so open pickers commit before DOM scrape. */
+async function flushFrappeControlsIntoFormData() {
 	const root = fdBodyRef.value?.$el;
 	if (root?.querySelectorAll) {
-		root.querySelectorAll(".ppv2-fd-datetime-frappe input").forEach((el) => {
-			if (typeof el.blur === "function") {
-				el.blur();
-			}
-		});
+		root
+			.querySelectorAll(
+				".ppv2-fd-datetime-frappe input, .ppv2-fd-link-frappe input",
+			)
+			.forEach((el) => {
+				if (typeof el.blur === "function") {
+					el.blur();
+				}
+			});
 	}
 	await nextTick();
 	if (document.activeElement && typeof document.activeElement.blur === "function") {
 		document.activeElement.blur();
 	}
 	await nextTick();
+}
+
+/** Commit all writable control values from DOM into formData before dirty checks or save. */
+async function syncFormDataFromLiveControls() {
+	await flushFrappeControlsIntoFormData();
+	const root = fdBodyRef.value?.$el;
+	if (!root || !form.allFields.value?.length) {
+		return;
+	}
+	const writable = form.allFields.value.filter(
+		(f) => form.isFieldVisible(f) && !form.isFieldReadOnly(f),
+	);
+	syncWritableControlsIntoFormData(root, form.formData, writable);
 }
 
 // Provide the raw ref so Date/Link controls can read .value synchronously
@@ -623,6 +640,7 @@ async function savePendingEditsBeforeNavigate() {
 	if (findCriteriaActive.value) {
 		return { ok: false, mainSaved: false, relatedSaved: false, syncJobIds: [] };
 	}
+	await syncFormDataFromLiveControls();
 	if (!footerIsDirty.value) {
 		return { ok: true, mainSaved: false, relatedSaved: false, syncJobIds: [] };
 	}
@@ -658,7 +676,6 @@ async function savePendingEditsBeforeNavigate() {
 			}
 			return { ok: false, mainSaved: false, relatedSaved: false, syncJobIds: [] };
 		}
-		await flushFrappeDateControlsIntoFormData();
 		const result = await form.save();
 		mainSaved = true;
 		if (Array.isArray(result?.sync_job_ids)) {
@@ -852,6 +869,7 @@ async function onSubmit(opts = {}) {
 	);
 	const pollLog = (cat, msg) => perf.push(cat, msg);
 	try {
+		await syncFormDataFromLiveControls();
 		if (!footerIsDirty.value) {
 			if (afterSave === "refresh") {
 				perf.push("refresh", "clean form — reload only, no save");
@@ -878,16 +896,10 @@ async function onSubmit(opts = {}) {
 				}
 				return;
 			}
-			perf.push("step", "flushFrappeDateControlsIntoFormData (custom submit)");
-			await flushFrappeDateControlsIntoFormData();
+			perf.push("step", "syncFormDataFromLiveControls (custom submit)");
 			const raw = JSON.parse(JSON.stringify(form.formData));
 			let doc = { doctype: props.doctype, ...raw };
 			if (props.doctype === "Events") {
-				const root = fdBodyRef.value?.$el;
-				const liveFirst = readLiveFieldValue(root, "first_session_date");
-				if (liveFirst != null) raw.first_session_date = liveFirst;
-				const liveSessions = readLiveFieldValue(root, "number_of_sessions");
-				if (liveSessions != null) raw.number_of_sessions = liveSessions;
 				doc = normalizeDocForWooEventsPublish({ doctype: props.doctype, ...raw });
 			}
 			form.saving.value = true;
@@ -971,15 +983,7 @@ async function onSubmit(opts = {}) {
 		let hookResult = null;
 		if (submitHookMethod && form.isDirty.value && String(form.formData.name || "").match(/^\d+$/)) {
 			perf.push("step", `presubmit hook ${submitHookMethod}`);
-			await flushFrappeDateControlsIntoFormData();
 			const raw = JSON.parse(JSON.stringify(form.formData));
-			if (props.doctype === "Events") {
-				const root = fdBodyRef.value?.$el;
-				const liveFirst = readLiveFieldValue(root, "first_session_date");
-				if (liveFirst != null) raw.first_session_date = liveFirst;
-				const liveSessions = readLiveFieldValue(root, "number_of_sessions");
-				if (liveSessions != null) raw.number_of_sessions = liveSessions;
-			}
 			const doc = props.doctype === "Events"
 				? normalizeDocForWooEventsPublish({ doctype: props.doctype, ...raw })
 				: { doctype: props.doctype, ...raw };
@@ -1098,7 +1102,7 @@ async function runEnrollmentProductRefund() {
 			(typeof performance !== "undefined" ? performance.now() : Date.now()) - startedAt;
 		showRefundActionResult(result, enrollmentName, { elapsedMs });
 	} catch (e) {
-		const msg = e?.message || String(e) || __("Cancellation failed");
+		const msg = extractServerMessage(e) || e?.message || String(e) || __("Cancellation failed");
 		if (typeof frappe !== "undefined" && frappe.msgprint) {
 			frappe.msgprint({ title: __("Error"), message: msg, indicator: "red" });
 		}
@@ -1132,17 +1136,8 @@ async function onPlaceholderButton(btn) {
 			return;
 		}
 		try {
-			await flushFrappeDateControlsIntoFormData();
+			await syncFormDataFromLiveControls();
 			const raw = JSON.parse(JSON.stringify(form.formData));
-			const root = fdBodyRef.value?.$el;
-			const liveFirst = readLiveFieldValue(root, "first_session_date");
-			if (liveFirst != null) {
-				raw.first_session_date = liveFirst;
-			}
-			const liveSessions = readLiveFieldValue(root, "number_of_sessions");
-			if (liveSessions != null) {
-				raw.number_of_sessions = liveSessions;
-			}
 			const doc = normalizeDocForWooEventsPublish({
 				doctype: props.doctype,
 				...raw,

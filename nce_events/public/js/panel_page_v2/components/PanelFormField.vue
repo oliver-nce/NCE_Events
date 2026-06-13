@@ -161,6 +161,7 @@
       :max="config.props?.max"
       class="ppv2-fd-input theme-border theme-rounded-sm"
       :class="{ 'theme-text-muted': readOnly }"
+      @input="onChange($event.target.value)"
       @change="onChange($event.target.value)"
     />
 
