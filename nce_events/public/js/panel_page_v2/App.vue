@@ -12,8 +12,9 @@
 			</div>
 			<div class="ppv2-zone ppv2-zone-tables">
 		<PanelFloat
-			:init-x="16"
-			:init-y="16"
+			ref="rootPanelFloatRef"
+			:init-x="ROOT_INIT_X"
+			:init-y="ROOT_INIT_Y"
 			:init-w="900"
 			:init-h="550"
 			:theme-slug="config?.theme_slug || ''"
@@ -64,6 +65,7 @@
 		<template v-for="p in openPanels" :key="p.id">
 		<PanelFloat
 			v-if="p._layoutReady"
+			:ref="(el) => setPanelFloatRef(p, el)"
 			:init-x="p.x"
 			:init-y="p.y"
 			:init-w="panelFloatInitW(p)"
@@ -391,6 +393,10 @@ import {
 import { frappeCall } from "./utils/frappeCall.js";
 import { openWpUserSwitch, familyIdFromRow } from "./utils/wpUserSwitch.js";
 
+const ROOT_INIT_X = 16;
+const ROOT_INIT_Y = 16;
+
+const rootPanelFloatRef = ref(null);
 const panelMode = inject("panelMode", null);
 const panelLabel = inject("panelLabel", "NCE Tables");
 const pageTitle = inject("pageTitle", "");
@@ -760,9 +766,24 @@ function nextPos(parentId) {
 }
 
 const CASCADE_STEP_X = 80;
-const CASCADE_STEP_Y = 24;
+/** Cascade action only — V2 headers are ~32–36px; drill-down spawn still uses +24 in nextPos(). */
+const CASCADE_STEP_Y = 40;
 
-/** Stagger all open drilled panels from the root drill offset (Panel Action: cascade_panels). */
+function setPanelFloatRef(p, el) {
+	p._floatRef = el;
+}
+
+/** Slot 1 = nearest to root; higher slots step further down-right. */
+function cascadePositionForSlot(slot) {
+	const n = Number(slot);
+	const s = Number.isFinite(n) && n > 0 ? n : 1;
+	return {
+		x: ROOT_INIT_X + CASCADE_STEP_X * s,
+		y: ROOT_INIT_Y + CASCADE_STEP_Y * s,
+	};
+}
+
+/** Stagger drilled panels by current z-order: buried (low z) → least offset; front → most. Z unchanged. */
 function cascadeOpenPanels() {
 	if (!openPanels.length) {
 		if (typeof frappe !== "undefined" && frappe.show_alert) {
@@ -770,11 +791,22 @@ function cascadeOpenPanels() {
 		}
 		return;
 	}
-	const base = nextPos("root");
-	openPanels.forEach((p, i) => {
-		p.x = base.x + i * CASCADE_STEP_X;
-		p.y = base.y + i * CASCADE_STEP_Y;
+	rootPanelFloatRef.value?.setPosition(ROOT_INIT_X, ROOT_INIT_Y);
+
+	const ranked = [...openPanels]
+		.map((p) => ({
+			panel: p,
+			z: typeof p._floatRef?.getZ === "function" ? p._floatRef.getZ() : 0,
+		}))
+		.sort((a, b) => a.z - b.z || a.panel.id - b.panel.id);
+
+	ranked.forEach(({ panel }, i) => {
+		const pos = cascadePositionForSlot(i + 1);
+		panel.x = pos.x;
+		panel.y = pos.y;
+		panel._floatRef?.setPosition(pos.x, pos.y);
 	});
+
 	if (typeof frappe !== "undefined" && frappe.show_alert) {
 		frappe.show_alert({
 			message: __("Cascaded {0} panel(s)", [openPanels.length]),

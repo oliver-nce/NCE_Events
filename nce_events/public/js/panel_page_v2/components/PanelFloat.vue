@@ -135,6 +135,18 @@ function bringToFront() {
 	z.value = getNextZ();
 }
 
+function setPosition(nx, ny) {
+	const xn = Number(nx);
+	const yn = Number(ny);
+	if (Number.isFinite(xn)) x.value = xn;
+	if (Number.isFinite(yn)) y.value = Math.max(props.minY, yn);
+}
+
+defineExpose({
+	setPosition,
+	getZ: () => z.value,
+});
+
 // Full-screen overlay prevents expensive hit-testing on table DOM during drag/resize
 function _addOverlay(cursor) {
 	const overlay = document.createElement("div");
