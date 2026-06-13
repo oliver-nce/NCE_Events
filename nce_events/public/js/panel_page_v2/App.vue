@@ -12,8 +12,9 @@
 			</div>
 			<div class="ppv2-zone ppv2-zone-tables">
 		<PanelFloat
-			:init-x="16"
-			:init-y="16"
+			ref="rootPanelFloatRef"
+			:init-x="ROOT_INIT_X"
+			:init-y="ROOT_INIT_Y"
 			:init-w="900"
 			:init-h="550"
 			:theme-slug="config?.theme_slug || ''"
@@ -64,6 +65,7 @@
 		<template v-for="p in openPanels" :key="p.id">
 		<PanelFloat
 			v-if="p._layoutReady"
+			:ref="(el) => setPanelFloatRef(p, el)"
 			:init-x="p.x"
 			:init-y="p.y"
 			:init-w="panelFloatInitW(p)"
@@ -365,7 +367,7 @@
 
 <script setup>
 // v2026-05-30
-import { ref, reactive, computed, onMounted, onUnmounted, inject, unref } from "vue";
+import { ref, reactive, computed, onMounted, onUnmounted, inject, unref, nextTick } from "vue";
 import { useNceCardStack, parseOpenCardOpts } from "./composables/useNceCardStack.js";
 import { usePanelFormDialogHost } from "./composables/usePanelFormDialogHost.js";
 import { usePanelActions } from "./composables/usePanelActions.js";
@@ -391,6 +393,16 @@ import {
 import { frappeCall } from "./utils/frappeCall.js";
 import { openWpUserSwitch, familyIdFromRow } from "./utils/wpUserSwitch.js";
 
+import { syncPanelFloatGlobalZ } from "./components/PanelFloat.vue";
+
+const ROOT_INIT_X = 16;
+const ROOT_INIT_Y = 16;
+const CASCADE_STEP_X = 80;
+/** V2 header chrome is ~32–36px; step must clear the full header bar. */
+const CASCADE_STEP_Y = 40;
+const TABLE_PANEL_Z_BASE = 100;
+
+const rootPanelFloatRef = ref(null);
 const panelMode = inject("panelMode", null);
 const panelLabel = inject("panelLabel", "NCE Tables");
 const pageTitle = inject("pageTitle", "");
@@ -745,22 +757,60 @@ function onPanelToolbarFind(p) {
 	p._showFilter = false;
 }
 
-function nextPos(parentId) {
-	/* Find the parent panel's position and offset from it */
-	if (parentId === "root") {
-		/* Offset from the root WP Tables panel (matches :init-x / :init-y on root PanelFloat) */
-		return { x: 16 + 80, y: 16 + 24 };
-	}
-	const parent = openPanels.find((p) => p.id === parentId);
-	if (parent) {
-		return { x: parent.x + 80, y: parent.y + 24 };
-	}
-	/* Fallback */
-	return { x: 140, y: 120 };
+function setPanelFloatRef(p, el) {
+	p._floatRef = el;
 }
 
-const CASCADE_STEP_X = 80;
-const CASCADE_STEP_Y = 24;
+/** Drill depth from root: root=0, first drill=1, grandchild=2, … */
+function panelChainDepth(panel) {
+	if (!panel || panel.parentId === "root") return 1;
+	const parent = openPanels.find((x) => x.id === panel.parentId);
+	return parent ? panelChainDepth(parent) + 1 : 1;
+}
+
+/** Left-to-right cascade order (shallowest drill first, then open order). */
+function orderedPanelsForCascade() {
+	return [...openPanels].sort((a, b) => {
+		const d = panelChainDepth(a) - panelChainDepth(b);
+		return d !== 0 ? d : a.id - b.id;
+	});
+}
+
+function cascadePositionForDepth(depth) {
+	const i = Math.max(0, depth - 1);
+	return {
+		x: ROOT_INIT_X + CASCADE_STEP_X * (i + 1),
+		y: ROOT_INIT_Y + CASCADE_STEP_Y * (i + 1),
+	};
+}
+
+function nextPos(parentId) {
+	const parent =
+		parentId === "root" ? null : openPanels.find((p) => p.id === parentId);
+	const depth = parent ? panelChainDepth(parent) + 1 : 1;
+	return cascadePositionForDepth(depth);
+}
+
+/** Phase 1: compute + apply positions. Phase 2: root at back, rightmost drill at front. */
+function applyCascadeLayout() {
+	const ordered = orderedPanelsForCascade();
+
+	rootPanelFloatRef.value?.setPosition(ROOT_INIT_X, ROOT_INIT_Y);
+
+	ordered.forEach((p) => {
+		const depth = panelChainDepth(p);
+		const pos = cascadePositionForDepth(depth);
+		p.x = pos.x;
+		p.y = pos.y;
+		p._floatRef?.setPosition(pos.x, pos.y);
+	});
+
+	rootPanelFloatRef.value?.setZ(TABLE_PANEL_Z_BASE);
+	ordered.forEach((p, i) => {
+		p._floatRef?.setZ(TABLE_PANEL_Z_BASE + 1 + i);
+	});
+	syncPanelFloatGlobalZ(TABLE_PANEL_Z_BASE + ordered.length + 1);
+}
 
 /** Stagger all open drilled panels from the root drill offset (Panel Action: cascade_panels). */
 function cascadeOpenPanels() {
@@ -770,17 +820,22 @@ function cascadeOpenPanels() {
 		}
 		return;
 	}
-	const base = nextPos("root");
-	openPanels.forEach((p, i) => {
-		p.x = base.x + i * CASCADE_STEP_X;
-		p.y = base.y + i * CASCADE_STEP_Y;
-	});
+	applyCascadeLayout();
 	if (typeof frappe !== "undefined" && frappe.show_alert) {
 		frappe.show_alert({
 			message: __("Cascaded {0} panel(s)", [openPanels.length]),
 			indicator: "green",
 		});
 	}
+}
+
+async function syncNewPanelStackOrder(panel) {
+	await nextTick();
+	const ordered = orderedPanelsForCascade();
+	const idx = ordered.findIndex((p) => p.id === panel.id);
+	if (idx < 0) return;
+	panel._floatRef?.setZ(TABLE_PANEL_Z_BASE + 1 + idx);
+	syncPanelFloatGlobalZ(TABLE_PANEL_Z_BASE + ordered.length + 1);
 }
 
 function openTagFinder(panel) {
@@ -867,6 +922,7 @@ async function openPanel(doctype, parentFilter = {}, parentId = null, parentCont
 		p.loading = false;
 		p._layoutReady = true;
 	}
+	await syncNewPanelStackOrder(p);
 	return id;
 }
 
