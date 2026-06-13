@@ -134,7 +134,10 @@ import { extractServerMessage } from "../composables/frozenFormSave.js";
 import { frappeCall } from "../utils/frappeCall.js";
 import { ppv2DebugLog, ppv2DebugWarn } from "../utils/ppv2Debug.js";
 import { normalizeDocForWooEventsPublish } from "../utils/wooPublishDocNormalize.js";
-import { syncWritableControlsIntoFormData } from "../utils/formDialogLiveScrape.js";
+import {
+	blurFocusedFrappeWidgetIfNeeded,
+	syncWritableControlsIntoFormData,
+} from "../utils/formDialogLiveScrape.js";
 import {
 	confirmDiscardIfDirty,
 	createRowNavKeydownHandler,
@@ -354,38 +357,30 @@ const form = usePanelFormDialog({
 	loadMode: toRef(props, "dialogLoadMode"),
 });
 
-/** Blur Frappe Date/Link controls so open pickers commit before DOM scrape. */
-async function flushFrappeControlsIntoFormData() {
-	const root = fdBodyRef.value?.$el;
-	if (root?.querySelectorAll) {
-		root
-			.querySelectorAll(
-				".ppv2-fd-datetime-frappe input, .ppv2-fd-link-frappe input",
-			)
-			.forEach((el) => {
-				if (typeof el.blur === "function") {
-					el.blur();
-				}
-			});
-	}
-	await nextTick();
-	if (document.activeElement && typeof document.activeElement.blur === "function") {
-		document.activeElement.blur();
-	}
-	await nextTick();
-}
-
-/** Commit all writable control values from DOM into formData before dirty checks or save. */
+/** Commit writable control values from DOM into formData before dirty checks or save. */
 async function syncFormDataFromLiveControls() {
-	await flushFrappeControlsIntoFormData();
 	const root = fdBodyRef.value?.$el;
 	if (!root || !form.allFields.value?.length) {
-		return;
+		return { blurredField: null, patched: false, count: 0, fields: [] };
 	}
 	const writable = form.allFields.value.filter(
 		(f) => form.isFieldVisible(f) && !form.isFieldReadOnly(f),
 	);
-	syncWritableControlsIntoFormData(root, form.formData, writable);
+	const syncOpts = {
+		originalData: form.originalData.value,
+		isFieldMandatory: (f) => form.isFieldMandatory(f),
+	};
+	const blurredField = blurFocusedFrappeWidgetIfNeeded(root, {
+		writableFields: writable,
+		...syncOpts,
+	});
+	if (blurredField) {
+		await nextTick();
+	}
+	return {
+		blurredField,
+		...syncWritableControlsIntoFormData(root, form.formData, writable, syncOpts),
+	};
 }
 
 // Provide the raw ref so Date/Link controls can read .value synchronously
@@ -869,7 +864,14 @@ async function onSubmit(opts = {}) {
 	);
 	const pollLog = (cat, msg) => perf.push(cat, msg);
 	try {
-		await syncFormDataFromLiveControls();
+		const syncResult = await syncFormDataFromLiveControls();
+		perf.push(
+			"sync",
+			`blurred=${syncResult.blurredField || "none"} patched=${syncResult.count} isDirty=${form.isDirty.value}`,
+		);
+		if (syncResult.fields?.length) {
+			perf.push("sync", `fields: ${syncResult.fields.join(", ")}`);
+		}
 		if (!footerIsDirty.value) {
 			if (afterSave === "refresh") {
 				perf.push("refresh", "clean form — reload only, no save");

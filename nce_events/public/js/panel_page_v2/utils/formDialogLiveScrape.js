@@ -1,5 +1,6 @@
 import { isLayoutField } from "./frappeFieldExpr.js";
 import { isVirtualDocField } from "../composables/frozenFormValidate.js";
+import { isEmptyScalarValue } from "./formDialogSnapshot.js";
 
 /**
  * Unsaved Form Dialog rows: Vue formData can lag visible control values
@@ -19,6 +20,8 @@ const SCRAPE_SKIP_FIELDTYPES = new Set([
 	"Image",
 	"Heading",
 ]);
+
+const FRAPPE_WIDGET_WRAP_SEL = ".ppv2-fd-datetime-frappe, .ppv2-fd-link-frappe";
 
 function fieldWrapSelector(fieldname) {
 	return typeof CSS !== "undefined" && typeof CSS.escape === "function"
@@ -46,6 +49,34 @@ export function isScrapableWritableField(field) {
 		return false;
 	}
 	return !isVirtualDocField(field);
+}
+
+function isLiveValueEmpty(liveRaw, fieldtype) {
+	if (liveRaw === undefined || liveRaw === null || liveRaw === "") {
+		return true;
+	}
+	const ft = String(fieldtype || "").trim();
+	if (ft === "Date" || ft === "Datetime") {
+		const s = String(liveRaw).trim();
+		if (!s) {
+			return true;
+		}
+		// Partial/placeholder text in Frappe date input — treat as empty for optional skip.
+		if (/[a-z]/i.test(s)) {
+			return true;
+		}
+	}
+	return false;
+}
+
+function shouldSkipOptionalEmpty({ field, liveRaw, originalValue, isFieldMandatory }) {
+	if (typeof isFieldMandatory === "function" && isFieldMandatory(field)) {
+		return false;
+	}
+	const ft = String(field?.fieldtype || "").trim();
+	const liveEmpty = isLiveValueEmpty(liveRaw, ft);
+	const origEmpty = isEmptyScalarValue(originalValue, ft);
+	return liveEmpty && origEmpty;
 }
 
 /**
@@ -152,15 +183,58 @@ function valuesEquivalent(fieldtype, a, b) {
 }
 
 /**
- * Patch formData from visible DOM for all writable scalar fields mounted in the body.
- * Skips layout, virtual, hidden, read-only, and unsupported types (child tables, attach).
- * @returns {boolean} true when any field was patched
+ * Blur the focused Frappe Date/Datetime/Link control only when it is writable and
+ * committing it is meaningful (required, has a value, or original was non-empty).
+ * @returns {string|null} fieldname blurred, or null
  */
-export function syncWritableControlsIntoFormData(formBodyEl, formData, fields) {
-	if (!formBodyEl?.querySelector || !formData || !fields?.length) {
-		return false;
+export function blurFocusedFrappeWidgetIfNeeded(formBodyEl, options = {}) {
+	const { writableFields = [], originalData = null, isFieldMandatory = () => false } = options;
+	const active = document.activeElement;
+	if (!active?.blur || !formBodyEl?.contains?.(active)) {
+		return null;
 	}
-	let patched = false;
+	const wrap = active.closest?.("[data-fd-fieldname]");
+	if (!wrap || !formBodyEl.contains(wrap)) {
+		return null;
+	}
+	if (!wrap.querySelector(FRAPPE_WIDGET_WRAP_SEL)) {
+		return null;
+	}
+	const fn = wrap.getAttribute("data-fd-fieldname");
+	if (!fn) {
+		return null;
+	}
+	const field = writableFields.find((f) => f?.fieldname === fn);
+	if (!field) {
+		return null;
+	}
+	const liveRaw = readLiveValueFromWrap(wrap, field.fieldtype);
+	if (
+		shouldSkipOptionalEmpty({
+			field,
+			liveRaw,
+			originalValue: originalData?.[fn],
+			isFieldMandatory,
+		})
+	) {
+		return null;
+	}
+	active.blur();
+	return fn;
+}
+
+/**
+ * Patch formData from visible DOM for writable scalar fields mounted in the body.
+ * Skips non-editable fields, unsupported types, and optional fields that are empty
+ * in both DOM and originalData (untouched blanks).
+ * @returns {{ patched: boolean, count: number, fields: string[] }}
+ */
+export function syncWritableControlsIntoFormData(formBodyEl, formData, fields, options = {}) {
+	const { originalData = null, isFieldMandatory = () => false } = options;
+	if (!formBodyEl?.querySelector || !formData || !fields?.length) {
+		return { patched: false, count: 0, fields: [] };
+	}
+	const patchedFields = [];
 	for (const f of fields) {
 		const fn = f?.fieldname;
 		const ft = String(f?.fieldtype || "").trim();
@@ -175,16 +249,30 @@ export function syncWritableControlsIntoFormData(formBodyEl, formData, fields) {
 		if (liveRaw === undefined) {
 			continue;
 		}
+		if (
+			shouldSkipOptionalEmpty({
+				field: f,
+				liveRaw,
+				originalValue: originalData?.[fn],
+				isFieldMandatory,
+			})
+		) {
+			continue;
+		}
 		const next = coerceScrapedValue(ft, liveRaw === "" ? null : liveRaw);
 		if (!valuesEquivalent(ft, formData[fn], next)) {
 			formData[fn] = next;
-			patched = true;
+			patchedFields.push(fn);
 		}
 	}
-	return patched;
+	return {
+		patched: patchedFields.length > 0,
+		count: patchedFields.length,
+		fields: patchedFields,
+	};
 }
 
 /** @deprecated Use syncWritableControlsIntoFormData */
-export function syncLaggingControlsIntoFormData(formBodyEl, formData, fields) {
-	return syncWritableControlsIntoFormData(formBodyEl, formData, fields);
+export function syncLaggingControlsIntoFormData(formBodyEl, formData, fields, options) {
+	return syncWritableControlsIntoFormData(formBodyEl, formData, fields, options);
 }

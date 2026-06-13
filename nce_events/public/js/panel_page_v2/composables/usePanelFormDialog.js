@@ -1,5 +1,5 @@
 import { ref, reactive, computed, unref, watch } from "vue";
-import { snapshotForCompare } from "../utils/formDialogSnapshot.js";
+import { isFormDataDirty } from "../utils/formDialogSnapshot.js";
 import { createHandleFetchFrom } from "./formDialogFetchFrom.js";
 import {
 	validateFrozenForm,
@@ -136,7 +136,7 @@ export function usePanelFormDialog({
 
 	const isDirty = computed(() => {
 		if (loading.value) return false;
-		return snapshotForCompare(formData) !== snapshotForCompare(originalData.value);
+		return isFormDataDirty(formData, originalData.value);
 	});
 
 	function validateForWooPublish() {
