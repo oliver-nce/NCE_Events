@@ -144,6 +144,7 @@ function setPosition(nx, ny) {
 
 defineExpose({
 	setPosition,
+	bringToFront,
 	getZ: () => z.value,
 });
 

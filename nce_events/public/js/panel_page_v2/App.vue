@@ -367,7 +367,7 @@
 
 <script setup>
 // v2026-05-30
-import { ref, reactive, computed, onMounted, onUnmounted, inject, unref } from "vue";
+import { ref, reactive, computed, onMounted, onUnmounted, inject, unref, nextTick } from "vue";
 import { useNceCardStack, parseOpenCardOpts } from "./composables/useNceCardStack.js";
 import { usePanelFormDialogHost } from "./composables/usePanelFormDialogHost.js";
 import { usePanelActions } from "./composables/usePanelActions.js";
@@ -784,9 +784,9 @@ function cascadePositionForSlot(slot) {
 }
 
 /** Stagger drilled panels by current z-order: buried (low z) → least offset; front → most. Z unchanged. */
-function cascadeOpenPanels() {
+function cascadeOpenPanels({ showAlert = true } = {}) {
 	if (!openPanels.length) {
-		if (typeof frappe !== "undefined" && frappe.show_alert) {
+		if (showAlert && typeof frappe !== "undefined" && frappe.show_alert) {
 			frappe.show_alert({ message: __("No open panels to arrange"), indicator: "orange" });
 		}
 		return;
@@ -807,12 +807,19 @@ function cascadeOpenPanels() {
 		panel._floatRef?.setPosition(pos.x, pos.y);
 	});
 
-	if (typeof frappe !== "undefined" && frappe.show_alert) {
+	if (showAlert && typeof frappe !== "undefined" && frappe.show_alert) {
 		frappe.show_alert({
 			message: __("Cascaded {0} panel(s)", [openPanels.length]),
 			indicator: "green",
 		});
 	}
+}
+
+/** New panel: bring to front, then cascade so it lands at the largest offset. */
+async function finalizeNewPanelOpen(panel) {
+	await nextTick();
+	panel._floatRef?.bringToFront?.();
+	cascadeOpenPanels({ showAlert: false });
 }
 
 function openTagFinder(panel) {
@@ -899,6 +906,7 @@ async function openPanel(doctype, parentFilter = {}, parentId = null, parentCont
 		p.loading = false;
 		p._layoutReady = true;
 	}
+	await finalizeNewPanelOpen(p);
 	return id;
 }
 
