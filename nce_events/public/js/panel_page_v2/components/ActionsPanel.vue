@@ -1,9 +1,14 @@
 <template>
-	<PanelFloat :init-x="8" :init-y="16" :init-w="200" :init-h="420">
-		<template #header="{ titleClasses }">
-			<span class="ppv2-title" :class="titleClasses">Actions</span>
-		</template>
-		<div class="ppv2-actions-body">
+	<div class="ppv2-actions-bar-inner theme-bg-card">
+		<SpaPageNavBar
+			v-if="pages.length"
+			class="ppv2-actions-pages"
+			:pages="pages"
+			:current-slug="pageSlug || ''"
+			@select="switchTo"
+		/>
+		<div v-if="pages.length && actions.length" class="ppv2-actions-sep" aria-hidden="true" />
+		<div class="ppv2-actions-list">
 			<button
 				v-for="a in actions"
 				:key="a.action_id || a.name"
@@ -14,39 +19,81 @@
 			>
 				{{ a.label }}
 			</button>
-			<div v-if="!actions.length" class="ppv2-actions-empty theme-text-muted">No actions</div>
+			<div v-if="!actions.length && !pages.length" class="ppv2-actions-empty theme-text-muted">
+				No actions
+			</div>
 		</div>
-		<template #footer>Actions</template>
-	</PanelFloat>
+	</div>
 </template>
 
 <script setup>
-import PanelFloat from "./PanelFloat.vue";
+import { inject, onMounted } from "vue";
+import SpaPageNavBar from "./SpaPageNavBar.vue";
+import { useSpaPageNav } from "../composables/useSpaPageNav.js";
 
 defineProps({
 	actions: { type: Array, default: () => [] },
 });
 
 defineEmits(["select"]);
+
+const pageSlug = inject("pageSlug", null);
+const { pages, loadPages, switchTo } = useSpaPageNav();
+
+onMounted(() => {
+	loadPages();
+});
 </script>
 
 <style scoped>
-.ppv2-actions-body {
-	padding: 12px;
+.ppv2-actions-bar-inner {
 	display: flex;
-	flex-direction: column;
-	gap: 10px;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--spacing-sm, 10px);
+	padding: 8px 12px;
+	box-sizing: border-box;
+	min-height: 48px;
+	border-bottom: 1px solid var(--nce-color-border, #d1d5db);
+}
+
+.ppv2-actions-pages {
+	flex-shrink: 0;
+	padding: 0;
+	min-height: 0;
+}
+
+.ppv2-actions-pages :deep(.ppv2-spa-nav) {
+	padding: 0;
+	min-height: 0;
+}
+
+.ppv2-actions-sep {
+	width: 1px;
+	align-self: stretch;
+	min-height: 28px;
+	background: var(--nce-color-border, #d1d5db);
+	flex-shrink: 0;
+}
+
+.ppv2-actions-list {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--spacing-sm, 10px);
+	flex: 1 1 auto;
+	min-width: 0;
 }
 
 .ppv2-action-btn {
-	width: 100%;
-	padding: 10px 12px;
+	padding: 8px 12px;
 	font-size: var(--font-size-sm, 13px);
 	font-weight: var(--font-weight-bold, 600);
 	font-family: var(--font-family);
-	text-align: left;
+	text-align: center;
 	cursor: pointer;
 	line-height: 1.3;
+	white-space: nowrap;
 	transition: background-color 0.15s ease, border-color 0.15s ease;
 }
 
@@ -62,7 +109,6 @@ defineEmits(["select"]);
 .ppv2-actions-empty {
 	font-size: var(--font-size-sm);
 	font-style: italic;
-	text-align: center;
-	padding: 6px 0;
+	padding: 4px 0;
 }
 </style>

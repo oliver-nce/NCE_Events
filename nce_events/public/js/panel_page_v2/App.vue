@@ -2,15 +2,11 @@
 	<div class="ppv2-root">
 		<div class="ppv2-top-row">
 			<div class="ppv2-zone ppv2-zone-title">{{ pageTitle }}</div>
-			<div class="ppv2-zone ppv2-zone-pages">
-				<SpaPageSwitcherFloat />
-			</div>
 		</div>
-		<div class="ppv2-bottom-row">
-			<div class="ppv2-zone ppv2-zone-actions">
-				<ActionsPanel :actions="panelActions" @select="onPanelActionSelect" />
-			</div>
-			<div class="ppv2-zone ppv2-zone-tables">
+		<div class="ppv2-actions-bar">
+			<ActionsPanel :actions="panelActions" @select="onPanelActionSelect" />
+		</div>
+		<div class="ppv2-zone ppv2-zone-tables">
 		<PanelFloat
 			ref="rootPanelFloatRef"
 			:init-x="ROOT_INIT_X"
@@ -217,7 +213,6 @@
 			:init-y="tagFinderY"
 			@close="tagFinderDoctype = ''"
 		/>
-			</div>
 		</div>
 
 		<CardModal
@@ -387,7 +382,6 @@ import CardModal from "./nce_cards/CardModal.vue";
 import PanelFormDialog from "./components/PanelFormDialog.vue";
 import { panelChromeFgTextClass } from "./utils/panelChromeClasses.js";
 import ActionsPanel from "./components/ActionsPanel.vue";
-import SpaPageSwitcherFloat from "./components/SpaPageSwitcherFloat.vue";
 import PanelFindActionBar from "./components/PanelFindActionBar.vue";
 import PanelFindRow from "./components/PanelFindRow.vue";
 import { useFindPanel } from "./composables/useFindPanel.js";
@@ -1158,16 +1152,10 @@ async function onSheets(panelPayload) {
 
 <style scoped>
 /*
- * 4-zone SPA layout
- *   ┌──────────────── 1/3 ────────────────┬──────────── 2/3 ─────────────┐
- *   │  Zone 1 — Title                     │  Zone 2 — Pages float        │
- *   ├── --ppv2-left-col ──┬───────────────┴── 1fr (remainder) ───────────┤
- *   │  Zone 3 — Actions   │  Zone 4 — Table panels, drill-downs, etc.    │
- *   └─────────────────────┴──────────────────────────────────────────────┘
- *
- * Bottom row has its own column split, so the left "Actions" column can be
- * tight (Actions panel width + 40px) while the top row keeps a 1/3 ↔ 2/3 split
- * for title / page switcher.
+ * SPA layout
+ *   ┌─ Title bar ─────────────────────────────────────────────┐
+ *   ├─ Actions bar (page switch + panel actions, horizontal) ─┤
+ *   └─ Table floats (full width) ─────────────────────────────┘
  */
 .ppv2-root {
 	position: relative;
@@ -1175,29 +1163,24 @@ async function onSheets(panelPayload) {
 	height: calc(100vh - 60px);
 	display: flex;
 	flex-direction: column;
-	/* Actions panel init width (200) + 40 px breathing room */
-	--ppv2-left-col: 240px;
 }
 
 .ppv2-top-row {
-	display: grid;
-	grid-template-columns: 1fr 2fr;
-	height: 71px;
 	flex-shrink: 0;
+	height: 71px;
 }
 
-.ppv2-bottom-row {
-	display: grid;
-	grid-template-columns: var(--ppv2-left-col) 1fr;
+.ppv2-actions-bar {
+	flex-shrink: 0;
+	position: relative;
+	z-index: 10;
+}
+
+.ppv2-zone-tables {
+	position: relative;
 	flex: 1;
 	min-height: 0;
-}
-
-.ppv2-zone {
-	position: relative;
 	overflow: visible;
-	min-width: 0;
-	min-height: 0;
 }
 
 .ppv2-find-stack {
