@@ -19,7 +19,7 @@
 			:init-h="550"
 			:theme-slug="config?.theme_slug || ''"
 			:chrome-config="config || null"
-			@brought-to-front="bumpTablePanelZTick"
+			@brought-to-front="onTablePanelBroughtToFront"
 		>
 			<template #header="{ titleClasses }">
 				<span class="ppv2-title" :class="titleClasses">{{
@@ -75,7 +75,7 @@
 			:init-h="600"
 			:theme-slug="p.config?.theme_slug || ''"
 			:chrome-config="p.config || null"
-			@brought-to-front="bumpTablePanelZTick"
+			@brought-to-front="onTablePanelBroughtToFront"
 		>
 			<template #header="{ titleClasses }">
 				<span class="ppv2-title" :class="titleClasses">{{ floatedPanelTitle(p) }}</span>
@@ -784,6 +784,11 @@ function bumpTablePanelZTick() {
 	tablePanelZTick.value++;
 }
 
+function onTablePanelBroughtToFront() {
+	bumpTablePanelZTick();
+	cascadeOpenPanels({ showAlert: false });
+}
+
 function maxTablePanelZ() {
 	let max = rootPanelFloatRef.value?.getZ?.() ?? 0;
 	for (const p of openPanels) {
@@ -849,11 +854,10 @@ function cascadeOpenPanels({ showAlert = true } = {}) {
 	}
 }
 
-/** New panel: bring to front, then cascade so it lands at the largest offset. */
+/** New panel: bring to front (cascade runs via brought-to-front). */
 async function finalizeNewPanelOpen(panel) {
 	await nextTick();
 	panel._floatRef?.bringToFront?.();
-	cascadeOpenPanels({ showAlert: false });
 }
 
 function openTagFinder(panel) {
