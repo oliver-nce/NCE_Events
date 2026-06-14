@@ -19,6 +19,7 @@
 			:init-h="550"
 			:theme-slug="config?.theme_slug || ''"
 			:chrome-config="config || null"
+			@brought-to-front="bumpTablePanelZTick"
 		>
 			<template #header="{ titleClasses }">
 				<span class="ppv2-title" :class="titleClasses">{{
@@ -27,9 +28,11 @@
 				<PanelHeaderToolbar
 					:chrome-config="config || null"
 					:loading="loading"
+					:is-front="isTablePanelFront(null)"
 					:show-click-hint="!!config?.open_card_on_click"
 					:row-count="rows.length"
 					:total="fullTotal"
+					@activate-panel="activateTablePanel(null)"
 					@refresh="onRefreshRoot"
 					@toggle-filter="rootPanelShowFilter = !rootPanelShowFilter"
 					@sheets="onSheets({ doctype: 'WP Tables', parentFilter: {}, rows })"
@@ -72,12 +75,14 @@
 			:init-h="600"
 			:theme-slug="p.config?.theme_slug || ''"
 			:chrome-config="p.config || null"
+			@brought-to-front="bumpTablePanelZTick"
 		>
 			<template #header="{ titleClasses }">
 				<span class="ppv2-title" :class="titleClasses">{{ floatedPanelTitle(p) }}</span>
 				<PanelHeaderToolbar
 					:chrome-config="p.config || null"
 					:loading="!!p.loading"
+					:is-front="isTablePanelFront(p)"
 					:show-click-hint="!!p.config?.open_card_on_click && !p._find?.mode"
 					:row-count="panelLiveRows(p).length"
 					:row-count-label="p._find?.mode === 'find' ? '—' : undefined"
@@ -92,6 +97,7 @@
 					"
 					:show-find="!!p.config?.form_dialog && !p._find?.mode"
 					show-close
+					@activate-panel="activateTablePanel(p)"
 					@refresh="onRefreshPanel(p)"
 					@toggle-filter="p._showFilter = !p._showFilter"
 					@sheets="onSheets(p)"
@@ -397,6 +403,7 @@ const ROOT_INIT_X = 16;
 const ROOT_INIT_Y = 16;
 
 const rootPanelFloatRef = ref(null);
+const tablePanelZTick = ref(0);
 const panelMode = inject("panelMode", null);
 const panelLabel = inject("panelLabel", "NCE Tables");
 const pageTitle = inject("pageTitle", "");
@@ -771,6 +778,33 @@ const CASCADE_STEP_Y = 40;
 
 function setPanelFloatRef(p, el) {
 	p._floatRef = el;
+}
+
+function bumpTablePanelZTick() {
+	tablePanelZTick.value++;
+}
+
+function maxTablePanelZ() {
+	let max = rootPanelFloatRef.value?.getZ?.() ?? 0;
+	for (const p of openPanels) {
+		max = Math.max(max, p._floatRef?.getZ?.() ?? 0);
+	}
+	return max;
+}
+
+/** True when this table-zone float has the highest z (root: panel=null). */
+function isTablePanelFront(panel) {
+	tablePanelZTick.value;
+	const max = maxTablePanelZ();
+	const z = panel
+		? panel._floatRef?.getZ?.() ?? 0
+		: rootPanelFloatRef.value?.getZ?.() ?? 0;
+	return z >= max;
+}
+
+function activateTablePanel(panel) {
+	if (panel) panel._floatRef?.bringToFront?.();
+	else rootPanelFloatRef.value?.bringToFront?.();
 }
 
 /** Slot 1 = nearest to root; higher slots step further down-right. */

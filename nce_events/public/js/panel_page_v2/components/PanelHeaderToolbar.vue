@@ -1,9 +1,13 @@
 <template>
-	<div class="ppv2-header-right" :class="toolbarClasses" @mousedown.stop>
+	<div
+		class="ppv2-header-right"
+		:class="[toolbarClasses, { 'ppv2-header-right--back': !props.isFront }]"
+		@mousedown.capture="onToolbarMouseDown"
+	>
 		<span v-if="props.showClickHint" class="ppv2-click-hint" :class="hintFgTextClass"
 			>Click row for details · Ctrl-click to remove</span
 		>
-		<div class="ppv2-header-controls">
+		<div class="ppv2-header-controls" :class="{ 'ppv2-header-controls--inactive': !props.isFront }">
 			<template v-if="!props.findHeaderMinimal">
 				<button
 					v-if="props.showNewRecord"
@@ -123,7 +127,22 @@ const props = defineProps({
 	rowCountLabel: { type: [Number, String], default: undefined },
 	/** Page Panel chrome config — used for click-hint tonal fg. */
 	chromeConfig: { type: Object, default: null },
+	/** When false, toolbar clicks bring the panel forward instead of firing actions. */
+	isFront: { type: Boolean, default: true },
 });
+
+const emit = defineEmits([
+	"refresh",
+	"toggle-filter",
+	"sheets",
+	"download-csv",
+	"email",
+	"sms",
+	"new-record",
+	"find",
+	"close",
+	"activate-panel",
+]);
 
 const toolbarClasses = computed(() => {
 	const bg = panelChromeBg(props.chromeConfig, "header_toolbar_bg_class");
@@ -145,15 +164,24 @@ const displayRowCount = computed(() => {
 	return props.rowCount;
 });
 
-defineEmits([
-	"refresh",
-	"toggle-filter",
-	"sheets",
-	"download-csv",
-	"email",
-	"sms",
-	"new-record",
-	"find",
-	"close",
-]);
+function onToolbarMouseDown(e) {
+	if (!props.isFront) {
+		e.preventDefault();
+		e.stopPropagation();
+		emit("activate-panel");
+		return;
+	}
+	e.stopPropagation();
+}
 </script>
+
+<style scoped>
+.ppv2-header-right--back {
+	cursor: pointer;
+}
+
+.ppv2-header-controls--inactive {
+	pointer-events: none;
+	opacity: 0.82;
+}
+</style>

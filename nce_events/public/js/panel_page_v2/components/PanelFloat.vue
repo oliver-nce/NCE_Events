@@ -87,7 +87,7 @@ const footerFgExplicitClass = computed(() =>
 	panelChromeExplicitFgClass(props.chromeConfig, "footer_bg_class")
 );
 
-const emit = defineEmits(["close"]);
+const emit = defineEmits(["close", "brought-to-front"]);
 
 const x = ref(props.initX);
 const y = ref(props.initY);
@@ -133,6 +133,7 @@ const floatStyle = computed(() => ({
 
 function bringToFront() {
 	z.value = getNextZ();
+	emit("brought-to-front");
 }
 
 function setPosition(nx, ny) {
