@@ -131,6 +131,8 @@
     <div
       v-else-if="isTextarea && readOnly"
       class="ppv2-fd-input ppv2-fd-textarea ppv2-fd-readonly-plain theme-border theme-rounded-sm"
+      tabindex="-1"
+      @keydown.prevent
     >{{ modelValue || "" }}</div>
     <textarea
       v-else-if="isTextarea"
@@ -148,6 +150,8 @@
     <div
       v-else-if="readOnly"
       class="ppv2-fd-input ppv2-fd-readonly-plain theme-border theme-rounded-sm"
+      tabindex="-1"
+      @keydown.prevent
     >{{ inputDisplayValue }}</div>
     <input
       v-else

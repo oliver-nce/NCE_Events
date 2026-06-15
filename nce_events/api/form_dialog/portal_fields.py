@@ -218,7 +218,7 @@ def _build_portal_editor_rows(
 			"label": cstr(f.get("label") or "").strip() or fn,
 			"fieldtype": cstr(f.get("fieldtype") or ""),
 			"show": show_b,
-			"editable": 1 if cint(entry.get("editable")) else 0,
+			"editable": 1 if show_b else 0,
 		}
 		sr = cint(entry.get("sort_rank")) if show_b else 0
 		sd = cstr(entry.get("sort_dir") or "").strip().lower()
@@ -269,7 +269,7 @@ def _normalize_portal_field_config_for_save(
 		rec: dict[str, int | str] = {
 			"fieldname": fn,
 			"show": show_b,
-			"editable": 1 if cint(entry.get("editable")) else 0,
+			"editable": 1 if show_b else 0,
 		}
 		if show_b and sr > 0:
 			rec["sort_rank"] = sr

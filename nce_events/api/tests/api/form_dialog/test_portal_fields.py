@@ -67,6 +67,7 @@ class TestRelatedPortalFieldEditor(FrappeTestCase):
 		)
 		doc.reload()
 		cfg2 = json.loads(doc.related_doctypes[0].portal_field_config or "[]")
+		self.assertEqual(cfg2[0].get("editable"), 1)
 		self.assertEqual(cfg2[0].get("sort_rank"), 1)
 		self.assertEqual(cfg2[0].get("sort_dir"), "desc")
 
@@ -97,6 +98,7 @@ class TestPortalNameField(unittest.TestCase):
 		self.assertEqual(len(out), 1)
 		self.assertEqual(out[0]["fieldname"], "name")
 		self.assertEqual(out[0]["show"], 1)
+		self.assertEqual(out[0]["editable"], 1)
 
 
 class TestNormalizePortalFieldConfig(unittest.TestCase):

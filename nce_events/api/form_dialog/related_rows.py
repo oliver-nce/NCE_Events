@@ -5,6 +5,7 @@ Reads (``get_form_dialog_related_rows``) and writes
 (``save_form_dialog_related_rows``) child-DocType rows shown in the related
 tabs of a Form Dialog. All field selection and editability is gated by the
 portal_field_config persisted on the Form Dialog Related DocType row.
+Editability at runtime follows DocType read_only and Page Panel read_only_fields (not portal editable flags).
 """
 
 from __future__ import annotations
@@ -293,21 +294,49 @@ _RELATED_SAVE_SKIP_FIELDTYPES: frozenset[str] = frozenset(
 )
 
 
-def _editable_related_fieldnames_for_save(row: Any, child_dt: str) -> set[str]:
-	"""Portal columns with show=1, editable=1, and safe fieldtypes on ``child_dt``."""
+def _page_panel_read_only_keys(root_doctype: str) -> set[str]:
+	"""Comma-delimited read_only_fields from Page Panel for ``root_doctype``."""
+	from nce_events.api.panel_api_pkg._helpers import _parse_csv
+	from nce_events.api.panel_api_pkg.page_panel_lookup import get_page_panel_doc_for_root
+
+	doc = get_page_panel_doc_for_root(root_doctype)
+	if not doc:
+		return set()
+	return {k for k in _parse_csv(getattr(doc, "read_only_fields", None)) if k}
+
+
+def _child_field_blocked_by_panel_read_only(
+	read_only_keys: set[str], link_field: str, fieldname: str
+) -> bool:
+	fn = cstr(fieldname or "").strip()
+	if not fn:
+		return False
+	if fn in read_only_keys:
+		return True
+	lf = cstr(link_field or "").strip()
+	if lf and f"{lf}.{fn}" in read_only_keys:
+		return True
+	return False
+
+
+def _editable_related_fieldnames_for_save(
+	row: Any, child_dt: str, *, root_doctype: str = "", link_field: str = ""
+) -> set[str]:
+	"""Shown portal columns with safe fieldtypes, excluding meta and panel read-only."""
 	columns, _ob = _related_list_columns_from_child_row(row)
 	meta = frappe.get_meta(child_dt)
+	panel_ro = _page_panel_read_only_keys(root_doctype) if root_doctype else set()
 	out: set[str] = set()
 	for c in columns:
-		if not cint(c.get("editable")):
-			continue
 		fn = cstr(c.get("fieldname") or "").strip()
 		if not fn or fn == "name":
 			continue
 		df = meta.get_field(fn)
 		if not df:
 			continue
-		if getattr(df, "read_only", 0):
+		if getattr(df, "read_only", 0) or cint(c.get("read_only")):
+			continue
+		if _child_field_blocked_by_panel_read_only(panel_ro, link_field, fn):
 			continue
 		ft = cstr(df.fieldtype or "").strip()
 		if ft in _RELATED_SAVE_SKIP_FIELDTYPES:
@@ -340,7 +369,7 @@ def save_form_dialog_related_rows(
 	"""
 	Persist field changes on related-tab rows (panel V2).
 
-	Only fieldnames marked editable in the related portal config are accepted.
+	Only fieldnames that are shown, not read-only (DocType or Page Panel), and safe fieldtypes are accepted.
 	Each document must appear in the same filtered set as ``get_form_dialog_related_rows``.
 	Root document must be writable (same session contract as ``save_form_dialog_document``).
 
@@ -371,7 +400,9 @@ def save_form_dialog_related_rows(
 	_enforce_related_edit_condition(row, root_doctype, root_name)
 
 	allowed_names = _allowed_child_names_for_related_tab(root_name, child_dt, link_f, hc)
-	allowed_fields = _editable_related_fieldnames_for_save(row, child_dt)
+	allowed_fields = _editable_related_fieldnames_for_save(
+		row, child_dt, root_doctype=root_doctype, link_field=link_f
+	)
 
 	if not updates:
 		return {"ok": 1, "saved": 0, "sync_job_ids": []}
@@ -437,7 +468,9 @@ def add_form_dialog_related_row(
 		frappe.throw(_("Not permitted"), frappe.PermissionError)
 
 	values = frappe.parse_json(values) if isinstance(values, str) else (values or {})
-	allowed_fields = _editable_related_fieldnames_for_save(row, child_dt)
+	allowed_fields = _editable_related_fieldnames_for_save(
+		row, child_dt, root_doctype=root_doctype, link_field=link_f
+	)
 	new = frappe.new_doc(child_dt)
 	new.set(link_f, root_name)
 	for fn, v in (values or {}).items():

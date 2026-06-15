@@ -1,5 +1,7 @@
 /** Mirror Desk ``form_dialog.js`` / server portal_fields for inline-child grids. */
 
+import { metaReadOnlyFromField } from "./portalColumnEditable.js";
+
 const SKIP_TYPES = new Set([
 	"Tab Break",
 	"Section Break",
@@ -79,7 +81,7 @@ export function buildPortalEditorRows(metaFields, portalEntries, portalOpts = {}
 			label: (String(f.label || "").trim() || fn),
 			fieldtype: String(f.fieldtype || ""),
 			show: showB,
-			editable: cint(entry.editable) ? 1 : 0,
+			editable: showB ? 1 : 0,
 		};
 		let sr = cint(entry.sort_rank);
 		if (!showB) {
@@ -141,7 +143,7 @@ export function portalColumnsForGrid(metaFields, portalRaw, portalOpts = {}) {
 				label: String(metaName.label || "").trim() || "name",
 				fieldtype: String(metaName.fieldtype || "Data"),
 				options: String(metaName.options || "").trim(),
-				editable: 0,
+				read_only: metaReadOnlyFromField(metaName) || 1,
 				reqd: cint(metaName.reqd),
 			},
 		];
@@ -156,7 +158,7 @@ export function portalColumnsForGrid(metaFields, portalRaw, portalOpts = {}) {
 			label: String(r.label || "").trim() || fn,
 			fieldtype: ft,
 			options: String(metaF.options || "").trim(),
-			editable: cint(r.editable),
+			read_only: metaReadOnlyFromField(metaF),
 			reqd: cint(metaF.reqd),
 		};
 	});

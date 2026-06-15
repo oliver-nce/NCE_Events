@@ -37,6 +37,7 @@
 					:go-to-busy="goToBusy"
 					:form-data="formData"
 					:original-form-data="originalFormData"
+					:read-only-fields="readOnlyFields"
 					@related-dirty="(v) => $emit('related-dirty', v)"
 					@go-to-panel="(ev) => $emit('go-to-panel', ev)"
 				/>
@@ -45,6 +46,7 @@
 					v-else-if="tab._inlineChild"
 					:tab="tab"
 					:form-data="formData"
+					:read-only-fields="readOnlyFields"
 					:read-only-host="readOnlyHost"
 				/>
 
@@ -147,6 +149,8 @@ const props = defineProps({
 	isFieldVisible: { type: Function, required: true },
 	isFieldMandatory: { type: Function, required: true },
 	isFieldReadOnly: { type: Function, required: true },
+	/** Page Panel Display read_only_fields — gates related/inline grid editability. */
+	readOnlyFields: { type: Array, default: () => [] },
 	/** When set, field-level dirty highlight uses display baseline (not formData). */
 	isFieldDisplayDirty: { type: Function, default: null },
 	findLayoutMode: { type: Boolean, default: false },

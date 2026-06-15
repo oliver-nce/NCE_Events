@@ -77,6 +77,7 @@
 			:is-field-visible="form.isFieldVisible"
 			:is-field-mandatory="form.isFieldMandatory"
 			:is-field-read-only="form.isFieldReadOnly"
+				:read-only-fields="readOnlyFields"
 				:is-field-display-dirty="isFieldDisplayDirty"
 				:find-layout-mode="findCriteriaActive"
 				:find-criteria="findCriteria"

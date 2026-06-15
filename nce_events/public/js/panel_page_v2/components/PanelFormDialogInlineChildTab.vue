@@ -107,28 +107,23 @@
 <script setup>
 import { computed } from "vue";
 import { portalColumnsForGrid } from "../utils/formDialogPortalColumns.js";
+import { isPortalGridColumnEditable } from "../utils/portalColumnEditable.js";
 
 const props = defineProps({
 	tab: { type: Object, required: true },
 	formData: { type: Object, required: true },
 	readOnlyHost: { type: Boolean, default: false },
+	readOnlyFields: { type: Array, default: () => [] },
 });
-
-const INLINE_NON_EDITABLE_TYPES = new Set([
-	"Link",
-	"Dynamic Link",
-	"Table",
-	"Attach",
-	"Attach Image",
-	"HTML",
-	"Read Only",
-	"Button",
-	"Barcode",
-	"Geolocation",
-]);
 
 const ic = computed(() => props.tab._inlineChild || {});
 const pfn = computed(() => String(ic.value.parent_fieldname || "").trim());
+
+const portalEditOpts = computed(() => ({
+	readOnlyFields: props.readOnlyFields,
+	linkField: pfn.value,
+	readOnlyHost: props.readOnlyHost,
+}));
 
 const parsedInfo = computed(() => {
 	const raw = ic.value.info;
@@ -183,10 +178,7 @@ function columnMandatory(col) {
 }
 
 function isColEditable(col) {
-	if (!col || !(Number(col.editable) === 1 || col.editable === true)) {
-		return false;
-	}
-	return !INLINE_NON_EDITABLE_TYPES.has(col.fieldtype);
+	return isPortalGridColumnEditable(col, portalEditOpts.value);
 }
 
 function isNumberField(col) {

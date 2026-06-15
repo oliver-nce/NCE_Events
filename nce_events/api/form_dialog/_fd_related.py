@@ -296,7 +296,7 @@ def _related_list_columns_from_child_row(row: Any) -> tuple[list[dict[str, Any]]
 					"label": cstr(name_meta.get("label") or "").strip() or "name",
 					"fieldtype": cstr(name_meta.get("fieldtype") or "Data"),
 					"options": cstr(name_meta.get("options") or "").strip(),
-					"editable": 0,
+					"read_only": cint(name_meta.get("read_only")) or 1,
 					"reqd": cint(name_meta.get("reqd")),
 				}
 			],
@@ -314,7 +314,7 @@ def _related_list_columns_from_child_row(row: Any) -> tuple[list[dict[str, Any]]
 				"label": cstr(r.get("label") or "").strip() or fn,
 				"fieldtype": ft,
 				"options": cstr(meta_f.get("options") or "").strip(),
-				"editable": cint(r.get("editable")),
+				"read_only": cint(meta_f.get("read_only")),
 				"reqd": cint(meta_f.get("reqd")),
 			},
 		)

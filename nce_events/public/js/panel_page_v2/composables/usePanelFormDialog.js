@@ -1,6 +1,7 @@
 import { ref, reactive, computed, unref, watch } from "vue";
 import { isFormDataDirty } from "../utils/formDialogSnapshot.js";
 import { createHandleFetchFrom } from "./formDialogFetchFrom.js";
+import { isRootFieldPanelReadOnly } from "../utils/panelFieldReadOnly.js";
 import {
 	validateFrozenForm,
 	validatePanelRequiredFields,
@@ -210,12 +211,8 @@ export function usePanelFormDialog({
 	function isFieldReadOnly(field) {
 		const ov = scriptFieldOverrides[field.fieldname];
 		if (ov && ov.read_only !== undefined) return !!ov.read_only;
-		const keys = panelReadOnlyFields ? unref(panelReadOnlyFields) : [];
-		if (Array.isArray(keys) && keys.length) {
-			const fn = field.fieldname;
-			if (keys.some((k) => String(k || "").trim() === fn && !String(k).includes("."))) {
-				return true;
-			}
+		if (isRootFieldPanelReadOnly(field.fieldname, unref(panelReadOnlyFields) || [])) {
+			return true;
 		}
 		return isFieldReadOnlyRule(field, formData);
 	}

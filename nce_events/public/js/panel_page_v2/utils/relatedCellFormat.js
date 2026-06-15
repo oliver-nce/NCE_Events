@@ -1,17 +1,9 @@
 /** Pure cell-format helpers for related-doctype and similar portal grids. */
 
-export const RELATED_GRID_NON_EDITABLE_TYPES = new Set([
-	"Link",
-	"Dynamic Link",
-	"Table",
-	"Attach",
-	"Attach Image",
-	"HTML",
-	"Read Only",
-	"Button",
-	"Barcode",
-	"Geolocation",
-]);
+export {
+	isPortalGridColumnEditable as isRelatedColEditable,
+	RELATED_GRID_NON_EDITABLE_TYPES,
+} from "./portalColumnEditable.js";
 
 /** Related table column: show red asterisk when child DocType marks field mandatory (`reqd`). */
 export function relatedColumnMandatory(col) {
@@ -73,14 +65,6 @@ export function selectOptionsForCell(col, rw) {
 		return base;
 	}
 	return cur ? [cur] : [];
-}
-
-export function isRelatedColEditable(col) {
-	if (!col || !(Number(col.editable) === 1 || col.editable === true)) {
-		return false;
-	}
-	const ft = col.fieldtype;
-	return !RELATED_GRID_NON_EDITABLE_TYPES.has(ft);
 }
 
 export function isRelatedNumberField(col) {

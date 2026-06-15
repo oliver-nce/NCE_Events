@@ -2513,8 +2513,6 @@ function _open_related_portal_float(frm, opts) {
 				__("Field") +
 				'</th><th style="width:70px;">' +
 				__("Show") +
-				'</th><th style="width:90px;">' +
-				__("Editable") +
 				'</th><th style="min-width:108px;">' +
 				__("Sort") +
 				'</th></tr></thead><tbody class="pp-portal-field-tbody">';
@@ -2522,7 +2520,6 @@ function _open_related_portal_float(frm, opts) {
 			rows.forEach(function (row) {
 				const fn = row.fieldname || "";
 				const sh = row.show ? " checked" : "";
-				const ed = row.editable ? " checked" : "";
 				const srRaw = parseInt(row.sort_rank, 10) || 0;
 				const sdRaw = row.sort_dir === "desc" ? "desc" : "asc";
 				const showOn = !!row.show && Number(row.show) !== 0;
@@ -2550,9 +2547,6 @@ function _open_related_portal_float(frm, opts) {
 					")</span></td>" +
 					'<td class="text-center"><input type="checkbox" class="pp-portal-show" draggable="false"' +
 					sh +
-					" /></td>" +
-					'<td class="text-center"><input type="checkbox" class="pp-portal-editable" draggable="false"' +
-					ed +
 					' /></td><td class="text-center pp-portal-sort-cell" style="white-space:nowrap;">' +
 					'<span class="pp-portal-sort-rank" draggable="false" style="display:inline-block;min-width:18px;font-weight:600;cursor:pointer;margin-right:4px;" title="' +
 					__("Click to add or remove from sort (Show must be on)") +
@@ -2798,7 +2792,7 @@ function _open_related_portal_float(frm, opts) {
 					const o = {
 						fieldname: fn,
 						show: show,
-						editable: $(this).find(".pp-portal-editable").prop("checked") ? 1 : 0,
+						editable: show ? 1 : 0,
 					};
 					if (show && sr > 0) {
 						o.sort_rank = sr;

@@ -470,6 +470,7 @@ const props = defineProps({
 	goToBusy: { type: Boolean, default: false },
 	formData: { type: Object, required: true },
 	originalFormData: { type: Object, default: null },
+	readOnlyFields: { type: Array, default: () => [] },
 });
 
 const emit = defineEmits(["related-dirty", "go-to-panel"]);
@@ -498,6 +499,21 @@ function isActionPromptNumeric(pa) {
 
 const editLocked = computed(() => relatedState[props.ti]?.edit_allowed === false);
 
+const relatedLinkField = computed(() => String(props.tab?._related?.link_field || "").trim());
+
+const portalEditOpts = computed(() => ({
+	readOnlyFields: props.readOnlyFields,
+	linkField: relatedLinkField.value,
+}));
+
+function isRelatedCellEditable(col) {
+	if (!isRelatedColEditable(col, portalEditOpts.value)) {
+		return false;
+	}
+	const st = relatedState[props.ti];
+	return st?.edit_allowed !== false;
+}
+
 const showRowMutateTools = computed(() => {
 	if (!props.tab?._related) {
 		return false;
@@ -506,14 +522,6 @@ const showRowMutateTools = computed(() => {
 });
 
 const canMutateRows = computed(() => showRowMutateTools.value && !editLocked.value);
-
-function isRelatedCellEditable(col) {
-	if (!isRelatedColEditable(col)) {
-		return false;
-	}
-	const st = relatedState[props.ti];
-	return st?.edit_allowed !== false;
-}
 
 function formatRelatedCellDisplay(rw, col) {
 	if (col?.fieldtype === "Check") {

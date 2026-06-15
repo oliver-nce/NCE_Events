@@ -98,7 +98,7 @@
 				label: (String(f.label || "").trim() || fn),
 				fieldtype: String(f.fieldtype || ""),
 				show: showB,
-				editable: _cint(entry.editable) ? 1 : 0,
+				editable: showB ? 1 : 0,
 			};
 			let sr = _cint(entry.sort_rank);
 			if (!showB) {
@@ -198,7 +198,7 @@
 			const o = {
 				fieldname: fn,
 				show: show,
-				editable: $(this).find(".fd-portal-editable").prop("checked") ? 1 : 0,
+				editable: show ? 1 : 0,
 			};
 			if (show && sr > 0) {
 				o.sort_rank = sr;
@@ -334,6 +334,7 @@
 
 	function _wireFieldsTabEvents(frm, rowName, $tbody, $innerContent) {
 		const $summary = $innerContent.find(".fd-portal-sort-summary");
+		$innerContent.off(".fdPortal");
 		let dragSrc = null;
 		$tbody
 			.find("tr")
@@ -369,7 +370,6 @@
 				_syncRowToDoc(frm, rowName);
 			});
 
-		$innerContent.off(".fdPortal");
 		$innerContent.on("change.fdPortal", ".fd-portal-show", function () {
 			const $tr = $(this).closest("tr");
 			if (!$(this).prop("checked")) {
@@ -377,9 +377,6 @@
 				$tr.attr("data-sort-dir", "asc");
 			}
 			_renumberSortRanks($tbody, $summary);
-			_syncRowToDoc(frm, rowName);
-		});
-		$innerContent.on("change.fdPortal", ".fd-portal-editable", function () {
 			_syncRowToDoc(frm, rowName);
 		});
 		$innerContent.on("click.fdPortal", ".fd-portal-sort-rank", function (e) {
@@ -640,8 +637,6 @@
 			__("Field") +
 			'</th><th style="width:70px;">' +
 			__("Show") +
-			'</th><th style="width:90px;">' +
-			__("Editable") +
 			'</th><th style="min-width:108px;">' +
 			__("Sort") +
 			"</th></tr></thead><tbody class=\"fd-portal-field-tbody\">";
@@ -649,7 +644,6 @@
 		rows.forEach(function (row) {
 			const fn = row.fieldname || "";
 			const sh = row.show ? " checked" : "";
-			const ed = row.editable ? " checked" : "";
 			const srRaw = parseInt(row.sort_rank, 10) || 0;
 			const sdRaw = row.sort_dir === "desc" ? "desc" : "asc";
 			const showOn = !!row.show && Number(row.show) !== 0;
@@ -679,10 +673,7 @@
 				")</span></td>" +
 				'<td class="text-center"><input type="checkbox" class="fd-portal-show"' +
 				sh +
-				" /></td>" +
-				'<td class="text-center"><input type="checkbox" class="fd-portal-editable"' +
-				ed +
-				' /></td><td class="text-center" style="white-space:nowrap;">' +
+				" /></td><td class=\"text-center\" style=\"white-space:nowrap;\">" +
 				'<span class="fd-portal-sort-pill">—</span>' +
 				'<span class="fd-portal-sort-rank" style="display:inline-block;min-width:18px;font-weight:600;cursor:pointer;margin-right:4px;">' +
 				rankLabel +
