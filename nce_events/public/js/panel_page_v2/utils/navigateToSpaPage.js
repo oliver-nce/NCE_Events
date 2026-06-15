@@ -15,7 +15,8 @@ export function navigateToSpaPage(route) {
 		return;
 	}
 	if (typeof frappe !== "undefined" && typeof frappe.set_route === "function") {
-		frappe.set_route("page", slug);
+		// Custom Frappe Page route — NOT set_route("page", slug) which opens the Page doctype form.
+		frappe.set_route(slug);
 		return;
 	}
 	window.location.assign(raw.startsWith("/") ? raw : `/app/${slug}`);
