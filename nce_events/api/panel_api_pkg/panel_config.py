@@ -100,6 +100,7 @@ def _panel_config_from_doc(doc: Any) -> dict[str, Any]:
 			sms_field = auto_sms
 	bold_fields = _parse_csv(doc.bold_fields)
 	required_fields = list(dict.fromkeys(_parse_csv(getattr(doc, "required_fields", None))))
+	read_only_fields = list(dict.fromkeys(_parse_csv(getattr(doc, "read_only_fields", None))))
 	search_only_fields = list(dict.fromkeys(_parse_csv(getattr(doc, "search_fields", None))))
 
 	# Build label/fieldtype metadata for search-only fields (used by filter bar + Find dialog)
@@ -202,6 +203,7 @@ def _panel_config_from_doc(doc: Any) -> dict[str, Any]:
 		"gender_color_fields": gender_color_fields,
 		"title_field": title_field,
 		"required_fields": required_fields,
+		"read_only_fields": read_only_fields,
 		"search_fields": search_only_fields,
 		"search_only_columns": search_only_cols,
 		"effective_searchable": list(dict.fromkeys(column_order + search_only_fields)),

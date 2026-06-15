@@ -246,6 +246,7 @@ const MATRIX_FIELDS = [
 	"gender_color_fields",
 	"title_field",
 	"required_fields",
+	"read_only_fields",
 	"search_fields",
 ];
 const BREAK_FIELDS = [
@@ -484,6 +485,84 @@ function _clear_doctype_field_cache() {
 	});
 }
 
+const PP_DISPLAY_COL_DEFAULTS = { field: 110, label: 150 };
+
+function _pp_display_col_storage_key(panelName) {
+	return "pp-display-col-widths:" + (panelName || "new");
+}
+
+function _load_display_col_widths(panelName) {
+	try {
+		const raw = localStorage.getItem(_pp_display_col_storage_key(panelName));
+		if (raw) {
+			const parsed = JSON.parse(raw);
+			return {
+				field: Math.max(60, parseInt(parsed.field, 10) || PP_DISPLAY_COL_DEFAULTS.field),
+				label: Math.max(60, parseInt(parsed.label, 10) || PP_DISPLAY_COL_DEFAULTS.label),
+			};
+		}
+	} catch (e) {
+		/* ignore */
+	}
+	return Object.assign({}, PP_DISPLAY_COL_DEFAULTS);
+}
+
+function _save_display_col_widths(panelName, widths) {
+	try {
+		localStorage.setItem(_pp_display_col_storage_key(panelName), JSON.stringify(widths));
+	} catch (e) {
+		/* ignore */
+	}
+}
+
+/** Drag-resize Field / Label columns on Display and Order matrices. */
+function _wire_display_matrix_col_resize($table, panelName, opts) {
+	if (!$table || !$table.length) return;
+	opts = opts || {};
+	const hasGripCol = !!opts.hasGripCol;
+	const fieldThIdx = hasGripCol ? 1 : 0;
+	const labelThIdx = hasGripCol ? 2 : 1;
+	const widths = _load_display_col_widths(panelName);
+	const colgroupHtml = hasGripCol
+		? '<colgroup><col style="width:24px;" /><col class="pp-display-col-field" /><col class="pp-display-col-label" /><col /></colgroup>'
+		: '<colgroup><col class="pp-display-col-field" /><col class="pp-display-col-label" /></colgroup>';
+	const $colgroup = $(colgroupHtml);
+	$table.prepend($colgroup);
+	$table.css({ tableLayout: "fixed", width: "100%" });
+	$colgroup.find(".pp-display-col-field").css("width", widths.field + "px");
+	$colgroup.find(".pp-display-col-label").css("width", widths.label + "px");
+
+	function _attachHandle($th, colClass) {
+		const $handle = $('<span class="pp-display-col-resize" aria-hidden="true"></span>');
+		$th.css({ position: "relative" }).append($handle);
+		$handle.on("mousedown", function (e) {
+			e.preventDefault();
+			e.stopPropagation();
+			const startX = e.clientX;
+			const $col = $colgroup.find(colClass);
+			const startW = $col.width() || PP_DISPLAY_COL_DEFAULTS.field;
+			$("body").addClass("pp-display-col-resizing");
+			function onMove(ev) {
+				const next = Math.max(60, Math.min(480, startW + (ev.clientX - startX)));
+				$col.css("width", next + "px");
+			}
+			function onUp() {
+				$(document).off("mousemove.ppDisplayColResize mouseup.ppDisplayColResize");
+				$("body").removeClass("pp-display-col-resizing");
+				const key = colClass === ".pp-display-col-field" ? "field" : "label";
+				widths[key] = Math.round($col.width() || startW);
+				_save_display_col_widths(panelName, widths);
+			}
+			$(document).on("mousemove.ppDisplayColResize", onMove);
+			$(document).on("mouseup.ppDisplayColResize", onUp);
+		});
+	}
+
+	const $ths = $table.find("thead th");
+	if ($ths.eq(fieldThIdx).length) _attachHandle($ths.eq(fieldThIdx), ".pp-display-col-field");
+	if ($ths.eq(labelThIdx).length) _attachHandle($ths.eq(labelThIdx), ".pp-display-col-label");
+}
+
 /** Keys that exist as rows on the Display matrices after a fresh meta fetch. */
 function _collect_valid_display_keys(root_fields, link_fields, linked_data, frm) {
 	const valid = {};
@@ -517,6 +596,7 @@ function _prune_stale_display_keys(frm, valid) {
 	const col = keep(frm.doc.column_order);
 	const bold = keep(frm.doc.bold_fields);
 	const req = keep(frm.doc.required_fields);
+	const ro = keep(frm.doc.read_only_fields);
 	const tint = keep(frm.doc.gender_color_fields);
 	const srch = keep(frm.doc.search_fields);
 	const gcRaw = (frm.doc.gender_column || "").trim();
@@ -527,12 +607,15 @@ function _prune_stale_display_keys(frm, valid) {
 	const nextCol = col.join(", ");
 	const nextBold = bold.join(", ");
 	const nextReq = req.join(", ");
+	const nextRo = ro.join(", ");
 	const nextTint = tint.join(", ");
 	const nextSrch = srch.join(", ");
 	if (nextCol !== (frm.doc.column_order || "").trim()) frm.set_value("column_order", nextCol);
 	if (nextBold !== (frm.doc.bold_fields || "").trim()) frm.set_value("bold_fields", nextBold);
 	if (nextReq !== (frm.doc.required_fields || "").trim())
 		frm.set_value("required_fields", nextReq);
+	if (nextRo !== (frm.doc.read_only_fields || "").trim())
+		frm.set_value("read_only_fields", nextRo);
 	if (nextTint !== (frm.doc.gender_color_fields || "").trim())
 		frm.set_value("gender_color_fields", nextTint);
 	if (nextSrch !== (frm.doc.search_fields || "").trim())
@@ -555,6 +638,7 @@ function _display_has_orphan_keys(frm, valid) {
 	if (listHasOrphan(frm.doc.column_order)) return true;
 	if (listHasOrphan(frm.doc.bold_fields)) return true;
 	if (listHasOrphan(frm.doc.required_fields)) return true;
+	if (listHasOrphan(frm.doc.read_only_fields)) return true;
 	if (listHasOrphan(frm.doc.gender_color_fields)) return true;
 	if (listHasOrphan(frm.doc.search_fields)) return true;
 	const gc = (frm.doc.gender_column || "").trim();
@@ -568,7 +652,7 @@ function _display_has_orphan_keys(frm, valid) {
 //
 // column_order stores: "fieldname, fieldname, link_field.fieldname, ..."
 // Root fields: bare fieldname.  Linked fields: link_field.fieldname.
-// bold_fields, required_fields, gender_column, gender_color_fields use the same dot notation.
+// bold_fields, required_fields, read_only_fields, gender_column, gender_color_fields use the same dot notation.
 
 function _render_display(frm) {
 	const $container = $(frm.layout.wrapper).find(".pp-matrix-wrap");
@@ -657,6 +741,11 @@ function _isDocfieldMetaReqd(f) {
 	return !!(f && (Number(f.reqd) === 1 || f.reqd === true || f.reqd === "1"));
 }
 
+/** DocType read_only — locked on in Display matrix Read Only column. */
+function _isDocfieldMetaReadOnly(f) {
+	return !!(f && (Number(f.read_only) === 1 || f.read_only === true || f.read_only === "1"));
+}
+
 function _build_display_tabs(frm, $container, root_fields, link_fields, linked_data, rootPack) {
 	// Drop keys for removed root Links / removed linked fields / removed related columns.
 	// Sub-tabs follow current link_fields only; stale "link.field" tokens must leave column_order
@@ -686,6 +775,7 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		column_order: _parse_csv(frm.doc.column_order),
 		bold: _parse_csv(frm.doc.bold_fields),
 		required: _parse_csv(frm.doc.required_fields),
+		read_only: _parse_csv(frm.doc.read_only_fields),
 		gender_col: (frm.doc.gender_column || "").trim(),
 		gender_tint: _parse_csv(frm.doc.gender_color_fields),
 		title_field: (frm.doc.title_field || "").trim(),
@@ -736,6 +826,32 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		const ld = linked_data[lf.fieldname];
 		if (ld && ld.fields) {
 			_registerMetaReqd(ld.fields, lf.fieldname + ".");
+		}
+	});
+
+	const metaReadOnlyKeys = {};
+	const forcedReadOnlyKeys = {};
+	function _registerMetaReadOnly(fields, prefix) {
+		(fields || []).forEach(function (f) {
+			if (f._related) {
+				return;
+			}
+			const key = prefix + f.fieldname;
+			if (f._computed) {
+				forcedReadOnlyKeys[key] = true;
+				return;
+			}
+			if (_isDocfieldMetaReadOnly(f)) {
+				metaReadOnlyKeys[key] = true;
+				forcedReadOnlyKeys[key] = true;
+			}
+		});
+	}
+	_registerMetaReadOnly(root_with_computed, "");
+	link_fields.forEach(function (lf) {
+		const ld = linked_data[lf.fieldname];
+		if (ld && ld.fields) {
+			_registerMetaReadOnly(ld.fields, lf.fieldname + ".");
 		}
 	});
 
@@ -796,6 +912,8 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		matrices[st.id] = _build_field_matrix(fields, prefix, uid, saved, shown_set, {
 			showTitleColumn: st.id === "_root",
 			metaReqdKeys: metaReqdKeys,
+			metaReadOnlyKeys: metaReadOnlyKeys,
+			forcedReadOnlyKeys: forcedReadOnlyKeys,
 		});
 	});
 
@@ -804,6 +922,7 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 		let col_order = [],
 			nb = [],
 			nr = [],
+			nro = [],
 			nt = [],
 			ns = [],
 			ngc = "",
@@ -819,6 +938,7 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 				if (showOn) col_order.push(key);
 				if ($r.filter('[data-role="bold"]').prop("checked")) nb.push(key);
 				if ($r.filter('[data-role="required"]').prop("checked")) nr.push(key);
+				if ($r.filter('[data-role="read-only"]').prop("checked")) nro.push(key);
 				if ($r.filter('[data-role="tint"]').prop("checked")) nt.push(key);
 				// Search Only: only when Show is off (mutual exclusion enforced in UI but double-checked here)
 				if (!showOn && $r.filter('[data-role="search-only"]').prop("checked")) ns.push(key);
@@ -857,9 +977,14 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 			col_order = reordered;
 		}
 
+		Object.keys(forcedReadOnlyKeys).forEach(function (k) {
+			if (nro.indexOf(k) === -1) nro.push(k);
+		});
+
 		frm.set_value("column_order", col_order.join(", "));
 		frm.set_value("bold_fields", nb.join(", "));
 		frm.set_value("required_fields", nr.join(", "));
+		frm.set_value("read_only_fields", nro.join(", "));
 		frm.set_value("gender_column", ngc);
 		frm.set_value("gender_color_fields", nt.join(", "));
 		frm.set_value("title_field", ntf);
@@ -958,7 +1083,8 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 				matrices,
 				saved,
 				_sync_all,
-				orderTitleKey
+				orderTitleKey,
+				frm.doc.name || "new"
 			);
 			return;
 		}
@@ -1034,6 +1160,7 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 
 		$panel.append($toolbar);
 		$panel.append(m.$matrix);
+		_wire_display_matrix_col_resize(m.$matrix, frm.doc.name || "new");
 		$sub_content.append($panel);
 	}
 
@@ -1050,6 +1177,10 @@ tr[draggable="true"]:active .matrix-drag-handle { cursor: grabbing; }
 .pp-fmt-dot { display:inline-block; width:9px; height:9px; border-radius:50%; vertical-align:middle; margin-right:2px; box-sizing:border-box; }
 .pp-fmt-dot--empty { border:1.5px solid #b7babe; background:transparent; }
 .pp-fmt-dot--set { background:#4198F0; border:1.5px solid #4198F0; }
+.pp-display-col-resize { position:absolute; top:0; right:-3px; width:7px; height:100%; cursor:col-resize; z-index:2; }
+.pp-display-col-resize:hover { background:rgba(65,152,240,0.35); }
+body.pp-display-col-resizing, body.pp-display-col-resizing * { cursor:col-resize !important; user-select:none !important; }
+.pp-display-field-matrix td, .pp-order-matrix td { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 </style>`);
 	}
 
@@ -1112,12 +1243,13 @@ function _refresh_fmt_buttons(matrices, sub_tabs, saved) {
 function _build_field_matrix(fields, prefix, uid, saved, shown_set, matrix_opts) {
 	matrix_opts = matrix_opts || {};
 	const metaReqdKeys = matrix_opts.metaReqdKeys || {};
+	const forcedReadOnlyKeys = matrix_opts.forcedReadOnlyKeys || {};
 	const showTitleColumn = !!matrix_opts.showTitleColumn;
 	const th_style =
 		'style="text-align:center;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;"';
 	const th_left =
 		'style="text-align:left;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;"';
-	let html = `<table style="width:100%;border-collapse:collapse;font-size:12px;">
+	let html = `<table class="pp-display-field-matrix" style="width:100%;border-collapse:collapse;font-size:12px;">
 		<thead><tr>
 			<th ${th_left}>Field</th>
 			<th ${th_left}>Label</th>
@@ -1125,6 +1257,7 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set, matrix_opts)
 			<th ${th_style}>Search Only</th>
 			<th ${th_style}>Bold</th>
 			<th ${th_style}>Required</th>
+			<th ${th_style}>Read Only</th>
 			<th ${th_style}>Gender</th>
 			<th ${th_style}>Tint</th>
 			<th ${th_style} style="text-align:center;padding:4px 8px;border-bottom:2px solid #d1d8dd;color:#6c7680;white-space:normal;line-height:1.1;min-width:90px;">Conditional<br>Formatting</th>`;
@@ -1174,6 +1307,24 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set, matrix_opts)
 				soChecked ? " checked" : ""
 			}></td>`;
 		}
+		let read_only_cell;
+		if (f._related) {
+			read_only_cell = `<td ${td} style="background:#f0f0f0;"></td>`;
+		} else if (forcedReadOnlyKeys[key]) {
+			const roTitle = f._computed
+				? __("Computed column — always read-only in Form Dialog")
+				: __("Read Only on DocType — cannot be changed");
+			read_only_cell =
+				`<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="read-only" checked disabled` +
+				' title="' +
+				frappe.utils.escape_html(roTitle) +
+				'"></td>';
+		} else {
+			const roChecked = saved.read_only.indexOf(key) !== -1;
+			read_only_cell = `<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="read-only"${
+				roChecked ? " checked" : ""
+			}></td>`;
+		}
 		html += `<tr data-key="${esc_key}"${bg}>
 			<td class="text-muted" style="padding:4px 8px;font-size:11px;">${fn_display}</td>
 			<td class="text-muted" style="padding:4px 8px;">${frappe.utils.escape_html(label)}</td>
@@ -1187,6 +1338,7 @@ function _build_field_matrix(fields, prefix, uid, saved, shown_set, matrix_opts)
 			<td ${td}><input type="checkbox" data-key="${esc_key}" data-role="required"${
 			reqChecked ? " checked" : ""
 		}${reqTitle}></td>
+			${read_only_cell}
 			<td ${td}><input type="radio"    data-key="${esc_key}" name="gender_col_${uid}"${
 			saved.gender_col === key ? " checked" : ""
 		}></td>
@@ -1313,7 +1465,8 @@ function _render_order_tab(
 	matrices,
 	saved,
 	_sync_all,
-	orderTitleKey
+	orderTitleKey,
+	panelName
 ) {
 	// Gather all currently selected fields across all matrices
 	let selected = [];
@@ -1430,6 +1583,7 @@ function _render_order_tab(
 		});
 
 	$sub_content.append($order);
+	_wire_display_matrix_col_resize($order, panelName || "new", { hasGripCol: true });
 }
 
 // ── Default Filters widget ────────────────────────────────────────────────────
@@ -4630,6 +4784,7 @@ frappe.ui.form.on("Page Panel", {
 		frm.set_value("column_order", "");
 		frm.set_value("bold_fields", "");
 		frm.set_value("required_fields", "");
+		frm.set_value("read_only_fields", "");
 		frm.set_value("gender_column", "");
 		frm.set_value("gender_color_fields", "");
 		frm.set_value("title_field", "");

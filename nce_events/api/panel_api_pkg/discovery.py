@@ -436,6 +436,7 @@ def get_doctype_fields(root_doctype: str) -> dict[str, Any]:
 			"label": f.label or _title_case(f.fieldname),
 			"fieldtype": f.fieldtype,
 			"reqd": cint(f.reqd),
+			"read_only": cint(f.read_only),
 		}
 		if f.fieldtype == "Link" and f.options:
 			entry["options"] = f.options

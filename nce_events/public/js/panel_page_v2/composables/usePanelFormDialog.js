@@ -19,6 +19,7 @@ import { useFormClientScript } from "./useFormClientScript.js";
  * @param {import('vue').Ref<string>|string} options.doctype
  * @param {import('vue').Ref<string|null>|string|null} options.docName
  * @param {import('vue').Ref<string[]>|import('vue').ComputedRef<string[]>|undefined} options.requiredFields — Page Panel root fieldnames
+ * @param {import('vue').Ref<string[]>|import('vue').ComputedRef<string[]>|undefined} options.readOnlyFields — Page Panel root fieldnames forced read-only in dialog
  * @param {import('vue').Ref<string>|string|undefined} options.loadMode — `'full'` | `'find-shell'`
  */
 export function usePanelFormDialog({
@@ -26,10 +27,12 @@ export function usePanelFormDialog({
 	doctype,
 	docName,
 	requiredFields,
+	readOnlyFields,
 	definitionSource,
 	loadMode,
 }) {
 	const panelRequiredFields = requiredFields;
+	const panelReadOnlyFields = readOnlyFields;
 	const definition = ref(null);
 	const tabs = ref([]);
 	const allFields = ref([]);
@@ -207,6 +210,13 @@ export function usePanelFormDialog({
 	function isFieldReadOnly(field) {
 		const ov = scriptFieldOverrides[field.fieldname];
 		if (ov && ov.read_only !== undefined) return !!ov.read_only;
+		const keys = panelReadOnlyFields ? unref(panelReadOnlyFields) : [];
+		if (Array.isArray(keys) && keys.length) {
+			const fn = field.fieldname;
+			if (keys.some((k) => String(k || "").trim() === fn && !String(k).includes("."))) {
+				return true;
+			}
+		}
 		return isFieldReadOnlyRule(field, formData);
 	}
 

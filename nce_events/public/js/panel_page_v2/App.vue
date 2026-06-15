@@ -239,6 +239,7 @@
 			:doctype="formDialogDoctype"
 			:doc-name="formDialogDocName"
 			:required-fields="formDialogRequiredFields"
+			:read-only-fields="formDialogReadOnlyFields"
 			:reload-panel-after-publish="reloadPanelForFormDialogDoctype"
 			:row-nav-enabled="
 				formDialogNavInfo.total > 1 || formDialogSourcePanelId != null
@@ -276,6 +277,7 @@
 			:doctype="formDialogPendingDoctype"
 			:doc-name="formDialogPendingDocName"
 			:required-fields="formDialogRequiredFields"
+			:read-only-fields="formDialogReadOnlyFields"
 			:reload-panel-after-publish="reloadPanelForFormDialogDoctype"
 			:dialog-load-mode="formDialogDialogLoadMode"
 			:find-chrome-phase="formDialogFindChromePhase"
@@ -307,6 +309,7 @@
 			:doctype="formDialogDoctype"
 			:doc-name="formDialogDocName"
 			:required-fields="formDialogRequiredFields"
+			:read-only-fields="formDialogReadOnlyFields"
 			:reload-panel-after-publish="reloadPanelForFormDialogDoctype"
 			:row-nav-enabled="
 				formDialogNavInfo.total > 1 || formDialogSourcePanelId != null
@@ -344,6 +347,7 @@
 			:doctype="formDialogPendingDoctype"
 			:doc-name="formDialogPendingDocName"
 			:required-fields="formDialogRequiredFields"
+			:read-only-fields="formDialogReadOnlyFields"
 			:reload-panel-after-publish="reloadPanelForFormDialogDoctype"
 			:dialog-load-mode="formDialogDialogLoadMode"
 			:find-chrome-phase="formDialogFindChromePhase"
@@ -440,6 +444,7 @@ const {
 	formDialogDoctype,
 	formDialogDefinitionSource,
 	formDialogRequiredFields,
+	formDialogReadOnlyFields,
 	formDialogSourcePanelId,
 	formDialogDialogLoadMode,
 	formDialogFindChromePhase,

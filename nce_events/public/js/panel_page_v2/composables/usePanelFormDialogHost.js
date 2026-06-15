@@ -47,6 +47,8 @@ export function usePanelFormDialogHost(openPanels) {
 	const formDialogDefinitionSource = ref("form_dialog");
 	/** Root fieldnames from Page Panel `required_fields` (Form Dialog validation). */
 	const formDialogRequiredFields = ref([]);
+	/** Root fieldnames from Page Panel `read_only_fields` (Form Dialog editability). */
+	const formDialogReadOnlyFields = ref([]);
 	/** `full` — normal doc load; `find-shell` — definition only, empty fields for criteria entry. */
 	const formDialogDialogLoadMode = ref("full");
 	/** Find UX: `none` | `criteria` | `post-find` */
@@ -101,6 +103,8 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogDefinitionSource.value = "form_dialog";
 		const rf = panel.config?.required_fields;
 		formDialogRequiredFields.value = Array.isArray(rf) ? rf.slice() : [];
+		const ro = panel.config?.read_only_fields;
+		formDialogReadOnlyFields.value = Array.isArray(ro) ? ro.slice() : [];
 		formDialogDialogLoadMode.value = "full";
 		formDialogFindSeedCriteria.value = null;
 		formDialogFindChromePhase.value =
@@ -121,6 +125,8 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogDefinitionSource.value = "form_dialog";
 		const rf = panel.config?.required_fields;
 		formDialogRequiredFields.value = Array.isArray(rf) ? rf.slice() : [];
+		const ro = panel.config?.read_only_fields;
+		formDialogReadOnlyFields.value = Array.isArray(ro) ? ro.slice() : [];
 		formDialogDialogLoadMode.value = "full";
 		formDialogFindSeedCriteria.value = null;
 		formDialogFindChromePhase.value =
@@ -140,6 +146,8 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogDefinitionSource.value = "form_dialog";
 		const rf = panel.config?.required_fields;
 		formDialogRequiredFields.value = Array.isArray(rf) ? rf.slice() : [];
+		const ro = panel.config?.read_only_fields;
+		formDialogReadOnlyFields.value = Array.isArray(ro) ? ro.slice() : [];
 		formDialogFindMatchNames.value = null;
 		formDialogLastFindCriteria.value = null;
 		formDialogFindConstrainNames.value = null;
@@ -167,13 +175,14 @@ export function usePanelFormDialogHost(openPanels) {
 
 	/**
 	 * Open Form Dialog without a parent panel context (e.g. from Actions panel).
-	 * @param {{ formDialog: string; doctype: string; docName?: string|null; requiredFields?: string[]; definitionSource?: 'form_dialog'|'panel_action' }} args
+	 * @param {{ formDialog: string; doctype: string; docName?: string|null; requiredFields?: string[]; readOnlyFields?: string[]; definitionSource?: 'form_dialog'|'panel_action' }} args
 	 */
 	async function openFormDialogStandalone({
 		formDialog,
 		doctype,
 		docName = null,
 		requiredFields = [],
+		readOnlyFields = [],
 		definitionSource = "form_dialog",
 	}) {
 		if (!formDialog || !doctype) return false;
@@ -185,6 +194,7 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogSourcePanelId.value = null;
 		formDialogDefinitionSource.value = definitionSource || "form_dialog";
 		formDialogRequiredFields.value = Array.isArray(requiredFields) ? requiredFields.slice() : [];
+		formDialogReadOnlyFields.value = Array.isArray(readOnlyFields) ? readOnlyFields.slice() : [];
 		formDialogDialogLoadMode.value = "full";
 		formDialogFindSeedCriteria.value = null;
 		formDialogFindChromePhase.value =
@@ -198,6 +208,7 @@ export function usePanelFormDialogHost(openPanels) {
 	function onFormDialogClose() {
 		showFormDialog.value = false;
 		formDialogRequiredFields.value = [];
+		formDialogReadOnlyFields.value = [];
 		formDialogDocName.value = null;
 		formDialogDefinition.value = null;
 		formDialogDoctype.value = null;
@@ -358,6 +369,7 @@ export function usePanelFormDialogHost(openPanels) {
 
 	function _clearDialogRefs() {
 		formDialogRequiredFields.value = [];
+		formDialogReadOnlyFields.value = [];
 		formDialogDocName.value = null;
 		formDialogDefinition.value = null;
 		formDialogDoctype.value = null;
@@ -455,6 +467,7 @@ export function usePanelFormDialogHost(openPanels) {
 		formDialogDoctype,
 		formDialogDefinitionSource,
 		formDialogRequiredFields,
+		formDialogReadOnlyFields,
 		formDialogSourcePanelId,
 		formDialogNavInfo,
 		formDialogNavLabel,

@@ -49,6 +49,7 @@
     "gender_color_fields",
     "title_field",
     "required_fields",
+    "read_only_fields",
     "search_fields",
     "section_break_widgets",
     "allow_new_record_creation",
@@ -381,6 +382,13 @@
       "fieldtype": "Small Text",
       "hidden": 1,
       "label": "Search Fields"
+    },
+    {
+      "description": "Comma-delimited fields read-only in the panel Form Dialog (managed by Display tab). DocType read_only and computed columns are always included and locked.",
+      "fieldname": "read_only_fields",
+      "fieldtype": "Small Text",
+      "hidden": 1,
+      "label": "Read Only Fields"
     },
     {
       "fieldname": "section_break_widgets",

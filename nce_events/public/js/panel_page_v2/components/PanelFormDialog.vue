@@ -177,6 +177,8 @@ const props = defineProps({
 	dissolveOpacity: { type: Number, default: 1 },
 	/** Page Panel Display — root fieldnames required before save */
 	requiredFields: { type: Array, default: () => [] },
+	/** Page Panel Display — root fieldnames read-only in this dialog */
+	readOnlyFields: { type: Array, default: () => [] },
 	/** Refetch open panel for this doctype after WC publish (Form Dialog Button script). */
 	reloadPanelAfterPublish: { type: Function, default: null },
 	/** Where the captured definition lives: 'form_dialog' (default) or 'panel_action'. */
@@ -351,6 +353,7 @@ const form = usePanelFormDialog({
 	doctype: toRef(props, "doctype"),
 	docName: toRef(props, "docName"),
 	requiredFields: toRef(props, "requiredFields"),
+	readOnlyFields: toRef(props, "readOnlyFields"),
 	definitionSource: toRef(props, "definitionSource"),
 	loadMode: toRef(props, "dialogLoadMode"),
 });

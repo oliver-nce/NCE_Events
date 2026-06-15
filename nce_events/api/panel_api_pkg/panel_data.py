@@ -106,6 +106,7 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 			"gender_color_fields": [],
 			"title_field": "",
 			"required_fields": [],
+			"read_only_fields": [],
 			"search_fields": [],
 			"search_only_columns": [],
 			"effective_searchable": [],
