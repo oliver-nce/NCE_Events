@@ -59,7 +59,7 @@
 					<!-- Normal frozen-schema tab -->
 					<template v-else>
 						<div
-							v-for="(section, si) in tab.sections"
+							v-for="(section, si) in visibleFormDialogSections(tab.sections)"
 							:key="si"
 							class="ppv2-fd-section"
 						>
@@ -71,16 +71,17 @@
 							</p>
 
 							<div
-								class="ppv2-fd-columns"
+								v-for="(row, ri) in sectionGridRows(section)"
+								:key="ri"
+								class="ppv2-fd-row"
 								:style="{
 									gridTemplateColumns:
-										'repeat(' + section.columns.length + ', 1fr)',
+										'repeat(' + sectionColumnCount(section) + ', 1fr)',
 								}"
 							>
-								<div v-for="(col, ci) in section.columns" :key="ci">
+								<template v-for="(field, ci) in row" :key="field ? field.fieldname : 'empty-' + ci">
 									<PanelFormField
-										v-for="field in col.fields"
-										:key="field.fieldname"
+										v-if="field"
 										:field="field"
 										:model-value="fieldModelValue(field)"
 										:visible="isFieldVisible(field)"
@@ -99,7 +100,8 @@
 										@change="(p) => onFieldOrCriterionChange(field, p)"
 										@link-change="(p) => $emit('link-change', p)"
 									/>
-								</div>
+									<div v-else class="ppv2-fd-row-empty" aria-hidden="true" />
+								</template>
 							</div>
 						</div>
 						<div
@@ -126,6 +128,11 @@
 <script setup>
 import { ref, watch } from "vue";
 import { isFindSearchableRootField } from "../utils/formDialogFindFields.js";
+import {
+	sectionColumnCount,
+	sectionGridRows,
+	visibleFormDialogSections,
+} from "../utils/formDialogSectionRows.js";
 import PanelFormField from "./PanelFormField.vue";
 import PanelFormDialogTabBar from "./PanelFormDialogTabBar.vue";
 import PanelFormDialogRelatedTab from "./PanelFormDialogRelatedTab.vue";
@@ -325,14 +332,19 @@ defineExpose({
 	font-size: var(--font-size-sm);
 	margin: 0 0 8px;
 }
-.ppv2-fd-columns {
+.ppv2-fd-row {
 	display: grid;
 	gap: 12px;
 	overflow: visible;
+	align-items: start;
+	margin-bottom: 0;
 }
-.ppv2-fd-columns > div {
+.ppv2-fd-row > * {
 	min-width: 0;
 	overflow: visible;
+}
+.ppv2-fd-row-empty {
+	min-height: 0;
 }
 .ppv2-fd-tab-guidance {
 	margin-top: 12px;

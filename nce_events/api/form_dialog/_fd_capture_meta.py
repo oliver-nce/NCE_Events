@@ -15,12 +15,42 @@ from ._fd_fetch_from import _enrich_fetch_from_fields
 FD_LEAD_TAB_ANCHOR = "__lead__"
 
 
+# --- Main-form tab anchors (mirror public/js/panel_page_v2/utils/parseLayout.js) ---
+FD_LEAD_TAB_ANCHOR = "__lead__"
+FD_DEFAULT_COLUMN_COUNT = 2
+
+
+def _new_layout_section(break_field: dict | None = None) -> dict[str, Any]:
+	column_count = max(
+		1,
+		cint(break_field.get("columns") if break_field else 0) or FD_DEFAULT_COLUMN_COUNT,
+	)
+	return {
+		"label": cstr(break_field.get("label") or "").strip() if break_field else "",
+		"collapsible": bool(cint(break_field.get("collapsible"))) if break_field else False,
+		"description": cstr(break_field.get("description") or "").strip() if break_field else "",
+		"columnCount": column_count,
+		"columns": [{"fields": []} for _ in range(column_count)],
+	}
+
+
+def _frozen_section_visually_nonempty(section: dict[str, Any]) -> bool:
+	for col in section.get("columns") or []:
+		if col.get("fields"):
+			return True
+	return False
+
+
 def _frozen_tab_visually_nonempty(sections: list[dict[str, Any]]) -> bool:
 	for sec in sections:
-		for col in sec.get("columns") or []:
-			if col.get("fields"):
-				return True
+		if _frozen_section_visually_nonempty(sec):
+			return True
 	return False
+
+
+def _push_layout_section_if_visible(tab_sections: list[dict[str, Any]], section: dict[str, Any]) -> None:
+	if _frozen_section_visually_nonempty(section):
+		tab_sections.append(section)
 
 
 def _main_tab_skeleton_from_frozen_fields(fields_list: list[dict]) -> list[dict[str, str]]:
@@ -29,7 +59,7 @@ def _main_tab_skeleton_from_frozen_fields(fields_list: list[dict]) -> list[dict[
 
 	Anchor is FD_LEAD_TAB_ANCHOR for the leading tab (before first Tab Break), otherwise
 	the Tab Break fieldname. Drops tabs with no visible data fields — same rule as JS
-	``parseLayout`` + ``hasVisibleFields``.
+	``parseLayout`` + ``sectionHasVisibleFields``.
 	"""
 	visible_fields = [f for f in fields_list if not cint(f.get("hidden") or 0)]
 
@@ -39,13 +69,8 @@ def _main_tab_skeleton_from_frozen_fields(fields_list: list[dict]) -> list[dict[
 	cur_label = "Details"
 	cur_sections: list[dict[str, Any]] = []
 
-	cur_section: dict[str, Any] = {
-		"label": "",
-		"collapsible": False,
-		"description": "",
-		"columns": [],
-	}
-	cur_column: dict[str, list[Any]] = {"fields": []}
+	cur_section = _new_layout_section(None)
+	col_idx = 0
 
 	def maybe_push_tab_done() -> None:
 		if _frozen_tab_visually_nonempty(cur_sections):
@@ -54,43 +79,35 @@ def _main_tab_skeleton_from_frozen_fields(fields_list: list[dict]) -> list[dict[
 	for field in visible_fields:
 		ft = cstr(field.get("fieldtype") or "")
 		if ft == "Tab Break":
-			cur_section["columns"].append(cur_column)
-			cur_sections.append(cur_section)
+			_push_layout_section_if_visible(cur_sections, cur_section)
 			maybe_push_tab_done()
 			tab_break_fn = cstr(field.get("fieldname") or "").strip()
 			cur_anchor = tab_break_fn or FD_LEAD_TAB_ANCHOR
 			cur_label = cstr(field.get("label") or "").strip() or "Details"
 			cur_sections = []
-			cur_section = {
-				"label": "",
-				"collapsible": False,
-				"description": "",
-				"columns": [],
-			}
-			cur_column = {"fields": []}
+			cur_section = _new_layout_section(None)
+			col_idx = 0
 			continue
 
 		if ft == "Section Break":
-			cur_section["columns"].append(cur_column)
-			cur_sections.append(cur_section)
-			cur_section = {
-				"label": cstr(field.get("label") or "").strip(),
-				"collapsible": bool(cint(field.get("collapsible"))),
-				"description": cstr(field.get("description") or "").strip(),
-				"columns": [],
-			}
-			cur_column = {"fields": []}
+			_push_layout_section_if_visible(cur_sections, cur_section)
+			cur_section = _new_layout_section(field)
+			col_idx = 0
 			continue
 
 		if ft == "Column Break":
-			cur_section["columns"].append(cur_column)
-			cur_column = {"fields": []}
+			column_count = cint(cur_section.get("columnCount") or 0) or FD_DEFAULT_COLUMN_COUNT
+			col_idx = (col_idx + 1) % max(1, column_count)
 			continue
 
-		cur_column["fields"].append(field)
+		columns = cur_section.setdefault("columns", [{"fields": []}])
+		if not columns:
+			cur_section["columns"] = [{"fields": []}]
+			cur_section["columnCount"] = 1
+			columns = cur_section["columns"]
+		columns[col_idx]["fields"].append(field)
 
-	cur_section["columns"].append(cur_column)
-	cur_sections.append(cur_section)
+	_push_layout_section_if_visible(cur_sections, cur_section)
 	maybe_push_tab_done()
 
 	return tabs_skeleton

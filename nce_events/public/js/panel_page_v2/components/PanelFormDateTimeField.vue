@@ -104,13 +104,29 @@ onBeforeUnmount(() => {
 .ppv2-fd-datetime-frappe {
 	width: 100%;
 }
+.ppv2-fd-datetime-frappe :deep(.control-label),
+.ppv2-fd-datetime-frappe :deep(.help-box) {
+	display: none !important;
+}
 .ppv2-fd-datetime-frappe :deep(.frappe-control) {
 	width: 100%;
 	max-width: 100%;
+	margin: 0;
+	padding: 0;
 }
 .ppv2-fd-datetime-frappe :deep(.form-control),
-.ppv2-fd-datetime-frappe :deep(input.form-control) {
+.ppv2-fd-datetime-frappe :deep(input.form-control),
+.ppv2-fd-datetime-frappe :deep(.control-value.like-disabled-input),
+.ppv2-fd-datetime-frappe :deep(.control-value) {
 	width: 100%;
+	min-height: 2.25em;
+	padding: 5px 8px;
 	box-sizing: border-box;
+	border: var(--nce-border-width, 1px) solid var(--nce-color-border);
+	border-radius: var(--border-radius-sm, 4px);
+	background: var(--nce-color-surface);
+	font-size: var(--font-size-base);
+	font-family: var(--font-family);
+	line-height: 1.4;
 }
 </style>

@@ -139,18 +139,34 @@ onBeforeUnmount(() => {
 	width: 100%;
 	max-width: 100%;
 	overflow: visible;
+	margin: 0;
+	padding: 0;
 }
 .ppv2-fd-link-frappe :deep(.control-input),
 .ppv2-fd-link-frappe :deep(.control-value) {
 	overflow: visible;
 }
+.ppv2-fd-link-frappe :deep(.control-label),
+.ppv2-fd-link-frappe :deep(.help-box) {
+	display: none !important;
+}
 .ppv2-fd-link-frappe :deep(.link-field) {
 	width: 100%;
 	position: relative;
 }
-.ppv2-fd-link-frappe :deep(.link-field .form-control) {
+.ppv2-fd-link-frappe :deep(.link-field .form-control),
+.ppv2-fd-link-frappe :deep(.control-value.like-disabled-input),
+.ppv2-fd-link-frappe :deep(.control-value) {
 	width: 100%;
+	min-height: 2.25em;
+	padding: 5px 8px;
 	box-sizing: border-box;
+	border: var(--nce-border-width, 1px) solid var(--nce-color-border);
+	border-radius: var(--border-radius-sm, 4px);
+	background: var(--nce-color-surface);
+	font-size: var(--font-size-base);
+	font-family: var(--font-family);
+	line-height: 1.4;
 }
 .ppv2-fd-link-frappe :deep(.awesomplete) {
 	display: block;
