@@ -1,5 +1,6 @@
 import { ref } from "vue";
 import { frappeCall } from "../utils/frappeCall.js";
+import { navigateToSpaPage } from "../utils/navigateToSpaPage.js";
 
 /**
  * Active SPA pages for the header nav bar (SPA Page Definition, is_active=1).
@@ -27,7 +28,7 @@ export function useSpaPageNav() {
 				target_spa: page.page_slug,
 			});
 			if (cfg?.route) {
-				window.location.assign(cfg.route);
+				navigateToSpaPage(cfg.route);
 			}
 		} catch (e) {
 			const title =

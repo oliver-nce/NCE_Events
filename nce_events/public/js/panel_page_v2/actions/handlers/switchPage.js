@@ -1,4 +1,5 @@
 import { frappeCall } from "../../utils/frappeCall.js";
+import { navigateToSpaPage } from "../../utils/navigateToSpaPage.js";
 
 /**
  * Panel Action: switch_page(<target_spa>).
@@ -19,7 +20,7 @@ export default async function switchPage(ctx) {
 		const cfg = await frappeCall("nce_events.api.spa_page.resolve_spa_switch", {
 			target_spa: target,
 		});
-		window.location.assign(cfg.route);
+		navigateToSpaPage(cfg.route);
 	} catch (e) {
 		ctx.msgprint({
 			title: __("Switch Page"),

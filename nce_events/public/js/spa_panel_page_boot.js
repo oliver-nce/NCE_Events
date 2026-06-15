@@ -54,7 +54,14 @@ nce_events.spa_panel_page.clearLayoutScope = function (wrapper) {
 };
 
 nce_events.spa_panel_page.boot = function (wrapper, pageSlug, mountElId) {
-	if (wrapper._vue_app) return;
+	const scopeEl = _findSpaScope(wrapper);
+	scopeEl.classList.add("spa-panel-page");
+	wrapper._nce_spa_scope_el = scopeEl;
+	_ensureSpaLayoutStyles();
+
+	if (wrapper._vue_app) {
+		return;
+	}
 
 	frappe.call({
 		method: "nce_events.api.spa_page.get_spa_page_config",
@@ -79,11 +86,6 @@ nce_events.spa_panel_page.boot = function (wrapper, pageSlug, mountElId) {
 			} else if (wrapper._page_obj.page && wrapper._page_obj.page.set_title) {
 				wrapper._page_obj.page.set_title("");
 			}
-
-			const scopeEl = _findSpaScope(wrapper);
-			scopeEl.classList.add("spa-panel-page");
-			wrapper._nce_spa_scope_el = scopeEl;
-			_ensureSpaLayoutStyles();
 
 			frappe.require(_VUE_ASSETS, function () {
 				if (wrapper._vue_app) return;
