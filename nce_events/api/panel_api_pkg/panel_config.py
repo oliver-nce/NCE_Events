@@ -15,6 +15,7 @@ from nce_events.api.panel_api_pkg._helpers import (
 	_title_case,
 )
 from nce_events.api.panel_api_pkg.computed_columns import _get_computed_columns
+from nce_events.api.panel_api_pkg.theme_slug import resolve_theme_slug as _resolve_theme_slug
 
 MALE_HEX: str = "#0000FF"
 FEMALE_HEX: str = "#c700e6"
@@ -61,24 +62,6 @@ def _panel_chrome_fg_type(doc: Any, bg_field: str) -> str:
 	fg_field = bg_field.replace("_bg_class", "_fg_type")
 	raw = (getattr(doc, fg_field, None) or "").strip().lower()
 	return "tonal" if raw == "tonal" else "mono"
-
-
-def _resolve_theme_slug(theme_link: str | None) -> str | None:
-	"""Resolve Page Panel theme Link to an Active NCE Theme slug, or None for site base."""
-	theme = (theme_link or "").strip()
-	if not theme:
-		return None
-	try:
-		if not frappe.db.exists("DocType", "NCE Theme"):
-			return None
-	except Exception:
-		return None
-	if not frappe.db.exists("NCE Theme", theme):
-		return None
-	slug, status = frappe.db.get_value("NCE Theme", theme, ["slug", "status"])
-	if status == "Active" and slug:
-		return slug
-	return None
 
 
 def _panel_config_from_doc(doc: Any) -> dict[str, Any]:
