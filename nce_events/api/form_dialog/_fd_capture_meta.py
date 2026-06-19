@@ -15,22 +15,18 @@ from ._fd_fetch_from import _enrich_fetch_from_fields
 FD_LEAD_TAB_ANCHOR = "__lead__"
 
 
-# --- Main-form tab anchors (mirror public/js/panel_page_v2/utils/parseLayout.js) ---
-FD_LEAD_TAB_ANCHOR = "__lead__"
-FD_DEFAULT_COLUMN_COUNT = 2
+def _sync_section_column_count(section: dict[str, Any]) -> None:
+	cols = section.get("columns") or []
+	section["columnCount"] = max(1, len(cols))
 
 
 def _new_layout_section(break_field: dict | None = None) -> dict[str, Any]:
-	column_count = max(
-		1,
-		cint(break_field.get("columns") if break_field else 0) or FD_DEFAULT_COLUMN_COUNT,
-	)
 	return {
 		"label": cstr(break_field.get("label") or "").strip() if break_field else "",
 		"collapsible": bool(cint(break_field.get("collapsible"))) if break_field else False,
 		"description": cstr(break_field.get("description") or "").strip() if break_field else "",
-		"columnCount": column_count,
-		"columns": [{"fields": []} for _ in range(column_count)],
+		"columnCount": 1,
+		"columns": [{"fields": []}],
 	}
 
 
@@ -50,6 +46,7 @@ def _frozen_tab_visually_nonempty(sections: list[dict[str, Any]]) -> bool:
 
 def _push_layout_section_if_visible(tab_sections: list[dict[str, Any]], section: dict[str, Any]) -> None:
 	if _frozen_section_visually_nonempty(section):
+		_sync_section_column_count(section)
 		tab_sections.append(section)
 
 
@@ -96,16 +93,21 @@ def _main_tab_skeleton_from_frozen_fields(fields_list: list[dict]) -> list[dict[
 			continue
 
 		if ft == "Column Break":
-			column_count = cint(cur_section.get("columnCount") or 0) or FD_DEFAULT_COLUMN_COUNT
-			col_idx = (col_idx + 1) % max(1, column_count)
+			col_idx += 1
+			columns = cur_section.setdefault("columns", [{"fields": []}])
+			while len(columns) <= col_idx:
+				columns.append({"fields": []})
+			_sync_section_column_count(cur_section)
 			continue
 
 		columns = cur_section.setdefault("columns", [{"fields": []}])
 		if not columns:
 			cur_section["columns"] = [{"fields": []}]
-			cur_section["columnCount"] = 1
 			columns = cur_section["columns"]
+		while len(columns) <= col_idx:
+			columns.append({"fields": []})
 		columns[col_idx]["fields"].append(field)
+		_sync_section_column_count(cur_section)
 
 	_push_layout_section_if_visible(cur_sections, cur_section)
 	maybe_push_tab_done()

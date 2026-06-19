@@ -4,20 +4,21 @@
  */
 export const FORM_DIALOG_LEAD_TAB_ANCHOR = "__lead__";
 
-const DEFAULT_COLUMN_COUNT = 2;
+/** @param {object} section */
+function syncSectionColumnCount(section) {
+	section.columnCount = Math.max(1, (section.columns || []).length);
+}
 
 /**
  * @param {object|undefined} breakField Section Break field dict (optional)
  */
 function createSection(breakField) {
-	const rawCols = breakField != null ? breakField.columns : null;
-	const columnCount = Math.max(1, parseInt(rawCols, 10) || DEFAULT_COLUMN_COUNT);
 	return {
 		label: (breakField && breakField.label) || "",
 		collapsible: !!(breakField && breakField.collapsible),
 		description: (breakField && breakField.description) || "",
-		columnCount,
-		columns: Array.from({ length: columnCount }, () => ({ fields: [] })),
+		columnCount: 1,
+		columns: [{ fields: [] }],
 	};
 }
 
@@ -34,6 +35,7 @@ function tabHasVisibleFields(tab) {
 /** @param {object} tab @param {object} section */
 function pushSectionIfVisible(tab, section) {
 	if (sectionHasVisibleFields(section)) {
+		syncSectionColumnCount(section);
 		tab.sections.push(section);
 	}
 }
@@ -41,9 +43,9 @@ function pushSectionIfVisible(tab, section) {
 /**
  * Parse a flat Frappe field list into a nested layout tree.
  *
- * Column Break advances within the section's column count (Desk ``columns`` on
- * Section Break, default 2) and wraps to the next row — fields stack vertically
- * within each column stack so row partners align in the UI.
+ * Matches Frappe v15 Desk layout: each section starts with one column; each
+ * Column Break adds another column. (DocField ``columns`` is for list/grid span,
+ * not section width — do not use it here.)
  *
  * @param {Array} fields - Array of DocField objects, sorted by idx
  * @returns {Array} Array of tab objects
@@ -86,15 +88,21 @@ export function parseLayout(fields) {
 			currentSection = createSection(field);
 			colIdx = 0;
 		} else if (ft === "Column Break") {
-			const n = currentSection.columnCount || currentSection.columns.length || DEFAULT_COLUMN_COUNT;
-			colIdx = (colIdx + 1) % n;
+			colIdx += 1;
+			if (!currentSection.columns[colIdx]) {
+				currentSection.columns.push({ fields: [] });
+			}
+			syncSectionColumnCount(currentSection);
 		} else {
 			const cols = currentSection.columns;
 			if (!cols.length) {
 				currentSection.columns = [{ fields: [] }];
-				currentSection.columnCount = 1;
+			}
+			while (colIdx >= cols.length) {
+				cols.push({ fields: [] });
 			}
 			cols[colIdx].fields.push(field);
+			syncSectionColumnCount(currentSection);
 		}
 	}
 
