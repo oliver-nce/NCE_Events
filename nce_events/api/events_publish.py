@@ -242,62 +242,19 @@ def _resolve_source_events_for_duplicate(
 	source_name: str | None,
 	parsed: dict[str, Any],
 ) -> tuple[frappe.Document, str]:
-	"""Load source Events doc; return (doc, product_id for sessions/WC)."""
-	raw_candidates: list[str] = []
-	for raw in (
-		source_name,
-		parsed.get("name"),
-		parsed.get("wp_id"),
-		parsed.get("product_id"),
-	):
-		s = cstr(raw or "").strip()
-		if not s:
-			continue
-		if s not in raw_candidates:
-			raw_candidates.append(s)
-		norm = _normalize_wp_product_id(s)
-		if norm and norm not in raw_candidates:
-			raw_candidates.append(norm)
-
-	if not raw_candidates:
+	"""Load source Events doc from Form Dialog context; return (doc, product_id for sessions)."""
+	raw = cstr(source_name or parsed.get("name") or "").strip()
+	if not raw:
 		frappe.throw(_("Open a saved event before duplicating."))
 
-	meta = frappe.get_meta(_EVENTS_DOCTYPE)
-	wp_fields = _events_wp_id_fieldnames(meta)
-
-	for cand in raw_candidates:
-		if not frappe.db.exists(_EVENTS_DOCTYPE, cand):
-			continue
-		if not frappe.has_permission(_EVENTS_DOCTYPE, "read", cand):
-			frappe.throw(
-				_("Not permitted to read {0}").format(_EVENTS_DOCTYPE),
-				frappe.PermissionError,
-			)
-		doc = frappe.get_doc(_EVENTS_DOCTYPE, cand)
-		return doc, _product_id_from_events_doc(doc)
-
-	for cand in raw_candidates:
-		norm = _normalize_wp_product_id(cand)
-		if not norm:
-			continue
-		for fn in wp_fields:
-			row_name = frappe.db.get_value(_EVENTS_DOCTYPE, {fn: norm}, "name")
-			if not row_name:
-				continue
-			if not frappe.has_permission(_EVENTS_DOCTYPE, "read", row_name):
-				frappe.throw(
-					_("Not permitted to read {0}").format(_EVENTS_DOCTYPE),
-					frappe.PermissionError,
-				)
-			doc = frappe.get_doc(_EVENTS_DOCTYPE, row_name)
-			return doc, norm
-
-	display = cstr(source_name or parsed.get("name") or "").strip() or raw_candidates[0]
-	frappe.throw(
-		_("{0} {1} is not a saved event with a WooCommerce product id.").format(
-			_EVENTS_DOCTYPE, display
+	name = _normalize_wp_product_id(raw) or raw
+	if not frappe.has_permission(_EVENTS_DOCTYPE, "read", name):
+		frappe.throw(
+			_("Not permitted to read {0}").format(_EVENTS_DOCTYPE),
+			frappe.PermissionError,
 		)
-	)
+	doc = frappe.get_doc(_EVENTS_DOCTYPE, name)
+	return doc, _product_id_from_events_doc(doc)
 
 
 def _is_existing_events_row(name: object) -> int | None:
