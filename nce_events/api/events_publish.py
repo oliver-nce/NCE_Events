@@ -357,6 +357,13 @@ def update_woo_commerce_product(
 
 _NEW_WOO_DOCTYPE: str = "New Woo Commerce Product"
 _NEW_WOO_FIELDS: tuple[str, ...] = ("event_name", "type_id", "price", "start_date")
+_EVENTS_STUB_FIELDS: tuple[str, ...] = ("event_name", "event_type_id", "price", "first_session_date")
+_EVENT_SESSIONS_DOCTYPE: str = "Event Sessions"
+_EVENT_SESSIONS_LINK_FIELD: str = "product_id"
+_DUPLICATE_EDIT_OK_FIELDS: tuple[str, ...] = (
+	"session_dates_edit_ok",
+	"sessions_table_edit_ok",
+)
 
 
 def _patch_new_woo_body(wc_body: dict[str, Any]) -> None:
@@ -499,29 +506,115 @@ def clear_new_woo_commerce_product() -> dict[str, Any]:
 	return {"ok": 1}
 
 
+def _events_stub_dict_from_source(source_dict: dict[str, Any]) -> dict[str, Any]:
+	"""Map a full Events row to the four stub fields used for WooCommerce POST."""
+	return {fn: source_dict.get(fn) for fn in _EVENTS_STUB_FIELDS}
+
+
+def _validate_events_stub_fields(stub: dict[str, Any]) -> None:
+	missing = [fn for fn in _EVENTS_STUB_FIELDS if not cstr(stub.get(fn)).strip()]
+	if missing:
+		frappe.throw(_("Please fill all required fields: {0}").format(", ".join(missing)))
+
+
+def _post_wc_private_product_from_events_stub(
+	stub: dict[str, Any],
+	*,
+	connector: str | None = None,
+) -> int:
+	"""POST a private WooCommerce product stub; return the new product id."""
+	_validate_events_stub_fields(stub)
+	wc_body = build_woocommerce_product_payload(dict(stub))
+	_patch_new_woo_body(wc_body)
+	conn = (connector or "").strip() or DEFAULT_WOOCOMMERCE_CONNECTOR
+	_resolve_and_patch_categories(wc_body, conn)
+	wc_resp = wc_request(conn, "POST", "/products", json_body=wc_body)
+	wpid = wc_resp.get("id") if isinstance(wc_resp, dict) else None
+	if wpid is None:
+		frappe.throw(_("WooCommerce response did not include a product id."))
+	return int(wpid)
+
+
+def _set_duplicate_edit_ok_flags(doc: frappe.Document) -> None:
+	for fn in _DUPLICATE_EDIT_OK_FIELDS:
+		if doc.meta.has_field(fn):
+			doc.set(fn, 1)
+
+
+def _copy_event_sessions(source_product_id: str, new_product_id: str) -> int:
+	"""Copy Event Sessions rows linked to *source_product_id* onto *new_product_id*."""
+	if not frappe.db.exists("DocType", _EVENT_SESSIONS_DOCTYPE):
+		return 0
+	meta = frappe.get_meta(_EVENT_SESSIONS_DOCTYPE)
+	if not meta.has_field(_EVENT_SESSIONS_LINK_FIELD):
+		return 0
+	if not frappe.has_permission(_EVENT_SESSIONS_DOCTYPE, "create"):
+		frappe.throw(
+			_("Not permitted to create {0}").format(_EVENT_SESSIONS_DOCTYPE),
+			frappe.PermissionError,
+		)
+
+	session_names = frappe.get_all(
+		_EVENT_SESSIONS_DOCTYPE,
+		filters={_EVENT_SESSIONS_LINK_FIELD: source_product_id},
+		pluck="name",
+	)
+	copied = 0
+	for session_name in session_names:
+		row = frappe.copy_doc(frappe.get_doc(_EVENT_SESSIONS_DOCTYPE, session_name))
+		row.set(_EVENT_SESSIONS_LINK_FIELD, new_product_id)
+		row.insert(ignore_permissions=True)
+		copied += 1
+	return copied
+
+
+def _insert_duplicated_events_row(source: frappe.Document, new_wp_id: int) -> frappe.Document:
+	"""Copy *source* Events row, assign ``name=new_wp_id``, set duplicate edit flags, insert."""
+	if not frappe.has_permission(_EVENTS_DOCTYPE, "create"):
+		frappe.throw(
+			_("Not permitted to create {0}").format(_EVENTS_DOCTYPE),
+			frappe.PermissionError,
+		)
+
+	new_name = str(new_wp_id)
+	if frappe.db.exists(_EVENTS_DOCTYPE, new_name):
+		frappe.throw(
+			_("An {0} record already exists for WooCommerce product id {1}.").format(
+				_EVENTS_DOCTYPE, new_name
+			)
+		)
+
+	new_doc = frappe.copy_doc(source)
+	_set_duplicate_edit_ok_flags(new_doc)
+	new_doc.insert(set_name=new_name, ignore_permissions=True)
+	return new_doc
+
+
 @frappe.whitelist()
 def duplicate_event(
 	source_name: str | None = None,
 	doc: dict[str, Any] | str | None = None,
+	connector_name: str | None = None,
 ) -> dict[str, Any]:
-	"""Placeholder: duplicate an Events record as a new WooCommerce product stub.
+	"""Duplicate an Events record: WooCommerce stub POST, Frappe copy, session rows.
 
-	Intended flow (not yet implemented):
-	  1. Load the source Events row (``name`` = WooCommerce product id).
-	  2. Build a WooCommerce POST body from its fields (``build_woocommerce_product_payload``).
-	  3. Force ``status=private`` (stub), POST ``/products``, return new ``wp_id``.
-	  4. User waits for the WordPress refresh cycle → new Frappe Events row appears.
+	1. POST a private WooCommerce product using stub fields from the source row
+	   (``event_name``, ``event_type_id``, ``price``, ``first_session_date``).
+	2. Copy ``Event Sessions`` only (``product_id`` → new id) and insert them.
+	3. Copy the Frappe ``Events`` row (including embedded child tables) with ``name`` = new product id.
+	4. Set ``session_dates_edit_ok`` and ``sessions_table_edit_ok`` to ``1``.
 
-	Form Dialog button: set **Button Script** to ``duplicate_event`` (V2 panel token).
+	Form Dialog button **Button Script**: ``duplicate_event``.
 
-	Until the POST step is implemented, returns ``placeholder: 1`` and a payload preview only.
+	Returns ``sync_job_ids`` from the insert (NCE Sync listener) for read-back polling.
+	The V2 panel switches to the new record and runs Submit and Refresh.
 	"""
 	parsed = frappe.parse_json(doc) if isinstance(doc, str) else dict(doc or {})
 	name = cstr(source_name or parsed.get("name") or "").strip()
 	if not name:
 		frappe.throw(_("Open a saved event before duplicating."))
-	wp_id = _is_existing_events_row(name)
-	if wp_id is None:
+	source_wp_id = _is_existing_events_row(name)
+	if source_wp_id is None:
 		frappe.throw(
 			_("{0} {1} is not a saved event with a WooCommerce product id.").format(
 				_EVENTS_DOCTYPE, name
@@ -535,16 +628,26 @@ def duplicate_event(
 
 	source = frappe.get_doc(_EVENTS_DOCTYPE, name)
 	source_dict = source.as_dict()
-	wc_body = build_woocommerce_product_payload(source_dict)
-	_patch_new_woo_body(wc_body)
+	stub = _events_stub_dict_from_source(source_dict)
+	new_wp_id = _post_wc_private_product_from_events_stub(
+		stub,
+		connector=connector_name,
+	)
+	new_name = str(new_wp_id)
+	sessions_copied = _copy_event_sessions(name, new_name)
+	new_doc = _insert_duplicated_events_row(source, new_wp_id)
+	frappe.db.commit()
 
+	sync_job_ids = list(getattr(frappe.local, "nce_sync_queued_job_ids", []))
 	return {
 		"ok": 1,
-		"placeholder": 1,
 		"source_name": name,
-		"source_wp_id": wp_id,
-		"message": _(
-			"Duplicate event is not fully implemented yet — no WooCommerce product was created."
-		),
-		"woocommerce_payload_preview": wc_body,
+		"source_wp_id": source_wp_id,
+		"wp_id": new_wp_id,
+		"new_name": str(new_wp_id),
+		"name": str(new_wp_id),
+		"doc": new_doc.as_dict(),
+		"sessions_copied": sessions_copied,
+		"sync_job_ids": sync_job_ids,
+		"message": _("Event duplicated as product id {0}.").format(new_wp_id),
 	}

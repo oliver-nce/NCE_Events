@@ -208,6 +208,7 @@ const emit = defineEmits([
 	"saved",
 	"nav-prev",
 	"nav-next",
+	"switch-doc",
 	"readback-merged",
 	"find-criteria",
 	"find-criteria-constrain",
@@ -757,44 +758,53 @@ async function onGoToPanel(ev) {
 
 /**
  * Poll WP sync jobs after save, trigger linked read-back syncs, patch panel row.
+ * @param {{ alwaysReadback?: boolean }} opts — when true, always fetch fresh doc + linked sync even with no job ids
  * @returns {Promise<boolean>} false when sync failed
  */
-async function runSyncReadbackAfterSave({ result, relatedSaveJobIds, oldRowName, pollLog }) {
+async function runSyncReadbackAfterSave({
+	result,
+	relatedSaveJobIds,
+	oldRowName,
+	pollLog,
+	alwaysReadback = false,
+}) {
 	const mainJobIds = Array.isArray(result?.sync_job_ids) ? result.sync_job_ids : [];
 	const relatedJobIds = Array.isArray(relatedSaveJobIds) ? relatedSaveJobIds : [];
 	const allJobIds = [...mainJobIds, ...relatedJobIds];
 	ppv2DebugLog("[NCE readback] save complete. mainJobIds:", mainJobIds, "relatedJobIds:", relatedJobIds);
 
-	if (!allJobIds.length) {
-		const savedName =
-			result?.name != null && String(result.name).trim() !== ""
-				? String(result.name).trim()
-				: null;
+	const savedName =
+		result?.name != null && String(result.name).trim() !== ""
+			? String(result.name).trim()
+			: null;
+
+	if (!allJobIds.length && !alwaysReadback) {
 		if (result && (savedName || oldRowName)) {
 			emit("readback-merged", { fresh: result, oldRowName, savedName });
 		}
 		return true;
 	}
 
-	const savedName =
-		result?.name != null && String(result.name).trim() !== ""
-			? String(result.name).trim()
-			: null;
-	syncWaiting.value = true;
+	if (allJobIds.length) {
+		syncWaiting.value = true;
+	}
 	try {
-		pollLog?.("readback", "poll main + related sync jobs");
-		const { anyFailed } = await pollSyncJobsUntilDone(allJobIds, { log: pollLog });
-		if (anyFailed) {
-			pollLog?.("sync", "one or more main/related jobs failed");
-			if (typeof frappe !== "undefined" && frappe.msgprint) {
-				frappe.msgprint({
-					title: __("Sync error"),
-					message: __("One or more sync jobs failed. Check Error Log."),
-					indicator: "red",
-				});
+		if (allJobIds.length) {
+			pollLog?.("readback", "poll main + related sync jobs");
+			const { anyFailed } = await pollSyncJobsUntilDone(allJobIds, { log: pollLog });
+			if (anyFailed) {
+				pollLog?.("sync", "one or more main/related jobs failed");
+				if (typeof frappe !== "undefined" && frappe.msgprint) {
+					frappe.msgprint({
+						title: __("Sync error"),
+						message: __("One or more sync jobs failed. Check Error Log."),
+						indicator: "red",
+					});
+				}
+				return false;
 			}
-			return false;
 		}
+
 		const freshName = savedName || oldRowName;
 		try {
 			ppv2DebugLog("[NCE readback] triggering linked DocType syncs for", freshName);
@@ -813,6 +823,7 @@ async function runSyncReadbackAfterSave({ result, relatedSaveJobIds, oldRowName,
 			ppv2DebugLog("[NCE readback] linked sync job_ids:", linkedJobIds);
 			pollLog?.("linked", `sync_job_ids count=${linkedJobIds.length}`);
 			if (linkedJobIds.length) {
+				syncWaiting.value = true;
 				pollLog?.("readback", "poll linked sync jobs");
 				await pollSyncJobsUntilDone(linkedJobIds, { log: pollLog });
 			}
@@ -822,7 +833,7 @@ async function runSyncReadbackAfterSave({ result, relatedSaveJobIds, oldRowName,
 		}
 		pollLog?.("readback", "fetchFreshDocAfterSync");
 		const fresh = await fetchFreshDocAfterSync(props.doctype, freshName);
-		emit("readback-merged", { fresh, oldRowName, savedName });
+		emit("readback-merged", { fresh: fresh || result, oldRowName, savedName });
 		await nextTick();
 		return true;
 	} catch (e) {
@@ -835,6 +846,80 @@ async function runSyncReadbackAfterSave({ result, relatedSaveJobIds, oldRowName,
 	} finally {
 		syncWaiting.value = false;
 	}
+}
+
+/**
+ * Full Submit-and-Refresh pipeline for a saved record — presubmit hook, save,
+ * related rows, WP read-back, form reload. Used after duplicate when the form
+ * is already persisted but we still need the complete S&R side effects.
+ */
+async function runForcedSubmitRefreshReadback({ initialSyncJobIds = [], pollLog } = {}) {
+	const submitHookMethod = (form.definition.value?.custom_presubmit_script || "").trim();
+	let hookResult = null;
+	if (submitHookMethod && String(form.formData.name || "").match(/^\d+$/)) {
+		pollLog?.("presubmit", submitHookMethod);
+		const raw = JSON.parse(JSON.stringify(form.formData));
+		const doc =
+			props.doctype === "Events"
+				? normalizeDocForWooEventsPublish({ doctype: props.doctype, ...raw })
+				: { doctype: props.doctype, ...raw };
+		try {
+			hookResult = await frappeCall(submitHookMethod, { doc });
+			pollLog?.("presubmit", `ok skipped=${Boolean(hookResult?.skipped)}`);
+		} catch (hookErr) {
+			const msg = hookErr?.message || String(hookErr) || "Update failed";
+			pollLog?.("presubmit_error", msg);
+			if (typeof frappe !== "undefined" && frappe.msgprint) {
+				frappe.msgprint({ title: "WooCommerce", message: msg, indicator: "red" });
+			}
+		}
+	}
+
+	form.saving.value = true;
+	let result = null;
+	try {
+		result = await form.save();
+	} finally {
+		form.saving.value = false;
+	}
+
+	const mergedJobIds = [
+		...(Array.isArray(initialSyncJobIds) ? initialSyncJobIds : []),
+		...(Array.isArray(result?.sync_job_ids) ? result.sync_job_ids : []),
+	];
+	result = { ...result, sync_job_ids: mergedJobIds };
+
+	let relatedSaveJobIds = [];
+	if (relatedDirty.value) {
+		try {
+			const relResult = await fdBodyRef.value?.saveAllRelatedRows?.();
+			if (Array.isArray(relResult)) relatedSaveJobIds = relResult;
+		} catch (relErr) {
+			const m = extractServerMessage(relErr);
+			if (typeof frappe !== "undefined" && frappe.msgprint) {
+				frappe.msgprint({ title: "Related rows", message: m, indicator: "red" });
+			}
+			throw relErr;
+		}
+	}
+
+	if (hookResult && !hookResult.skipped) {
+		if (typeof frappe !== "undefined" && frappe.show_alert) {
+			frappe.show_alert({ message: "WooCommerce product updated", indicator: "green" }, 5);
+		}
+	}
+
+	const readbackOk = await runSyncReadbackAfterSave({
+		result,
+		relatedSaveJobIds,
+		oldRowName: props.docName,
+		pollLog,
+		alwaysReadback: true,
+	});
+	if (readbackOk) {
+		await refreshFormAfterSave();
+	}
+	return readbackOk;
 }
 
 function onSubmitClose(opts) {
@@ -1136,18 +1221,34 @@ async function onPlaceholderButton(btn) {
 				{ source_name: sourceName, doc },
 				{ freeze: true, freeze_message: __("Duplicating event…") },
 			);
-			const preview = r?.woocommerce_payload_preview;
-			const body = preview ? JSON.stringify(preview, null, 2) : JSON.stringify(r, null, 2);
+			if (!r?.ok || !r?.new_name) {
+				const msg = r?.message || __("Duplicate failed");
+				throw new Error(msg);
+			}
+			const newName = String(r.new_name).trim();
+			emit("switch-doc", newName);
+			await nextTick();
+			await form.load();
+			await nextTick();
+			internalReloadTick.value += 1;
+			await nextTick();
+			fdBodyRef.value?.reloadRelatedFromServer?.();
+			const readbackOk = await runForcedSubmitRefreshReadback({
+				initialSyncJobIds: r.sync_job_ids,
+			});
+			if (readbackOk && typeof props.reloadPanelAfterPublish === "function") {
+				await props.reloadPanelAfterPublish();
+			}
+			if (!readbackOk) {
+				return;
+			}
 			if (typeof frappe !== "undefined" && frappe.msgprint) {
 				frappe.msgprint({
-					title: r?.placeholder ? __("Duplicate Event (placeholder)") : __("Duplicate Event"),
-					message:
-						`<p>${frappe.utils.escape_html(String(r?.message || __("Done")))}</p>` +
-						(preview
-							? `<pre style="white-space:pre-wrap;max-height:55vh;overflow:auto;text-align:left;font-size:var(--font-size-sm);margin-top:0.75rem;">${escapeForPreHtml(body)}</pre>`
-							: ""),
-					wide: true,
-					indicator: r?.placeholder ? "blue" : "green",
+					title: __("Duplicate Event"),
+					message: `<p>${frappe.utils.escape_html(
+						String(r.message || `Event duplicated as product id ${newName}.`),
+					)}</p>`,
+					indicator: "green",
 				});
 			}
 		} catch (e) {

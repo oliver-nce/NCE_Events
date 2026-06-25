@@ -452,6 +452,12 @@ export function usePanelFormDialogHost(openPanels) {
 		setTimeout(commitPendingNav, 300);
 	}
 
+	function onFormDialogSwitchDoc(docName) {
+		const name = docName != null ? String(docName).trim() : "";
+		if (!name) return;
+		formDialogDocName.value = name;
+	}
+
 	/** Reload the open panel whose doctype matches the current form dialog (e.g. after WC publish). */
 	function reloadPanelForFormDialogDoctype() {
 		const doctype = formDialogDoctype.value;
@@ -486,6 +492,7 @@ export function usePanelFormDialogHost(openPanels) {
 		onFormDialogFindCancelCriteria,
 		onFormDialogNavPrev,
 		onFormDialogNavNext,
+		onFormDialogSwitchDoc,
 		openFormDialogFromPanelRow,
 		openFormDialogForNewRecord,
 		openFormDialogForFind,

@@ -324,5 +324,55 @@ class TestUpdateWooCommerceProduct(unittest.TestCase):
 			update_woo_commerce_product({"doctype": "Events", "name": "EVT-NON-NUMERIC"})
 
 
+class TestDuplicateEvent(unittest.TestCase):
+	_SOURCE = {
+		"doctype": "Events",
+		"name": "501",
+		"event_name": "Spring Camp",
+		"event_type_id": "ET-1",
+		"price": 99,
+		"first_session_date": "2026-06-01",
+		"sku": "CAMP-501",
+	}
+
+	@patch("nce_events.api.events_publish.frappe.db")
+	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)
+	@patch("nce_events.api.events_publish._copy_event_sessions", return_value=2)
+	@patch("nce_events.api.events_publish._insert_duplicated_events_row")
+	@patch("nce_events.api.events_publish._post_wc_private_product_from_events_stub", return_value=902)
+	@patch("nce_events.api.events_publish.frappe.get_doc")
+	def test_duplicate_posts_wc_and_copies_row(
+		self,
+		mock_get_doc,
+		mock_post_wc,
+		mock_insert,
+		mock_copy_sessions,
+		mock_perm,
+		mock_db,
+	):
+		mock_db.exists.side_effect = lambda dt, name: dt == "Events" and name in ("501",)
+		source_doc = MagicMock()
+		source_doc.as_dict.return_value = dict(self._SOURCE)
+		mock_get_doc.return_value = source_doc
+		new_doc = MagicMock()
+		new_doc.name = "902"
+		mock_insert.return_value = new_doc
+
+		from nce_events.api.events_publish import duplicate_event
+
+		out = duplicate_event(source_name="501")
+
+		mock_post_wc.assert_called_once()
+		stub = mock_post_wc.call_args[0][0]
+		self.assertEqual(stub["event_name"], "Spring Camp")
+		self.assertEqual(stub["event_type_id"], "ET-1")
+		mock_copy_sessions.assert_called_once_with("501", "902")
+		mock_insert.assert_called_once_with(source_doc, 902)
+		self.assertEqual(out["ok"], 1)
+		self.assertEqual(out["new_name"], "902")
+		self.assertEqual(out["wp_id"], 902)
+		self.assertEqual(out["sessions_copied"], 2)
+
+
 if __name__ == "__main__":
 	unittest.main()

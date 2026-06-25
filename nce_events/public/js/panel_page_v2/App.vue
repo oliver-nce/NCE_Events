@@ -263,6 +263,7 @@
 			@readback-merged="onReadbackMerged"
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
+			@switch-doc="onFormDialogSwitchDoc"
 			:on-go-to-navigate="onFormDialogGoToNavigate"
 		/>
 		<!-- Slot 1 pending (behind) -->
@@ -295,6 +296,7 @@
 			@readback-merged="onReadbackMerged"
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
+			@switch-doc="onFormDialogSwitchDoc"
 			:on-go-to-navigate="onFormDialogGoToNavigate"
 		/>
 		<!-- Slot 1 active -->
@@ -333,6 +335,7 @@
 			@readback-merged="onReadbackMerged"
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
+			@switch-doc="onFormDialogSwitchDoc"
 			:on-go-to-navigate="onFormDialogGoToNavigate"
 		/>
 		<!-- Slot 0 pending (behind) -->
@@ -365,6 +368,7 @@
 			@readback-merged="onReadbackMerged"
 			@nav-prev="onFormDialogNavPrev"
 			@nav-next="onFormDialogNavNext"
+			@switch-doc="onFormDialogSwitchDoc"
 			:on-go-to-navigate="onFormDialogGoToNavigate"
 		/>
 	</div>
@@ -455,6 +459,7 @@ const {
 	formDialogFindActive,
 	onFormDialogNavPrev,
 	onFormDialogNavNext,
+	onFormDialogSwitchDoc,
 	openFormDialogFromPanelRow,
 	openFormDialogForNewRecord,
 	openFormDialogStandalone,
@@ -496,6 +501,7 @@ const { actions: panelActions, loadActions, executeAction: runPanelAction } = us
 	openFormDialogStandalone,
 	refreshPanelByDoctype,
 	cascadeOpenPanels,
+	closeAllPanels,
 	scope: panelMode,
 });
 
@@ -505,7 +511,7 @@ async function onPanelActionSelect(action) {
 
 const { cardStack, openCardModal, closeTopCard, onOpenCard } = useNceCardStack();
 
-const { onEmail, onSms, onEmailOne, onSmsOne } = useSendDialogs();
+const { onEmail, onSms, onEmailOne, onSmsOne, closeSendDialog } = useSendDialogs();
 
 async function onSwitchOne(panel, row) {
 	const field = panel?.config?.wp_family_id_field || "";
@@ -952,6 +958,24 @@ function closePanel(id) {
 	children.forEach((c) => closePanel(c.id));
 	const idx = openPanels.findIndex((p) => p.id === id);
 	if (idx >= 0) openPanels.splice(idx, 1);
+}
+
+/** Close drilled panels and all overlay dialogs; root WP Tables panel stays open. */
+function closeAllPanels({ showAlert = true } = {}) {
+	onFormDialogClose();
+	tagFinderDoctype.value = "";
+	while (cardStack.length) closeTopCard();
+	closeSendDialog();
+
+	const ids = openPanels.map((p) => p.id);
+	ids.forEach((id) => closePanel(id));
+
+	if (showAlert && typeof frappe !== "undefined" && frappe.show_alert) {
+		frappe.show_alert({
+			message: __("Closed all tables and dialogs"),
+			indicator: "green",
+		});
+	}
 }
 
 function onRootRowClick(row) {
