@@ -1222,7 +1222,10 @@ async function onPlaceholderButton(btn) {
 				{ freeze: true, freeze_message: __("Duplicating event…") },
 			);
 			if (!r?.ok || !r?.new_name) {
-				const msg = r?.message || __("Duplicate failed");
+				const msg =
+					(typeof r?.message === "string" && r.message) ||
+					extractServerMessage(r) ||
+					__("Duplicate failed");
 				throw new Error(msg);
 			}
 			const newName = String(r.new_name).trim();
@@ -1252,7 +1255,8 @@ async function onPlaceholderButton(btn) {
 				});
 			}
 		} catch (e) {
-			const msg = e?.message || String(e) || __("Duplicate failed");
+			const msg =
+				extractServerMessage(e) || e?.message || String(e) || __("Duplicate failed");
 			form.validationError.value = msg;
 			if (typeof frappe !== "undefined" && frappe.msgprint) {
 				frappe.msgprint({ title: __("Duplicate Event"), message: msg, indicator: "red" });

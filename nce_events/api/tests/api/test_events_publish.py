@@ -373,6 +373,54 @@ class TestDuplicateEvent(unittest.TestCase):
 		self.assertEqual(out["wp_id"], 902)
 		self.assertEqual(out["sessions_copied"], 2)
 
+	@patch("nce_events.api.events_publish.frappe.db")
+	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)
+	@patch("nce_events.api.events_publish._copy_event_sessions", return_value=0)
+	@patch("nce_events.api.events_publish._insert_duplicated_events_row")
+	@patch("nce_events.api.events_publish._post_wc_private_product_from_events_stub", return_value=903)
+	@patch("nce_events.api.events_publish.frappe.get_doc")
+	@patch("nce_events.api.events_publish.frappe.get_meta")
+	def test_duplicate_resolves_float_product_id(
+		self,
+		mock_get_meta,
+		mock_get_doc,
+		mock_post_wc,
+		mock_insert,
+		mock_copy_sessions,
+		mock_perm,
+		mock_db,
+	):
+		meta = MagicMock()
+		meta.has_field.return_value = False
+		mock_get_meta.return_value = meta
+		mock_db.exists.side_effect = lambda dt, name: dt == "Events" and name == "501"
+		source_doc = MagicMock()
+		source_doc.name = "501"
+		source_doc.as_dict.return_value = dict(self._SOURCE)
+		mock_get_doc.return_value = source_doc
+		mock_insert.return_value = MagicMock(name="903")
+
+		from nce_events.api.events_publish import duplicate_event
+
+		out = duplicate_event(source_name="501.0")
+
+		mock_copy_sessions.assert_called_once_with("501", "903")
+		self.assertEqual(out["new_name"], "903")
+
+
+class TestNormalizeWpProductId(unittest.TestCase):
+	def test_strips_trailing_decimal_zeros(self):
+		from nce_events.api.events_publish import _normalize_wp_product_id
+
+		self.assertEqual(_normalize_wp_product_id("281471.0"), "281471")
+		self.assertEqual(_normalize_wp_product_id(281471.0), "281471")
+
+	def test_rejects_non_numeric(self):
+		from nce_events.api.events_publish import _normalize_wp_product_id
+
+		self.assertIsNone(_normalize_wp_product_id("EVT-1"))
+		self.assertIsNone(_normalize_wp_product_id(""))
+
 
 if __name__ == "__main__":
 	unittest.main()
