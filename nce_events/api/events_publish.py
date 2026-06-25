@@ -652,24 +652,17 @@ def _insert_duplicated_events_row(source: frappe.Document, new_wp_id: int) -> fr
 
 
 @frappe.whitelist()
-def duplicate_event(
+def duplicate_event_start(
 	source_name: str | None = None,
 	doc: dict[str, Any] | str | None = None,
 	connector_name: str | None = None,
 ) -> dict[str, Any]:
-	"""Duplicate an Events record: WooCommerce stub POST, Frappe copy, session rows.
+	"""Phase 1 of duplicate: POST WC product, copy Event Sessions, commit.
 
-	1. POST a private WooCommerce product using stub fields from the source row
-	   (``event_name``, ``event_type_id``, ``price``, ``first_session_date``).
-	2. Copy ``Event Sessions`` (``product_id`` → new id) and insert them first so their
-	   WP push jobs are enqueued before the Events row push.
-	3. Copy the Frappe ``Events`` row with ``name`` = new product id (inserted last).
-	4. Set ``session_dates_edit_ok`` and ``sessions_table_edit_ok`` to ``1``.
-
-	Form Dialog button **Button Script**: ``duplicate_event``.
-
-	Returns ``sync_job_ids`` from the insert (NCE Sync listener) for read-back polling.
-	The V2 panel switches to the new record and runs Submit and Refresh.
+	Returns ``new_wp_id`` and ``session_job_ids`` so the client can poll until
+	all session WP pushes are confirmed finished before inserting the Events row.
+	The Events row must not be created until sessions exist in WP (WP trigger
+	dependency).
 	"""
 	parsed = frappe.parse_json(doc) if isinstance(doc, str) else dict(doc or {})
 	source, source_product_id = _resolve_source_events_for_duplicate(source_name, parsed)
@@ -681,19 +674,46 @@ def duplicate_event(
 	)
 	new_name = str(new_wp_id)
 	sessions_copied = _copy_event_sessions(source_product_id, new_name)
-	new_doc = _insert_duplicated_events_row(source, new_wp_id)
 	frappe.db.commit()
-
-	sync_job_ids = list(getattr(frappe.local, "nce_sync_queued_job_ids", []))
+	session_job_ids = list(getattr(frappe.local, "nce_sync_queued_job_ids", []))
 	return {
 		"ok": 1,
+		"new_wp_id": new_wp_id,
+		"new_name": new_name,
 		"source_name": source.name,
 		"source_wp_id": int(source_product_id),
-		"wp_id": new_wp_id,
-		"new_name": str(new_wp_id),
-		"name": str(new_wp_id),
-		"doc": new_doc.as_dict(),
 		"sessions_copied": sessions_copied,
-		"sync_job_ids": sync_job_ids,
+		"session_job_ids": session_job_ids,
+	}
+
+
+@frappe.whitelist()
+def duplicate_event_finalize(
+	new_wp_id: int | str,
+	source_name: str | None = None,
+	doc: dict[str, Any] | str | None = None,
+) -> dict[str, Any]:
+	"""Phase 2 of duplicate: insert the Events row after sessions are confirmed in WP.
+
+	Called by the client only after all ``session_job_ids`` from
+	``duplicate_event_start`` have reached a terminal state.  Inserts the Events
+	row last so the WP trigger finds session rows already present.
+	"""
+	parsed = frappe.parse_json(doc) if isinstance(doc, str) else dict(doc or {})
+	source, _ = _resolve_source_events_for_duplicate(source_name, parsed)
+	new_wp_id = int(new_wp_id)
+	new_name = str(new_wp_id)
+	frappe.local.nce_sync_queued_job_ids = []
+	new_doc = _insert_duplicated_events_row(source, new_wp_id)
+	frappe.db.commit()
+	events_job_ids = list(getattr(frappe.local, "nce_sync_queued_job_ids", []))
+	return {
+		"ok": 1,
+		"new_name": new_name,
+		"name": new_name,
+		"wp_id": new_wp_id,
+		"doc": new_doc.as_dict(),
+		"events_job_ids": events_job_ids,
+		"sync_job_ids": events_job_ids,
 		"message": _("Event duplicated as product id {0}.").format(new_wp_id),
 	}

@@ -1232,23 +1232,52 @@ async function onPlaceholderButton(btn) {
 		try {
 			await commitFocusedFrappeWidget();
 			const raw = JSON.parse(JSON.stringify(form.formData));
-			const doc = normalizeDocForWooEventsPublish({
-				doctype: props.doctype,
-				...raw,
-			});
-			const r = await frappeCall(
-				"nce_events.api.events_publish.duplicate_event",
+			const doc = normalizeDocForWooEventsPublish({ doctype: props.doctype, ...raw });
+
+			// Phase 1 — create WC product + insert sessions
+			const r1 = await frappeCall(
+				"nce_events.api.events_publish.duplicate_event_start",
 				{ source_name: sourceName, doc },
-				{ freeze: true, freeze_message: __("Duplicating event…") },
+				{ freeze: true, freeze_message: __("Duplicating event — copying sessions…") },
 			);
-			if (!r?.ok || !r?.new_name) {
-				const msg =
-					(typeof r?.message === "string" && r.message) ||
-					extractServerMessage(r) ||
-					__("Duplicate failed");
-				throw new Error(msg);
+			if (!r1?.ok || !r1?.new_name) {
+				throw new Error(extractServerMessage(r1) || __("Duplicate failed"));
 			}
-			const newName = String(r.new_name).trim();
+			const newName = String(r1.new_name).trim();
+			const sessionJobIds = Array.isArray(r1.session_job_ids) ? r1.session_job_ids : [];
+
+			// Wait for all session WP push jobs to finish before inserting Events row
+			if (sessionJobIds.length) {
+				syncWaiting.value = true;
+				const { anyFailed } = await pollSyncJobsUntilDone(sessionJobIds);
+				syncWaiting.value = false;
+				if (anyFailed) {
+					throw new Error(__("One or more session sync jobs failed. Check Error Log."));
+				}
+			}
+
+			// Phase 2 — insert Events row (sessions are now confirmed in WP)
+			const r2 = await frappeCall(
+				"nce_events.api.events_publish.duplicate_event_finalize",
+				{ new_wp_id: r1.new_wp_id, source_name: sourceName, doc },
+				{ freeze: true, freeze_message: __("Inserting event record…") },
+			);
+			if (!r2?.ok) {
+				throw new Error(extractServerMessage(r2) || __("Duplicate finalize failed"));
+			}
+			const eventsJobIds = Array.isArray(r2.events_job_ids) ? r2.events_job_ids : [];
+
+			// Wait for Events WP push job to finish
+			if (eventsJobIds.length) {
+				syncWaiting.value = true;
+				const { anyFailed } = await pollSyncJobsUntilDone(eventsJobIds);
+				syncWaiting.value = false;
+				if (anyFailed) {
+					throw new Error(__("Event sync job failed. Check Error Log."));
+				}
+			}
+
+			// Switch to new doc, load form, reload all related tabs
 			emit("switch-doc", newName);
 			await nextTick();
 			await form.load();
@@ -1256,28 +1285,29 @@ async function onPlaceholderButton(btn) {
 			internalReloadTick.value += 1;
 			await nextTick();
 			fdBodyRef.value?.reloadRelatedFromServer?.();
-			const readbackOk = await runForcedSubmitRefreshReadback({
-				initialSyncJobIds: r.sync_job_ids,
-				skipPresubmit: true,
-				skipSave: true,
-				skipRelatedSave: true,
+
+			// Full readback — linked sync pulls all related tables (sessions + any future ones)
+			const readbackOk = await runSyncReadbackAfterSave({
+				result: { name: newName, sync_job_ids: [] },
+				relatedSaveJobIds: [],
+				oldRowName: newName,
+				alwaysReadback: true,
 			});
 			if (readbackOk && typeof props.reloadPanelAfterPublish === "function") {
 				await props.reloadPanelAfterPublish();
 			}
-			if (!readbackOk) {
-				return;
-			}
+			if (!readbackOk) return;
 			if (typeof frappe !== "undefined" && frappe.msgprint) {
 				frappe.msgprint({
 					title: __("Duplicate Event"),
 					message: `<p>${frappe.utils.escape_html(
-						String(r.message || `Event duplicated as product id ${newName}.`),
+						String(r2.message || `Event duplicated as product id ${newName}.`),
 					)}</p>`,
 					indicator: "green",
 				});
 			}
 		} catch (e) {
+			syncWaiting.value = false;
 			const msg =
 				extractServerMessage(e) || e?.message || String(e) || __("Duplicate failed");
 			form.validationError.value = msg;
