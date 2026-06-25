@@ -611,7 +611,7 @@ def _copy_event_sessions(source_product_id: str, new_product_id: str) -> int:
 	for session_name in session_names:
 		row = frappe.copy_doc(frappe.get_doc(_EVENT_SESSIONS_DOCTYPE, session_name))
 		row.set(_EVENT_SESSIONS_LINK_FIELD, new_product_id)
-		row.insert(ignore_permissions=True)
+		row.insert(ignore_permissions=True, ignore_links=True)
 		copied += 1
 	return copied
 
@@ -648,8 +648,8 @@ def duplicate_event(
 
 	1. POST a private WooCommerce product using stub fields from the source row
 	   (``event_name``, ``event_type_id``, ``price``, ``first_session_date``).
-	2. Copy ``Event Sessions`` only (``product_id`` → new id) and insert them.
-	3. Copy the Frappe ``Events`` row (including embedded child tables) with ``name`` = new product id.
+	2. Copy the Frappe ``Events`` row (including embedded child tables) with ``name`` = new product id.
+	3. Copy ``Event Sessions`` only (``product_id`` → new id) and insert them.
 	4. Set ``session_dates_edit_ok`` and ``sessions_table_edit_ok`` to ``1``.
 
 	Form Dialog button **Button Script**: ``duplicate_event``.
@@ -666,8 +666,8 @@ def duplicate_event(
 		connector=connector_name,
 	)
 	new_name = str(new_wp_id)
-	sessions_copied = _copy_event_sessions(source_product_id, new_name)
 	new_doc = _insert_duplicated_events_row(source, new_wp_id)
+	sessions_copied = _copy_event_sessions(source_product_id, new_name)
 	frappe.db.commit()
 
 	sync_job_ids = list(getattr(frappe.local, "nce_sync_queued_job_ids", []))

@@ -852,11 +852,21 @@ async function runSyncReadbackAfterSave({
  * Full Submit-and-Refresh pipeline for a saved record — presubmit hook, save,
  * related rows, WP read-back, form reload. Used after duplicate when the form
  * is already persisted but we still need the complete S&R side effects.
+ * @param {{ skipPresubmit?: boolean, skipSave?: boolean }} opts — skip WC presubmit (duplicate already POSTed stub); skipSave when server already persisted
  */
-async function runForcedSubmitRefreshReadback({ initialSyncJobIds = [], pollLog } = {}) {
+async function runForcedSubmitRefreshReadback({
+	initialSyncJobIds = [],
+	pollLog,
+	skipPresubmit = false,
+	skipSave = false,
+} = {}) {
 	const submitHookMethod = (form.definition.value?.custom_presubmit_script || "").trim();
 	let hookResult = null;
-	if (submitHookMethod && String(form.formData.name || "").match(/^\d+$/)) {
+	if (
+		!skipPresubmit &&
+		submitHookMethod &&
+		String(form.formData.name || "").match(/^\d+$/)
+	) {
 		pollLog?.("presubmit", submitHookMethod);
 		const raw = JSON.parse(JSON.stringify(form.formData));
 		const doc =
@@ -878,7 +888,16 @@ async function runForcedSubmitRefreshReadback({ initialSyncJobIds = [], pollLog 
 	form.saving.value = true;
 	let result = null;
 	try {
-		result = await form.save();
+		if (skipSave) {
+			const savedName = String(form.formData?.name || props.docName || "").trim();
+			result = {
+				name: savedName || undefined,
+				sync_job_ids: Array.isArray(initialSyncJobIds) ? [...initialSyncJobIds] : [],
+			};
+			pollLog?.("save", "skipped (already persisted server-side)");
+		} else {
+			result = await form.save();
+		}
 	} finally {
 		form.saving.value = false;
 	}
@@ -1238,6 +1257,8 @@ async function onPlaceholderButton(btn) {
 			fdBodyRef.value?.reloadRelatedFromServer?.();
 			const readbackOk = await runForcedSubmitRefreshReadback({
 				initialSyncJobIds: r.sync_job_ids,
+				skipPresubmit: true,
+				skipSave: true,
 			});
 			if (readbackOk && typeof props.reloadPanelAfterPublish === "function") {
 				await props.reloadPanelAfterPublish();
