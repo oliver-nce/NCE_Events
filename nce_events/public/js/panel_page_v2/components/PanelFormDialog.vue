@@ -852,13 +852,14 @@ async function runSyncReadbackAfterSave({
  * Full Submit-and-Refresh pipeline for a saved record — presubmit hook, save,
  * related rows, WP read-back, form reload. Used after duplicate when the form
  * is already persisted but we still need the complete S&R side effects.
- * @param {{ skipPresubmit?: boolean, skipSave?: boolean }} opts — skip WC presubmit (duplicate already POSTed stub); skipSave when server already persisted
+ * @param {{ skipPresubmit?: boolean, skipSave?: boolean, skipRelatedSave?: boolean }} opts
  */
 async function runForcedSubmitRefreshReadback({
 	initialSyncJobIds = [],
 	pollLog,
 	skipPresubmit = false,
 	skipSave = false,
+	skipRelatedSave = false,
 } = {}) {
 	const submitHookMethod = (form.definition.value?.custom_presubmit_script || "").trim();
 	let hookResult = null;
@@ -909,7 +910,7 @@ async function runForcedSubmitRefreshReadback({
 	result = { ...result, sync_job_ids: mergedJobIds };
 
 	let relatedSaveJobIds = [];
-	if (relatedDirty.value) {
+	if (!skipRelatedSave && relatedDirty.value) {
 		try {
 			const relResult = await fdBodyRef.value?.saveAllRelatedRows?.();
 			if (Array.isArray(relResult)) relatedSaveJobIds = relResult;
@@ -1259,6 +1260,7 @@ async function onPlaceholderButton(btn) {
 				initialSyncJobIds: r.sync_job_ids,
 				skipPresubmit: true,
 				skipSave: true,
+				skipRelatedSave: true,
 			});
 			if (readbackOk && typeof props.reloadPanelAfterPublish === "function") {
 				await props.reloadPanelAfterPublish();

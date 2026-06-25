@@ -589,6 +589,19 @@ def _set_duplicate_edit_ok_flags(doc: frappe.Document) -> None:
 			doc.set(fn, 1)
 
 
+def _push_events_row_to_wp(docname: str) -> None:
+	"""Upsert one Events row to WordPress after duplicate (requires nce_sync upsert)."""
+	try:
+		from nce_sync.utils.live_sync import _get_listen_map, push_record_to_wp
+	except ImportError:
+		return
+
+	wp_table_name = _get_listen_map().get(_EVENTS_DOCTYPE)
+	if not wp_table_name:
+		return
+	push_record_to_wp(wp_table_name, _EVENTS_DOCTYPE, docname)
+
+
 def _copy_event_sessions(source_product_id: str, new_product_id: str) -> int:
 	"""Copy Event Sessions rows linked to *source_product_id* onto *new_product_id*."""
 	if not frappe.db.exists("DocType", _EVENT_SESSIONS_DOCTYPE):
@@ -608,11 +621,16 @@ def _copy_event_sessions(source_product_id: str, new_product_id: str) -> int:
 		pluck="name",
 	)
 	copied = 0
-	for session_name in session_names:
-		row = frappe.copy_doc(frappe.get_doc(_EVENT_SESSIONS_DOCTYPE, session_name))
-		row.set(_EVENT_SESSIONS_LINK_FIELD, new_product_id)
-		row.insert(ignore_permissions=True, ignore_links=True)
-		copied += 1
+	prev_skip = getattr(frappe.flags, "nce_skip_wp_write_back", False)
+	frappe.flags.nce_skip_wp_write_back = True
+	try:
+		for session_name in session_names:
+			row = frappe.copy_doc(frappe.get_doc(_EVENT_SESSIONS_DOCTYPE, session_name))
+			row.set(_EVENT_SESSIONS_LINK_FIELD, new_product_id)
+			row.insert(ignore_permissions=True, ignore_links=True)
+			copied += 1
+	finally:
+		frappe.flags.nce_skip_wp_write_back = prev_skip
 	return copied
 
 
@@ -634,7 +652,12 @@ def _insert_duplicated_events_row(source: frappe.Document, new_wp_id: int) -> fr
 
 	new_doc = frappe.copy_doc(source)
 	_set_duplicate_edit_ok_flags(new_doc)
-	new_doc.insert(set_name=new_name, ignore_permissions=True)
+	prev_skip = getattr(frappe.flags, "nce_skip_wp_write_back", False)
+	frappe.flags.nce_skip_wp_write_back = True
+	try:
+		new_doc.insert(set_name=new_name, ignore_permissions=True)
+	finally:
+		frappe.flags.nce_skip_wp_write_back = prev_skip
 	return new_doc
 
 
@@ -669,6 +692,7 @@ def duplicate_event(
 	new_doc = _insert_duplicated_events_row(source, new_wp_id)
 	sessions_copied = _copy_event_sessions(source_product_id, new_name)
 	frappe.db.commit()
+	_push_events_row_to_wp(new_name)
 
 	sync_job_ids = list(getattr(frappe.local, "nce_sync_queued_job_ids", []))
 	return {
