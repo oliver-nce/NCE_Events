@@ -621,16 +621,11 @@ def _copy_event_sessions(source_product_id: str, new_product_id: str) -> int:
 		pluck="name",
 	)
 	copied = 0
-	prev_skip = getattr(frappe.flags, "nce_skip_wp_write_back", False)
-	frappe.flags.nce_skip_wp_write_back = True
-	try:
-		for session_name in session_names:
-			row = frappe.copy_doc(frappe.get_doc(_EVENT_SESSIONS_DOCTYPE, session_name))
-			row.set(_EVENT_SESSIONS_LINK_FIELD, new_product_id)
-			row.insert(ignore_permissions=True, ignore_links=True)
-			copied += 1
-	finally:
-		frappe.flags.nce_skip_wp_write_back = prev_skip
+	for session_name in session_names:
+		row = frappe.copy_doc(frappe.get_doc(_EVENT_SESSIONS_DOCTYPE, session_name))
+		row.set(_EVENT_SESSIONS_LINK_FIELD, new_product_id)
+		row.insert(ignore_permissions=True, ignore_links=True)
+		copied += 1
 	return copied
 
 
@@ -652,12 +647,7 @@ def _insert_duplicated_events_row(source: frappe.Document, new_wp_id: int) -> fr
 
 	new_doc = frappe.copy_doc(source)
 	_set_duplicate_edit_ok_flags(new_doc)
-	prev_skip = getattr(frappe.flags, "nce_skip_wp_write_back", False)
-	frappe.flags.nce_skip_wp_write_back = True
-	try:
-		new_doc.insert(set_name=new_name, ignore_permissions=True)
-	finally:
-		frappe.flags.nce_skip_wp_write_back = prev_skip
+	new_doc.insert(set_name=new_name, ignore_permissions=True)
 	return new_doc
 
 
@@ -671,8 +661,9 @@ def duplicate_event(
 
 	1. POST a private WooCommerce product using stub fields from the source row
 	   (``event_name``, ``event_type_id``, ``price``, ``first_session_date``).
-	2. Copy the Frappe ``Events`` row (including embedded child tables) with ``name`` = new product id.
-	3. Copy ``Event Sessions`` only (``product_id`` → new id) and insert them.
+	2. Copy ``Event Sessions`` (``product_id`` → new id) and insert them first so their
+	   WP push jobs are enqueued before the Events row push.
+	3. Copy the Frappe ``Events`` row with ``name`` = new product id (inserted last).
 	4. Set ``session_dates_edit_ok`` and ``sessions_table_edit_ok`` to ``1``.
 
 	Form Dialog button **Button Script**: ``duplicate_event``.
@@ -689,10 +680,9 @@ def duplicate_event(
 		connector=connector_name,
 	)
 	new_name = str(new_wp_id)
-	new_doc = _insert_duplicated_events_row(source, new_wp_id)
 	sessions_copied = _copy_event_sessions(source_product_id, new_name)
+	new_doc = _insert_duplicated_events_row(source, new_wp_id)
 	frappe.db.commit()
-	_push_events_row_to_wp(new_name)
 
 	sync_job_ids = list(getattr(frappe.local, "nce_sync_queued_job_ids", []))
 	return {
