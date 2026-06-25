@@ -497,3 +497,54 @@ def clear_new_woo_commerce_product() -> dict[str, Any]:
 	frappe.db.commit()
 	frappe.clear_cache(doctype=_NEW_WOO_DOCTYPE)
 	return {"ok": 1}
+
+
+@frappe.whitelist()
+def duplicate_event(
+	source_name: str | None = None,
+	doc: dict[str, Any] | str | None = None,
+) -> dict[str, Any]:
+	"""Placeholder: duplicate an Events record as a new WooCommerce product stub.
+
+	Intended flow (not yet implemented):
+	  1. Load the source Events row (``name`` = WooCommerce product id).
+	  2. Build a WooCommerce POST body from its fields (``build_woocommerce_product_payload``).
+	  3. Force ``status=private`` (stub), POST ``/products``, return new ``wp_id``.
+	  4. User waits for the WordPress refresh cycle → new Frappe Events row appears.
+
+	Form Dialog button: set **Button Script** to ``duplicate_event`` (V2 panel token).
+
+	Until the POST step is implemented, returns ``placeholder: 1`` and a payload preview only.
+	"""
+	parsed = frappe.parse_json(doc) if isinstance(doc, str) else dict(doc or {})
+	name = cstr(source_name or parsed.get("name") or "").strip()
+	if not name:
+		frappe.throw(_("Open a saved event before duplicating."))
+	wp_id = _is_existing_events_row(name)
+	if wp_id is None:
+		frappe.throw(
+			_("{0} {1} is not a saved event with a WooCommerce product id.").format(
+				_EVENTS_DOCTYPE, name
+			)
+		)
+	if not frappe.has_permission(_EVENTS_DOCTYPE, "read", name):
+		frappe.throw(
+			_("Not permitted to read {0}").format(_EVENTS_DOCTYPE),
+			frappe.PermissionError,
+		)
+
+	source = frappe.get_doc(_EVENTS_DOCTYPE, name)
+	source_dict = source.as_dict()
+	wc_body = build_woocommerce_product_payload(source_dict)
+	_patch_new_woo_body(wc_body)
+
+	return {
+		"ok": 1,
+		"placeholder": 1,
+		"source_name": name,
+		"source_wp_id": wp_id,
+		"message": _(
+			"Duplicate event is not fully implemented yet — no WooCommerce product was created."
+		),
+		"woocommerce_payload_preview": wc_body,
+	}

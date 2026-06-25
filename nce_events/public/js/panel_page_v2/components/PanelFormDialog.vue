@@ -1111,6 +1111,57 @@ async function onPlaceholderButton(btn) {
 		return;
 	}
 
+	if (props.doctype === "Events" && scriptToken === "duplicate_event") {
+		const sourceName = String(form.formData?.name || props.docName || "").trim();
+		if (!sourceName) {
+			if (typeof frappe !== "undefined" && frappe.msgprint) {
+				frappe.msgprint({
+					title: __("Duplicate Event"),
+					message: __("Save this event before duplicating."),
+					indicator: "orange",
+				});
+			}
+			return;
+		}
+		customActionBusy.value = true;
+		try {
+			await commitFocusedFrappeWidget();
+			const raw = JSON.parse(JSON.stringify(form.formData));
+			const doc = normalizeDocForWooEventsPublish({
+				doctype: props.doctype,
+				...raw,
+			});
+			const r = await frappeCall(
+				"nce_events.api.events_publish.duplicate_event",
+				{ source_name: sourceName, doc },
+				{ freeze: true, freeze_message: __("Duplicating event…") },
+			);
+			const preview = r?.woocommerce_payload_preview;
+			const body = preview ? JSON.stringify(preview, null, 2) : JSON.stringify(r, null, 2);
+			if (typeof frappe !== "undefined" && frappe.msgprint) {
+				frappe.msgprint({
+					title: r?.placeholder ? __("Duplicate Event (placeholder)") : __("Duplicate Event"),
+					message:
+						`<p>${frappe.utils.escape_html(String(r?.message || __("Done")))}</p>` +
+						(preview
+							? `<pre style="white-space:pre-wrap;max-height:55vh;overflow:auto;text-align:left;font-size:var(--font-size-sm);margin-top:0.75rem;">${escapeForPreHtml(body)}</pre>`
+							: ""),
+					wide: true,
+					indicator: r?.placeholder ? "blue" : "green",
+				});
+			}
+		} catch (e) {
+			const msg = e?.message || String(e) || __("Duplicate failed");
+			form.validationError.value = msg;
+			if (typeof frappe !== "undefined" && frappe.msgprint) {
+				frappe.msgprint({ title: __("Duplicate Event"), message: msg, indicator: "red" });
+			}
+		} finally {
+			customActionBusy.value = false;
+		}
+		return;
+	}
+
 	if (props.doctype === "Events" && scriptToken === "update_events_to_website") {
 		form.validationError.value = null;
 		const errors = form.validateForWooPublish();
