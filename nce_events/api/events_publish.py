@@ -700,7 +700,7 @@ def duplicate_event_finalize(
 	row last so the WP trigger finds session rows already present.
 	"""
 	parsed = frappe.parse_json(doc) if isinstance(doc, str) else dict(doc or {})
-	source, _ = _resolve_source_events_for_duplicate(source_name, parsed)
+	source, _source_pid = _resolve_source_events_for_duplicate(source_name, parsed)
 	new_wp_id = int(new_wp_id)
 	new_name = str(new_wp_id)
 	frappe.local.nce_sync_queued_job_ids = []
