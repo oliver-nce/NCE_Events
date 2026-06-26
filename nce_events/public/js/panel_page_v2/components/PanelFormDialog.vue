@@ -92,7 +92,7 @@
 			@go-to-panel="onGoToPanel"
 		/>
 			<PanelFormDialogFooter
-				:buttons="form.buttons.value"
+				:buttons="filteredButtons"
 				:definition-name="definitionName"
 				:doc-name="docName"
 				:custom-action-busy="customActionBusy"
@@ -330,6 +330,19 @@ const internalReloadTick = ref(0);
 /** True while polling WP sync jobs after save — shows overlay, disables footer actions. */
 const syncWaiting = ref(false);
 const customActionBusy = ref(false);
+
+const filteredButtons = computed(() => {
+	const btns = form.buttons.value || [];
+	if (props.doctype !== "Events") return btns;
+	const datesOk = Number(form.formData?.session_dates_edit_ok) === 1;
+	const tableOk = Number(form.formData?.sessions_table_edit_ok) === 1;
+	return btns.filter((btn) => {
+		const token = String(btn?.button_script || "").trim().split(/\s+/)[0];
+		if (token === "freeze_event_sessions" && datesOk && tableOk) return false;
+		if (token === "unfreeze_event_sessions" && !datesOk && !tableOk) return false;
+		return true;
+	});
+});
 
 const syncWaitingText =
 	typeof window.__ === "function" ? window.__("Updating") + "…" : "Updating…";
@@ -1313,6 +1326,42 @@ async function onPlaceholderButton(btn) {
 			form.validationError.value = msg;
 			if (typeof frappe !== "undefined" && frappe.msgprint) {
 				frappe.msgprint({ title: __("Duplicate Event"), message: msg, indicator: "red" });
+			}
+		} finally {
+			customActionBusy.value = false;
+		}
+		return;
+	}
+
+	if (props.doctype === "Events" && scriptToken === "freeze_event_sessions") {
+		customActionBusy.value = true;
+		try {
+			form.formData.session_dates_edit_ok = 1;
+			form.formData.sessions_table_edit_ok = 1;
+			await form.save();
+		} catch (e) {
+			const msg = extractServerMessage(e) || e?.message || String(e) || __("Save failed");
+			form.validationError.value = msg;
+			if (typeof frappe !== "undefined" && frappe.msgprint) {
+				frappe.msgprint({ title: __("Freeze Sessions"), message: msg, indicator: "red" });
+			}
+		} finally {
+			customActionBusy.value = false;
+		}
+		return;
+	}
+
+	if (props.doctype === "Events" && scriptToken === "unfreeze_event_sessions") {
+		customActionBusy.value = true;
+		try {
+			form.formData.session_dates_edit_ok = 0;
+			form.formData.sessions_table_edit_ok = 0;
+			await form.save();
+		} catch (e) {
+			const msg = extractServerMessage(e) || e?.message || String(e) || __("Save failed");
+			form.validationError.value = msg;
+			if (typeof frappe !== "undefined" && frappe.msgprint) {
+				frappe.msgprint({ title: __("Unfreeze Sessions"), message: msg, indicator: "red" });
 			}
 		} finally {
 			customActionBusy.value = false;
