@@ -92,7 +92,6 @@
 			@go-to-panel="onGoToPanel"
 		/>
 			<PanelFormDialogFooter
-				ref="fdFooterRef"
 				:buttons="form.buttons.value"
 				:definition-name="definitionName"
 				:doc-name="docName"
@@ -331,7 +330,6 @@ const internalReloadTick = ref(0);
 /** True while polling WP sync jobs after save — shows overlay, disables footer actions. */
 const syncWaiting = ref(false);
 const customActionBusy = ref(false);
-const fdFooterRef = ref(null);
 
 
 const syncWaitingText =
@@ -1331,15 +1329,8 @@ async function onPlaceholderButton(btn) {
 		try {
 			form.formData.session_dates_edit_ok = freezing ? 1 : 0;
 			form.formData.sessions_table_edit_ok = freezing ? 1 : 0;
-			const result = await form.save();
-			await runSyncReadbackAfterSave({
-				result,
-				relatedSaveJobIds: [],
-				oldRowName: props.docName,
-				alwaysReadback: true,
-			});
-			await nextTick();
-			fdFooterRef.value?.refreshFooterVisibility?.();
+			await form.save();
+			await refreshFormAfterSave();
 		} catch (e) {
 			const msg = extractServerMessage(e) || e?.message || String(e) || __("Save failed");
 			form.validationError.value = msg;
