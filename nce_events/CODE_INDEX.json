@@ -101,6 +101,9 @@
         "publish_new_woo_commerce_product",
         "slugify_product_slug",
         "submit_new_woo_commerce_product",
+        "duplicate_event_finalize",
+        "duplicate_event_start",
+        "delete_event",
         "update_events_to_website",
         "update_woo_commerce_product"
       ],
@@ -108,6 +111,9 @@
         "clear_new_woo_commerce_product",
         "publish_new_woo_commerce_product",
         "submit_new_woo_commerce_product",
+        "duplicate_event_finalize",
+        "duplicate_event_start",
+        "delete_event",
         "update_events_to_website",
         "update_woo_commerce_product"
       ],

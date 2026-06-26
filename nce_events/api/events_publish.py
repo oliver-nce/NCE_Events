@@ -718,3 +718,98 @@ def duplicate_event_finalize(
 		"sync_job_ids": events_job_ids,
 		"message": _("Event duplicated as product id {0}.").format(new_wp_id),
 	}
+
+
+_ENROLLMENTS_DOCTYPE: str = "Enrollments"
+_ENROLLMENTS_LINK_FIELD: str = "product_id"
+
+
+def _count_enrollments_for_event(product_id: str) -> int:
+	if not frappe.db.exists("DocType", _ENROLLMENTS_DOCTYPE):
+		return 0
+	meta = frappe.get_meta(_ENROLLMENTS_DOCTYPE)
+	if not meta.has_field(_ENROLLMENTS_LINK_FIELD):
+		return 0
+	return int(
+		frappe.db.count(_ENROLLMENTS_DOCTYPE, {_ENROLLMENTS_LINK_FIELD: product_id}) or 0
+	)
+
+
+def _delete_wc_product_soft(wp_id: int, connector: str | None = None) -> dict[str, Any]:
+	"""Move a WooCommerce product to trash (soft delete — no ``force=true``)."""
+	conn = (connector or "").strip() or DEFAULT_WOOCOMMERCE_CONNECTOR
+	resp = wc_request(conn, "DELETE", f"/products/{wp_id}")
+	return resp if isinstance(resp, dict) else {}
+
+
+def _delete_event_sessions_for_product(product_id: str) -> int:
+	"""Delete Event Sessions rows linked to *product_id*; return count deleted."""
+	if not frappe.db.exists("DocType", _EVENT_SESSIONS_DOCTYPE):
+		return 0
+	meta = frappe.get_meta(_EVENT_SESSIONS_DOCTYPE)
+	if not meta.has_field(_EVENT_SESSIONS_LINK_FIELD):
+		return 0
+	if not frappe.has_permission(_EVENT_SESSIONS_DOCTYPE, "delete"):
+		frappe.throw(
+			_("Not permitted to delete {0}").format(_EVENT_SESSIONS_DOCTYPE),
+			frappe.PermissionError,
+		)
+
+	session_names = frappe.get_all(
+		_EVENT_SESSIONS_DOCTYPE,
+		filters={_EVENT_SESSIONS_LINK_FIELD: product_id},
+		pluck="name",
+	)
+	deleted = 0
+	for session_name in session_names:
+		if not frappe.has_permission(_EVENT_SESSIONS_DOCTYPE, "delete", doc=session_name):
+			frappe.throw(_("Not permitted"), frappe.PermissionError)
+		frappe.delete_doc(_EVENT_SESSIONS_DOCTYPE, session_name, force=True)
+		deleted += 1
+	return deleted
+
+
+@frappe.whitelist()
+def delete_event(
+	source_name: str | None = None,
+	doc: dict[str, Any] | str | None = None,
+	connector_name: str | None = None,
+) -> dict[str, Any]:
+	"""Trash the WooCommerce product, then delete Event Sessions and the Events row.
+
+	Refuses when any Enrollments row links to this event (``product_id``). Returns
+	``sync_job_ids`` from nce_sync listeners so the client can poll before updating UI.
+	"""
+	parsed = frappe.parse_json(doc) if isinstance(doc, str) else dict(doc or {})
+	source, product_id = _resolve_source_events_for_duplicate(source_name, parsed)
+
+	if not frappe.has_permission(_EVENTS_DOCTYPE, "delete", doc=source.name):
+		frappe.throw(
+			_("Not permitted to delete {0}").format(_EVENTS_DOCTYPE),
+			frappe.PermissionError,
+		)
+
+	enrollment_count = _count_enrollments_for_event(product_id)
+	if enrollment_count > 0:
+		frappe.throw(
+			_("Cannot delete this event: {0} enrollment(s) exist.").format(enrollment_count)
+		)
+
+	wp_id = int(product_id)
+	wc_resp = _delete_wc_product_soft(wp_id, connector_name)
+
+	frappe.local.nce_sync_queued_job_ids = []
+	sessions_deleted = _delete_event_sessions_for_product(product_id)
+	frappe.delete_doc(_EVENTS_DOCTYPE, source.name, force=True)
+	sync_job_ids = list(getattr(frappe.local, "nce_sync_queued_job_ids", []))
+	frappe.db.commit()
+
+	return {
+		"ok": 1,
+		"name": source.name,
+		"wp_id": wp_id,
+		"sessions_deleted": sessions_deleted,
+		"woocommerce": wc_resp,
+		"sync_job_ids": sync_job_ids,
+		"message": _("The event has been deleted."),
+	}

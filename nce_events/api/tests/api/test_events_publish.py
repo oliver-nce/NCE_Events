@@ -402,6 +402,76 @@ class TestDuplicateEvent(unittest.TestCase):
 		self.assertEqual(out["new_name"], "903")
 
 
+class TestDeleteEvent(unittest.TestCase):
+	_SOURCE = {
+		"doctype": "Events",
+		"name": "501",
+		"event_name": "Spring Camp",
+	}
+
+	@patch("nce_events.api.events_publish.frappe.db.commit")
+	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)
+	@patch("nce_events.api.events_publish._count_enrollments_for_event", return_value=3)
+	@patch("nce_events.api.events_publish.frappe.get_doc")
+	def test_refuses_when_enrollments_exist(
+		self,
+		mock_get_doc,
+		mock_count,
+		mock_perm,
+		mock_commit,
+	):
+		source_doc = MagicMock()
+		source_doc.name = "501"
+		mock_get_doc.return_value = source_doc
+
+		from nce_events.api.events_publish import delete_event
+
+		with self.assertRaises(frappe.ValidationError):
+			delete_event(source_name="501")
+		mock_commit.assert_not_called()
+
+	@patch("nce_events.api.events_publish.frappe.db.commit")
+	@patch("nce_events.api.events_publish.frappe.delete_doc")
+	@patch("nce_events.api.events_publish._delete_event_sessions_for_product", return_value=2)
+	@patch("nce_events.api.events_publish.wc_request")
+	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)
+	@patch("nce_events.api.events_publish._count_enrollments_for_event", return_value=0)
+	@patch("nce_events.api.events_publish.frappe.get_doc")
+	def test_delete_trashes_wc_product_then_deletes_frappe_rows(
+		self,
+		mock_get_doc,
+		mock_count,
+		mock_perm,
+		mock_wc,
+		mock_delete_sessions,
+		mock_delete_doc,
+		mock_commit,
+	):
+		source_doc = MagicMock()
+		source_doc.name = "501"
+		mock_get_doc.return_value = source_doc
+		mock_wc.return_value = {"id": 501, "status": "trash"}
+
+		frappe.local.nce_sync_queued_job_ids = ["job-1", "job-2"]
+
+		from nce_events.api.events_publish import delete_event
+
+		out = delete_event(source_name="501")
+
+		mock_wc.assert_called_once()
+		self.assertEqual(mock_wc.call_args[0][1], "DELETE")
+		self.assertEqual(mock_wc.call_args[0][2], "/products/501")
+		self.assertNotIn("force", mock_wc.call_args[1].get("query_params") or {})
+		mock_delete_sessions.assert_called_once_with("501")
+		mock_delete_doc.assert_called_once_with("Events", "501", force=True)
+		mock_commit.assert_called_once()
+		self.assertEqual(out["ok"], 1)
+		self.assertEqual(out["name"], "501")
+		self.assertEqual(out["sessions_deleted"], 2)
+		self.assertEqual(out["sync_job_ids"], ["job-1", "job-2"])
+		self.assertIn("deleted", out["message"].lower())
+
+
 class TestNormalizeWpProductId(unittest.TestCase):
 	def test_strips_trailing_decimal_zeros(self):
 		from nce_events.api.events_publish import _normalize_wp_product_id

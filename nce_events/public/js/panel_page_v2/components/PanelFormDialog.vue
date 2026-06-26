@@ -46,6 +46,13 @@
 			>
 				<div class="ppv2-fd-readback-spinner theme-border theme-rounded-sm">{{ syncWaitingText }}</div>
 			</div>
+			<div
+				v-if="deleteSuccessFlash"
+				class="ppv2-fd-readback-overlay"
+				@click.stop
+			>
+				<div class="ppv2-fd-readback-spinner theme-border theme-rounded-sm">{{ deleteSuccessFlash }}</div>
+			</div>
 			<div class="ppv2-fd-drag-handle" @mousedown="startDrag">
 				<PanelFormDialogHeader
 					:header-bg-class="dialogHeaderBgClass"
@@ -330,15 +337,16 @@ const internalReloadTick = ref(0);
 /** True while polling WP sync jobs after save — shows overlay, disables footer actions. */
 const syncWaiting = ref(false);
 const customActionBusy = ref(false);
+const deleteSuccessFlash = ref("");
 
 
 const syncWaitingText =
 	typeof window.__ === "function" ? window.__("Updating") + "…" : "Updating…";
 
-const headerClosable = computed(() => !syncWaiting.value);
+const headerClosable = computed(() => !syncWaiting.value && !deleteSuccessFlash.value);
 
 const rowNavEnabledEffective = computed(
-	() => props.rowNavEnabled && !syncWaiting.value,
+	() => props.rowNavEnabled && !syncWaiting.value && !deleteSuccessFlash.value,
 );
 
 const findCriteriaActive = computed(() => props.findChromePhase === "criteria");
@@ -1314,6 +1322,56 @@ async function onPlaceholderButton(btn) {
 			form.validationError.value = msg;
 			if (typeof frappe !== "undefined" && frappe.msgprint) {
 				frappe.msgprint({ title: __("Duplicate Event"), message: msg, indicator: "red" });
+			}
+		} finally {
+			customActionBusy.value = false;
+		}
+		return;
+	}
+
+	if (props.doctype === "Events" && scriptToken === "delete_event") {
+		const eventName = String(form.formData?.name || props.docName || "").trim();
+		if (!eventName) {
+			if (typeof frappe !== "undefined" && frappe.msgprint) {
+				frappe.msgprint({
+					title: __("Delete Event"),
+					message: __("Save this event before deleting."),
+					indicator: "orange",
+				});
+			}
+			return;
+		}
+		customActionBusy.value = true;
+		try {
+			const r = await frappeCall(
+				"nce_events.api.events_publish.delete_event",
+				{ source_name: eventName },
+				{ freeze: true, freeze_message: __("Deleting event…") },
+			);
+			if (!r?.ok) {
+				throw new Error(extractServerMessage(r) || __("Delete failed"));
+			}
+			const syncJobIds = Array.isArray(r.sync_job_ids) ? r.sync_job_ids : [];
+			if (syncJobIds.length) {
+				syncWaiting.value = true;
+				const { anyFailed } = await pollSyncJobsUntilDone(syncJobIds);
+				syncWaiting.value = false;
+				if (anyFailed) {
+					throw new Error(__("One or more sync jobs failed. Check Error Log."));
+				}
+			}
+			window._nce_remove_panel_row?.("Events", eventName);
+			deleteSuccessFlash.value = String(r.message || __("The event has been deleted."));
+			await new Promise((resolve) => setTimeout(resolve, 3000));
+			deleteSuccessFlash.value = "";
+			emit("close");
+		} catch (e) {
+			syncWaiting.value = false;
+			deleteSuccessFlash.value = "";
+			const msg = extractServerMessage(e) || e?.message || String(e) || __("Delete failed");
+			form.validationError.value = msg;
+			if (typeof frappe !== "undefined" && frappe.msgprint) {
+				frappe.msgprint({ title: __("Delete Event"), message: msg, indicator: "red" });
 			}
 		} finally {
 			customActionBusy.value = false;
