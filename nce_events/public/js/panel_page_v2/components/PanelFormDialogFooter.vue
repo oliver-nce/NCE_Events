@@ -275,6 +275,8 @@ watch(
 	},
 	{ deep: true, immediate: true },
 );
+
+defineExpose({ refreshFooterVisibility });
 </script>
 
 <style scoped>
