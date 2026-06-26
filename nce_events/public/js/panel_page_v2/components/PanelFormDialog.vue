@@ -1321,37 +1321,29 @@ async function onPlaceholderButton(btn) {
 		return;
 	}
 
-	if (props.doctype === "Events" && scriptToken === "freeze_event_sessions") {
+	if (props.doctype === "Events" && (scriptToken === "freeze_event_sessions" || scriptToken === "unfreeze_event_sessions")) {
+		const freezing = scriptToken === "freeze_event_sessions";
+		const title = freezing ? __("Freeze Sessions") : __("Unfreeze Sessions");
 		customActionBusy.value = true;
+		form.saving.value = true;
 		try {
-			form.formData.session_dates_edit_ok = 1;
-			form.formData.sessions_table_edit_ok = 1;
-			await form.save();
+			form.formData.session_dates_edit_ok = freezing ? 1 : 0;
+			form.formData.sessions_table_edit_ok = freezing ? 1 : 0;
+			const result = await form.save();
+			await runSyncReadbackAfterSave({
+				result,
+				relatedSaveJobIds: [],
+				oldRowName: props.docName,
+				alwaysReadback: true,
+			});
 		} catch (e) {
 			const msg = extractServerMessage(e) || e?.message || String(e) || __("Save failed");
 			form.validationError.value = msg;
 			if (typeof frappe !== "undefined" && frappe.msgprint) {
-				frappe.msgprint({ title: __("Freeze Sessions"), message: msg, indicator: "red" });
+				frappe.msgprint({ title, message: msg, indicator: "red" });
 			}
 		} finally {
-			customActionBusy.value = false;
-		}
-		return;
-	}
-
-	if (props.doctype === "Events" && scriptToken === "unfreeze_event_sessions") {
-		customActionBusy.value = true;
-		try {
-			form.formData.session_dates_edit_ok = 0;
-			form.formData.sessions_table_edit_ok = 0;
-			await form.save();
-		} catch (e) {
-			const msg = extractServerMessage(e) || e?.message || String(e) || __("Save failed");
-			form.validationError.value = msg;
-			if (typeof frappe !== "undefined" && frappe.msgprint) {
-				frappe.msgprint({ title: __("Unfreeze Sessions"), message: msg, indicator: "red" });
-			}
-		} finally {
+			form.saving.value = false;
 			customActionBusy.value = false;
 		}
 		return;
