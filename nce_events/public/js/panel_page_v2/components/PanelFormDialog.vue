@@ -92,7 +92,7 @@
 			@go-to-panel="onGoToPanel"
 		/>
 			<PanelFormDialogFooter
-				:buttons="filteredButtons"
+				:buttons="form.buttons.value"
 				:definition-name="definitionName"
 				:doc-name="docName"
 				:custom-action-busy="customActionBusy"
@@ -331,18 +331,6 @@ const internalReloadTick = ref(0);
 const syncWaiting = ref(false);
 const customActionBusy = ref(false);
 
-const filteredButtons = computed(() => {
-	const btns = form.buttons.value || [];
-	if (props.doctype !== "Events") return btns;
-	const datesOk = Number(form.formData?.session_dates_edit_ok) === 1;
-	const tableOk = Number(form.formData?.sessions_table_edit_ok) === 1;
-	return btns.filter((btn) => {
-		const token = String(btn?.button_script || "").trim().split(/\s+/)[0];
-		if (token === "freeze_event_sessions" && datesOk && tableOk) return false;
-		if (token === "unfreeze_event_sessions" && !datesOk && !tableOk) return false;
-		return true;
-	});
-});
 
 const syncWaitingText =
 	typeof window.__ === "function" ? window.__("Updating") + "…" : "Updating…";
