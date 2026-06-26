@@ -647,6 +647,7 @@ def _insert_duplicated_events_row(source: frappe.Document, new_wp_id: int) -> fr
 
 	new_doc = frappe.copy_doc(source)
 	_set_duplicate_edit_ok_flags(new_doc)
+	new_doc.event_name = (new_doc.event_name or "").rstrip() + " - "
 	new_doc.insert(set_name=new_name, ignore_permissions=True)
 	return new_doc
 
