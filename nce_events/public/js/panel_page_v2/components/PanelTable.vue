@@ -237,13 +237,11 @@ let _closeHeaderMenuHandler = null;
 const panelBorderStyleVars = computed(() =>
 	panelChromeTableBorderStyleVars(props.config)
 );
-const colHeaderBgClass = computed(() =>
-	panelChromeBg(props.config, "col_header_bg_class")
-);
 const colHeaderCellClasses = computed(() => {
-	const bg = colHeaderBgClass.value;
+	const raw = (props.config?.col_header_bg_class || "").trim();
+	if (!raw) return [];
 	const fg = panelChromeFgTextClass(props.config, "col_header_bg_class");
-	return fg ? [bg, fg] : [bg];
+	return fg ? [raw, fg] : [raw];
 });
 
 function rowTrClasses(ri, row) {
@@ -679,9 +677,8 @@ function startColResize(e, ci) {
 	position: sticky;
 	top: 0;
 	z-index: 2;
-	/* Background + auto-paired text color come from the theme class
-	   theme-bg-secondary-600 on the <th> (see template). Do not set color
-	   here — a scoped rule would override the theme class. */
+	/* Background + text: theme-table thead th when col_header_bg_class is empty;
+	   otherwise per-panel theme-bg-* on the <th>. Do not set color here. */
 	font-weight: var(--font-weight-bold);
 	font-size: var(--font-size-sm);
 	text-transform: uppercase;

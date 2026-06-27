@@ -158,7 +158,7 @@
       "options": "mono\ntonal"
     },
     {
-      "description": "Table column header cells. Empty uses theme-bg-secondary-600.",
+      "description": "Table column header cells. Empty uses theme-table header token (theme-bg-table-header).",
       "fieldname": "col_header_bg_class",
       "fieldtype": "Data",
       "hidden": 1,
@@ -188,7 +188,7 @@
       "options": "mono\ntonal"
     },
     {
-      "description": "Even table rows. Empty uses theme-bg-surface.",
+      "description": "Even table rows. Empty uses theme-table row token (theme-bg-row).",
       "fieldname": "row_bg_class",
       "fieldtype": "Data",
       "hidden": 1,

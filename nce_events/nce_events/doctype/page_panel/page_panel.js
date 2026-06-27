@@ -207,7 +207,7 @@ const COLOUR_SLOTS = [
 		field: "col_header_bg_class",
 		fgTypeField: "col_header_fg_type",
 		label: __("Column headers"),
-		fallback: "theme-bg-secondary-600",
+		fallback: "theme-bg-table-header",
 	},
 	{
 		field: "filter_bar_bg_class",

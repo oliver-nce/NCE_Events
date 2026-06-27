@@ -4,7 +4,7 @@ export const PANEL_CHROME_DEFAULTS = {
 	header_bg_class: "theme-bg-primary-600",
 	header_toolbar_bg_class: "theme-bg-primary-600",
 	footer_bg_class: "theme-bg-primary",
-	col_header_bg_class: "theme-bg-secondary-600",
+	col_header_bg_class: "",
 	filter_bar_bg_class: "theme-bg-primary-100",
 	row_bg_class: "theme-bg-row",
 	row_alt_bg_class: "theme-bg-row-alt",
