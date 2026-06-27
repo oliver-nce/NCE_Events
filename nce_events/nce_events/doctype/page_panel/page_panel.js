@@ -232,7 +232,7 @@ const TABLE_COLOUR_SLOTS = [
 	{
 		field: "col_header_bg_class",
 		fgTypeField: "col_header_fg_type",
-		label: __("Column headers"),
+		label: __("Header row"),
 		fallback: "theme-bg-table-header",
 		tokenVar: "--nce-color-table-header",
 		hexKey: "header_bg_hex",
@@ -240,7 +240,7 @@ const TABLE_COLOUR_SLOTS = [
 	{
 		field: "row_bg_class",
 		fgTypeField: "row_fg_type",
-		label: __("Table rows (even)"),
+		label: __("Row (main / even)"),
 		fallback: "theme-bg-row",
 		tokenVar: "--nce-color-row",
 		hexKey: "row_even_bg_hex",
@@ -248,7 +248,7 @@ const TABLE_COLOUR_SLOTS = [
 	{
 		field: "row_alt_bg_class",
 		fgTypeField: "row_alt_fg_type",
-		label: __("Table rows (odd)"),
+		label: __("Row (alternate / odd)"),
 		fallback: "theme-bg-row-alt",
 		tokenVar: "--nce-color-row-alt",
 		hexKey: "row_odd_bg_hex",
@@ -4006,7 +4006,7 @@ function _colour_preview_swatch_html(className, fgType, isDefault, tokenVar, the
 	const hex = (themeHex || "").trim();
 	if (isDefault && hex) {
 		return (
-			'<span class="nce-theme-swatch-picker__swatch pp-colour-swatch--default" ' +
+			'<span class="nce-theme-swatch-picker__swatch pp-colour-swatch" ' +
 			'style="display:inline-block;width:28px;height:20px;border-radius:3px;' +
 			"border:1px solid rgba(0,0,0,0.12);background-color:" +
 			frappe.utils.escape_html(hex) +
@@ -4017,7 +4017,7 @@ function _colour_preview_swatch_html(className, fgType, isDefault, tokenVar, the
 	}
 	if (isDefault && (tokenVar || "").trim()) {
 		return (
-			'<span class="nce-theme-swatch-picker__swatch pp-colour-swatch--default" ' +
+			'<span class="nce-theme-swatch-picker__swatch pp-colour-swatch" ' +
 			'style="display:inline-block;width:28px;height:20px;border-radius:3px;' +
 			"border:1px solid rgba(0,0,0,0.12);background-color:var(" +
 			frappe.utils.escape_html(tokenVar.trim()) +
@@ -4029,7 +4029,6 @@ function _colour_preview_swatch_html(className, fgType, isDefault, tokenVar, the
 		return '<span style="color:#8d99a6;font-size:11px;">—</span>';
 	}
 	const fg = _colour_overlay_fg_class(bg, fgType);
-	const defaultCls = isDefault ? " pp-colour-swatch--default" : "";
 	let inner = "";
 	if (fg) {
 		inner =
@@ -4038,9 +4037,7 @@ function _colour_preview_swatch_html(className, fgType, isDefault, tokenVar, the
 			'">Text</span>';
 	}
 	return (
-		'<span class="nce-theme-swatch-picker__swatch' +
-		defaultCls +
-		" " +
+		'<span class="nce-theme-swatch-picker__swatch pp-colour-swatch ' +
 		frappe.utils.escape_html(bg) +
 		'" title="' +
 		frappe.utils.escape_html(className) +
@@ -4360,7 +4357,31 @@ function _mount_theme_field_on_colours_tab(frm, $container) {
 function _colours_tab_styles_html() {
 	return `
 		<style>
-			.pp-colours-wrap .pp-colour-swatch--default { opacity: 0.55; }
+			.pp-colours-wrap .pp-colours-class-cell .pp-colours-class-custom {
+				font-weight: 600;
+				color: #36414c;
+			}
+			.pp-colours-wrap .pp-colours-class-cell .pp-colours-class-default {
+				color: #8d99a6;
+				font-weight: 400;
+			}
+			.pp-colours-wrap .pp-colours-table-preview-wrap {
+				margin: 10px 0 14px;
+				overflow: hidden;
+				border-radius: 6px;
+				border: 1px solid #d1d8dd;
+				max-width: 420px;
+			}
+			.pp-colours-wrap .pp-colours-table-preview.theme-table {
+				width: 100%;
+				border-collapse: collapse;
+				font-size: 12px;
+			}
+			.pp-colours-wrap .pp-colours-table-preview.theme-table th,
+			.pp-colours-wrap .pp-colours-table-preview.theme-table td {
+				padding: 5px 8px;
+				text-align: left;
+			}
 			.pp-colours-wrap .pp-colours-theme-scope { display: inline-block; max-width: 100%; }
 			.pp-colours-wrap .pp-colours-theme-row {
 				display: flex;
@@ -4549,8 +4570,8 @@ function _build_colours_preview_table_html(frm, slots, sectionTitle, themeTableT
 		const fgType = _colour_fg_type_value(frm, slot.field);
 		const themeHex = isDefault ? _theme_table_hex(themeTableTokens, slot.hexKey) : "";
 		const display = raw
-			? frappe.utils.escape_html(raw)
-			: '<span style="color:#8d99a6;">' +
+			? '<span class="pp-colours-class-custom">' + frappe.utils.escape_html(raw) + "</span>"
+			: '<span class="pp-colours-class-default">' +
 				frappe.utils.escape_html(slot.fallback) +
 				(themeHex ? " · " + frappe.utils.escape_html(themeHex) : "") +
 				"</span>";
@@ -4606,8 +4627,8 @@ function _build_colours_border_table_html(frm, slots, sectionTitle, themeTableTo
 		const colorRaw = (frm.doc[slot.colorField] || "").trim();
 		const themeHex = _theme_table_hex(themeTableTokens, slot.themeColorHexKey);
 		const colorDisplay = colorRaw
-			? frappe.utils.escape_html(colorRaw)
-			: '<span class="pp-border-color-muted">' +
+			? '<span class="pp-colours-class-custom">' + frappe.utils.escape_html(colorRaw) + "</span>"
+			: '<span class="pp-colours-class-default">' +
 				__("theme") +
 				(themeHex ? " · " + frappe.utils.escape_html(themeHex) : "") +
 				"</span>";
@@ -4648,10 +4669,63 @@ function _build_colours_border_table_html(frm, slots, sectionTitle, themeTableTo
 	);
 }
 
+function _colours_table_preview_th_class(frm) {
+	const raw = (frm.doc.col_header_bg_class || "").trim();
+	return raw ? frappe.utils.escape_html(raw) : "";
+}
+
+function _colours_table_preview_tr_class(frm, rowIndex) {
+	const even = rowIndex % 2 === 0;
+	const field = even ? "row_bg_class" : "row_alt_bg_class";
+	const raw = (frm.doc[field] || "").trim();
+	return raw ? frappe.utils.escape_html(raw) : "";
+}
+
+function _build_colours_table_live_preview_html(frm) {
+	const previewRows = [
+		{ id: "101", name: "Alpha", status: "Active" },
+		{ id: "102", name: "Beta", status: "Pending" },
+		{ id: "103", name: "Gamma", status: "Active" },
+	];
+	const thClass = _colours_table_preview_th_class(frm);
+	const thAttr = thClass ? ' class="' + thClass + '"' : "";
+	let body = "";
+	previewRows.forEach(function (row, ri) {
+		const trClass = _colours_table_preview_tr_class(frm, ri);
+		const trAttr = trClass ? ' class="' + trClass + '"' : "";
+		body +=
+			"<tr" +
+			trAttr +
+			"><td>" +
+			frappe.utils.escape_html(row.id) +
+			"</td><td>" +
+			frappe.utils.escape_html(row.name) +
+			"</td><td>" +
+			frappe.utils.escape_html(row.status) +
+			"</td></tr>";
+	});
+	return (
+		'<div class="pp-colours-table-preview-wrap">' +
+		'<table class="theme-table pp-colours-table-preview">' +
+		"<thead><tr" +
+		thAttr +
+		'><th>ID</th><th>Name</th><th>Status</th></tr></thead>' +
+		"<tbody>" +
+		body +
+		"</tbody></table></div>"
+	);
+}
+
 function _build_colours_tables_section_html(frm, themeTableTokens) {
 	return (
 		`<div class="pp-colours-section-title">${__("Tables")}</div>` +
+		'<p class="text-muted small" style="margin:-4px 0 10px;">' +
+		__(
+			"Empty slots use the assigned theme's Tables tokens (same as the Theme Editor). Row 1 is alternate/odd; row 2 is main/even — matching theme-table striping."
+		) +
+		"</p>" +
 		_build_colours_preview_table_html(frm, TABLE_COLOUR_SLOTS, null, themeTableTokens) +
+		_build_colours_table_live_preview_html(frm) +
 		_build_colours_border_table_html(frm, TABLE_BORDER_LINE_SLOTS, null, themeTableTokens)
 	);
 }
