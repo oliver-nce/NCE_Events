@@ -28,6 +28,7 @@ from nce_events.api.panel_api_pkg.panel_config import (
 )
 from nce_events.api.panel_api_pkg.panel_export import export_panel_data_impl
 from nce_events.api.panel_api_pkg.sql import _build_panel_sql
+from nce_events.api.panel_api_pkg.theme_slug import resolve_theme_slug
 
 _SKIP_FIELDTYPES: frozenset[str] = frozenset(
 	{
@@ -126,7 +127,7 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 			"open_card_on_click": 0,
 			"allow_new_record_creation": 0,
 			"form_dialog": None,
-			"theme_slug": None,
+			"theme_slug": resolve_theme_slug(None),
 			"frame_bg_class": "",
 			"frame_fg_type": "mono",
 			"header_bg_class": "",
@@ -375,6 +376,12 @@ def get_other_page_panels(current_panel: str) -> list[dict[str, str]]:
 		order_by="name asc",
 	)
 	return [{"name": r["name"], "theme": (r.get("theme") or "").strip()} for r in rows]
+
+
+@frappe.whitelist()
+def get_theme_slug_for_link(theme_link: str | None = None) -> str | None:
+	"""Resolve Page Panel theme Link (or empty) to Active slug — shared by runtime and Desk previews."""
+	return resolve_theme_slug(theme_link)
 
 
 @frappe.whitelist()

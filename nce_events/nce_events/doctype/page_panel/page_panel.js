@@ -3846,16 +3846,13 @@ const PP_COLOUR_CLASS_RE =
 	/^theme-(bg|text|border)-(primary|secondary|accent|success|info|warning|danger)-(100|200|300|500|600|700|900)$/;
 
 function _resolve_nce_theme_slug_for_colours(themeLink, callback) {
-	const theme = (themeLink || "").trim();
-	if (!theme) {
-		callback("");
-		return;
-	}
-	frappe.db.get_value("NCE Theme", theme, ["slug", "status"]).then(function (r) {
-		const row = r && r.message ? r.message : r;
-		const slug =
-			row && row.status === "Active" && row.slug ? String(row.slug).trim() : "";
-		callback(slug);
+	frappe.call({
+		method: "nce_events.api.panel_api_pkg.panel_data.get_theme_slug_for_link",
+		args: { theme_link: (themeLink || "").trim() || null },
+		callback: function (r) {
+			const slug = r && r.message != null ? String(r.message).trim() : "";
+			callback(slug);
+		},
 	});
 }
 

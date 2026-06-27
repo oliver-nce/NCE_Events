@@ -1,4 +1,4 @@
-"""Tests for Page Panel theme slug resolution (live Default vs stale links)."""
+"""Tests for Page Panel theme slug resolution (linked NCE Theme doc → slug)."""
 
 from __future__ import annotations
 
@@ -87,19 +87,23 @@ def _mock_get_value(rows):
 
 
 class TestResolveThemeSlug(unittest.TestCase):
-	def test_blank_link_inherits_site_base(self):
-		self.assertIsNone(resolve_theme_slug(None))
-		self.assertIsNone(resolve_theme_slug(""))
-
-	def test_stale_default_doc_follows_live_default(self):
+	def test_blank_link_uses_site_default_theme(self):
 		rows = _theme_rows()
 		with patch("nce_events.api.panel_api_pkg.theme_slug.frappe") as frappe_mock:
 			frappe_mock.db.exists.return_value = True
 			frappe_mock.get_all.return_value = ["NCE"]
 			frappe_mock.db.get_value.side_effect = _mock_get_value(rows)
+			self.assertEqual(resolve_theme_slug(None), "nce")
+			self.assertEqual(resolve_theme_slug(""), "nce")
+
+	def test_linked_doc_uses_its_own_slug_not_site_default(self):
+		rows = _theme_rows()
+		with patch("nce_events.api.panel_api_pkg.theme_slug.frappe") as frappe_mock:
+			frappe_mock.db.exists.return_value = True
+			frappe_mock.db.get_value.side_effect = _mock_get_value(rows)
 			result = resolve_theme_slug("Default")
 
-		self.assertEqual(result, "nce")
+		self.assertEqual(result, "default")
 
 	def test_explicit_override_uses_linked_theme(self):
 		rows = _theme_rows()
