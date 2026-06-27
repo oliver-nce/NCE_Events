@@ -17,7 +17,7 @@ export const PANEL_BORDER_DEFAULTS = {
 	frame_border_color_class: "",
 	filter_divider_class: "theme-border-thin",
 	filter_divider_color_class: "",
-	col_header_line_class: "theme-border-strong",
+	col_header_line_class: "",
 	col_header_line_color_class: "",
 	row_divider_class: "",
 	row_divider_color_class: "",
@@ -63,7 +63,7 @@ export function panelChromeBorder(config, field) {
 const BORDER_COLOR_FIELD_DEFAULTS = {
 	frame_border_color_class: "var(--nce-color-border)",
 	filter_divider_color_class: "var(--nce-color-border)",
-	col_header_line_color_class: "var(--nce-color-border)",
+	col_header_line_color_class: "var(--nce-color-table-row-divider)",
 	row_divider_color_class: "var(--nce-color-table-row-divider)",
 	col_divider_color_class: "var(--nce-color-table-col-divider)",
 };
@@ -74,6 +74,7 @@ export function panelChromeBorderWidthVar(config, field) {
 	if (BORDER_WIDTH_CSS_VARS[cls]) return BORDER_WIDTH_CSS_VARS[cls];
 	if (field === "row_divider_class") return "--nce-border-width-table-row";
 	if (field === "col_divider_class") return "--nce-border-width-table-col";
+	if (field === "col_header_line_class") return "--nce-border-width-table-row";
 	return BORDER_WIDTH_CSS_VARS["theme-border"];
 }
 

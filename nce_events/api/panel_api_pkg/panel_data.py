@@ -385,6 +385,14 @@ def get_theme_slug_for_link(theme_link: str | None = None) -> str | None:
 
 
 @frappe.whitelist()
+def get_theme_table_tokens(theme_link: str | None = None) -> dict[str, str]:
+	"""Table token defaults from linked NCE Theme — Page Panel Colours tab previews."""
+	from nce_events.api.panel_api_pkg.theme_table_tokens import get_theme_table_tokens as _tokens
+
+	return _tokens(theme_link)
+
+
+@frappe.whitelist()
 def copy_panel_colours(source_name: str, target_names: str | list) -> dict[str, Any]:
 	"""Copy all colour fields from source Page Panel to one or more target panels."""
 	if isinstance(target_names, str):

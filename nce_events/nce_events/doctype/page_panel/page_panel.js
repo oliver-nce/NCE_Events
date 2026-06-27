@@ -153,25 +153,31 @@ const FRAME_BORDER_LINE_SLOTS = [
 	},
 ];
 
-/** Table lines — empty width uses theme-table divider tokens at runtime. */
+/** Table lines — empty width/color uses theme-table tokens from assigned NCE Theme. */
 const TABLE_BORDER_LINE_SLOTS = [
 	{
 		widthField: "col_header_line_class",
 		colorField: "col_header_line_color_class",
 		label: __("Column header underline"),
-		widthFallback: "theme-border-strong",
+		themeWidthKey: "col_header_line_width_class",
+		themeColorVar: "--nce-color-table-row-divider",
+		themeColorHexKey: "row_divider_color_hex",
 	},
 	{
 		widthField: "row_divider_class",
 		colorField: "row_divider_color_class",
 		label: __("Horizontal dividers"),
-		widthFallback: "theme-border-thin",
+		themeWidthKey: "row_divider_width_class",
+		themeColorVar: "--nce-color-table-row-divider",
+		themeColorHexKey: "row_divider_color_hex",
 	},
 	{
 		widthField: "col_divider_class",
 		colorField: "col_divider_color_class",
 		label: __("Vertical dividers"),
-		widthFallback: "theme-border-thin",
+		themeWidthKey: "col_divider_width_class",
+		themeColorVar: "--nce-color-table-col-divider",
+		themeColorHexKey: "col_divider_color_hex",
 	},
 ];
 
@@ -228,18 +234,24 @@ const TABLE_COLOUR_SLOTS = [
 		fgTypeField: "col_header_fg_type",
 		label: __("Column headers"),
 		fallback: "theme-bg-table-header",
+		tokenVar: "--nce-color-table-header",
+		hexKey: "header_bg_hex",
 	},
 	{
 		field: "row_bg_class",
 		fgTypeField: "row_fg_type",
 		label: __("Table rows (even)"),
 		fallback: "theme-bg-row",
+		tokenVar: "--nce-color-row",
+		hexKey: "row_even_bg_hex",
 	},
 	{
 		field: "row_alt_bg_class",
 		fgTypeField: "row_alt_fg_type",
 		label: __("Table rows (odd)"),
 		fallback: "theme-bg-row-alt",
+		tokenVar: "--nce-color-row-alt",
+		hexKey: "row_odd_bg_hex",
 	},
 ];
 
@@ -3898,39 +3910,76 @@ const PP_BORDER_WIDTH_PX = {
 	"theme-border-strong": "2px",
 };
 
-function _border_effective_width_class(raw, fallback) {
-	return (raw || "").trim() || (fallback || "").trim();
+function _border_effective_width_class(raw, fallback, themeClass) {
+	const trimmed = (raw || "").trim();
+	if (trimmed) return trimmed;
+	if ((themeClass || "").trim()) return String(themeClass).trim();
+	return (fallback || "").trim();
 }
 
-/** Extract CSS color var from any theme-{bg|text|border}-{role}-{shade} class. */
-function _border_preview_color_css(colorClass) {
+function _theme_table_hex(themeTableTokens, key) {
+	if (!themeTableTokens || !key) return "";
+	return String(themeTableTokens[key] || "").trim();
+}
+
+/** Extract CSS color var from theme class, or theme token / hex when empty. */
+function _border_preview_color_css(colorClass, themeColorVar, themeHex) {
 	const m = (colorClass || "").match(/^theme-(?:bg|text|border)-([a-z]+)-(\d+)$/);
-	if (!m) return "#8898a4";
-	return "var(--nce-color-" + m[1] + "-" + m[2] + ", #8898a4)";
+	if (m) return "var(--nce-color-" + m[1] + "-" + m[2] + ", #8898a4)";
+	const hex = (themeHex || "").trim();
+	if (hex) return hex;
+	if ((themeColorVar || "").trim()) {
+		return "var(" + themeColorVar.trim() + ", #8898a4)";
+	}
+	return "#8898a4";
 }
 
-function _border_line_preview_html(frm, slot) {
+function _theme_table_width_class(themeTableTokens, slot) {
+	if (!themeTableTokens || !slot.themeWidthKey) return "";
+	return (themeTableTokens[slot.themeWidthKey] || "").trim();
+}
+
+function _table_theme_border_width_var(slot) {
+	if (slot.themeWidthKey === "col_divider_width_class") {
+		return "--nce-border-width-table-col";
+	}
+	return "--nce-border-width-table-row";
+}
+
+function _border_line_preview_html(frm, slot, themeTableTokens) {
+	const colorRaw = (frm.doc[slot.colorField] || "").trim();
+	const widthRaw = (frm.doc[slot.widthField] || "").trim();
+	const themeWidthClass = _theme_table_width_class(themeTableTokens, slot);
 	const widthClass = _border_effective_width_class(
-		frm.doc[slot.widthField],
-		slot.widthFallback
+		widthRaw,
+		slot.widthFallback,
+		themeWidthClass
 	);
-	const widthPx = PP_BORDER_WIDTH_PX[widthClass] || "1px";
-	const colorCss = _border_preview_color_css(frm.doc[slot.colorField]);
+	const widthCss =
+		!widthRaw && themeWidthClass && slot.themeColorVar
+			? "var(" + _table_theme_border_width_var(slot) + ")"
+			: PP_BORDER_WIDTH_PX[widthClass] || "1px";
+	const colorCss = _border_preview_color_css(
+		colorRaw,
+		slot.themeColorVar,
+		_theme_table_hex(themeTableTokens, slot.themeColorHexKey)
+	);
 	return (
 		'<div style="width:60px;border-bottom:' +
-		widthPx +
+		widthCss +
 		" solid " +
 		colorCss +
 		';margin:11px 4px 4px;" title="' +
-		frappe.utils.escape_html(widthClass + " · " + (frm.doc[slot.colorField] || __("default"))) +
+		frappe.utils.escape_html(widthClass + " · " + (colorRaw || __("theme"))) +
 		'"></div>'
 	);
 }
 
-function _border_width_select_html(frm, slot) {
+function _border_width_select_html(frm, slot, themeTableTokens) {
 	const current = _border_effective_width_class(
 		frm.doc[slot.widthField],
-		slot.widthFallback
+		slot.widthFallback,
+		_theme_table_width_class(themeTableTokens, slot)
 	);
 	let opts = "";
 	BORDER_WIDTH_OPTIONS.forEach(function (o) {
@@ -3953,7 +4002,28 @@ function _border_width_select_html(frm, slot) {
 	);
 }
 
-function _colour_preview_swatch_html(className, fgType, isDefault) {
+function _colour_preview_swatch_html(className, fgType, isDefault, tokenVar, themeHex) {
+	const hex = (themeHex || "").trim();
+	if (isDefault && hex) {
+		return (
+			'<span class="nce-theme-swatch-picker__swatch pp-colour-swatch--default" ' +
+			'style="display:inline-block;width:28px;height:20px;border-radius:3px;' +
+			"border:1px solid rgba(0,0,0,0.12);background-color:" +
+			frappe.utils.escape_html(hex) +
+			';" title="' +
+			frappe.utils.escape_html(hex) +
+			'"></span>'
+		);
+	}
+	if (isDefault && (tokenVar || "").trim()) {
+		return (
+			'<span class="nce-theme-swatch-picker__swatch pp-colour-swatch--default" ' +
+			'style="display:inline-block;width:28px;height:20px;border-radius:3px;' +
+			"border:1px solid rgba(0,0,0,0.12);background-color:var(" +
+			frappe.utils.escape_html(tokenVar.trim()) +
+			');"></span>'
+		);
+	}
 	const bg = _colour_preview_bg_class(className);
 	if (!bg) {
 		return '<span style="color:#8d99a6;font-size:11px;">—</span>';
@@ -4470,21 +4540,31 @@ function _colours_tab_styles_html() {
 		</style>`;
 }
 
-function _build_colours_preview_table_html(frm, slots, sectionTitle) {
+function _build_colours_preview_table_html(frm, slots, sectionTitle, themeTableTokens) {
 	let rows = "";
 	slots.forEach(function (slot) {
 		const raw = (frm.doc[slot.field] || "").trim();
 		const isDefault = !raw;
 		const effective = _colour_effective_class(raw, slot.fallback);
 		const fgType = _colour_fg_type_value(frm, slot.field);
-		const display =
-			raw ||
-			'<span style="color:#8d99a6;">' + frappe.utils.escape_html(slot.fallback) + "</span>";
+		const themeHex = isDefault ? _theme_table_hex(themeTableTokens, slot.hexKey) : "";
+		const display = raw
+			? frappe.utils.escape_html(raw)
+			: '<span style="color:#8d99a6;">' +
+				frappe.utils.escape_html(slot.fallback) +
+				(themeHex ? " · " + frappe.utils.escape_html(themeHex) : "") +
+				"</span>";
 		const fgLabel =
 			fgType === "tonal"
 				? '<span style="color:#8d99a6;margin-left:6px;">(' + __("tonal") + ")</span>"
 				: "";
-		const swatch = _colour_preview_swatch_html(effective, fgType, isDefault);
+		const swatch = _colour_preview_swatch_html(
+			effective,
+			fgType,
+			isDefault,
+			isDefault ? slot.tokenVar : null,
+			themeHex
+		);
 		const classTitle = raw || slot.fallback;
 		rows += `<tr>
 			<td>${frappe.utils.escape_html(slot.label)}</td>
@@ -4520,16 +4600,20 @@ function _build_colours_preview_table_html(frm, slots, sectionTitle) {
 	);
 }
 
-function _build_colours_border_table_html(frm, slots, sectionTitle) {
+function _build_colours_border_table_html(frm, slots, sectionTitle, themeTableTokens) {
 	let rows = "";
 	slots.forEach(function (slot) {
 		const colorRaw = (frm.doc[slot.colorField] || "").trim();
+		const themeHex = _theme_table_hex(themeTableTokens, slot.themeColorHexKey);
 		const colorDisplay = colorRaw
 			? frappe.utils.escape_html(colorRaw)
-			: '<span class="pp-border-color-muted">' + __("default") + "</span>";
-		const preview = _border_line_preview_html(frm, slot);
-		const widthSelect = _border_width_select_html(frm, slot);
-		const colorTitle = colorRaw || __("default");
+			: '<span class="pp-border-color-muted">' +
+				__("theme") +
+				(themeHex ? " · " + frappe.utils.escape_html(themeHex) : "") +
+				"</span>";
+		const preview = _border_line_preview_html(frm, slot, themeTableTokens);
+		const widthSelect = _border_width_select_html(frm, slot, themeTableTokens);
+		const colorTitle = colorRaw || slot.themeColorVar || __("theme");
 		rows += `<tr>
 			<td>${frappe.utils.escape_html(slot.label)}</td>
 			<td class="pp-colours-preview-cell">${preview}</td>
@@ -4564,11 +4648,11 @@ function _build_colours_border_table_html(frm, slots, sectionTitle) {
 	);
 }
 
-function _build_colours_tables_section_html(frm) {
+function _build_colours_tables_section_html(frm, themeTableTokens) {
 	return (
 		`<div class="pp-colours-section-title">${__("Tables")}</div>` +
-		_build_colours_preview_table_html(frm, TABLE_COLOUR_SLOTS, null) +
-		_build_colours_border_table_html(frm, TABLE_BORDER_LINE_SLOTS, null)
+		_build_colours_preview_table_html(frm, TABLE_COLOUR_SLOTS, null, themeTableTokens) +
+		_build_colours_border_table_html(frm, TABLE_BORDER_LINE_SLOTS, null, themeTableTokens)
 	);
 }
 
@@ -4618,22 +4702,49 @@ function _render_colours_tab_previews(frm, themeSlug, $container) {
 		return;
 	}
 
-	const scopeAttr = themeSlug
-		? ' data-nce-theme="' + frappe.utils.escape_html(themeSlug) + '"'
-		: "";
-
 	const $previews = $container.find(".pp-colours-previews");
 	if (!$previews.length) {
 		return;
 	}
 
+	const themeLink = (frm.doc.theme || "").trim() || null;
+	frappe.call({
+		method: "nce_events.api.panel_api_pkg.panel_data.get_theme_table_tokens",
+		args: { theme_link: themeLink },
+		callback: function (r) {
+			const themeTableTokens = (r && r.message) || {};
+			_fill_colours_tab_previews(frm, themeSlug, $container, themeTableTokens);
+		},
+	});
+}
+
+function _fill_colours_tab_previews(frm, themeSlug, $container, themeTableTokens) {
+	const $previews = $container.find(".pp-colours-previews");
+	if (!$previews.length) {
+		return;
+	}
+
+	const scopeAttr = themeSlug
+		? ' data-nce-theme="' + frappe.utils.escape_html(themeSlug) + '"'
+		: "";
+
 	$previews.html(
 		'<div class="pp-colours-theme-scope"' +
 			scopeAttr +
 			">" +
-			_build_colours_preview_table_html(frm, BACKGROUND_COLOUR_SLOTS, __("Backgrounds")) +
-			_build_colours_tables_section_html(frm) +
-			_build_colours_border_table_html(frm, FRAME_BORDER_LINE_SLOTS, __("Lines & borders")) +
+			_build_colours_preview_table_html(
+				frm,
+				BACKGROUND_COLOUR_SLOTS,
+				__("Backgrounds"),
+				themeTableTokens
+			) +
+			_build_colours_tables_section_html(frm, themeTableTokens) +
+			_build_colours_border_table_html(
+				frm,
+				FRAME_BORDER_LINE_SLOTS,
+				__("Lines & borders"),
+				themeTableTokens
+			) +
 			"</div>"
 	);
 	_bind_colours_tab_pickers(frm, $container);
