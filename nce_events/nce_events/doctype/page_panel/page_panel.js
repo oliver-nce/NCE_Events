@@ -219,7 +219,7 @@ const COLOUR_SLOTS = [
 		field: "row_bg_class",
 		fgTypeField: "row_fg_type",
 		label: __("Table rows (even)"),
-		fallback: "theme-bg-surface",
+		fallback: "theme-bg-row",
 	},
 	{
 		field: "row_alt_bg_class",

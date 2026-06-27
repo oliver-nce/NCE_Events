@@ -6,7 +6,7 @@ export const PANEL_CHROME_DEFAULTS = {
 	footer_bg_class: "theme-bg-primary",
 	col_header_bg_class: "theme-bg-secondary-600",
 	filter_bar_bg_class: "theme-bg-primary-100",
-	row_bg_class: "theme-bg-surface",
+	row_bg_class: "theme-bg-row",
 	row_alt_bg_class: "theme-bg-row-alt",
 	dialog_header_bg_class: "theme-bg-primary",
 };
@@ -19,9 +19,9 @@ export const PANEL_BORDER_DEFAULTS = {
 	filter_divider_color_class: "",
 	col_header_line_class: "theme-border-strong",
 	col_header_line_color_class: "",
-	row_divider_class: "theme-border-thin",
+	row_divider_class: "",
 	row_divider_color_class: "",
-	col_divider_class: "theme-border-thin",
+	col_divider_class: "",
 	col_divider_color_class: "",
 };
 
@@ -59,16 +59,30 @@ export function panelChromeBorder(config, field) {
 	return "";
 }
 
+/** CSS color when a border colour class slot is empty. */
+const BORDER_COLOR_FIELD_DEFAULTS = {
+	frame_border_color_class: "var(--nce-color-border)",
+	filter_divider_color_class: "var(--nce-color-border)",
+	col_header_line_color_class: "var(--nce-color-border)",
+	row_divider_color_class: "var(--nce-color-table-row-divider)",
+	col_divider_color_class: "var(--nce-color-table-col-divider)",
+};
+
 /** CSS var name for a theme-border* width class (directional lines in scoped CSS). */
 export function panelChromeBorderWidthVar(config, field) {
 	const cls = panelChromeBorder(config, field);
-	return BORDER_WIDTH_CSS_VARS[cls] || BORDER_WIDTH_CSS_VARS["theme-border"];
+	if (BORDER_WIDTH_CSS_VARS[cls]) return BORDER_WIDTH_CSS_VARS[cls];
+	if (field === "row_divider_class") return "--nce-border-width-table-row";
+	if (field === "col_divider_class") return "--nce-border-width-table-col";
+	return BORDER_WIDTH_CSS_VARS["theme-border"];
 }
 
-/** CSS color value for a theme-{bg|text|border}-{role}-{shade} class, or site border token when empty. */
+/** CSS color value for a theme-{bg|text|border}-{role}-{shade} class, or theme token when empty. */
 export function panelChromeBorderColorCss(config, colorField) {
 	const raw = (config?.[colorField] || "").trim();
-	if (!raw) return "var(--nce-color-border)";
+	if (!raw) {
+		return BORDER_COLOR_FIELD_DEFAULTS[colorField] || "var(--nce-color-border)";
+	}
 	const m = raw.match(/^theme-(?:bg|text|border)-([a-z]+)-(\d+)$/);
 	if (!m || !PALETTE_ROLES.has(m[1])) return "var(--nce-color-border)";
 	return `var(--nce-color-${m[1]}-${m[2]})`;

@@ -33,7 +33,7 @@
 		<div v-else-if="error" class="ppv2-error theme-text-danger">{{ error }}</div>
 
 		<div v-else-if="config" class="ppv2-body">
-			<table class="ppv2-table" :style="tableMinWidthStyle">
+			<table class="ppv2-table theme-table" :style="tableMinWidthStyle">
 				<thead>
 					<tr>
 						<th
@@ -253,9 +253,10 @@ function rowTrClasses(ri, row) {
 	if (hovered) return { "ppv2-row-hovered": true };
 	const even = ri % 2 === 0;
 	const bgField = even ? "row_bg_class" : "row_alt_bg_class";
-	const bgClass = panelChromeBg(props.config, bgField);
+	const raw = (props.config?.[bgField] || "").trim();
+	if (!raw) return {};
 	const fgClass = panelChromeFgTextClass(props.config, bgField);
-	const classes = { [bgClass]: true };
+	const classes = { [raw]: true };
 	if (fgClass) classes[fgClass] = true;
 	return classes;
 }
@@ -706,16 +707,20 @@ function startColResize(e, ci) {
 .ppv2-table td {
 	padding: 5px 8px;
 	border-bottom: var(--ppv2-row-divider-w) solid var(--ppv2-row-divider-c);
+	border-right: var(--ppv2-col-divider-w) solid var(--ppv2-col-divider-c);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+.ppv2-table td:last-child {
+	border-right: none;
 }
 
 .ppv2-table tbody tr {
 	cursor: pointer;
 }
 
-/* Row even/odd use per-panel theme-bg-* classes (row_bg_class / row_alt_bg_class). */
+/* Row even/odd: theme-table when no per-panel override; ppv2-row-* for hover/selected. */
 .ppv2-table tbody tr.ppv2-row-hovered {
 	background-color: var(--nce-color-primary-100, #e3f0fc);
 }
