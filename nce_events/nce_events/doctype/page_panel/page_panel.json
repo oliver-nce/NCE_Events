@@ -113,7 +113,7 @@
       "options": "mono\ntonal"
     },
     {
-      "description": "Panel header title area (left). Empty uses theme-bg-primary.",
+      "description": "Panel header title area (left). Empty uses theme-bg-primary-600.",
       "fieldname": "header_bg_class",
       "fieldtype": "Data",
       "hidden": 1,
@@ -128,7 +128,7 @@
       "options": "mono\ntonal"
     },
     {
-      "description": "Header toolbar with action icons (right). Empty uses theme-bg-secondary-900.",
+      "description": "Header toolbar with action icons (right). Empty uses theme-bg-primary-600.",
       "fieldname": "header_toolbar_bg_class",
       "fieldtype": "Data",
       "hidden": 1,

@@ -189,13 +189,13 @@ const COLOUR_SLOTS = [
 		field: "header_bg_class",
 		fgTypeField: "header_fg_type",
 		label: __("Header title"),
-		fallback: "theme-bg-primary",
+		fallback: "theme-bg-primary-600",
 	},
 	{
 		field: "header_toolbar_bg_class",
 		fgTypeField: "header_toolbar_fg_type",
 		label: __("Header toolbar (actions)"),
-		fallback: "theme-bg-secondary-900",
+		fallback: "theme-bg-primary-600",
 	},
 	{
 		field: "footer_bg_class",

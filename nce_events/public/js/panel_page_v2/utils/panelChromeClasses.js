@@ -1,8 +1,8 @@
 /** Per-panel surface bg defaults — match runtime fallbacks when Page Panel fields are empty. */
 export const PANEL_CHROME_DEFAULTS = {
 	frame_bg_class: "theme-bg-surface",
-	header_bg_class: "theme-bg-primary",
-	header_toolbar_bg_class: "theme-bg-secondary-900",
+	header_bg_class: "theme-bg-primary-600",
+	header_toolbar_bg_class: "theme-bg-primary-600",
 	footer_bg_class: "theme-bg-primary",
 	col_header_bg_class: "theme-bg-secondary-600",
 	filter_bar_bg_class: "theme-bg-primary-100",
