@@ -132,6 +132,11 @@ const COLOUR_FIELDS = [
 	"col_divider_color_class",
 ];
 
+/** Chrome override fields cleared by Revert to Theme Defaults (keeps ``theme`` link). */
+const COLOUR_OVERRIDE_FIELDS = COLOUR_FIELDS.filter(function (fn) {
+	return fn !== "section_break_colours" && fn !== "theme";
+});
+
 /** Lines & borders — width (theme-border*) + optional color (theme-border-{role}-{shade}). */
 const BORDER_LINE_SLOTS = [
 	{
@@ -4053,6 +4058,39 @@ function _reload_nce_theme_stylesheet(cssHash) {
 	});
 }
 
+function _revert_panel_colours_to_theme_defaults(frm) {
+	frappe.confirm(
+		__(
+			"Clear all custom background, foreground, and line overrides for this panel? The assigned theme will control appearance using built-in defaults."
+		),
+		function () {
+			COLOUR_OVERRIDE_FIELDS.forEach(function (fn) {
+				frm.set_value(fn, "");
+			});
+			_render_colours_tab(frm);
+			frappe.show_alert({
+				message: __("Reverted to theme defaults"),
+				indicator: "green",
+			});
+		}
+	);
+}
+
+function _mount_colours_theme_revert_btn(frm, $row) {
+	if ($row.find(".pp-colours-theme-revert").length) {
+		return;
+	}
+	const $revertBtn = $(
+		'<button type="button" class="btn btn-default btn-sm pp-colours-theme-revert">' +
+			frappe.utils.escape_html(__("Revert to Theme Defaults")) +
+			"</button>"
+	);
+	$revertBtn.on("click", function () {
+		_revert_panel_colours_to_theme_defaults(frm);
+	});
+	$row.append($revertBtn);
+}
+
 function _refresh_colours_theme_css(frm) {
 	const $container = $(frm.layout.wrapper).find(".pp-colours-wrap");
 	const $btn = $container.find(".pp-colours-theme-refresh");
@@ -4189,12 +4227,14 @@ function _mount_theme_field_on_colours_tab(frm, $container) {
 	}
 
 	if ($host.find(".pp-colours-theme-row").length) {
+		_mount_colours_theme_revert_btn(frm, $host.find(".pp-colours-theme-row"));
 		sync_existing_row();
 		return;
 	}
 
 	_fetch_active_nce_themes_for_colours(function (themes) {
 		if ($host.find(".pp-colours-theme-row").length) {
+			_mount_colours_theme_revert_btn(frm, $host.find(".pp-colours-theme-row"));
 			sync_existing_row();
 			return;
 		}
@@ -4234,6 +4274,7 @@ function _mount_theme_field_on_colours_tab(frm, $container) {
 			}
 		});
 		$row.append($editBtn);
+		_mount_colours_theme_revert_btn(frm, $row);
 		$host.append($row);
 
 		_update_colours_theme_edit_btn(frm, $editBtn);
@@ -4271,7 +4312,8 @@ function _colours_tab_styles_html() {
 				font-size: 13px;
 			}
 			.pp-colours-wrap .pp-colours-theme-edit,
-			.pp-colours-wrap .pp-colours-theme-refresh {
+			.pp-colours-wrap .pp-colours-theme-refresh,
+			.pp-colours-wrap .pp-colours-theme-revert {
 				flex-shrink: 0;
 				margin-bottom: 2px;
 				white-space: nowrap;
