@@ -137,8 +137,8 @@ const COLOUR_OVERRIDE_FIELDS = COLOUR_FIELDS.filter(function (fn) {
 	return fn !== "section_break_colours" && fn !== "theme";
 });
 
-/** Lines & borders — width (theme-border*) + optional color (theme-border-{role}-{shade}). */
-const BORDER_LINE_SLOTS = [
+/** Frame chrome lines — width (theme-border*) + optional color (theme-border-{role}-{shade}). */
+const FRAME_BORDER_LINE_SLOTS = [
 	{
 		widthField: "frame_border_class",
 		colorField: "frame_border_color_class",
@@ -151,6 +151,10 @@ const BORDER_LINE_SLOTS = [
 		label: __("Filter bar divider"),
 		widthFallback: "theme-border-thin",
 	},
+];
+
+/** Table lines — empty width uses theme-table divider tokens at runtime. */
+const TABLE_BORDER_LINE_SLOTS = [
 	{
 		widthField: "col_header_line_class",
 		colorField: "col_header_line_color_class",
@@ -160,13 +164,13 @@ const BORDER_LINE_SLOTS = [
 	{
 		widthField: "row_divider_class",
 		colorField: "row_divider_color_class",
-		label: __("Table row dividers"),
+		label: __("Horizontal dividers"),
 		widthFallback: "theme-border-thin",
 	},
 	{
 		widthField: "col_divider_class",
 		colorField: "col_divider_color_class",
-		label: __("Column dividers"),
+		label: __("Vertical dividers"),
 		widthFallback: "theme-border-thin",
 	},
 ];
@@ -177,8 +181,8 @@ const BORDER_WIDTH_OPTIONS = [
 	{ value: "theme-border-strong", label: __("Strong") },
 ];
 
-/** Per-panel chrome slots — valueField for ThemeSwatchPicker; default when empty. */
-const COLOUR_SLOTS = [
+/** Non-table surfaces — ThemeSwatchPicker slots; fallback when field empty. */
+const BACKGROUND_COLOUR_SLOTS = [
 	{
 		field: "frame_bg_class",
 		fgTypeField: "frame_fg_type",
@@ -204,16 +208,26 @@ const COLOUR_SLOTS = [
 		fallback: "theme-bg-primary",
 	},
 	{
-		field: "col_header_bg_class",
-		fgTypeField: "col_header_fg_type",
-		label: __("Column headers"),
-		fallback: "theme-bg-table-header",
-	},
-	{
 		field: "filter_bar_bg_class",
 		fgTypeField: "filter_bar_fg_type",
 		label: __("Filter bar"),
 		fallback: "theme-bg-primary-100",
+	},
+	{
+		field: "dialog_header_bg_class",
+		fgTypeField: "dialog_header_fg_type",
+		label: __("Viewer dialog header"),
+		fallback: "theme-bg-primary",
+	},
+];
+
+/** Table surfaces — empty uses theme-table bundle tokens at runtime. */
+const TABLE_COLOUR_SLOTS = [
+	{
+		field: "col_header_bg_class",
+		fgTypeField: "col_header_fg_type",
+		label: __("Column headers"),
+		fallback: "theme-bg-table-header",
 	},
 	{
 		field: "row_bg_class",
@@ -226,12 +240,6 @@ const COLOUR_SLOTS = [
 		fgTypeField: "row_alt_fg_type",
 		label: __("Table rows (odd)"),
 		fallback: "theme-bg-row-alt",
-	},
-	{
-		field: "dialog_header_bg_class",
-		fgTypeField: "dialog_header_fg_type",
-		label: __("Viewer dialog header"),
-		fallback: "theme-bg-primary",
 	},
 ];
 
@@ -4436,6 +4444,9 @@ function _colours_tab_styles_html() {
 				font-weight: 600;
 				font-size: 13px;
 			}
+			.pp-colours-theme-scope .pp-colours-chrome-table + .pp-colours-chrome-table {
+				margin-top: 10px;
+			}
 			.pp-border-width-select {
 				width: 100%;
 				max-width: 110px;
@@ -4459,9 +4470,9 @@ function _colours_tab_styles_html() {
 		</style>`;
 }
 
-function _build_colours_preview_table_html(frm) {
+function _build_colours_preview_table_html(frm, slots, sectionTitle) {
 	let rows = "";
-	COLOUR_SLOTS.forEach(function (slot) {
+	slots.forEach(function (slot) {
 		const raw = (frm.doc[slot.field] || "").trim();
 		const isDefault = !raw;
 		const effective = _colour_effective_class(raw, slot.fallback);
@@ -4489,8 +4500,12 @@ function _build_colours_preview_table_html(frm) {
 		</tr>`;
 	});
 
+	const titleHtml = sectionTitle
+		? `<div class="pp-colours-section-title">${frappe.utils.escape_html(sectionTitle)}</div>`
+		: "";
+
 	return (
-		`<div class="pp-colours-section-title">${__("Backgrounds")}</div>` +
+		titleHtml +
 		`<table class="table table-bordered pp-colours-chrome-table">
 		<thead>
 			<tr>
@@ -4505,9 +4520,9 @@ function _build_colours_preview_table_html(frm) {
 	);
 }
 
-function _build_colours_border_table_html(frm) {
+function _build_colours_border_table_html(frm, slots, sectionTitle) {
 	let rows = "";
-	BORDER_LINE_SLOTS.forEach(function (slot) {
+	slots.forEach(function (slot) {
 		const colorRaw = (frm.doc[slot.colorField] || "").trim();
 		const colorDisplay = colorRaw
 			? frappe.utils.escape_html(colorRaw)
@@ -4528,8 +4543,12 @@ function _build_colours_border_table_html(frm) {
 		</tr>`;
 	});
 
+	const titleHtml = sectionTitle
+		? `<div class="pp-colours-section-title">${frappe.utils.escape_html(sectionTitle)}</div>`
+		: "";
+
 	return (
-		`<div class="pp-colours-section-title">${__("Lines & borders")}</div>` +
+		titleHtml +
 		`<table class="table table-bordered pp-colours-chrome-table">
 		<thead>
 			<tr>
@@ -4542,6 +4561,14 @@ function _build_colours_border_table_html(frm) {
 		</thead>
 		<tbody>${rows}</tbody>
 	</table>`
+	);
+}
+
+function _build_colours_tables_section_html(frm) {
+	return (
+		`<div class="pp-colours-section-title">${__("Tables")}</div>` +
+		_build_colours_preview_table_html(frm, TABLE_COLOUR_SLOTS, null) +
+		_build_colours_border_table_html(frm, TABLE_BORDER_LINE_SLOTS, null)
 	);
 }
 
@@ -4604,8 +4631,9 @@ function _render_colours_tab_previews(frm, themeSlug, $container) {
 		'<div class="pp-colours-theme-scope"' +
 			scopeAttr +
 			">" +
-			_build_colours_preview_table_html(frm) +
-			_build_colours_border_table_html(frm) +
+			_build_colours_preview_table_html(frm, BACKGROUND_COLOUR_SLOTS, __("Backgrounds")) +
+			_build_colours_tables_section_html(frm) +
+			_build_colours_border_table_html(frm, FRAME_BORDER_LINE_SLOTS, __("Lines & borders")) +
 			"</div>"
 	);
 	_bind_colours_tab_pickers(frm, $container);
