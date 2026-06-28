@@ -1330,11 +1330,9 @@ defineExpose({
 .ppv2-fd-related-th {
 	text-align: left;
 	padding: 6px 8px;
-	background: var(--nce-color-secondary-100, #e3f0fc);
-	color: var(--nce-color-secondary-700, #105ead);
+	/* Background + text: theme-table thead th — do not set color or background here. */
 	font-size: var(--font-size-base);
 	font-weight: var(--font-weight-bold, 600);
-	border-bottom: var(--nce-border-width) solid var(--nce-color-border);
 	position: sticky;
 	top: 0;
 	z-index: 1;
