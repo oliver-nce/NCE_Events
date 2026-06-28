@@ -16,7 +16,7 @@
 			</p>
 			<button
 				type="button"
-				class="btn btn-default btn-sm ppv2-fd-related-go-to"
+				class="ppv2-fd-related-go-to theme-bg-primary theme-border-primary"
 				:disabled="!goToEnabled || goToBusy"
 				title="Open panel for this related list"
 				@click="onGoToPanel"
@@ -1242,6 +1242,15 @@ defineExpose({
 }
 .ppv2-fd-related-go-to {
 	flex-shrink: 0;
+	padding: 6px 14px;
+	border-radius: var(--border-radius-sm, 4px);
+	font-size: var(--font-size-base, 14px);
+	font-weight: var(--font-weight-bold, 600);
+	cursor: pointer;
+}
+.ppv2-fd-related-go-to:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
 }
 .ppv2-fd-related-meta-link {
 	font-weight: normal;
