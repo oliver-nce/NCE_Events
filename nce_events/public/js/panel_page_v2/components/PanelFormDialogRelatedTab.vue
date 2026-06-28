@@ -52,7 +52,7 @@
 				class="ppv2-fd-related-table-wrap theme-border theme-rounded-sm"
 				:class="{ 'ppv2-fd-related-table-wrap--locked': editLocked }"
 			>
-				<table class="ppv2-fd-related-table">
+				<table class="ppv2-fd-related-table theme-table">
 					<thead>
 						<tr>
 							<th
