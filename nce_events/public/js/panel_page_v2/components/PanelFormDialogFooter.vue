@@ -138,7 +138,7 @@ const props = defineProps({
 	customActionBusy: { type: Boolean, default: false },
 });
 
-defineEmits([
+const emit = defineEmits([
 	"cancel",
 	"revert",
 	"submit-close",
@@ -150,6 +150,7 @@ defineEmits([
 	"find-constrain",
 	"find-modify",
 	"find-show-all",
+	"layout-updated",
 ]);
 
 function __(s) {
@@ -258,6 +259,7 @@ async function refreshFooterVisibility() {
 		hideSubmit = sv === null ? false : !!sv;
 	}
 	submitVisible.value = !hideSubmit;
+	emit("layout-updated");
 }
 
 watch(
@@ -284,7 +286,7 @@ watch(
 	padding: 10px 16px;
 	border-top: var(--nce-border-width) solid var(--nce-color-border);
 	display: flex;
-	flex-wrap: wrap;
+	flex-wrap: nowrap;
 	align-items: center;
 	justify-content: space-between;
 	gap: 8px;
@@ -308,10 +310,12 @@ watch(
 }
 .ppv2-fd-custom-buttons {
 	display: flex;
+	flex-shrink: 0;
 	gap: 4px;
 }
 .ppv2-fd-action-buttons {
 	display: flex;
+	flex-shrink: 0;
 	gap: 6px;
 	margin-left: auto;
 }

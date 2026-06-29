@@ -99,6 +99,7 @@
 			@go-to-panel="onGoToPanel"
 		/>
 			<PanelFormDialogFooter
+				ref="fdFooterRef"
 				:buttons="form.buttons.value"
 				:definition-name="definitionName"
 				:doc-name="docName"
@@ -123,6 +124,7 @@
 				@find-constrain="emit('find-constrain')"
 				@find-modify="emit('find-modify')"
 				@find-show-all="emit('find-show-all')"
+				@layout-updated="scheduleFitDialogWidthToFooter"
 			/>
 			<div class="ppv2-fd-resize-handle" @mousedown.prevent="startResize" />
 		</div>
@@ -229,6 +231,7 @@ const emit = defineEmits([
 const activeTab = ref(0);
 const findCriteria = reactive({});
 const fdBodyRef = ref(null);
+const fdFooterRef = ref(null);
 const backdropRef = ref(null);
 const dialogEl = ref(null);
 /** Drag offset from flex-centered origin; reset on each open. */
@@ -253,6 +256,39 @@ function resetDialogPositionAndSize() {
 	dlgW.value = null;
 	dlgH.value = null;
 }
+
+function getFooterRootEl() {
+	const inst = fdFooterRef.value;
+	if (!inst) return null;
+	return inst.$el ?? inst;
+}
+
+/** Widen dialog (never shrink) so footer buttons stay on one row. */
+function fitDialogWidthToFooter() {
+	const dialog = dialogEl.value;
+	const footer = getFooterRootEl();
+	if (!dialog || !footer || !props.open) return;
+
+	const maxW = Math.floor(window.innerWidth * 0.95);
+	const minW = 360;
+	const needed = Math.ceil(footer.scrollWidth);
+	if (!needed) return;
+
+	const currentW =
+		dlgW.value != null ? dlgW.value : Math.ceil(dialog.getBoundingClientRect().width);
+
+	if (needed > currentW) {
+		dlgW.value = Math.min(maxW, Math.max(minW, needed));
+	}
+}
+
+function scheduleFitDialogWidthToFooter() {
+	nextTick(() => {
+		requestAnimationFrame(() => fitDialogWidthToFooter());
+	});
+}
+
+let footerResizeObs = null;
 
 function _addDragResizeOverlay(cursor) {
 	const overlay = document.createElement("div");
@@ -460,6 +496,10 @@ watch(
 watch(
 	() => props.open,
 	(o) => {
+		if (footerResizeObs) {
+			footerResizeObs.disconnect();
+			footerResizeObs = null;
+		}
 		if (!o) {
 			clearFindCriteriaBag();
 			return;
@@ -468,8 +508,32 @@ watch(
 		showFdLoadDebug.value = isFdLoadDebugEnabled();
 		syncWaiting.value = false;
 		internalReloadTick.value = 0;
+		nextTick(() => {
+			const el = getFooterRootEl();
+			if (el && typeof ResizeObserver !== "undefined") {
+				footerResizeObs = new ResizeObserver(() => scheduleFitDialogWidthToFooter());
+				footerResizeObs.observe(el);
+			}
+			scheduleFitDialogWidthToFooter();
+		});
 	},
 	{ immediate: true },
+);
+
+watch(
+	() => [
+		props.open,
+		form.loading.value,
+		form.buttons.value,
+		props.docName,
+		props.findChromePhase,
+	],
+	() => {
+		if (props.open && !form.loading.value) {
+			scheduleFitDialogWidthToFooter();
+		}
+	},
+	{ deep: true },
 );
 
 function onCancel() {
@@ -610,6 +674,10 @@ watch(
 );
 
 onUnmounted(() => {
+	if (footerResizeObs) {
+		footerResizeObs.disconnect();
+		footerResizeObs = null;
+	}
 	window.removeEventListener("keydown", onFormDialogKeydown, true);
 	form.resetWhenClosed();
 });
