@@ -1566,7 +1566,7 @@
       "vue": {
         "uses_defineEmits": true
       },
-      "purpose": "Single field renderer inside PanelFormDialog. Maps Frappe fieldtype → control element (FormControl, checkbox, select, Link placeholder, etc.). Respects hidden/read_only/reqd and depends_on eval expressions.",
+      "purpose": "Single field renderer inside PanelFormDialog. Maps Frappe fieldtype → control element (FormControl, checkbox, select, Link, etc.). Data + options URL renders clickable links (Desk parity). Respects hidden/read_only/reqd and depends_on eval expressions.",
       "depends_on": [
         "utils/fieldTypeMap.js",
         "components/PanelFormLinkField.vue",

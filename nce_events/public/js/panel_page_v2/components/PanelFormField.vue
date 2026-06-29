@@ -146,6 +146,43 @@
       @input="onChange($event.target.value)"
     />
 
+    <!-- Data + options URL — Desk URL field (frozen meta options: "URL") -->
+    <a
+      v-else-if="isDataUrlField && readOnly && urlFieldHref"
+      :href="urlFieldHref"
+      class="ppv2-fd-input ppv2-fd-url-link theme-border theme-rounded-sm theme-text-link"
+      target="_blank"
+      rel="noopener noreferrer"
+    >{{ urlFieldDisplayText }}</a>
+    <div
+      v-else-if="isDataUrlField && readOnly"
+      class="ppv2-fd-input ppv2-fd-readonly-plain theme-border theme-rounded-sm"
+      tabindex="-1"
+      @keydown.prevent
+    >{{ urlFieldDisplayText }}</div>
+    <div v-else-if="isDataUrlField && !readOnly" class="ppv2-fd-url-row">
+      <input
+        type="text"
+        class="ppv2-fd-input ppv2-fd-url-input theme-border theme-rounded-sm"
+        :value="inputDisplayValue"
+        :required="mandatory"
+        :placeholder="field.placeholder || ''"
+        @input="onChange($event.target.value)"
+        @change="onChange($event.target.value)"
+      />
+      <a
+        v-if="urlFieldHref"
+        :href="urlFieldHref"
+        class="ppv2-fd-url-open theme-text-link theme-border theme-rounded-sm"
+        target="_blank"
+        rel="noopener noreferrer"
+        :title="__('Open link')"
+        @click.stop
+      >
+        <i class="fa fa-external-link" aria-hidden="true" />
+      </a>
+    </div>
+
     <!-- All other fields: text/number/date/time/etc -->
     <div
       v-else-if="readOnly"
@@ -225,6 +262,31 @@ const isTextarea = computed(() => {
 	const t = config.value?.props?.type;
 	return t === "textarea";
 });
+
+/** Frappe Data field with options set to URL (Desk clickable URL field). */
+const isDataUrlField = computed(() => {
+	const ft = normFieldtype(props.field).toLowerCase();
+	return ft === "data" && String(props.field?.options || "").trim().toUpperCase() === "URL";
+});
+
+function resolveUrlHref(value) {
+	const raw = String(value ?? "").trim();
+	if (!raw) return null;
+	if (/^https?:\/\//i.test(raw)) return raw;
+	if (/^\/\//.test(raw)) return `https:${raw}`;
+	if (/^[\w.-]+\.[a-z]{2,}/i.test(raw)) return `https://${raw}`;
+	return null;
+}
+
+const urlFieldHref = computed(() =>
+	isDataUrlField.value ? resolveUrlHref(props.modelValue) : null,
+);
+
+const urlFieldDisplayText = computed(() => String(props.modelValue ?? "").trim());
+
+function __(s) {
+	return typeof window.__ === "function" ? window.__(s) : s;
+}
 
 const selectOptions = computed(() => {
 	if (!useNativeSelectUi.value || !props.field.options) return [];
@@ -397,5 +459,41 @@ function onLinkChangePayload(payload) {
 }
 .ppv2-fd-field-find-criteria .ppv2-fd-input {
 	font-family: ui-monospace, monospace;
+}
+.ppv2-fd-url-row {
+	display: flex;
+	align-items: stretch;
+	gap: 6px;
+}
+.ppv2-fd-url-input {
+	flex: 1 1 auto;
+	min-width: 0;
+	width: auto;
+}
+.ppv2-fd-url-open {
+	flex: 0 0 auto;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0 10px;
+	background: var(--nce-color-surface);
+	text-decoration: none;
+}
+.ppv2-fd-url-open:hover {
+	text-decoration: none;
+	opacity: 0.85;
+}
+.ppv2-fd-url-link {
+	display: block;
+	text-decoration: underline;
+	word-break: break-all;
+	min-height: 2.5em;
+	cursor: pointer;
+	user-select: text;
+}
+.ppv2-fd-field-dirty .ppv2-fd-url-link,
+.ppv2-fd-field-dirty .ppv2-fd-url-input {
+	color: var(--nce-color-danger) !important;
+	font-weight: var(--font-weight-bold, 600);
 }
 </style>
