@@ -50,22 +50,18 @@ def _discover_via_link_paths(
 	one_hop: list[dict[str, object]],
 	wp_doctypes: set[str],
 	label_map: dict[str, str],
-) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
+) -> tuple[list[dict[str, object]], list[dict[str, object]], list[dict[str, object]]]:
 	"""Discover related tabs through a bridge DocType's outbound Link (reverse of inbound-only scan).
 
 	Frappe places Link fields on the many side (e.g. Enrollments → People / Events). Inbound
 	1-hop finds rows pointing at the root; this helper walks outbound links on the root **or**
-	on each inbound 1-hop bridge, then finds other DocTypes that share the same via target.
+	on each inbound 1-hop bridge.
 
-	Examples:
-	- Enrollments (root) --player_id--> People <--person_id-- Eligibility
-	- Events (root) ← Enrollments --player_id--> People <--person_id-- Eligibility
-
-	Returns ``(one_hop_linked_parents, two_hop_co_linked)`` to merge into picker buckets.
+	Returns ``(one_hop_extra, two_hop_extra, three_hop_extra)`` for the Form Dialog picker.
 	"""
 	root_doctype = cstr(root_doctype or "").strip()
 	if not root_doctype:
-		return [], []
+		return [], [], []
 
 	bridges: list[tuple[str, str]] = [(root_doctype, "name")]
 	seen_bridge: set[tuple[str, str]] = {(root_doctype, "name")}
@@ -84,8 +80,10 @@ def _discover_via_link_paths(
 
 	one_extra: list[dict[str, object]] = []
 	two_extra: list[dict[str, object]] = []
+	three_extra: list[dict[str, object]] = []
 	seen1: set[str] = set()
 	seen2: set[str] = set()
+	seen3: set[str] = set()
 
 	for bridge_dt, parent_link in bridges:
 		try:
@@ -119,7 +117,26 @@ def _discover_via_link_paths(
 						}
 					)
 
-			# Rows on another DocType that link to the same via target (Eligibility → People).
+			# 2-hop: bridge → via target (e.g. People via Enrollments when root is Events).
+			if bridge_dt != root_doctype and via_dt != root_doctype:
+				sig2 = _via_path_key(via_dt, hop_chain)
+				if sig2 not in seen2:
+					seen2.add(sig2)
+					bridge_label = label_map.get(bridge_dt, bridge_dt)
+					two_extra.append(
+						{
+							"doctype": via_dt,
+							"link_field": "name",
+							"label": _("{0} (via {1})").format(via_label, bridge_label),
+							"hop_chain": hop_chain,
+						}
+					)
+
+			# 3-hop: related table links to the via target (e.g. Eligibility → People).
+			# Skip when via target is the root (circular 1-hop paths like Enrollments via … → Events).
+			if via_dt == root_doctype:
+				continue
+
 			for dt in sorted(wp_doctypes):
 				if dt in (bridge_dt, via_dt, root_doctype):
 					continue
@@ -134,15 +151,15 @@ def _discover_via_link_paths(
 					if not in_fn:
 						continue
 					sig = _via_path_key(dt, hop_chain)
-					if sig in seen2:
+					if sig in seen3:
 						break
-					seen2.add(sig)
+					seen3.add(sig)
 					bridge_label = label_map.get(bridge_dt, bridge_dt)
 					if bridge_dt == root_doctype:
 						via_phrase = via_label
 					else:
 						via_phrase = _("{0} → {1}").format(bridge_label, via_label)
-					two_extra.append(
+					three_extra.append(
 						{
 							"doctype": dt,
 							"link_field": in_fn,
@@ -154,7 +171,8 @@ def _discover_via_link_paths(
 
 	one_extra.sort(key=lambda r: cstr(r.get("label") or r.get("doctype")))
 	two_extra.sort(key=lambda r: cstr(r.get("label") or r.get("doctype")))
-	return one_extra, two_extra
+	three_extra.sort(key=lambda r: cstr(r.get("label") or r.get("doctype")))
+	return one_extra, two_extra, three_extra
 
 
 def _skip_as_panel_child_table(meta: Any) -> bool:
@@ -216,9 +234,9 @@ def get_multi_hop_children(root_doctype: str) -> dict[str, list[dict[str, object
 	Each item: doctype, link_field (use ``name`` for multi-hop), label, hop_chain (list or []).
 
 	1-hop: inbound children (Link → root) plus linked parents when root is a junction table.
-	2-hop: standard bridge paths (e.g. People via Enrollments) plus co-linked rows
-	(e.g. Eligibility via People, including through a 1-hop bridge when People has no Link back).
-	3-hop: inbound three-step paths where each bridge links back to the prior step.
+	2-hop: bridge → related table (e.g. People via Enrollments).
+	3-hop: bridge → via table → related table on that via (e.g. Eligibility via Enrollments → People),
+	plus inbound three-step paths where each bridge links back to the prior step.
 
 	hop_chain step: ``{bridge, parent_link, child_link}`` — on ``bridge`` DocType,
 	``parent_link`` points toward the root side, ``child_link`` toward the next level.
@@ -260,7 +278,7 @@ def get_multi_hop_children(root_doctype: str) -> dict[str, list[dict[str, object
 				)
 				break
 
-	one_hop_extra, via_two_hop = _discover_via_link_paths(
+	one_hop_extra, via_two_hop, via_three_hop = _discover_via_link_paths(
 		root_doctype, one_hop, wp_doctypes, label_map
 	)
 	seen_one: set[str] = set()
@@ -324,6 +342,15 @@ def get_multi_hop_children(root_doctype: str) -> dict[str, list[dict[str, object
 
 	three_hop: list[dict[str, object]] = []
 	seen3: set[str] = set()
+	for row in via_three_hop:
+		dt_fin = cstr(row.get("doctype") or "").strip()
+		hc = row.get("hop_chain") or []
+		key = _via_path_key(dt_fin, hc)
+		if key in seen3 or key in seen2:
+			continue
+		seen3.add(key)
+		seen2.add(key)
+		three_hop.append(row)
 	for m1 in one_hop:
 		if m1.get("hop_chain"):
 			continue
@@ -362,10 +389,11 @@ def get_multi_hop_children(root_doctype: str) -> dict[str, list[dict[str, object
 					{"bridge": b1, "parent_link": l1r, "child_link": f_b1_m2.fieldname},
 					{"bridge": m2, "parent_link": f_m2_b1, "child_link": f_t.fieldname},
 				]
-				key = f"{t_fin}::{json.dumps(hop_chain, sort_keys=True)}"
+				key = _via_path_key(t_fin, hop_chain)
 				if key in seen3 or key in seen2:
 					continue
 				seen3.add(key)
+				seen2.add(key)
 				three_hop.append(
 					{
 						"doctype": t_fin,
