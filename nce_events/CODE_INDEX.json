@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Manual overlay merged into CODE_INDEX.json by scripts/build_code_index.py. Edit per-file entries here; the generator preserves your curated 'purpose', 'sections', 'private_helpers', 'key_fields', and 'depends_on'.",
-    "generated": "2026-06-11",
+    "generated": "2026-06-29",
     "generator": "scripts/build_code_index.py",
     "usage": "Run `python scripts/build_code_index.py --write` to regenerate CODE_INDEX.json after editing this file or after adding/renaming/deleting source files. The pre-commit hook runs `--check` and blocks commits whose code changes have not been regenerated."
   },
@@ -18,7 +18,7 @@
       "Form Dialog buttons: script text is copied from Desk at capture/rebuild time — not live-linked. Rebuild is manual.",
       "Panel Page split (Mirror / Native): one Vue bundle, three Frappe Pages. main.js mount(selector, opts) provides panelMode + panelLabel; App.vue injects them, applies { doctype_source: panelMode } to the root usePanel, and passes scope: panelMode to usePanelActions. Cross-page navigation is a Panel Action of type Client Script using switch_page(slug), implemented as a full-reload window.location.assign for KISS state reset. See Docs/handoff_panel_page_split.md.",
       "NCE Sync mirror refresh (separate app): whitelisted nce_sync.api.sync_doctype_rows (by doc names) and nce_sync.api.sync_linked_doctype_rows (rebuild child rows for one parent Link). Full call shapes, enqueue helpers, and permission notes: architecture.nce_sync_mirror_refresh_apis.",
-      "ThemeSwatchPicker (Themes app): Desk Page Panel Colours tab — Backgrounds: themeSwatchPicker per *_bg_class slot; Lines & borders: width Select (theme-border-thin|theme-border|theme-border-strong) + Color pick (theme-border-{role}-{shade}). Runtime: panelChromeClasses.js resolves bg + border slots; PanelFloat frame border classes, PanelTable/FilterBar CSS vars for directional dividers."
+      "ThemeSwatchPicker (Themes app): Desk Page Panel Colours tab — Backgrounds: themeSwatchPicker per *_bg_class slot; Lines & borders: width Select + Color pick; Tables: header/zebra/divider previews from get_theme_table_tokens (NCE Theme theme_json). Runtime: panelChromeClasses.js resolves bg + border slots; theme-table CSS bundle on PanelTable and Form Dialog related grids (headers, zebra rows, cell dividers); empty panel table overrides defer to theme-table tokens."
     ],
     "nce_sync_mirror_refresh_apis": {
       "source_app": "nce_sync Frappe app (dependency of NCE Events; implementation not in this repo).",
@@ -98,22 +98,22 @@
       "exports": [
         "build_woocommerce_product_payload",
         "clear_new_woo_commerce_product",
+        "delete_event",
+        "duplicate_event_finalize",
+        "duplicate_event_start",
         "publish_new_woo_commerce_product",
         "slugify_product_slug",
         "submit_new_woo_commerce_product",
-        "duplicate_event_finalize",
-        "duplicate_event_start",
-        "delete_event",
         "update_events_to_website",
         "update_woo_commerce_product"
       ],
       "whitelist_endpoints": [
         "clear_new_woo_commerce_product",
-        "publish_new_woo_commerce_product",
-        "submit_new_woo_commerce_product",
+        "delete_event",
         "duplicate_event_finalize",
         "duplicate_event_start",
-        "delete_event",
+        "publish_new_woo_commerce_product",
+        "submit_new_woo_commerce_product",
         "update_events_to_website",
         "update_woo_commerce_product"
       ],
@@ -130,15 +130,18 @@
     },
     "nce_events/api/exchange.py": {
       "exports": [
-        "execute_product_exchange"
+        "execute_product_exchange",
+        "execute_product_refund"
       ],
       "whitelist_endpoints": [
-        "execute_product_exchange"
+        "execute_product_exchange",
+        "execute_product_refund"
       ],
-      "purpose": "Data exchange/import functionality for enrollments",
+      "purpose": "Enrollment product exchange and refund whitelisted endpoints (execute_product_exchange, execute_product_refund).",
       "depends_on": [],
       "sections": [
-        "Exchange logic"
+        "Product exchange",
+        "Product refund with optional cancellation fee"
       ]
     },
     "nce_events/api/form_dialog/__init__.py": {
@@ -273,7 +276,17 @@
       "whitelist_endpoints": [
         "get_edit_condition_fields"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Validate and evaluate Form Dialog related-tab edit conditions (implicit IF SQL on root DocType). Empty expression allows edit; truthy IF disables edit/add/remove. Supports pending unsaved root field values, label-to-fieldname resolution for Desk picker, and get_edit_condition_fields whitelist.",
+      "depends_on": [
+        "nce_events/api/form_dialog/button_visibility.py",
+        "nce_events/utils/sql_table.py"
+      ],
+      "sections": [
+        "validate_edit_condition compile guard",
+        "evaluate_edit_condition with pending_root_values overlay",
+        "resolve_edit_condition_labels (`Label` / [Label] tokens)",
+        "get_edit_condition_fields whitelist"
+      ]
     },
     "nce_events/api/form_dialog/portal_actions.py": {
       "exports": [
@@ -327,12 +340,14 @@
         "add_form_dialog_related_row",
         "delete_form_dialog_related_row",
         "get_form_dialog_related_rows",
+        "reevaluate_related_tab_edit_allowed",
         "save_form_dialog_related_rows"
       ],
       "whitelist_endpoints": [
         "add_form_dialog_related_row",
         "delete_form_dialog_related_row",
         "get_form_dialog_related_rows",
+        "reevaluate_related_tab_edit_allowed",
         "save_form_dialog_related_rows"
       ],
       "purpose": "Related-rows endpoints for the panel-V2 Form Dialog: fetch and save child-DocType rows shown in related tabs, gated by the portal_field_config persisted on the Form Dialog Related DocType row.",
@@ -348,7 +363,8 @@
         "Skip fieldtypes set",
         "_related_rows_for_vue_api child-row shape",
         "get_form_dialog_related_rows (logged-in users)",
-        "save_form_dialog_related_rows (logged-in users)"
+        "save_form_dialog_related_rows (logged-in users)",
+        "reevaluate_related_tab_edit_allowed (footer SQL / edit gating refresh)"
       ]
     },
     "nce_events/api/form_dialog/save.py": {
@@ -634,16 +650,20 @@
         "export_panel_data",
         "get_other_page_panels",
         "get_panel_config",
-        "get_panel_data"
+        "get_panel_data",
+        "get_theme_slug_for_link",
+        "get_theme_table_tokens"
       ],
       "whitelist_endpoints": [
         "copy_panel_colours",
         "export_panel_data",
         "get_other_page_panels",
         "get_panel_config",
-        "get_panel_data"
+        "get_panel_data",
+        "get_theme_slug_for_link",
+        "get_theme_table_tokens"
       ],
-      "purpose": "Panel data read endpoints — get_panel_config, get_panel_data (hot path), get_other_page_panels, copy_panel_colours, and export_panel_data whitelist wrapper. Config/export logic lives in panel_config.py and panel_export.py; _panel_config_from_doc re-exported for sql.py.",
+      "purpose": "Panel data read endpoints — get_panel_config, get_panel_data (hot path), get_other_page_panels, copy_panel_colours, export_panel_data whitelist wrapper, get_theme_slug_for_link, and get_theme_table_tokens (Desk Colours tab previews). Config/export logic lives in panel_config.py and panel_export.py; _panel_config_from_doc re-exported for sql.py.",
       "depends_on": [
         "nce_events/api/panel_api_pkg/_helpers.py",
         "nce_events/api/panel_api_pkg/computed_columns.py",
@@ -651,13 +671,16 @@
         "nce_events/api/panel_api_pkg/panel_export.py",
         "nce_events/api/panel_api_pkg/sql.py",
         "nce_events/api/panel_api_pkg/discovery.py",
+        "nce_events/api/panel_api_pkg/theme_slug.py",
+        "nce_events/api/panel_api_pkg/theme_table_tokens.py",
         "nce_events/nce_events/doctype/page_panel/"
       ],
       "sections": [
         "get_panel_config whitelist",
         "get_panel_data hot path",
         "get_other_page_panels / copy_panel_colours",
-        "export_panel_data whitelist delegate"
+        "export_panel_data whitelist delegate",
+        "get_theme_slug_for_link / get_theme_table_tokens (Desk Colours tab)"
       ]
     },
     "nce_events/api/panel_api_pkg/panel_export.py": {
@@ -693,6 +716,24 @@
         "_build_panel_sql internal helper",
         "build_panel_sql public endpoint",
         "save_panel_sql public endpoint"
+      ]
+    },
+    "nce_events/api/panel_api_pkg/theme_slug.py": {
+      "exports": [
+        "resolve_theme_slug"
+      ],
+      "purpose": "Resolve Page Panel NCE Theme Link values to Active theme slugs for data-nce-theme scoping. Empty link falls back to site default (is_default=1); missing/inactive docs return None.",
+      "depends_on": []
+    },
+    "nce_events/api/panel_api_pkg/theme_table_tokens.py": {
+      "exports": [
+        "get_theme_table_tokens",
+        "normalize_table_width_tier",
+        "tier_to_border_class"
+      ],
+      "purpose": "Read NCE Theme table chrome tokens (header bg, zebra row colours, row/col divider colours and width tiers) from theme_json for Page Panel Colours tab Tables previews and Desk override defaults.",
+      "depends_on": [
+        "nce_events/api/panel_api_pkg/theme_slug.py"
       ]
     },
     "nce_events/api/reports.py": {
@@ -804,10 +845,11 @@
     "nce_events/api/tests/api/form_dialog/test_edit_condition.py": {
       "exports": [
         "TestEvaluateEditCondition",
+        "TestEvaluateEditConditionPending",
         "TestResolveEditConditionLabels",
         "TestValidateEditCondition"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Unit tests for form_dialog edit_condition: validate_edit_condition guards, evaluate_edit_condition truthy/falsy/pending_root_values, resolve_edit_condition_labels token rewriting."
     },
     "nce_events/api/tests/api/form_dialog/test_helpers.py": {
       "exports": [
@@ -830,6 +872,7 @@
     "nce_events/api/tests/api/form_dialog/test_portal_fields.py": {
       "exports": [
         "TestNormalizePortalFieldConfig",
+        "TestPortalNameField",
         "TestRelatedPortalFieldEditor"
       ],
       "purpose": "Unit tests for form_dialog portal_fields editor normalization and related portal config."
@@ -845,9 +888,22 @@
     "nce_events/api/tests/api/panel_api_pkg/test_discovery.py": {
       "exports": [
         "TestDiscoverViaLinkPaths",
-        "TestGetChildDoctypes"
+        "TestGetChildDoctypes",
+        "TestGetMultiHopChildren"
       ],
-      "purpose": "Unit tests for panel_api_pkg child-doctype discovery and multi-hop link paths."
+      "purpose": "Unit tests for panel_api_pkg child-doctype discovery, multi-hop link paths (1/2/3-hop), and get_multi_hop_children classification."
+    },
+    "nce_events/api/tests/api/panel_api_pkg/test_theme_slug.py": {
+      "exports": [
+        "TestResolveThemeSlug"
+      ],
+      "purpose": "Unit tests for theme_slug.resolve_theme_slug (Active slug, site default fallback, missing/inactive docs)."
+    },
+    "nce_events/api/tests/api/panel_api_pkg/test_theme_table_tokens.py": {
+      "exports": [
+        "TestThemeTableTokens"
+      ],
+      "purpose": "Unit tests for theme_table_tokens.get_theme_table_tokens divider tiers, border classes, and theme_json colour resolution."
     },
     "nce_events/api/tests/api/test_credentials.py": {
       "exports": [
@@ -867,11 +923,14 @@
     "nce_events/api/tests/api/test_events_publish.py": {
       "exports": [
         "TestBuildWooCommerceProductPayload",
+        "TestDeleteEvent",
+        "TestDuplicateEvent",
+        "TestNormalizeWpProductId",
         "TestSlugifyProductSlug",
         "TestUpdateEventsToWebsite",
         "TestUpdateWooCommerceProduct"
       ],
-      "purpose": "Unit tests for events_publish WooCommerce product publish/update payloads."
+      "purpose": "Unit tests for events_publish WooCommerce publish/update payloads, duplicate_event, and delete_event flows."
     },
     "nce_events/api/tests/api/test_sql_eval.py": {
       "exports": [
@@ -1157,9 +1216,9 @@
       ]
     },
     "nce_events/nce_events/doctype/page_panel/": {
-      "purpose": "Core config doctype — one record per root DocType being displayed. Stores column order, filters, gender config, email/SMS fields, computed columns, optional theme palette override (Link NCE Theme), per-surface theme-bg + line/border class slots (Colours tab), and optional link to a Form Dialog for V2 row editing. Desk UI: page_panel.js tabs Config / Display / Colours / Query / Dialogs; Colours tab: Backgrounds (COLOUR_SLOTS + ThemeSwatchPicker) and Lines & borders (BORDER_LINE_SLOTS: width select + border color picker).",
+      "purpose": "Core config doctype — one record per root DocType being displayed. Stores column order, filters, gender config, email/SMS fields, computed columns, optional theme palette override (Link NCE Theme), per-surface theme-bg + line/border class slots (Colours tab), table header/zebra/divider overrides, and optional link to a Form Dialog for V2 row editing. Desk UI: page_panel.js tabs Config / Display / Colours / Query / Dialogs; Colours tab: Backgrounds (COLOUR_SLOTS + ThemeSwatchPicker), Lines & borders (BORDER_LINE_SLOTS), Tables section (previews from get_theme_table_tokens + Revert to Theme Defaults).",
       "sections": [
-        "Colours tab (COLOUR_SLOTS backgrounds + BORDER_LINE_SLOTS lines/borders)",
+        "Colours tab (Backgrounds + Lines & borders + Tables previews)",
         "Display matrix, Query SQL, Form Dialogs tab"
       ],
       "key_fields": [
@@ -1329,7 +1388,15 @@
       "exports": [
         "cascadePanels"
       ],
-      "purpose": "TODO: describe in CODE_INDEX.manual.json"
+      "purpose": "Client Script panel action handler — cascade_panels. Calls App.vue cascadePanels to stagger open drilled panel floats diagonally.",
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/actions/handlers/closeAllPanels.js": {
+      "exports": [
+        "closeAllPanels"
+      ],
+      "purpose": "Client Script panel action handler — close_all_panels. Calls App.vue closeAllPanels to dismiss drilled panels and overlay dialogs.",
+      "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/actions/handlers/showDt.js": {
       "exports": [
@@ -1350,6 +1417,8 @@
       ],
       "purpose": "Maps Client Script panel action handler keys to JS handler functions. Each Panel Action with action_type=Client Script declares client_handler like 'switch_page(panel-page-native)'; the registry resolves the key (e.g. 'switch_page') to the handler module.",
       "depends_on": [
+        "actions/handlers/cascadePanels.js",
+        "actions/handlers/closeAllPanels.js",
         "actions/handlers/showDt.js",
         "actions/handlers/switchPage.js"
       ]
@@ -1446,7 +1515,7 @@
       "vue": {
         "uses_defineEmits": true
       },
-      "purpose": "Form dialog body orchestrator: renders the tab bar (PanelFormDialogTabBar), iterates tabs, and dispatches each tab to PanelFormDialogRelatedTab (related-doctype tabs), PanelFormScriptToolTab (captured JS tool tabs), or the inline main-tab fields grid (PanelFormField-based). Aggregates imperative saveAllRelatedRows / resetRelatedToBaseline across related-tab children for the parent dialog.",
+      "purpose": "Form dialog body orchestrator: renders the tab bar (PanelFormDialogTabBar), iterates tabs, and dispatches each tab to PanelFormDialogRelatedTab (related-doctype tabs), PanelFormScriptToolTab (captured JS tool tabs), or the inline main-tab fields grid (PanelFormField-based). Main tabs: collapsible Section Breaks render as accordion headers (chevron, default collapsed; unlabeled → Un-named Section). Aggregates imperative saveAllRelatedRows / resetRelatedToBaseline across related-tab children for the parent dialog.",
       "depends_on": [
         "components/PanelFormField.vue",
         "components/PanelFormDialogTabBar.vue",
@@ -1471,16 +1540,13 @@
       ]
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogInlineChildTab.vue": {
-      "vue": {
-        "uses_defineProps": true
-      },
       "purpose": "Form dialog inline child-table tab — portal-editable grid for frozen inline children."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue": {
       "vue": {
         "uses_defineEmits": true
       },
-      "purpose": "Form dialog related-doctype tab: scrollable rows table with portal-editable cells (Select/Check/number/date/text/textarea), label-column resizer, schema details panel, save_form_dialog_related_rows on Submit. Exposes saveAllRelatedRows + resetRelatedToBaseline.",
+      "purpose": "Form dialog related-doctype tab: scrollable rows table with portal-editable cells (Select/Check/number/date/text/textarea), theme-table styling (same NCE Theme table tokens as PanelTable), label-column resizer, schema details panel, save_form_dialog_related_rows on Submit. Exposes saveAllRelatedRows + resetRelatedToBaseline.",
       "depends_on": [
         "utils/frappeCall.js",
         "utils/relatedCellFormat.js",
@@ -1545,7 +1611,7 @@
       "vue": {
         "uses_defineEmits": true
       },
-      "purpose": "Scrollable data table with sortable-width columns, link/related-link cells, gender-tint and bold styling, optional per-row email/phone/sms action buttons. Dynamic chrome: col_header_bg_class on <th>, row_bg_class/row_alt_bg_class on zebra rows (hover/selected stay token-based). Filter widget delegated to PanelTableFilterBar.",
+      "purpose": "Scrollable data table with sortable-width columns, link/related-link cells, gender-tint and bold styling, optional per-row email/phone/sms action buttons. Table chrome uses theme-table CSS bundle (header bg, zebra rows, row/col dividers); per-panel col_header_bg_class / row_bg_class overrides apply when set, otherwise defer to theme tokens. Filter widget delegated to PanelTableFilterBar.",
       "depends_on": [
         "components/PanelTableFilterBar.vue",
         "utils/panelChromeClasses.js"
@@ -1672,6 +1738,15 @@
       "purpose": "confirmDiscardIfDirty + createRowNavKeydownHandler for Panel Form Dialog shell.",
       "depends_on": []
     },
+    "nce_events/public/js/panel_page_v2/composables/useFormDialogDisplayDirty.js": {
+      "exports": [
+        "useFormDialogDisplayDirty"
+      ],
+      "purpose": "Display-baseline dirty tracking for Form Dialog main tabs: captures visible control values at load/save, compares on input/change without writing into formData (avoids Frappe date side effects).",
+      "depends_on": [
+        "utils/formDialogDisplayBaseline.js"
+      ]
+    },
     "nce_events/public/js/panel_page_v2/composables/useFormDialogRecordNav.js": {
       "exports": [
         "panelRowArray",
@@ -1759,9 +1834,10 @@
     },
     "nce_events/public/js/panel_page_v2/composables/useSendDialogs.js": {
       "exports": [
+        "closeSendDialog",
         "useSendDialogs"
       ],
-      "purpose": "Composable wrapping the plain-JS frappe.require email/SMS dialog launchers (bulk + per-row). Owns the in-flight _sendDialog instance.",
+      "purpose": "Composable wrapping the plain-JS frappe.require email/SMS dialog launchers (bulk + per-row). Owns the in-flight _sendDialog instance; exports closeSendDialog for teardown.",
       "depends_on": [
         "../../js_dialogs/email_dialog.js",
         "../../js_dialogs/sms_dialog.js"
@@ -1839,6 +1915,17 @@
         "utils/frappeCall.js"
       ]
     },
+    "nce_events/public/js/panel_page_v2/utils/enrollmentWpActions.js": {
+      "exports": [
+        "CANCELLATION_FEE_PROMPT_FIELD",
+        "buildRefundOutcomeHtml",
+        "parseCancellationFeeInput",
+        "promptCancellationFee",
+        "runProductRefund",
+        "showRefundActionResult"
+      ],
+      "purpose": "Enrollment refund UX helpers: cancellation-fee prompt field spec, parseCancellationFeeInput, runProductRefund via execute_product_refund, outcome msgprint HTML."
+    },
     "nce_events/public/js/panel_page_v2/utils/fieldTypeMap.js": {
       "exports": [
         "getComponentConfig"
@@ -1858,6 +1945,18 @@
       ],
       "purpose": "Match a single Find criterion against a panel row value (operators, case rules)."
     },
+    "nce_events/public/js/panel_page_v2/utils/formDialogDisplayBaseline.js": {
+      "exports": [
+        "blurFocusedFrappeWidget",
+        "captureDisplayBaseline",
+        "diffDisplayBaseline",
+        "displayValueKey",
+        "findFieldWrap",
+        "isBaselineField",
+        "readDisplayedValueFromWrap"
+      ],
+      "purpose": "Display-baseline capture/diff for Form Dialog controls: read visible widget values from DOM wraps, blur focused Frappe widgets, compare without mutating formData."
+    },
     "nce_events/public/js/panel_page_v2/utils/formDialogFindFields.js": {
       "exports": [
         "firstNonRelatedTabIndex",
@@ -1868,9 +1967,16 @@
     },
     "nce_events/public/js/panel_page_v2/utils/formDialogLiveScrape.js": {
       "exports": [
-        "readLiveFieldValue"
+        "blurFocusedFrappeWidget",
+        "blurFocusedFrappeWidgetIfNeeded",
+        "captureDisplayBaseline",
+        "diffDisplayBaseline",
+        "isScrapableWritableField",
+        "readLiveFieldValue",
+        "syncLaggingControlsIntoFormData",
+        "syncWritableControlsIntoFormData"
       ],
-      "purpose": "Read live field values from an open Desk form for dialog pre-fill (readLiveFieldValue)."
+      "purpose": "Desk form live-scrape and control sync: readLiveFieldValue, captureDisplayBaseline, syncWritableControlsIntoFormData, blurFocusedFrappeWidget for dialog pre-fill and save flush."
     },
     "nce_events/public/js/panel_page_v2/utils/formDialogLoadDebug.js": {
       "exports": [
@@ -1882,6 +1988,7 @@
     "nce_events/public/js/panel_page_v2/utils/formDialogPortalColumns.js": {
       "exports": [
         "buildPortalEditorRows",
+        "metaFieldsForPortalEditor",
         "parsePortalFieldConfigRaw",
         "portalColumnsForGrid"
       ],
@@ -1894,11 +2001,22 @@
       ],
       "purpose": "Related-tab Go To panel — buildRelatedTabPanelFilter, canGoToRelatedPanel drill-down helper."
     },
+    "nce_events/public/js/panel_page_v2/utils/formDialogSectionRows.js": {
+      "exports": [
+        "sectionColumnCount",
+        "sectionGridRows",
+        "visibleFormDialogSections"
+      ],
+      "purpose": "Section grid helpers for Form Dialog body: sectionGridRows (row-major column stacks), sectionColumnCount, visibleFormDialogSections filter."
+    },
     "nce_events/public/js/panel_page_v2/utils/formDialogSnapshot.js": {
       "exports": [
+        "isEmptyScalarValue",
+        "isFormDataDirty",
+        "scalarValuesEquivalent",
         "snapshotForCompare"
       ],
-      "purpose": "Utility: snapshotForCompare for dirty detection on frozen form reactive state.",
+      "purpose": "Form dialog dirty helpers: snapshotForCompare, isFormDataDirty, scalarValuesEquivalent, isEmptyScalarValue for reactive formData comparison.",
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/utils/frappeCall.js": {
@@ -1932,6 +2050,12 @@
       ],
       "purpose": "Measure Desk navbar title anchor for aligning floating panel chrome with Desk layout."
     },
+    "nce_events/public/js/panel_page_v2/utils/navigateToSpaPage.js": {
+      "exports": [
+        "navigateToSpaPage"
+      ],
+      "purpose": "Navigate between panel SPA Frappe Pages via frappe.set_route(slug) without full reload (preserves mounted Vue apps)."
+    },
     "nce_events/public/js/panel_page_v2/utils/openDeskDoctypeList.js": {
       "exports": [
         "openDeskDoctypeListInNewTab"
@@ -1959,6 +2083,13 @@
       "purpose": "PANEL_CHROME_DEFAULTS + PANEL_BORDER_DEFAULTS; panelChromeBg/Border, border width/color CSS var helpers, frameBorderClasses, table/filter divider style vars for V2 runtime.",
       "depends_on": []
     },
+    "nce_events/public/js/panel_page_v2/utils/panelFieldReadOnly.js": {
+      "exports": [
+        "isFieldInPanelReadOnlyList",
+        "isRootFieldPanelReadOnly"
+      ],
+      "purpose": "Match Page Panel Display read_only_fields against root frozen fields and related/inline child column fieldnames."
+    },
     "nce_events/public/js/panel_page_v2/utils/panelTableColWidths.js": {
       "exports": [
         "PANEL_FLOAT_CHROME_PX",
@@ -1982,10 +2113,20 @@
     "nce_events/public/js/panel_page_v2/utils/parseLayout.js": {
       "exports": [
         "FORM_DIALOG_LEAD_TAB_ANCHOR",
-        "parseLayout"
+        "hasVisibleFields",
+        "parseLayout",
+        "sectionHasVisibleFields"
       ],
-      "purpose": "Utility: parse a flat Frappe DocField array into a nested Tabs→Sections→Columns→Fields tree. Used by usePanelFormDialog to render frozen_meta_json layout.",
+      "purpose": "Parse a flat Frappe DocField array into Tabs→Sections→Columns→Fields (section.collapsible from Section Break). Exports sectionHasVisibleFields for empty-section filtering. Used by useFrozenFormLoad to render frozen_meta_json layout.",
       "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/utils/portalColumnEditable.js": {
+      "exports": [
+        "RELATED_GRID_NON_EDITABLE_TYPES",
+        "isPortalGridColumnEditable",
+        "metaReadOnlyFromField"
+      ],
+      "purpose": "Related/inline portal grid column editability: fieldtype skip set, DocType read_only, Page Panel read_only_fields (not portal_field_config.editable)."
     },
     "nce_events/public/js/panel_page_v2/utils/ppv2Debug.js": {
       "exports": [

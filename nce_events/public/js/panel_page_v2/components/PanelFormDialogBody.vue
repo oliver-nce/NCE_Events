@@ -62,46 +62,75 @@
 							v-for="(section, si) in visibleFormDialogSections(tab.sections)"
 							:key="si"
 							class="ppv2-fd-section"
+							:class="{ 'ppv2-fd-section-collapsible': section.collapsible }"
 						>
-							<h3 v-if="section.label" class="ppv2-fd-section-label">
+							<button
+								v-if="section.collapsible"
+								type="button"
+								class="ppv2-fd-section-toggle"
+								:aria-expanded="!isSectionCollapsed(ti, si)"
+								@click="toggleSection(ti, si)"
+							>
+								<i
+									class="fa fa-chevron-right ppv2-fd-section-chevron"
+									:class="{
+										'ppv2-fd-section-chevron-open': !isSectionCollapsed(ti, si),
+									}"
+									aria-hidden="true"
+								/>
+								<span class="ppv2-fd-section-label">{{ sectionDisplayLabel(section) }}</span>
+							</button>
+							<h3 v-else-if="section.label" class="ppv2-fd-section-label">
 								{{ section.label }}
 							</h3>
-							<p v-if="section.description" class="ppv2-fd-section-desc theme-text-muted">
-								{{ section.description }}
-							</p>
 
 							<div
-								v-for="(row, ri) in sectionGridRows(section)"
-								:key="ri"
-								class="ppv2-fd-row"
-								:style="{
-									gridTemplateColumns:
-										'repeat(' + sectionColumnCount(section) + ', 1fr)',
-								}"
+								v-show="!section.collapsible || !isSectionCollapsed(ti, si)"
+								class="ppv2-fd-section-body"
 							>
-								<template v-for="(field, ci) in row" :key="field ? field.fieldname : 'empty-' + ci">
-									<PanelFormField
-										v-if="field"
-										:field="field"
-										:model-value="fieldModelValue(field)"
-										:visible="isFieldVisible(field)"
-										:mandatory="findLayoutMode ? false : isFieldMandatory(field)"
-										:read-only="fieldReadOnlyEffective(field)"
-										:find-criteria-mode="
-											findLayoutMode && isFindEnterable(field)
-										"
-										:field-dirty="
-											!findLayoutMode &&
-											!fieldReadOnlyEffective(field) &&
-											(props.isFieldDisplayDirty
-												? props.isFieldDisplayDirty(field.fieldname)
-												: isRootFieldDirty(field.fieldname))
-										"
-										@change="(p) => onFieldOrCriterionChange(field, p)"
-										@link-change="(p) => $emit('link-change', p)"
-									/>
-									<div v-else class="ppv2-fd-row-empty" aria-hidden="true" />
-								</template>
+								<p
+									v-if="section.description"
+									class="ppv2-fd-section-desc theme-text-muted"
+								>
+									{{ section.description }}
+								</p>
+
+								<div
+									v-for="(row, ri) in sectionGridRows(section)"
+									:key="ri"
+									class="ppv2-fd-row"
+									:style="{
+										gridTemplateColumns:
+											'repeat(' + sectionColumnCount(section) + ', 1fr)',
+									}"
+								>
+									<template
+										v-for="(field, ci) in row"
+										:key="field ? field.fieldname : 'empty-' + ci"
+									>
+										<PanelFormField
+											v-if="field"
+											:field="field"
+											:model-value="fieldModelValue(field)"
+											:visible="isFieldVisible(field)"
+											:mandatory="findLayoutMode ? false : isFieldMandatory(field)"
+											:read-only="fieldReadOnlyEffective(field)"
+											:find-criteria-mode="
+												findLayoutMode && isFindEnterable(field)
+											"
+											:field-dirty="
+												!findLayoutMode &&
+												!fieldReadOnlyEffective(field) &&
+												(props.isFieldDisplayDirty
+													? props.isFieldDisplayDirty(field.fieldname)
+													: isRootFieldDirty(field.fieldname))
+											"
+											@change="(p) => onFieldOrCriterionChange(field, p)"
+											@link-change="(p) => $emit('link-change', p)"
+										/>
+										<div v-else class="ppv2-fd-row-empty" aria-hidden="true" />
+									</template>
+								</div>
 							</div>
 						</div>
 						<div
@@ -126,7 +155,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from "vue";
+import { ref, reactive, watch } from "vue";
 import { isFindSearchableRootField } from "../utils/formDialogFindFields.js";
 import {
 	sectionColumnCount,
@@ -182,6 +211,39 @@ const emit = defineEmits([
 ]);
 
 const findHelpOpen = ref(false);
+
+/** Collapsible Section Break without a Desk label. */
+const COLLAPSIBLE_SECTION_FALLBACK_LABEL = "Un-named Section";
+
+/** @type {Record<string, boolean>} true = collapsed (body hidden) */
+const collapsedSections = reactive({});
+
+watch(
+	() => `${props.definitionName}|${props.rootDocName ?? ""}`,
+	() => {
+		for (const key of Object.keys(collapsedSections)) {
+			delete collapsedSections[key];
+		}
+	},
+);
+
+function sectionCollapseKey(tabIdx, sectionIdx) {
+	return `${tabIdx}-${sectionIdx}`;
+}
+
+function isSectionCollapsed(tabIdx, sectionIdx) {
+	return collapsedSections[sectionCollapseKey(tabIdx, sectionIdx)] ?? true;
+}
+
+function toggleSection(tabIdx, sectionIdx) {
+	const key = sectionCollapseKey(tabIdx, sectionIdx);
+	collapsedSections[key] = !isSectionCollapsed(tabIdx, sectionIdx);
+}
+
+function sectionDisplayLabel(section) {
+	const label = section?.label != null ? String(section.label).trim() : "";
+	return label || COLLAPSIBLE_SECTION_FALLBACK_LABEL;
+}
 
 watch(
 	() => props.findLayoutMode,
@@ -323,9 +385,46 @@ defineExpose({
 .ppv2-fd-section {
 	margin-bottom: 16px;
 }
+.ppv2-fd-section-toggle {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	width: 100%;
+	margin: 0 0 8px;
+	padding: 0;
+	border: 0;
+	background: transparent;
+	cursor: pointer;
+	text-align: left;
+	font: inherit;
+	color: inherit;
+}
+.ppv2-fd-section-toggle:focus-visible {
+	outline: 2px solid var(--nce-color-primary, #2563eb);
+	outline-offset: 2px;
+}
+.ppv2-fd-section-chevron {
+	flex: 0 0 auto;
+	width: 12px;
+	font-size: 12px;
+	line-height: 1;
+	transition: transform 0.15s ease;
+}
+.ppv2-fd-section-chevron-open {
+	transform: rotate(90deg);
+}
+.ppv2-fd-section-body {
+	overflow: visible;
+}
 .ppv2-fd-section-label {
 	font-size: var(--font-size-base);
 	font-weight: var(--font-weight-bold);
+	margin: 0;
+}
+.ppv2-fd-section-toggle .ppv2-fd-section-label {
+	margin: 0;
+}
+.ppv2-fd-section:not(.ppv2-fd-section-collapsible) .ppv2-fd-section-label {
 	margin: 0 0 8px;
 }
 .ppv2-fd-section-desc {

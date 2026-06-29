@@ -5,18 +5,18 @@
   },
   "architecture": {
     "overview": "NCE Events is a Frappe app that renders configurable multi-panel data explorer pages. It has a Python API layer and two frontend generations: V1 (vanilla JS class-based) and V2 (Vue 3 SFC with Vite build). Both share SMS/Email dialogs from V1. Depends on nce_sync app. V2 supports optional frozen Form Dialogs for editing panel rows without leaving the panel page. V2 ships as one Vue bundle mounted by three Frappe Pages: legacy /app/panel-page-v2 (unfiltered), /app/panel-page-mirrored (doctype_source=Mirror), /app/panel-page-native (doctype_source=Native). Each page passes a mode + label into the SPA via app.provide; the root WP Tables panel filter and the Panel Actions scope filter both derive from that mode. See Docs/handoff_panel_page_split.md.",
-    "data_flow": "Frappe Page (panel_page / panel_page_v2) → JS/Vue → frappe.call() → api/panel_api_pkg/, api/messaging.py, api/tags.py, api/reports.py, api/form_dialog/ → Frappe ORM → MariaDB",
+    "data_flow": "Frappe Page (panel_page / panel_page_v2) \u2192 JS/Vue \u2192 frappe.call() \u2192 api/panel_api_pkg/, api/messaging.py, api/tags.py, api/reports.py, api/form_dialog/ \u2192 Frappe ORM \u2192 MariaDB",
     "key_patterns": [
       "V2 Vue app built separately: npm run build in public/js/panel_page_v2/ then bench build",
-      "V2 reuses V1 SmsDialog, EmailDialog, and ai_tools.js at runtime — do NOT duplicate",
-      "Python helpers follow snake_case private convention (_helper_name) — check AGENTS.md before adding",
+      "V2 reuses V1 SmsDialog, EmailDialog, and ai_tools.js at runtime \u2014 do NOT duplicate",
+      "Python helpers follow snake_case private convention (_helper_name) \u2014 check AGENTS.md before adding",
       "frozenset used for fieldtype/fieldname skip sets",
       "Tag system uses Jinja template tags with gender-conditional pronouns",
       "Form Dialog: frozen_meta_json (snapshot of frappe.get_meta fields) is parsed by parseLayout.js + rendered by PanelFormDialog.vue. Only DocTypes in WP Tables are eligible.",
-      "Form Dialog buttons: script text is copied from Desk at capture/rebuild time — not live-linked. Rebuild is manual.",
+      "Form Dialog buttons: script text is copied from Desk at capture/rebuild time \u2014 not live-linked. Rebuild is manual.",
       "Panel Page split (Mirror / Native): one Vue bundle, three Frappe Pages. main.js mount(selector, opts) provides panelMode + panelLabel; App.vue injects them, applies { doctype_source: panelMode } to the root usePanel, and passes scope: panelMode to usePanelActions. Cross-page navigation is a Panel Action of type Client Script using switch_page(slug), implemented as a full-reload window.location.assign for KISS state reset. See Docs/handoff_panel_page_split.md.",
       "NCE Sync mirror refresh (separate app): whitelisted nce_sync.api.sync_doctype_rows (by doc names) and nce_sync.api.sync_linked_doctype_rows (rebuild child rows for one parent Link). Full call shapes, enqueue helpers, and permission notes: architecture.nce_sync_mirror_refresh_apis.",
-      "ThemeSwatchPicker (Themes app): Desk Page Panel Colours tab uses frappe.ui.themeSwatchPicker.open({ frm, themeField: 'theme', valueField }) per chrome slot (header_bg_class, row_alt_bg_class, etc.). Runtime: panelChromeClasses.js resolves config → theme-bg-* with fallbacks; PanelFloat/PanelTable/PanelFormDialog bind dynamically. theme-bg-* auto-pairs fg — toolbar buttons inherit, do not hardcode theme-text-primary-fg."
+      "ThemeSwatchPicker (Themes app): Desk Page Panel Colours tab \u2014 Backgrounds: themeSwatchPicker per *_bg_class slot; Lines & borders: width Select + Color pick; Tables: header/zebra/divider previews from get_theme_table_tokens (NCE Theme theme_json). Runtime: panelChromeClasses.js resolves bg + border slots; theme-table CSS bundle on PanelTable and Form Dialog related grids (headers, zebra rows, cell dividers); empty panel table overrides defer to theme-table tokens."
     ],
     "nce_sync_mirror_refresh_apis": {
       "source_app": "nce_sync Frappe app (dependency of NCE Events; implementation not in this repo).",
@@ -38,7 +38,7 @@
             "link_field": "Fieldname of the Link field on that child (string)",
             "link_value": "Parent name stored in that Link, e.g. EVT-00001 (string)"
           },
-          "response": "Same pattern — queued summary in r.message"
+          "response": "Same pattern \u2014 queued summary in r.message"
         }
       },
       "enqueue_job_targets": {
@@ -62,7 +62,7 @@
       ]
     },
     "nce_events/api/panel_api_pkg/__init__.py": {
-      "purpose": "Panel API package — Phase 5 split of the original 1093-LOC panel_api.py module (the deprecated shim was removed in Phase 12). Re-exports submodule public + underscore-prefixed names so callers can resolve them at the package root.",
+      "purpose": "Panel API package \u2014 Phase 5 split of the original 1093-LOC panel_api.py module (the deprecated shim was removed in Phase 12). Re-exports submodule public + underscore-prefixed names so callers can resolve them at the package root.",
       "depends_on": [
         "nce_events/nce_events/doctype/page_panel/",
         "nce_events/nce_events/doctype/page_panel_computed_column/"
@@ -100,7 +100,7 @@
       ]
     },
     "nce_events/api/panel_api_pkg/core_filters.py": {
-      "purpose": "Core filter SQL building — WHERE clause construction with raw SQL expressions, query execution with core filters, user filter application (field, op, value conditions), and SQL table-name prefix normalization.",
+      "purpose": "Core filter SQL building \u2014 WHERE clause construction with raw SQL expressions, query execution with core filters, user filter application (field, op, value conditions), and SQL table-name prefix normalization.",
       "private_helpers": [
         "_build_core_filter_where",
         "_count_with_core_filter",
@@ -120,7 +120,7 @@
       ]
     },
     "nce_events/api/panel_api_pkg/computed_columns.py": {
-      "purpose": "Computed columns — extract unstored SQL-expression fields from Page Panel config, evaluate expressions per row with {fieldname} substitution, and execute custom SQL expressions.",
+      "purpose": "Computed columns \u2014 extract unstored SQL-expression fields from Page Panel config, evaluate expressions per row with {fieldname} substitution, and execute custom SQL expressions.",
       "private_helpers": [
         "_get_computed_columns",
         "_evaluate_computed_columns",
@@ -137,7 +137,7 @@
       ]
     },
     "nce_events/api/panel_api_pkg/sql.py": {
-      "purpose": "Panel SQL generation — build SELECT [LEFT JOIN...] queries for a panel with field selection and link field resolution, generate and save panel SQL for inspection, persist core filter and order_by on Page Panel records.",
+      "purpose": "Panel SQL generation \u2014 build SELECT [LEFT JOIN...] queries for a panel with field selection and link field resolution, generate and save panel SQL for inspection, persist core filter and order_by on Page Panel records.",
       "private_helpers": [
         "_build_panel_sql"
       ],
@@ -167,7 +167,7 @@
       ]
     },
     "nce_events/api/panel_api_pkg/panel_data.py": {
-      "purpose": "Panel data read endpoints — get_panel_config, get_panel_data (hot path), get_other_page_panels, copy_panel_colours, and export_panel_data whitelist wrapper. Config/export logic lives in panel_config.py and panel_export.py; _panel_config_from_doc re-exported for sql.py.",
+      "purpose": "Panel data read endpoints \u2014 get_panel_config, get_panel_data (hot path), get_other_page_panels, copy_panel_colours, export_panel_data whitelist wrapper, get_theme_slug_for_link, and get_theme_table_tokens (Desk Colours tab previews). Config/export logic lives in panel_config.py and panel_export.py; _panel_config_from_doc re-exported for sql.py.",
       "depends_on": [
         "nce_events/api/panel_api_pkg/_helpers.py",
         "nce_events/api/panel_api_pkg/computed_columns.py",
@@ -175,17 +175,20 @@
         "nce_events/api/panel_api_pkg/panel_export.py",
         "nce_events/api/panel_api_pkg/sql.py",
         "nce_events/api/panel_api_pkg/discovery.py",
+        "nce_events/api/panel_api_pkg/theme_slug.py",
+        "nce_events/api/panel_api_pkg/theme_table_tokens.py",
         "nce_events/nce_events/doctype/page_panel/"
       ],
       "sections": [
         "get_panel_config whitelist",
         "get_panel_data hot path",
         "get_other_page_panels / copy_panel_colours",
-        "export_panel_data whitelist delegate"
+        "export_panel_data whitelist delegate",
+        "get_theme_slug_for_link / get_theme_table_tokens (Desk Colours tab)"
       ]
     },
     "nce_events/api/panel_api_pkg/discovery.py": {
-      "purpose": "Child doctype discovery — find direct-child DocTypes with Link fields pointing to a root, multi-hop child discovery (1/2/3-hop) for Form Dialog picker, field metadata extraction (fieldname, label, fieldtype, Link options), and diagnostic child lookup.",
+      "purpose": "Child doctype discovery \u2014 find direct-child DocTypes with Link fields pointing to a root, multi-hop child discovery (1/2/3-hop) for Form Dialog picker, field metadata extraction (fieldname, label, fieldtype, Link options), and diagnostic child lookup.",
       "depends_on": [
         "nce_events/api/panel_api_pkg/_helpers.py"
       ],
@@ -213,6 +216,16 @@
         "nce_events/nce_events/doctype/page_panel/"
       ]
     },
+    "nce_events/api/panel_api_pkg/theme_slug.py": {
+      "purpose": "Resolve Page Panel NCE Theme Link values to Active theme slugs for data-nce-theme scoping. Empty link falls back to site default (is_default=1); missing/inactive docs return None.",
+      "depends_on": []
+    },
+    "nce_events/api/panel_api_pkg/theme_table_tokens.py": {
+      "purpose": "Read NCE Theme table chrome tokens (header bg, zebra row colours, row/col divider colours and width tiers) from theme_json for Page Panel Colours tab Tables previews and Desk override defaults.",
+      "depends_on": [
+        "nce_events/api/panel_api_pkg/theme_slug.py"
+      ]
+    },
     "nce_events/api/messaging.py": {
       "purpose": "Email and SMS messaging: preview Jinja-rendered message, send bulk panel message, get email accounts",
       "private_helpers": [
@@ -238,7 +251,7 @@
       ],
       "sections": [
         "slugify_product_slug",
-        "Events → WooCommerce field mapping",
+        "Events \u2192 WooCommerce field mapping",
         "publish/update whitelist endpoints"
       ]
     },
@@ -254,7 +267,7 @@
       ]
     },
     "nce_events/api/tags.py": {
-      "purpose": "Jinja tag generation for email/SMS templates — pronoun tags, gender-conditional values",
+      "purpose": "Jinja tag generation for email/SMS templates \u2014 pronoun tags, gender-conditional values",
       "private_helpers": [
         "_compute_jinja_tag"
       ],
@@ -264,7 +277,7 @@
       ]
     },
     "nce_events/api/reports.py": {
-      "purpose": "Report generation — panel data as structured report output",
+      "purpose": "Report generation \u2014 panel data as structured report output",
       "depends_on": [
         "nce_events/api/panel_api_pkg/"
       ],
@@ -273,7 +286,7 @@
       ]
     },
     "nce_events/api/credentials.py": {
-      "purpose": "Read credential_config JSON from API Connector doctype — returns auth_pattern, base_url, and required credential values. Fallback auth_type map includes Secret (api_secret only, auth_pattern shared_secret).",
+      "purpose": "Read credential_config JSON from API Connector doctype \u2014 returns auth_pattern, base_url, and required credential values. Fallback auth_type map includes Secret (api_secret only, auth_pattern shared_secret).",
       "depends_on": [],
       "sections": [
         "Credential lookup from API Connector",
@@ -281,14 +294,15 @@
       ]
     },
     "nce_events/api/exchange.py": {
-      "purpose": "Data exchange/import functionality for enrollments",
+      "purpose": "Enrollment product exchange and refund whitelisted endpoints (execute_product_exchange, execute_product_refund).",
       "depends_on": [],
       "sections": [
-        "Exchange logic"
+        "Product exchange",
+        "Product refund with optional cancellation fee"
       ]
     },
     "nce_events/api/hierarchy_explorer.py": {
-      "purpose": "Hierarchy explorer backend — tree traversal for hierarchical doctypes",
+      "purpose": "Hierarchy explorer backend \u2014 tree traversal for hierarchical doctypes",
       "depends_on": [],
       "sections": [
         "Hierarchy data fetch"
@@ -309,7 +323,7 @@
       ]
     },
     "nce_events/api/form_dialog/__init__.py": {
-      "purpose": "Form Dialog API package — Phase 4 split of the original 1233-LOC form_dialog_api.py module (the deprecated shim was removed in Phase 12). Re-exports submodule public + underscore-prefixed names so callers can resolve them at the package root.",
+      "purpose": "Form Dialog API package \u2014 Phase 4 split of the original 1233-LOC form_dialog_api.py module (the deprecated shim was removed in Phase 12). Re-exports submodule public + underscore-prefixed names so callers can resolve them at the package root.",
       "depends_on": [
         "nce_events/nce_events/doctype/form_dialog/"
       ],
@@ -329,7 +343,7 @@
       ]
     },
     "nce_events/api/form_dialog/_fd_fetch_from.py": {
-      "purpose": "fetch_from field enrichment — copies display-relevant properties (fieldtype, options) from linked DocType source fields into frozen Form Dialog field dicts."
+      "purpose": "fetch_from field enrichment \u2014 copies display-relevant properties (fieldtype, options) from linked DocType source fields into frozen Form Dialog field dicts."
     },
     "nce_events/api/form_dialog/_fd_gating.py": {
       "purpose": "Form Dialog gating: WP Tables validation, System Manager guard, capture-schema readiness check, and panel required-value emptiness check."
@@ -352,7 +366,7 @@
       "purpose": "Script tool group argument parsing and script_tool_groups child-row sync on Form Dialog capture/rebuild."
     },
     "nce_events/api/form_dialog/_helpers.py": {
-      "purpose": "Back-compat façade re-exporting all form_dialog domain submodules (_fd_gating, _fd_fetch_from, _fd_related, _fd_inline_children, _fd_script_tools, _fd_capture_meta). Existing call sites import from here unchanged.",
+      "purpose": "Back-compat fa\u00e7ade re-exporting all form_dialog domain submodules (_fd_gating, _fd_fetch_from, _fd_related, _fd_inline_children, _fd_script_tools, _fd_capture_meta). Existing call sites import from here unchanged.",
       "depends_on": [
         "nce_events/api/form_dialog/_fd_capture_meta.py",
         "nce_events/api/form_dialog/_fd_fetch_from.py",
@@ -389,6 +403,19 @@
       "sections": [
         "get_form_dialog_footer_visibility whitelist",
         "SQL expression hide evaluation with %(name)s"
+      ]
+    },
+    "nce_events/api/form_dialog/edit_condition.py": {
+      "purpose": "Validate and evaluate Form Dialog related-tab edit conditions (implicit IF SQL on root DocType). Empty expression allows edit; truthy IF disables edit/add/remove. Supports pending unsaved root field values, label-to-fieldname resolution for Desk picker, and get_edit_condition_fields whitelist.",
+      "depends_on": [
+        "nce_events/api/form_dialog/button_visibility.py",
+        "nce_events/utils/sql_table.py"
+      ],
+      "sections": [
+        "validate_edit_condition compile guard",
+        "evaluate_edit_condition with pending_root_values overlay",
+        "resolve_edit_condition_labels (`Label` / [Label] tokens)",
+        "get_edit_condition_fields whitelist"
       ]
     },
     "nce_events/api/form_dialog/portal_actions.py": {
@@ -439,7 +466,8 @@
         "Skip fieldtypes set",
         "_related_rows_for_vue_api child-row shape",
         "get_form_dialog_related_rows (logged-in users)",
-        "save_form_dialog_related_rows (logged-in users)"
+        "save_form_dialog_related_rows (logged-in users)",
+        "reevaluate_related_tab_edit_allowed (footer SQL / edit gating refresh)"
       ]
     },
     "nce_events/api/form_dialog/save.py": {
@@ -461,9 +489,9 @@
       ]
     },
     "nce_events/nce_events/doctype/page_panel/": {
-      "purpose": "Core config doctype — one record per root DocType being displayed. Stores column order, filters, gender config, email/SMS fields, computed columns, optional theme palette override (Link NCE Theme), per-surface theme-bg class slots (Colours tab + ThemeSwatchPicker), and optional link to a Form Dialog for V2 row editing. Desk UI: page_panel.js tabs Config / Display / Colours / Query / Dialogs; Colours tab (_render_colours_tab) picks eight chrome slots via frappe.ui.themeSwatchPicker.open({ frm, themeField: 'theme', valueField }).",
+      "purpose": "Core config doctype \u2014 one record per root DocType being displayed. Stores column order, filters, gender config, email/SMS fields, computed columns, optional theme palette override (Link NCE Theme), per-surface theme-bg + line/border class slots (Colours tab), table header/zebra/divider overrides, and optional link to a Form Dialog for V2 row editing. Desk UI: page_panel.js tabs Config / Display / Colours / Query / Dialogs; Colours tab: Backgrounds (COLOUR_SLOTS + ThemeSwatchPicker), Lines & borders (BORDER_LINE_SLOTS), Tables section (previews from get_theme_table_tokens + Revert to Theme Defaults).",
       "sections": [
-        "Colours tab (COLOUR_SLOTS, ThemeSwatchPicker per surface)",
+        "Colours tab (Backgrounds + Lines & borders + Tables previews)",
         "Display matrix, Query SQL, Form Dialogs tab"
       ],
       "key_fields": [
@@ -478,6 +506,12 @@
         "row_bg_class",
         "row_alt_bg_class",
         "dialog_header_bg_class",
+        "frame_border_class",
+        "frame_border_color_class",
+        "filter_divider_class",
+        "col_header_line_class",
+        "row_divider_class",
+        "col_divider_class",
         "core_filter",
         "order_by",
         "column_order",
@@ -500,7 +534,7 @@
       "depends_on": []
     },
     "nce_events/nce_events/doctype/card_definition/": {
-      "purpose": "Card layout definition — composite display card with tabs, fields, actions, graphics",
+      "purpose": "Card layout definition \u2014 composite display card with tabs, fields, actions, graphics",
       "key_fields": [
         "title",
         "target_doctype"
@@ -519,7 +553,7 @@
       ]
     },
     "nce_events/nce_events/doctype/card_portal/": {
-      "purpose": "Portal page definition — ordered columns of cards",
+      "purpose": "Portal page definition \u2014 ordered columns of cards",
       "key_fields": [
         "title"
       ],
@@ -575,7 +609,7 @@
       "depends_on": []
     },
     "nce_events/nce_events/doctype/panel_action/": {
-      "purpose": "Configurable side-panel action shown in the V2 SPA. action_type drives behavior (Form Dialog, Client Script, Show DocType, etc.); role gating is enforced via the Panel Action Role child table. Scope (Both / Mirror / Native, default Both) controls which panel page the action appears on — a Mirror-scoped action only shows on /app/panel-page-mirrored, a Native-scoped one only on /app/panel-page-native; Both shows on every page. Backfilled by patch v0_0_2/set_panel_action_scope_default.",
+      "purpose": "Configurable side-panel action shown in the V2 SPA. action_type drives behavior (Form Dialog, Client Script, Show DocType, etc.); role gating is enforced via the Panel Action Role child table. Scope (Both / Mirror / Native, default Both) controls which panel page the action appears on \u2014 a Mirror-scoped action only shows on /app/panel-page-mirrored, a Native-scoped one only on /app/panel-page-native; Both shows on every page. Backfilled by patch v0_0_2/set_panel_action_scope_default.",
       "key_fields": [
         "action_id",
         "label",
@@ -591,14 +625,14 @@
       ]
     },
     "nce_events/nce_events/doctype/panel_action_role/": {
-      "purpose": "Child table of Panel Action — list of Role names allowed to see and execute the parent action. Empty list means everyone with read on Panel Action can see it.",
+      "purpose": "Child table of Panel Action \u2014 list of Role names allowed to see and execute the parent action. Empty list means everyone with read on Panel Action can see it.",
       "key_fields": [
         "role"
       ],
       "depends_on": []
     },
     "nce_events/api/panel_actions.py": {
-      "purpose": "Panel Action endpoints — list visible Panel Actions for the current user (role-gated and scope-filtered), capture/load Panel Action Form Dialog definitions, and resolve dynamic DocType targets for showDt actions. get_panel_actions(scope) returns only actions whose Scope matches the requested page scope ('Mirror' / 'Native') plus the universal 'Both' scope; called with scope=null returns everything (used by legacy panel-page-v2).",
+      "purpose": "Panel Action endpoints \u2014 list visible Panel Actions for the current user (role-gated and scope-filtered), capture/load Panel Action Form Dialog definitions, and resolve dynamic DocType targets for showDt actions. get_panel_actions(scope) returns only actions whose Scope matches the requested page scope ('Mirror' / 'Native') plus the universal 'Both' scope; called with scope=null returns everything (used by legacy panel-page-v2).",
       "depends_on": [
         "nce_events/nce_events/doctype/panel_action/"
       ],
@@ -610,33 +644,33 @@
       ]
     },
     "nce_events/public/js/schema_explorer.js": {
-      "purpose": "Tag Finder V1 — DocType field browser for building Jinja template tags",
+      "purpose": "Tag Finder V1 \u2014 DocType field browser for building Jinja template tags",
       "depends_on": []
     },
     "nce_events/public/js/email_template_tags.js": {
-      "purpose": "DocType JS extension for Email Template — adds Tag Finder button",
+      "purpose": "DocType JS extension for Email Template \u2014 adds Tag Finder button",
       "depends_on": [
         "schema_explorer.js"
       ]
     },
     "nce_events/public/js/api_connector_tags.js": {
-      "purpose": "DocType JS extension for API Connector — tag generation helpers",
+      "purpose": "DocType JS extension for API Connector \u2014 tag generation helpers",
       "depends_on": []
     },
     "nce_events/public/js/enrollments_exchange.js": {
-      "purpose": "Enrollments data exchange UI — globally included",
+      "purpose": "Enrollments data exchange UI \u2014 globally included",
       "depends_on": []
     },
     "nce_events/public/js/js_dialogs/sms_dialog.js": {
-      "purpose": "SMS compose/send dialog (plain JS, Frappe ui.Dialog) — loaded at runtime via frappe.require() from V2 and reusable from desk forms",
+      "purpose": "SMS compose/send dialog (plain JS, Frappe ui.Dialog) \u2014 loaded at runtime via frappe.require() from V2 and reusable from desk forms",
       "depends_on": []
     },
     "nce_events/public/js/js_dialogs/email_dialog.js": {
-      "purpose": "Email compose/send dialog (plain JS, Frappe ui.Dialog) — loaded at runtime via frappe.require() from V2 and reusable from desk forms",
+      "purpose": "Email compose/send dialog (plain JS, Frappe ui.Dialog) \u2014 loaded at runtime via frappe.require() from V2 and reusable from desk forms",
       "depends_on": []
     },
     "nce_events/public/js/js_dialogs/ai_tools.js": {
-      "purpose": "AI tools sidebar panel (plain JS) — loaded at runtime via frappe.require() from V2 and reusable from desk forms",
+      "purpose": "AI tools sidebar panel (plain JS) \u2014 loaded at runtime via frappe.require() from V2 and reusable from desk forms",
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/App.vue": {
@@ -658,19 +692,19 @@
       ]
     },
     "nce_events/public/js/panel_page_v2/main.js": {
-      "purpose": "V2 SPA bundle entry point. Exposes window.NCEPanelPageV2.mount(selector, opts) — creates a fresh Vue app per mount call (so each Frappe Page gets a clean instance) and provides panelMode + panelLabel from opts so App.vue can scope the root WP Tables filter and Panel Actions list. opts.mode is 'Mirror' / 'Native' / null; opts.label is the header text.",
+      "purpose": "V2 SPA bundle entry point. Exposes window.NCEPanelPageV2.mount(selector, opts) \u2014 creates a fresh Vue app per mount call (so each Frappe Page gets a clean instance) and provides panelMode + panelLabel from opts so App.vue can scope the root WP Tables filter and Panel Actions list. opts.mode is 'Mirror' / 'Native' / null; opts.label is the header text.",
       "depends_on": [
         "App.vue"
       ]
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js": {
-      "purpose": "V2 composable — load panel config and data, refetch with user_filters. Accepts an optional parentFilter object that is AND-merged into every get_panel_data call (used by App.vue to apply the doctype_source filter on the Mirror / Native pages).",
+      "purpose": "V2 composable \u2014 load panel config and data, refetch with user_filters. Accepts an optional parentFilter object that is AND-merged into every get_panel_data call (used by App.vue to apply the doctype_source filter on the Mirror / Native pages).",
       "depends_on": [
         "utils/frappeCall.js"
       ]
     },
     "nce_events/public/js/panel_page_v2/composables/usePanelActions.js": {
-      "purpose": "V2 composable — loads the Panel Actions list and runs the click handler. Accepts a scope option ('Mirror' / 'Native' / null) that is forwarded to get_panel_actions so the server returns only actions whose Scope matches the current panel page (plus the universal 'Both' scope).",
+      "purpose": "V2 composable \u2014 loads the Panel Actions list and runs the click handler. Accepts a scope option ('Mirror' / 'Native' / null) that is forwarded to get_panel_actions so the server returns only actions whose Scope matches the current panel page (plus the universal 'Both' scope).",
       "depends_on": [
         "utils/frappeCall.js",
         "actions/registry.js"
@@ -679,34 +713,50 @@
     "nce_events/public/js/panel_page_v2/actions/registry.js": {
       "purpose": "Maps Client Script panel action handler keys to JS handler functions. Each Panel Action with action_type=Client Script declares client_handler like 'switch_page(panel-page-native)'; the registry resolves the key (e.g. 'switch_page') to the handler module.",
       "depends_on": [
+        "actions/handlers/cascadePanels.js",
+        "actions/handlers/closeAllPanels.js",
         "actions/handlers/showDt.js",
         "actions/handlers/switchPage.js"
       ]
     },
+    "nce_events/public/js/panel_page_v2/actions/handlers/cascadePanels.js": {
+      "purpose": "Client Script panel action handler \u2014 cascade_panels. Calls App.vue cascadePanels to stagger open drilled panel floats diagonally.",
+      "depends_on": []
+    },
+    "nce_events/public/js/panel_page_v2/actions/handlers/closeAllPanels.js": {
+      "purpose": "Client Script panel action handler \u2014 close_all_panels. Calls App.vue closeAllPanels to dismiss drilled panels and overlay dialogs.",
+      "depends_on": []
+    },
     "nce_events/public/js/panel_page_v2/actions/handlers/switchPage.js": {
-      "purpose": "Client Script panel action handler — switch_page(target_spa). Calls resolve_spa_switch then window.location.assign(route). target_spa may be page_slug, doctype_source_mode (Mirror/Native), or switch_handler_slug.",
+      "purpose": "Client Script panel action handler \u2014 switch_page(target_spa). Calls resolve_spa_switch then window.location.assign(route). target_spa may be page_slug, doctype_source_mode (Mirror/Native), or switch_handler_slug.",
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/composables/useFormDialogRecordNav.js": {
-      "purpose": "V2 composable — form dialog prev/next over the source panel's visible row list; exported panelRowArray for reuse.",
+      "purpose": "V2 composable \u2014 form dialog prev/next over the source panel's visible row list; exported panelRowArray for reuse.",
       "depends_on": []
     },
+    "nce_events/public/js/panel_page_v2/composables/useFormDialogDisplayDirty.js": {
+      "purpose": "Display-baseline dirty tracking for Form Dialog main tabs: captures visible control values at load/save, compares on input/change without writing into formData (avoids Frappe date side effects).",
+      "depends_on": [
+        "utils/formDialogDisplayBaseline.js"
+      ]
+    },
     "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js": {
-      "purpose": "V2 composable — panel integration for Panel Form Dialog: refs, open from row, close/save + panel reload; composes useFormDialogRecordNav.",
+      "purpose": "V2 composable \u2014 panel integration for Panel Form Dialog: refs, open from row, close/save + panel reload; composes useFormDialogRecordNav.",
       "depends_on": [
         "composables/useFormDialogRecordNav.js"
       ]
     },
     "nce_events/public/js/panel_page_v2/composables/useTagFinder.js": {
-      "purpose": "V2 composable — Tag Finder field loading and tag generation",
+      "purpose": "V2 composable \u2014 Tag Finder field loading and tag generation",
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/composables/useNceCardStack.js": {
-      "purpose": "V2 composable — stacked Card modals; parseOpenCardOpts for window._nce_open_card. Panel drill calls openCardModal.",
+      "purpose": "V2 composable \u2014 stacked Card modals; parseOpenCardOpts for window._nce_open_card. Panel drill calls openCardModal.",
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/composables/formDialogFetchFrom.js": {
-      "purpose": "createHandleFetchFrom(allFields, formData) — Link change fetch_from resolution for Panel Form Dialog.",
+      "purpose": "createHandleFetchFrom(allFields, formData) \u2014 Link change fetch_from resolution for Panel Form Dialog.",
       "depends_on": [
         "utils/frappeCall.js"
       ]
@@ -718,14 +768,14 @@
       ]
     },
     "nce_events/public/js/panel_page_v2/composables/frozenFormSave.js": {
-      "purpose": "saveFrozenFormDocument — server save_form_dialog_document + writeback_fetches flag.",
+      "purpose": "saveFrozenFormDocument \u2014 server save_form_dialog_document + writeback_fetches flag.",
       "depends_on": [
         "utils/frappeCall.js",
         "nce_events/api/form_dialog/save.py"
       ]
     },
     "nce_events/public/js/panel_page_v2/composables/useFrozenFormLoad.js": {
-      "purpose": "createFrozenFormLoad — load seq, resetWhenClosed, load definition + doc + initial fetch_from batch.",
+      "purpose": "createFrozenFormLoad \u2014 load seq, resetWhenClosed, load definition + doc + initial fetch_from batch.",
       "depends_on": [
         "utils/frappeCall.js",
         "utils/frappeFieldExpr.js",
@@ -734,14 +784,14 @@
       ]
     },
     "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js": {
-      "purpose": "Two-phase captured-script runner for the Panel Form Dialog. Phase 1 activateScripts(): intercepts window.frappe.ui.form.on, executes each client_scripts entry, runs refresh handlers with a DOM-safe shim (real hidden element for layout.wrapper, Proxy for fields_dict, absorb-Proxy for page). Returns tool tab descriptors — one per add_custom_button group, or a single generic 'Tools' entry for DOM-injection scripts that have no add_custom_button calls. Phase 2 mountTool(tool, domContainer): re-runs refresh with the real visible container so the script renders its full UI (tab bars, buttons, sections). Also provides runOnChange(fieldname) for field-level event handlers.",
+      "purpose": "Two-phase captured-script runner for the Panel Form Dialog. Phase 1 activateScripts(): intercepts window.frappe.ui.form.on, executes each client_scripts entry, runs refresh handlers with a DOM-safe shim (real hidden element for layout.wrapper, Proxy for fields_dict, absorb-Proxy for page). Returns tool tab descriptors \u2014 one per add_custom_button group, or a single generic 'Tools' entry for DOM-injection scripts that have no add_custom_button calls. Phase 2 mountTool(tool, domContainer): re-runs refresh with the real visible container so the script renders its full UI (tab bars, buttons, sections). Also provides runOnChange(fieldname) for field-level event handlers.",
       "exports": [
         "useFormClientScript"
       ],
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/composables/usePanelFormDialog.js": {
-      "purpose": "V2 composable — facade for Panel Form Dialog: composes createFrozenFormLoad, createHandleFetchFrom, frozenFormValidate/Save, formDialogSnapshot, and useFormClientScript. Watches loading to run activateScripts() after each load and push tool tabs. Used by PanelFormDialog.vue.",
+      "purpose": "V2 composable \u2014 facade for Panel Form Dialog: composes createFrozenFormLoad, createHandleFetchFrom, frozenFormValidate/Save, formDialogSnapshot, and useFormClientScript. Watches loading to run activateScripts() after each load and push tool tabs. Used by PanelFormDialog.vue.",
       "depends_on": [
         "utils/formDialogSnapshot.js",
         "composables/formDialogFetchFrom.js",
@@ -752,7 +802,7 @@
       ]
     },
     "nce_events/public/js/panel_page_v2/components/PanelTable.vue": {
-      "purpose": "Scrollable data table with sortable-width columns, link/related-link cells, gender-tint and bold styling, optional per-row email/phone/sms action buttons. Dynamic chrome: col_header_bg_class on <th>, row_bg_class/row_alt_bg_class on zebra rows (hover/selected stay token-based). Filter widget delegated to PanelTableFilterBar.",
+      "purpose": "Scrollable data table with sortable-width columns, link/related-link cells, gender-tint and bold styling, optional per-row email/phone/sms action buttons. Table chrome uses theme-table CSS bundle (header bg, zebra rows, row/col dividers); per-panel col_header_bg_class / row_bg_class overrides apply when set, otherwise defer to theme tokens. Filter widget delegated to PanelTableFilterBar.",
       "depends_on": [
         "components/PanelTableFilterBar.vue",
         "utils/panelChromeClasses.js"
@@ -771,7 +821,7 @@
       ]
     },
     "nce_events/public/js/panel_page_v2/composables/useSendDialogs.js": {
-      "purpose": "Composable wrapping the plain-JS frappe.require email/SMS dialog launchers (bulk + per-row). Owns the in-flight _sendDialog instance.",
+      "purpose": "Composable wrapping the plain-JS frappe.require email/SMS dialog launchers (bulk + per-row). Owns the in-flight _sendDialog instance; exports closeSendDialog for teardown.",
       "depends_on": [
         "../../js_dialogs/email_dialog.js",
         "../../js_dialogs/sms_dialog.js"
@@ -782,7 +832,7 @@
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/components/TagFinder.vue": {
-      "purpose": "Tag Finder V2 — Vue port of schema_explorer.js for template tag building",
+      "purpose": "Tag Finder V2 \u2014 Vue port of schema_explorer.js for template tag building",
       "depends_on": [
         "useTagFinder.js"
       ]
@@ -802,13 +852,13 @@
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/nce_cards/useCardForm.js": {
-      "purpose": "Card core — load Card Definition + record, hop paths, saveField/refresh (uses frappe.db + frappeCall).",
+      "purpose": "Card core \u2014 load Card Definition + record, hop paths, saveField/refresh (uses frappe.db + frappeCall).",
       "depends_on": [
         "utils/frappeCall.js"
       ]
     },
     "nce_events/public/js/panel_page_v2/nce_cards/CardForm.vue": {
-      "purpose": "Card core — renders a Card Definition (tabs, WidgetGrid, ActionsPanel).",
+      "purpose": "Card core \u2014 renders a Card Definition (tabs, WidgetGrid, ActionsPanel).",
       "depends_on": [
         "nce_cards/useCardForm.js",
         "components/ActionsPanel.vue",
@@ -817,7 +867,7 @@
       ]
     },
     "nce_events/public/js/panel_page_v2/nce_cards/CardModal.vue": {
-      "purpose": "Card core — Teleport modal shell wrapping CardForm.",
+      "purpose": "Card core \u2014 Teleport modal shell wrapping CardForm.",
       "depends_on": [
         "nce_cards/CardForm.vue"
       ]
@@ -831,13 +881,13 @@
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/components/PanelFloat.vue": {
-      "purpose": "Floating panel chrome — data-nce-theme + dynamic per-surface theme-bg classes from chromeConfig (frame/header/footer).",
+      "purpose": "Floating panel chrome \u2014 data-nce-theme + dynamic theme-bg and frame border classes from chromeConfig (frame/header/footer).",
       "depends_on": [
         "utils/panelChromeClasses.js"
       ]
     },
     "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js": {
-      "purpose": "PANEL_CHROME_DEFAULTS, panelChromeBg(config, field), themeBgToFgTonal(bgClass) — resolves Page Panel chrome slots for V2 runtime.",
+      "purpose": "PANEL_CHROME_DEFAULTS + PANEL_BORDER_DEFAULTS; panelChromeBg/Border, border width/color CSS var helpers, frameBorderClasses, table/filter divider style vars for V2 runtime.",
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/components/WidgetGrid.vue": {
@@ -849,7 +899,7 @@
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogHeader.vue": {
-      "purpose": "Form dialog header — title, row nav, close. Dynamic headerBgClass (opening panel dialog_header_bg_class); nav/close inherit fg from bg class.",
+      "purpose": "Form dialog header \u2014 title, row nav, close. Dynamic headerBgClass (opening panel dialog_header_bg_class); nav/close inherit fg from bg class.",
       "depends_on": [
         "utils/panelChromeClasses.js"
       ]
@@ -861,7 +911,7 @@
       ]
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue": {
-      "purpose": "Form dialog body orchestrator: renders the tab bar (PanelFormDialogTabBar), iterates tabs, and dispatches each tab to PanelFormDialogRelatedTab (related-doctype tabs), PanelFormScriptToolTab (captured JS tool tabs), or the inline main-tab fields grid (PanelFormField-based). Aggregates imperative saveAllRelatedRows / resetRelatedToBaseline across related-tab children for the parent dialog.",
+      "purpose": "Form dialog body orchestrator: renders the tab bar (PanelFormDialogTabBar), iterates tabs, and dispatches each tab to PanelFormDialogRelatedTab (related-doctype tabs), PanelFormScriptToolTab (captured JS tool tabs), or the inline main-tab fields grid (PanelFormField-based). Main tabs: collapsible Section Breaks render as accordion headers (chevron, default collapsed; unlabeled \u2192 Un-named Section). Aggregates imperative saveAllRelatedRows / resetRelatedToBaseline across related-tab children for the parent dialog.",
       "depends_on": [
         "components/PanelFormField.vue",
         "components/PanelFormDialogTabBar.vue",
@@ -874,7 +924,7 @@
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue": {
-      "purpose": "Form dialog related-doctype tab: scrollable rows table with portal-editable cells (Select/Check/number/date/text/textarea), label-column resizer, schema details panel, save_form_dialog_related_rows on Submit. Exposes saveAllRelatedRows + resetRelatedToBaseline.",
+      "purpose": "Form dialog related-doctype tab: scrollable rows table with portal-editable cells (Select/Check/number/date/text/textarea), theme-table styling (same NCE Theme table tokens as PanelTable), label-column resizer, schema details panel, save_form_dialog_related_rows on Submit. Exposes saveAllRelatedRows + resetRelatedToBaseline.",
       "depends_on": [
         "utils/frappeCall.js",
         "utils/relatedCellFormat.js",
@@ -896,11 +946,11 @@
       ]
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogFooter.vue": {
-      "purpose": "Form dialog footer — custom buttons, Cancel, Revert (discard unsaved), Submit.",
+      "purpose": "Form dialog footer \u2014 custom buttons, Cancel, Revert (discard unsaved), Submit.",
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue": {
-      "purpose": "V2 form dialog root — composes Header/Body/Footer, usePanelFormDialog + useFormDialogChrome. data-nce-theme + dialogHeaderBgClass from opening panel (renders outside PanelFloat). Opened from panel when form_dialog is set.",
+      "purpose": "V2 form dialog root \u2014 composes Header/Body/Footer, usePanelFormDialog + useFormDialogChrome. data-nce-theme + dialogHeaderBgClass from opening panel (renders outside PanelFloat). Opened from panel when form_dialog is set.",
       "depends_on": [
         "composables/usePanelFormDialog.js",
         "composables/useFormDialogChrome.js",
@@ -910,7 +960,7 @@
       ]
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormField.vue": {
-      "purpose": "Single field renderer inside PanelFormDialog. Maps Frappe fieldtype → control element (FormControl, checkbox, select, Link placeholder, etc.). Respects hidden/read_only/reqd and depends_on eval expressions.",
+      "purpose": "Single field renderer inside PanelFormDialog. Maps Frappe fieldtype \u2192 control element (FormControl, checkbox, select, Link placeholder, etc.). Respects hidden/read_only/reqd and depends_on eval expressions.",
       "depends_on": [
         "utils/fieldTypeMap.js",
         "components/PanelFormLinkField.vue",
@@ -918,11 +968,11 @@
       ]
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDateTimeField.vue": {
-      "purpose": "Panel Form Dialog control — mounts Frappe Date/Time/Datetime control in a div host; v-model sync and read_only/reqd from frozen meta.",
+      "purpose": "Panel Form Dialog control \u2014 mounts Frappe Date/Time/Datetime control in a div host; v-model sync and read_only/reqd from frozen meta.",
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormLinkField.vue": {
-      "purpose": "Panel Form Dialog control — mounts Frappe Link control in a div host; emits change + link-change for fetch_from; v-model sync.",
+      "purpose": "Panel Form Dialog control \u2014 mounts Frappe Link control in a div host; emits change + link-change for fetch_from; v-model sync.",
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/utils/frappeCall.js": {
@@ -930,7 +980,7 @@
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/utils/ppv2Debug.js": {
-      "purpose": "Gated V2 debug logging — localStorage nce_ppv2_debug=1 enables ppv2DebugLog/ppv2DebugWarn (readback poll, client scripts, panel actions).",
+      "purpose": "Gated V2 debug logging \u2014 localStorage nce_ppv2_debug=1 enables ppv2DebugLog/ppv2DebugWarn (readback poll, client scripts, panel actions).",
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/utils/frappeFieldExpr.js": {
@@ -938,31 +988,389 @@
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/utils/formDialogSnapshot.js": {
-      "purpose": "Utility: snapshotForCompare for dirty detection on frozen form reactive state.",
+      "purpose": "Form dialog dirty helpers: snapshotForCompare, isFormDataDirty, scalarValuesEquivalent, isEmptyScalarValue for reactive formData comparison.",
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/utils/parseLayout.js": {
-      "purpose": "Utility: parse a flat Frappe DocField array into a nested Tabs→Sections→Columns→Fields tree. Used by usePanelFormDialog to render frozen_meta_json layout.",
+      "purpose": "Parse a flat Frappe DocField array into Tabs\u2192Sections\u2192Columns\u2192Fields (section.collapsible from Section Break). Exports sectionHasVisibleFields for empty-section filtering. Used by useFrozenFormLoad to render frozen_meta_json layout.",
       "depends_on": []
     },
     "nce_events/public/js/panel_page_v2/utils/fieldTypeMap.js": {
-      "purpose": "Utility: maps every Frappe fieldtype string to a { component, props } config (or { layout } for structural types). Single source of truth for fieldtype→control mapping in V2 dialogs.",
+      "purpose": "Utility: maps every Frappe fieldtype string to a { component, props } config (or { layout } for structural types). Single source of truth for fieldtype\u2192control mapping in V2 dialogs.",
       "depends_on": []
     },
     "nce_events/public/js/hierarchy_explorer/ui.js": {
-      "purpose": "Hierarchy Explorer UI — tree view rendering for hierarchical doctypes",
+      "purpose": "Hierarchy Explorer UI \u2014 tree view rendering for hierarchical doctypes",
       "depends_on": [
         "hierarchy_explorer/store.js",
         "hierarchy_explorer/config.js"
       ]
     },
     "nce_events/public/js/hierarchy_explorer/store.js": {
-      "purpose": "Hierarchy Explorer state — tree data, expansion state",
+      "purpose": "Hierarchy Explorer state \u2014 tree data, expansion state",
       "depends_on": []
     },
     "nce_events/public/js/hierarchy_explorer/config.js": {
-      "purpose": "Hierarchy Explorer configuration — which doctypes to show as hierarchies",
+      "purpose": "Hierarchy Explorer configuration \u2014 which doctypes to show as hierarchies",
       "depends_on": []
+    },
+    "nce_events/__init__.py": {
+      "purpose": "Frappe app package root for nce_events (version string, app metadata)."
+    },
+    "nce_events/api/__init__.py": {
+      "purpose": "API package marker \u2014 endpoints live in submodules (panel_api_pkg, form_dialog, messaging, etc.)."
+    },
+    "nce_events/api/derived_fields.py": {
+      "purpose": "DocType-agnostic derived-field evaluation: compose WP Tables column_mapping specs with sql_eval substitution for panel/computed use.",
+      "depends_on": [
+        "nce_events/api/sql_eval.py",
+        "nce_events/api/wp_tables_mapping.py"
+      ]
+    },
+    "nce_events/api/evaluations.py": {
+      "purpose": "Evaluations API \u2014 enrollment rows for event-scoped rating Kanban (get_event_enrollments whitelist).",
+      "depends_on": [
+        "nce_events/utils/sql_table.py"
+      ]
+    },
+    "nce_events/api/form_dialog/sync_related.py": {
+      "purpose": "Post-save linked DocType sync for Form Dialog WP read-back: trigger_linked_sync_for_dialog_readback queues nce_sync linked-row pulls before Show changes.",
+      "depends_on": [
+        "nce_events/api/form_dialog/_helpers.py"
+      ]
+    },
+    "nce_events/api/sql_eval.py": {
+      "purpose": "Generic SQL expression evaluation with {fieldname} substitution, literal splitting, and per-doctype token allowlist (evaluate_sql_expressions_api whitelist)."
+    },
+    "nce_events/api/sync_status.py": {
+      "purpose": "NCE Sync job polling for V2 panel: is_doctype_sync_busy (Redis gate) and get_sync_job_status (RQ status by job_id)."
+    },
+    "nce_events/api/woocommerce_client.py": {
+      "purpose": "Generic WooCommerce REST v3 HTTP client using API Connector credentials (wc_request, get_woocommerce_v3_base_url).",
+      "depends_on": [
+        "nce_events/api/credentials.py"
+      ]
+    },
+    "nce_events/api/wp_readback_panel.py": {
+      "purpose": "Panel V2 WP SQL live read-back detection: doctype_has_wp_sql_live_readback returns enabled flag and write_back_refresh_seconds from WP Tables."
+    },
+    "nce_events/api/wp_tables_mapping.py": {
+      "purpose": "WP Tables column_mapping and derived SQL spec helpers (get_wp_tables_column_mapping_api, get_wp_tables_default_field_values_api)."
+    },
+    "nce_events/api/wp_user_switch.py": {
+      "purpose": "WordPress user-switch URL builder for panel row actions (get_wp_switch_url whitelist)."
+    },
+    "nce_events/utils/__init__.py": {
+      "purpose": "Shared Python utilities package marker for nce_events."
+    },
+    "nce_events/utils/sql_table.py": {
+      "purpose": "physical_table_name \u2014 map DocType name to Frappe tab-prefixed SQL table name."
+    },
+    "nce_events/utils/version.py": {
+      "purpose": "Frappe major-version helpers: get_frappe_major_version, is_v16_or_later."
+    },
+    "nce_events/api/tests/__init__.py": {
+      "purpose": "nce_events API unit test package root."
+    },
+    "nce_events/api/tests/api/__init__.py": {
+      "purpose": "API submodule test package marker."
+    },
+    "nce_events/api/tests/api/form_dialog/__init__.py": {
+      "purpose": "Form Dialog API test package marker."
+    },
+    "nce_events/api/tests/api/form_dialog/test_button_visibility.py": {
+      "purpose": "Unit tests for form_dialog button_visibility SQL hide modes and get_form_dialog_footer_visibility."
+    },
+    "nce_events/api/tests/api/form_dialog/test_edit_condition.py": {
+      "purpose": "Unit tests for form_dialog edit_condition: validate_edit_condition guards, evaluate_edit_condition truthy/falsy/pending_root_values, resolve_edit_condition_labels token rewriting."
+    },
+    "nce_events/api/tests/api/form_dialog/test_capture.py": {
+      "purpose": "Unit tests for form_dialog capture/rebuild and get_form_dialog_definition endpoints."
+    },
+    "nce_events/api/tests/api/form_dialog/test_helpers.py": {
+      "purpose": "Unit tests for form_dialog _helpers fa\u00e7ade and _fd_* domain modules (gating, related, capture meta)."
+    },
+    "nce_events/api/tests/api/form_dialog/test_portal_actions.py": {
+      "purpose": "Unit tests for form_dialog portal_actions run_portal_action allow-list execution."
+    },
+    "nce_events/api/tests/api/form_dialog/test_portal_fields.py": {
+      "purpose": "Unit tests for form_dialog portal_fields editor normalization and related portal config."
+    },
+    "nce_events/api/tests/api/form_dialog/test_related_rows.py": {
+      "purpose": "Unit tests for form_dialog related_rows fetch/save and portal column gating."
+    },
+    "nce_events/api/tests/api/panel_api_pkg/test_discovery.py": {
+      "purpose": "Unit tests for panel_api_pkg child-doctype discovery, multi-hop link paths (1/2/3-hop), and get_multi_hop_children classification."
+    },
+    "nce_events/api/tests/api/panel_api_pkg/test_theme_slug.py": {
+      "purpose": "Unit tests for theme_slug.resolve_theme_slug (Active slug, site default fallback, missing/inactive docs)."
+    },
+    "nce_events/api/tests/api/panel_api_pkg/test_theme_table_tokens.py": {
+      "purpose": "Unit tests for theme_table_tokens.get_theme_table_tokens divider tiers, border classes, and theme_json colour resolution."
+    },
+    "nce_events/api/tests/api/test_credentials.py": {
+      "purpose": "Unit tests for credentials.get_credentials secret auth pattern parsing."
+    },
+    "nce_events/api/tests/api/test_derived_fields.py": {
+      "purpose": "Unit tests for derived_fields spec loading and SQL literal splitting."
+    },
+    "nce_events/api/tests/api/test_events_publish.py": {
+      "purpose": "Unit tests for events_publish WooCommerce publish/update payloads, duplicate_event, and delete_event flows."
+    },
+    "nce_events/api/tests/api/test_sql_eval.py": {
+      "purpose": "Unit tests for sql_eval expression evaluation and substitution token allowlist."
+    },
+    "nce_events/api/tests/api/test_woocommerce_client.py": {
+      "purpose": "Unit tests for woocommerce_client REST request helper and base URL normalization."
+    },
+    "nce_events/api/tests/api/test_wp_tables_mapping.py": {
+      "purpose": "Unit tests for wp_tables_mapping column mapping and default field values API."
+    },
+    "nce_events/api/tests/test_core_functions.py": {
+      "purpose": "Unit tests for core SQL/table helpers (physical_table_name, tab prefix, WP query translation)."
+    },
+    "nce_events/api/tests/test_evaluations.py": {
+      "purpose": "Unit tests for evaluations get_event_enrollments and physical table name resolution."
+    },
+    "nce_events/api/tests/test_spa_page.py": {
+      "purpose": "Unit tests for spa_page resolve_spa_switch and SPA Page Definition slug lookup."
+    },
+    "nce_events/nce_events/doctype/card_action/": {
+      "purpose": "Child table of Card Definition \u2014 footer action button (label, action_script link to Card Script, sort_order).",
+      "key_fields": [
+        "label",
+        "action_script",
+        "sort_order"
+      ]
+    },
+    "nce_events/nce_events/doctype/card_display/": {
+      "purpose": "Child table of Card Definition \u2014 display widget row (layout slot for Card Field / Graphic / etc.)."
+    },
+    "nce_events/nce_events/doctype/card_field/": {
+      "purpose": "Child table of Card Definition \u2014 single field display binding (fieldname, label override, format)."
+    },
+    "nce_events/nce_events/doctype/card_graphic/": {
+      "purpose": "Child table of Card Definition \u2014 image/graphic widget (file URL, alt text, sizing)."
+    },
+    "nce_events/nce_events/doctype/card_pivot_table/": {
+      "purpose": "Child table of Card Definition \u2014 pivot-table widget config (rows/cols/values field bindings)."
+    },
+    "nce_events/nce_events/doctype/card_portal_column/": {
+      "purpose": "Child table of Card Definition \u2014 portal grid column definition for editable child rows."
+    },
+    "nce_events/nce_events/doctype/card_script/": {
+      "purpose": "Child table of Card Definition \u2014 named client script body referenced by Card Action rows.",
+      "key_fields": [
+        "script_name",
+        "script_body"
+      ]
+    },
+    "nce_events/nce_events/doctype/card_tab/": {
+      "purpose": "Child table of Card Definition \u2014 tab container grouping display widgets.",
+      "key_fields": [
+        "tab_label",
+        "sort_order"
+      ]
+    },
+    "nce_events/nce_events/doctype/card_text_block/": {
+      "purpose": "Child table of Card Definition \u2014 static HTML/Markdown text block widget."
+    },
+    "nce_events/nce_events/doctype/card_video/": {
+      "purpose": "Child table of Card Definition \u2014 embedded video widget (URL, poster, autoplay flags)."
+    },
+    "nce_events/nce_events/doctype/card_web_viewer/": {
+      "purpose": "Child table of Card Definition \u2014 iframe/web-viewer widget (URL, height)."
+    },
+    "nce_events/nce_events/doctype/form_dialog_inline_child_table/": {
+      "purpose": "Child table of Form Dialog \u2014 inline child table tab (child_doctype, portal_field_config, portal_actions).",
+      "key_fields": [
+        "child_doctype",
+        "tab_label",
+        "portal_field_config"
+      ]
+    },
+    "nce_events/nce_events/doctype/form_dialog_related_doctype/": {
+      "purpose": "Child table of Form Dialog \u2014 related-doctype tab (child_doctype, link_field, hop_chain, portal_field_config, portal_actions).",
+      "key_fields": [
+        "child_doctype",
+        "link_field",
+        "tab_label",
+        "hop_chain",
+        "portal_field_config"
+      ]
+    },
+    "nce_events/nce_events/doctype/form_dialog_script_tool_group/": {
+      "purpose": "Child table of Form Dialog \u2014 captured client-script tool tab group (label, sort_order, script bodies)."
+    },
+    "nce_events/nce_events/doctype/form_dialog_tab_note/": {
+      "purpose": "Child table of Form Dialog \u2014 per-tab guidance note shown in V2 dialog tab bar.",
+      "key_fields": [
+        "tab_label",
+        "note_html"
+      ]
+    },
+    "nce_events/nce_events/doctype/page_panel_default_filter/": {
+      "purpose": "Child table of Page Panel \u2014 default filter row applied on panel load (fieldname, operator, value)."
+    },
+    "nce_events/nce_events/doctype/page_panel_format_rule/": {
+      "purpose": "Child table of Page Panel \u2014 per-column conditional cell styling (condition_sql, color, font_weight, last_validated_sql).",
+      "key_fields": [
+        "field_name",
+        "condition_sql",
+        "color",
+        "last_validated_sql"
+      ]
+    },
+    "nce_events/nce_events/doctype/panel_page_definition/": {
+      "purpose": "Legacy panel page registry DocType \u2014 maps page slug/mode to panel configuration before SPA Page Definition."
+    },
+    "nce_events/public/js/evaluations/App.vue": {
+      "purpose": "Evaluations Vue root \u2014 event-scoped enrollment rating Kanban shell."
+    },
+    "nce_events/public/js/evaluations/components/RatingKanbanPlaceholder.vue": {
+      "purpose": "Evaluations placeholder lane UI while enrollment data loads."
+    },
+    "nce_events/public/js/evaluations/components/RatingKanbanView.vue": {
+      "purpose": "Evaluations rating Kanban board \u2014 drag lanes 0\u20137 for enrollment rows."
+    },
+    "nce_events/public/js/evaluations/composables/useEnrollments.js": {
+      "purpose": "Evaluations composable \u2014 load and group enrollment rows by rating for Kanban."
+    },
+    "nce_events/public/js/evaluations/main.js": {
+      "purpose": "Evaluations Vite entry \u2014 mounts App.vue on Frappe evaluations page."
+    },
+    "nce_events/public/js/evaluations/stores/shell.js": {
+      "purpose": "Evaluations Pinia-style shell store (useNceEvalShellStore) \u2014 active event, layout chrome."
+    },
+    "nce_events/public/js/evaluations/utils/frappeCall.js": {
+      "purpose": "Evaluations-local Promise wrapper for frappe.call (mirrors panel_page_v2 frappeCall)."
+    },
+    "nce_events/public/js/panel_page_v2/actions/handlers/showDt.js": {
+      "purpose": "Panel action client handler show_dt \u2014 open a DocType list in Desk (new tab)."
+    },
+    "nce_events/public/js/panel_page_v2/components/ColorPicker.vue": {
+      "purpose": "Reusable theme-aware color picker input used by FormatRuleEditor and panel chrome."
+    },
+    "nce_events/public/js/panel_page_v2/components/FindPanel.vue": {
+      "purpose": "FileMaker-style Find panel float \u2014 criteria entry and found-set browse mode."
+    },
+    "nce_events/public/js/panel_page_v2/components/FormatRuleEditor.vue": {
+      "purpose": "Desk-mounted format-rule SQL editor \u2014 validate_format_rule, color/font styling, Apply to Page Panel row.",
+      "depends_on": [
+        "nce_events/public/js/panel_page_v2/utils/frappeCall.js"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFindActionBar.vue": {
+      "purpose": "Find mode action bar \u2014 New Request, Extend Found Set, Constrain, Cancel Find."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFindRow.vue": {
+      "purpose": "Single Find criterion row \u2014 field picker, operator, value input."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFindToolbar.vue": {
+      "purpose": "Find mode toolbar \u2014 perform find, clear criteria, switch browse/criteria phases."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogInlineChildTab.vue": {
+      "purpose": "Form dialog inline child-table tab \u2014 portal-editable grid for frozen inline children."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormFindSearchHelpModal.vue": {
+      "purpose": "Help modal explaining FileMaker-style Find searchable fields in Form Dialog."
+    },
+    "nce_events/public/js/panel_page_v2/components/SpaPageNavBar.vue": {
+      "purpose": "SPA page top nav bar \u2014 lists active SPA Page Definitions and switch_page targets."
+    },
+    "nce_events/public/js/panel_page_v2/components/SpaPageSwitcherFloat.vue": {
+      "purpose": "Floating SPA page switcher \u2014 quick navigation between registered SPA panels."
+    },
+    "nce_events/public/js/panel_page_v2/composables/useBackdropPointerDismiss.js": {
+      "purpose": "Click-outside-to-close for floating panels and form dialog backdrop (pointer vs mousedown guard)."
+    },
+    "nce_events/public/js/panel_page_v2/composables/useFindPanel.js": {
+      "purpose": "Find panel state machine \u2014 criteria, found set, browse mode, panel API filter wiring."
+    },
+    "nce_events/public/js/panel_page_v2/composables/useSpaPageNav.js": {
+      "purpose": "SPA page navigation \u2014 load list_spa_pages_for_ui, resolve switch_page routes.",
+      "depends_on": [
+        "nce_events/public/js/panel_page_v2/utils/frappeCall.js"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/composables/wpReadbackFlow.js": {
+      "purpose": "WP SQL read-back after Form Dialog save \u2014 poll sync job IDs, trigger linked sync, merge fresh doc into panel row.",
+      "depends_on": [
+        "nce_events/public/js/panel_page_v2/utils/frappeCall.js",
+        "nce_events/public/js/panel_page_v2/utils/ppv2Debug.js"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/mount_format_rule_editor.js": {
+      "purpose": "Vite mount entry for Desk Page Panel format-rule editor (mountFormatRuleEditor on DOM host)."
+    },
+    "nce_events/public/js/panel_page_v2/utils/findColumns.js": {
+      "purpose": "Build Find-mode column definitions from frozen meta searchable fields."
+    },
+    "nce_events/public/js/panel_page_v2/utils/findCriterion.js": {
+      "purpose": "Match a single Find criterion against a panel row value (operators, case rules)."
+    },
+    "nce_events/public/js/panel_page_v2/utils/formDialogFindFields.js": {
+      "purpose": "Find-mode searchable field discovery from frozen form meta (isFindSearchableRootField, criterion seeds)."
+    },
+    "nce_events/public/js/panel_page_v2/utils/formDialogDisplayBaseline.js": {
+      "purpose": "Display-baseline capture/diff for Form Dialog controls: read visible widget values from DOM wraps, blur focused Frappe widgets, compare without mutating formData."
+    },
+    "nce_events/public/js/panel_page_v2/utils/formDialogSectionRows.js": {
+      "purpose": "Section grid helpers for Form Dialog body: sectionGridRows (row-major column stacks), sectionColumnCount, visibleFormDialogSections filter."
+    },
+    "nce_events/public/js/panel_page_v2/utils/formDialogLiveScrape.js": {
+      "purpose": "Desk form live-scrape and control sync: readLiveFieldValue, captureDisplayBaseline, syncWritableControlsIntoFormData, blurFocusedFrappeWidget for dialog pre-fill and save flush."
+    },
+    "nce_events/public/js/panel_page_v2/utils/formDialogLoadDebug.js": {
+      "purpose": "Form Dialog load debug overlay \u2014 localStorage nce_fd_load_debug=1 enables step trace rows."
+    },
+    "nce_events/public/js/panel_page_v2/utils/formDialogPortalColumns.js": {
+      "purpose": "Parse portal_field_config JSON into editable grid column defs for related/inline tabs."
+    },
+    "nce_events/public/js/panel_page_v2/utils/formDialogRelatedGoTo.js": {
+      "purpose": "Related-tab Go To panel \u2014 buildRelatedTabPanelFilter, canGoToRelatedPanel drill-down helper."
+    },
+    "nce_events/public/js/panel_page_v2/utils/enrollmentWpActions.js": {
+      "purpose": "Enrollment refund UX helpers: cancellation-fee prompt field spec, parseCancellationFeeInput, runProductRefund via execute_product_refund, outcome msgprint HTML."
+    },
+    "nce_events/public/js/panel_page_v2/utils/navigateToSpaPage.js": {
+      "purpose": "Navigate between panel SPA Frappe Pages via frappe.set_route(slug) without full reload (preserves mounted Vue apps)."
+    },
+    "nce_events/public/js/panel_page_v2/utils/panelFieldReadOnly.js": {
+      "purpose": "Match Page Panel Display read_only_fields against root frozen fields and related/inline child column fieldnames."
+    },
+    "nce_events/public/js/panel_page_v2/utils/portalColumnEditable.js": {
+      "purpose": "Related/inline portal grid column editability: fieldtype skip set, DocType read_only, Page Panel read_only_fields (not portal_field_config.editable)."
+    },
+    "nce_events/public/js/panel_page_v2/utils/frappeDateControlSync.js": {
+      "purpose": "Sync Frappe Date/Datetime controls with Vue reactive formData (stub doc read/write)."
+    },
+    "nce_events/public/js/panel_page_v2/utils/measureDeskTitleAnchor.js": {
+      "purpose": "Measure Desk navbar title anchor for aligning floating panel chrome with Desk layout."
+    },
+    "nce_events/public/js/panel_page_v2/utils/openDeskDoctypeList.js": {
+      "purpose": "Open a DocType list view in Desk (new tab) from panel actions and form dialog links."
+    },
+    "nce_events/public/js/panel_page_v2/utils/panelTableColWidths.js": {
+      "purpose": "Panel table column width persistence and layout prep (preparePanelTableLayout, panelRowVal)."
+    },
+    "nce_events/public/js/panel_page_v2/utils/parseClientHandlerSpec.js": {
+      "purpose": "Parse panel action client_handler spec strings (e.g. show_dt(error-log)) into key + args."
+    },
+    "nce_events/public/js/panel_page_v2/utils/submitPerfTrace.js": {
+      "purpose": "Form Dialog submit performance trace \u2014 localStorage nce_fd_submit_trace=1 logs timing lines."
+    },
+    "nce_events/public/js/panel_page_v2/utils/syncGateClient.js": {
+      "purpose": "Client wrapper for nce_sync per-DocType sync busy gate (isDoctypeSyncBusy, assertDoctypeNotSyncBusy).",
+      "depends_on": [
+        "nce_events/public/js/panel_page_v2/utils/frappeCall.js"
+      ]
+    },
+    "nce_events/public/js/panel_page_v2/utils/wooPublishDocNormalize.js": {
+      "purpose": "Normalize Events doc fields before WooCommerce publish hook (normalizeDocForWooEventsPublish)."
+    },
+    "nce_events/public/js/panel_page_v2/utils/wpUserSwitch.js": {
+      "purpose": "WordPress user-switch flow from panel row \u2014 familyIdFromRow, openWpUserSwitch."
     }
   }
 }
