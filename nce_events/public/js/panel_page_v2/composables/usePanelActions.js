@@ -9,12 +9,14 @@ import { parseClientHandlerSpec } from "../utils/parseClientHandlerSpec.js";
  *   openFormDialogStandalone: (args: object) => Promise<boolean>;
  *   refreshPanelByDoctype: (doctype: string) => void;
  *   cascadeOpenPanels: () => void;
+ *   closeAllPanels: () => void;
  * }} deps
  */
 export function usePanelActions({
 	openFormDialogStandalone,
 	refreshPanelByDoctype,
 	cascadeOpenPanels,
+	closeAllPanels,
 	scope = null,
 }) {
 	const actions = ref([]);
@@ -49,6 +51,7 @@ export function usePanelActions({
 				}),
 			refreshPanel: refreshPanelByDoctype,
 			cascadePanels: cascadeOpenPanels,
+			closeAllPanels,
 			args: Array.isArray(args) ? args : [],
 		};
 	}

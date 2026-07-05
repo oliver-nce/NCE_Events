@@ -91,6 +91,13 @@ function _openSendDialogOne(p, mode, row) {
 	);
 }
 
+export function closeSendDialog() {
+	if (_sendDialog) {
+		_sendDialog.close();
+		_sendDialog = null;
+	}
+}
+
 export function useSendDialogs() {
 	return {
 		onEmail(p) {
@@ -105,5 +112,6 @@ export function useSendDialogs() {
 		onSmsOne(p, row) {
 			_openSendDialogOne(p, "sms", row);
 		},
+		closeSendDialog,
 	};
 }
