@@ -5085,22 +5085,11 @@ frappe.ui.form.on("Page Panel", {
 		if (typeof frm._pp_sync_display === "function") {
 			frm._pp_sync_display();
 		}
-		// Always clear panel_sql so the form is dirty and after_save Python
-		// unconditionally regenerates it from the current column_order.
-		// Without this, a non-dirty form skips the server-side save entirely
-		// and the SQL silently stays stale.
-		frm.set_value("panel_sql", "");
 		_prune_empty_format_rules(frm);
 	},
 
 	after_save: function (frm) {
-		if (!frm.doc.root_doctype || !frm.doc.name) return;
-		frappe.db.get_value("Page Panel", frm.doc.name, "panel_sql").then(function (r) {
-			const sql = r && r.message && r.message.panel_sql;
-			if (sql != null && sql !== "") {
-				frm.set_value("panel_sql", sql);
-				frm.refresh_field("panel_sql");
-			}
-		});
+		if (!frm.doc.root_doctype) return;
+		_refresh_query_tab(frm);
 	},
 });
