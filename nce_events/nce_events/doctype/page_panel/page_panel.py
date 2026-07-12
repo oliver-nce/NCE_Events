@@ -8,7 +8,6 @@ from frappe.model.document import Document
 from frappe.utils import cstr
 
 from nce_events.api.panel_api_pkg.page_panel_lookup import generate_auto_page_panel_name
-from nce_events.api.panel_api_pkg.sql import build_panel_sql_for_doc
 
 # Desk route for unsaved Page Panel forms (browser URL ``…/new-page-panel-…``).
 _DESK_NEW_ROUTE = re.compile(r"^new-page-panel[\w-]*$", re.I)
@@ -81,10 +80,3 @@ class PagePanel(Document):
 			except Exception:
 				pass  # never block saves on SQL generation errors
 
-	def after_save(self):
-		if self.root_doctype:
-			# Belt-and-suspenders: keep DB in sync for programmatic saves that
-			# bypass the Desk form (no JS before_save clearing panel_sql).
-			sql = build_panel_sql_for_doc(self)
-			if sql:
-				self.panel_sql = sql

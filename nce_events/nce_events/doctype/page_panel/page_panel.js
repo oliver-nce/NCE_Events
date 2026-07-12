@@ -5090,6 +5090,6 @@ frappe.ui.form.on("Page Panel", {
 
 	after_save: function (frm) {
 		if (!frm.doc.root_doctype) return;
-		_refresh_query_tab(frm);
+		frm.refresh_field("panel_sql");
 	},
 });
