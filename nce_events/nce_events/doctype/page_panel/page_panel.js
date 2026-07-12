@@ -56,6 +56,25 @@ function _parse_csv(val) {
 		.filter(Boolean);
 }
 
+/** Keep prevOrder for keys still in selectedKeys; append newly selected keys at the end. */
+function _merge_column_order(prevOrder, selectedKeys) {
+	const still_selected = {};
+	selectedKeys.forEach(function (k) {
+		still_selected[k] = true;
+	});
+	const merged = [];
+	(prevOrder || []).forEach(function (k) {
+		if (still_selected[k]) {
+			merged.push(k);
+			delete still_selected[k];
+		}
+	});
+	selectedKeys.forEach(function (k) {
+		if (still_selected[k]) merged.push(k);
+	});
+	return merged;
+}
+
 function _title_case(name) {
 	return name.replace(/_/g, " ").replace(/\b\w/g, function (c) {
 		return c.toUpperCase();
@@ -978,29 +997,18 @@ function _build_display_tabs(frm, $container, root_fields, link_fields, linked_d
 			if ($tf.length) ntf = $tf.data("key") || "";
 		}
 
-		// Reorder col_order by Order tab if it exists
+		// Preserve custom order: live Order tab rows when visible, else saved column_order.
 		const $order_body = $sub_content.find(".pp-order-matrix tbody");
+		let prev_order;
 		if ($order_body.length) {
-			const order_keys = [];
+			prev_order = [];
 			$order_body.find("tr").each(function () {
-				order_keys.push($(this).data("key"));
+				prev_order.push($(this).data("key"));
 			});
-			const in_order = {};
-			col_order.forEach(function (k) {
-				in_order[k] = true;
-			});
-			const reordered = [];
-			order_keys.forEach(function (k) {
-				if (in_order[k]) {
-					reordered.push(k);
-					delete in_order[k];
-				}
-			});
-			col_order.forEach(function (k) {
-				if (in_order[k]) reordered.push(k);
-			});
-			col_order = reordered;
+		} else {
+			prev_order = _parse_csv(frm.doc.column_order);
 		}
+		col_order = _merge_column_order(prev_order, col_order);
 
 		Object.keys(forcedReadOnlyKeys).forEach(function (k) {
 			if (nro.indexOf(k) === -1) nro.push(k);
@@ -1522,17 +1530,15 @@ function _render_order_tab(
 		selected.forEach(function (s) {
 			key_map[s.key] = s;
 		});
-		const ordered = [];
-		saved.column_order.forEach(function (k) {
-			if (key_map[k]) {
-				ordered.push(key_map[k]);
-				delete key_map[k];
-			}
+		const ordered_keys = _merge_column_order(
+			saved.column_order,
+			selected.map(function (s) {
+				return s.key;
+			})
+		);
+		selected = ordered_keys.map(function (k) {
+			return key_map[k];
 		});
-		selected.forEach(function (s) {
-			if (key_map[s.key]) ordered.push(s);
-		});
-		selected = ordered;
 	}
 
 	if (!selected.length) {
