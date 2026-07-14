@@ -8,7 +8,7 @@ from typing import Any
 
 import frappe
 from frappe import _
-from frappe.utils import cint, cstr, flt, getdate
+from frappe.utils import cint, cstr, getdate
 
 from nce_events.api.panel_api_pkg._helpers import validate_document_page_panel_required_roots
 from nce_events.api.woocommerce_client import (
@@ -18,7 +18,6 @@ from nce_events.api.woocommerce_client import (
 
 _EVENTS_DOCTYPE: str = "Events"
 _EVENT_TYPES_DOCTYPE: str = "Event Types"
-_WC_TRACKED_FIELDS: tuple[str, ...] = ("first_session_date", "event_name", "event_type_id", "price", "status")
 
 
 def slugify_product_slug(raw: str | None) -> str:
@@ -267,54 +266,10 @@ def _is_existing_events_row(name: object) -> int | None:
 	return int(norm)
 
 
-def _wc_tracked_fields_changed(doc: dict[str, Any], wp_id: int) -> bool:
-	"""Return True if any tracked WC field (first_session_date, event_name, event_type_id, price, status) differs from the stored Events row."""
-	stored = frappe.db.get_value(
-		_EVENTS_DOCTYPE, str(wp_id), list(_WC_TRACKED_FIELDS), as_dict=True
-	)
-	if not stored:
-		return True
-	if _mysql_date(doc.get("first_session_date")) != _mysql_date(stored.get("first_session_date")):
-		return True
-	if cstr(doc.get("event_name")).strip() != cstr(stored.get("event_name")).strip():
-		return True
-	if cstr(doc.get("event_type_id")).strip() != cstr(stored.get("event_type_id")).strip():
-		return True
-	if flt(doc.get("price") or 0) != flt(stored.get("price") or 0):
-		return True
-	if _wc_status_from_events(doc.get("status")) != _wc_status_from_events(stored.get("status")):
-		return True
-	return False
-
-
 def _do_woo_product_put(wp_id: int, wc_body: dict[str, Any], conn: str) -> dict[str, Any]:
 	"""Resolve category IDs then PUT ``wc_body`` to ``/products/{wp_id}``. Returns the WooCommerce response."""
 	_resolve_and_patch_categories(wc_body, conn)
 	return wc_request(conn, "PUT", f"/products/{wp_id}", json_body=wc_body)
-
-
-def _prepare_events_publish(
-	doc: dict[str, Any] | str,
-	connector_name: str | None = None,
-) -> tuple[dict[str, Any], dict[str, Any], str]:
-	"""Parse ``doc``, enforce write permissions and panel required fields, build WooCommerce body."""
-	doc = frappe.parse_json(doc) if isinstance(doc, str) else dict(doc)
-	if (doc.get("doctype") or _EVENTS_DOCTYPE) != _EVENTS_DOCTYPE:
-		frappe.throw(_("Document must be doctype {0}.").format(_EVENTS_DOCTYPE))
-
-	if not frappe.has_permission(_EVENTS_DOCTYPE, "write"):
-		frappe.throw(
-			_("Not permitted to write {0}").format(_EVENTS_DOCTYPE),
-			frappe.PermissionError,
-		)
-
-	validate_document_page_panel_required_roots(
-		doc, _EVENTS_DOCTYPE, include_meta_mandatory=False
-	)
-
-	wc_body = build_woocommerce_product_payload(doc)
-	conn = (connector_name or "").strip() or DEFAULT_WOOCOMMERCE_CONNECTOR
-	return doc, wc_body, conn
 
 
 @frappe.whitelist()
@@ -323,12 +278,20 @@ def update_events_to_website(
 	connector_name: str | None = None,
 ) -> dict[str, Any]:
 	"""
-	Check tracked fields against the stored Events row and PUT to WooCommerce if changed.
+	Unconditionally push the current Events row to WooCommerce.
+
+	Must be called AFTER ``form.save()`` has committed. ``doc`` only needs to
+	identify the record (``name``) — the WooCommerce payload is always built
+	from a fresh DB read taken here, never from the caller's submitted values,
+	because fields such as ``sku`` are MariaDB *generated* columns: they only
+	have their final value once the save's UPDATE statement has actually run.
+
+	There is deliberately no change-detection: every call pushes an update.
+	This keeps the endpoint simple and immune to staleness bugs where a
+	changed field (e.g. a generated ``sku``/permalink) would otherwise be
+	invisible to a pre-save comparison.
 
 	``doc["name"]`` must be a numeric WC product id matching an existing Frappe Events row.
-	Returns ``{"ok": 1, "skipped": 1}`` when no tracked fields differ.
-
-	Does not persist the Frappe record — the caller's Submit handles that.
 
 	Other apps (e.g. nce_sync) may register::
 
@@ -341,11 +304,17 @@ def update_events_to_website(
 			_("{0} does not have a valid WooCommerce product id as its name.").format(_EVENTS_DOCTYPE)
 		)
 
-	_doc, wc_body, conn = _prepare_events_publish(raw, connector_name)
+	if not frappe.has_permission(_EVENTS_DOCTYPE, "write"):
+		frappe.throw(_("Not permitted to write {0}").format(_EVENTS_DOCTYPE), frappe.PermissionError)
 
-	if not _wc_tracked_fields_changed(_doc, wp_id):
-		return {"ok": 1, "name": str(wp_id), "wp_id": wp_id, "skipped": 1}
+	fresh = frappe.db.get_value(_EVENTS_DOCTYPE, str(wp_id), "*", as_dict=True)
+	if not fresh:
+		frappe.throw(_("{0} {1} not found.").format(_EVENTS_DOCTYPE, wp_id))
 
+	validate_document_page_panel_required_roots(fresh, _EVENTS_DOCTYPE, include_meta_mandatory=False)
+
+	conn = (connector_name or "").strip() or DEFAULT_WOOCOMMERCE_CONNECTOR
+	wc_body = build_woocommerce_product_payload(fresh)
 	wc_resp = _do_woo_product_put(wp_id, wc_body, conn)
 	_run_after_publish_hooks(str(wp_id))
 	return {

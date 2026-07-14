@@ -1037,12 +1037,16 @@ async function onSubmit(opts = {}) {
 	);
 	const pollLog = (cat, msg) => perf.push(cat, msg);
 	try {
+		const forceRun = !!opts?.shift;
 		const blurredField = await commitFocusedFrappeWidget();
 		perf.push(
 			"dirty",
-			`blurred=${blurredField || "none"} displayDirty=${displayDirty.value} changed=${changedDisplayFields.value.join(", ") || "none"}`,
+			`blurred=${blurredField || "none"} displayDirty=${displayDirty.value} changed=${changedDisplayFields.value.join(", ") || "none"} forceRun=${forceRun}`,
 		);
-		if (!footerIsDirty.value) {
+		// Shift-click bypasses the "nothing changed" short-circuit below, so the full
+		// save/readback + WooCommerce-push pipeline runs even on a clean form — a manual
+		// escape hatch to force a resync without needing to touch a field first.
+		if (!footerIsDirty.value && !forceRun) {
 			if (afterSave === "refresh") {
 				perf.push("refresh", "clean form — reload only, no save");
 				await refreshFormAfterSave();
@@ -1148,30 +1152,6 @@ async function onSubmit(opts = {}) {
 
 		perf.push("branch", "standard Frappe save + readback");
 
-		// If the Form Dialog definition has a presubmit script and the record already
-		// has a numeric name (linked to an external system), call it BEFORE saving to
-		// Frappe so change-detection compares against the old stored DB values.
-		const submitHookMethod = (form.definition.value?.custom_presubmit_script || "").trim();
-		let hookResult = null;
-		if (submitHookMethod && displayDirty.value && String(form.formData.name || "").match(/^\d+$/)) {
-			perf.push("step", `presubmit hook ${submitHookMethod}`);
-			const raw = JSON.parse(JSON.stringify(form.formData));
-			const doc = props.doctype === "Events"
-				? normalizeDocForWooEventsPublish({ doctype: props.doctype, ...raw })
-				: { doctype: props.doctype, ...raw };
-			try {
-				hookResult = await frappeCall(submitHookMethod, { doc });
-				perf.push("presubmit", `hook returned skipped=${Boolean(hookResult?.skipped)}`);
-			} catch (hookErr) {
-				const msg = hookErr?.message || String(hookErr) || "Update failed";
-				perf.push("presubmit_error", msg);
-				if (typeof frappe !== "undefined" && frappe.msgprint) {
-					frappe.msgprint({ title: "WooCommerce", message: msg, indicator: "red" });
-				}
-				// Hook failure does not block the Frappe save
-			}
-		}
-
 		let result = null;
 		if (displayDirty.value) {
 			perf.push("save", "form.save() …");
@@ -1184,6 +1164,36 @@ async function onSubmit(opts = {}) {
 			perf.push("save", "skip form.save (root unchanged)");
 			result = { name: form.formData.name, sync_job_ids: [] };
 		}
+
+		// The WooCommerce push runs AFTER the Frappe save has committed, and the
+		// server always re-reads the row fresh from the DB rather than trusting
+		// anything sent from here — required because fields such as `sku` are
+		// MariaDB *generated* columns that only have their final value once the
+		// save's UPDATE statement above has actually run. No change-detection:
+		// every save of a Woo-linked record (numeric name) pushes an update.
+		const submitHookMethod = (form.definition.value?.custom_presubmit_script || "").trim();
+		let hookResult = null;
+		if (
+			submitHookMethod &&
+			(displayDirty.value || forceRun) &&
+			String(result?.name || "").match(/^\d+$/)
+		) {
+			perf.push("step", `post-save woo hook ${submitHookMethod}`);
+			try {
+				hookResult = await frappeCall(submitHookMethod, {
+					doc: { doctype: props.doctype, name: result.name },
+				});
+				perf.push("presubmit", "hook ok");
+			} catch (hookErr) {
+				const msg = hookErr?.message || String(hookErr) || "Update failed";
+				perf.push("presubmit_error", msg);
+				if (typeof frappe !== "undefined" && frappe.msgprint) {
+					frappe.msgprint({ title: "WooCommerce", message: msg, indicator: "red" });
+				}
+				// Hook failure does not undo the Frappe save (already committed above)
+			}
+		}
+
 		let relatedSaveJobIds = [];
 		if (relatedDirty.value) {
 			try {
@@ -1207,7 +1217,7 @@ async function onSubmit(opts = {}) {
 			perf.push("related", "skip saveAllRelatedRows (unchanged)");
 		}
 
-		if (hookResult && !hookResult.skipped) {
+		if (hookResult) {
 			if (typeof frappe !== "undefined" && frappe.show_alert) {
 				frappe.show_alert({ message: "WooCommerce product updated", indicator: "green" }, 5);
 			}

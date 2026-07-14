@@ -178,41 +178,23 @@ class TestBuildWooCommerceProductPayload(unittest.TestCase):
 
 
 class TestUpdateEventsToWebsite(unittest.TestCase):
-	"""Tests for update_events_to_website — PUT-only, with change detection."""
+	"""Tests for update_events_to_website — always PUTs a freshly-read DB row, no change detection.
 
-	_DOC = {
+	The endpoint must be called AFTER ``form.save()`` has committed. It ignores any field
+	values the caller submits (only ``name`` is used to look up the record) and always
+	re-reads the row fresh from the DB, because fields such as ``sku`` are MariaDB
+	*generated* columns that only have their final value once the save has run.
+	"""
+
+	_FRESH_ROW = {
 		"doctype": "Events",
 		"name": "501",
 		"sku": "sku-1",
 		"event_name": "Spring Camp",
-		"price": 50,
-		"first_session_date": "2026-06-01",
-		"status": "publish",
-	}
-	_STORED_SAME = {
-		"first_session_date": "2026-06-01",
-		"event_name": "Spring Camp",
-		"event_type_id": "",
 		"price": 50.0,
+		"first_session_date": "2026-06-01",
 		"status": "publish",
 	}
-
-	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)
-	@patch("nce_events.api.events_publish.validate_document_page_panel_required_roots")
-	@patch("nce_events.api.events_publish.frappe.db")
-	@patch("nce_events.api.events_publish.wc_request")
-	def test_unchanged_fields_skip_wc_call(self, mock_wc, mock_db, mock_validate, mock_perm):
-		mock_db.exists.return_value = "501"
-		mock_db.get_value.return_value = self._STORED_SAME
-
-		from nce_events.api.events_publish import update_events_to_website
-
-		out = update_events_to_website(dict(self._DOC))
-
-		mock_wc.assert_not_called()
-		self.assertEqual(out["skipped"], 1)
-		self.assertEqual(out["wp_id"], 501)
-		self.assertEqual(out["name"], "501")
 
 	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)
 	@patch("nce_events.api.events_publish.validate_document_page_panel_required_roots")
@@ -220,14 +202,16 @@ class TestUpdateEventsToWebsite(unittest.TestCase):
 	@patch("nce_events.api.events_publish._run_after_publish_hooks")
 	@patch("nce_events.api.events_publish.frappe.db")
 	@patch("nce_events.api.events_publish.wc_request")
-	def test_changed_name_triggers_put(self, mock_wc, mock_db, mock_hooks, mock_cats, mock_validate, mock_perm):
+	def test_always_puts_using_fresh_db_row(
+		self, mock_wc, mock_db, mock_hooks, mock_cats, mock_validate, mock_perm
+	):
 		mock_db.exists.return_value = "501"
-		mock_db.get_value.return_value = {**self._STORED_SAME, "event_name": "Old Name"}
+		mock_db.get_value.return_value = dict(self._FRESH_ROW)
 		mock_wc.return_value = {"id": 501, "slug": "spring-camp", "sku": "sku-1"}
 
 		from nce_events.api.events_publish import update_events_to_website
 
-		out = update_events_to_website(dict(self._DOC))
+		out = update_events_to_website({"doctype": "Events", "name": "501"})
 
 		put_calls = [c for c in mock_wc.call_args_list if c[0][1] == "PUT"]
 		self.assertEqual(len(put_calls), 1)
@@ -242,38 +226,22 @@ class TestUpdateEventsToWebsite(unittest.TestCase):
 	@patch("nce_events.api.events_publish._run_after_publish_hooks")
 	@patch("nce_events.api.events_publish.frappe.db")
 	@patch("nce_events.api.events_publish.wc_request")
-	def test_changed_status_triggers_put(self, mock_wc, mock_db, mock_hooks, mock_cats, mock_validate, mock_perm):
+	def test_slug_built_from_fresh_sku_not_caller_doc(
+		self, mock_wc, mock_db, mock_hooks, mock_cats, mock_validate, mock_perm
+	):
+		"""The slug/permalink must come from the freshly-read (post-save) sku, never from ``doc``."""
 		mock_db.exists.return_value = "501"
-		mock_db.get_value.return_value = {**self._STORED_SAME, "status": "private"}
-		mock_wc.return_value = {"id": 501, "slug": "spring-camp", "sku": "sku-1"}
+		mock_db.get_value.return_value = {**self._FRESH_ROW, "sku": "new-sku"}
+		mock_wc.return_value = {"id": 501, "slug": "new-sku", "sku": "new-sku"}
 
 		from nce_events.api.events_publish import update_events_to_website
 
-		out = update_events_to_website(dict(self._DOC))  # _DOC has status="publish"
+		# The real client no longer sends field values here — just doctype/name.
+		out = update_events_to_website({"doctype": "Events", "name": "501"})
 
 		put_calls = [c for c in mock_wc.call_args_list if c[0][1] == "PUT"]
-		self.assertEqual(len(put_calls), 1)
-		self.assertEqual(put_calls[0][0][2], "/products/501")
-		self.assertEqual(out["wp_id"], 501)
-
-	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)
-	@patch("nce_events.api.events_publish.validate_document_page_panel_required_roots")
-	@patch("nce_events.api.events_publish._resolve_and_patch_categories")
-	@patch("nce_events.api.events_publish._run_after_publish_hooks")
-	@patch("nce_events.api.events_publish.frappe.db")
-	@patch("nce_events.api.events_publish.wc_request")
-	def test_changed_price_triggers_put(self, mock_wc, mock_db, mock_hooks, mock_cats, mock_validate, mock_perm):
-		mock_db.exists.return_value = "501"
-		mock_db.get_value.return_value = {**self._STORED_SAME, "price": 25.0}
-		mock_wc.return_value = {"id": 501, "slug": "spring-camp", "sku": "sku-1"}
-
-		from nce_events.api.events_publish import update_events_to_website
-
-		out = update_events_to_website(dict(self._DOC))
-
-		put_calls = [c for c in mock_wc.call_args_list if c[0][1] == "PUT"]
-		self.assertEqual(len(put_calls), 1)
-		self.assertEqual(out["wp_id"], 501)
+		self.assertEqual(put_calls[0][1]["json_body"]["slug"], "new-sku")
+		self.assertEqual(out["woocommerce"]["slug"], "new-sku")
 
 	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)
 	@patch("nce_events.api.events_publish.frappe.db")
@@ -283,7 +251,18 @@ class TestUpdateEventsToWebsite(unittest.TestCase):
 		from nce_events.api.events_publish import update_events_to_website
 
 		with self.assertRaises(frappe.ValidationError):
-			update_events_to_website({**self._DOC, "name": "EVT-NON-NUMERIC"})
+			update_events_to_website({"doctype": "Events", "name": "EVT-NON-NUMERIC"})
+
+	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)
+	@patch("nce_events.api.events_publish.frappe.db")
+	def test_missing_row_throws(self, mock_db, mock_perm):
+		mock_db.exists.return_value = "501"
+		mock_db.get_value.return_value = None
+
+		from nce_events.api.events_publish import update_events_to_website
+
+		with self.assertRaises(frappe.ValidationError):
+			update_events_to_website({"doctype": "Events", "name": "501"})
 
 
 class TestUpdateWooCommerceProduct(unittest.TestCase):
