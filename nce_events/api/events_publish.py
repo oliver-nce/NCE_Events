@@ -160,11 +160,19 @@ def _wc_events_end_date_mysql_from_doc(doc: dict[str, Any]) -> str:
 
 
 def build_woocommerce_product_payload(doc: dict[str, Any]) -> dict[str, Any]:
-	"""Map Events fields to WooCommerce REST product create body (subset)."""
+	"""Map Events fields to WooCommerce REST product create body (subset).
+
+	``type`` echoes back ``doc["wc_product_type"]`` (mirrored from the live WooCommerce
+	product's ``product_type`` taxonomy term) so publishing never overwrites an existing
+	product's structure. Falls back to ``"simple"`` when unset — new products (New Woo
+	Commerce Product, duplicate-event) have no ``wc_product_type`` yet and are always
+	created simple; users convert to variable on the WooCommerce side if needed.
+	"""
 	sku = cstr(doc.get("sku")).strip()
 	slug = slugify_product_slug(sku or cstr(doc.get("event_name")))
 	price_val = doc.get("price")
 	regular_price = "" if price_val is None or price_val == "" else cstr(price_val).strip()
+	wc_product_type = cstr(doc.get("wc_product_type")).strip() or "simple"
 
 	wc_categories = _wc_categories_payload_from_doc(doc)
 	meta_rows: list[dict[str, Any]] = [
@@ -181,7 +189,7 @@ def build_woocommerce_product_payload(doc: dict[str, Any]) -> dict[str, Any]:
 
 	payload: dict[str, Any] = {
 		"name": cstr(doc.get("event_name")).strip() or _("Untitled"),
-		"type": "simple",
+		"type": wc_product_type,
 		"slug": slug,
 		"status": _wc_status_from_events(doc.get("status")),
 		"sku": sku,

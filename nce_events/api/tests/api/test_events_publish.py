@@ -43,6 +43,7 @@ class TestBuildWooCommerceProductPayload(unittest.TestCase):
 		self.assertEqual(p["sku"], "CAMP-2026")
 		self.assertEqual(p["slug"], "camp-2026")
 		self.assertEqual(p["status"], "publish")
+		self.assertEqual(p["type"], "simple")
 		self.assertEqual(p["regular_price"], "99.5")
 		self.assertEqual(p["categories"], [{"name": "Workshops"}])
 		keys = {m["key"] for m in p["meta_data"]}
@@ -58,6 +59,23 @@ class TestBuildWooCommerceProductPayload(unittest.TestCase):
 			next(m["value"] for m in p["meta_data"] if m["key"] == "WooCommerceEventsEndDateMySQLFormat"),
 			"2026-06-15",
 		)
+
+	def test_type_defaults_to_simple_when_unset(self):
+		doc = {"event_name": "No Type Set", "sku": "x"}
+		p = build_woocommerce_product_payload(doc)
+		self.assertEqual(p["type"], "simple")
+
+	def test_type_echoes_wc_product_type(self):
+		doc = {"event_name": "Variable Event", "sku": "x", "wc_product_type": "variable"}
+		p = build_woocommerce_product_payload(doc)
+		self.assertEqual(p["type"], "variable")
+
+	def test_type_passes_through_any_value_unchanged(self):
+		"""Not limited to simple/variable — any taxonomy value round-trips as-is."""
+		for wc_type in ("grouped", "external", "variable-subscription", "bundle"):
+			doc = {"event_name": "E", "sku": "x", "wc_product_type": wc_type}
+			p = build_woocommerce_product_payload(doc)
+			self.assertEqual(p["type"], wc_type)
 
 	def test_first_session_iso_datetime_string(self):
 		doc = {
