@@ -41,28 +41,35 @@ def _grant_read(doctype: str, role: str) -> str:
 
 
 def _doctype_from_wp_tables_row(row: dict) -> str:
-	"""Resolve Frappe DocType name from a WP Tables row (NCE Name / link / table name)."""
+	"""Resolve Frappe DocType name from a WP Tables row (link / NCE Name / doc name / table)."""
 	return (
-		(row.get("frappe_doctype") or row.get("nce_name") or row.get("table_name") or "")
+		(
+			row.get("frappe_doctype")
+			or row.get("nce_name")
+			or row.get("name")
+			or row.get("table_name")
+			or ""
+		)
 		.strip()
 	)
 
 
-def doctypes_from_wp_tables(*, include_page_panel: bool = True) -> list[str]:
-	"""Distinct DocType names for all WP Tables rows."""
-	if not frappe.db.table_exists("tabWP Tables"):
-		return ["Page Panel"] if include_page_panel else []
+def doctypes_from_wp_tables(*, include_page_panel: bool = True) -> tuple[list[str], int]:
+	"""Distinct DocType names for all WP Tables rows; returns (names, wp_tables_row_count)."""
+	if not frappe.db.table_exists("WP Tables"):
+		names = ["Page Panel"] if include_page_panel else []
+		return names, 0
 
 	rows = frappe.get_all(
 		"WP Tables",
-		fields=["frappe_doctype", "nce_name", "table_name"],
+		fields=["name", "frappe_doctype", "nce_name", "table_name"],
 		limit_page_length=0,
 	)
 	names = {_doctype_from_wp_tables_row(row) for row in rows}
 	names.discard("")
 	if include_page_panel:
 		names.add("Page Panel")
-	return sorted(names)
+	return sorted(names), len(rows)
 
 
 def sync_wp_tables_read_permissions(
@@ -77,7 +84,7 @@ def sync_wp_tables_read_permissions(
 	if not frappe.db.exists("Role", role):
 		frappe.throw(_("Role not found: {0}").format(role))
 
-	doctypes = doctypes_from_wp_tables()
+	doctypes, wp_tables_rows = doctypes_from_wp_tables()
 	added: list[str] = []
 	already: list[str] = []
 	skipped: list[str] = []
@@ -97,6 +104,7 @@ def sync_wp_tables_read_permissions(
 
 	return {
 		"role": role,
+		"wp_tables_rows": wp_tables_rows,
 		"doctypes_processed": len(doctypes),
 		"added": added,
 		"already_had_read": already,
