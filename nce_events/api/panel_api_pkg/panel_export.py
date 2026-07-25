@@ -78,7 +78,10 @@ def build_panel_csv_text(columns: list[dict[str, Any]], rows: list[dict[str, Any
 
 
 def build_page_panel_csv_text(page_panel: str) -> tuple[str, str, int]:
-	"""Load a Page Panel by name and return (csv_text, safe_filename_stem, row_count)."""
+	"""Load a Page Panel by name and return (csv_text, safe_filename_stem, row_count).
+
+	REST: GET /api/method/nce_events.api.get_panel?page_panel=<Page Panel name>
+	"""
 	from nce_events.api.panel_api_pkg.panel_config import _panel_config_from_doc
 	from nce_events.api.panel_api_pkg.panel_data import get_panel_data
 
