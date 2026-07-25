@@ -161,6 +161,8 @@ def get_panel_data(
 	limit: int | str = 0,
 	start: int | str = 0,
 	user_filters: str | list | None = None,
+	config: dict[str, Any] | None = None,
+	page_panel: str | None = None,
 ) -> dict[str, Any]:
 	"""Fetch rows from a DocType.
 
@@ -181,7 +183,8 @@ def get_panel_data(
 	limit = cint(limit)
 	start = cint(start)
 
-	config = get_panel_config(root_doctype)
+	if config is None:
+		config = get_panel_config(root_doctype)
 	display_fields: list[str] = config["column_order"] or []
 	fetch_only: list[str] = list(config.get("fetch_only_fields") or [])
 	all_fields: list[str] = list(display_fields)
@@ -217,7 +220,7 @@ def get_panel_data(
 	# When a drill-down filter is active, always rebuild (filter changes the WHERE).
 	parsed_filters: dict[str, Any] = filters if isinstance(filters, dict) else {}
 	stored_sql: str = ""
-	pp_name = page_panel_docname_for_root(root_doctype)
+	pp_name = (page_panel or "").strip() or page_panel_docname_for_root(root_doctype)
 	if not parsed_filters and pp_name:
 		stored_sql = (frappe.db.get_value("Page Panel", pp_name, "panel_sql") or "").strip()
 

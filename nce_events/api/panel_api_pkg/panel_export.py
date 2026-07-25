@@ -53,6 +53,66 @@ def _cell_str(val: Any) -> str:
 	return str(val)
 
 
+def _csv_export_columns(columns: list[dict[str, Any]], config: dict[str, Any]) -> list[dict[str, Any]]:
+	"""Visible panel columns plus search-only fields (row data already includes both)."""
+	out = list(columns or [])
+	seen = {c.get("fieldname") for c in out if c.get("fieldname")}
+	for col in config.get("search_only_columns") or []:
+		fn = (col.get("fieldname") or "").strip()
+		if fn and fn not in seen:
+			out.append(col)
+			seen.add(fn)
+	return out
+
+
+def build_panel_csv_text(columns: list[dict[str, Any]], rows: list[dict[str, Any]]) -> str:
+	"""Serialize panel columns/rows to CSV text (header row = column labels)."""
+	col_fieldnames = [c["fieldname"] for c in columns]
+	labels = [c.get("label") or c["fieldname"] for c in columns]
+	output = io.StringIO()
+	writer = csv.writer(output)
+	writer.writerow(labels)
+	for row in rows:
+		writer.writerow([_cell_str(row.get(fn)) for fn in col_fieldnames])
+	return output.getvalue()
+
+
+def build_page_panel_csv_text(page_panel: str) -> tuple[str, str, int]:
+	"""Load a Page Panel by name and return (csv_text, safe_filename_stem, row_count)."""
+	from nce_events.api.panel_api_pkg.panel_config import _panel_config_from_doc
+	from nce_events.api.panel_api_pkg.panel_data import get_panel_data
+
+	name = (page_panel or "").strip()
+	if not name:
+		frappe.throw(_("Page Panel name is required."))
+
+	if not frappe.db.exists("Page Panel", name):
+		frappe.throw(_("Page Panel not found: {0}").format(name), frappe.DoesNotExistError)
+
+	if not frappe.has_permission("Page Panel", "read", doc=name):
+		frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+	doc = frappe.get_doc("Page Panel", name)
+	root_doctype = (doc.root_doctype or "").strip()
+	if not root_doctype:
+		frappe.throw(_("Page Panel {0} has no root_doctype.").format(name))
+
+	if not frappe.has_permission(root_doctype, "read"):
+		frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+	config = _panel_config_from_doc(doc)
+	result = get_panel_data(
+		root_doctype,
+		config=config,
+		page_panel=name,
+	)
+	columns = _csv_export_columns(result.get("columns") or [], config)
+	rows = result.get("rows") or []
+	csv_text = build_panel_csv_text(columns, rows)
+	safe_stem = _safe_filename(name) or _safe_filename(root_doctype) or "panel"
+	return csv_text, safe_stem, len(rows)
+
+
 def export_panel_data_impl(
 	root_doctype: str,
 	filters: str | dict | None = None,
