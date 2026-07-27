@@ -22,6 +22,14 @@ Docs/cursor_engineering_policy_frappe_v15_v16.md
 Docs/frappe_rag_context_v15_v16.md
 Docs/Cursor-Ready Implementation Plan*
 nce_events/public/js/panel_page_v2/node_modules/
+nce_events/public/js/evaluations/node_modules/
+
+# Vite build output — built fresh on every deploy (scripts/deploy_nce_events.sh).
+# Committing these caused the JS bundle and CSS bundle to drift out of sync
+# (one file rebuilt/committed without the other), which broke the V2 form
+# dialog's layout/backdrop styling on production. Never commit build output.
+nce_events/public/js/panel_page_v2_dist/
+nce_events/public/js/evaluations_dist/
 # Cursor AI rules (symlinked from shared config)
 .cursor/
 Frappe Context
