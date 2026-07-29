@@ -1293,6 +1293,17 @@ async function runEnrollmentProductRefund() {
 	}
 }
 
+function confirmDeleteEvent(message) {
+	return new Promise((resolve) => {
+		const msg = String(message || __("Delete this event?")).trim() || __("Delete this event?");
+		if (typeof frappe !== "undefined" && frappe.confirm) {
+			frappe.confirm(msg, () => resolve(true), () => resolve(false));
+			return;
+		}
+		resolve(window.confirm(msg));
+	});
+}
+
 async function onPlaceholderButton(btn) {
 	if (findCriteriaActive.value || customActionBusy.value) return;
 	const script = String(btn?.button_script || "").trim();
@@ -1421,10 +1432,46 @@ async function onPlaceholderButton(btn) {
 		}
 		customActionBusy.value = true;
 		try {
+			const preview = await frappeCall(
+				"nce_events.api.events_publish.get_delete_event_preview",
+				{ source_name: eventName },
+			);
+			const enrollmentCount = Number(preview?.enrollment_count || 0);
+			const hasPaymentPlan = !!preview?.has_payment_plan || !!form.formData?.payment_plan;
+			if (preview?.blocked || (hasPaymentPlan && enrollmentCount > 0)) {
+				throw new Error(
+					preview?.message ||
+						__(
+							"Cannot delete this event: it has a payment plan and {0} enrollment(s) exist.",
+							[enrollmentCount],
+						),
+				);
+			}
+
+			let cancelEnrollments = 0;
+			if (preview?.needs_confirm) {
+				customActionBusy.value = false;
+				const confirmMsg =
+					preview?.message ||
+					__(
+						"{0} enrollment(s) will be canceled and payments will be refunded as store credits.",
+						[enrollmentCount],
+					);
+				const confirmed = await confirmDeleteEvent(confirmMsg);
+				if (!confirmed) {
+					return;
+				}
+				cancelEnrollments = 1;
+				customActionBusy.value = true;
+			}
+
+			const freezeMessage = cancelEnrollments
+				? __("Canceling enrollments and deleting event…")
+				: __("Deleting event…");
 			const r = await frappeCall(
 				"nce_events.api.events_publish.delete_event",
-				{ source_name: eventName },
-				{ freeze: true, freeze_message: __("Deleting event…") },
+				{ source_name: eventName, cancel_enrollments: cancelEnrollments },
+				{ freeze: true, freeze_message: freezeMessage },
 			);
 			if (!r?.ok) {
 				throw new Error(extractServerMessage(r) || __("Delete failed"));

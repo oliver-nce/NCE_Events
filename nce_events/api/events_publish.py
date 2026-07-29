@@ -712,6 +712,68 @@ def _count_enrollments_for_event(product_id: str) -> int:
 	)
 
 
+def _list_enrollment_names_for_event(product_id: str) -> list[str]:
+	if not frappe.db.exists("DocType", _ENROLLMENTS_DOCTYPE):
+		return []
+	meta = frappe.get_meta(_ENROLLMENTS_DOCTYPE)
+	if not meta.has_field(_ENROLLMENTS_LINK_FIELD):
+		return []
+	return frappe.get_all(
+		_ENROLLMENTS_DOCTYPE,
+		filters={_ENROLLMENTS_LINK_FIELD: product_id},
+		pluck="name",
+	)
+
+
+def _event_has_payment_plan(doc: frappe.Document | dict[str, Any]) -> bool:
+	if isinstance(doc, frappe.Document):
+		raw = getattr(doc, "payment_plan", None)
+	else:
+		raw = doc.get("payment_plan")
+	return bool(cint(raw))
+
+
+def _delete_local_enrollments_for_event(product_id: str) -> int:
+	deleted = 0
+	for enrollment_name in _list_enrollment_names_for_event(product_id):
+		if not frappe.db.exists(_ENROLLMENTS_DOCTYPE, enrollment_name):
+			continue
+		if not frappe.has_permission(_ENROLLMENTS_DOCTYPE, "delete", doc=enrollment_name):
+			frappe.throw(
+				_("Not permitted to delete {0}").format(_ENROLLMENTS_DOCTYPE),
+				frappe.PermissionError,
+			)
+		frappe.delete_doc(_ENROLLMENTS_DOCTYPE, enrollment_name, force=True)
+		deleted += 1
+	return deleted
+
+
+@frappe.whitelist()
+def get_delete_event_preview(source_name: str | None = None) -> dict[str, Any]:
+	"""Return delete guardrails for the Events Form Dialog delete button."""
+	source, product_id = _resolve_source_events_for_duplicate(source_name, {})
+	enrollment_count = _count_enrollments_for_event(product_id)
+	has_payment_plan = _event_has_payment_plan(source)
+	blocked = has_payment_plan and enrollment_count > 0
+	message = ""
+	if blocked:
+		message = _(
+			"Cannot delete this event: it has a payment plan and {0} enrollment(s) exist."
+		).format(enrollment_count)
+	elif enrollment_count > 0:
+		message = _(
+			"{0} enrollment(s) will be canceled and payments will be refunded as store credits."
+		).format(enrollment_count)
+	return {
+		"ok": 1,
+		"blocked": blocked,
+		"has_payment_plan": has_payment_plan,
+		"enrollment_count": enrollment_count,
+		"needs_confirm": enrollment_count > 0 and not has_payment_plan,
+		"message": message,
+	}
+
+
 def _delete_wc_product_soft(wp_id: int, connector: str | None = None) -> dict[str, Any]:
 	"""Move a WooCommerce product to trash (soft delete — no ``force=true``)."""
 	conn = (connector or "").strip() or DEFAULT_WOOCOMMERCE_CONNECTOR
@@ -751,11 +813,15 @@ def delete_event(
 	source_name: str | None = None,
 	doc: dict[str, Any] | str | None = None,
 	connector_name: str | None = None,
+	cancel_enrollments: int | str | bool | None = None,
 ) -> dict[str, Any]:
 	"""Trash the WooCommerce product, then delete Event Sessions and the Events row.
 
-	Refuses when any Enrollments row links to this event (``product_id``). Returns
-	``sync_job_ids`` from nce_sync listeners so the client can poll before updating UI.
+	When ``payment_plan`` is set and enrollments exist, delete is refused. When there
+	is no payment plan but enrollments exist, pass ``cancel_enrollments=1`` after the
+	user confirms; enrollments are bulk-refunded via WordPress then removed locally.
+
+	Returns ``sync_job_ids`` from nce_sync listeners so the client can poll before updating UI.
 	"""
 	parsed = frappe.parse_json(doc) if isinstance(doc, str) else dict(doc or {})
 	source, product_id = _resolve_source_events_for_duplicate(source_name, parsed)
@@ -767,10 +833,27 @@ def delete_event(
 		)
 
 	enrollment_count = _count_enrollments_for_event(product_id)
-	if enrollment_count > 0:
+	has_payment_plan = _event_has_payment_plan(source)
+	if has_payment_plan and enrollment_count > 0:
 		frappe.throw(
-			_("Cannot delete this event: {0} enrollment(s) exist.").format(enrollment_count)
+			_(
+				"Cannot delete this event: it has a payment plan and {0} enrollment(s) exist."
+			).format(enrollment_count)
 		)
+
+	enrollments_refunded = 0
+	if enrollment_count > 0:
+		if not cint(cancel_enrollments):
+			frappe.throw(
+				_(
+					"This event has {0} enrollment(s). Confirm cancellation before deleting."
+				).format(enrollment_count)
+			)
+		from nce_events.api.exchange import execute_bulk_refund_by_product
+
+		bulk_result = execute_bulk_refund_by_product(product_id)
+		enrollments_refunded = int(bulk_result.get("refunded_count") or 0)
+		_delete_local_enrollments_for_event(product_id)
 
 	wp_id = int(product_id)
 	wc_resp = _delete_wc_product_soft(wp_id, connector_name)
@@ -786,6 +869,7 @@ def delete_event(
 		"name": source.name,
 		"wp_id": wp_id,
 		"sessions_deleted": sessions_deleted,
+		"enrollments_refunded": enrollments_refunded,
 		"woocommerce": wc_resp,
 		"sync_job_ids": sync_job_ids,
 		"message": _("The event has been deleted."),

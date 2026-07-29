@@ -409,10 +409,12 @@ class TestDeleteEvent(unittest.TestCase):
 	@patch("nce_events.api.events_publish.frappe.db.commit")
 	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)
 	@patch("nce_events.api.events_publish._count_enrollments_for_event", return_value=3)
+	@patch("nce_events.api.events_publish._event_has_payment_plan", return_value=True)
 	@patch("nce_events.api.events_publish.frappe.get_doc")
-	def test_refuses_when_enrollments_exist(
+	def test_refuses_when_payment_plan_and_enrollments_exist(
 		self,
 		mock_get_doc,
+		mock_has_plan,
 		mock_count,
 		mock_perm,
 		mock_commit,
@@ -426,6 +428,70 @@ class TestDeleteEvent(unittest.TestCase):
 		with self.assertRaises(frappe.ValidationError):
 			delete_event(source_name="501")
 		mock_commit.assert_not_called()
+
+	@patch("nce_events.api.events_publish.frappe.db.commit")
+	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)
+	@patch("nce_events.api.events_publish._count_enrollments_for_event", return_value=2)
+	@patch("nce_events.api.events_publish._event_has_payment_plan", return_value=False)
+	@patch("nce_events.api.events_publish.frappe.get_doc")
+	def test_refuses_when_enrollments_exist_without_confirm(
+		self,
+		mock_get_doc,
+		mock_has_plan,
+		mock_count,
+		mock_perm,
+		mock_commit,
+	):
+		source_doc = MagicMock()
+		source_doc.name = "501"
+		mock_get_doc.return_value = source_doc
+
+		from nce_events.api.events_publish import delete_event
+
+		with self.assertRaises(frappe.ValidationError):
+			delete_event(source_name="501")
+		mock_commit.assert_not_called()
+
+	@patch("nce_events.api.events_publish.frappe.db.commit")
+	@patch("nce_events.api.events_publish.frappe.delete_doc")
+	@patch("nce_events.api.events_publish._delete_local_enrollments_for_event", return_value=2)
+	@patch("nce_events.api.exchange.execute_bulk_refund_by_product")
+	@patch("nce_events.api.events_publish._delete_event_sessions_for_product", return_value=2)
+	@patch("nce_events.api.events_publish.wc_request")
+	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)
+	@patch("nce_events.api.events_publish._count_enrollments_for_event", return_value=2)
+	@patch("nce_events.api.events_publish._event_has_payment_plan", return_value=False)
+	@patch("nce_events.api.events_publish.frappe.get_doc")
+	def test_delete_bulk_refunds_enrollments_when_confirmed(
+		self,
+		mock_get_doc,
+		mock_has_plan,
+		mock_count,
+		mock_perm,
+		mock_wc,
+		mock_delete_sessions,
+		mock_bulk_refund,
+		mock_delete_enrollments,
+		mock_delete_doc,
+		mock_commit,
+	):
+		source_doc = MagicMock()
+		source_doc.name = "501"
+		mock_get_doc.return_value = source_doc
+		mock_wc.return_value = {"id": 501, "status": "trash"}
+		mock_bulk_refund.return_value = {"success": True, "refunded_count": 2}
+
+		frappe.local.nce_sync_queued_job_ids = ["job-1"]
+
+		from nce_events.api.events_publish import delete_event
+
+		out = delete_event(source_name="501", cancel_enrollments=1)
+
+		mock_bulk_refund.assert_called_once_with("501")
+		mock_delete_enrollments.assert_called_once_with("501")
+		mock_delete_doc.assert_called_once_with("Events", "501", force=True)
+		self.assertEqual(out["enrollments_refunded"], 2)
+		mock_commit.assert_called_once()
 
 	@patch("nce_events.api.events_publish.frappe.db.commit")
 	@patch("nce_events.api.events_publish.frappe.delete_doc")
