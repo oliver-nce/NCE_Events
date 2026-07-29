@@ -1437,15 +1437,8 @@ async function onPlaceholderButton(btn) {
 				{ source_name: eventName },
 			);
 			const enrollmentCount = Number(preview?.enrollment_count || 0);
-			const hasPaymentPlan = !!preview?.has_payment_plan || !!form.formData?.payment_plan;
-			if (preview?.blocked || (hasPaymentPlan && enrollmentCount > 0)) {
-				throw new Error(
-					preview?.message ||
-						__(
-							"Cannot delete this event: it has a payment plan and {0} enrollment(s) exist.",
-							[enrollmentCount],
-						),
-				);
+			if (preview?.blocked) {
+				throw new Error(preview?.message || __("Cannot delete this event."));
 			}
 
 			let cancelEnrollments = 0;

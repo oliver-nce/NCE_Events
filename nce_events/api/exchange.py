@@ -222,7 +222,11 @@ def _post_wp_enrollment_action(
     action_noun: str,
     log_title: str,
 ) -> dict[str, Any]:
-    """POST form fields to a WordPress enrollment endpoint; delete local row on success."""
+    """POST form fields to a WordPress enrollment endpoint.
+
+    On success, local Enrollments cleanup is deferred to WP→Frappe sync (see commented
+    ``delete_doc`` below).
+    """
     if not frappe.db.exists("Enrollments", enrollment_name):
         frappe.throw(_("Enrollment {0} not found.").format(enrollment_name))
 
@@ -285,7 +289,8 @@ def _post_wp_enrollment_action(
         msg = data.get("error") or f"Unknown error from WordPress {action_noun}."
         frappe.throw(_("{0} failed: {1}").format(action_noun.capitalize(), str(msg)))
 
-    frappe.delete_doc("Enrollments", enrollment_name, force=True)
+    # Local mirror cleanup is deferred to the next WP→Frappe Enrollments sync.
+    # frappe.delete_doc("Enrollments", enrollment_name, force=True)
     return data
 
 
@@ -338,7 +343,8 @@ def execute_product_refund(
     """Cancel an enrollment via WordPress ``/nce-exchange/v1/refund-item``.
 
     Issues store credit and optionally charges a cancellation fee (separate fee order
-    when ``cancellation_fee`` > 0). Deletes the local Enrollments mirror on success.
+    when ``cancellation_fee`` > 0). Local Enrollments mirror is removed by the next
+    WP→Frappe sync after WordPress cancels the line.
     """
     if not frappe.db.exists("Enrollments", enrollment_name):
         frappe.throw(_("Enrollment {0} not found.").format(enrollment_name))

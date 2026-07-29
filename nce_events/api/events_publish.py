@@ -754,22 +754,23 @@ def get_delete_event_preview(source_name: str | None = None) -> dict[str, Any]:
 	source, product_id = _resolve_source_events_for_duplicate(source_name, {})
 	enrollment_count = _count_enrollments_for_event(product_id)
 	has_payment_plan = _event_has_payment_plan(source)
-	blocked = has_payment_plan and enrollment_count > 0
 	message = ""
-	if blocked:
-		message = _(
-			"Cannot delete this event: it has a payment plan and {0} enrollment(s) exist."
-		).format(enrollment_count)
-	elif enrollment_count > 0:
-		message = _(
-			"{0} enrollment(s) will be canceled and payments will be refunded as store credits."
-		).format(enrollment_count)
+	if enrollment_count > 0:
+		if has_payment_plan:
+			message = _(
+				"{0} enrollment(s) will be canceled (payment plans stopped and collected "
+				"installments refunded) and credited as store credits."
+			).format(enrollment_count)
+		else:
+			message = _(
+				"{0} enrollment(s) will be canceled and payments will be refunded as store credits."
+			).format(enrollment_count)
 	return {
 		"ok": 1,
-		"blocked": blocked,
+		"blocked": False,
 		"has_payment_plan": has_payment_plan,
 		"enrollment_count": enrollment_count,
-		"needs_confirm": enrollment_count > 0 and not has_payment_plan,
+		"needs_confirm": enrollment_count > 0,
 		"message": message,
 	}
 
@@ -817,9 +818,9 @@ def delete_event(
 ) -> dict[str, Any]:
 	"""Trash the WooCommerce product, then delete Event Sessions and the Events row.
 
-	When ``payment_plan`` is set and enrollments exist, delete is refused. When there
-	is no payment plan but enrollments exist, pass ``cancel_enrollments=1`` after the
-	user confirms; enrollments are bulk-refunded via WordPress then removed locally.
+	When enrollments exist, pass ``cancel_enrollments=1`` after the user confirms.
+	Enrollments are bulk-refunded via WordPress (including payment-plan cancel when
+	applicable). Local Enrollments rows drop on the next WP→Frappe sync.
 
 	Returns ``sync_job_ids`` from nce_sync listeners so the client can poll before updating UI.
 	"""
@@ -833,13 +834,6 @@ def delete_event(
 		)
 
 	enrollment_count = _count_enrollments_for_event(product_id)
-	has_payment_plan = _event_has_payment_plan(source)
-	if has_payment_plan and enrollment_count > 0:
-		frappe.throw(
-			_(
-				"Cannot delete this event: it has a payment plan and {0} enrollment(s) exist."
-			).format(enrollment_count)
-		)
 
 	enrollments_refunded = 0
 	if enrollment_count > 0:
@@ -853,7 +847,8 @@ def delete_event(
 
 		bulk_result = execute_bulk_refund_by_product(product_id)
 		enrollments_refunded = int(bulk_result.get("refunded_count") or 0)
-		_delete_local_enrollments_for_event(product_id)
+		# Local mirror cleanup deferred to WP→Frappe Enrollments sync after bulk refund.
+		# _delete_local_enrollments_for_event(product_id)
 
 	wp_id = int(product_id)
 	wc_resp = _delete_wc_product_soft(wp_id, connector_name)
