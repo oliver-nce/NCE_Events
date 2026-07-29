@@ -726,10 +726,10 @@ def _list_enrollment_names_for_event(product_id: str) -> list[str]:
 
 
 def _event_has_payment_plan(doc: frappe.Document | dict[str, Any]) -> bool:
-	if isinstance(doc, frappe.Document):
-		raw = getattr(doc, "payment_plan", None)
-	else:
+	if isinstance(doc, dict):
 		raw = doc.get("payment_plan")
+	else:
+		raw = getattr(doc, "payment_plan", None)
 	return bool(cint(raw))
 
 
