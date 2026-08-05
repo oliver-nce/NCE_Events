@@ -15,11 +15,6 @@ from nce_events.api.credentials import get_credentials
 DEFAULT_WP_USER_SWITCH_CONNECTOR: str = "WP User Switch"
 
 
-def _require_switch_permission() -> None:
-	if "System Manager" not in frappe.get_roles(frappe.session.user):
-		frappe.throw(_("Only System Manager can use WP user switch."), frappe.PermissionError)
-
-
 def build_wp_switch_url(
 	family_id: str,
 	connector_name: str = "",
@@ -64,7 +59,6 @@ def get_wp_switch_url(
 	redirect_to: str = "",
 ) -> dict[str, Any]:
 	"""Return a signed WP switch URL for the given Families.ID."""
-	_require_switch_permission()
 	return {
 		"url": build_wp_switch_url(family_id, connector_name=connector_name, redirect_to=redirect_to),
 	}
