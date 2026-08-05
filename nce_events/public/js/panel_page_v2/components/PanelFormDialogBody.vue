@@ -47,10 +47,12 @@
 					mode="inline_child"
 					:focus-fieldname="tab._inlineChild.parent_fieldname"
 					:is-active="tabs.length === 1 || activeTab === ti"
+					:bootstrapping="nativeFormBootstrapping"
+					:error="nativeFormError"
 				/>
 
 				<PanelFormDialogInlineChildTab
-					v-else-if="tab._inlineChild"
+					v-else-if="tab._inlineChild && (!useNativeForm || useNativeFormFallback)"
 					:tab="tab"
 					:form-data="formData"
 					:read-only-fields="readOnlyFields"
@@ -69,6 +71,8 @@
 						mode="details"
 						:hide-fieldnames="inlineFieldnames"
 						:is-active="tabs.length === 1 || activeTab === ti"
+						:bootstrapping="nativeFormBootstrapping"
+						:error="nativeFormError"
 					/>
 
 					<!-- Normal frozen-schema tab -->
@@ -218,6 +222,10 @@ const props = defineProps({
 	goToBusy: { type: Boolean, default: false },
 	/** Mount real frappe.ui.form.Form for Details + inline child table tabs. */
 	useNativeForm: { type: Boolean, default: false },
+	/** True when native bootstrap failed — show simplified Vue inline table. */
+	useNativeFormFallback: { type: Boolean, default: false },
+	nativeFormBootstrapping: { type: Boolean, default: false },
+	nativeFormError: { type: String, default: "" },
 	/** Parent table fieldnames to hide on the Details native form view. */
 	inlineFieldnames: { type: Array, default: () => [] },
 });

@@ -19,6 +19,32 @@ function isLayoutFieldtype(fieldtype) {
 	return layoutFieldtypes().has(fieldtype);
 }
 
+function ensureFrappeFormReady() {
+	return new Promise((resolve, reject) => {
+		if (typeof frappe !== "undefined" && frappe.model && frappe.ui?.form?.Form) {
+			resolve();
+			return;
+		}
+		if (typeof frappe === "undefined" || typeof frappe.require !== "function") {
+			reject(new Error("Frappe is not available on this page"));
+			return;
+		}
+		frappe.require(
+			["form.bundle.js"],
+			() => {
+				if (frappe.ui?.form?.Form) {
+					resolve();
+					return;
+				}
+				reject(new Error("form.bundle.js loaded but frappe.ui.form.Form is missing"));
+			},
+			(err) => {
+				reject(err || new Error("Failed to load form.bundle.js"));
+			},
+		);
+	});
+}
+
 /**
  * @returns {Promise<object|null>} frappe.ui.form.Form instance
  */
@@ -115,50 +141,38 @@ export function createNativeFormHost({ onDirty } = {}) {
 			return bootPromise;
 		}
 
-		if (
-			typeof frappe === "undefined" ||
-			!frappe.model ||
-			!frappe.ui?.form?.Form
-		) {
-			throw new Error("Frappe Form API is not available");
-		}
-
 		const dt = String(doctype || "").trim();
 		const dn = String(docname || "").trim();
 		if (!dt || !dn) {
 			throw new Error("Native form requires doctype and docname");
 		}
 
-		bootPromise = new Promise((resolve, reject) => {
-			frappe.model.with_doc(dt, dn, () => {
-				try {
-					hiddenParent = document.createElement("div");
-					hiddenParent.className = "ppv2-native-form-host-hidden";
-					hiddenParent.style.cssText =
-						"position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;";
-					document.body.appendChild(hiddenParent);
+		bootPromise = (async () => {
+			await ensureFrappeFormReady();
 
-					frm = new frappe.ui.form.Form(dt, hiddenParent, false);
-					const setupResult = frm.setup(dt);
-					const afterSetup = () => {
-						frm.refresh(dn);
-						_hideFormChrome();
-						_bindDirtyListeners();
-						bootstrapped = true;
-						resolve(frm);
-					};
-					if (setupResult && typeof setupResult.then === "function") {
-						setupResult.then(afterSetup).catch(reject);
-					} else {
-						afterSetup();
-					}
-				} catch (e) {
-					reject(e);
-				}
-			}, reject);
-		});
+			await frappe.model.with_doc(dt, dn);
 
-		return bootPromise;
+			hiddenParent = document.createElement("div");
+			hiddenParent.className = "ppv2-native-form-host-hidden";
+			hiddenParent.style.cssText =
+				"position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;";
+			document.body.appendChild(hiddenParent);
+
+			frm = new frappe.ui.form.Form(dt, hiddenParent, false);
+			frm.setup();
+			await frm.refresh(dn);
+			_hideFormChrome();
+			_bindDirtyListeners();
+			bootstrapped = true;
+			return frm;
+		})();
+
+		try {
+			return await bootPromise;
+		} catch (e) {
+			bootPromise = null;
+			throw e;
+		}
 	}
 
 	function mountTo(containerEl, viewOpts = {}) {

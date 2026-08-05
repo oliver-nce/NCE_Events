@@ -11,6 +11,7 @@ from unittest.mock import patch
 
 import frappe
 from frappe.tests.utils import FrappeTestCase
+from frappe.utils import cint
 
 
 class TestRelatedPortalFieldEditor(FrappeTestCase):
@@ -76,6 +77,22 @@ class TestRelatedPortalFieldEditor(FrappeTestCase):
 
 
 class TestPortalNameField(unittest.TestCase):
+	def test_default_portal_field_config_shows_all_eligible_fields(self):
+		from nce_events.api.form_dialog.portal_fields import default_portal_field_config_list
+
+		cfg = default_portal_field_config_list(
+			[
+				{"fieldname": "document_type", "label": "Document Type", "fieldtype": "Link"},
+				{"fieldname": "read", "label": "Read", "fieldtype": "Check"},
+			],
+			child_doctype="User",
+		)
+		fns = {r["fieldname"] for r in cfg}
+		self.assertIn("name", fns)
+		self.assertIn("document_type", fns)
+		self.assertIn("read", fns)
+		self.assertTrue(all(cint(r.get("show")) == 1 for r in cfg))
+
 	def test_build_portal_editor_rows_prepends_name_with_doctype_label(self):
 		from nce_events.api.form_dialog.portal_fields import _build_portal_editor_rows
 
@@ -120,6 +137,22 @@ class TestNormalizePortalFieldConfig(unittest.TestCase):
 		self.assertEqual(len(out), 1)
 		self.assertNotIn("sort_rank", out[0])
 		self.assertNotIn("sort_dir", out[0])
+
+
+class TestInlineChildDefaultPortalConfig(unittest.TestCase):
+	def test_build_inline_child_row_includes_default_portal_field_config(self):
+		from nce_events.api.form_dialog._fd_inline_children import _build_inline_child_row_dict
+
+		meta = frappe.get_meta("DocType")
+		row = _build_inline_child_row_dict({"parent_fieldname": "fields", "tab_label": "Fields"}, meta)
+		self.assertIsNotNone(row)
+		raw = row.get("portal_field_config") or ""
+		self.assertTrue(str(raw).strip())
+		cfg = json.loads(raw)
+		self.assertGreater(len(cfg), 0)
+		self.assertTrue(all(cint(x.get("show")) == 1 for x in cfg))
+		fns = {x["fieldname"] for x in cfg}
+		self.assertIn("name", fns)
 
 
 if __name__ == "__main__":

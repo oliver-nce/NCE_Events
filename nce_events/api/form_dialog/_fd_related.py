@@ -128,13 +128,19 @@ def _build_related_child_row_dict(spec: dict[str, Any]) -> dict[str, str]:
 			},
 			default=str,
 		)
-	return {
+	from .portal_fields import portal_field_config_from_info
+
+	row: dict[str, str] = {
 		"child_doctype": child_dt,
 		"link_field": link_f,
 		"tab_label": tab_l,
 		"hop_chain": hop_chain_json,
 		"info": info_str,
 	}
+	default_pfc = portal_field_config_from_info(info_obj, child_doctype=child_dt)
+	if default_pfc:
+		row["portal_field_config"] = default_pfc
+	return row
 
 
 def _related_doctype_child_rows(related_doctypes: str | list | None) -> list[dict[str, Any]]:

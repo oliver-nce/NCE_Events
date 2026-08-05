@@ -1,5 +1,13 @@
 <template>
-	<div ref="containerRef" class="ppv2-native-form-tab"></div>
+	<div class="ppv2-native-form-tab">
+		<div v-if="bootstrapping" class="ppv2-native-form-tab-status theme-text-muted">
+			Loading Frappe form…
+		</div>
+		<div v-else-if="error" class="ppv2-native-form-tab-status theme-text-danger">
+			{{ error }}
+		</div>
+		<div ref="containerRef" class="ppv2-native-form-tab-mount"></div>
+	</div>
 </template>
 
 <script setup>
@@ -15,6 +23,8 @@ const props = defineProps({
 	isActive: { type: Boolean, default: false },
 	/** For details mode: all inline table fieldnames to hide. */
 	hideFieldnames: { type: Array, default: () => [] },
+	bootstrapping: { type: Boolean, default: false },
+	error: { type: String, default: "" },
 });
 
 const containerRef = ref(null);
@@ -23,6 +33,8 @@ const nativeFormReady = inject("nativeFormReady", ref(false));
 
 function remount() {
 	if (
+		props.bootstrapping ||
+		props.error ||
 		!props.isActive ||
 		!nativeFormReady.value ||
 		!nativeFormHost?.mountTo ||
@@ -42,7 +54,15 @@ function remount() {
 }
 
 watch(
-	() => [props.isActive, nativeFormReady.value, props.mode, props.focusFieldname, props.hideFieldnames],
+	() => [
+		props.isActive,
+		props.bootstrapping,
+		props.error,
+		nativeFormReady.value,
+		props.mode,
+		props.focusFieldname,
+		props.hideFieldnames,
+	],
 	() => remount(),
 );
 
@@ -64,11 +84,18 @@ onUnmounted(() => {
 	overflow: auto;
 	padding: 4px 0;
 }
-.ppv2-native-form-tab :deep(.form-layout) {
+.ppv2-native-form-tab-status {
+	padding: 12px 4px;
+	font-size: var(--font-size-sm);
+}
+.ppv2-native-form-tab-mount {
+	min-height: 160px;
+}
+.ppv2-native-form-tab-mount :deep(.form-layout) {
 	margin: 0;
 }
-.ppv2-native-form-tab :deep(.page-actions),
-.ppv2-native-form-tab :deep(.standard-actions) {
+.ppv2-native-form-tab-mount :deep(.page-actions),
+.ppv2-native-form-tab-mount :deep(.standard-actions) {
 	display: none !important;
 }
 </style>

@@ -91,7 +91,10 @@
 				:findable-fieldnames="findableFieldnames"
 				:read-only-host="findCriteriaActive"
 				:go-to-busy="goToPanelBusy"
-				:use-native-form="useNativeForm"
+				:use-native-form="useNativeForm && !useNativeFormFallback"
+				:use-native-form-fallback="useNativeFormFallback"
+				:native-form-error="nativeFormError"
+				:native-form-bootstrapping="nativeFormBootstrapping"
 				:inline-fieldnames="inlineFieldnames"
 				v-model:active-tab="activeTab"
 				@field-change="onFieldChange"
@@ -427,6 +430,8 @@ const loadDebugRows = computed(() => form.loadDebugLog.value);
 const nativeFormDirty = ref(false);
 const nativeFormReady = ref(false);
 const nativeFormFailed = ref(false);
+const nativeFormBootstrapping = ref(false);
+const nativeFormError = ref("");
 const nativeFormHost = createNativeFormHost({
 	onDirty: () => {
 		nativeFormDirty.value = true;
@@ -444,9 +449,6 @@ const useNativeForm = computed(() => {
 	if (findCriteriaActive.value) {
 		return false;
 	}
-	if (nativeFormFailed.value) {
-		return false;
-	}
 	if (!props.docName) {
 		return false;
 	}
@@ -456,22 +458,32 @@ const useNativeForm = computed(() => {
 	return inlineFieldnames.value.length > 0;
 });
 
+/** Fall back to Vue inline table only after native bootstrap fails. */
+const useNativeFormFallback = computed(
+	() => useNativeForm.value && nativeFormFailed.value,
+);
+
 function teardownNativeForm() {
 	nativeFormHost.destroy();
 	nativeFormReady.value = false;
 	nativeFormDirty.value = false;
 	nativeFormFailed.value = false;
+	nativeFormBootstrapping.value = false;
+	nativeFormError.value = "";
 }
 
 async function bootstrapNativeForm() {
 	nativeFormReady.value = false;
 	nativeFormDirty.value = false;
+	nativeFormFailed.value = false;
+	nativeFormError.value = "";
 	if (!useNativeForm.value) {
 		return;
 	}
 	if (nativeFormHost.isActive()) {
 		nativeFormHost.destroy();
 	}
+	nativeFormBootstrapping.value = true;
 	try {
 		await nativeFormHost.bootstrap({
 			doctype: props.doctype,
@@ -480,7 +492,10 @@ async function bootstrapNativeForm() {
 		nativeFormReady.value = true;
 	} catch (e) {
 		nativeFormFailed.value = true;
+		nativeFormError.value = e?.message || String(e || "Native form failed");
 		ppv2DebugWarn("[NativeForm] bootstrap failed:", e);
+	} finally {
+		nativeFormBootstrapping.value = false;
 	}
 }
 
@@ -766,6 +781,7 @@ watch(
 		props.doctype,
 		inlineFieldnames.value.join(","),
 		findCriteriaActive.value,
+		form.tabs.value.length,
 	],
 	async () => {
 		if (!props.open || form.loading.value) {
@@ -777,7 +793,6 @@ watch(
 			}
 			return;
 		}
-		nativeFormFailed.value = false;
 		await bootstrapNativeForm();
 	},
 );

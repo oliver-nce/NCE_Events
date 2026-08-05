@@ -191,6 +191,46 @@ def _parse_portal_field_config_entries(raw: str | None) -> list[dict]:
 	return [x for x in data if isinstance(x, dict)]
 
 
+def default_portal_field_config_list(
+	meta_fields: list[dict],
+	child_doctype: str | None = None,
+	name_field_label: str | None = None,
+) -> list[dict[str, int | str]]:
+	"""All eligible portal columns visible by default; hide via portal editor (show=0)."""
+	eligible = _portal_meta_fields_for_editor(meta_fields, child_doctype, name_field_label)
+	out: list[dict[str, int | str]] = []
+	for f in eligible:
+		fn = cstr(f.get("fieldname") or "").strip()
+		if not fn:
+			continue
+		out.append({"fieldname": fn, "show": 1, "editable": 1})
+	return out
+
+
+def default_portal_field_config_json(
+	meta_fields: list[dict],
+	child_doctype: str | None = None,
+	name_field_label: str | None = None,
+) -> str:
+	payload = default_portal_field_config_list(meta_fields, child_doctype, name_field_label)
+	return json.dumps(payload, indent=None) if payload else ""
+
+
+def portal_field_config_from_info(
+	info: dict | None,
+	child_doctype: str | None = None,
+) -> str:
+	"""Default portal_field_config JSON from frozen tab ``info`` (capture/rebuild)."""
+	if not info or not isinstance(info, dict):
+		return ""
+	meta_fields = info.get("fields") if isinstance(info.get("fields"), list) else []
+	if not meta_fields:
+		return ""
+	name_field_label = cstr(info.get("name_field_label") or "").strip() or None
+	dt = cstr(child_doctype or info.get("doctype") or "").strip() or None
+	return default_portal_field_config_json(meta_fields, child_doctype=dt, name_field_label=name_field_label)
+
+
 def _build_portal_editor_rows(
 	meta_fields: list[dict],
 	portal_entries: list[dict],
