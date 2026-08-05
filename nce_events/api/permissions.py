@@ -8,6 +8,37 @@ from frappe import _
 READ_ONLY_ROLE_DEFAULT = "Read Only"
 
 
+def has_explicit_doctype_read(doctype: str, user: str | None = None) -> bool:
+	"""True when ``user`` has ordinary (non-if-owner) Read or Write on ``doctype``.
+
+	Matches Role Permission Manager / Custom DocPerm rows synced from NCE Access
+	Profile — not ``frappe.has_permission``, which can return True for ``User``
+	when only *select* or *if_owner* list access applies (Desk still hides the list).
+	"""
+	dt = (doctype or "").strip()
+	if not dt:
+		return False
+	if not user:
+		user = frappe.session.user
+	if user == "Administrator":
+		return True
+
+	roles = set(frappe.get_roles(user))
+	try:
+		meta = frappe.get_meta(dt)
+	except Exception:
+		return False
+
+	for perm in meta.permissions:
+		if perm.role not in roles or frappe.utils.cint(perm.permlevel) != 0:
+			continue
+		if frappe.utils.cint(perm.if_owner):
+			continue
+		if frappe.utils.cint(perm.read) or frappe.utils.cint(perm.write):
+			return True
+	return False
+
+
 def _require_system_manager() -> None:
 	if "System Manager" not in frappe.get_roles():
 		frappe.throw(_("System Manager role required."), frappe.PermissionError)
