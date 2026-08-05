@@ -8,16 +8,27 @@
 			Schema note: {{ tab._inlineChild.captureError }}
 		</p>
 
-		<div v-if="columns.length" class="ppv2-fd-related-table-wrap">
-			<table class="ppv2-fd-related-table">
+		<div v-if="columns.length" class="ppv2-fd-related-table-wrap ppv2-fd-inline-table-wrap theme-border theme-rounded-sm">
+			<table class="ppv2-fd-related-table ppv2-fd-inline-table theme-table">
+				<colgroup>
+					<col v-if="showDeleteColumn" class="ppv2-fd-inline-col-del" />
+					<col class="ppv2-fd-inline-col-no" />
+					<col
+						v-for="(col, ci) in columns"
+						:key="'col-' + col.fieldname"
+						:class="columnLayouts[ci].colgroupClass"
+						:style="columnLayouts[ci].colStyle || undefined"
+					/>
+				</colgroup>
 				<thead>
 					<tr>
 						<th v-if="showDeleteColumn" class="ppv2-fd-related-th ppv2-fd-inline-del-head" aria-hidden="true" />
 						<th class="ppv2-fd-related-th ppv2-fd-inline-no-head">No.</th>
 						<th
-							v-for="col in columns"
+							v-for="(col, ci) in columns"
 							:key="col.fieldname"
 							class="ppv2-fd-related-th"
+							:class="columnLayouts[ci].headerClass"
 						>
 							{{ col.label || col.fieldname
 							}}<span v-if="columnMandatory(col)" class="ppv2-fd-reqd theme-text-danger" aria-hidden="true"> *</span>
@@ -38,15 +49,18 @@
 						</td>
 						<td class="ppv2-fd-related-td ppv2-fd-inline-no-cell">{{ ri + 1 }}</td>
 						<td
-							v-for="col in columns"
+							v-for="(col, ci) in columns"
 							:key="col.fieldname"
 							class="ppv2-fd-related-td"
-							:class="{
-								'ppv2-fd-related-td--editable': isColEditableForRow(rw, col),
-							}"
+							:class="[
+								columnLayouts[ci].cellClass,
+								{
+									'ppv2-fd-related-td--editable': isColEditableForRow(rw, col),
+								},
+							]"
 						>
 							<button
-								v-if="isActionButtonColumn(col)"
+								v-if="isInlineActionButtonColumn(col)"
 								type="button"
 								class="btn btn-default btn-xs ppv2-fd-inline-action-btn"
 								:disabled="readOnlyHost || !isActionButtonEnabled(rw, col)"
@@ -126,6 +140,10 @@
 import { computed } from "vue";
 import { listViewColumnsForGrid } from "../utils/formDialogPortalColumns.js";
 import { isPortalGridColumnEditable } from "../utils/portalColumnEditable.js";
+import {
+	buildInlineColumnLayout,
+	isInlineActionButtonColumn,
+} from "../utils/inlineChildTableLayout.js";
 import { openManageFieldsDialog } from "../utils/accessProfileManageFields.js";
 import PanelFormLinkField from "./PanelFormLinkField.vue";
 
@@ -174,8 +192,12 @@ const columns = computed(() =>
 	}),
 );
 
+const columnLayouts = computed(() => buildInlineColumnLayout(columns.value));
+
 const hasEditableColumn = computed(() =>
-	columns.value.some((c) => !isActionButtonColumn(c) && isPortalGridColumnEditable(c, portalEditOpts.value)),
+	columns.value.some(
+		(c) => !isInlineActionButtonColumn(c) && isPortalGridColumnEditable(c, portalEditOpts.value),
+	),
 );
 
 const showDeleteColumn = computed(
@@ -234,10 +256,6 @@ function isColEditableForRow(rw, col) {
 		return false;
 	}
 	return true;
-}
-
-function isActionButtonColumn(col) {
-	return col?.isActionButton || col?.fieldtype === "Button";
 }
 
 function isActionButtonEnabled(rw, col) {
@@ -398,6 +416,82 @@ function removeRow(index) {
 <style scoped>
 .ppv2-fd-inline-root {
 	padding-bottom: 8px;
+}
+.ppv2-fd-inline-table-wrap {
+	width: 100%;
+	max-height: min(52vh, 520px);
+	overflow: auto;
+	margin: 0 0 12px;
+}
+.ppv2-fd-inline-table {
+	table-layout: fixed;
+	width: 100%;
+	border-collapse: collapse;
+	font-size: var(--font-size-base);
+}
+.ppv2-fd-inline-table .ppv2-fd-related-th {
+	text-align: left;
+	padding: 8px 10px;
+	font-size: var(--font-size-base);
+	font-weight: var(--font-weight-bold, 600);
+	position: sticky;
+	top: 0;
+	z-index: 1;
+	white-space: normal;
+	line-height: 1.25;
+	vertical-align: bottom;
+}
+.ppv2-fd-inline-table .ppv2-fd-related-td {
+	padding: 6px 10px;
+	border-bottom: var(--nce-border-width) solid var(--nce-color-border);
+	vertical-align: middle;
+}
+.ppv2-fd-inline-col-del {
+	width: 2.25rem;
+}
+.ppv2-fd-inline-col-no {
+	width: 2.75rem;
+}
+/* Generic child-table column roles (any inline child DocType). */
+.ppv2-fd-child-col-primary {
+	width: auto;
+	min-width: 10rem;
+}
+.ppv2-fd-child-col-check {
+	width: 6.75rem;
+}
+.ppv2-fd-child-col-action {
+	width: 9.5rem;
+}
+.ppv2-fd-child-col-numeric {
+	width: 6.25rem;
+}
+.ppv2-fd-child-col-compact {
+	width: 7.5rem;
+}
+.ppv2-fd-child-col-medium {
+	width: 8.5rem;
+}
+.ppv2-fd-child-th-check,
+.ppv2-fd-child-td-check,
+.ppv2-fd-child-th-numeric,
+.ppv2-fd-child-td-numeric {
+	text-align: center;
+}
+.ppv2-fd-child-th-action,
+.ppv2-fd-child-td-action {
+	text-align: center;
+}
+.ppv2-fd-child-th-primary,
+.ppv2-fd-child-td-primary {
+	text-align: left;
+}
+.ppv2-fd-child-td-primary :deep(.ppv2-fd-link-frappe) {
+	width: 100%;
+}
+.ppv2-fd-child-td-check .ppv2-fd-related-check {
+	margin: 0 auto;
+	display: block;
 }
 .ppv2-fd-inline-del-head {
 	width: 36px;
