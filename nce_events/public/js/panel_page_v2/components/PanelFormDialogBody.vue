@@ -42,17 +42,8 @@
 					@go-to-panel="(ev) => $emit('go-to-panel', ev)"
 				/>
 
-				<PanelFormDialogNativeFormTab
-					v-else-if="useNativeForm && tab._inlineChild"
-					mode="inline_child"
-					:focus-fieldname="tab._inlineChild.parent_fieldname"
-					:is-active="tabs.length === 1 || activeTab === ti"
-					:bootstrapping="nativeFormBootstrapping"
-					:error="nativeFormError"
-				/>
-
 				<PanelFormDialogInlineChildTab
-					v-else-if="tab._inlineChild && (!useNativeForm || useNativeFormFallback)"
+					v-else-if="tab._inlineChild"
 					:tab="tab"
 					:form-data="formData"
 					:read-only-fields="readOnlyFields"

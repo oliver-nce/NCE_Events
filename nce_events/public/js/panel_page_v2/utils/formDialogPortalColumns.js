@@ -2,6 +2,18 @@
 
 import { metaReadOnlyFromField } from "./portalColumnEditable.js";
 
+/** Child-table list view columns (Desk ``in_list_view``), including Button actions. */
+const LIST_VIEW_SKIP = new Set([
+	"Tab Break",
+	"Section Break",
+	"Column Break",
+	"Heading",
+	"HTML",
+	"Image",
+	"Fold",
+	"Table",
+]);
+
 const SKIP_TYPES = new Set([
 	"Tab Break",
 	"Section Break",
@@ -162,4 +174,50 @@ export function portalColumnsForGrid(metaFields, portalRaw, portalOpts = {}) {
 			reqd: cint(metaF.reqd),
 		};
 	});
+}
+
+function listViewFieldEligible(f) {
+	const fn = ((f && f.fieldname) || "").trim();
+	if (!fn) {
+		return false;
+	}
+	if (cint(f.hidden)) {
+		return false;
+	}
+	const ft = ((f && f.fieldtype) || "").trim();
+	if (ft === "Button") {
+		return cint(f.in_list_view) === 1;
+	}
+	if (LIST_VIEW_SKIP.has(ft)) {
+		return false;
+	}
+	return cint(f.in_list_view) === 1;
+}
+
+function columnFromMetaField(f) {
+	const fn = String(f.fieldname || "").trim();
+	const ft = String(f.fieldtype || "").trim();
+	return {
+		fieldname: fn,
+		label: String(f.label || "").trim() || fn,
+		fieldtype: ft,
+		options: String(f.options || "").trim(),
+		read_only: metaReadOnlyFromField(f),
+		reqd: cint(f.reqd),
+		depends_on: f.depends_on,
+		read_only_depends_on: f.read_only_depends_on,
+		isActionButton: ft === "Button",
+	};
+}
+
+/**
+ * Grid columns from child DocType ``in_list_view`` (Desk child table is source of truth).
+ * Falls back to portal config when no list-view fields are defined.
+ */
+export function listViewColumnsForGrid(metaFields, portalRaw, portalOpts = {}) {
+	const listFields = (metaFields || []).filter(listViewFieldEligible);
+	if (!listFields.length) {
+		return portalColumnsForGrid(metaFields, portalRaw, portalOpts);
+	}
+	return listFields.map(columnFromMetaField);
 }
