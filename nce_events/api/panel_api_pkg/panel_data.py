@@ -4,7 +4,10 @@ import json
 from typing import Any
 
 import frappe
+from frappe import _
 from frappe.utils import cint
+
+from nce_events.api.permissions import _doctype_from_wp_tables_row
 
 from nce_events.api.panel_api_pkg._helpers import (
 	_auto_detect_contact_fields,
@@ -91,9 +94,31 @@ _COLOUR_COPY_FIELDS: tuple[str, ...] = (
 )
 
 
+def _require_root_doctype_read(root_doctype: str) -> None:
+	"""Raise if the current user cannot read the panel's underlying DocType."""
+	dt = (root_doctype or "").strip()
+	if not dt:
+		return
+	if not frappe.has_permission(dt, "read"):
+		frappe.throw(_("Not permitted"), frappe.PermissionError)
+
+
+def _filter_wp_tables_catalog_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+	"""Drop WP Tables catalog rows whose underlying DocType the user cannot read."""
+	out: list[dict[str, Any]] = []
+	for row in rows:
+		dt = _doctype_from_wp_tables_row(row)
+		if not dt:
+			continue
+		if frappe.has_permission(dt, "read"):
+			out.append(row)
+	return out
+
+
 @frappe.whitelist()
 def get_panel_config(root_doctype: str) -> dict[str, Any]:
 	"""Fetch display configuration for a single Page Panel."""
+	_require_root_doctype_read(root_doctype)
 	if not page_panel_exists_for_root(root_doctype):
 		auto_email, auto_sms = _auto_detect_contact_fields(root_doctype)
 		return {
@@ -173,9 +198,10 @@ def get_panel_data(
 	user_filters, limit, and start are accepted but ignored — filtering and
 	pagination are handled client-side on the full dataset.
 
-	Returns the full dataset with core_filter applied server-side for initial
-	security, and the raw unfiltered count (full_count) for UI denominators.
+	Returns the full dataset; default_filters are applied client-side in V2.
+	When root_doctype is WP Tables, rows are filtered to DocTypes the user can read.
 	"""
+	_require_root_doctype_read(root_doctype)
 	if isinstance(filters, str):
 		filters = json.loads(filters) if filters else {}
 	filters = filters or {}
@@ -257,6 +283,11 @@ def get_panel_data(
 			)
 
 	rows = frappe.db.sql(base_sql, base_params, as_dict=True)
+
+	if root_doctype == "WP Tables":
+		rows = _filter_wp_tables_catalog_rows(rows)
+		total_count = len(rows)
+		full_count = len(rows)
 
 	child_doctypes = get_child_doctypes(root_doctype)
 	related_label_map: dict[str, str] = {f"_related_{c['doctype']}": c["label"] for c in child_doctypes}
