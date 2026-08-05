@@ -19,6 +19,18 @@ export async function openWpUserSwitch(familyId, { frappeCall, msgprint } = {}) 
 		});
 		return;
 	}
+
+	// Open synchronously on click — async window.open after frappeCall is popup-blocked.
+	const popup = window.open("about:blank", "_blank");
+	if (!popup) {
+		msgprint?.({
+			title: __("View as"),
+			message: __("Popup blocked. Allow popups for this site."),
+			indicator: "orange",
+		});
+		return;
+	}
+
 	try {
 		const r = await frappeCall("nce_events.api.wp_user_switch.get_wp_switch_url", {
 			family_id: id,
@@ -27,8 +39,10 @@ export async function openWpUserSwitch(familyId, { frappeCall, msgprint } = {}) 
 		if (!url) {
 			throw new Error(__("No switch URL returned."));
 		}
-		window.open(url, "_blank", "noopener,noreferrer");
+		popup.location.href = url;
+		popup.opener = null;
 	} catch (e) {
+		popup.close();
 		msgprint?.({
 			title: __("View as"),
 			message: String(e?.message || e),
