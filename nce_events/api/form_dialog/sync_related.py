@@ -3,14 +3,17 @@ Post-save linked DocType sync for Form Dialog read-back.
 
 After the main write-back job finishes (WP ← Frappe push), WP-side triggers may
 create or update rows in related tables (e.g. Event Sessions). This endpoint
-queues nce_sync.api.sync_linked_doctype_rows for each direct-link related DocType
-on the Form Dialog so those rows are pulled back into Frappe before "Show changes"
-is shown.
+enqueues nce_sync's run_sync_linked_doctype_rows_job for each direct-link related
+DocType on the Form Dialog so those rows are pulled back into Frappe before "Show
+changes" is shown. The job runner is enqueued directly (bypassing the whitelisted
+delete-permission gate) so the mirror rebuild is not blocked by the caller's
+permissions.
 """
 
 from __future__ import annotations
 
 import json
+from uuid import uuid4
 
 import frappe
 from frappe import _
@@ -24,8 +27,13 @@ def trigger_linked_sync_for_dialog_readback(
     root_name: str,
 ) -> dict:
     """
-    Queue nce_sync.api.sync_linked_doctype_rows for each direct-link related
-    DocType in the Form Dialog and return the resulting job_ids.
+    Enqueue nce_sync's run_sync_linked_doctype_rows_job for each direct-link
+    related DocType in the Form Dialog and return the resulting job_ids.
+
+    The job runner is enqueued directly (rather than via the whitelisted
+    sync_linked_doctype_rows wrapper) so the mirror rebuild runs regardless of
+    the caller's delete permission on the child DocType — see the inline note at
+    the enqueue call for the rationale and its safety constraints.
 
     Only processes rows where:
     - child_doctype and link_field are set
@@ -69,8 +77,6 @@ def trigger_linked_sync_for_dialog_readback(
     if not frappe.db.exists("DocType", "WP Tables"):
         return {"sync_job_ids": []}
 
-    from nce_sync.api import sync_linked_doctype_rows
-
     job_ids: list[str] = []
 
     for row in dialog_doc.related_doctypes or []:
@@ -100,16 +106,27 @@ def trigger_linked_sync_for_dialog_readback(
         if not wp_rows:
             continue
 
+        # Bypass the whitelisted sync_linked_doctype_rows wrapper (which gates on
+        # the caller's delete permission) and enqueue the job runner directly. The
+        # runner deletes mirror rows via frappe.db.delete (no per-user permission
+        # check), so the resync is a controlled, config-driven mirror rebuild — it
+        # must run regardless of whether the current user can delete the child.
+        # A generated job_id lets the readback poll it via get_sync_job_status.
         try:
-            result = sync_linked_doctype_rows(
+            job_id = str(uuid4())
+            frappe.enqueue(
+                "nce_sync.utils.data_sync.run_sync_linked_doctype_rows_job",
+                queue="default",
+                timeout=3600,
+                job_id=job_id,
                 doctype=child_dt,
                 link_field=link_field,
                 link_value=root_name,
+                user=frappe.session.user,
             )
-            job_id = cstr(result.get("job_id") or "").strip()
-            if job_id:
-                job_ids.append(job_id)
+            job_ids.append(job_id)
         except Exception as e:
+            frappe.clear_last_message()
             frappe.log_error(
                 title=f"trigger_linked_sync_for_dialog_readback: {child_dt}",
                 message=cstr(e),
