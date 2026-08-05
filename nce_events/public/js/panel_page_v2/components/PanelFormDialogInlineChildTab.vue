@@ -12,7 +12,7 @@
 			<table class="ppv2-fd-related-table">
 				<thead>
 					<tr>
-						<th v-if="hasEditableColumn" class="ppv2-fd-related-th ppv2-fd-inline-del-head" aria-hidden="true" />
+						<th v-if="showDeleteColumn" class="ppv2-fd-related-th ppv2-fd-inline-del-head" aria-hidden="true" />
 						<th class="ppv2-fd-related-th ppv2-fd-inline-no-head">No.</th>
 						<th
 							v-for="col in columns"
@@ -26,7 +26,7 @@
 				</thead>
 				<tbody>
 					<tr v-for="(rw, ri) in rows" :key="rowKey(rw, ri)">
-						<td v-if="hasEditableColumn" class="ppv2-fd-related-td ppv2-fd-inline-del-cell">
+						<td v-if="showDeleteColumn" class="ppv2-fd-related-td ppv2-fd-inline-del-cell">
 							<button
 								type="button"
 								class="ppv2-fd-inline-del-btn theme-text-danger"
@@ -113,7 +113,7 @@
 				</tbody>
 			</table>
 			<p v-if="!rows.length" class="ppv2-fd-related-empty">No rows yet.</p>
-			<div v-if="hasEditableColumn && !readOnlyHost" class="ppv2-fd-inline-actions">
+			<div v-if="showAddRow" class="ppv2-fd-inline-actions">
 				<button type="button" class="btn btn-default btn-xs" @click="addRow">
 					Add Row
 				</button>
@@ -139,6 +139,8 @@ const props = defineProps({
 const ic = computed(() => props.tab._inlineChild || {});
 const pfn = computed(() => String(ic.value.parent_fieldname || "").trim());
 const childDoctype = computed(() => String(ic.value.child_doctype || "").trim());
+const cannotAddRows = computed(() => ic.value.cannotAddRows === true);
+const cannotDeleteRows = computed(() => ic.value.cannotDeleteRows === true);
 
 const portalEditOpts = computed(() => ({
 	readOnlyFields: props.readOnlyFields,
@@ -174,6 +176,14 @@ const columns = computed(() =>
 
 const hasEditableColumn = computed(() =>
 	columns.value.some((c) => !isActionButtonColumn(c) && isPortalGridColumnEditable(c, portalEditOpts.value)),
+);
+
+const showDeleteColumn = computed(
+	() => hasEditableColumn.value && !cannotDeleteRows.value,
+);
+
+const showAddRow = computed(
+	() => hasEditableColumn.value && !props.readOnlyHost && !cannotAddRows.value,
 );
 
 const rows = computed(() => {

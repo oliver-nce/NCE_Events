@@ -312,6 +312,15 @@ export function createFrozenFormLoad(ctx) {
 								: parsed
 									? JSON.stringify(parsed)
 									: "";
+						const parentField = (fields || []).find(
+							(f) => f && f.fieldname === pfn && f.fieldtype === "Table",
+						);
+						const cannotAddRows = parentField
+							? Number(parentField.cannot_add_rows) === 1
+							: false;
+						const cannotDeleteRows = parentField
+							? Number(parentField.cannot_delete_rows) === 1
+							: false;
 						tabs.value.push({
 							label,
 							sections,
@@ -323,6 +332,8 @@ export function createFrozenFormLoad(ctx) {
 								info: infoStr,
 								captureError: parsed && parsed.capture_error,
 								hasLayout: sections.length > 0,
+								cannotAddRows,
+								cannotDeleteRows,
 							},
 						});
 						inlineAdded += 1;

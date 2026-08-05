@@ -167,6 +167,25 @@ def _capture_client_scripts(doctype: str) -> list[str]:
 	return scripts
 
 
+def _enrich_table_grid_flags(fields_list: list[dict], meta: Any) -> list[dict]:
+	"""Re-attach Table grid flags dropped by ``DocField.as_dict()``.
+
+	``cannot_add_rows`` / ``cannot_delete_rows`` are runtime grid properties (often
+	set via Property Setter), not DocField schema columns, so ``as_dict()`` strips
+	them. Read them back off the meta docfield so the frozen dialog can honor them.
+	"""
+	grid_flag_keys = ("cannot_add_rows", "cannot_delete_rows")
+	for entry in fields_list:
+		if not isinstance(entry, dict) or entry.get("fieldtype") != "Table":
+			continue
+		df = meta.get_field(entry.get("fieldname"))
+		if not df:
+			continue
+		for key in grid_flag_keys:
+			entry[key] = 1 if getattr(df, key, 0) else 0
+	return fields_list
+
+
 def _build_frozen_meta_json(doctype: str) -> tuple[str, list[dict]]:
 	"""
 	Build the ``frozen_meta_json`` string for a DocType by snapshotting its meta,
@@ -179,6 +198,7 @@ def _build_frozen_meta_json(doctype: str) -> tuple[str, list[dict]]:
 	meta = frappe.get_meta(doctype)
 	fields_list = [f.as_dict() for f in meta.fields]
 	fields_list = _enrich_fetch_from_fields(fields_list, meta)
+	fields_list = _enrich_table_grid_flags(fields_list, meta)
 	client_scripts = _capture_client_scripts(doctype)
 	frozen_json = json.dumps(
 		{"fields": fields_list, "client_scripts": client_scripts},
