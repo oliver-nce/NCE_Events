@@ -6,63 +6,6 @@ import frappe
 from frappe import _
 
 READ_ONLY_ROLE_DEFAULT = "Read Only"
-NCE_PROFILE_ROLE_PREFIX = "NCE "
-
-
-def _user_nce_profile_roles() -> list[str]:
-	"""Roles managed by NCE Access Profile (``NCE {profile_name}``)."""
-	return [r for r in frappe.get_roles() if r.startswith(NCE_PROFILE_ROLE_PREFIX)]
-
-
-def _allowed_doctypes_from_nce_profiles(roles: list[str]) -> frozenset[str]:
-	"""Union of DocTypes with read/write/restricted-write on any of the user's NCE profiles."""
-	if not roles or not frappe.db.table_exists("NCE Access Profile"):
-		return frozenset()
-
-	allowed: set[str] = set()
-	for role in roles:
-		profile_name = frappe.db.get_value("NCE Access Profile", {"role": role}, "name")
-		if not profile_name:
-			continue
-		rows = frappe.get_all(
-			"NCE Access Profile Table",
-			filters={"parent": profile_name, "parenttype": "NCE Access Profile"},
-			fields=["document_type", "read", "write", "restrict_write"],
-		)
-		for row in rows:
-			dt = (row.get("document_type") or "").strip()
-			if not dt:
-				continue
-			if row.get("read") or row.get("write") or row.get("restrict_write"):
-				allowed.add(dt)
-	return frozenset(allowed)
-
-
-def user_can_view_panel_doctype(doctype: str, *, nce_allowed: frozenset[str] | None = None) -> bool:
-	"""Whether the current user may open a panel for ``doctype``.
-
-	Users with NCE Access Profile roles are gated by profile ``table_access``
-	only — not other Frappe roles that might still grant read (e.g. ``All``,
-	``Read Only`` sync). Everyone else falls back to ``frappe.has_permission``.
-	"""
-	dt = (doctype or "").strip()
-	if not dt:
-		return False
-
-	nce_roles = _user_nce_profile_roles()
-	if nce_roles:
-		allowed = nce_allowed if nce_allowed is not None else _allowed_doctypes_from_nce_profiles(nce_roles)
-		return dt in allowed
-
-	return bool(frappe.has_permission(dt, "read"))
-
-
-def panel_visible_doctypes_for_user() -> frozenset[str] | None:
-	"""Precomputed allow-list for NCE profile users; ``None`` = use ``has_permission`` per row."""
-	nce_roles = _user_nce_profile_roles()
-	if not nce_roles:
-		return None
-	return _allowed_doctypes_from_nce_profiles(nce_roles)
 
 
 def _require_system_manager() -> None:
