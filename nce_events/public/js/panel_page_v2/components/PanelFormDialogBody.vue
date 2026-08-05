@@ -42,6 +42,13 @@
 					@go-to-panel="(ev) => $emit('go-to-panel', ev)"
 				/>
 
+				<PanelFormDialogNativeFormTab
+					v-else-if="useNativeForm && tab._inlineChild"
+					mode="inline_child"
+					:focus-fieldname="tab._inlineChild.parent_fieldname"
+					:is-active="tabs.length === 1 || activeTab === ti"
+				/>
+
 				<PanelFormDialogInlineChildTab
 					v-else-if="tab._inlineChild"
 					:tab="tab"
@@ -54,6 +61,14 @@
 					<PanelFormScriptToolTab
 						v-else-if="tab._scriptTool"
 						:tab="tab"
+					/>
+
+					<!-- Native Frappe form (Details) when inline child tables use native grid -->
+					<PanelFormDialogNativeFormTab
+						v-else-if="useNativeForm"
+						mode="details"
+						:hide-fieldnames="inlineFieldnames"
+						:is-active="tabs.length === 1 || activeTab === ti"
 					/>
 
 					<!-- Normal frozen-schema tab -->
@@ -166,6 +181,7 @@ import PanelFormField from "./PanelFormField.vue";
 import PanelFormDialogTabBar from "./PanelFormDialogTabBar.vue";
 import PanelFormDialogRelatedTab from "./PanelFormDialogRelatedTab.vue";
 import PanelFormDialogInlineChildTab from "./PanelFormDialogInlineChildTab.vue";
+import PanelFormDialogNativeFormTab from "./PanelFormDialogNativeFormTab.vue";
 import PanelFormScriptToolTab from "./PanelFormScriptToolTab.vue";
 import PanelFormFindSearchHelpModal from "./PanelFormFindSearchHelpModal.vue";
 
@@ -200,6 +216,10 @@ const props = defineProps({
 	/** Disable editing on inline child tabs (e.g. Find criteria mode). */
 	readOnlyHost: { type: Boolean, default: false },
 	goToBusy: { type: Boolean, default: false },
+	/** Mount real frappe.ui.form.Form for Details + inline child table tabs. */
+	useNativeForm: { type: Boolean, default: false },
+	/** Parent table fieldnames to hide on the Details native form view. */
+	inlineFieldnames: { type: Array, default: () => [] },
 });
 
 const emit = defineEmits([

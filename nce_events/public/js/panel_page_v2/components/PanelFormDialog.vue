@@ -91,6 +91,8 @@
 				:findable-fieldnames="findableFieldnames"
 				:read-only-host="findCriteriaActive"
 				:go-to-busy="goToPanelBusy"
+				:use-native-form="useNativeForm"
+				:inline-fieldnames="inlineFieldnames"
 				v-model:active-tab="activeTab"
 				@field-change="onFieldChange"
 				@find-criteria-patch="patchFindCriterion"
@@ -166,6 +168,7 @@ import {
 	runProductRefund,
 	showRefundActionResult,
 } from "../utils/enrollmentWpActions.js";
+import { createNativeFormHost } from "../utils/nativeFormHost.js";
 
 
 function escapeForPreHtml(s) {
@@ -421,7 +424,76 @@ const showFdLoadDebug = ref(false);
 
 const loadDebugRows = computed(() => form.loadDebugLog.value);
 
-const footerIsDirty = computed(() => displayDirty.value || relatedDirty.value);
+const nativeFormDirty = ref(false);
+const nativeFormReady = ref(false);
+const nativeFormFailed = ref(false);
+const nativeFormHost = createNativeFormHost({
+	onDirty: () => {
+		nativeFormDirty.value = true;
+	},
+});
+
+provide("nativeFormHost", nativeFormHost);
+provide("nativeFormReady", nativeFormReady);
+
+const inlineFieldnames = computed(() =>
+	nativeFormHost.collectInlineFieldnames(form.tabs.value),
+);
+
+const useNativeForm = computed(() => {
+	if (findCriteriaActive.value) {
+		return false;
+	}
+	if (nativeFormFailed.value) {
+		return false;
+	}
+	if (!props.docName) {
+		return false;
+	}
+	if (props.dialogLoadMode === "find-shell") {
+		return false;
+	}
+	return inlineFieldnames.value.length > 0;
+});
+
+function teardownNativeForm() {
+	nativeFormHost.destroy();
+	nativeFormReady.value = false;
+	nativeFormDirty.value = false;
+	nativeFormFailed.value = false;
+}
+
+async function bootstrapNativeForm() {
+	nativeFormReady.value = false;
+	nativeFormDirty.value = false;
+	if (!useNativeForm.value) {
+		return;
+	}
+	if (nativeFormHost.isActive()) {
+		nativeFormHost.destroy();
+	}
+	try {
+		await nativeFormHost.bootstrap({
+			doctype: props.doctype,
+			docname: props.docName,
+		});
+		nativeFormReady.value = true;
+	} catch (e) {
+		nativeFormFailed.value = true;
+		ppv2DebugWarn("[NativeForm] bootstrap failed:", e);
+	}
+}
+
+function syncNativeFormToFormData() {
+	if (useNativeForm.value && nativeFormHost.isActive()) {
+		nativeFormHost.syncDocToFormData(form.formData);
+		nativeFormDirty.value = false;
+	}
+}
+
+const footerIsDirty = computed(
+	() => displayDirty.value || relatedDirty.value || nativeFormDirty.value,
+);
 
 function isFieldDisplayDirty(fieldname) {
 	return changedDisplayFields.value.includes(fieldname);
@@ -574,6 +646,7 @@ async function refreshFormAfterSave() {
 	try {
 		/* Load root doc first so ``docName`` / link fields are in sync, then bump tick so related tabs refetch. */
 		await form.load();
+		await bootstrapNativeForm();
 		await nextTick();
 		relatedDirty.value = false;
 		internalReloadTick.value += 1;
@@ -603,6 +676,7 @@ function onRevert() {
 		fdBodyRef.value?.resetRelatedToBaseline?.();
 		relatedDirty.value = false;
 		refreshBaselineAfterRevert();
+		bootstrapNativeForm();
 	};
 	if (typeof frappe !== "undefined" && frappe.confirm) {
 		frappe.confirm(msg, proceed, () => {});
@@ -650,6 +724,7 @@ watch(
 		if (!cur.open) {
 			disarmBackdropDismiss();
 			window.removeEventListener("keydown", onFormDialogKeydown, true);
+			teardownNativeForm();
 			form.resetWhenClosed();
 			return;
 		}
@@ -679,8 +754,33 @@ onUnmounted(() => {
 		footerResizeObs = null;
 	}
 	window.removeEventListener("keydown", onFormDialogKeydown, true);
+	teardownNativeForm();
 	form.resetWhenClosed();
 });
+
+watch(
+	() => [
+		props.open,
+		form.loading.value,
+		props.docName,
+		props.doctype,
+		inlineFieldnames.value.join(","),
+		findCriteriaActive.value,
+	],
+	async () => {
+		if (!props.open || form.loading.value) {
+			return;
+		}
+		if (!useNativeForm.value) {
+			if (nativeFormHost.isActive()) {
+				teardownNativeForm();
+			}
+			return;
+		}
+		nativeFormFailed.value = false;
+		await bootstrapNativeForm();
+	},
+);
 
 function onFieldChange({ fieldname, value }) {
 	form.formData[fieldname] = value;
@@ -710,7 +810,7 @@ async function savePendingEditsBeforeNavigate() {
 	}
 
 	const onSubmitMethod = (form.definition.value?.on_submit_method || "").trim();
-	if (onSubmitMethod && displayDirty.value) {
+	if (onSubmitMethod && (displayDirty.value || nativeFormDirty.value)) {
 		form.validationError.value = __("Use Submit and Close or Submit and Refresh to save this form before opening the panel.");
 		if (typeof frappe !== "undefined" && frappe.msgprint) {
 			frappe.msgprint({
@@ -726,8 +826,9 @@ async function savePendingEditsBeforeNavigate() {
 	let mainSaved = false;
 	let relatedSaved = false;
 
-	if (displayDirty.value) {
+	if (displayDirty.value || nativeFormDirty.value) {
 		form.validationError.value = null;
+		syncNativeFormToFormData();
 		const errors = form.validate();
 		if (errors.length) {
 			form.validationError.value = errors.map((e) => e.message).join(", ");
@@ -974,6 +1075,7 @@ async function runForcedSubmitRefreshReadback({
 			};
 			pollLog?.("save", "skipped (already persisted server-side)");
 		} else {
+			syncNativeFormToFormData();
 			result = await form.save();
 		}
 	} finally {
@@ -1059,6 +1161,7 @@ async function onSubmit(opts = {}) {
 		if (onSubmitMethod) {
 			perf.push("branch", "custom on_submit_method");
 			form.validationError.value = null;
+			syncNativeFormToFormData();
 			const errors = form.validate();
 			if (errors.length) {
 				form.validationError.value = errors.map((e) => e.message).join(", ");
@@ -1073,6 +1176,7 @@ async function onSubmit(opts = {}) {
 				return;
 			}
 			perf.push("step", "commitFocusedFrappeWidget (custom submit)");
+			syncNativeFormToFormData();
 			const raw = JSON.parse(JSON.stringify(form.formData));
 			let doc = { doctype: props.doctype, ...raw };
 			if (props.doctype === "Events") {
@@ -1153,7 +1257,8 @@ async function onSubmit(opts = {}) {
 		perf.push("branch", "standard Frappe save + readback");
 
 		let result = null;
-		if (displayDirty.value) {
+		if (displayDirty.value || nativeFormDirty.value) {
+			syncNativeFormToFormData();
 			perf.push("save", "form.save() …");
 			result = await form.save();
 			perf.push(
@@ -1175,7 +1280,7 @@ async function onSubmit(opts = {}) {
 		let hookResult = null;
 		if (
 			submitHookMethod &&
-			(displayDirty.value || forceRun) &&
+			(displayDirty.value || nativeFormDirty.value || forceRun) &&
 			String(result?.name || "").match(/^\d+$/)
 		) {
 			perf.push("step", `post-save woo hook ${submitHookMethod}`);
@@ -1505,6 +1610,7 @@ async function onPlaceholderButton(btn) {
 		try {
 			form.formData.session_dates_edit_ok = freezing ? 1 : 0;
 			form.formData.sessions_table_edit_ok = freezing ? 1 : 0;
+			syncNativeFormToFormData();
 			await form.save();
 			await refreshFormAfterSave();
 		} catch (e) {
