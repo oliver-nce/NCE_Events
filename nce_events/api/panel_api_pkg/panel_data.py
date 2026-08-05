@@ -7,7 +7,11 @@ import frappe
 from frappe import _
 from frappe.utils import cint
 
-from nce_events.api.permissions import _doctype_from_wp_tables_row
+from nce_events.api.permissions import (
+	_doctype_from_wp_tables_row,
+	panel_visible_doctypes_for_user,
+	user_can_view_panel_doctype,
+)
 
 from nce_events.api.panel_api_pkg._helpers import (
 	_auto_detect_contact_fields,
@@ -103,18 +107,19 @@ def _require_root_doctype_read(root_doctype: str) -> None:
 	dt = (root_doctype or "").strip()
 	if not dt or dt == "WP Tables":
 		return
-	if not frappe.has_permission(dt, "read"):
+	if not user_can_view_panel_doctype(dt):
 		frappe.throw(_("Not permitted"), frappe.PermissionError)
 
 
 def _filter_wp_tables_catalog_rows(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
 	"""Drop WP Tables catalog rows whose underlying DocType the user cannot read."""
+	nce_allowed = panel_visible_doctypes_for_user()
 	out: list[dict[str, Any]] = []
 	for row in rows:
 		dt = _doctype_from_wp_tables_row(row)
 		if not dt:
 			continue
-		if frappe.has_permission(dt, "read"):
+		if user_can_view_panel_doctype(dt, nce_allowed=nce_allowed):
 			out.append(row)
 	return out
 
