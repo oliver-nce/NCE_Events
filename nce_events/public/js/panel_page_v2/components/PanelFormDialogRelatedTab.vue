@@ -504,6 +504,8 @@ const relatedLinkField = computed(() => String(props.tab?._related?.link_field |
 const portalEditOpts = computed(() => ({
 	readOnlyFields: props.readOnlyFields,
 	linkField: relatedLinkField.value,
+	canWrite: relatedState[props.ti]?.can_write !== false,
+	writablePermlevels: relatedState[props.ti]?.writable_permlevels ?? null,
 }));
 
 function isRelatedCellEditable(col) {
@@ -700,6 +702,10 @@ async function fetchRelatedForTab(ti) {
 		relatedState[ti].actions = Array.isArray(msg.actions) ? msg.actions : [];
 		relatedState[ti].edit_allowed = msg.edit_allowed !== false;
 		relatedState[ti].allow_add_remove = !!msg.allow_add_remove;
+		relatedState[ti].can_write = msg.can_write !== 0 && msg.can_write !== false;
+		relatedState[ti].writable_permlevels = Array.isArray(msg.writable_permlevels)
+			? msg.writable_permlevels.map(Number)
+			: null;
 		addDraftActive.value = false;
 		emit("related-dirty", false);
 	} catch (e) {
@@ -710,6 +716,8 @@ async function fetchRelatedForTab(ti) {
 		relatedState[ti].baseline = [];
 		relatedState[ti].columns = [];
 		relatedState[ti].actions = [];
+		relatedState[ti].can_write = true;
+		relatedState[ti].writable_permlevels = null;
 		relatedState[ti].error = e?.message || String(e) || "Failed to load related rows";
 	} finally {
 		if (relatedSeq[ti] === seq) {

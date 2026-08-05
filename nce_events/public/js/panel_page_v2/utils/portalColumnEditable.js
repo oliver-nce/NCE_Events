@@ -37,6 +37,10 @@ export function isPortalGridColumnEditable(col, opts = {}) {
 	if (!col) {
 		return false;
 	}
+	// User lacks write permission on the child DocType — no column is editable.
+	if (opts.canWrite === false) {
+		return false;
+	}
 	const ft = col.fieldtype;
 	if (!ft || RELATED_GRID_NON_EDITABLE_TYPES.has(ft)) {
 		return false;
@@ -46,6 +50,13 @@ export function isPortalGridColumnEditable(col, opts = {}) {
 	}
 	if (isFieldInPanelReadOnlyList(col.fieldname, opts.readOnlyFields, opts.linkField)) {
 		return false;
+	}
+	// Permlevel gate: only writable when the column's permlevel is in the allowed
+	// set. A non-array (null) means "undeterminable" — skip the gate (fail-open).
+	if (Array.isArray(opts.writablePermlevels)) {
+		if (!opts.writablePermlevels.includes(Number(col.permlevel || 0))) {
+			return false;
+		}
 	}
 	return true;
 }

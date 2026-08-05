@@ -91,6 +91,8 @@ export function createFrozenFormLoad(ctx) {
 		syncingFromLoad,
 		loadDebugLog,
 		definitionSource,
+		canWrite,
+		writablePermlevels,
 	} = ctx;
 
 	let loadSeq = 0;
@@ -116,6 +118,8 @@ export function createFrozenFormLoad(ctx) {
 		allFields.value = [];
 		definition.value = null;
 		buttons.value = [];
+		if (canWrite) canWrite.value = true;
+		if (writablePermlevels) writablePermlevels.value = null;
 		for (const key of Object.keys(formData)) {
 			delete formData[key];
 		}
@@ -131,6 +135,8 @@ export function createFrozenFormLoad(ctx) {
 		error.value = null;
 		validationError.value = null;
 		syncingFromLoad.value = false;
+		if (canWrite) canWrite.value = true;
+		if (writablePermlevels) writablePermlevels.value = null;
 
 		const defnName = unref(definitionName);
 		const dt = unref(doctype);
@@ -436,6 +442,36 @@ export function createFrozenFormLoad(ctx) {
 				return;
 			}
 			pushDebug("fetch_from batch", true, `${linkFields.length} link field(s)`);
+
+			// Write-permission context: fields the user can't write are shown read-only
+			// up front. Fail-open (editable) on any error so this never blocks editing.
+			if (!findShell && canWrite && writablePermlevels) {
+				try {
+					const wc = await frappeCall(
+						"nce_events.api.form_dialog.save.get_form_dialog_write_context",
+						{ doctype: dt, name: dn || null },
+					);
+					if (mySeq !== loadSeq) {
+						pushDebug("aborted", false, "stale seq after write_context");
+						return;
+					}
+					canWrite.value = !(wc?.can_write === 0 || wc?.can_write === false);
+					writablePermlevels.value = Array.isArray(wc?.writable_permlevels)
+						? wc.writable_permlevels.map(Number)
+						: null;
+					pushDebug(
+						"write_context",
+						true,
+						`can_write=${canWrite.value} permlevels=${
+							writablePermlevels.value ? writablePermlevels.value.join(",") : "all"
+						}`,
+					);
+				} catch (e) {
+					canWrite.value = true;
+					writablePermlevels.value = null;
+					pushDebug("write_context", false, "fail-open (editable)", e?.message || e);
+				}
+			}
 
 			originalData.value = JSON.parse(JSON.stringify(formData));
 			pushDebug("originalData snapshot", true, `keys=${Object.keys(formData).length}`);

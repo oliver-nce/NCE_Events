@@ -26,6 +26,44 @@ from ._helpers import (
 from .edit_condition import evaluate_edit_condition
 
 
+def _writable_permlevels(doctype: str) -> list[int] | None:
+	"""Permlevels the current user may write on ``doctype`` (None if undeterminable).
+
+	A None result tells the client to skip permlevel gating (fail-open) rather
+	than lock every field, so an API mismatch never blocks legitimate editing.
+	"""
+	try:
+		levels = frappe.new_doc(doctype).get_permlevel_access("write")
+		return sorted({cint(x) for x in levels})
+	except Exception:
+		return None
+
+
+def _child_write_context(child_dt: str) -> dict[str, Any]:
+	"""DocType-level write flag + writable permlevels for a related child grid."""
+	try:
+		can_write = 1 if frappe.has_permission(child_dt, "write") else 0
+	except Exception:
+		can_write = 1
+	return {"can_write": can_write, "writable_permlevels": _writable_permlevels(child_dt)}
+
+
+def _enrich_columns_with_permlevel(child_dt: str, columns: list[dict[str, Any]]) -> None:
+	"""Annotate each related column in place with its DocField ``permlevel`` (0 if unknown)."""
+	try:
+		meta = frappe.get_meta(child_dt)
+	except Exception:
+		meta = None
+	for col in columns:
+		fn = cstr(col.get("fieldname") or "").strip()
+		pl = 0
+		if meta and fn and fn != "name":
+			df = meta.get_field(fn)
+			if df is not None:
+				pl = cint(getattr(df, "permlevel", 0))
+		col["permlevel"] = pl
+
+
 def _inline_child_tables_for_vue_api(doc: Any) -> list[dict[str, Any]]:
 	"""Inline Table-field tabs for V2 — same portal columns shape as related rows."""
 	out: list[dict[str, Any]] = []
@@ -208,7 +246,7 @@ def get_form_dialog_related_rows(
 	Returns:
 	    ``{ child_doctype, columns, rows, order_by, edit_allowed, allow_add_remove }``.
 	"""
-	_, row, child_dt, link_f, hc = _load_related_tab_context(
+	dialog_doc, row, child_dt, link_f, hc = _load_related_tab_context(
 		definition,
 		related_row_name,
 		root_doctype,
@@ -224,6 +262,8 @@ def get_form_dialog_related_rows(
 
 	filters, force_empty = _filters_for_related_rows(root_name, child_dt, link_f, hc)
 	columns, order_by = _related_list_columns_from_child_row(row)
+	_enrich_columns_with_permlevel(child_dt, columns)
+	write_ctx = _child_write_context(child_dt)
 	field_list = _sanitize_get_list_fields(child_dt, [cstr(c.get("fieldname") or "") for c in columns])
 
 	from nce_events.api.form_dialog.portal_actions import get_portal_actions_for_row
@@ -238,6 +278,7 @@ def get_form_dialog_related_rows(
 			"rows": [],
 			"order_by": order_by,
 			"actions": actions,
+			**write_ctx,
 			**flags,
 		}
 
@@ -254,6 +295,7 @@ def get_form_dialog_related_rows(
 		"rows": rows,
 		"order_by": order_by,
 		"actions": actions,
+		**write_ctx,
 		**flags,
 	}
 
@@ -267,7 +309,7 @@ def reevaluate_related_tab_edit_allowed(
 	pending_root_values: str | dict | None = None,
 ) -> dict[str, Any]:
 	"""Recompute edit_allowed / allow_add_remove without refetching child rows."""
-	_, row, _child_dt, _link_f, _hc = _load_related_tab_context(
+	dialog_doc, row, _child_dt, _link_f, _hc = _load_related_tab_context(
 		definition,
 		related_row_name,
 		root_doctype,
@@ -383,7 +425,7 @@ def save_form_dialog_related_rows(
 	Returns:
 	    ``{ "ok": 1, "saved": <int> }`` — number of child documents saved (0 if updates empty).
 	"""
-	_, row, child_dt, link_f, hc = _load_related_tab_context(
+	dialog_doc, row, child_dt, link_f, hc = _load_related_tab_context(
 		definition,
 		related_row_name,
 		root_doctype,
@@ -422,7 +464,10 @@ def save_form_dialog_related_rows(
 		if not values:
 			continue
 		if not frappe.has_permission(child_dt, "write", doc=cname):
-			frappe.throw(_("Not permitted"), frappe.PermissionError)
+			frappe.throw(
+				_("You do not have permission to edit {0}").format(child_dt),
+				frappe.PermissionError,
+			)
 
 		child = frappe.get_doc(child_dt, cname)
 		for fn, raw_val in values.items():
@@ -449,7 +494,7 @@ def add_form_dialog_related_row(
 	values: str | dict | None = None,
 ) -> dict[str, Any]:
 	"""Create a child row linked to the open root document (direct child tabs only)."""
-	_, row, child_dt, link_f, hc = _load_related_tab_context(
+	dialog_doc, row, child_dt, link_f, hc = _load_related_tab_context(
 		definition,
 		related_row_name,
 		root_doctype,
@@ -465,7 +510,10 @@ def add_form_dialog_related_row(
 		frappe.throw(_("Add row is only supported for direct child tabs (no hop chain)."))
 
 	if not frappe.has_permission(child_dt, "create"):
-		frappe.throw(_("Not permitted"), frappe.PermissionError)
+		frappe.throw(
+			_("You do not have permission to add {0}").format(child_dt),
+			frappe.PermissionError,
+		)
 
 	values = frappe.parse_json(values) if isinstance(values, str) else (values or {})
 	allowed_fields = _editable_related_fieldnames_for_save(
@@ -494,7 +542,7 @@ def delete_form_dialog_related_row(
 	child_name: str,
 ) -> dict[str, Any]:
 	"""Delete one child row from a related tab."""
-	_, row, child_dt, link_f, hc = _load_related_tab_context(
+	dialog_doc, row, child_dt, link_f, hc = _load_related_tab_context(
 		definition,
 		related_row_name,
 		root_doctype,
@@ -514,7 +562,10 @@ def delete_form_dialog_related_row(
 	if child_name not in allowed:
 		frappe.throw(_("Not permitted to delete this row"), frappe.PermissionError)
 	if not frappe.has_permission(child_dt, "delete", doc=child_name):
-		frappe.throw(_("Not permitted"), frappe.PermissionError)
+		frappe.throw(
+			_("You do not have permission to delete {0}").format(child_dt),
+			frappe.PermissionError,
+		)
 
 	frappe.delete_doc(child_dt, child_name)
 	return {

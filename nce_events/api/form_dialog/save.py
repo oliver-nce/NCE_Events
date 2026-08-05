@@ -127,6 +127,40 @@ def save_form_dialog_document(
 	else:
 		d = frappe.get_doc(doc)
 	d.save(ignore_version=True)
-	result = d.as_dict()
-	result["sync_job_ids"] = list(getattr(frappe.local, "nce_sync_queued_job_ids", []))
-	return result
+	return d.as_dict()
+
+
+@frappe.whitelist()
+def get_form_dialog_write_context(
+	doctype: str, name: str | None = None
+) -> dict[str, Any]:
+	"""
+	Write-permission context for a Form Dialog record, so the client can render
+	fields the user cannot edit as read-only up front (instead of failing at save).
+
+	Returns:
+	    ``can_write``: 1 if the user may write this record (or create, when new), else 0.
+	    ``writable_permlevels``: sorted permlevels the user may write. ``None`` means
+	    the value could not be determined — the client then skips permlevel gating
+	    (fail-open) so field editing is never blocked by an API mismatch.
+	"""
+	if not doctype:
+		frappe.throw(_("Missing doctype"))
+	_assert_doctype_in_wp_tables(doctype)
+
+	name = cstr(name or "").strip() or None
+	if name:
+		can_write = 1 if frappe.has_permission(doctype, "write", doc=name) else 0
+	else:
+		can_write = 1 if frappe.has_permission(doctype, "create") else 0
+
+	try:
+		if name:
+			levels = frappe.get_doc(doctype, name).get_permlevel_access("write")
+		else:
+			levels = frappe.new_doc(doctype).get_permlevel_access("write")
+		writable_permlevels = sorted({cint(x) for x in levels})
+	except Exception:
+		writable_permlevels = None
+
+	return {"can_write": can_write, "writable_permlevels": writable_permlevels}

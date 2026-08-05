@@ -52,6 +52,11 @@ export function usePanelFormDialog({
 	/** Field display overrides written by captured client scripts via set_df_property. */
 	const scriptFieldOverrides = reactive({});
 
+	/** DocType-level write permission for the open record (fail-open: true). */
+	const canWrite = ref(true);
+	/** Permlevels the user may write; null → skip permlevel gating (fail-open). */
+	const writablePermlevels = ref(null);
+
 	const handleFetchFrom = createHandleFetchFrom(allFields, formData);
 
 	const { load, resetWhenClosed } = createFrozenFormLoad({
@@ -72,6 +77,8 @@ export function usePanelFormDialog({
 		syncingFromLoad,
 		loadDebugLog,
 		definitionSource,
+		canWrite,
+		writablePermlevels,
 	});
 
 	const { activateScripts, mountTool, runOnChange } = useFormClientScript({
@@ -208,7 +215,18 @@ export function usePanelFormDialog({
 		return keys.some((k) => String(k || "").trim() === fn && !String(k).includes("."));
 	}
 
+	/** True when the user may write this field, honouring DocType write + permlevel. */
+	function isFieldWritableByPerm(field) {
+		if (canWrite.value === false) return false;
+		const wp = writablePermlevels.value;
+		if (!Array.isArray(wp)) return true;
+		return wp.includes(Number(field?.permlevel || 0));
+	}
+
 	function isFieldReadOnly(field) {
+		// Permission gate wins over script overrides: the server would reject or
+		// silently reset these fields anyway, so never present them as editable.
+		if (!isFieldWritableByPerm(field)) return true;
 		const ov = scriptFieldOverrides[field.fieldname];
 		if (ov && ov.read_only !== undefined) return !!ov.read_only;
 		if (isRootFieldPanelReadOnly(field.fieldname, unref(panelReadOnlyFields) || [])) {
@@ -247,6 +265,8 @@ export function usePanelFormDialog({
 		isFieldVisible,
 		isFieldMandatory,
 		isFieldReadOnly,
+		canWrite,
+		writablePermlevels,
 		onFieldChange,
 		mountTool,
 		handleFetchFrom,
