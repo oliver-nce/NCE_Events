@@ -95,9 +95,13 @@ _COLOUR_COPY_FIELDS: tuple[str, ...] = (
 
 
 def _require_root_doctype_read(root_doctype: str) -> None:
-	"""Raise if the current user cannot read the panel's underlying DocType."""
+	"""Raise if the current user cannot read the panel's underlying DocType.
+
+	WP Tables is the SPA catalog picker — skip the gate there; row-level
+	``_filter_wp_tables_catalog_rows`` hides DocTypes the user cannot read.
+	"""
 	dt = (root_doctype or "").strip()
-	if not dt:
+	if not dt or dt == "WP Tables":
 		return
 	if not frappe.has_permission(dt, "read"):
 		frappe.throw(_("Not permitted"), frappe.PermissionError)
