@@ -13,6 +13,9 @@
  "roles": [
   {
    "role": "System Manager"
+  },
+  {
+   "role": "NCE Manager"
   }
  ],
  "standard": "Yes",
