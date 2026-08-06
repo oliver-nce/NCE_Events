@@ -308,6 +308,15 @@
         "Hierarchy data fetch"
       ]
     },
+    "nce_events/api/permissions.py": {
+      "purpose": "Panel/desk permission helpers — resolve DocType from WP Tables rows, bulk-grant Read on WP Tables DocTypes to a role, and gate panel visibility on explicit DocPerm read/write (has_explicit_doctype_read, not frappe.has_permission).",
+      "depends_on": [],
+      "sections": [
+        "WP Tables DocType resolution",
+        "Explicit DocPerm read check for panel catalog",
+        "Bulk read-only grant for WP Tables DocTypes"
+      ]
+    },
     "nce_events/api/llm.py": {
       "purpose": "LLM/AI integration helpers for AI tools panel feature",
       "depends_on": [],
@@ -933,6 +942,9 @@
         "utils/formDialogRelatedGoTo.js"
       ]
     },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogNativeFormTab.vue": {
+      "purpose": "Form dialog native-form tab — renders a Desk-style native form (via nativeFormHost) for the record instead of frozen frozen-meta fields; used for inline_child parent field / details tab routing."
+    },
     "nce_events/public/js/panel_page_v2/utils/relatedCellFormat.js": {
       "purpose": "Pure cell-format helpers for related-doctype portal grids: mandatory asterisk, Select options, raw/truthy/format values, editable/number/long-text column checks."
     },
@@ -1101,6 +1113,9 @@
     },
     "nce_events/api/tests/api/panel_api_pkg/test_discovery.py": {
       "purpose": "Unit tests for panel_api_pkg child-doctype discovery, multi-hop link paths (1/2/3-hop), and get_multi_hop_children classification."
+    },
+    "nce_events/api/tests/api/panel_api_pkg/test_panel_rest_export.py": {
+      "purpose": "Unit tests for panel_export CSV helpers (_csv_export_columns, build_panel_csv_text) via Frappe-stubbed unittest."
     },
     "nce_events/api/tests/api/panel_api_pkg/test_theme_slug.py": {
       "purpose": "Unit tests for theme_slug.resolve_theme_slug (Active slug, site default fallback, missing/inactive docs)."
@@ -1332,6 +1347,15 @@
     },
     "nce_events/public/js/panel_page_v2/utils/enrollmentWpActions.js": {
       "purpose": "Enrollment refund UX helpers: cancellation-fee prompt field spec, parseCancellationFeeInput, runProductRefund via execute_product_refund, outcome msgprint HTML."
+    },
+    "nce_events/public/js/panel_page_v2/utils/accessProfileManageFields.js": {
+      "purpose": "Manage Fields dialog for NCE Access Profile Table rows — toggle per-field Restricted (permlevel 1) via nce_sync set_field_restricted / set_all_fields_restricted endpoints."
+    },
+    "nce_events/public/js/panel_page_v2/utils/inlineChildTableLayout.js": {
+      "purpose": "Inline child-table column layout for Form Dialog grids: build column layout, role/header/cell classes, and col styles mirroring Desk list view."
+    },
+    "nce_events/public/js/panel_page_v2/utils/nativeFormHost.js": {
+      "purpose": "Native form host helper (createNativeFormHost) — hosts a Desk-style native form surface inside the panel form dialog."
     },
     "nce_events/public/js/panel_page_v2/utils/navigateToSpaPage.js": {
       "purpose": "Navigate between panel SPA Frappe Pages via frappe.set_route(slug) without full reload (preserves mounted Vue apps)."

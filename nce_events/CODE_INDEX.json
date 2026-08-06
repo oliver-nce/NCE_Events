@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Manual overlay merged into CODE_INDEX.json by scripts/build_code_index.py. Edit per-file entries here; the generator preserves your curated 'purpose', 'sections', 'private_helpers', 'key_fields', and 'depends_on'.",
-    "generated": "2026-06-29",
+    "generated": "2026-08-06",
     "generator": "scripts/build_code_index.py",
     "usage": "Run `python scripts/build_code_index.py --write` to regenerate CODE_INDEX.json after editing this file or after adding/renaming/deleting source files. The pre-commit hook runs `--check` and blocks commits whose code changes have not been regenerated."
   },
@@ -57,6 +57,12 @@
       "purpose": "Frappe app package root for nce_events (version string, app metadata)."
     },
     "nce_events/api/__init__.py": {
+      "exports": [
+        "get_panel"
+      ],
+      "whitelist_endpoints": [
+        "get_panel"
+      ],
       "purpose": "API package marker — endpoints live in submodules (panel_api_pkg, form_dialog, messaging, etc.)."
     },
     "nce_events/api/credentials.py": {
@@ -101,6 +107,7 @@
         "delete_event",
         "duplicate_event_finalize",
         "duplicate_event_start",
+        "get_delete_event_preview",
         "publish_new_woo_commerce_product",
         "slugify_product_slug",
         "submit_new_woo_commerce_product",
@@ -112,6 +119,7 @@
         "delete_event",
         "duplicate_event_finalize",
         "duplicate_event_start",
+        "get_delete_event_preview",
         "publish_new_woo_commerce_product",
         "submit_new_woo_commerce_product",
         "update_events_to_website",
@@ -130,6 +138,7 @@
     },
     "nce_events/api/exchange.py": {
       "exports": [
+        "execute_bulk_refund_by_product",
         "execute_product_exchange",
         "execute_product_refund"
       ],
@@ -304,8 +313,11 @@
     },
     "nce_events/api/form_dialog/portal_fields.py": {
       "exports": [
+        "default_portal_field_config_json",
+        "default_portal_field_config_list",
         "get_inline_child_portal_field_editor",
         "get_related_portal_field_editor",
+        "portal_field_config_from_info",
         "save_inline_child_portal_actions",
         "save_inline_child_portal_field_config",
         "save_related_portal_actions",
@@ -369,9 +381,11 @@
     },
     "nce_events/api/form_dialog/save.py": {
       "exports": [
+        "get_form_dialog_write_context",
         "save_form_dialog_document"
       ],
       "whitelist_endpoints": [
+        "get_form_dialog_write_context",
         "save_form_dialog_document"
       ],
       "purpose": "Server-side Form Dialog document save (save_form_dialog_document) with optional fetch_from writeback. Honours per-DocType + Page Panel required_fields, then optionally pushes fetch_from values back into linked source records before saving.",
@@ -685,6 +699,8 @@
     },
     "nce_events/api/panel_api_pkg/panel_export.py": {
       "exports": [
+        "build_page_panel_csv_text",
+        "build_panel_csv_text",
         "export_panel_data_impl"
       ],
       "purpose": "Panel CSV export implementation: filtered_row_names parsing, cell serialization, public file write. Called by panel_data.export_panel_data whitelist (path must stay on panel_data module).",
@@ -734,6 +750,24 @@
       "purpose": "Read NCE Theme table chrome tokens (header bg, zebra row colours, row/col divider colours and width tiers) from theme_json for Page Panel Colours tab Tables previews and Desk override defaults.",
       "depends_on": [
         "nce_events/api/panel_api_pkg/theme_slug.py"
+      ]
+    },
+    "nce_events/api/permissions.py": {
+      "exports": [
+        "doctypes_from_wp_tables",
+        "grant_read_only_wp_tables",
+        "has_explicit_doctype_read",
+        "sync_wp_tables_read_permissions"
+      ],
+      "whitelist_endpoints": [
+        "grant_read_only_wp_tables"
+      ],
+      "purpose": "Panel/desk permission helpers — resolve DocType from WP Tables rows, bulk-grant Read on WP Tables DocTypes to a role, and gate panel visibility on explicit DocPerm read/write (has_explicit_doctype_read, not frappe.has_permission).",
+      "depends_on": [],
+      "sections": [
+        "WP Tables DocType resolution",
+        "Explicit DocPerm read check for panel catalog",
+        "Bulk read-only grant for WP Tables DocTypes"
       ]
     },
     "nce_events/api/reports.py": {
@@ -871,6 +905,7 @@
     },
     "nce_events/api/tests/api/form_dialog/test_portal_fields.py": {
       "exports": [
+        "TestInlineChildDefaultPortalConfig",
         "TestNormalizePortalFieldConfig",
         "TestPortalNameField",
         "TestRelatedPortalFieldEditor"
@@ -892,6 +927,13 @@
         "TestGetMultiHopChildren"
       ],
       "purpose": "Unit tests for panel_api_pkg child-doctype discovery, multi-hop link paths (1/2/3-hop), and get_multi_hop_children classification."
+    },
+    "nce_events/api/tests/api/panel_api_pkg/test_panel_rest_export.py": {
+      "exports": [
+        "TestBuildPanelCsvText",
+        "TestCsvExportColumns"
+      ],
+      "purpose": "Unit tests for panel_export CSV helpers (_csv_export_columns, build_panel_csv_text) via Frappe-stubbed unittest."
     },
     "nce_events/api/tests/api/panel_api_pkg/test_theme_slug.py": {
       "exports": [
@@ -1542,6 +1584,9 @@
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogInlineChildTab.vue": {
       "purpose": "Form dialog inline child-table tab — portal-editable grid for frozen inline children."
     },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogNativeFormTab.vue": {
+      "purpose": "Form dialog native-form tab — renders a Desk-style native form (via nativeFormHost) for the record instead of frozen frozen-meta fields; used for inline_child parent field / details tab routing."
+    },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue": {
       "vue": {
         "uses_defineEmits": true
@@ -1915,6 +1960,12 @@
         "utils/frappeCall.js"
       ]
     },
+    "nce_events/public/js/panel_page_v2/utils/accessProfileManageFields.js": {
+      "exports": [
+        "openManageFieldsDialog"
+      ],
+      "purpose": "Manage Fields dialog for NCE Access Profile Table rows — toggle per-field Restricted (permlevel 1) via nce_sync set_field_restricted / set_all_fields_restricted endpoints."
+    },
     "nce_events/public/js/panel_page_v2/utils/enrollmentWpActions.js": {
       "exports": [
         "CANCELLATION_FEE_PROMPT_FIELD",
@@ -1988,6 +2039,7 @@
     "nce_events/public/js/panel_page_v2/utils/formDialogPortalColumns.js": {
       "exports": [
         "buildPortalEditorRows",
+        "listViewColumnsForGrid",
         "metaFieldsForPortalEditor",
         "parsePortalFieldConfigRaw",
         "portalColumnsForGrid"
@@ -2044,11 +2096,30 @@
       "purpose": "Utility: Frappe-style depends_on / *_depends_on evaluation and layout fieldtype list for frozen form meta.",
       "depends_on": []
     },
+    "nce_events/public/js/panel_page_v2/utils/inlineChildTableLayout.js": {
+      "exports": [
+        "buildInlineColumnLayout",
+        "inlineCellClass",
+        "inlineColStyle",
+        "inlineColgroupClass",
+        "inlineColumnRole",
+        "inlineHeaderClass",
+        "isInlineActionButtonColumn",
+        "primaryInlineColumnIndex"
+      ],
+      "purpose": "Inline child-table column layout for Form Dialog grids: build column layout, role/header/cell classes, and col styles mirroring Desk list view."
+    },
     "nce_events/public/js/panel_page_v2/utils/measureDeskTitleAnchor.js": {
       "exports": [
         "measureDeskTitleAnchor"
       ],
       "purpose": "Measure Desk navbar title anchor for aligning floating panel chrome with Desk layout."
+    },
+    "nce_events/public/js/panel_page_v2/utils/nativeFormHost.js": {
+      "exports": [
+        "createNativeFormHost"
+      ],
+      "purpose": "Native form host helper (createNativeFormHost) — hosts a Desk-style native form surface inside the panel form dialog."
     },
     "nce_events/public/js/panel_page_v2/utils/navigateToSpaPage.js": {
       "exports": [
