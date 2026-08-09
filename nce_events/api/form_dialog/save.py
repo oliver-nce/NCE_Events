@@ -64,6 +64,11 @@ def save_form_dialog_document(
 
 	_assert_doctype_in_wp_tables(doctype)
 
+	# Start a clean tally of write-back jobs this save enqueues (via the listener's
+	# on_record_change hook). Returned below so the browser waits for the WordPress
+	# copy to finish before it releases the edit-lock and shows the refreshed data.
+	frappe.local.nce_sync_queued_job_ids = []
+
 	name = doc.get("name")
 	if name:
 		if not frappe.has_permission(doctype, "write", doc=name):
@@ -127,7 +132,12 @@ def save_form_dialog_document(
 	else:
 		d = frappe.get_doc(doc)
 	d.save(ignore_version=True)
-	return d.as_dict()
+
+	result = d.as_dict()
+	# Job ids of any write-backs the save triggered (listener → run_write_back_for_doc).
+	# The dialog polls these so it doesn't pull back / release before WordPress is updated.
+	result["sync_job_ids"] = list(getattr(frappe.local, "nce_sync_queued_job_ids", []))
+	return result
 
 
 @frappe.whitelist()

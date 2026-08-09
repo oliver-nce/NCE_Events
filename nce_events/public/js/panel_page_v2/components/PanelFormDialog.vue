@@ -1153,6 +1153,8 @@ async function onSubmit(opts = {}) {
 		`submit(${afterSave}) ${props.doctype} def=${props.definitionName || ""} doc=${props.docName || "(new)"}`,
 	);
 	const pollLog = (cat, msg) => perf.push(cat, msg);
+	// Set once begin_dialog_edit succeeds, so the finally only releases what we took.
+	let editLockAcquired = false;
 	try {
 		const forceRun = !!opts?.shift;
 		const blurredField = await commitFocusedFrappeWidget();
@@ -1271,6 +1273,35 @@ async function onSubmit(opts = {}) {
 
 		perf.push("branch", "standard Frappe save + readback");
 
+		// Mark this dialog's tables "under edit" so syncs stand down and another
+		// user's overlapping submit is refused. Held until the finally below.
+		try {
+			await frappeCall(
+				"nce_events.api.form_dialog.sync_related.begin_dialog_edit",
+				{
+					definition: props.definitionName,
+					root_doctype: props.doctype,
+					root_name: props.docName || "",
+				},
+			);
+			editLockAcquired = true;
+		} catch (lockErr) {
+			const lockMsg =
+				extractServerMessage(lockErr) ||
+				lockErr?.message ||
+				__("An update is in progress — please try again in a moment.");
+			form.validationError.value = lockMsg;
+			perf.push("editlock", lockMsg);
+			if (typeof frappe !== "undefined" && frappe.msgprint) {
+				frappe.msgprint({
+					title: __("Update in progress"),
+					message: lockMsg,
+					indicator: "orange",
+				});
+			}
+			return;
+		}
+
 		let result = null;
 		if (displayDirty.value || nativeFormDirty.value) {
 			syncNativeFormToFormData();
@@ -1369,6 +1400,22 @@ async function onSubmit(opts = {}) {
 		if (msg) perf.push("error", msg);
 		// validationError (root) or related save error — stay open
 	} finally {
+		// Lift the edit-lock now that save → write-back → read-back → refresh is done
+		// (or has failed). The nce_sync TTL is only the crash backstop.
+		if (editLockAcquired) {
+			try {
+				await frappeCall(
+					"nce_events.api.form_dialog.sync_related.end_dialog_edit",
+					{
+						definition: props.definitionName,
+						root_doctype: props.doctype,
+						root_name: props.docName || "",
+					},
+				);
+			} catch (releaseErr) {
+				perf.push("editlock", `release failed: ${releaseErr?.message || releaseErr}`);
+			}
+		}
 		perf.showCopyDialog();
 	}
 }
