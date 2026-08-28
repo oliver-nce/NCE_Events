@@ -462,6 +462,7 @@ import {
 	formatRuleInlineStyle,
 	isFormatRuleActive,
 } from "../utils/panelFormatRules.js";
+import { useRelatedActions } from "../composables/useRelatedActions.js";
 import { useRelatedLabelWidths } from "../composables/useRelatedLabelWidths.js";
 
 const props = defineProps({
