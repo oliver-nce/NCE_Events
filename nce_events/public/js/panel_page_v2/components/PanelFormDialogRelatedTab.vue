@@ -96,8 +96,11 @@
 									'ppv2-fd-related-td--editable': isRelatedCellEditable(col),
 									'ppv2-fd-related-td--locked': isRelatedColEditable(col) && editLocked,
 									'ppv2-fd-related-td--dirty': isRelatedCellDirty(ti, rw, col),
-									'theme-text-danger': isRelatedCellDirty(ti, rw, col),
+									'theme-text-danger':
+										isRelatedCellDirty(ti, rw, col) &&
+										!isRelatedFormatActive(rw, col),
 								}"
+								:style="relatedCellFormatStyle(rw, col)"
 							>
 								<select
 									v-if="isSelectColumn(col) && isRelatedCellEditable(col)"
@@ -455,7 +458,10 @@ import {
 	relatedColumnMandatory,
 	selectOptionsForCell,
 } from "../utils/relatedCellFormat.js";
-import { useRelatedActions } from "../composables/useRelatedActions.js";
+import {
+	formatRuleInlineStyle,
+	isFormatRuleActive,
+} from "../utils/panelFormatRules.js";
 import { useRelatedLabelWidths } from "../composables/useRelatedLabelWidths.js";
 
 const props = defineProps({
@@ -498,6 +504,18 @@ function isActionPromptNumeric(pa) {
 }
 
 const editLocked = computed(() => relatedState[props.ti]?.edit_allowed === false);
+
+const formatRulesForTab = computed(
+	() => relatedState[props.ti]?.format_rules || [],
+);
+
+function relatedCellFormatStyle(rw, col) {
+	return formatRuleInlineStyle(rw, col, formatRulesForTab.value);
+}
+
+function isRelatedFormatActive(rw, col) {
+	return isFormatRuleActive(rw, col, formatRulesForTab.value);
+}
 
 const relatedLinkField = computed(() => String(props.tab?._related?.link_field || "").trim());
 
@@ -706,6 +724,7 @@ async function fetchRelatedForTab(ti) {
 		relatedState[ti].writable_permlevels = Array.isArray(msg.writable_permlevels)
 			? msg.writable_permlevels.map(Number)
 			: null;
+		relatedState[ti].format_rules = Array.isArray(msg.format_rules) ? msg.format_rules : [];
 		addDraftActive.value = false;
 		emit("related-dirty", false);
 	} catch (e) {
@@ -718,6 +737,7 @@ async function fetchRelatedForTab(ti) {
 		relatedState[ti].actions = [];
 		relatedState[ti].can_write = true;
 		relatedState[ti].writable_permlevels = null;
+		relatedState[ti].format_rules = [];
 		relatedState[ti].error = e?.message || String(e) || "Failed to load related rows";
 	} finally {
 		if (relatedSeq[ti] === seq) {

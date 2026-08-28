@@ -115,17 +115,20 @@ class TestGetFormDialogRelatedRows(FrappeTestCase):
 
 		with patch("nce_events.api.form_dialog.related_rows.frappe.session.user", "Administrator"):
 			with patch("nce_events.api.form_dialog.related_rows._assert_doctype_in_wp_tables"):
-				with patch("nce_events.api.form_dialog.related_rows.frappe.get_doc", return_value=mock_doc):
-					with patch(
-						"nce_events.api.form_dialog.related_rows.frappe.has_permission", return_value=True
-					):
+				with patch(
+					"nce_events.api.form_dialog.related_rows._child_panel_format_rules", return_value=[]
+				):
+					with patch("nce_events.api.form_dialog.related_rows.frappe.get_doc", return_value=mock_doc):
 						with patch(
-							"nce_events.api.form_dialog.related_rows.frappe.get_list",
-							return_value=[{"name": "u1"}],
-						) as mock_list:
-							out = get_form_dialog_related_rows(
-								"FD1", "RELROW1", "DocType", "DocType", limit=50
-							)
+							"nce_events.api.form_dialog.related_rows.frappe.has_permission", return_value=True
+						):
+							with patch(
+								"nce_events.api.form_dialog.related_rows.frappe.get_list",
+								return_value=[{"name": "u1"}],
+							) as mock_list:
+								out = get_form_dialog_related_rows(
+									"FD1", "RELROW1", "DocType", "DocType", limit=50
+								)
 
 		self.assertEqual(out["rows"], [{"name": "u1"}])
 		self.assertEqual(out["child_doctype"], "User")
@@ -133,6 +136,66 @@ class TestGetFormDialogRelatedRows(FrappeTestCase):
 		kw = mock_list.call_args.kwargs
 		self.assertEqual(kw["filters"], {"owner": "DocType"})
 		self.assertEqual(kw["limit_page_length"], 50)
+		self.assertEqual(out.get("format_rules"), [])
+
+	@patch("nce_events.api.form_dialog.portal_actions.get_portal_actions_for_row", return_value=[])
+	@patch(
+		"nce_events.api.form_dialog.related_rows._fetch_related_rows_with_format_rules",
+		return_value=[{"name": "u1", "_fmt_status": 1, "status": "Open"}],
+	)
+	@patch(
+		"nce_events.api.form_dialog.related_rows._child_panel_format_rules",
+		return_value=[
+			{
+				"field_name": "status",
+				"condition_sql": "status = 'Open'",
+				"color": "#ff0000",
+				"font_weight": None,
+				"italic": False,
+				"underline": False,
+				"flag_key": "_fmt_status",
+			}
+		],
+	)
+	def test_format_rules_from_child_panel(self, mock_rules, mock_fetch, mock_actions):
+		from nce_events.api.form_dialog.related_rows import get_form_dialog_related_rows
+
+		mock_row = MagicMock()
+		mock_row.name = "RELROW1"
+		mock_row.child_doctype = "User"
+		mock_row.link_field = "owner"
+		mock_row.hop_chain = []
+		mock_row.portal_field_config = None
+		mock_row.info = json.dumps(
+			{
+				"fields": [
+					{"fieldname": "name", "fieldtype": "Data", "label": "ID"},
+					{"fieldname": "status", "fieldtype": "Data", "label": "Status"},
+				]
+			}
+		)
+
+		mock_doc = MagicMock()
+		mock_doc.is_active = 1
+		mock_doc.target_doctype = "DocType"
+		mock_doc.related_doctypes = [mock_row]
+
+		with patch("nce_events.api.form_dialog.related_rows.frappe.session.user", "Administrator"):
+			with patch("nce_events.api.form_dialog.related_rows._assert_doctype_in_wp_tables"):
+				with patch("nce_events.api.form_dialog.related_rows.frappe.get_doc", return_value=mock_doc):
+					with patch(
+						"nce_events.api.form_dialog.related_rows.frappe.has_permission", return_value=True
+					):
+						with patch("nce_events.api.form_dialog.related_rows.frappe.get_list") as mock_list:
+							out = get_form_dialog_related_rows(
+								"FD1", "RELROW1", "DocType", "DocType", limit=50
+							)
+
+		self.assertEqual(len(out["format_rules"]), 1)
+		self.assertEqual(out["format_rules"][0]["flag_key"], "_fmt_status")
+		self.assertEqual(out["rows"][0]["_fmt_status"], 1)
+		mock_fetch.assert_called_once()
+		mock_list.assert_not_called()
 
 
 class TestAddDeleteFormDialogRelatedRows(FrappeTestCase):

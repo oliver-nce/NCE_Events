@@ -174,6 +174,10 @@ import {
 	panelRowVal,
 } from "../utils/panelTableColWidths.js";
 import {
+	activeFormatRule,
+	fieldKeyMatchesColumn,
+} from "../utils/panelFormatRules.js";
+import {
 	panelChromeBg,
 	panelChromeFgTextClass,
 	panelChromeTableBorderStyleVars,
@@ -491,20 +495,6 @@ const genderTintSet = computed(() => {
 	return s;
 });
 
-function formatRuleForColumn(col) {
-	const rules = props.config?.format_rules || [];
-	for (let i = 0; i < rules.length; i++) {
-		if (fieldKeyMatchesColumn(rules[i].field_name, col)) return rules[i];
-	}
-	return null;
-}
-
-function isFormatRuleActive(row, col) {
-	const rule = formatRuleForColumn(col);
-	if (!rule) return false;
-	return Number(panelRowVal(row, rule.flag_key)) === 1;
-}
-
 const genderCol = computed(() => (props.config.gender_column || "").trim().toLowerCase());
 const maleHex = computed(() => (props.config.male_hex || "").trim());
 const femaleHex = computed(() => (props.config.female_hex || "").trim());
@@ -555,14 +545,6 @@ function looksLike(val, gender) {
 	return false;
 }
 
-function fieldKeyMatchesColumn(fieldKey, col) {
-	const k = String(fieldKey || "").trim().toLowerCase();
-	if (!k || !col) return false;
-	const bare = k.includes(".") ? k.split(".").pop() : k;
-	const fn = String(col.fieldname || "").toLowerCase();
-	return fn === k || fn === bare;
-}
-
 function isBoldColumn(col) {
 	if (isTitleFieldColumn(col, props.config?.title_field)) return true;
 	return (props.config.bold_fields || []).some((f) => fieldKeyMatchesColumn(f, col));
@@ -580,18 +562,17 @@ function genderColor(row, col) {
 	return "";
 }
 
-function activeFormatRule(row, col) {
-	return isFormatRuleActive(row, col) ? formatRuleForColumn(col) : null;
+function activeFormatRuleForRow(row, col) {
+	return activeFormatRule(row, col, props.config?.format_rules);
 }
 
-/** Same layering as bold: base panel styles on <td>, format overrides only what it sets. */
 function cellStyle(row, col) {
 	const style = {
 		color: genderColor(row, col) || "var(--nce-color-text)",
 	};
 	if (isBoldColumn(col)) style.fontWeight = "700";
 
-	const rule = activeFormatRule(row, col);
+	const rule = activeFormatRuleForRow(row, col);
 	if (rule) {
 		if (rule.color) style.color = rule.color;
 		if (rule.font_weight) style.fontWeight = rule.font_weight;
@@ -603,7 +584,7 @@ function cellStyle(row, col) {
 
 /** Link cells need inline color when format/gender tint beats theme-text-link. */
 function linkCellStyle(row, col) {
-	const rule = activeFormatRule(row, col);
+	const rule = activeFormatRuleForRow(row, col);
 	const style = {};
 	if (rule?.color) {
 		style.color = rule.color;
@@ -615,7 +596,7 @@ function linkCellStyle(row, col) {
 }
 
 function linkCellClasses(row, col, hoverKey) {
-	const rule = activeFormatRule(row, col);
+	const rule = activeFormatRuleForRow(row, col);
 	const hovered = hoveredLinkKey.value === hoverKey;
 	const hasColorOverride = !!(rule?.color || genderColor(row, col));
 	const classes = {};

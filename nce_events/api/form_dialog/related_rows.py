@@ -158,6 +158,83 @@ def _load_related_tab_context(
 	return doc, row, child_dt, link_f, hc
 
 
+def _child_panel_format_rules(child_doctype: str) -> list[dict[str, Any]]:
+	"""Conditional-format rules from the Page Panel whose root is the related child DocType."""
+	from nce_events.api.panel_api_pkg.page_panel_lookup import page_panel_exists_for_root
+
+	child_doctype = cstr(child_doctype or "").strip()
+	if not child_doctype or not page_panel_exists_for_root(child_doctype):
+		return []
+	from nce_events.api.panel_api_pkg.panel_data import get_panel_config
+
+	return list(get_panel_config(child_doctype).get("format_rules") or [])
+
+
+def _project_related_row(
+	row: dict[str, Any],
+	field_list: list[str],
+	format_rules: list[dict[str, Any]],
+) -> dict[str, Any]:
+	"""Keep portal columns plus ``_fmt_*`` flag keys; drop extra panel_sql columns."""
+	out: dict[str, Any] = {}
+	for fn in field_list:
+		if fn in row:
+			out[fn] = row[fn]
+	for rule in format_rules:
+		flag_key = cstr(rule.get("flag_key") or "").strip()
+		if flag_key and flag_key in row:
+			out[flag_key] = row[flag_key]
+	if "name" in row and "name" not in out:
+		out["name"] = row["name"]
+	return out
+
+
+def _fetch_related_rows_with_format_rules(
+	child_doctype: str,
+	filters: dict[str, Any],
+	format_rules: list[dict[str, Any]],
+	field_list: list[str],
+	limit_n: int,
+) -> list[dict[str, Any]] | None:
+	"""
+	Fetch related rows via panel SQL + format-rule CASE columns (same path as ``get_panel_data``).
+
+	Returns ``None`` when the SQL path fails so the caller can fall back to ``get_list``.
+	"""
+	from nce_events.api.panel_api_pkg.format_rules import build_format_case_columns
+	from nce_events.api.panel_api_pkg.panel_config import _derived_order_clause
+	from nce_events.api.panel_api_pkg.panel_data import get_panel_config
+	from nce_events.api.panel_api_pkg.sql import _build_panel_sql
+
+	config = get_panel_config(child_doctype)
+	allowed_fields = {
+		str(f).strip().lower()
+		for f in (list(config.get("column_order") or []) + list(config.get("search_fields") or []))
+		if str(f).strip()
+	}
+	case_cols = build_format_case_columns(child_doctype, format_rules, allowed_fields=allowed_fields)
+	if not case_cols:
+		return None
+
+	base_sql, base_params = _build_panel_sql(child_doctype, filters=filters, config=config)
+	display_fields = list(config.get("column_order") or [])
+	order_clause = _derived_order_clause(config, display_fields)
+	sql = (
+		f"SELECT pp_rows.*, {', '.join(case_cols)} FROM ({base_sql}) AS pp_rows"
+		f"{order_clause} LIMIT {int(limit_n)}"
+	)
+	try:
+		raw_rows = frappe.db.sql(sql, base_params, as_dict=True)
+	except Exception:
+		frappe.log_error(
+			title="Related tab format rule fetch failed",
+			message=frappe.get_traceback(),
+		)
+		return None
+
+	return [_project_related_row(r, field_list, format_rules) for r in (raw_rows or [])]
+
+
 def _related_tab_flags(
 	row: Any,
 	root_doctype: str,
@@ -244,7 +321,10 @@ def get_form_dialog_related_rows(
 	    pending_root_values: Optional JSON dict of unsaved root field values for edit_condition.
 
 	Returns:
-	    ``{ child_doctype, columns, rows, order_by, edit_allowed, allow_add_remove }``.
+	    ``{ child_doctype, columns, rows, order_by, format_rules, edit_allowed, allow_add_remove }``.
+
+	    ``format_rules`` comes from the Page Panel for the **child** DocType (same rules as
+	    the float panel opened via Go to). Rows include ``_fmt_*`` flag columns when rules apply.
 	"""
 	dialog_doc, row, child_dt, link_f, hc = _load_related_tab_context(
 		definition,
@@ -271,29 +351,46 @@ def get_form_dialog_related_rows(
 	actions = get_portal_actions_for_row(row)
 	flags = _related_tab_flags(row, root_doctype, root_name, pending_root_values)
 
+	format_rules_out: list[dict[str, Any]] = []
+	rows: list[dict[str, Any]] = []
+
 	if force_empty:
 		return {
 			"child_doctype": child_dt,
 			"columns": columns,
 			"rows": [],
 			"order_by": order_by,
+			"format_rules": [],
 			"actions": actions,
 			**write_ctx,
 			**flags,
 		}
 
-	rows = frappe.get_list(
-		child_dt,
-		filters=filters,
-		fields=field_list,
-		order_by=order_by,
-		limit_page_length=limit_n,
-	)
+	format_rules_out = _child_panel_format_rules(child_dt)
+	if format_rules_out:
+		sql_rows = _fetch_related_rows_with_format_rules(
+			child_dt, filters, format_rules_out, field_list, limit_n
+		)
+		if sql_rows is not None:
+			rows = sql_rows
+		else:
+			format_rules_out = []
+
+	if not rows:
+		rows = frappe.get_list(
+			child_dt,
+			filters=filters,
+			fields=field_list,
+			order_by=order_by,
+			limit_page_length=limit_n,
+		)
+
 	return {
 		"child_doctype": child_dt,
 		"columns": columns,
 		"rows": rows,
 		"order_by": order_by,
+		"format_rules": format_rules_out,
 		"actions": actions,
 		**write_ctx,
 		**flags,
