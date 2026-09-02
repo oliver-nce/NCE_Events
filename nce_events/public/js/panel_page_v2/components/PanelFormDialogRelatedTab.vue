@@ -2,6 +2,15 @@
 	<!-- Related DocType tab: data table + optional field-metadata details -->
 	<div v-if="tab._related" class="ppv2-fd-related-root">
 		<div class="ppv2-fd-related-meta-row">
+			<button
+				type="button"
+				class="ppv2-fd-related-go-to theme-bg-primary theme-border-primary"
+				:disabled="!goToEnabled || goToBusy"
+				title="Open panel for this related list"
+				@click="onGoToPanel"
+			>
+				Go to
+			</button>
 			<p class="ppv2-fd-related-meta theme-text-muted">
 				{{ tab._related.doctype }}
 				<span v-if="tab._related.link_field" class="ppv2-fd-related-meta-link">
@@ -14,15 +23,6 @@
 					· {{ tab._related.hop_chain.length }}-hop
 				</span>
 			</p>
-			<button
-				type="button"
-				class="ppv2-fd-related-go-to theme-bg-primary theme-border-primary"
-				:disabled="!goToEnabled || goToBusy"
-				title="Open panel for this related list"
-				@click="onGoToPanel"
-			>
-				Go to
-			</button>
 		</div>
 		<p v-if="tab._related.captureError" class="ppv2-fd-related-warn">
 			Schema note: {{ tab._related.captureError }}
@@ -1259,7 +1259,7 @@ defineExpose({
 .ppv2-fd-related-meta-row {
 	display: flex;
 	align-items: flex-start;
-	justify-content: space-between;
+	justify-content: flex-start;
 	gap: 12px;
 	margin: 0 0 12px;
 }
