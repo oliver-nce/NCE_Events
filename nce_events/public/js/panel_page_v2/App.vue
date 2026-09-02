@@ -57,6 +57,7 @@
 				@refresh="onRefreshRoot"
 				@show-filter="rootPanelShowFilter = true"
 				@switch-one="(row) => onSwitchOne({ config: config }, row)"
+				@sync-error-click="onSyncErrorClick"
 			/>
 			<template #footer>{{ config?.header_text || "NCE Tables" }}</template>
 		</PanelFloat>
@@ -982,6 +983,27 @@ function onRootRowClick(row) {
 	const doctype = row.frappe_doctype || row.name;
 	if (!doctype) return;
 	openPanel(doctype, {}, "root");
+}
+
+async function onSyncErrorClick(row) {
+	if (!row?.name) return;
+	const panel = {
+		id: null,
+		doctype: "WP Tables",
+		config: config.value || {},
+	};
+	if (await openFormDialogFromPanelRow(panel, row)) {
+		return;
+	}
+	if (typeof frappe !== "undefined" && frappe.msgprint) {
+		frappe.msgprint({
+			title: __("Form Dialog"),
+			message: __(
+				"Link a Form Dialog on this Page Panel (Dialogs tab) to view the record.",
+			),
+			indicator: "orange",
+		});
+	}
 }
 
 async function onDrill(ev, parentPanel) {

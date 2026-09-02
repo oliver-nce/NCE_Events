@@ -119,6 +119,81 @@ def _filter_wp_tables_catalog_rows(rows: list[dict[str, Any]]) -> list[dict[str,
 	return out
 
 
+def _flag_last_sync_status_column(columns: list[dict[str, Any]]) -> None:
+	"""Mark Last Sync Status so the SPA can open error detail on non-Success."""
+	for col in columns:
+		if col.get("fieldname") == "last_sync_status":
+			col["sync_error_drill"] = True
+			return
+
+
+def _merge_latest_sync_log(
+	rows: list[dict[str, Any]],
+	sync_log_by_table: dict[str, dict[str, Any]],
+	wp_log_by_name: dict[str, dict[str, Any]],
+) -> None:
+	"""Copy WP Tables last_sync_log (if missing) and latest Sync Log error onto rows."""
+	for row in rows:
+		name = row.get("name")
+		if not name:
+			continue
+		wp = wp_log_by_name.get(name) or {}
+		if not str(row.get("last_sync_log") or "").strip():
+			row["last_sync_log"] = wp.get("last_sync_log") or ""
+		sl = sync_log_by_table.get(name) or {}
+		row["last_sync_error_message"] = sl.get("error_message") or ""
+		row["last_sync_log_name"] = sl.get("name") or ""
+
+
+def _attach_wp_tables_sync_details(rows: list[dict[str, Any]]) -> None:
+	"""Load last_sync_log + latest Sync Log error_message for catalog rows."""
+	if not rows:
+		return
+	names = [r.get("name") for r in rows if r.get("name")]
+	if not names:
+		return
+
+	wp_log_by_name: dict[str, dict[str, Any]] = {}
+	try:
+		for rec in frappe.get_all(
+			"WP Tables",
+			filters={"name": ["in", names]},
+			fields=["name", "last_sync_log"],
+		):
+			wp_log_by_name[rec.name] = rec
+	except Exception:
+		wp_log_by_name = {}
+
+	sync_log_by_table: dict[str, dict[str, Any]] = {}
+	if frappe.db.exists("DocType", "Sync Log"):
+		placeholders = ", ".join(["%s"] * len(names))
+		try:
+			latest = frappe.db.sql(
+				f"""
+				SELECT sl.wp_table, sl.error_message, sl.name
+				FROM `tabSync Log` sl
+				INNER JOIN (
+					SELECT wp_table, MAX(creation) AS max_creation
+					FROM `tabSync Log`
+					WHERE wp_table IN ({placeholders})
+					GROUP BY wp_table
+				) latest
+					ON latest.wp_table = sl.wp_table
+					AND latest.max_creation = sl.creation
+				""",
+				tuple(names),
+				as_dict=True,
+			)
+			for rec in latest or []:
+				key = rec.get("wp_table")
+				if key:
+					sync_log_by_table[key] = rec
+		except Exception:
+			sync_log_by_table = {}
+
+	_merge_latest_sync_log(rows, sync_log_by_table, wp_log_by_name)
+
+
 @frappe.whitelist()
 def get_panel_config(root_doctype: str) -> dict[str, Any]:
 	"""Fetch display configuration for a single Page Panel."""
@@ -290,6 +365,7 @@ def get_panel_data(
 
 	if root_doctype == "WP Tables":
 		rows = _filter_wp_tables_catalog_rows(rows)
+		_attach_wp_tables_sync_details(rows)
 		total_count = len(rows)
 		full_count = len(rows)
 
@@ -342,6 +418,9 @@ def get_panel_data(
 		if ft:
 			col["fieldtype"] = ft
 		columns.append(col)
+
+	if root_doctype == "WP Tables":
+		_flag_last_sync_status_column(columns)
 
 	for fn, target_dt in link_target_map.items():
 		if fn not in seen:

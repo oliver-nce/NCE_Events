@@ -108,6 +108,14 @@
 								"
 								>{{ cellValue(row, col) }}</span
 							>
+							<span
+								v-else-if="col.sync_error_drill && isNonSuccessSyncStatus(row, col)"
+								class="ppv2-sync-status-link theme-text-link"
+								role="button"
+								tabindex="0"
+								@click.stop="$emit('sync-error-click', row)"
+								@keydown.enter.prevent="$emit('sync-error-click', row)"
+							>{{ cellValue(row, col) }}</span>
 							<template v-else>{{ cellValue(row, col) }}</template>
 						</td>
 						<td v-if="hasActionColumn" class="ppv2-action-td" :style="actionColumnStyle">
@@ -217,6 +225,7 @@ const emit = defineEmits([
 	"switch-one",
 	"refresh",
 	"show-filter",
+	"sync-error-click",
 	/** Sum of data column widths + action column reserve (px). Used to size PanelFloat on open. */
 	"table-min-width",
 ]);
@@ -502,6 +511,11 @@ const tintByGender = computed(() => props.config.tint_by_gender || {});
 
 function getVal(row, key) {
 	return panelRowVal(row, key);
+}
+
+function isNonSuccessSyncStatus(row, col) {
+	const v = String(getVal(row, col.fieldname) || "").trim().toLowerCase();
+	return v !== "" && v !== "success";
 }
 
 function cellValue(row, col) {
@@ -801,5 +815,11 @@ function startColResize(e, ci) {
 }
 .ppv2-header-ctx-item:hover {
 	background-color: var(--nce-color-primary-100, #e3f0fc);
+}
+
+.ppv2-sync-status-link {
+	cursor: pointer;
+	text-decoration: underline;
+	font-weight: 600;
 }
 </style>

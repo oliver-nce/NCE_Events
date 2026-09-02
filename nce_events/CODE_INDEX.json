@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Manual overlay merged into CODE_INDEX.json by scripts/build_code_index.py. Edit per-file entries here; the generator preserves your curated 'purpose', 'sections', 'private_helpers', 'key_fields', and 'depends_on'.",
-    "generated": "2026-08-06",
+    "generated": "2026-09-02",
     "generator": "scripts/build_code_index.py",
     "usage": "Run `python scripts/build_code_index.py --write` to regenerate CODE_INDEX.json after editing this file or after adding/renaming/deleting source files. The pre-commit hook runs `--check` and blocks commits whose code changes have not been regenerated."
   },
@@ -417,9 +417,13 @@
     },
     "nce_events/api/form_dialog/sync_related.py": {
       "exports": [
+        "begin_dialog_edit",
+        "end_dialog_edit",
         "trigger_linked_sync_for_dialog_readback"
       ],
       "whitelist_endpoints": [
+        "begin_dialog_edit",
+        "end_dialog_edit",
         "trigger_linked_sync_for_dialog_readback"
       ],
       "purpose": "Post-save linked DocType sync for Form Dialog WP read-back: trigger_linked_sync_for_dialog_readback queues nce_sync linked-row pulls before Show changes.",
@@ -677,7 +681,13 @@
         "get_theme_slug_for_link",
         "get_theme_table_tokens"
       ],
-      "purpose": "Panel data read endpoints — get_panel_config, get_panel_data (hot path), get_other_page_panels, copy_panel_colours, export_panel_data whitelist wrapper, get_theme_slug_for_link, and get_theme_table_tokens (Desk Colours tab previews). Config/export logic lives in panel_config.py and panel_export.py; _panel_config_from_doc re-exported for sql.py.",
+      "purpose": "Panel data read endpoints — get_panel_config, get_panel_data (hot path), get_other_page_panels, copy_panel_colours, export_panel_data whitelist wrapper, get_theme_slug_for_link, and get_theme_table_tokens (Desk Colours tab previews). Config/export logic lives in panel_config.py and panel_export.py; _panel_config_from_doc re-exported for sql.py. WP Tables catalog rows get last_sync_log / latest Sync Log error attached and last_sync_status flagged for Form Dialog drill.",
+      "private_helpers": [
+        "_filter_wp_tables_catalog_rows",
+        "_flag_last_sync_status_column",
+        "_merge_latest_sync_log",
+        "_attach_wp_tables_sync_details"
+      ],
       "depends_on": [
         "nce_events/api/panel_api_pkg/_helpers.py",
         "nce_events/api/panel_api_pkg/computed_columns.py",
@@ -692,6 +702,7 @@
       "sections": [
         "get_panel_config whitelist",
         "get_panel_data hot path",
+        "WP Tables catalog sync-status drill helpers",
         "get_other_page_panels / copy_panel_colours",
         "export_panel_data whitelist delegate",
         "get_theme_slug_for_link / get_theme_table_tokens (Desk Colours tab)"
@@ -946,6 +957,13 @@
         "TestThemeTableTokens"
       ],
       "purpose": "Unit tests for theme_table_tokens.get_theme_table_tokens divider tiers, border classes, and theme_json colour resolution."
+    },
+    "nce_events/api/tests/api/panel_api_pkg/test_wp_tables_sync_details.py": {
+      "exports": [
+        "TestFlagLastSyncStatusColumn",
+        "TestMergeLatestSyncLog"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
     "nce_events/api/tests/api/test_credentials.py": {
       "exports": [
@@ -1409,7 +1427,7 @@
       "purpose": "Evaluations-local Promise wrapper for frappe.call (mirrors panel_page_v2 frappeCall)."
     },
     "nce_events/public/js/panel_page_v2/App.vue": {
-      "purpose": "V2 SPA root: composes PanelFloat + PanelTable for the root WP Tables panel and per-doctype drilled panels, hosts TagFinder/CardModal/PanelFormDialog overlays. Passes chromeConfig (eight theme-bg class fields) to PanelFloat/PanelHeaderToolbar; formDialogChromeConfig from formDialogSourcePanelId scopes viewer dialog theme_slug + dialog_header_bg_class. Uses PanelHeaderToolbar for float headers and useSendDialogs for plain-JS email/SMS (out of chrome scope). Reads injected panelMode + panelLabel for Mirror/Native page split.",
+      "purpose": "V2 SPA root: composes PanelFloat + PanelTable for the root WP Tables panel and per-doctype drilled panels, hosts TagFinder/CardModal/PanelFormDialog overlays. Root Last Sync Status (non-Success) opens the WP Tables Form Dialog via the same openFormDialogFromPanelRow path as drilled-panel row clicks. Passes chromeConfig (eight theme-bg class fields) to PanelFloat/PanelHeaderToolbar; formDialogChromeConfig from formDialogSourcePanelId scopes viewer dialog theme_slug + dialog_header_bg_class. Uses PanelHeaderToolbar for float headers and useSendDialogs for plain-JS email/SMS (out of chrome scope). Reads injected panelMode + panelLabel for Mirror/Native page split.",
       "depends_on": [
         "composables/usePanel.js",
         "composables/usePanelActions.js",
@@ -2160,6 +2178,16 @@
         "isRootFieldPanelReadOnly"
       ],
       "purpose": "Match Page Panel Display read_only_fields against root frozen fields and related/inline child column fieldnames."
+    },
+    "nce_events/public/js/panel_page_v2/utils/panelFormatRules.js": {
+      "exports": [
+        "activeFormatRule",
+        "fieldKeyMatchesColumn",
+        "formatRuleForColumn",
+        "formatRuleInlineStyle",
+        "isFormatRuleActive"
+      ],
+      "purpose": "TODO: describe in CODE_INDEX.manual.json"
     },
     "nce_events/public/js/panel_page_v2/utils/panelTableColWidths.js": {
       "exports": [
