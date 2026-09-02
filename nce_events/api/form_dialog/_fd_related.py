@@ -353,6 +353,15 @@ def _filters_for_related_rows(
 	must not call get_list and should return zero rows (hop miss or empty keys).
 	"""
 	if not hop_chain:
+		try:
+			df = frappe.get_meta(child_doctype).get_field(link_field)
+			is_self_ref = bool(df) and cstr(getattr(df, "options", "") or "").strip() == child_doctype
+		except Exception:
+			is_self_ref = False
+		if is_self_ref:
+			own_value = cstr(frappe.db.get_value(child_doctype, root_name, link_field) or "").strip()
+			if own_value:
+				return ({link_field: own_value}, False)
 		return ({link_field: root_name}, False)
 
 	final_ids = _hop_walk_final_identifiers(root_name, hop_chain)
