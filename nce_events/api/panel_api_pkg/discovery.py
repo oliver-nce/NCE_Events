@@ -72,6 +72,9 @@ def _discover_via_link_paths(
 		l1r = cstr(m1.get("link_field") or "").strip()
 		if not b1 or not l1r:
 			continue
+		# Self-Link on the root is inbound 1-hop; do not treat the root as a via-path bridge.
+		if b1 == root_doctype:
+			continue
 		key = (b1, l1r)
 		if key in seen_bridge:
 			continue
@@ -184,7 +187,8 @@ def _skip_as_panel_child_table(meta: Any) -> bool:
 def get_child_doctypes(root_doctype: str) -> list[dict[str, str]]:
 	"""Return DocTypes that have a Link field pointing to root_doctype.
 
-	Scans all WP Tables DocTypes for Link fields targeting root_doctype.
+	Scans all WP Tables DocTypes for Link fields targeting root_doctype,
+	including a self-Link on the root DocType.
 	Excludes Singles and virtual DocTypes (no physical child table to query).
 	Returns [{doctype, link_field, label}].
 	"""
@@ -204,8 +208,6 @@ def get_child_doctypes(root_doctype: str) -> list[dict[str, str]]:
 
 	result: list[dict[str, str]] = []
 	for dt in wp_doctypes:
-		if dt == root_doctype:
-			continue
 		try:
 			meta = frappe.get_meta(dt)
 		except Exception:
@@ -233,7 +235,8 @@ def get_multi_hop_children(root_doctype: str) -> dict[str, list[dict[str, object
 
 	Each item: doctype, link_field (use ``name`` for multi-hop), label, hop_chain (list or []).
 
-	1-hop: inbound children (Link → root) plus linked parents when root is a junction table.
+	1-hop: inbound children (Link → root), including a self-Link on the root,
+	plus linked parents when root is a junction table.
 	2-hop: bridge → related table (e.g. People via Enrollments).
 	3-hop: bridge → via table → related table on that via (e.g. Eligibility via Enrollments → People),
 	plus inbound three-step paths where each bridge links back to the prior step.
@@ -260,8 +263,6 @@ def get_multi_hop_children(root_doctype: str) -> dict[str, list[dict[str, object
 
 	one_hop: list[dict[str, object]] = []
 	for dt in sorted(wp_doctypes):
-		if dt == root_doctype:
-			continue
 		try:
 			meta = frappe.get_meta(dt)
 		except Exception:
@@ -302,6 +303,8 @@ def get_multi_hop_children(root_doctype: str) -> dict[str, list[dict[str, object
 		b1 = cstr(m1.get("doctype") or "").strip()
 		l1r = cstr(m1.get("link_field") or "").strip()
 		if not b1 or not l1r:
+			continue
+		if b1 == root_doctype:
 			continue
 		try:
 			meta_b1 = frappe.get_meta(b1)
@@ -357,6 +360,8 @@ def get_multi_hop_children(root_doctype: str) -> dict[str, list[dict[str, object
 		b1 = cstr(m1.get("doctype") or "").strip()
 		l1r = cstr(m1.get("link_field") or "").strip()
 		if not b1:
+			continue
+		if b1 == root_doctype:
 			continue
 		try:
 			meta_b1 = frappe.get_meta(b1)
@@ -423,7 +428,7 @@ def debug_child_lookup(root_doctype: str) -> dict[str, Any]:
 
 	for row in wp_rows:
 		dt = row.get("frappe_doctype")
-		if not dt or dt == root_doctype:
+		if not dt:
 			continue
 		try:
 			meta = frappe.get_meta(dt)

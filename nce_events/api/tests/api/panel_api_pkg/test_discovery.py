@@ -2,9 +2,59 @@
 
 from __future__ import annotations
 
+import sys
+import types
 import unittest
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
+
+
+def _cint(val):
+	if val in (None, False):
+		return 0
+	if val is True:
+		return 1
+	try:
+		return int(val)
+	except (TypeError, ValueError):
+		return 0
+
+
+def _install_frappe_stub() -> None:
+	if "frappe" in sys.modules:
+		return
+	frappe_mod = types.ModuleType("frappe")
+	frappe_utils = types.ModuleType("frappe.utils")
+	frappe_utils.cint = _cint
+	frappe_utils.cstr = lambda v: "" if v is None else str(v)
+	frappe_mod.utils = frappe_utils
+	frappe_mod.get_all = MagicMock()
+	frappe_mod.get_meta = MagicMock()
+	frappe_mod.whitelist = lambda *a, **k: (lambda f: f)
+	frappe_mod._ = lambda s: s
+	sys.modules["frappe"] = frappe_mod
+	sys.modules["frappe.utils"] = frappe_utils
+
+
+def _install_package_stubs() -> None:
+	from pathlib import Path
+
+	root = Path(__file__).resolve().parents[4]
+	stubs = {
+		"nce_events": root,
+		"nce_events.api": root / "api",
+		"nce_events.api.panel_api_pkg": root / "api" / "panel_api_pkg",
+	}
+	for name, path in stubs.items():
+		if name in sys.modules:
+			continue
+		pkg = types.ModuleType(name)
+		pkg.__path__ = [str(path)]
+		sys.modules[name] = pkg
+
+
+_install_frappe_stub()
+_install_package_stubs()
 
 
 def _field(fieldname: str, fieldtype: str, options: str = "") -> SimpleNamespace:
@@ -181,6 +231,45 @@ class TestGetMultiHopChildren(unittest.TestCase):
 		two_labels = [r["label"] for r in out["2_hop"]]
 		self.assertFalse(any("Events" in lb for lb in two_labels))
 
+	def test_includes_self_link_as_1_hop(self):
+		from nce_events.api.panel_api_pkg.discovery import get_multi_hop_children
+
+		wp = {"Line Item Payments", "Enrollments"}
+
+		def fake_get_meta(doctype: str):
+			if doctype == "Line Item Payments":
+				return _meta(
+					_field("parent_id", "Link", "Line Item Payments"),
+					_field("enrollment_id", "Link", "Enrollments"),
+				)
+			if doctype == "Enrollments":
+				return _meta(_field("product_id", "Link", "Events"))
+			return _meta()
+
+		with patch(
+			"nce_events.api.panel_api_pkg.discovery.frappe.get_all",
+			return_value=_wp_rows(*sorted(wp)),
+		), patch(
+			"nce_events.api.panel_api_pkg.discovery.frappe.get_meta",
+			side_effect=fake_get_meta,
+		), patch(
+			"nce_events.api.panel_api_pkg.discovery._find_link_field",
+			return_value=None,
+		):
+			out = get_multi_hop_children("Line Item Payments")
+
+		self_rows = [r for r in out["1_hop"] if r["doctype"] == "Line Item Payments"]
+		self.assertEqual(len(self_rows), 1)
+		self.assertEqual(self_rows[0]["link_field"], "parent_id")
+		self.assertEqual(self_rows[0]["hop_chain"], [])
+
+		two_via_self = [
+			r
+			for r in out["2_hop"]
+			if r.get("hop_chain") and r["hop_chain"][0].get("parent_link") == "parent_id"
+		]
+		self.assertEqual(two_via_self, [])
+
 
 class TestGetChildDoctypes(unittest.TestCase):
 	def test_excludes_single_doctype_with_link_to_root(self):
@@ -222,6 +311,37 @@ class TestGetChildDoctypes(unittest.TestCase):
 		self.assertEqual(len(result), 1)
 		self.assertEqual(result[0]["doctype"], "Events")
 		self.assertEqual(result[0]["link_field"], "event_type_id")
+
+	def test_includes_self_link(self):
+		from nce_events.api.panel_api_pkg.discovery import get_child_doctypes
+
+		wp_rows = [
+			{
+				"frappe_doctype": "Line Item Payments",
+				"nce_name": "Line Item Payments",
+				"table_name": "line_item_payments",
+			},
+		]
+
+		def fake_get_meta(doctype: str):
+			return SimpleNamespace(
+				issingle=0,
+				is_virtual=0,
+				fields=[_field("parent_id", "Link", "Line Item Payments")],
+			)
+
+		with patch(
+			"nce_events.api.panel_api_pkg.discovery.frappe.get_all",
+			return_value=wp_rows,
+		), patch(
+			"nce_events.api.panel_api_pkg.discovery.frappe.get_meta",
+			side_effect=fake_get_meta,
+		):
+			result = get_child_doctypes("Line Item Payments")
+
+		self.assertEqual(len(result), 1)
+		self.assertEqual(result[0]["doctype"], "Line Item Payments")
+		self.assertEqual(result[0]["link_field"], "parent_id")
 
 
 if __name__ == "__main__":
