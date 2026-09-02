@@ -227,6 +227,14 @@
 			@close="closeTopCard"
 		/>
 
+		<SyncErrorDialog
+			v-model="syncErrorOpen"
+			:title="syncErrorTitle"
+			:status="syncErrorStatus"
+			:summary="syncErrorSummary"
+			:detail="syncErrorDetail"
+		/>
+
 		<!-- Form Dialog — dual-slot dissolve transition for flicker-free nav -->
 		<!-- Slot 0 active -->
 		<PanelFormDialog
@@ -389,6 +397,7 @@ import PanelHeaderToolbar from "./components/PanelHeaderToolbar.vue";
 import TagFinder from "./components/TagFinder.vue";
 import CardModal from "./nce_cards/CardModal.vue";
 import PanelFormDialog from "./components/PanelFormDialog.vue";
+import SyncErrorDialog from "./components/SyncErrorDialog.vue";
 import { panelChromeFgTextClass } from "./utils/panelChromeClasses.js";
 import ActionsPanel from "./components/ActionsPanel.vue";
 import PanelFindActionBar from "./components/PanelFindActionBar.vue";
@@ -441,6 +450,11 @@ const dropStack = reactive([]);
 const tagFinderDoctype = ref("");
 const tagFinderX = ref(0);
 const tagFinderY = ref(80);
+const syncErrorOpen = ref(false);
+const syncErrorTitle = ref("");
+const syncErrorStatus = ref("");
+const syncErrorSummary = ref("");
+const syncErrorDetail = ref("");
 
 const {
 	showFormDialog,
@@ -964,6 +978,7 @@ function closePanel(id) {
 /** Close drilled panels and all overlay dialogs; root WP Tables panel stays open. */
 function closeAllPanels({ showAlert = true } = {}) {
 	onFormDialogClose();
+	syncErrorOpen.value = false;
 	tagFinderDoctype.value = "";
 	while (cardStack.length) closeTopCard();
 	closeSendDialog();
@@ -985,25 +1000,13 @@ function onRootRowClick(row) {
 	openPanel(doctype, {}, "root");
 }
 
-async function onSyncErrorClick(row) {
-	if (!row?.name) return;
-	const panel = {
-		id: null,
-		doctype: "WP Tables",
-		config: config.value || {},
-	};
-	if (await openFormDialogFromPanelRow(panel, row)) {
-		return;
-	}
-	if (typeof frappe !== "undefined" && frappe.msgprint) {
-		frappe.msgprint({
-			title: __("Form Dialog"),
-			message: __(
-				"Link a Form Dialog on this Page Panel (Dialogs tab) to view the record.",
-			),
-			indicator: "orange",
-		});
-	}
+function onSyncErrorClick(row) {
+	const label = row?.nce_name || row?.frappe_doctype || row?.name || "";
+	syncErrorTitle.value = label ? String(label) : "";
+	syncErrorStatus.value = String(row?.last_sync_status || "").trim();
+	syncErrorSummary.value = String(row?.last_sync_log || "").trim();
+	syncErrorDetail.value = String(row?.last_sync_error_message || "").trim();
+	syncErrorOpen.value = true;
 }
 
 async function onDrill(ev, parentPanel) {

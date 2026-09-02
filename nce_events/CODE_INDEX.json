@@ -1427,7 +1427,7 @@
       "purpose": "Evaluations-local Promise wrapper for frappe.call (mirrors panel_page_v2 frappeCall)."
     },
     "nce_events/public/js/panel_page_v2/App.vue": {
-      "purpose": "V2 SPA root: composes PanelFloat + PanelTable for the root WP Tables panel and per-doctype drilled panels, hosts TagFinder/CardModal/PanelFormDialog overlays. Root Last Sync Status (non-Success) opens the WP Tables Form Dialog via the same openFormDialogFromPanelRow path as drilled-panel row clicks. Passes chromeConfig (eight theme-bg class fields) to PanelFloat/PanelHeaderToolbar; formDialogChromeConfig from formDialogSourcePanelId scopes viewer dialog theme_slug + dialog_header_bg_class. Uses PanelHeaderToolbar for float headers and useSendDialogs for plain-JS email/SMS (out of chrome scope). Reads injected panelMode + panelLabel for Mirror/Native page split.",
+      "purpose": "V2 SPA root: composes PanelFloat + PanelTable for the root WP Tables panel and per-doctype drilled panels, hosts TagFinder/CardModal/PanelFormDialog overlays. Root Last Sync Status (non-Success) opens SyncErrorDialog with last_sync_log and latest Sync Log error (NCE Tables is not a Page Panel, so Form Dialog drill is not used). Passes chromeConfig (eight theme-bg class fields) to PanelFloat/PanelHeaderToolbar; formDialogChromeConfig from formDialogSourcePanelId scopes viewer dialog theme_slug + dialog_header_bg_class. Uses PanelHeaderToolbar for float headers and useSendDialogs for plain-JS email/SMS (out of chrome scope). Reads injected panelMode + panelLabel for Mirror/Native page split.",
       "depends_on": [
         "composables/usePanel.js",
         "composables/usePanelActions.js",
@@ -1439,6 +1439,7 @@
         "components/TabBar.vue",
         "nce_cards/CardModal.vue",
         "components/PanelFormDialog.vue",
+        "components/SyncErrorDialog.vue",
         "shared/sms_dialog.js",
         "shared/email_dialog.js",
         "shared/ai_tools.js"
@@ -1697,6 +1698,13 @@
     },
     "nce_events/public/js/panel_page_v2/components/SpaPageSwitcherFloat.vue": {
       "purpose": "Floating SPA page switcher — quick navigation between registered SPA panels."
+    },
+    "nce_events/public/js/panel_page_v2/components/SyncErrorDialog.vue": {
+      "vue": {
+        "uses_defineProps": true,
+        "uses_defineEmits": true
+      },
+      "purpose": "Vue overlay for NCE Tables Last Sync Status errors — shows last_sync_log and latest Sync Log error_message without a Page Panel Form Dialog."
     },
     "nce_events/public/js/panel_page_v2/components/TabBar.vue": {
       "vue": {
