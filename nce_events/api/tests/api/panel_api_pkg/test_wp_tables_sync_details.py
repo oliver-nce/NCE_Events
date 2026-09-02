@@ -63,6 +63,8 @@ _install_package_stubs()
 
 from nce_events.api.panel_api_pkg.panel_data import (
 	_flag_last_sync_status_column,
+	_format_sync_duration,
+	_insert_elapsed_column,
 	_merge_latest_sync_log,
 )
 
@@ -94,6 +96,7 @@ class TestMergeLatestSyncLog(unittest.TestCase):
 		self.assertEqual(rows[0]["last_sync_log"], "Pre-flight lock check found blockers")
 		self.assertEqual(rows[0]["last_sync_error_message"], "lock held")
 		self.assertEqual(rows[0]["last_sync_log_name"], "SLOG-1")
+		self.assertEqual(rows[0]["last_sync_duration"], "")
 
 	def test_keeps_existing_last_sync_log(self) -> None:
 		rows = [{"name": "tbl-1", "last_sync_log": "already set"}]
@@ -105,6 +108,53 @@ class TestMergeLatestSyncLog(unittest.TestCase):
 		self.assertEqual(rows[0]["last_sync_log"], "already set")
 		self.assertEqual(rows[0]["last_sync_error_message"], "")
 		self.assertEqual(rows[0]["last_sync_log_name"], "")
+		self.assertEqual(rows[0]["last_sync_duration"], "")
+
+	def test_formats_duration_seconds(self) -> None:
+		rows = [{"name": "tbl-1", "last_sync_log": "x"}]
+		_merge_latest_sync_log(
+			rows,
+			{"tbl-1": {"error_message": "", "name": "SLOG-1", "duration_seconds": 183.2}},
+			{},
+		)
+		self.assertEqual(rows[0]["last_sync_duration"], "3m 03s")
+
+
+class TestFormatSyncDuration(unittest.TestCase):
+	def test_seconds(self) -> None:
+		self.assertEqual(_format_sync_duration(32), "32s")
+
+	def test_minutes(self) -> None:
+		self.assertEqual(_format_sync_duration(183), "3m 03s")
+
+	def test_hours(self) -> None:
+		self.assertEqual(_format_sync_duration(3723), "1h 02m 03s")
+
+	def test_empty(self) -> None:
+		self.assertEqual(_format_sync_duration(None), "")
+		self.assertEqual(_format_sync_duration(""), "")
+
+
+class TestInsertElapsedColumn(unittest.TestCase):
+	def test_inserts_after_last_synced(self) -> None:
+		columns = [
+			{"fieldname": "last_synced", "label": "Last Synced"},
+			{"fieldname": "last_sync_status", "label": "Last Sync Status"},
+		]
+		_insert_elapsed_column(columns)
+		self.assertEqual(
+			[c["fieldname"] for c in columns],
+			["last_synced", "last_sync_duration", "last_sync_status"],
+		)
+		self.assertEqual(columns[1]["label"], "Elapsed")
+
+	def test_idempotent(self) -> None:
+		columns = [
+			{"fieldname": "last_synced", "label": "Last Synced"},
+			{"fieldname": "last_sync_duration", "label": "Elapsed"},
+		]
+		_insert_elapsed_column(columns)
+		self.assertEqual(len(columns), 2)
 
 
 if __name__ == "__main__":

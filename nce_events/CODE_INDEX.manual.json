@@ -167,10 +167,12 @@
       ]
     },
     "nce_events/api/panel_api_pkg/panel_data.py": {
-      "purpose": "Panel data read endpoints \u2014 get_panel_config, get_panel_data (hot path), get_other_page_panels, copy_panel_colours, export_panel_data whitelist wrapper, get_theme_slug_for_link, and get_theme_table_tokens (Desk Colours tab previews). Config/export logic lives in panel_config.py and panel_export.py; _panel_config_from_doc re-exported for sql.py. WP Tables catalog rows get last_sync_log / latest Sync Log error attached and last_sync_status flagged for Form Dialog drill.",
+      "purpose": "Panel data read endpoints \u2014 get_panel_config, get_panel_data (hot path), get_other_page_panels, copy_panel_colours, export_panel_data whitelist wrapper, get_theme_slug_for_link, and get_theme_table_tokens (Desk Colours tab previews). Config/export logic lives in panel_config.py and panel_export.py; _panel_config_from_doc re-exported for sql.py. WP Tables catalog rows get last_sync_log / latest Sync Log error+duration attached, last_sync_status flagged for error overlay, and an Elapsed column after Last Synced.",
       "private_helpers": [
         "_filter_wp_tables_catalog_rows",
         "_flag_last_sync_status_column",
+        "_format_sync_duration",
+        "_insert_elapsed_column",
         "_merge_latest_sync_log",
         "_attach_wp_tables_sync_details"
       ],

@@ -127,12 +127,48 @@ def _flag_last_sync_status_column(columns: list[dict[str, Any]]) -> None:
 			return
 
 
+def _format_sync_duration(raw: Any) -> str:
+	"""Turn Sync Log duration_seconds into a compact elapsed label."""
+	if raw is None or raw == "":
+		return ""
+	try:
+		secs = float(raw)
+	except (TypeError, ValueError):
+		return ""
+	if secs < 0:
+		return ""
+	total = int(round(secs))
+	hours, rem = divmod(total, 3600)
+	minutes, seconds = divmod(rem, 60)
+	if hours:
+		return f"{hours}h {minutes:02d}m {seconds:02d}s"
+	if minutes:
+		return f"{minutes}m {seconds:02d}s"
+	return f"{seconds}s"
+
+
+def _insert_elapsed_column(columns: list[dict[str, Any]]) -> None:
+	"""Place Elapsed immediately after Last Synced on the WP Tables catalog."""
+	if any(c.get("fieldname") == "last_sync_duration" for c in columns):
+		return
+	col: dict[str, Any] = {"fieldname": "last_sync_duration", "label": _("Elapsed")}
+	for i, existing in enumerate(columns):
+		if existing.get("fieldname") == "last_synced":
+			columns.insert(i + 1, col)
+			return
+	for i, existing in enumerate(columns):
+		if existing.get("fieldname") == "last_sync_status":
+			columns.insert(i, col)
+			return
+	columns.append(col)
+
+
 def _merge_latest_sync_log(
 	rows: list[dict[str, Any]],
 	sync_log_by_table: dict[str, dict[str, Any]],
 	wp_log_by_name: dict[str, dict[str, Any]],
 ) -> None:
-	"""Copy WP Tables last_sync_log (if missing) and latest Sync Log error onto rows."""
+	"""Copy WP Tables last_sync_log (if missing) and latest Sync Log fields onto rows."""
 	for row in rows:
 		name = row.get("name")
 		if not name:
@@ -143,10 +179,11 @@ def _merge_latest_sync_log(
 		sl = sync_log_by_table.get(name) or {}
 		row["last_sync_error_message"] = sl.get("error_message") or ""
 		row["last_sync_log_name"] = sl.get("name") or ""
+		row["last_sync_duration"] = _format_sync_duration(sl.get("duration_seconds"))
 
 
 def _attach_wp_tables_sync_details(rows: list[dict[str, Any]]) -> None:
-	"""Load last_sync_log + latest Sync Log error_message for catalog rows."""
+	"""Load last_sync_log + latest Sync Log error/duration for catalog rows."""
 	if not rows:
 		return
 	names = [r.get("name") for r in rows if r.get("name")]
@@ -170,7 +207,7 @@ def _attach_wp_tables_sync_details(rows: list[dict[str, Any]]) -> None:
 		try:
 			latest = frappe.db.sql(
 				f"""
-				SELECT sl.wp_table, sl.error_message, sl.name
+				SELECT sl.wp_table, sl.error_message, sl.name, sl.duration_seconds
 				FROM `tabSync Log` sl
 				INNER JOIN (
 					SELECT wp_table, MAX(creation) AS max_creation
@@ -421,6 +458,7 @@ def get_panel_data(
 
 	if root_doctype == "WP Tables":
 		_flag_last_sync_status_column(columns)
+		_insert_elapsed_column(columns)
 
 	for fn, target_dt in link_target_map.items():
 		if fn not in seen:
