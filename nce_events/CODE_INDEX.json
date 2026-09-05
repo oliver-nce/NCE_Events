@@ -1,7 +1,7 @@
 {
   "_meta": {
     "description": "Manual overlay merged into CODE_INDEX.json by scripts/build_code_index.py. Edit per-file entries here; the generator preserves your curated 'purpose', 'sections', 'private_helpers', 'key_fields', and 'depends_on'.",
-    "generated": "2026-09-02",
+    "generated": "2026-09-05",
     "generator": "scripts/build_code_index.py",
     "usage": "Run `python scripts/build_code_index.py --write` to regenerate CODE_INDEX.json after editing this file or after adding/renaming/deleting source files. The pre-commit hook runs `--check` and blocks commits whose code changes have not been regenerated."
   },
@@ -936,7 +936,6 @@
     "nce_events/api/tests/api/panel_api_pkg/test_discovery.py": {
       "exports": [
         "TestDiscoverViaLinkPaths",
-        "TestGetChildDoctypes",
         "TestGetMultiHopChildren"
       ],
       "purpose": "Unit tests for panel_api_pkg child-doctype discovery (including self-Link), multi-hop link paths (1/2/3-hop), and get_multi_hop_children classification."
@@ -995,6 +994,14 @@
         "TestUpdateWooCommerceProduct"
       ],
       "purpose": "Unit tests for events_publish WooCommerce publish/update payloads, duplicate_event, and delete_event flows."
+    },
+    "nce_events/api/tests/api/test_query_based_table_link.py": {
+      "exports": [
+        "TestNormalizeConditions",
+        "TestNormalizeOp",
+        "TestNormalizeSort"
+      ],
+      "purpose": "Unit tests for Query Based Table Link condition/sort JSON helpers and where_clause generation."
     },
     "nce_events/api/tests/api/test_sql_eval.py": {
       "exports": [
@@ -1361,6 +1368,20 @@
     },
     "nce_events/nce_events/doctype/panel_page_definition/": {
       "purpose": "Legacy panel page registry DocType — maps page slug/mode to panel configuration before SPA Page Definition."
+    },
+    "nce_events/nce_events/doctype/query_based_table_link/": {
+      "purpose": "App-defined catalog of bidirectional query-based table links. Desk form JS builds AND'd field-pair criteria plus per-side sort; validate() rewrites where_clause from conditions_json. Not executed yet; Form Dialog related tabs still use same_doc_group / Link hops.",
+      "key_fields": [
+        "left_table",
+        "right_table",
+        "where_clause",
+        "conditions_json",
+        "left_sort_enabled",
+        "right_sort_enabled",
+        "left_sort_json",
+        "right_sort_json"
+      ],
+      "depends_on": []
     },
     "nce_events/nce_events/doctype/settings/": {
       "purpose": "App-level settings singleton",

@@ -1109,6 +1109,9 @@
     "nce_events/api/tests/api/form_dialog/test_capture.py": {
       "purpose": "Unit tests for form_dialog capture/rebuild and get_form_dialog_definition endpoints."
     },
+    "nce_events/api/tests/api/test_query_based_table_link.py": {
+      "purpose": "Unit tests for Query Based Table Link condition/sort JSON helpers and where_clause generation."
+    },
     "nce_events/api/tests/api/form_dialog/test_helpers.py": {
       "purpose": "Unit tests for form_dialog _helpers fa\u00e7ade and _fd_* domain modules (gating, related, capture meta)."
     },
@@ -1223,6 +1226,20 @@
         "hop_chain",
         "portal_field_config"
       ]
+    },
+    "nce_events/nce_events/doctype/query_based_table_link/": {
+      "purpose": "App-defined catalog of bidirectional query-based table links. Desk form JS builds AND'd field-pair criteria plus per-side sort; validate() rewrites where_clause from conditions_json. Not executed yet; Form Dialog related tabs still use same_doc_group / Link hops.",
+      "key_fields": [
+        "left_table",
+        "right_table",
+        "where_clause",
+        "conditions_json",
+        "left_sort_enabled",
+        "right_sort_enabled",
+        "left_sort_json",
+        "right_sort_json"
+      ],
+      "depends_on": []
     },
     "nce_events/nce_events/doctype/form_dialog_script_tool_group/": {
       "purpose": "Child table of Form Dialog \u2014 captured client-script tool tab group (label, sort_order, script bodies)."
