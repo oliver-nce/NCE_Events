@@ -2,12 +2,13 @@
  * Build get_panel_data drill-down filters for Form Dialog related-tab "Go to".
  * Mirrors nce_events.api.form_dialog._helpers._filters_for_related_rows.
  *
- * @param {{ link_field?: string, hop_chain?: object[] }} related
+ * @param {{ doctype?: string, link_field?: string, hop_chain?: object[] }} related
  * @param {string} rootDocName
  * @param {object[]} rows — loaded related-tab rows (must include `name` for multi-hop)
+ * @param {string} [rootDoctype] — Form Dialog target DocType (same-table group tabs)
  * @returns {Record<string, string | [string, string[]]> | null} null when filter cannot be built
  */
-export function buildRelatedTabPanelFilter(related, rootDocName, rows) {
+export function buildRelatedTabPanelFilter(related, rootDocName, rows, rootDoctype) {
 	const linkField = String(related?.link_field || "").trim();
 	if (!linkField) {
 		return null;
@@ -19,6 +20,25 @@ export function buildRelatedTabPanelFilter(related, rootDocName, rows) {
 
 	const hopChain = Array.isArray(related?.hop_chain) ? related.hop_chain : [];
 	if (!hopChain.length) {
+		const childDt = String(related?.doctype || "").trim();
+		const rootDt = String(rootDoctype || "").trim();
+		if (childDt && rootDt && childDt === rootDt) {
+			let groupVal = null;
+			for (const rw of rows || []) {
+				if (!rw || rw[linkField] == null) {
+					continue;
+				}
+				const s = String(rw[linkField]).trim();
+				if (s) {
+					groupVal = rw[linkField];
+					break;
+				}
+			}
+			if (groupVal == null || String(groupVal).trim() === "") {
+				return null;
+			}
+			return { [linkField]: groupVal };
+		}
 		return { [linkField]: root };
 	}
 

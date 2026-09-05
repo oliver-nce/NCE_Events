@@ -2881,6 +2881,7 @@ function _normalizeHopChainForPickerKey(hc) {
 
 function _relatedPickerFingerprint(row) {
 	const dt = row && row.doctype ? String(row.doctype).trim() : "";
+	const lf = row && row.link_field ? String(row.link_field).trim() : "";
 	let hc = row && row.hop_chain;
 	if (typeof hc === "string") {
 		try {
@@ -2889,7 +2890,7 @@ function _relatedPickerFingerprint(row) {
 			hc = [];
 		}
 	}
-	return dt + "\0" + JSON.stringify(_normalizeHopChainForPickerKey(hc));
+	return dt + "\0" + lf + "\0" + JSON.stringify(_normalizeHopChainForPickerKey(hc));
 }
 
 function _htmlEscAttr(s) {
@@ -3045,12 +3046,15 @@ function _show_capture_wizard_dialog(opts, onSubmit) {
 	const one = buckets["1_hop"] || [];
 	const two = buckets["2_hop"] || [];
 	const three = buckets["3_hop"] || [];
+	const sameGroup = buckets["same_doc_group"] || [];
 
 	const preselectedRelated = opts.preselectedRelated || [];
 	const preRelSet = new Set(preselectedRelated.map(_relatedPickerFingerprint));
 
 	// Already-configured tabs not returned by discovery stay selectable (Rebuild).
-	const discoveryFp = new Set(one.concat(two, three).map(_relatedPickerFingerprint));
+	const discoveryFp = new Set(
+		one.concat(two, three, sameGroup).map(_relatedPickerFingerprint)
+	);
 	const configuredExtra = [];
 	for (let pri = 0; pri < preselectedRelated.length; pri++) {
 		const row = preselectedRelated[pri];
@@ -3074,8 +3078,6 @@ function _show_capture_wizard_dialog(opts, onSubmit) {
 		discoveryFp.add(fp);
 		configuredExtra.push(normalized);
 	}
-
-	const allRowsFlat = one.concat(two, three, configuredExtra);
 
 	const inlineOpts = Array.isArray(opts.inlineOptions) ? opts.inlineOptions : [];
 	const discoveredTools = Array.isArray(opts.discoveredTools) ? opts.discoveredTools : [];
@@ -3237,7 +3239,11 @@ function _show_capture_wizard_dialog(opts, onSubmit) {
 	}
 
 	const configuredCol = configuredExtra.length
-		? colHtml(__("Configured"), configuredExtra, one.length + two.length + three.length)
+		? colHtml(
+				__("Configured"),
+				configuredExtra,
+				one.length + two.length + three.length + sameGroup.length
+			)
 		: "";
 	const relatedWrap =
 		'<div style="margin:0 0 10px;font-size:12px;font-weight:600;color:#36414c;">' +
@@ -3246,8 +3252,11 @@ function _show_capture_wizard_dialog(opts, onSubmit) {
 		colHtml(__("1-hop"), one, 0) +
 		colHtml(__("2-hop"), two, one.length) +
 		colHtml(__("3-hop"), three, one.length + two.length) +
+		colHtml(__("Same table"), sameGroup, one.length + two.length + three.length) +
 		configuredCol +
 		"</div>";
+
+	const allRowsFlat = one.concat(two, three, sameGroup, configuredExtra);
 
 	const bodyHtml =
 		'<div class="pp-capture-wizard-body" style="max-height:72vh;overflow-y:auto;padding-right:6px;">' +

@@ -564,6 +564,7 @@ function onGoToPanel() {
 		rel,
 		props.rootDocName,
 		relatedState[props.ti]?.rows || [],
+		props.rootDoctype,
 	);
 	if (!parentFilter) {
 		if (typeof frappe !== "undefined" && frappe.show_alert) {

@@ -50,7 +50,19 @@ class TestParseRelatedDoctypes(unittest.TestCase):
 		self.assertEqual(rows[0]["label"], "People")
 		self.assertEqual(rows[0].get("hop_chain"), [])
 
-	def test_dedupes_same_doctype_same_hop_chain(self):
+	def test_dedupes_same_doctype_same_hop_chain_same_link_field(self):
+		from nce_events.api.form_dialog._helpers import _parse_related_doctypes_argument
+
+		rows = _parse_related_doctypes_argument(
+			[
+				{"doctype": "People", "link_field": "a", "label": "A"},
+				{"doctype": "People", "link_field": "a", "label": "A duplicate"},
+			]
+		)
+		self.assertEqual(len(rows), 1)
+		self.assertEqual(rows[0]["link_field"], "a")
+
+	def test_keeps_same_doctype_same_hop_different_link_field(self):
 		from nce_events.api.form_dialog._helpers import _parse_related_doctypes_argument
 
 		rows = _parse_related_doctypes_argument(
@@ -59,8 +71,7 @@ class TestParseRelatedDoctypes(unittest.TestCase):
 				{"doctype": "People", "link_field": "b", "label": "B"},
 			]
 		)
-		self.assertEqual(len(rows), 1)
-		self.assertEqual(rows[0]["link_field"], "a")
+		self.assertEqual(len(rows), 2)
 
 	def test_keeps_same_doctype_different_hop_chain(self):
 		from nce_events.api.form_dialog._helpers import _parse_related_doctypes_argument
@@ -89,6 +100,40 @@ class TestFiltersForRelatedRows(unittest.TestCase):
 		filters, force_empty = _filters_for_related_rows("ROOT", "People", "event", [])
 		self.assertFalse(force_empty)
 		self.assertEqual(filters, {"event": "ROOT"})
+
+	@patch("nce_events.api.form_dialog._fd_related.frappe.db.get_value")
+	@patch("nce_events.api.form_dialog._fd_related.frappe.get_meta")
+	def test_same_doctype_group_by_field_value(self, mock_get_meta, mock_get_value):
+		from nce_events.api.form_dialog._helpers import _filters_for_related_rows
+
+		mock_get_meta.return_value.get_field.return_value = object()
+		mock_get_value.return_value = 10240
+		filters, force_empty = _filters_for_related_rows(
+			"10243",
+			"Line Item Payments",
+			"base_line_item_id",
+			[],
+			"Line Item Payments",
+		)
+		self.assertFalse(force_empty)
+		self.assertEqual(filters, {"base_line_item_id": 10240})
+		mock_get_value.assert_called_once_with("Line Item Payments", "10243", "base_line_item_id")
+
+	@patch("nce_events.api.form_dialog._fd_related.frappe.get_meta")
+	def test_same_doctype_empty_group_value_force_empty(self, mock_get_meta):
+		from nce_events.api.form_dialog._helpers import _filters_for_related_rows
+
+		mock_get_meta.return_value.get_field.return_value = object()
+		with patch("nce_events.api.form_dialog._fd_related.frappe.db.get_value", return_value=""):
+			filters, force_empty = _filters_for_related_rows(
+				"10243",
+				"Line Item Payments",
+				"base_line_item_id",
+				[],
+				"Line Item Payments",
+			)
+		self.assertTrue(force_empty)
+		self.assertEqual(filters, {})
 
 	@patch("nce_events.api.form_dialog._fd_related._hop_walk_final_identifiers")
 	def test_multihop_no_bridge_rows_force_empty(self, mock_hop):

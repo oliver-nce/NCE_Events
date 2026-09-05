@@ -40,6 +40,25 @@ _SKIP_FIELDNAMES: frozenset[str] = frozenset(
 	}
 )
 
+_SAME_DOC_GROUP_FIELDTYPES: frozenset[str] = frozenset(
+	{
+		"Data",
+		"Int",
+		"Float",
+		"Currency",
+		"Percent",
+		"Link",
+		"Select",
+		"Date",
+		"Datetime",
+		"Time",
+		"Check",
+		"Long Text",
+		"Small Text",
+		"Text",
+	}
+)
+
 
 def _via_path_key(doctype: str, hop_chain: list[dict[str, str]]) -> str:
 	return f"{doctype}::{json.dumps(hop_chain, sort_keys=True)}"
@@ -183,6 +202,55 @@ def _skip_as_panel_child_table(meta: Any) -> bool:
 	return bool(getattr(meta, "issingle", 0)) or bool(getattr(meta, "is_virtual", 0))
 
 
+def _discover_same_doctype_group_fields(
+	root_doctype: str,
+	wp_doctypes: set[str],
+	label_map: dict[str, str],
+	*,
+	exclude_link_fields: frozenset[str] | set[str] | None = None,
+) -> list[dict[str, object]]:
+	"""Same-table related tabs: group rows by a shared scalar field value (not row id).
+
+	Offered when ``link_field`` is a plain column (e.g. ``base_line_item_id`` Int/Data)
+	or a Link to another DocType — not when it is already a self-Link in 1-hop discovery.
+	"""
+	root_doctype = cstr(root_doctype or "").strip()
+	if not root_doctype or root_doctype not in wp_doctypes:
+		return []
+	try:
+		meta = frappe.get_meta(root_doctype)
+	except Exception:
+		return []
+	if _skip_as_panel_child_table(meta):
+		return []
+
+	skip_links = {cstr(x).strip() for x in (exclude_link_fields or set()) if cstr(x).strip()}
+	dt_label = label_map.get(root_doctype, root_doctype)
+	out: list[dict[str, object]] = []
+	for field in meta.fields:
+		fn = cstr(field.fieldname or "").strip()
+		if not fn or fn in _SKIP_FIELDNAMES:
+			continue
+		if field.fieldtype in _SKIP_FIELDTYPES:
+			continue
+		if field.fieldtype not in _SAME_DOC_GROUP_FIELDTYPES:
+			continue
+		if fn in skip_links:
+			continue
+		if field.fieldtype == "Link" and cstr(field.options or "").strip() == root_doctype:
+			continue
+		out.append(
+			{
+				"doctype": root_doctype,
+				"link_field": fn,
+				"label": _("{0} (group by {1})").format(dt_label, fn),
+				"hop_chain": [],
+			}
+		)
+	out.sort(key=lambda r: cstr(r.get("link_field") or ""))
+	return out
+
+
 @frappe.whitelist()
 def get_child_doctypes(root_doctype: str) -> list[dict[str, str]]:
 	"""Return DocTypes that have a Link field pointing to root_doctype.
@@ -246,7 +314,7 @@ def get_multi_hop_children(root_doctype: str) -> dict[str, list[dict[str, object
 	"""
 	root_doctype = cstr(root_doctype or "").strip()
 	if not root_doctype:
-		return {"1_hop": [], "2_hop": [], "3_hop": []}
+		return {"1_hop": [], "2_hop": [], "3_hop": [], "same_doc_group": []}
 
 	wp_rows = frappe.get_all(
 		"WP Tables",
@@ -413,7 +481,19 @@ def get_multi_hop_children(root_doctype: str) -> dict[str, list[dict[str, object
 				)
 	three_hop.sort(key=lambda r: cstr(r.get("label") or r.get("doctype")))
 
-	return {"1_hop": one_hop, "2_hop": two_hop, "3_hop": three_hop}
+	self_link_fields = frozenset(
+		cstr(r.get("link_field") or "").strip()
+		for r in one_hop
+		if cstr(r.get("doctype") or "").strip() == root_doctype and cstr(r.get("link_field") or "").strip()
+	)
+	same_doc_group = _discover_same_doctype_group_fields(
+		root_doctype,
+		wp_doctypes,
+		label_map,
+		exclude_link_fields=self_link_fields,
+	)
+
+	return {"1_hop": one_hop, "2_hop": two_hop, "3_hop": three_hop, "same_doc_group": same_doc_group}
 
 
 @frappe.whitelist()

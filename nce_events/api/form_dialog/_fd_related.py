@@ -39,8 +39,9 @@ def _normalize_hop_chain_value(raw: object) -> list[dict[str, str]]:
 	return out
 
 
-def _related_row_signature(doctype: str, hop_chain: list[dict[str, str]]) -> str:
-	return f"{doctype}\0{json.dumps(hop_chain, separators=(',', ':'))}"
+def _related_row_signature(doctype: str, link_field: str, hop_chain: list[dict[str, str]]) -> str:
+	lf = cstr(link_field or "").strip()
+	return f"{doctype}\0{lf}\0{json.dumps(hop_chain, separators=(',', ':'))}"
 
 
 def _related_tab_portal_config_key(child_doctype: str, link_field: str, hop_chain_raw: object) -> str:
@@ -77,7 +78,7 @@ def _parse_related_doctypes_argument(related_doctypes: str | list | None) -> lis
 		if not lf:
 			continue
 		hc = _normalize_hop_chain_value(item.get("hop_chain"))
-		sig = _related_row_signature(dt, hc)
+		sig = _related_row_signature(dt, lf, hc)
 		if sig in seen:
 			continue
 		seen.add(sig)
@@ -345,23 +346,31 @@ def _filters_for_related_rows(
 	child_doctype: str,
 	link_field: str,
 	hop_chain: list[dict[str, str]],
+	root_doctype: str = "",
 ) -> tuple[dict[str, Any], bool]:
 	"""
 	Build get_list filters for the final related DocType.
 
 	Returns ``(filters, force_empty)``. When ``force_empty`` is True, the caller
 	must not call get_list and should return zero rows (hop miss or empty keys).
+
+	When ``child_doctype`` equals ``root_doctype`` (same-table related tab), rows
+	are matched by the opened row's own ``link_field`` **value** (sibling group),
+	not by ``root_name`` (row id).
 	"""
 	if not hop_chain:
-		try:
-			df = frappe.get_meta(child_doctype).get_field(link_field)
-			is_self_ref = bool(df) and cstr(getattr(df, "options", "") or "").strip() == child_doctype
-		except Exception:
-			is_self_ref = False
-		if is_self_ref:
-			own_value = cstr(frappe.db.get_value(child_doctype, root_name, link_field) or "").strip()
-			if own_value:
-				return ({link_field: own_value}, False)
+		root_dt = cstr(root_doctype or "").strip()
+		if root_dt and child_doctype == root_dt:
+			try:
+				df = frappe.get_meta(child_doctype).get_field(link_field)
+			except Exception:
+				df = None
+			if not df:
+				return ({}, True)
+			own_value = frappe.db.get_value(child_doctype, root_name, link_field)
+			if own_value is None or cstr(own_value).strip() == "":
+				return ({}, True)
+			return ({link_field: own_value}, False)
 		return ({link_field: root_name}, False)
 
 	final_ids = _hop_walk_final_identifiers(root_name, hop_chain)

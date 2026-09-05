@@ -918,7 +918,12 @@ async function onGoToPanel(ev) {
 
 		const rootName = String(form.formData?.name ?? props.docName ?? "").trim();
 		const rows = fdBodyRef.value?.getRelatedRowsForTab?.(ev.ti) ?? [];
-		const parentFilter = buildRelatedTabPanelFilter(ev.related, rootName, rows);
+		const parentFilter = buildRelatedTabPanelFilter(
+			{ ...ev.related, doctype },
+			rootName,
+			rows,
+			props.doctype,
+		);
 		if (!parentFilter) {
 			if (typeof frappe !== "undefined" && frappe.show_alert) {
 				frappe.show_alert({

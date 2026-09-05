@@ -270,8 +270,38 @@ class TestGetMultiHopChildren(unittest.TestCase):
 		]
 		self.assertEqual(two_via_self, [])
 
+	def test_same_doc_group_lists_scalar_fields_excluding_self_link(self):
+		from nce_events.api.panel_api_pkg.discovery import get_multi_hop_children
 
-class TestGetChildDoctypes(unittest.TestCase):
+		wp = {"Line Item Payments", "Enrollments"}
+
+		def fake_get_meta(doctype: str):
+			if doctype == "Line Item Payments":
+				return _meta(
+					_field("parent_id", "Link", "Line Item Payments"),
+					_field("base_line_item_id", "Int"),
+					_field("enrollment_id", "Link", "Enrollments"),
+				)
+			if doctype == "Enrollments":
+				return _meta(_field("product_id", "Link", "Events"))
+			return _meta()
+
+		with patch(
+			"nce_events.api.panel_api_pkg.discovery.frappe.get_all",
+			return_value=_wp_rows(*sorted(wp)),
+		), patch(
+			"nce_events.api.panel_api_pkg.discovery.frappe.get_meta",
+			side_effect=fake_get_meta,
+		), patch(
+			"nce_events.api.panel_api_pkg.discovery._find_link_field",
+			return_value=None,
+		):
+			out = get_multi_hop_children("Line Item Payments")
+
+		group = out.get("same_doc_group") or []
+		fns = {r["link_field"] for r in group}
+		self.assertIn("base_line_item_id", fns)
+		self.assertNotIn("parent_id", fns)
 	def test_excludes_single_doctype_with_link_to_root(self):
 		from nce_events.api.panel_api_pkg.discovery import get_child_doctypes
 

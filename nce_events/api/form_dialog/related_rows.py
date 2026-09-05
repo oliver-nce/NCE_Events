@@ -340,7 +340,7 @@ def get_form_dialog_related_rows(
 	if limit_n > 2000:
 		limit_n = 2000
 
-	filters, force_empty = _filters_for_related_rows(root_name, child_dt, link_f, hc)
+	filters, force_empty = _filters_for_related_rows(root_name, child_dt, link_f, hc, root_doctype)
 	columns, order_by = _related_list_columns_from_child_row(row)
 	_enrich_columns_with_permlevel(child_dt, columns)
 	write_ctx = _child_write_context(child_dt)
@@ -489,8 +489,9 @@ def _allowed_child_names_for_related_tab(
 	child_dt: str,
 	link_f: str,
 	hc: list[dict[str, str]],
+	root_doctype: str = "",
 ) -> set[str]:
-	filters, force_empty = _filters_for_related_rows(root_name, child_dt, link_f, hc)
+	filters, force_empty = _filters_for_related_rows(root_name, child_dt, link_f, hc, root_doctype)
 	if force_empty:
 		return set()
 	names = frappe.get_all(child_dt, filters=filters, pluck="name", limit=5000)
@@ -538,7 +539,7 @@ def save_form_dialog_related_rows(
 
 	_enforce_related_edit_condition(row, root_doctype, root_name)
 
-	allowed_names = _allowed_child_names_for_related_tab(root_name, child_dt, link_f, hc)
+	allowed_names = _allowed_child_names_for_related_tab(root_name, child_dt, link_f, hc, root_doctype)
 	allowed_fields = _editable_related_fieldnames_for_save(
 		row, child_dt, root_doctype=root_doctype, link_field=link_f
 	)
@@ -655,7 +656,7 @@ def delete_form_dialog_related_row(
 	if not child_name:
 		frappe.throw(_("Missing child_name"))
 
-	allowed = _allowed_child_names_for_related_tab(root_name, child_dt, link_f, hc)
+	allowed = _allowed_child_names_for_related_tab(root_name, child_dt, link_f, hc, root_doctype)
 	if child_name not in allowed:
 		frappe.throw(_("Not permitted to delete this row"), frappe.PermissionError)
 	if not frappe.has_permission(child_dt, "delete", doc=child_name):
