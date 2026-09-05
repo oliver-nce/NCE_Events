@@ -231,7 +231,7 @@ class TestGetMultiHopChildren(unittest.TestCase):
 		two_labels = [r["label"] for r in out["2_hop"]]
 		self.assertFalse(any("Events" in lb for lb in two_labels))
 
-	def test_includes_self_link_as_1_hop(self):
+	def test_excludes_self_link_from_1_hop(self):
 		from nce_events.api.panel_api_pkg.discovery import get_multi_hop_children
 
 		wp = {"Line Item Payments", "Enrollments"}
@@ -259,9 +259,7 @@ class TestGetMultiHopChildren(unittest.TestCase):
 			out = get_multi_hop_children("Line Item Payments")
 
 		self_rows = [r for r in out["1_hop"] if r["doctype"] == "Line Item Payments"]
-		self.assertEqual(len(self_rows), 1)
-		self.assertEqual(self_rows[0]["link_field"], "parent_id")
-		self.assertEqual(self_rows[0]["hop_chain"], [])
+		self.assertEqual(self_rows, [])
 
 		two_via_self = [
 			r

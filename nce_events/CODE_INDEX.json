@@ -614,7 +614,7 @@
         "get_doctype_fields",
         "get_multi_hop_children"
       ],
-      "purpose": "Child doctype discovery — find DocTypes (including a self-Link on the root) with Link fields pointing to a root, multi-hop child discovery (1/2/3-hop) for Form Dialog picker, field metadata extraction (fieldname, label, fieldtype, Link options), and diagnostic child lookup.",
+      "purpose": "Child doctype discovery — find DocTypes with Link fields pointing to a root (get_child_doctypes still includes a self-Link), multi-hop child discovery (1/2/3-hop) for Form Dialog picker (self-Link on the root omitted), field metadata extraction (fieldname, label, fieldtype, Link options), and diagnostic child lookup.",
       "depends_on": [
         "nce_events/api/panel_api_pkg/_helpers.py"
       ],
@@ -938,7 +938,7 @@
         "TestDiscoverViaLinkPaths",
         "TestGetMultiHopChildren"
       ],
-      "purpose": "Unit tests for panel_api_pkg child-doctype discovery (including self-Link), multi-hop link paths (1/2/3-hop), and get_multi_hop_children classification."
+      "purpose": "Unit tests for panel_api_pkg child-doctype discovery, multi-hop link paths (1/2/3-hop), Form Dialog picker excluding self-Link 1-hop, and get_multi_hop_children classification."
     },
     "nce_events/api/tests/api/panel_api_pkg/test_panel_rest_export.py": {
       "exports": [

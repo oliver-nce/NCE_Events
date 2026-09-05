@@ -303,8 +303,9 @@ def get_multi_hop_children(root_doctype: str) -> dict[str, list[dict[str, object
 
 	Each item: doctype, link_field (use ``name`` for multi-hop), label, hop_chain (list or []).
 
-	1-hop: inbound children (Link → root), including a self-Link on the root,
-	plus linked parents when root is a junction table.
+	1-hop: inbound children (Link → root) on a **different** DocType,
+	plus linked parents when root is a junction table. Self-Links on the
+	root are omitted (use Same table / query-based links for same-DocType groups).
 	2-hop: bridge → related table (e.g. People via Enrollments).
 	3-hop: bridge → via table → related table on that via (e.g. Eligibility via Enrollments → People),
 	plus inbound three-step paths where each bridge links back to the prior step.
@@ -334,6 +335,8 @@ def get_multi_hop_children(root_doctype: str) -> dict[str, list[dict[str, object
 		try:
 			meta = frappe.get_meta(dt)
 		except Exception:
+			continue
+		if dt == root_doctype:
 			continue
 		for field in meta.fields:
 			if field.fieldtype == "Link" and field.options == root_doctype:
