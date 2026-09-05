@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from collections import deque
 from typing import Any
 
 import frappe
@@ -297,25 +298,204 @@ def get_child_doctypes(root_doctype: str) -> list[dict[str, str]]:
 	return result
 
 
+def _empty_capture_hop_buckets() -> dict[str, dict[str, list[dict[str, object]]]]:
+	return {
+		k: {"relationships": [], "query_based_links": []}
+		for k in ("self", "1_hop", "2_hop", "3_hop")
+	}
+
+
+def _discover_self_link_relationships(
+	root_doctype: str,
+	wp_doctypes: set[str],
+	label_map: dict[str, str],
+) -> list[dict[str, object]]:
+	"""Self-Link fields on the root DocType (Link options = root)."""
+	root_doctype = cstr(root_doctype or "").strip()
+	if not root_doctype or root_doctype not in wp_doctypes:
+		return []
+	try:
+		meta = frappe.get_meta(root_doctype)
+	except Exception:
+		return []
+	if _skip_as_panel_child_table(meta):
+		return []
+
+	dt_label = label_map.get(root_doctype, root_doctype)
+	out: list[dict[str, object]] = []
+	for field in meta.fields:
+		fn = cstr(field.fieldname or "").strip()
+		if not fn or field.fieldtype != "Link":
+			continue
+		if cstr(field.options or "").strip() != root_doctype:
+			continue
+		out.append(
+			{
+				"doctype": root_doctype,
+				"link_field": fn,
+				"label": _("{0} (self-Link {1})").format(dt_label, fn),
+				"hop_chain": [],
+			}
+		)
+	out.sort(key=lambda r: cstr(r.get("link_field") or ""))
+	return out
+
+
+def _load_query_based_table_links() -> list[dict[str, object]]:
+	try:
+		rows = frappe.get_all(
+			"Query Based Table Link",
+			fields=["name", "title", "left_table", "right_table"],
+			order_by="title",
+		)
+	except Exception:
+		return []
+	out: list[dict[str, object]] = []
+	for row in rows:
+		left = cstr(row.get("left_table") or "").strip()
+		right = cstr(row.get("right_table") or "").strip()
+		name = cstr(row.get("name") or row.get("title") or "").strip()
+		if not left or not right or not name:
+			continue
+		out.append(
+			{
+				"name": name,
+				"title": name,
+				"left_table": left,
+				"right_table": right,
+				"label": name,
+			}
+		)
+	return out
+
+
+def _build_mixed_doctype_adjacency(
+	wp_doctypes: set[str],
+	qbtl_rows: list[dict[str, object]],
+) -> dict[str, list[tuple[str, str | None]]]:
+	"""DocType graph: Link hops (undirected) + QBTL edges (tagged with catalog name)."""
+	adj: dict[str, list[tuple[str, str | None]]] = {dt: [] for dt in wp_doctypes}
+	seen: set[tuple[str, str, str]] = set()
+
+	def add_edge(a: str, b: str, qbtl: str | None) -> None:
+		if a not in wp_doctypes or b not in wp_doctypes or a == b:
+			return
+		tag = qbtl or ""
+		key = (a, b, tag)
+		if key in seen:
+			return
+		seen.add(key)
+		adj.setdefault(a, []).append((b, qbtl))
+
+	for dt in wp_doctypes:
+		try:
+			meta = frappe.get_meta(dt)
+		except Exception:
+			continue
+		if _skip_as_panel_child_table(meta):
+			continue
+		for field in meta.fields:
+			if field.fieldtype != "Link" or not field.options:
+				continue
+			target = cstr(field.options).strip()
+			if target not in wp_doctypes or target == dt:
+				continue
+			add_edge(dt, target, None)
+			add_edge(target, dt, None)
+
+	for row in qbtl_rows:
+		left = cstr(row.get("left_table") or "").strip()
+		right = cstr(row.get("right_table") or "").strip()
+		name = cstr(row.get("name") or "").strip()
+		if not left or not right or not name:
+			continue
+		if left not in wp_doctypes or right not in wp_doctypes:
+			continue
+		if left == right:
+			continue
+		add_edge(left, right, name)
+		add_edge(right, left, name)
+
+	return adj
+
+
+def _doctype_distance_sets(
+	root_doctype: str,
+	adj: dict[str, list[tuple[str, str | None]]],
+	*,
+	max_depth: int = 3,
+) -> dict[str, set[int]]:
+	"""All path lengths (1..max_depth) from root to each reachable DocType."""
+	distances: dict[str, set[int]] = {root_doctype: {0}}
+	queue: deque[tuple[str, int]] = deque([(root_doctype, 0)])
+	while queue:
+		node, depth = queue.popleft()
+		if depth >= max_depth:
+			continue
+		for neighbor, _qbtl in adj.get(node, []):
+			next_depth = depth + 1
+			if next_depth > max_depth:
+				continue
+			if neighbor not in distances:
+				distances[neighbor] = set()
+			if next_depth not in distances[neighbor]:
+				distances[neighbor].add(next_depth)
+				queue.append((neighbor, next_depth))
+	return distances
+
+
+def _classify_query_based_links(
+	root_doctype: str,
+	qbtl_rows: list[dict[str, object]],
+	distances: dict[str, set[int]],
+) -> tuple[list[dict[str, object]], dict[int, list[dict[str, object]]]]:
+	"""Return (self_qbtl, {1: [...], 2: [...], 3: [...]}) for capture wizard columns."""
+	self_qbtl: list[dict[str, object]] = []
+	by_hop: dict[int, list[dict[str, object]]] = {1: [], 2: [], 3: []}
+	seen: dict[int, set[str]] = {1: set(), 2: set(), 3: set()}
+
+	for row in qbtl_rows:
+		left = cstr(row.get("left_table") or "").strip()
+		right = cstr(row.get("right_table") or "").strip()
+		name = cstr(row.get("name") or "").strip()
+		if not left or not right or not name:
+			continue
+		item = {
+			"name": name,
+			"title": name,
+			"left_table": left,
+			"right_table": right,
+			"label": name,
+		}
+		if left == right == root_doctype:
+			self_qbtl.append(item)
+			continue
+		for hop in (1, 2, 3):
+			before = hop - 1
+			if before not in distances.get(left, set()) and before not in distances.get(right, set()):
+				continue
+			if name in seen[hop]:
+				continue
+			seen[hop].add(name)
+			by_hop[hop].append(item)
+
+	self_qbtl.sort(key=lambda r: cstr(r.get("label") or r.get("name")))
+	for hop in (1, 2, 3):
+		by_hop[hop].sort(key=lambda r: cstr(r.get("label") or r.get("name")))
+	return self_qbtl, by_hop
+
+
 @frappe.whitelist()
-def get_multi_hop_children(root_doctype: str) -> dict[str, list[dict[str, object]]]:
-	"""Related tables for Form Dialog picker: 1-hop, 2-hop, 3-hop (WP Tables only).
+def get_multi_hop_children(root_doctype: str) -> dict[str, dict[str, list[dict[str, object]]]]:
+	"""Related tables for Form Dialog capture wizard: SELF + 1/2/3-hop columns.
 
-	Each item: doctype, link_field (use ``name`` for multi-hop), label, hop_chain (list or []).
-
-	1-hop: inbound children (Link → root) on a **different** DocType,
-	plus linked parents when root is a junction table. Self-Links on the
-	root are omitted (use Same table / query-based links for same-DocType groups).
-	2-hop: bridge → related table (e.g. People via Enrollments).
-	3-hop: bridge → via table → related table on that via (e.g. Eligibility via Enrollments → People),
-	plus inbound three-step paths where each bridge links back to the prior step.
-
-	hop_chain step: ``{bridge, parent_link, child_link}`` — on ``bridge`` DocType,
-	``parent_link`` points toward the root side, ``child_link`` toward the next level.
+	Each column has ``relationships`` (Link hops / group-by / self-Link) and
+	``query_based_links`` (Query Based Table Link catalog entries reachable at
+	that hop depth via mixed Link + QBTL paths).
 	"""
 	root_doctype = cstr(root_doctype or "").strip()
 	if not root_doctype:
-		return {"1_hop": [], "2_hop": [], "3_hop": [], "same_doc_group": []}
+		return _empty_capture_hop_buckets()
 
 	wp_rows = frappe.get_all(
 		"WP Tables",
@@ -484,19 +664,27 @@ def get_multi_hop_children(root_doctype: str) -> dict[str, list[dict[str, object
 				)
 	three_hop.sort(key=lambda r: cstr(r.get("label") or r.get("doctype")))
 
-	self_link_fields = frozenset(
-		cstr(r.get("link_field") or "").strip()
-		for r in one_hop
-		if cstr(r.get("doctype") or "").strip() == root_doctype and cstr(r.get("link_field") or "").strip()
-	)
 	same_doc_group = _discover_same_doctype_group_fields(
 		root_doctype,
 		wp_doctypes,
 		label_map,
-		exclude_link_fields=self_link_fields,
+		exclude_link_fields=frozenset(),
 	)
+	self_links = _discover_self_link_relationships(root_doctype, wp_doctypes, label_map)
+	self_relationships = same_doc_group + self_links
+	self_relationships.sort(key=lambda r: cstr(r.get("label") or r.get("link_field") or ""))
 
-	return {"1_hop": one_hop, "2_hop": two_hop, "3_hop": three_hop, "same_doc_group": same_doc_group}
+	qbtl_rows = _load_query_based_table_links()
+	adj = _build_mixed_doctype_adjacency(wp_doctypes, qbtl_rows)
+	distances = _doctype_distance_sets(root_doctype, adj, max_depth=3)
+	self_qbtl, qbtl_by_hop = _classify_query_based_links(root_doctype, qbtl_rows, distances)
+
+	return {
+		"self": {"relationships": self_relationships, "query_based_links": self_qbtl},
+		"1_hop": {"relationships": one_hop, "query_based_links": qbtl_by_hop.get(1, [])},
+		"2_hop": {"relationships": two_hop, "query_based_links": qbtl_by_hop.get(2, [])},
+		"3_hop": {"relationships": three_hop, "query_based_links": qbtl_by_hop.get(3, [])},
+	}
 
 
 @frappe.whitelist()

@@ -213,25 +213,32 @@ class TestGetMultiHopChildren(unittest.TestCase):
 		), patch(
 			"nce_events.api.panel_api_pkg.discovery._find_link_field",
 			return_value=None,
+		), patch(
+			"nce_events.api.panel_api_pkg.discovery._load_query_based_table_links",
+			return_value=[],
 		):
 			out = get_multi_hop_children("Events")
 
-		one_dts = {r["doctype"] for r in out["1_hop"]}
+		one_dts = {r["doctype"] for r in out["1_hop"]["relationships"]}
 		self.assertIn("Enrollments", one_dts)
 		self.assertIn("Event Metadata", one_dts)
 
-		two_dts = {r["doctype"] for r in out["2_hop"]}
+		two_dts = {r["doctype"] for r in out["2_hop"]["relationships"]}
 		self.assertIn("People", two_dts)
 		self.assertIn("WC Settlement History", two_dts)
 		self.assertNotIn("Eligibility", two_dts)
 
-		three_dts = {r["doctype"] for r in out["3_hop"]}
+		three_dts = {r["doctype"] for r in out["3_hop"]["relationships"]}
 		self.assertIn("Eligibility", three_dts)
 
-		two_labels = [r["label"] for r in out["2_hop"]]
+		two_labels = [r["label"] for r in out["2_hop"]["relationships"]]
 		self.assertFalse(any("Events" in lb for lb in two_labels))
 
-	def test_excludes_self_link_from_1_hop(self):
+		for key in ("self", "1_hop", "2_hop", "3_hop"):
+			self.assertIn("relationships", out[key])
+			self.assertIn("query_based_links", out[key])
+
+	def test_self_link_moves_to_self_column(self):
 		from nce_events.api.panel_api_pkg.discovery import get_multi_hop_children
 
 		wp = {"Line Item Payments", "Enrollments"}
@@ -255,18 +262,18 @@ class TestGetMultiHopChildren(unittest.TestCase):
 		), patch(
 			"nce_events.api.panel_api_pkg.discovery._find_link_field",
 			return_value=None,
+		), patch(
+			"nce_events.api.panel_api_pkg.discovery._load_query_based_table_links",
+			return_value=[],
 		):
 			out = get_multi_hop_children("Line Item Payments")
 
-		self_rows = [r for r in out["1_hop"] if r["doctype"] == "Line Item Payments"]
+		self_rows = [r for r in out["1_hop"]["relationships"] if r["doctype"] == "Line Item Payments"]
 		self.assertEqual(self_rows, [])
 
-		two_via_self = [
-			r
-			for r in out["2_hop"]
-			if r.get("hop_chain") and r["hop_chain"][0].get("parent_link") == "parent_id"
-		]
-		self.assertEqual(two_via_self, [])
+		self_col = out["self"]["relationships"]
+		self_links = [r for r in self_col if r.get("link_field") == "parent_id"]
+		self.assertEqual(len(self_links), 1)
 
 	def test_same_doc_group_lists_scalar_fields_excluding_self_link(self):
 		from nce_events.api.panel_api_pkg.discovery import get_multi_hop_children
@@ -293,13 +300,100 @@ class TestGetMultiHopChildren(unittest.TestCase):
 		), patch(
 			"nce_events.api.panel_api_pkg.discovery._find_link_field",
 			return_value=None,
+		), patch(
+			"nce_events.api.panel_api_pkg.discovery._load_query_based_table_links",
+			return_value=[],
 		):
 			out = get_multi_hop_children("Line Item Payments")
 
-		group = out.get("same_doc_group") or []
-		fns = {r["link_field"] for r in group}
-		self.assertIn("base_line_item_id", fns)
-		self.assertNotIn("parent_id", fns)
+		group = out["self"]["relationships"]
+		group_fns = {
+			r["link_field"]
+			for r in group
+			if "group by" in str(r.get("label") or "")
+		}
+		self.assertIn("base_line_item_id", group_fns)
+		self.assertNotIn("parent_id", group_fns)
+		self_link_fns = {
+			r["link_field"] for r in group if "self-Link" in str(r.get("label") or "")
+		}
+		self.assertIn("parent_id", self_link_fns)
+
+	def test_qbtl_mixed_path_two_hop(self):
+		from nce_events.api.panel_api_pkg.discovery import get_multi_hop_children
+
+		wp = {"Events", "Enrollments", "People"}
+		qbtl = [
+			{
+				"name": "Enrollments to People",
+				"title": "Enrollments to People",
+				"left_table": "Enrollments",
+				"right_table": "People",
+			}
+		]
+
+		def fake_get_meta(doctype: str):
+			if doctype == "Events":
+				return _meta()
+			if doctype == "Enrollments":
+				return _meta(
+					_field("product_id", "Link", "Events"),
+					_field("player_id", "Link", "People"),
+				)
+			return _meta()
+
+		with patch(
+			"nce_events.api.panel_api_pkg.discovery.frappe.get_all",
+			return_value=_wp_rows(*sorted(wp)),
+		), patch(
+			"nce_events.api.panel_api_pkg.discovery.frappe.get_meta",
+			side_effect=fake_get_meta,
+		), patch(
+			"nce_events.api.panel_api_pkg.discovery._find_link_field",
+			return_value=None,
+		), patch(
+			"nce_events.api.panel_api_pkg.discovery._load_query_based_table_links",
+			return_value=qbtl,
+		):
+			out = get_multi_hop_children("Events")
+
+		two_q = out["2_hop"]["query_based_links"]
+		self.assertEqual(len(two_q), 1)
+		self.assertEqual(two_q[0]["name"], "Enrollments to People")
+
+	def test_qbtl_self_join_on_root(self):
+		from nce_events.api.panel_api_pkg.discovery import get_multi_hop_children
+
+		wp = {"Line Item Payments"}
+		qbtl = [
+			{
+				"name": "LIP self",
+				"title": "LIP self",
+				"left_table": "Line Item Payments",
+				"right_table": "Line Item Payments",
+			}
+		]
+
+		def fake_get_meta(doctype: str):
+			if doctype == "Line Item Payments":
+				return _meta(_field("base_line_item_id", "Int"))
+			return _meta()
+
+		with patch(
+			"nce_events.api.panel_api_pkg.discovery.frappe.get_all",
+			return_value=_wp_rows(*sorted(wp)),
+		), patch(
+			"nce_events.api.panel_api_pkg.discovery.frappe.get_meta",
+			side_effect=fake_get_meta,
+		), patch(
+			"nce_events.api.panel_api_pkg.discovery._load_query_based_table_links",
+			return_value=qbtl,
+		):
+			out = get_multi_hop_children("Line Item Payments")
+
+		self.assertEqual(len(out["self"]["query_based_links"]), 1)
+		self.assertEqual(out["self"]["query_based_links"][0]["name"], "LIP self")
+
 	def test_excludes_single_doctype_with_link_to_root(self):
 		from nce_events.api.panel_api_pkg.discovery import get_child_doctypes
 

@@ -3028,11 +3028,97 @@ function _desk_discover_script_tool_groups(doctype, scriptBodies) {
 	return Object.values(toolGroups);
 }
 
+function _normalizeCaptureHopBuckets(raw) {
+	const empty = function () {
+		return { relationships: [], query_based_links: [] };
+	};
+	if (!raw || typeof raw !== "object") {
+		return { self: empty(), "1_hop": empty(), "2_hop": empty(), "3_hop": empty() };
+	}
+	if (raw.self && raw.self.relationships) {
+		return {
+			self: {
+				relationships: raw.self.relationships || [],
+				query_based_links: raw.self.query_based_links || [],
+			},
+			"1_hop": {
+				relationships: (raw["1_hop"] && raw["1_hop"].relationships) || [],
+				query_based_links: (raw["1_hop"] && raw["1_hop"].query_based_links) || [],
+			},
+			"2_hop": {
+				relationships: (raw["2_hop"] && raw["2_hop"].relationships) || [],
+				query_based_links: (raw["2_hop"] && raw["2_hop"].query_based_links) || [],
+			},
+			"3_hop": {
+				relationships: (raw["3_hop"] && raw["3_hop"].relationships) || [],
+				query_based_links: (raw["3_hop"] && raw["3_hop"].query_based_links) || [],
+			},
+		};
+	}
+	return {
+		self: { relationships: raw.same_doc_group || [], query_based_links: [] },
+		"1_hop": { relationships: raw["1_hop"] || [], query_based_links: [] },
+		"2_hop": { relationships: raw["2_hop"] || [], query_based_links: [] },
+		"3_hop": { relationships: raw["3_hop"] || [], query_based_links: [] },
+	};
+}
+
+function _classifyRelatedRowBucket(row, rootDoctype) {
+	const dt = String((row && row.doctype) || "").trim();
+	const root = String(rootDoctype || "").trim();
+	if (dt && root && dt === root) {
+		return "self";
+	}
+	let hc = row && row.hop_chain;
+	if (typeof hc === "string") {
+		try {
+			hc = JSON.parse(hc || "[]");
+		} catch (e) {
+			hc = [];
+		}
+	}
+	if (!Array.isArray(hc) || !hc.length) {
+		return "1_hop";
+	}
+	if (hc.length === 1) {
+		const bridge = hc[0] && hc[0].bridge ? String(hc[0].bridge).trim() : "";
+		return bridge === root ? "1_hop" : "2_hop";
+	}
+	return "3_hop";
+}
+
+function _mergeConfiguredRelatedIntoBuckets(buckets, configuredExtra, rootDoctype, discoveryRelFp) {
+	for (let i = 0; i < configuredExtra.length; i++) {
+		const row = configuredExtra[i];
+		if (!row || typeof row !== "object") {
+			continue;
+		}
+		const fp = _relatedPickerFingerprint(row);
+		if (discoveryRelFp.has(fp)) {
+			continue;
+		}
+		discoveryRelFp.add(fp);
+		const bucketKey = _classifyRelatedRowBucket(row, rootDoctype);
+		if (!buckets[bucketKey]) {
+			continue;
+		}
+		buckets[bucketKey].relationships.push(row);
+	}
+}
+
+function _allDiscoveryRelationshipRows(buckets) {
+	return (buckets.self.relationships || [])
+		.concat(buckets["1_hop"].relationships || [])
+		.concat(buckets["2_hop"].relationships || [])
+		.concat(buckets["3_hop"].relationships || []);
+}
+
 /**
  * Unified capture wizard: related hops + inline Table fields + Tools script groups.
  *
  * @param {object} opts
  * @param {object} opts.buckets — get_multi_hop_children message
+ * @param {string} opts.rootDoctype — Form Dialog target DocType
  * @param {object[]} opts.inlineOptions — ``inline_table_fields`` from ``get_capture_wizard_options``
  * @param {object[]} opts.discoveredTools — from ``_desk_discover_script_tool_groups``
  * @param {object[]} opts.preselectedRelated — Form Dialog definition rows (shape like picker output)
@@ -3042,19 +3128,14 @@ function _desk_discover_script_tool_groups(doctype, scriptBodies) {
  * @param {Function} onSubmit — ``({ related, inline_child_tables, script_tool_groups })``
  */
 function _show_capture_wizard_dialog(opts, onSubmit) {
-	const buckets = opts.buckets || {};
-	const one = buckets["1_hop"] || [];
-	const two = buckets["2_hop"] || [];
-	const three = buckets["3_hop"] || [];
-	const sameGroup = buckets["same_doc_group"] || [];
+	const rootDoctype = String(opts.rootDoctype || "").trim();
+	const buckets = _normalizeCaptureHopBuckets(opts.buckets || {});
 
 	const preselectedRelated = opts.preselectedRelated || [];
 	const preRelSet = new Set(preselectedRelated.map(_relatedPickerFingerprint));
 
-	// Already-configured tabs not returned by discovery stay selectable (Rebuild).
-	const discoveryFp = new Set(
-		one.concat(two, three, sameGroup).map(_relatedPickerFingerprint)
-	);
+	const discoveryRelFp = new Set(_allDiscoveryRelationshipRows(buckets).map(_relatedPickerFingerprint));
+
 	const configuredExtra = [];
 	for (let pri = 0; pri < preselectedRelated.length; pri++) {
 		const row = preselectedRelated[pri];
@@ -3072,12 +3153,12 @@ function _show_capture_wizard_dialog(opts, onSubmit) {
 			hop_chain: row.hop_chain || [],
 		};
 		const fp = _relatedPickerFingerprint(normalized);
-		if (discoveryFp.has(fp)) {
+		if (discoveryRelFp.has(fp)) {
 			continue;
 		}
-		discoveryFp.add(fp);
 		configuredExtra.push(normalized);
 	}
+	_mergeConfiguredRelatedIntoBuckets(buckets, configuredExtra, rootDoctype, discoveryRelFp);
 
 	const inlineOpts = Array.isArray(opts.inlineOptions) ? opts.inlineOptions : [];
 	const discoveredTools = Array.isArray(opts.discoveredTools) ? opts.discoveredTools : [];
@@ -3096,45 +3177,87 @@ function _show_capture_wizard_dialog(opts, onSubmit) {
 		sgLabelByKey[gk] = String(r.tab_label || "").trim() || gk;
 	}
 
-	function colHtml(title, rows, idxOffset) {
+	const allRelRowsFlat = _allDiscoveryRelationshipRows(buckets);
+	const allQblRowsFlat = (buckets.self.query_based_links || [])
+		.concat(buckets["1_hop"].query_based_links || [])
+		.concat(buckets["2_hop"].query_based_links || [])
+		.concat(buckets["3_hop"].query_based_links || []);
+
+	function _checkboxRows(rows, kind, idxOffset, isChecked) {
+		let h = "";
+		if (!rows.length) {
+			h +=
+				'<div style="color:#b9c0c7;font-size:12px;margin:0 0 6px;">' +
+				_htmlEscAttr(__("None")) +
+				"</div>";
+			return h;
+		}
+		rows.forEach(function (row, j) {
+			const idx = idxOffset + j;
+			const id = "pp-related-sel-" + kind + "-" + idx;
+			const lab = row.label || row.doctype || row.name || "";
+			const checked = isChecked(row) ? " checked" : "";
+			h += '<div style="margin:0 0 8px;display:flex;align-items:flex-start;gap:8px;">';
+			h +=
+				'<input type="checkbox" class="pp-related-cb" id="' +
+				id +
+				'" data-kind="' +
+				kind +
+				'" data-idx="' +
+				idx +
+				'" style="margin-top:2px;"' +
+				checked +
+				"/>";
+			h +=
+				'<label for="' +
+				id +
+				'" style="margin:0;font-weight:400;cursor:pointer;line-height:1.35;">' +
+				_htmlEscAttr(lab) +
+				"</label>";
+			h += "</div>";
+		});
+		return h;
+	}
+
+	function colHtml(title, bucket, relOffset, qblOffset) {
+		const rels = (bucket && bucket.relationships) || [];
+		const qbls = (bucket && bucket.query_based_links) || [];
 		let h =
-			'<div class="pp-related-picker-col" style="flex:1;min-width:0;max-height:260px;overflow-y:auto;padding:10px;border:1px solid #eef0f2;border-radius:6px;background:#fafbfc;">';
+			'<div class="pp-related-picker-col" style="flex:1;min-width:0;max-height:320px;overflow-y:auto;padding:10px;border:1px solid #eef0f2;border-radius:6px;background:#fafbfc;">';
 		h +=
 			'<div style="font-size:11px;font-weight:600;color:#74808b;text-transform:uppercase;margin:0 0 10px;">' +
 			_htmlEscAttr(title) +
 			"</div>";
-		if (!rows.length) {
-			h +=
-				'<div style="color:#b9c0c7;font-size:12px;">' +
-				_htmlEscAttr(__("None")) +
-				"</div>";
-		} else {
-			rows.forEach(function (row, j) {
-				const idx = idxOffset + j;
-				const id = "pp-related-sel-" + idx;
-				const lab = row.label || row.doctype || "";
-				const checked = preRelSet.has(_relatedPickerFingerprint(row)) ? " checked" : "";
-				h += '<div style="margin:0 0 8px;display:flex;align-items:flex-start;gap:8px;">';
-				h +=
-					'<input type="checkbox" class="pp-related-cb" id="' +
-					id +
-					'" data-idx="' +
-					idx +
-					'" style="margin-top:2px;"' +
-					checked +
-					"/>";
-				h +=
-					'<label for="' +
-					id +
-					'" style="margin:0;font-weight:400;cursor:pointer;line-height:1.35;">' +
-					_htmlEscAttr(lab) +
-					"</label>";
-				h += "</div>";
-			});
-		}
+		h +=
+			'<div style="font-size:10px;font-weight:600;color:#8d99a6;text-transform:uppercase;margin:0 0 6px;">' +
+			_htmlEscAttr(__("Relationships")) +
+			"</div>";
+		h += _checkboxRows(rels, "rel", relOffset, function (row) {
+			return preRelSet.has(_relatedPickerFingerprint(row));
+		});
+		h +=
+			'<div style="font-size:10px;font-weight:600;color:#8d99a6;text-transform:uppercase;margin:10px 0 6px;">' +
+			_htmlEscAttr(__("Query based links")) +
+			"</div>";
+		h += _checkboxRows(qbls, "qbl", qblOffset, function () {
+			return false;
+		});
 		h += "</div>";
 		return h;
 	}
+
+	let relOff = 0;
+	const relOffsets = {};
+	["self", "1_hop", "2_hop", "3_hop"].forEach(function (key) {
+		relOffsets[key] = relOff;
+		relOff += (buckets[key].relationships || []).length;
+	});
+	let qblOff = 0;
+	const qblOffsets = {};
+	["self", "1_hop", "2_hop", "3_hop"].forEach(function (key) {
+		qblOffsets[key] = qblOff;
+		qblOff += (buckets[key].query_based_links || []).length;
+	});
 
 	let inlineSectionHtml = "";
 	if (inlineOpts.length) {
@@ -3238,25 +3361,15 @@ function _show_capture_wizard_dialog(opts, onSubmit) {
 			"</p>";
 	}
 
-	const configuredCol = configuredExtra.length
-		? colHtml(
-				__("Configured"),
-				configuredExtra,
-				one.length + two.length + three.length + sameGroup.length
-			)
-		: "";
 	const relatedWrap =
 		'<div style="margin:0 0 10px;font-size:12px;font-weight:600;color:#36414c;">' +
 		_htmlEscAttr(__("Related tables (multi-hop)")) +
 		'</div><div class="pp-related-picker-wrap" style="display:flex;gap:12px;align-items:stretch;">' +
-		colHtml(__("1-hop"), one, 0) +
-		colHtml(__("2-hop"), two, one.length) +
-		colHtml(__("3-hop"), three, one.length + two.length) +
-		colHtml(__("Same table"), sameGroup, one.length + two.length + three.length) +
-		configuredCol +
+		colHtml(__("Self"), buckets.self, relOffsets.self, qblOffsets.self) +
+		colHtml(__("1-hop"), buckets["1_hop"], relOffsets["1_hop"], qblOffsets["1_hop"]) +
+		colHtml(__("2-hop"), buckets["2_hop"], relOffsets["2_hop"], qblOffsets["2_hop"]) +
+		colHtml(__("3-hop"), buckets["3_hop"], relOffsets["3_hop"], qblOffsets["3_hop"]) +
 		"</div>";
-
-	const allRowsFlat = one.concat(two, three, sameGroup, configuredExtra);
 
 	const bodyHtml =
 		'<div class="pp-capture-wizard-body" style="max-height:72vh;overflow-y:auto;padding-right:6px;">' +
@@ -3273,10 +3386,19 @@ function _show_capture_wizard_dialog(opts, onSubmit) {
 		secondary_action_label: __("Cancel"),
 		primary_action: function () {
 			const selectedRelated = [];
+			let qblChecked = 0;
 			d.$wrapper.find(".pp-related-cb:checked").each(function () {
+				const kind = String($(this).attr("data-kind") || "rel");
 				const idx = parseInt($(this).attr("data-idx"), 10);
-				if (!Number.isNaN(idx) && allRowsFlat[idx]) {
-					const src = allRowsFlat[idx];
+				if (Number.isNaN(idx)) {
+					return;
+				}
+				if (kind === "qbl") {
+					qblChecked++;
+					return;
+				}
+				if (allRelRowsFlat[idx]) {
+					const src = allRelRowsFlat[idx];
 					selectedRelated.push({
 						doctype: src.doctype,
 						link_field: src.link_field,
@@ -3285,6 +3407,12 @@ function _show_capture_wizard_dialog(opts, onSubmit) {
 					});
 				}
 			});
+			if (qblChecked) {
+				frappe.show_alert({
+					message: __("Query based links are not saved yet ({0} selected).", [qblChecked]),
+					indicator: "orange",
+				});
+			}
 
 			const inlinePayload = [];
 			d.$wrapper.find(".pp-inline-cb:checked").each(function () {
@@ -3506,6 +3634,7 @@ function _bind_dialogs_click_handlers(frm) {
 										_show_capture_wizard_dialog(
 											{
 												buckets: buckets,
+												rootDoctype: discoveryDoctype,
 												inlineOptions: inlineOpts,
 												discoveredTools: discovered,
 												preselectedRelated: current_related,
@@ -3595,6 +3724,7 @@ function _bind_dialogs_click_handlers(frm) {
 								_show_capture_wizard_dialog(
 									{
 										buckets: buckets,
+										rootDoctype: doctype,
 										inlineOptions: inlineOpts,
 										discoveredTools: discovered,
 										preselectedRelated: [],

@@ -1125,7 +1125,7 @@
       "purpose": "Unit tests for form_dialog related_rows fetch/save and portal column gating."
     },
     "nce_events/api/tests/api/panel_api_pkg/test_discovery.py": {
-      "purpose": "Unit tests for panel_api_pkg child-doctype discovery, multi-hop link paths (1/2/3-hop), Form Dialog picker excluding self-Link 1-hop, and get_multi_hop_children classification."
+      "purpose": "Unit tests for panel_api_pkg child-doctype discovery, SELF/1/2/3-hop capture buckets (relationships + query based links), self-Link in SELF column, and mixed Link/QBTL path classification."
     },
     "nce_events/api/tests/api/panel_api_pkg/test_panel_rest_export.py": {
       "purpose": "Unit tests for panel_export CSV helpers (_csv_export_columns, build_panel_csv_text) via Frappe-stubbed unittest."

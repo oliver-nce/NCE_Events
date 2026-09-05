@@ -938,7 +938,7 @@
         "TestDiscoverViaLinkPaths",
         "TestGetMultiHopChildren"
       ],
-      "purpose": "Unit tests for panel_api_pkg child-doctype discovery, multi-hop link paths (1/2/3-hop), Form Dialog picker excluding self-Link 1-hop, and get_multi_hop_children classification."
+      "purpose": "Unit tests for panel_api_pkg child-doctype discovery, SELF/1/2/3-hop capture buckets (relationships + query based links), self-Link in SELF column, and mixed Link/QBTL path classification."
     },
     "nce_events/api/tests/api/panel_api_pkg/test_panel_rest_export.py": {
       "exports": [
