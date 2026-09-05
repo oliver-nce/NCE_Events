@@ -44,8 +44,21 @@ def _related_row_signature(doctype: str, link_field: str, hop_chain: list[dict[s
 	return f"{doctype}\0{lf}\0{json.dumps(hop_chain, separators=(',', ':'))}"
 
 
-def _related_tab_portal_config_key(child_doctype: str, link_field: str, hop_chain_raw: object) -> str:
+def _qbtl_row_signature(qbtl_name: str) -> str:
+	return f"qbtl\0{cstr(qbtl_name or '').strip()}"
+
+
+def _related_tab_portal_config_key(
+	child_doctype: str,
+	link_field: str,
+	hop_chain_raw: object,
+	*,
+	query_based_table_link: str | None = None,
+) -> str:
 	"""Stable key for merging portal_field_config across Form Dialog rebuilds."""
+	qbtl = cstr(query_based_table_link or "").strip()
+	if qbtl:
+		return _qbtl_row_signature(qbtl)
 	dt = cstr(child_doctype or "").strip()
 	lf = cstr(link_field or "").strip()
 	hc = _normalize_hop_chain_value(hop_chain_raw)
@@ -70,6 +83,15 @@ def _parse_related_doctypes_argument(related_doctypes: str | list | None) -> lis
 	seen: set[str] = set()
 	for item in related_doctypes:
 		if not isinstance(item, dict):
+			continue
+		qbtl = cstr(item.get("query_based_table_link") or item.get("qbtl") or "").strip()
+		if qbtl:
+			sig = _qbtl_row_signature(qbtl)
+			if sig in seen:
+				continue
+			seen.add(sig)
+			lb = cstr(item.get("label") or "").strip() or qbtl
+			out.append({"query_based_table_link": qbtl, "label": lb})
 			continue
 		dt = cstr(item.get("doctype") or "").strip()
 		if not dt:
@@ -144,8 +166,186 @@ def _build_related_child_row_dict(spec: dict[str, Any]) -> dict[str, str]:
 	return row
 
 
-def _related_doctype_child_rows(related_doctypes: str | list | None) -> list[dict[str, Any]]:
-	return [_build_related_child_row_dict(r) for r in _parse_related_doctypes_argument(related_doctypes)]
+def _find_link_hop_chain_to_doctype(root_doctype: str, target_doctype: str) -> list[dict[str, str]] | None:
+	"""Shortest Link-hop chain from root to ``target_doctype`` (empty when equal). None if unreachable."""
+	root = cstr(root_doctype or "").strip()
+	target = cstr(target_doctype or "").strip()
+	if not root or not target:
+		return None
+	if root == target:
+		return []
+	try:
+		from nce_events.api.panel_api_pkg.discovery import get_multi_hop_children
+
+		buckets = get_multi_hop_children(root)
+	except Exception:
+		return None
+	best: list[dict[str, str]] | None = None
+	for key in ("self", "1_hop", "2_hop", "3_hop"):
+		bucket = buckets.get(key) or {}
+		for row in bucket.get("relationships") or []:
+			if cstr(row.get("doctype") or "").strip() != target:
+				continue
+			hc = _normalize_hop_chain_value(row.get("hop_chain"))
+			if best is None or len(hc) < len(best):
+				best = hc
+	return best
+
+
+def _resolve_qbtl_tab_plan(root_doctype: str, qbtl_name: str, label: str) -> dict[str, Any]:
+	"""Map a QBTL catalog entry to display/bind DocTypes and hop chain from the dialog root."""
+	root = cstr(root_doctype or "").strip()
+	qbtl_name = cstr(qbtl_name or "").strip()
+	tab_label = cstr(label or "").strip() or qbtl_name
+
+	qbtl = frappe.get_doc("Query Based Table Link", qbtl_name)
+	left = cstr(qbtl.left_table or "").strip()
+	right = cstr(qbtl.right_table or "").strip()
+	if not left or not right:
+		frappe.throw(_("Query Based Table Link {0} is missing left/right table").format(qbtl_name))
+
+	if root == left:
+		return {
+			"display_doctype": right,
+			"bind_doctype": left,
+			"bind_side": "left",
+			"hop_chain": [],
+			"tab_label": tab_label or cstr(qbtl.title or qbtl_name).strip(),
+			"query_based_table_link": qbtl_name,
+		}
+	if root == right:
+		return {
+			"display_doctype": left,
+			"bind_doctype": right,
+			"bind_side": "right",
+			"hop_chain": [],
+			"tab_label": tab_label or cstr(qbtl.title or qbtl_name).strip(),
+			"query_based_table_link": qbtl_name,
+		}
+
+	path_left = _find_link_hop_chain_to_doctype(root, left)
+	path_right = _find_link_hop_chain_to_doctype(root, right)
+	if path_left is None and path_right is None:
+		frappe.throw(
+			_("Cannot reach Query Based Table Link {0} from {1}").format(qbtl_name, root_doctype)
+		)
+
+	if path_left is not None and path_right is not None:
+		if len(path_left) <= len(path_right):
+			bind_dt, display_dt, bind_side, hop_chain = left, right, "left", path_left
+		else:
+			bind_dt, display_dt, bind_side, hop_chain = right, left, "right", path_right
+	elif path_left is not None:
+		bind_dt, display_dt, bind_side, hop_chain = left, right, "left", path_left
+	else:
+		bind_dt, display_dt, bind_side, hop_chain = right, left, "right", path_right  # type: ignore[assignment]
+
+	return {
+		"display_doctype": display_dt,
+		"bind_doctype": bind_dt,
+		"bind_side": bind_side,
+		"hop_chain": hop_chain,
+		"tab_label": tab_label or cstr(qbtl.title or qbtl_name).strip(),
+		"query_based_table_link": qbtl_name,
+	}
+
+
+def _build_related_qbtl_child_row_dict(spec: dict[str, Any], root_doctype: str) -> dict[str, str]:
+	"""One QBTL related tab row with frozen field list on the display DocType."""
+	qbtl_name = cstr(spec.get("query_based_table_link") or "").strip()
+	tab_l = cstr(spec.get("label") or "").strip()
+	plan: dict[str, Any]
+	try:
+		plan = _resolve_qbtl_tab_plan(root_doctype, qbtl_name, tab_l)
+	except Exception as e:
+		plan = {
+			"display_doctype": "",
+			"bind_doctype": "",
+			"bind_side": "",
+			"hop_chain": [],
+			"tab_label": tab_l or qbtl_name,
+			"query_based_table_link": qbtl_name,
+			"capture_error": cstr(e)[:500],
+		}
+
+	child_dt = cstr(plan.get("display_doctype") or "").strip()
+	hc_norm = _normalize_hop_chain_value(plan.get("hop_chain"))
+	try:
+		hop_chain_json = json.dumps(hc_norm, indent=None)
+	except Exception:
+		hop_chain_json = "[]"
+
+	info_obj: dict[str, Any] = {
+		"source_type": "qbtl",
+		"doctype": child_dt,
+		"query_based_table_link": qbtl_name,
+		"bind_doctype": cstr(plan.get("bind_doctype") or "").strip(),
+		"bind_side": cstr(plan.get("bind_side") or "").strip(),
+		"label": cstr(plan.get("tab_label") or "").strip() or qbtl_name,
+		"hop_chain": hc_norm,
+	}
+	if plan.get("capture_error"):
+		info_obj["capture_error"] = plan["capture_error"]
+
+	if child_dt and not info_obj.get("capture_error"):
+		try:
+			_assert_doctype_in_wp_tables(child_dt)
+			child_meta = frappe.get_meta(child_dt)
+			child_fields = [f.as_dict() for f in child_meta.fields]
+			child_fields = _enrich_fetch_from_fields(child_fields, child_meta)
+			from .portal_fields import _portal_name_field_dict
+
+			name_row = _portal_name_field_dict(child_dt)
+			info_obj["name_field_label"] = name_row["label"]
+			if not any(cstr(f.get("fieldname") or "").strip() == "name" for f in child_fields):
+				child_fields.insert(0, name_row)
+			info_obj["fields"] = child_fields
+		except Exception as e:
+			info_obj["capture_error"] = cstr(e)[:500]
+
+	try:
+		info_str = json.dumps(info_obj, default=str)
+	except Exception as e:
+		info_str = json.dumps(
+			{
+				"source_type": "qbtl",
+				"query_based_table_link": qbtl_name,
+				"label": tab_l or qbtl_name,
+				"capture_error": cstr(e)[:300],
+			},
+			default=str,
+		)
+
+	from .portal_fields import portal_field_config_from_info
+
+	row: dict[str, str] = {
+		"child_doctype": child_dt or qbtl_name,
+		"link_field": "",
+		"query_based_table_link": qbtl_name,
+		"tab_label": cstr(plan.get("tab_label") or "").strip() or qbtl_name,
+		"hop_chain": hop_chain_json,
+		"info": info_str,
+		"allow_add_remove": "0",
+	}
+	if child_dt and not info_obj.get("capture_error"):
+		default_pfc = portal_field_config_from_info(info_obj, child_doctype=child_dt)
+		if default_pfc:
+			row["portal_field_config"] = default_pfc
+	return row
+
+
+def _related_doctype_child_rows(
+	related_doctypes: str | list | None,
+	root_doctype: str = "",
+) -> list[dict[str, Any]]:
+	root = cstr(root_doctype or "").strip()
+	out: list[dict[str, Any]] = []
+	for spec in _parse_related_doctypes_argument(related_doctypes):
+		if spec.get("query_based_table_link"):
+			out.append(_build_related_qbtl_child_row_dict(spec, root))
+		else:
+			out.append(_build_related_child_row_dict(spec))
+	return out
 
 
 def _sync_related_doctypes(doc: Any, related_doctypes: str | list | None) -> None:
@@ -159,6 +359,7 @@ def _sync_related_doctypes(doc: Any, related_doctypes: str | list | None) -> Non
 			getattr(old, "child_doctype", None),
 			getattr(old, "link_field", None),
 			getattr(old, "hop_chain", None),
+			query_based_table_link=getattr(old, "query_based_table_link", None),
 		)
 		pfc = cstr(getattr(old, "portal_field_config", None) or "").strip()
 		if pfc:
@@ -167,7 +368,9 @@ def _sync_related_doctypes(doc: Any, related_doctypes: str | list | None) -> Non
 		if pa:
 			preserved_actions[key] = pa
 
-	parsed_rows = _related_doctype_child_rows(related_doctypes)
+	parsed_rows = _related_doctype_child_rows(
+		related_doctypes, cstr(getattr(doc, "target_doctype", None) or "").strip()
+	)
 
 	doc.related_doctypes = []
 	for row in parsed_rows:
@@ -175,6 +378,7 @@ def _sync_related_doctypes(doc: Any, related_doctypes: str | list | None) -> Non
 			row.get("child_doctype"),
 			row.get("link_field"),
 			row.get("hop_chain"),
+			query_based_table_link=row.get("query_based_table_link"),
 		)
 		if key in preserved_portal:
 			row["portal_field_config"] = preserved_portal[key]

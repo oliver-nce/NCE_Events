@@ -264,6 +264,10 @@ export function createFrozenFormLoad(ctx) {
 							_related: {
 								doctype: (parsed && parsed.doctype) || dt,
 								link_field: (parsed && parsed.link_field) || rel.link_field || "",
+								query_based_table_link:
+									rel.query_based_table_link ||
+									(parsed && parsed.query_based_table_link) ||
+									"",
 								label,
 								hop_chain,
 								child_row_name: rel.child_row_name || rel.name || "",

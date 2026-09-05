@@ -39,6 +39,15 @@ class TestAssertDoctypeInWPTables(FrappeTestCase):
 class TestParseRelatedDoctypes(unittest.TestCase):
 	"""related_doctypes JSON from Page Panel Desk (picker shape with optional hop_chain)."""
 
+	def test_parses_qbtl_selection(self):
+		from nce_events.api.form_dialog._helpers import _parse_related_doctypes_argument
+
+		rows = _parse_related_doctypes_argument(
+			[{"query_based_table_link": "LIP-LIP on base order id", "label": "Sibling LIPs"}]
+		)
+		self.assertEqual(len(rows), 1)
+		self.assertEqual(rows[0]["query_based_table_link"], "LIP-LIP on base order id")
+
 	def test_json_string_roundtrip(self):
 		from nce_events.api.form_dialog._helpers import _parse_related_doctypes_argument
 

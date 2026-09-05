@@ -111,7 +111,7 @@ def _load_related_tab_context(
 	root_name: str,
 	*,
 	root_perm: str,
-) -> tuple[Any, Any, str, str, list[dict[str, str]]]:
+) -> tuple[Any, Any, str, str, list[dict[str, str]], str]:
 	"""Shared guard for related-tab read/write endpoints."""
 	if frappe.session.user == "Guest":
 		frappe.throw(_("Login required"), frappe.PermissionError)
@@ -149,13 +149,16 @@ def _load_related_tab_context(
 
 	child_dt = cstr(row.child_doctype or "").strip()
 	link_f = cstr(row.link_field or "").strip()
-	if not child_dt or not link_f:
+	qbtl = cstr(getattr(row, "query_based_table_link", None) or "").strip()
+	if not child_dt:
+		frappe.throw(_("Invalid related row configuration"))
+	if not qbtl and not link_f:
 		frappe.throw(_("Invalid related row configuration"))
 
 	_assert_doctype_in_wp_tables(child_dt)
 
 	hc = _normalize_hop_chain_value(row.hop_chain or getattr(row, "hop_chain", None))
-	return doc, row, child_dt, link_f, hc
+	return doc, row, child_dt, link_f, hc, qbtl
 
 
 def _child_panel_format_rules(child_doctype: str) -> list[dict[str, Any]]:
@@ -278,6 +281,9 @@ def _related_rows_for_vue_api(doc: Any) -> list[dict[str, Any]]:
 			"link_field": lf,
 			"child_row_name": crn,
 		}
+		qbtl = cstr(d.get("query_based_table_link") or getattr(r, "query_based_table_link", None) or "").strip()
+		if qbtl:
+			row["query_based_table_link"] = qbtl
 		hc_raw = d.get("hop_chain") or getattr(r, "hop_chain", None)
 		row["hop_chain"] = _normalize_hop_chain_value(hc_raw)
 		pfc = d.get("portal_field_config") or getattr(r, "portal_field_config", None)
@@ -326,7 +332,7 @@ def get_form_dialog_related_rows(
 	    ``format_rules`` comes from the Page Panel for the **child** DocType (same rules as
 	    the float panel opened via Go to). Rows include ``_fmt_*`` flag columns when rules apply.
 	"""
-	dialog_doc, row, child_dt, link_f, hc = _load_related_tab_context(
+	dialog_doc, row, child_dt, link_f, hc, qbtl = _load_related_tab_context(
 		definition,
 		related_row_name,
 		root_doctype,
@@ -340,19 +346,67 @@ def get_form_dialog_related_rows(
 	if limit_n > 2000:
 		limit_n = 2000
 
-	filters, force_empty = _filters_for_related_rows(root_name, child_dt, link_f, hc, root_doctype)
 	columns, order_by = _related_list_columns_from_child_row(row)
 	_enrich_columns_with_permlevel(child_dt, columns)
-	write_ctx = _child_write_context(child_dt)
 	field_list = _sanitize_get_list_fields(child_dt, [cstr(c.get("fieldname") or "") for c in columns])
 
 	from nce_events.api.form_dialog.portal_actions import get_portal_actions_for_row
 
 	actions = get_portal_actions_for_row(row)
 	flags = _related_tab_flags(row, root_doctype, root_name, pending_root_values)
+	if qbtl:
+		flags["allow_add_remove"] = 0
+		flags["edit_allowed"] = False
+		write_ctx = {"can_write": 0, "writable_permlevels": []}
+	else:
+		write_ctx = _child_write_context(child_dt)
 
 	format_rules_out: list[dict[str, Any]] = []
 	rows: list[dict[str, Any]] = []
+
+	if qbtl:
+		from .qbtl_rows import fetch_qbtl_related_row_names, qbtl_info_from_row
+
+		meta = qbtl_info_from_row(row)
+		names, force_empty = fetch_qbtl_related_row_names(
+			qbtl,
+			root_doctype,
+			root_name,
+			bind_doctype=meta.get("bind_doctype") or "",
+			bind_side=meta.get("bind_side") or "",
+			display_doctype=child_dt,
+			hop_chain_raw=row.hop_chain or getattr(row, "hop_chain", None),
+		)
+		if force_empty or not names:
+			return {
+				"child_doctype": child_dt,
+				"columns": columns,
+				"rows": [],
+				"order_by": order_by,
+				"format_rules": [],
+				"actions": actions,
+				**write_ctx,
+				**flags,
+			}
+		rows = frappe.get_list(
+			child_dt,
+			filters={"name": ["in", names]},
+			fields=field_list,
+			order_by=order_by,
+			limit_page_length=limit_n,
+		)
+		return {
+			"child_doctype": child_dt,
+			"columns": columns,
+			"rows": rows,
+			"order_by": order_by,
+			"format_rules": [],
+			"actions": actions,
+			**write_ctx,
+			**flags,
+		}
+
+	filters, force_empty = _filters_for_related_rows(root_name, child_dt, link_f, hc, root_doctype)
 
 	if force_empty:
 		return {
@@ -406,7 +460,7 @@ def reevaluate_related_tab_edit_allowed(
 	pending_root_values: str | dict | None = None,
 ) -> dict[str, Any]:
 	"""Recompute edit_allowed / allow_add_remove without refetching child rows."""
-	dialog_doc, row, _child_dt, _link_f, _hc = _load_related_tab_context(
+	dialog_doc, row, _child_dt, _link_f, _hc, _qbtl = _load_related_tab_context(
 		definition,
 		related_row_name,
 		root_doctype,
@@ -523,13 +577,16 @@ def save_form_dialog_related_rows(
 	Returns:
 	    ``{ "ok": 1, "saved": <int> }`` — number of child documents saved (0 if updates empty).
 	"""
-	dialog_doc, row, child_dt, link_f, hc = _load_related_tab_context(
+	dialog_doc, row, child_dt, link_f, hc, qbtl = _load_related_tab_context(
 		definition,
 		related_row_name,
 		root_doctype,
 		root_name,
 		root_perm="write",
 	)
+
+	if qbtl:
+		frappe.throw(_("Query based link tabs are read-only"), frappe.PermissionError)
 
 	updates = frappe.parse_json(updates) if isinstance(updates, str) else updates
 	if updates is None:
@@ -592,13 +649,16 @@ def add_form_dialog_related_row(
 	values: str | dict | None = None,
 ) -> dict[str, Any]:
 	"""Create a child row linked to the open root document (direct child tabs only)."""
-	dialog_doc, row, child_dt, link_f, hc = _load_related_tab_context(
+	dialog_doc, row, child_dt, link_f, hc, qbtl = _load_related_tab_context(
 		definition,
 		related_row_name,
 		root_doctype,
 		root_name,
 		root_perm="write",
 	)
+
+	if qbtl:
+		frappe.throw(_("Query based link tabs are read-only"), frappe.PermissionError)
 
 	if not cint(getattr(row, "allow_add_remove", 0)):
 		frappe.throw(_("Add/remove is not enabled for this tab"), frappe.PermissionError)
@@ -640,13 +700,16 @@ def delete_form_dialog_related_row(
 	child_name: str,
 ) -> dict[str, Any]:
 	"""Delete one child row from a related tab."""
-	dialog_doc, row, child_dt, link_f, hc = _load_related_tab_context(
+	dialog_doc, row, child_dt, link_f, hc, qbtl = _load_related_tab_context(
 		definition,
 		related_row_name,
 		root_doctype,
 		root_name,
 		root_perm="write",
 	)
+
+	if qbtl:
+		frappe.throw(_("Query based link tabs are read-only"), frappe.PermissionError)
 
 	if not cint(getattr(row, "allow_add_remove", 0)):
 		frappe.throw(_("Add/remove is not enabled for this tab"), frappe.PermissionError)

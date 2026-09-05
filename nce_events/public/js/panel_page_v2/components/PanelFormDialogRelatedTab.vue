@@ -13,7 +13,10 @@
 			</button>
 			<p class="ppv2-fd-related-meta theme-text-muted">
 				{{ tab._related.doctype }}
-				<span v-if="tab._related.link_field" class="ppv2-fd-related-meta-link">
+				<span v-if="tab._related.query_based_table_link" class="ppv2-fd-related-meta-link">
+					· QBTL {{ tab._related.query_based_table_link }}
+				</span>
+				<span v-else-if="tab._related.link_field" class="ppv2-fd-related-meta-link">
 					· {{ tab._related.link_field }}
 				</span>
 				<span

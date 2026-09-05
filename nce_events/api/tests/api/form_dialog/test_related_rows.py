@@ -217,7 +217,7 @@ class TestAddDeleteFormDialogRelatedRows(FrappeTestCase):
 		mock_row = self._mock_row(allow_add_remove=0)
 		with patch(
 			"nce_events.api.form_dialog.related_rows._load_related_tab_context",
-			return_value=(MagicMock(), mock_row, "People", "event", []),
+			return_value=(MagicMock(), mock_row, "People", "event", [], ""),
 		):
 			with self.assertRaises(frappe.PermissionError):
 				add_form_dialog_related_row("FD", "REL1", "Event", "EVT1", {})
@@ -231,7 +231,7 @@ class TestAddDeleteFormDialogRelatedRows(FrappeTestCase):
 		hc = [{"bridge": "X", "parent_link": "a", "child_link": "b"}]
 		with patch(
 			"nce_events.api.form_dialog.related_rows._load_related_tab_context",
-			return_value=(MagicMock(), mock_row, "People", "event", hc),
+			return_value=(MagicMock(), mock_row, "People", "event", hc, ""),
 		):
 			with self.assertRaises(frappe.ValidationError):
 				add_form_dialog_related_row("FD", "REL1", "Event", "EVT1", {})
@@ -251,7 +251,7 @@ class TestAddDeleteFormDialogRelatedRows(FrappeTestCase):
 
 		with patch(
 			"nce_events.api.form_dialog.related_rows._load_related_tab_context",
-			return_value=(MagicMock(), mock_row, "People", "event", []),
+			return_value=(MagicMock(), mock_row, "People", "event", [], ""),
 		):
 			with patch(
 				"nce_events.api.form_dialog.related_rows.frappe.has_permission", return_value=True
@@ -284,7 +284,7 @@ class TestAddDeleteFormDialogRelatedRows(FrappeTestCase):
 		mock_row = self._mock_row()
 		with patch(
 			"nce_events.api.form_dialog.related_rows._load_related_tab_context",
-			return_value=(MagicMock(), mock_row, "People", "event", []),
+			return_value=(MagicMock(), mock_row, "People", "event", [], ""),
 		):
 			with self.assertRaises(frappe.PermissionError):
 				delete_form_dialog_related_row("FD", "REL1", "Event", "EVT1", "OTHER")
@@ -297,7 +297,7 @@ class TestAddDeleteFormDialogRelatedRows(FrappeTestCase):
 		mock_row = self._mock_row(edit_condition="docstatus = 0")
 		with patch(
 			"nce_events.api.form_dialog.related_rows._load_related_tab_context",
-			return_value=(MagicMock(), mock_row, "People", "event", []),
+			return_value=(MagicMock(), mock_row, "People", "event", [], ""),
 		):
 			with self.assertRaises(frappe.PermissionError):
 				save_form_dialog_related_rows(

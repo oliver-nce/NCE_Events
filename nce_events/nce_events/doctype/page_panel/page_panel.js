@@ -2880,6 +2880,10 @@ function _normalizeHopChainForPickerKey(hc) {
 }
 
 function _relatedPickerFingerprint(row) {
+	const qbtl = row && row.query_based_table_link ? String(row.query_based_table_link).trim() : "";
+	if (qbtl) {
+		return "qbtl\0" + qbtl;
+	}
 	const dt = row && row.doctype ? String(row.doctype).trim() : "";
 	const lf = row && row.link_field ? String(row.link_field).trim() : "";
 	let hc = row && row.hop_chain;
@@ -2891,6 +2895,43 @@ function _relatedPickerFingerprint(row) {
 		}
 	}
 	return dt + "\0" + lf + "\0" + JSON.stringify(_normalizeHopChainForPickerKey(hc));
+}
+
+function _qbtlPickerFingerprint(row) {
+	const name = row && (row.name || row.query_based_table_link)
+		? String(row.name || row.query_based_table_link).trim()
+		: "";
+	return name ? "qbtl\0" + name : "";
+}
+
+function _mergeConfiguredQbtlIntoBuckets(buckets, configuredExtra, discoveryQbtlFp) {
+	for (let i = 0; i < configuredExtra.length; i++) {
+		const row = configuredExtra[i];
+		if (!row || typeof row !== "object") {
+			continue;
+		}
+		const qbtl = String(row.query_based_table_link || row.name || "").trim();
+		if (!qbtl) {
+			continue;
+		}
+		const normalized = {
+			name: qbtl,
+			query_based_table_link: qbtl,
+			label: String(row.label || row.tab_label || qbtl).trim() || qbtl,
+			left_table: row.left_table || "",
+			right_table: row.right_table || "",
+		};
+		const fp = _qbtlPickerFingerprint(normalized);
+		if (discoveryQbtlFp.has(fp)) {
+			continue;
+		}
+		discoveryQbtlFp.add(fp);
+		// Stale QBTL tabs without a live discovery match land in Self for visibility.
+		if (!buckets.self) {
+			buckets.self = { relationships: [], query_based_links: [] };
+		}
+		buckets.self.query_based_links.push(normalized);
+	}
 }
 
 function _htmlEscAttr(s) {
@@ -3135,11 +3176,28 @@ function _show_capture_wizard_dialog(opts, onSubmit) {
 	const preRelSet = new Set(preselectedRelated.map(_relatedPickerFingerprint));
 
 	const discoveryRelFp = new Set(_allDiscoveryRelationshipRows(buckets).map(_relatedPickerFingerprint));
+	const discoveryQbtlFp = new Set(
+		(buckets.self.query_based_links || [])
+			.concat(buckets["1_hop"].query_based_links || [])
+			.concat(buckets["2_hop"].query_based_links || [])
+			.concat(buckets["3_hop"].query_based_links || [])
+			.map(_qbtlPickerFingerprint)
+	);
 
 	const configuredExtra = [];
+	const configuredQbtlExtra = [];
 	for (let pri = 0; pri < preselectedRelated.length; pri++) {
 		const row = preselectedRelated[pri];
 		if (!row || typeof row !== "object") {
+			continue;
+		}
+		const qbtl = String(row.query_based_table_link || "").trim();
+		if (qbtl) {
+			configuredQbtlExtra.push({
+				query_based_table_link: qbtl,
+				name: qbtl,
+				label: String(row.label || row.tab_label || qbtl).trim() || qbtl,
+			});
 			continue;
 		}
 		const dt = String(row.doctype || row.child_doctype || "").trim();
@@ -3159,6 +3217,7 @@ function _show_capture_wizard_dialog(opts, onSubmit) {
 		configuredExtra.push(normalized);
 	}
 	_mergeConfiguredRelatedIntoBuckets(buckets, configuredExtra, rootDoctype, discoveryRelFp);
+	_mergeConfiguredQbtlIntoBuckets(buckets, configuredQbtlExtra, discoveryQbtlFp);
 
 	const inlineOpts = Array.isArray(opts.inlineOptions) ? opts.inlineOptions : [];
 	const discoveredTools = Array.isArray(opts.discoveredTools) ? opts.discoveredTools : [];
@@ -3239,8 +3298,8 @@ function _show_capture_wizard_dialog(opts, onSubmit) {
 			'<div style="font-size:10px;font-weight:600;color:#8d99a6;text-transform:uppercase;margin:10px 0 6px;">' +
 			_htmlEscAttr(__("Query based links")) +
 			"</div>";
-		h += _checkboxRows(qbls, "qbl", qblOffset, function () {
-			return false;
+		h += _checkboxRows(qbls, "qbl", qblOffset, function (row) {
+			return preRelSet.has(_qbtlPickerFingerprint(row));
 		});
 		h += "</div>";
 		return h;
@@ -3386,7 +3445,6 @@ function _show_capture_wizard_dialog(opts, onSubmit) {
 		secondary_action_label: __("Cancel"),
 		primary_action: function () {
 			const selectedRelated = [];
-			let qblChecked = 0;
 			d.$wrapper.find(".pp-related-cb:checked").each(function () {
 				const kind = String($(this).attr("data-kind") || "rel");
 				const idx = parseInt($(this).attr("data-idx"), 10);
@@ -3394,7 +3452,13 @@ function _show_capture_wizard_dialog(opts, onSubmit) {
 					return;
 				}
 				if (kind === "qbl") {
-					qblChecked++;
+					if (allQblRowsFlat[idx]) {
+						const src = allQblRowsFlat[idx];
+						selectedRelated.push({
+							query_based_table_link: String(src.name || src.query_based_table_link || "").trim(),
+							label: src.label || src.title || src.name || "",
+						});
+					}
 					return;
 				}
 				if (allRelRowsFlat[idx]) {
@@ -3407,12 +3471,6 @@ function _show_capture_wizard_dialog(opts, onSubmit) {
 					});
 				}
 			});
-			if (qblChecked) {
-				frappe.show_alert({
-					message: __("Query based links are not saved yet ({0} selected).", [qblChecked]),
-					indicator: "orange",
-				});
-			}
 
 			const inlinePayload = [];
 			d.$wrapper.find(".pp-inline-cb:checked").each(function () {

@@ -3,7 +3,7 @@
   "creation": "2026-04-07 00:00:00.000000",
   "doctype": "DocType",
   "engine": "InnoDB",
-  "field_order": ["child_doctype", "link_field", "tab_label", "hop_chain", "info", "portal_field_config", "allow_add_remove", "edit_condition", "portal_actions"],
+  "field_order": ["child_doctype", "link_field", "query_based_table_link", "tab_label", "hop_chain", "info", "portal_field_config", "allow_add_remove", "edit_condition", "portal_actions"],
   "fields": [
     {
       "description": "DocType that links to the Form Dialog target (e.g. child table).",
@@ -19,8 +19,15 @@
       "fieldname": "link_field",
       "fieldtype": "Data",
       "in_list_view": 1,
-      "label": "Link Field",
-      "reqd": 1
+      "label": "Link Field"
+    },
+    {
+      "description": "When set, related rows come from this Query Based Table Link join (read-only tab). Link Field is not used.",
+      "fieldname": "query_based_table_link",
+      "fieldtype": "Link",
+      "in_list_view": 1,
+      "label": "Query Based Table Link",
+      "options": "Query Based Table Link"
     },
     {
       "description": "Label for the extra tab in the panel form dialog.",

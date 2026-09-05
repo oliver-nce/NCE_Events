@@ -93,7 +93,7 @@ def capture_form_dialog_from_desk(
 				"captured_at": frappe.utils.now_datetime(),
 				"dialog_size": "xl",
 				"is_active": 1,
-				"related_doctypes": _related_doctype_child_rows(related_doctypes),
+				"related_doctypes": _related_doctype_child_rows(related_doctypes, doctype),
 			}
 		)
 		_sync_inline_child_tables(doc, inline_child_tables, doctype)
@@ -283,7 +283,7 @@ def list_form_dialogs_for_doctype(doctype: str) -> list[dict]:
 			"parenttype": "Form Dialog",
 			"parentfield": "related_doctypes",
 		},
-		fields=["name", "parent", "child_doctype", "link_field", "tab_label", "hop_chain", "idx"],
+		fields=["name", "parent", "child_doctype", "link_field", "query_based_table_link", "tab_label", "hop_chain", "idx"],
 		order_by="parent asc, idx asc",
 	)
 	by_parent: dict[str, list[dict[str, str | int | list]]] = {}
@@ -293,20 +293,22 @@ def list_form_dialogs_for_doctype(doctype: str) -> list[dict]:
 			continue
 		lb = cstr(r.get("tab_label") or "").strip() or dt
 		lf = cstr(r.get("link_field") or "").strip()
+		qbtl = cstr(r.get("query_based_table_link") or "").strip()
 		pid = cstr(r.get("parent") or "").strip()
 		if not pid:
 			continue
 		crn = cstr(r.get("name") or "").strip()
 		hc = _normalize_hop_chain_value(r.get("hop_chain"))
-		by_parent.setdefault(pid, []).append(
-			{
-				"doctype": dt,
-				"label": lb,
-				"link_field": lf,
-				"child_row_name": crn,
-				"hop_chain": hc,
-			},
-		)
+		entry: dict[str, str | int | list] = {
+			"doctype": dt,
+			"label": lb,
+			"link_field": lf,
+			"child_row_name": crn,
+			"hop_chain": hc,
+		}
+		if qbtl:
+			entry["query_based_table_link"] = qbtl
+		by_parent.setdefault(pid, []).append(entry)
 
 	# Requires ``bench migrate`` after deploying child DocTypes; avoid breaking Desk if table missing.
 	try:
