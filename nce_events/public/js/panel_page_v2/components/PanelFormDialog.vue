@@ -301,22 +301,21 @@ const hasTabularTabs = computed(() =>
 	(form.tabs.value || []).some((t) => t && (t._related || t._inlineChild)),
 );
 
-/** Single-line pixel height for a cell (falls back to font-size × 1.4 when line-height is "normal"). */
-function _cellLineHeight(el) {
-	const cs = window.getComputedStyle(el);
-	const lh = parseFloat(cs.lineHeight);
-	if (Number.isFinite(lh) && lh > 0) return lh;
-	const fs = parseFloat(cs.fontSize);
-	return Number.isFinite(fs) && fs > 0 ? fs * 1.4 : 18;
+/**
+ * Number of visual lines an inline cell-text span occupies. getClientRects()
+ * returns one rectangle per wrapped line for inline content, so its length is
+ * a reliable line count (unlike scrollHeight, which is 0 on inline elements).
+ */
+function _cellLineCount(el) {
+	const rects = el.getClientRects();
+	return rects && rects.length ? rects.length : 1;
 }
 
 /** Max line count across related/inline table cells at the current layout. */
 function _maxRelatedCellLines(cells) {
 	let max = 1;
 	for (const el of cells) {
-		const lh = _cellLineHeight(el);
-		if (lh <= 0) continue;
-		const lines = Math.round(el.scrollHeight / lh);
+		const lines = _cellLineCount(el);
 		if (lines > max) max = lines;
 	}
 	return max;
