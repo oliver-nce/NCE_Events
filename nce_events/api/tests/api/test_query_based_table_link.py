@@ -10,7 +10,10 @@ import unittest
 
 import frappe
 
+from unittest.mock import patch
+
 from nce_events.nce_events.doctype.query_based_table_link.query_based_table_link import (
+	_assert_in_wp_tables,
 	build_where_clause,
 	normalize_conditions,
 	normalize_op,
@@ -60,3 +63,20 @@ class TestNormalizeSort(unittest.TestCase):
 	def test_normalizes_dir(self):
 		rows = normalize_sort([{"fieldname": "name", "dir": "DESC"}, {"fieldname": "", "dir": "asc"}])
 		self.assertEqual(rows, [{"fieldname": "name", "dir": "desc"}])
+
+
+class TestAssertInWpTables(unittest.TestCase):
+	def test_rejects_missing(self):
+		with patch(
+			"nce_events.nce_events.doctype.query_based_table_link.query_based_table_link.frappe.get_all",
+			return_value=[],
+		):
+			with self.assertRaises(frappe.ValidationError):
+				_assert_in_wp_tables("Not A Table")
+
+	def test_accepts_listed(self):
+		with patch(
+			"nce_events.nce_events.doctype.query_based_table_link.query_based_table_link.frappe.get_all",
+			return_value=[{"name": "WP-1"}],
+		):
+			_assert_in_wp_tables("Line Item Payments")

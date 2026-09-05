@@ -1230,6 +1230,7 @@
     "nce_events/nce_events/doctype/query_based_table_link/": {
       "purpose": "App-defined catalog of bidirectional query-based table links. Desk form JS builds AND'd field-pair criteria plus per-side sort; validate() rewrites where_clause from conditions_json. Not executed yet; Form Dialog related tabs still use same_doc_group / Link hops.",
       "key_fields": [
+        "title",
         "left_table",
         "right_table",
         "where_clause",

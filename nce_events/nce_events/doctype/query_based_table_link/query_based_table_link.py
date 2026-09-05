@@ -119,6 +119,39 @@ def _doctype_fieldnames(doctype: str) -> set[str]:
 	return names
 
 
+def _assert_in_wp_tables(doctype: str) -> None:
+	if not doctype:
+		return
+	if not frappe.get_all("WP Tables", filters={"frappe_doctype": doctype}, limit=1):
+		frappe.throw(_("{0} is not listed in WP Tables").format(doctype))
+
+
+@frappe.whitelist()
+@frappe.validate_and_sanitize_search_inputs
+def wp_tables_doctype_query(doctype, txt, searchfield, start, page_len, filters):
+	"""Link search: DocType names that appear on WP Tables."""
+	txt = cstr(txt or "").strip()
+	flt: dict[str, object] = (
+		{"frappe_doctype": ["like", f"%{txt}%"]} if txt else {"frappe_doctype": ["is", "set"]}
+	)
+	rows = frappe.get_all(
+		"WP Tables",
+		filters=flt,
+		fields=["frappe_doctype"],
+		order_by="frappe_doctype",
+		start=cint(start),
+		page_length=cint(page_len) or 20,
+	)
+	seen: set[str] = set()
+	out: list[list[str]] = []
+	for row in rows:
+		dt = cstr(row.get("frappe_doctype") or "").strip()
+		if dt and dt not in seen:
+			seen.add(dt)
+			out.append([dt])
+	return out
+
+
 def _assert_fields_exist(doctype: str, fieldnames: set[str], side: str) -> None:
 	if not doctype:
 		return
@@ -138,8 +171,15 @@ class QueryBasedTableLink(Document):
 		self.conditions_json = json.dumps(conditions, separators=(",", ":"))
 		self.where_clause = build_where_clause(conditions)
 
+		title = cstr(getattr(self, "title", None) or "").strip()
+		if not title:
+			frappe.throw(_("Title is required"))
+		self.title = title
+
 		left_dt = cstr(getattr(self, "left_table", None) or "").strip()
 		right_dt = cstr(getattr(self, "right_table", None) or "").strip()
+		_assert_in_wp_tables(left_dt)
+		_assert_in_wp_tables(right_dt)
 		_assert_fields_exist(left_dt, {c["left_field"] for c in conditions}, _("left"))
 		_assert_fields_exist(right_dt, {c["right_field"] for c in conditions}, _("right"))
 

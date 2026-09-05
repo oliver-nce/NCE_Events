@@ -13,7 +13,11 @@ const _QBTL_OPS = [
 const _QBTL_OP_LABEL = { "=": "=", "<>": "≠", "!=": "≠", "<": "<", ">": ">", "<=": "≤", ">=": "≥" };
 
 frappe.ui.form.on("Query Based Table Link", {
+	onload: function (frm) {
+		_qbtl_set_table_queries(frm);
+	},
 	refresh: function (frm) {
+		_qbtl_set_table_queries(frm);
 		_qbtl_render(frm);
 	},
 	left_table: function (frm) {
@@ -23,6 +27,39 @@ frappe.ui.form.on("Query Based Table Link", {
 		_qbtl_render(frm);
 	},
 });
+
+function _qbtl_set_table_queries(frm) {
+	const q = function () {
+		return {
+			query:
+				"nce_events.nce_events.doctype.query_based_table_link.query_based_table_link.wp_tables_doctype_query",
+		};
+	};
+	frm.set_query("left_table", q);
+	frm.set_query("right_table", q);
+}
+
+function _qbtl_sort_fields(fields) {
+	const nameRows = [];
+	const rest = [];
+	(fields || []).forEach(function (f) {
+		const fn = String((f && f.fieldname) || "").trim();
+		if (!fn) {
+			return;
+		}
+		if (fn === "name") {
+			nameRows.push(f);
+		} else {
+			rest.push(f);
+		}
+	});
+	rest.sort(function (a, b) {
+		return String(a.fieldname || "").localeCompare(String(b.fieldname || ""), undefined, {
+			sensitivity: "base",
+		});
+	});
+	return nameRows.concat(rest);
+}
 
 function _qbtl_esc(s) {
 	return frappe.utils.escape_html(String(s == null ? "" : s));
@@ -219,14 +256,24 @@ function _qbtl_shell_html() {
 	const opOpts = _QBTL_OPS.map(function (o) {
 		return '<option value="' + o.value + '">' + _qbtl_esc(o.label) + "</option>";
 	}).join("");
+	const listStyle =
+		"height:360px;font-size:16px;line-height:2.1;font-family:Arial,Helvetica,sans-serif;padding:6px 8px;";
 	return (
-		'<div class="qbtl-builder" style="border:1px solid var(--border-color,#d1d8dd);border-radius:6px;padding:12px;background:var(--fg-color,#fff);">' +
-		'<div style="display:flex;gap:12px;align-items:stretch;">' +
+		'<div class="qbtl-builder" style="border:1px solid #d1d8dd;border-radius:6px;padding:12px;background:#fff;">' +
+		'<style>' +
+		".qbtl-builder select[data-qbtl='left-fields'] option," +
+		".qbtl-builder select[data-qbtl='right-fields'] option{" +
+		"font-size:16px;line-height:2.1;padding:8px 6px;font-family:Arial,Helvetica,sans-serif;" +
+		"}" +
+		"</style>" +
+		'<div style="display:flex;gap:36px;align-items:stretch;">' +
 		'<div style="flex:1;min-width:0;">' +
-		'<div class="text-muted" style="font-size:11px;font-weight:600;text-transform:uppercase;margin:0 0 6px;">' +
+		'<div style="font-size:12px;font-weight:600;text-transform:uppercase;margin:0 0 8px;color:#555;">' +
 		__("Left fields") +
 		"</div>" +
-		'<select data-qbtl="left-fields" size="12" class="form-control" style="height:220px;font-size:12px;"></select>' +
+		'<select data-qbtl="left-fields" size="12" class="form-control" style="' +
+		listStyle +
+		'"></select>' +
 		"</div>" +
 		'<div style="display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;width:88px;flex:0 0 88px;">' +
 		'<select data-qbtl="op" class="form-control" style="width:72px;font-size:16px;text-align:center;">' +
@@ -237,10 +284,12 @@ function _qbtl_shell_html() {
 		"</button>" +
 		"</div>" +
 		'<div style="flex:1;min-width:0;">' +
-		'<div class="text-muted" style="font-size:11px;font-weight:600;text-transform:uppercase;margin:0 0 6px;">' +
+		'<div style="font-size:12px;font-weight:600;text-transform:uppercase;margin:0 0 8px;color:#555;">' +
 		__("Right fields") +
 		"</div>" +
-		'<select data-qbtl="right-fields" size="12" class="form-control" style="height:220px;font-size:12px;"></select>' +
+		'<select data-qbtl="right-fields" size="12" class="form-control" style="' +
+		listStyle +
+		'"></select>' +
 		"</div>" +
 		"</div>" +
 		'<div style="margin:12px 0 6px;font-size:11px;font-weight:600;text-transform:uppercase;color:#74808b;">' +
@@ -305,8 +354,9 @@ function _qbtl_render(frm) {
 	$host.data("qbtl-tables", cacheKey);
 
 	function apply(side, fields) {
-		frm["_qbtl_" + side + "_fields"] = fields;
-		$host.find("[data-qbtl=" + side + "-fields]").html(_qbtl_field_options(fields));
+		const ordered = _qbtl_sort_fields(fields);
+		frm["_qbtl_" + side + "_fields"] = ordered;
+		$host.find("[data-qbtl=" + side + "-fields]").html(_qbtl_field_options(ordered));
 	}
 
 	if (!leftDt) {
