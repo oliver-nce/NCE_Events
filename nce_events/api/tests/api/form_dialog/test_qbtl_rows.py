@@ -125,6 +125,32 @@ class TestQbtlJoinSql(unittest.TestCase):
 		)
 		self.assertEqual(on, "display.`a` = bind.`b`")
 
+	def test_bind_nonempty_guard_left(self):
+		from nce_events.api.form_dialog.qbtl_rows import _bind_nonempty_guard
+
+		guard = _bind_nonempty_guard(
+			[{"left_field": "base_line_item_id", "op": "=", "right_field": "base_line_item_id"}],
+			"left",
+			bind_alias="bind",
+		)
+		self.assertEqual(
+			guard,
+			"bind.`base_line_item_id` IS NOT NULL "
+			"AND bind.`base_line_item_id` <> '' "
+			"AND bind.`base_line_item_id` <> '0'",
+		)
+
+	def test_bind_nonempty_guard_right_uses_right_field(self):
+		from nce_events.api.form_dialog.qbtl_rows import _bind_nonempty_guard
+
+		guard = _bind_nonempty_guard(
+			[{"left_field": "a", "op": "=", "right_field": "b"}],
+			"right",
+			bind_alias="bind",
+		)
+		self.assertIn("bind.`b`", guard)
+		self.assertNotIn("bind.`a`", guard)
+
 
 class TestFetchQbtlRelatedNames(unittest.TestCase):
 	def test_self_join_returns_display_names(self):
@@ -156,6 +182,9 @@ class TestFetchQbtlRelatedNames(unittest.TestCase):
 		sql = mock_sql.call_args[0][0]
 		self.assertIn("INNER JOIN", sql)
 		self.assertIn("bind.name = %s", sql)
+		# Blank/zero join keys must not fan out across unrelated rows.
+		self.assertIn("bind.`base_line_item_id` IS NOT NULL", sql)
+		self.assertIn("bind.`base_line_item_id` <> '0'", sql)
 
 	def test_direct_child_bind_uses_reverse_fk(self):
 		"""Enrollments root: bind LIP rows via reverse FK, not a hop-chain walk."""

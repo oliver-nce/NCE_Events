@@ -59,6 +59,36 @@ def _build_qbtl_join_on(
 	return " AND ".join(parts)
 
 
+def _bind_join_columns(conditions: list[dict[str, str]], bind_side: str) -> list[str]:
+	"""Bind-side join columns for each condition (left_field when bind is left, else right_field)."""
+	key = "left_field" if bind_side == "left" else "right_field"
+	out: list[str] = []
+	for cond in conditions:
+		col = cstr(cond.get(key) or "").strip()
+		if col and col not in out:
+			out.append(col)
+	return out
+
+
+def _bind_nonempty_guard(conditions: list[dict[str, str]], bind_side: str, bind_alias: str) -> str:
+	"""
+	SQL requiring each bind-side join column to hold a real key value.
+
+	A blank/NULL/zero key means "no relationship" (e.g. ``base_line_item_id = 0``
+	for a Line Item Payment with no payment plan). Without this guard an equality
+	join fans out across every other row that also has an empty key. The ``<> '0'``
+	check catches integer zeros (MySQL coerces ``''`` to ``0`` for int columns).
+	"""
+	clauses: list[str] = []
+	for col in _bind_join_columns(conditions, bind_side):
+		clauses.append(
+			f"{bind_alias}.`{col}` IS NOT NULL "
+			f"AND {bind_alias}.`{col}` <> '' "
+			f"AND {bind_alias}.`{col}` <> '0'"
+		)
+	return " AND ".join(clauses)
+
+
 def _qbtl_bind_identifiers(
 	root_doctype: str,
 	root_name: str,
@@ -150,6 +180,10 @@ def fetch_qbtl_related_row_names(
 		placeholders = ", ".join(["%s"] * len(bind_ids))
 		where_bind = f"bind.name IN ({placeholders})"
 		params = list(bind_ids)
+
+	nonempty_guard = _bind_nonempty_guard(conditions, bind_side, bind_alias="bind")
+	if nonempty_guard:
+		where_bind = f"{where_bind} AND {nonempty_guard}"
 
 	sql = (
 		f"SELECT display.name AS name FROM {display_tab} AS display "
