@@ -35,7 +35,7 @@
 				aria-label="Fit width to tables"
 				@click="$emit('fit-width')"
 			>
-				<i class="fa fa-arrows-alt-h"></i>
+				|&lt;expand&gt;|
 			</button>
 			<button v-if="closable" class="ppv2-fd-close" type="button" @click="$emit('close')">
 				&times;
@@ -140,15 +140,17 @@ defineEmits(["close", "nav-prev", "nav-next", "fit-width"]);
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
-	width: 28px;
-	height: 28px;
-	padding: 0;
+	height: 26px;
+	padding: 0 8px;
 	color: inherit;
 	border: var(--nce-border-width) solid color-mix(in srgb, currentColor 28%, transparent);
 	border-radius: var(--border-radius-sm, 4px);
 	background: color-mix(in srgb, currentColor 10%, transparent);
 	cursor: pointer;
 	font-size: var(--font-size-sm);
+	font-family: var(--font-family-monospace, monospace);
+	line-height: 1;
+	white-space: nowrap;
 }
 .ppv2-fd-fit-width:hover {
 	background: color-mix(in srgb, currentColor 18%, transparent);
