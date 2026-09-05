@@ -1465,14 +1465,14 @@ defineExpose({
 	background: var(--nce-color-secondary-50, #f4f8fb);
 }
 .ppv2-fd-related-td--locked .ppv2-fd-related-cell-text {
-	color: var(--nce-color-text-muted, #8d99a6);
+	color: var(--nce-color-text, #36414c);
 	font-weight: var(--font-weight-normal, 400);
 }
 .ppv2-fd-related-table-wrap--locked .ppv2-fd-related-td:not(.ppv2-fd-related-td--locked):not(.ppv2-fd-related-td-actions):not(.ppv2-fd-related-td-del) {
-	color: var(--nce-color-text-muted, #8d99a6);
+	color: var(--nce-color-text, #36414c);
 }
 .ppv2-fd-related-table-wrap--locked .ppv2-fd-related-cell-text {
-	color: var(--nce-color-text-muted, #8d99a6);
+	color: var(--nce-color-text, #36414c);
 	font-weight: var(--font-weight-normal, 400);
 }
 .ppv2-fd-related-tools-muted {
