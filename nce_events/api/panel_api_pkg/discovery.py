@@ -354,16 +354,17 @@ def _load_query_based_table_links() -> list[dict[str, object]]:
 	for row in rows:
 		left = cstr(row.get("left_table") or "").strip()
 		right = cstr(row.get("right_table") or "").strip()
-		name = cstr(row.get("name") or row.get("title") or "").strip()
+		name = cstr(row.get("name") or "").strip()
+		title = cstr(row.get("title") or name or "").strip()
 		if not left or not right or not name:
 			continue
 		out.append(
 			{
 				"name": name,
-				"title": name,
+				"title": title,
 				"left_table": left,
 				"right_table": right,
-				"label": name,
+				"label": title,
 			}
 		)
 	return out
@@ -462,10 +463,10 @@ def _classify_query_based_links(
 			continue
 		item = {
 			"name": name,
-			"title": name,
+			"title": cstr(row.get("title") or name).strip(),
 			"left_table": left,
 			"right_table": right,
-			"label": name,
+			"label": cstr(row.get("title") or name).strip(),
 		}
 		if left == right == root_doctype:
 			self_qbtl.append(item)
@@ -664,15 +665,9 @@ def get_multi_hop_children(root_doctype: str) -> dict[str, dict[str, list[dict[s
 				)
 	three_hop.sort(key=lambda r: cstr(r.get("label") or r.get("doctype")))
 
-	same_doc_group = _discover_same_doctype_group_fields(
-		root_doctype,
-		wp_doctypes,
-		label_map,
-		exclude_link_fields=frozenset(),
-	)
-	self_links = _discover_self_link_relationships(root_doctype, wp_doctypes, label_map)
-	self_relationships = same_doc_group + self_links
-	self_relationships.sort(key=lambda r: cstr(r.get("label") or r.get("link_field") or ""))
+	# SELF relationships: explicit self-Links only. Group-by tabs are not auto-offered;
+	# they appear when already configured on the Form Dialog (merged client-side on Rebuild).
+	self_relationships = _discover_self_link_relationships(root_doctype, wp_doctypes, label_map)
 
 	qbtl_rows = _load_query_based_table_links()
 	adj = _build_mixed_doctype_adjacency(wp_doctypes, qbtl_rows)

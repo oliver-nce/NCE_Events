@@ -275,7 +275,7 @@ class TestGetMultiHopChildren(unittest.TestCase):
 		self_links = [r for r in self_col if r.get("link_field") == "parent_id"]
 		self.assertEqual(len(self_links), 1)
 
-	def test_same_doc_group_lists_scalar_fields_excluding_self_link(self):
+	def test_self_column_excludes_auto_group_by(self):
 		from nce_events.api.panel_api_pkg.discovery import get_multi_hop_children
 
 		wp = {"Line Item Payments", "Enrollments"}
@@ -306,18 +306,9 @@ class TestGetMultiHopChildren(unittest.TestCase):
 		):
 			out = get_multi_hop_children("Line Item Payments")
 
-		group = out["self"]["relationships"]
-		group_fns = {
-			r["link_field"]
-			for r in group
-			if "group by" in str(r.get("label") or "")
-		}
-		self.assertIn("base_line_item_id", group_fns)
-		self.assertNotIn("parent_id", group_fns)
-		self_link_fns = {
-			r["link_field"] for r in group if "self-Link" in str(r.get("label") or "")
-		}
-		self.assertIn("parent_id", self_link_fns)
+		group_fns = {r["link_field"] for r in out["self"]["relationships"]}
+		self.assertNotIn("base_line_item_id", group_fns)
+		self.assertIn("parent_id", group_fns)
 
 	def test_qbtl_mixed_path_two_hop(self):
 		from nce_events.api.panel_api_pkg.discovery import get_multi_hop_children
@@ -367,8 +358,8 @@ class TestGetMultiHopChildren(unittest.TestCase):
 		wp = {"Line Item Payments"}
 		qbtl = [
 			{
-				"name": "LIP self",
-				"title": "LIP self",
+				"name": "lip-self-name",
+				"title": "LIP Parent/Child",
 				"left_table": "Line Item Payments",
 				"right_table": "Line Item Payments",
 			}
@@ -392,7 +383,7 @@ class TestGetMultiHopChildren(unittest.TestCase):
 			out = get_multi_hop_children("Line Item Payments")
 
 		self.assertEqual(len(out["self"]["query_based_links"]), 1)
-		self.assertEqual(out["self"]["query_based_links"][0]["name"], "LIP self")
+		self.assertEqual(out["self"]["query_based_links"][0]["label"], "LIP Parent/Child")
 
 	def test_excludes_single_doctype_with_link_to_root(self):
 		from nce_events.api.panel_api_pkg.discovery import get_child_doctypes
