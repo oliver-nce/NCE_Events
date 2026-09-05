@@ -1,5 +1,5 @@
 """
-Unit tests for Query Based Table Link condition / sort helpers.
+Unit tests for Query Based Table Link condition / sort / index helpers.
 
 Run with:
     bench run-tests --app nce_events --module nce_events.api.tests.api.test_query_based_table_link
@@ -15,7 +15,9 @@ from unittest.mock import patch
 from nce_events.nce_events.doctype.query_based_table_link.query_based_table_link import (
 	_assert_in_wp_tables,
 	build_where_clause,
+	ensure_search_index,
 	normalize_conditions,
+	normalize_index_fields,
 	normalize_op,
 	normalize_sort,
 )
@@ -80,3 +82,37 @@ class TestAssertInWpTables(unittest.TestCase):
 			return_value=[{"name": "WP-1"}],
 		):
 			_assert_in_wp_tables("Line Item Payments")
+
+
+class TestNormalizeIndexFields(unittest.TestCase):
+	def test_dedupes_and_skips_blank(self):
+		self.assertEqual(
+			normalize_index_fields(["base_line_item_id", "", "base_line_item_id", "status"]),
+			["base_line_item_id", "status"],
+		)
+
+
+class TestEnsureSearchIndex(unittest.TestCase):
+	def test_skips_name(self):
+		with patch(
+			"nce_events.nce_events.doctype.query_based_table_link.query_based_table_link.frappe.db.get_value"
+		) as mock_get:
+			ensure_search_index("Line Item Payments", "name")
+			mock_get.assert_not_called()
+
+	def test_sets_docfield_and_adds_index(self):
+		db = (
+			"nce_events.nce_events.doctype.query_based_table_link.query_based_table_link.frappe.db"
+		)
+		with (
+			patch(db + ".get_value", side_effect=["df-1", 0]) as mock_get,
+			patch(db + ".set_value") as mock_set,
+			patch(db + ".add_index") as mock_add,
+			patch(
+				"nce_events.nce_events.doctype.query_based_table_link.query_based_table_link.frappe.clear_cache"
+			),
+		):
+			ensure_search_index("Line Item Payments", "base_line_item_id")
+			self.assertEqual(mock_get.call_count, 2)
+			mock_set.assert_called_once()
+			mock_add.assert_called_once_with("Line Item Payments", ["base_line_item_id"])

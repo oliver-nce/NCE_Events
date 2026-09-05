@@ -20,6 +20,12 @@ frappe.ui.form.on("Query Based Table Link", {
 		_qbtl_set_table_queries(frm);
 		_qbtl_render(frm);
 	},
+	before_save: function (frm) {
+		const $host = _qbtl_host(frm);
+		if ($host && $host.find(".qbtl-field-row").length) {
+			_qbtl_persist_indexes(frm, $host);
+		}
+	},
 	left_table: function (frm) {
 		_qbtl_render(frm);
 	},
@@ -126,6 +132,12 @@ function _qbtl_fetch_fields(doctype, callback) {
 	});
 }
 
+function _qbtl_field_label(f) {
+	const fn = String((f && f.fieldname) || "").trim();
+	const lab = String((f && f.label) || "").trim();
+	return lab && lab !== fn ? fn + " — " + lab : fn;
+}
+
 function _qbtl_field_options(fields) {
 	return (fields || [])
 		.map(function (f) {
@@ -133,11 +145,105 @@ function _qbtl_field_options(fields) {
 			if (!fn) {
 				return "";
 			}
-			const lab = String(f.label || "").trim();
-			const text = lab && lab !== fn ? fn + " — " + lab : fn;
-			return '<option value="' + _qbtl_esc(fn) + '">' + _qbtl_esc(text) + "</option>";
+			return '<option value="' + _qbtl_esc(fn) + '">' + _qbtl_esc(_qbtl_field_label(f)) + "</option>";
 		})
 		.join("");
+}
+
+function _qbtl_row_bg(i, selected) {
+	if (selected) {
+		return "#d0e4ff";
+	}
+	return i % 2 === 0 ? "#ffffff" : "#f3f3f3";
+}
+
+function _qbtl_paint_field_rows($list) {
+	const sel = String($list.attr("data-value") || "");
+	$list.find(".qbtl-field-row").each(function (i) {
+		const on = String($(this).attr("data-fn") || "") === sel;
+		$(this).css("background", _qbtl_row_bg(i, on));
+		$(this).css("font-weight", on ? "600" : "400");
+	});
+}
+
+function _qbtl_index_set(raw) {
+	const set = {};
+	_qbtl_parse_json_list(raw).forEach(function (fn) {
+		const s = String(fn || "").trim();
+		if (s) {
+			set[s] = true;
+		}
+	});
+	return set;
+}
+
+function _qbtl_read_index_fields($list) {
+	const out = [];
+	$list.find(".qbtl-index-cb:checked").each(function () {
+		const fn = String($(this).attr("data-fn") || "").trim();
+		if (fn) {
+			out.push(fn);
+		}
+	});
+	return out;
+}
+
+function _qbtl_persist_side_index(frm, $host, side) {
+	const $list = $host.find("[data-qbtl=" + side + "-fields]");
+	if (!$list.attr("data-index-ready")) {
+		return;
+	}
+	frm.set_value(
+		side === "left" ? "left_index_json" : "right_index_json",
+		JSON.stringify(_qbtl_read_index_fields($list))
+	);
+}
+
+function _qbtl_persist_indexes(frm, $host) {
+	_qbtl_persist_side_index(frm, $host, "left");
+	_qbtl_persist_side_index(frm, $host, "right");
+}
+
+function _qbtl_fill_field_list($list, fields, indexSet) {
+	const prev = String($list.attr("data-value") || "");
+	const checked = indexSet || {};
+	let html = "";
+	(fields || []).forEach(function (f, i) {
+		const fn = String(f.fieldname || "").trim();
+		if (!fn) {
+			return;
+		}
+		const on = !!checked[fn];
+		html +=
+			'<div class="qbtl-field-row" data-fn="' +
+			_qbtl_esc(fn) +
+			'" style="display:flex;align-items:center;gap:8px;padding:6px 10px;font-size:16px;line-height:1.5;font-family:Arial,Helvetica,sans-serif;color:#222;cursor:pointer;background:' +
+			_qbtl_row_bg(i, fn === prev) +
+			';">' +
+			'<span style="flex:1;min-width:0;">' +
+			_qbtl_esc(_qbtl_field_label(f)) +
+			"</span>" +
+			'<label style="margin:0;font-weight:400;font-size:12px;color:#444;display:flex;align-items:center;gap:4px;flex:0 0 auto;cursor:pointer;" onclick="event.stopPropagation();">' +
+			'<input type="checkbox" class="qbtl-index-cb" data-fn="' +
+			_qbtl_esc(fn) +
+			'"' +
+			(on ? " checked" : "") +
+			"/> " +
+			__("Index") +
+			"</label>" +
+			"</div>";
+	});
+	$list.html(html);
+	if (prev && $list.find('.qbtl-field-row[data-fn="' + prev + '"]').length) {
+		$list.attr("data-value", prev);
+	} else {
+		$list.attr("data-value", "");
+	}
+	_qbtl_paint_field_rows($list);
+}
+
+function _qbtl_list_val($host, key) {
+	return String($host.find("[data-qbtl=" + key + "]").attr("data-value") || "").trim();
 }
 
 function _qbtl_criterion_label(frm, c) {
@@ -178,9 +284,23 @@ function _qbtl_bind($host, frm) {
 	}
 	$host.data("qbtl-bound", 1);
 
+	$host.on("click.qbtl", ".qbtl-field-row", function (e) {
+		if ($(e.target).closest("label, input").length) {
+			return;
+		}
+		const $list = $(this).closest("[data-qbtl]");
+		$list.attr("data-value", String($(this).attr("data-fn") || ""));
+		_qbtl_paint_field_rows($list);
+	});
+
+	$host.on("change.qbtl", ".qbtl-index-cb", function (e) {
+		e.stopPropagation();
+		_qbtl_persist_indexes(frm, $host);
+	});
+
 	$host.on("click.qbtl", "[data-qbtl=add]", function () {
-		const lf = $host.find("[data-qbtl=left-fields]").val();
-		const rf = $host.find("[data-qbtl=right-fields]").val();
+		const lf = _qbtl_list_val($host, "left-fields");
+		const rf = _qbtl_list_val($host, "right-fields");
 		const op = $host.find("[data-qbtl=op]").val() || "=";
 		if (!lf || !rf) {
 			frappe.show_alert({ message: __("Select a field on each side"), indicator: "orange" });
@@ -200,8 +320,8 @@ function _qbtl_bind($host, frm) {
 			frappe.show_alert({ message: __("Select a criterion to change"), indicator: "orange" });
 			return;
 		}
-		const lf = $host.find("[data-qbtl=left-fields]").val();
-		const rf = $host.find("[data-qbtl=right-fields]").val();
+		const lf = _qbtl_list_val($host, "left-fields");
+		const rf = _qbtl_list_val($host, "right-fields");
 		const op = $host.find("[data-qbtl=op]").val() || "=";
 		if (!lf || !rf) {
 			frappe.show_alert({ message: __("Select a field on each side"), indicator: "orange" });
@@ -257,26 +377,25 @@ function _qbtl_shell_html() {
 		return '<option value="' + o.value + '">' + _qbtl_esc(o.label) + "</option>";
 	}).join("");
 	const listStyle =
-		"height:360px;font-size:16px;line-height:2.1;font-family:Arial,Helvetica,sans-serif;padding:6px 8px;";
+		"height:360px;overflow-y:auto;background:#ffffff;border:1px solid #c8c8c8;border-radius:4px;";
 	return (
 		'<div class="qbtl-builder" style="border:1px solid #d1d8dd;border-radius:6px;padding:12px;background:#fff;">' +
-		'<style>' +
-		".qbtl-builder select[data-qbtl='left-fields'] option," +
-		".qbtl-builder select[data-qbtl='right-fields'] option{" +
-		"font-size:16px;line-height:2.1;padding:8px 6px;font-family:Arial,Helvetica,sans-serif;" +
-		"}" +
-		"</style>" +
 		'<div style="display:flex;gap:36px;align-items:stretch;">' +
 		'<div style="flex:1;min-width:0;">' +
-		'<div style="font-size:12px;font-weight:600;text-transform:uppercase;margin:0 0 8px;color:#555;">' +
+		'<div style="display:flex;justify-content:space-between;align-items:center;margin:0 0 8px;color:#555;">' +
+		'<span style="font-size:12px;font-weight:600;text-transform:uppercase;">' +
 		__("Left fields") +
+		"</span>" +
+		'<span style="font-size:11px;font-weight:600;text-transform:uppercase;">' +
+		__("Index") +
+		"</span>" +
 		"</div>" +
-		'<select data-qbtl="left-fields" size="12" class="form-control" style="' +
+		'<div data-qbtl="left-fields" data-value="" style="' +
 		listStyle +
-		'"></select>' +
+		'"></div>' +
 		"</div>" +
 		'<div style="display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;width:88px;flex:0 0 88px;">' +
-		'<select data-qbtl="op" class="form-control" style="width:72px;font-size:16px;text-align:center;">' +
+		'<select data-qbtl="op" class="form-control" style="width:72px;font-size:16px;text-align:center;background:#ffffff;">' +
 		opOpts +
 		"</select>" +
 		'<button type="button" class="btn btn-xs btn-primary" data-qbtl="add">' +
@@ -284,18 +403,23 @@ function _qbtl_shell_html() {
 		"</button>" +
 		"</div>" +
 		'<div style="flex:1;min-width:0;">' +
-		'<div style="font-size:12px;font-weight:600;text-transform:uppercase;margin:0 0 8px;color:#555;">' +
+		'<div style="display:flex;justify-content:space-between;align-items:center;margin:0 0 8px;color:#555;">' +
+		'<span style="font-size:12px;font-weight:600;text-transform:uppercase;">' +
 		__("Right fields") +
+		"</span>" +
+		'<span style="font-size:11px;font-weight:600;text-transform:uppercase;">' +
+		__("Index") +
+		"</span>" +
 		"</div>" +
-		'<select data-qbtl="right-fields" size="12" class="form-control" style="' +
+		'<div data-qbtl="right-fields" data-value="" style="' +
 		listStyle +
-		'"></select>' +
+		'"></div>' +
 		"</div>" +
 		"</div>" +
 		'<div style="margin:12px 0 6px;font-size:11px;font-weight:600;text-transform:uppercase;color:#74808b;">' +
 		__("Criteria") +
 		"</div>" +
-		'<select data-qbtl="criteria" size="5" class="form-control" style="height:110px;font-size:12px;"></select>' +
+		'<select data-qbtl="criteria" size="5" style="height:110px;width:100%;font-size:13px;background:#ffffff;color:#222;border:1px solid #c8c8c8;border-radius:4px;"></select>' +
 		'<div style="margin:8px 0 0;display:flex;gap:8px;">' +
 		'<button type="button" class="btn btn-xs btn-default" data-qbtl="change">' +
 		__("Change") +
@@ -356,7 +480,11 @@ function _qbtl_render(frm) {
 	function apply(side, fields) {
 		const ordered = _qbtl_sort_fields(fields);
 		frm["_qbtl_" + side + "_fields"] = ordered;
-		$host.find("[data-qbtl=" + side + "-fields]").html(_qbtl_field_options(ordered));
+		const raw = side === "left" ? frm.doc.left_index_json : frm.doc.right_index_json;
+		const $list = $host.find("[data-qbtl=" + side + "-fields]");
+		_qbtl_fill_field_list($list, ordered, _qbtl_index_set(raw));
+		$list.attr("data-index-ready", "1");
+		_qbtl_persist_side_index(frm, $host, side);
 	}
 
 	if (!leftDt) {

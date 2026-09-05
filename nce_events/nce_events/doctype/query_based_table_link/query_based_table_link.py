@@ -152,6 +152,61 @@ def wp_tables_doctype_query(doctype, txt, searchfield, start, page_len, filters)
 	return out
 
 
+def normalize_index_fields(raw: object) -> list[str]:
+	"""Parse index-field JSON into unique valid fieldnames (order preserved)."""
+	if raw is None or raw == "":
+		return []
+	if isinstance(raw, str):
+		try:
+			raw = json.loads(raw)
+		except json.JSONDecodeError:
+			frappe.throw(_("Index JSON must be valid JSON"))
+	if not isinstance(raw, list):
+		frappe.throw(_("Index JSON must be a list"))
+	out: list[str] = []
+	seen: set[str] = set()
+	for item in raw:
+		fn = cstr(item or "").strip()
+		if not fn or fn in seen:
+			continue
+		if not _FIELD_NAME_RE.match(fn):
+			frappe.throw(_("Invalid index field name"))
+		seen.add(fn)
+		out.append(fn)
+	return out
+
+
+def ensure_search_index(doctype: str, fieldname: str) -> None:
+	"""Set DocField/Custom Field search_index and create the MariaDB index via Frappe.
+
+	Does not drop indexes. Skips ``name`` (already the primary key).
+	"""
+	doctype = cstr(doctype or "").strip()
+	fieldname = cstr(fieldname or "").strip()
+	if not doctype or not fieldname or fieldname == "name":
+		return
+
+	df_name = frappe.db.get_value("DocField", {"parent": doctype, "fieldname": fieldname}, "name")
+	if df_name:
+		if not cint(frappe.db.get_value("DocField", df_name, "search_index")):
+			frappe.db.set_value("DocField", df_name, "search_index", 1, update_modified=False)
+	else:
+		cf_name = frappe.db.get_value(
+			"Custom Field", {"dt": doctype, "fieldname": fieldname}, "name"
+		)
+		if not cf_name:
+			return
+		if not cint(frappe.db.get_value("Custom Field", cf_name, "search_index")):
+			frappe.db.set_value("Custom Field", cf_name, "search_index", 1, update_modified=False)
+
+	try:
+		frappe.db.add_index(doctype, [fieldname])
+	except Exception:
+		# Index may already exist from a prior save or schema_mirror.
+		pass
+	frappe.clear_cache(doctype=doctype)
+
+
 def _assert_fields_exist(doctype: str, fieldnames: set[str], side: str) -> None:
 	if not doctype:
 		return
@@ -193,3 +248,20 @@ class QueryBasedTableLink(Document):
 			_assert_fields_exist(left_dt, {r["fieldname"] for r in left_sort}, _("left sort"))
 		if self.right_sort_enabled:
 			_assert_fields_exist(right_dt, {r["fieldname"] for r in right_sort}, _("right sort"))
+
+		left_idx = normalize_index_fields(getattr(self, "left_index_json", None))
+		right_idx = normalize_index_fields(getattr(self, "right_index_json", None))
+		self.left_index_json = json.dumps(left_idx, separators=(",", ":")) if left_idx else ""
+		self.right_index_json = json.dumps(right_idx, separators=(",", ":")) if right_idx else ""
+		if left_idx:
+			_assert_fields_exist(left_dt, set(left_idx), _("left index"))
+		if right_idx:
+			_assert_fields_exist(right_dt, set(right_idx), _("right index"))
+
+	def on_update(self):
+		left_dt = cstr(getattr(self, "left_table", None) or "").strip()
+		right_dt = cstr(getattr(self, "right_table", None) or "").strip()
+		for fn in normalize_index_fields(getattr(self, "left_index_json", None)):
+			ensure_search_index(left_dt, fn)
+		for fn in normalize_index_fields(getattr(self, "right_index_json", None)):
+			ensure_search_index(right_dt, fn)

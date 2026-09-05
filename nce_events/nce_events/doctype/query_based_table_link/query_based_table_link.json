@@ -14,11 +14,14 @@
     "section_break_criteria",
     "criteria_builder",
     "where_clause",
+    "notes",
     "conditions_json",
     "left_sort_enabled",
     "right_sort_enabled",
     "left_sort_json",
-    "right_sort_json"
+    "right_sort_json",
+    "left_index_json",
+    "right_index_json"
   ],
   "fields": [
     {
@@ -76,6 +79,11 @@
       "read_only": 1
     },
     {
+      "fieldname": "notes",
+      "fieldtype": "Text",
+      "label": "Notes"
+    },
+    {
       "fieldname": "conditions_json",
       "fieldtype": "Long Text",
       "hidden": 1,
@@ -106,12 +114,24 @@
       "fieldtype": "Long Text",
       "hidden": 1,
       "label": "Right Sort JSON"
+    },
+    {
+      "fieldname": "left_index_json",
+      "fieldtype": "Long Text",
+      "hidden": 1,
+      "label": "Left Index JSON"
+    },
+    {
+      "fieldname": "right_index_json",
+      "fieldtype": "Long Text",
+      "hidden": 1,
+      "label": "Right Index JSON"
     }
   ],
   "index_web_pages_for_search": 0,
   "istable": 0,
   "links": [],
-  "modified": "2026-09-05 13:00:00.000000",
+  "modified": "2026-09-05 14:15:00.000000",
   "modified_by": "Administrator",
   "module": "NCE Events",
   "name": "Query Based Table Link",
