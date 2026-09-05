@@ -374,6 +374,7 @@ def get_form_dialog_related_rows(
 			root_name,
 			bind_doctype=meta.get("bind_doctype") or "",
 			bind_side=meta.get("bind_side") or "",
+			bind_link_field=meta.get("bind_link_field") or "",
 			display_doctype=child_dt,
 			hop_chain_raw=row.hop_chain or getattr(row, "hop_chain", None),
 		)

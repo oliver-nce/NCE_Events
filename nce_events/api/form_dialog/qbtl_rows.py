@@ -7,7 +7,7 @@ from typing import Any
 import frappe
 from frappe.utils import cstr
 
-from ._fd_related import _hop_walk_final_identifiers, _normalize_hop_chain_value
+from ._fd_related import _filters_for_related_rows, _normalize_hop_chain_value
 
 
 def _parse_qbtl_conditions(raw: object) -> list[dict[str, str]]:
@@ -63,9 +63,16 @@ def _qbtl_bind_identifiers(
 	root_doctype: str,
 	root_name: str,
 	bind_doctype: str,
+	bind_link_field: str,
 	hop_chain: list[dict[str, str]],
 ) -> list[str] | None:
-	"""Primary keys on ``bind_doctype`` to anchor the QBTL join."""
+	"""
+	Primary keys on ``bind_doctype`` that anchor the QBTL join for the open root.
+
+	Uses the same related-tab filter semantics as the Link relationship tabs:
+	direct child via reverse FK (``{link_field: root_name}``) or a hop-chain walk.
+	Returns ``None`` when the bind set is empty (caller returns no rows).
+	"""
 	root = cstr(root_doctype or "").strip()
 	bind = cstr(bind_doctype or "").strip()
 	if not root or not bind:
@@ -73,12 +80,15 @@ def _qbtl_bind_identifiers(
 	if root == bind and not hop_chain:
 		name = cstr(root_name or "").strip()
 		return [name] if name else None
-	if not hop_chain:
+
+	filters, force_empty = _filters_for_related_rows(
+		root_name, bind, cstr(bind_link_field or "").strip(), hop_chain, root
+	)
+	if force_empty:
 		return None
-	ids = _hop_walk_final_identifiers(root_name, hop_chain)
-	if ids is None:
-		return None
-	return [cstr(x).strip() for x in ids if cstr(x).strip()]
+	names = frappe.get_all(bind, filters=filters, pluck="name", limit_page_length=5000)
+	out = [cstr(n).strip() for n in (names or []) if cstr(n).strip()]
+	return out or None
 
 
 def fetch_qbtl_related_row_names(
@@ -88,6 +98,7 @@ def fetch_qbtl_related_row_names(
 	*,
 	bind_doctype: str,
 	bind_side: str,
+	bind_link_field: str,
 	display_doctype: str,
 	hop_chain_raw: object,
 ) -> tuple[list[str], bool]:
@@ -119,9 +130,7 @@ def fetch_qbtl_related_row_names(
 		return ([], True)
 
 	hc = _normalize_hop_chain_value(hop_chain_raw)
-	bind_ids = _qbtl_bind_identifiers(root_doctype, root_name, bind_dt, hc)
-	if bind_ids is None:
-		return ([], True)
+	bind_ids = _qbtl_bind_identifiers(root_doctype, root_name, bind_dt, bind_link_field, hc)
 	if not bind_ids:
 		return ([], True)
 
@@ -180,6 +189,7 @@ def qbtl_info_from_row(row: Any) -> dict[str, Any]:
 	return {
 		"bind_doctype": cstr(info.get("bind_doctype") or "").strip(),
 		"bind_side": bind_side if bind_side in ("left", "right") else "",
+		"bind_link_field": cstr(info.get("bind_link_field") or "").strip(),
 		"query_based_table_link": cstr(
 			getattr(row, "query_based_table_link", None) or info.get("query_based_table_link") or ""
 		).strip(),

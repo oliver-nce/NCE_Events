@@ -166,29 +166,39 @@ def _build_related_child_row_dict(spec: dict[str, Any]) -> dict[str, str]:
 	return row
 
 
-def _find_link_hop_chain_to_doctype(root_doctype: str, target_doctype: str) -> list[dict[str, str]] | None:
-	"""Shortest Link-hop chain from root to ``target_doctype`` (empty when equal). None if unreachable."""
+def _find_relationship_to_doctype(root_doctype: str, target_doctype: str) -> dict[str, Any] | None:
+	"""
+	Shortest related-tab relationship from root to ``target_doctype``.
+
+	Returns ``{"link_field", "hop_chain"}`` (the same shape the normal related tab
+	uses to filter rows), or ``None`` if unreachable. When root equals target the
+	relationship is the record itself (``link_field="name"``, empty hop chain).
+	"""
 	root = cstr(root_doctype or "").strip()
 	target = cstr(target_doctype or "").strip()
 	if not root or not target:
 		return None
 	if root == target:
-		return []
+		return {"link_field": "name", "hop_chain": []}
 	try:
 		from nce_events.api.panel_api_pkg.discovery import get_multi_hop_children
 
 		buckets = get_multi_hop_children(root)
 	except Exception:
 		return None
-	best: list[dict[str, str]] | None = None
+	best: dict[str, Any] | None = None
 	for key in ("self", "1_hop", "2_hop", "3_hop"):
 		bucket = buckets.get(key) or {}
 		for row in bucket.get("relationships") or []:
 			if cstr(row.get("doctype") or "").strip() != target:
 				continue
 			hc = _normalize_hop_chain_value(row.get("hop_chain"))
-			if best is None or len(hc) < len(best):
-				best = hc
+			candidate = {
+				"link_field": cstr(row.get("link_field") or "").strip(),
+				"hop_chain": hc,
+			}
+			if best is None or len(hc) < len(best["hop_chain"]):
+				best = candidate
 	return best
 
 
@@ -209,6 +219,7 @@ def _resolve_qbtl_tab_plan(root_doctype: str, qbtl_name: str, label: str) -> dic
 			"display_doctype": right,
 			"bind_doctype": left,
 			"bind_side": "left",
+			"bind_link_field": "name",
 			"hop_chain": [],
 			"tab_label": tab_label or cstr(qbtl.title or qbtl_name).strip(),
 			"query_based_table_link": qbtl_name,
@@ -218,33 +229,35 @@ def _resolve_qbtl_tab_plan(root_doctype: str, qbtl_name: str, label: str) -> dic
 			"display_doctype": left,
 			"bind_doctype": right,
 			"bind_side": "right",
+			"bind_link_field": "name",
 			"hop_chain": [],
 			"tab_label": tab_label or cstr(qbtl.title or qbtl_name).strip(),
 			"query_based_table_link": qbtl_name,
 		}
 
-	path_left = _find_link_hop_chain_to_doctype(root, left)
-	path_right = _find_link_hop_chain_to_doctype(root, right)
-	if path_left is None and path_right is None:
+	rel_left = _find_relationship_to_doctype(root, left)
+	rel_right = _find_relationship_to_doctype(root, right)
+	if rel_left is None and rel_right is None:
 		frappe.throw(
 			_("Cannot reach Query Based Table Link {0} from {1}").format(qbtl_name, root_doctype)
 		)
 
-	if path_left is not None and path_right is not None:
-		if len(path_left) <= len(path_right):
-			bind_dt, display_dt, bind_side, hop_chain = left, right, "left", path_left
+	if rel_left is not None and rel_right is not None:
+		if len(rel_left["hop_chain"]) <= len(rel_right["hop_chain"]):
+			bind_dt, display_dt, bind_side, rel = left, right, "left", rel_left
 		else:
-			bind_dt, display_dt, bind_side, hop_chain = right, left, "right", path_right
-	elif path_left is not None:
-		bind_dt, display_dt, bind_side, hop_chain = left, right, "left", path_left
+			bind_dt, display_dt, bind_side, rel = right, left, "right", rel_right
+	elif rel_left is not None:
+		bind_dt, display_dt, bind_side, rel = left, right, "left", rel_left
 	else:
-		bind_dt, display_dt, bind_side, hop_chain = right, left, "right", path_right  # type: ignore[assignment]
+		bind_dt, display_dt, bind_side, rel = right, left, "right", rel_right  # type: ignore[assignment]
 
 	return {
 		"display_doctype": display_dt,
 		"bind_doctype": bind_dt,
 		"bind_side": bind_side,
-		"hop_chain": hop_chain,
+		"bind_link_field": cstr(rel.get("link_field") or "").strip(),
+		"hop_chain": rel.get("hop_chain") or [],
 		"tab_label": tab_label or cstr(qbtl.title or qbtl_name).strip(),
 		"query_based_table_link": qbtl_name,
 	}
@@ -262,6 +275,7 @@ def _build_related_qbtl_child_row_dict(spec: dict[str, Any], root_doctype: str) 
 			"display_doctype": "",
 			"bind_doctype": "",
 			"bind_side": "",
+			"bind_link_field": "",
 			"hop_chain": [],
 			"tab_label": tab_l or qbtl_name,
 			"query_based_table_link": qbtl_name,
@@ -281,6 +295,7 @@ def _build_related_qbtl_child_row_dict(spec: dict[str, Any], root_doctype: str) 
 		"query_based_table_link": qbtl_name,
 		"bind_doctype": cstr(plan.get("bind_doctype") or "").strip(),
 		"bind_side": cstr(plan.get("bind_side") or "").strip(),
+		"bind_link_field": cstr(plan.get("bind_link_field") or "").strip(),
 		"label": cstr(plan.get("tab_label") or "").strip() or qbtl_name,
 		"hop_chain": hc_norm,
 	}

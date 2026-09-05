@@ -35,6 +35,7 @@ def _install_frappe_stub() -> None:
 	frappe_utils.cstr = lambda v: "" if v is None else str(v)
 	frappe_mod.utils = frappe_utils
 	frappe_mod.get_doc = MagicMock()
+	frappe_mod.get_all = MagicMock()
 	frappe_mod.db = MagicMock()
 	frappe_mod.log_error = MagicMock()
 	frappe_mod.get_traceback = MagicMock(return_value="")
@@ -131,7 +132,7 @@ class TestFetchQbtlRelatedNames(unittest.TestCase):
 
 		qbtl_doc = SimpleNamespace(
 			conditions_json=json.dumps(
-				[{"left_field": "base_order_id", "op": "=", "right_field": "base_order_id"}]
+				[{"left_field": "base_line_item_id", "op": "=", "right_field": "base_line_item_id"}]
 			)
 		)
 		with patch("nce_events.api.form_dialog.qbtl_rows.frappe.get_doc", return_value=qbtl_doc):
@@ -145,6 +146,7 @@ class TestFetchQbtlRelatedNames(unittest.TestCase):
 					"LIP-1",
 					bind_doctype="Line Item Payments",
 					bind_side="left",
+					bind_link_field="name",
 					display_doctype="Line Item Payments",
 					hop_chain_raw="[]",
 				)
@@ -154,6 +156,50 @@ class TestFetchQbtlRelatedNames(unittest.TestCase):
 		sql = mock_sql.call_args[0][0]
 		self.assertIn("INNER JOIN", sql)
 		self.assertIn("bind.name = %s", sql)
+
+	def test_direct_child_bind_uses_reverse_fk(self):
+		"""Enrollments root: bind LIP rows via reverse FK, not a hop-chain walk."""
+		from nce_events.api.form_dialog.qbtl_rows import fetch_qbtl_related_row_names
+
+		qbtl_doc = SimpleNamespace(
+			conditions_json=json.dumps(
+				[{"left_field": "base_line_item_id", "op": "=", "right_field": "base_line_item_id"}]
+			)
+		)
+		with patch("nce_events.api.form_dialog.qbtl_rows.frappe.get_doc", return_value=qbtl_doc):
+			with patch(
+				"nce_events.api.form_dialog.qbtl_rows._filters_for_related_rows",
+				return_value=({"enrollment_id": "1117"}, False),
+			) as mock_filters:
+				with patch(
+					"nce_events.api.form_dialog.qbtl_rows.frappe.get_all",
+					return_value=["LIP-1117"],
+				):
+					with patch(
+						"nce_events.api.form_dialog.qbtl_rows.frappe.db.sql",
+						return_value=[
+							{"name": "LIP-1117"},
+							{"name": "LIP-1122"},
+							{"name": "LIP-2578"},
+						],
+					):
+						names, force_empty = fetch_qbtl_related_row_names(
+							"LIP-LIP on base order id",
+							"Enrollments",
+							"1117",
+							bind_doctype="Line Item Payments",
+							bind_side="left",
+							bind_link_field="enrollment_id",
+							display_doctype="Line Item Payments",
+							hop_chain_raw="[]",
+						)
+
+		self.assertFalse(force_empty)
+		self.assertEqual(len(names), 3)
+		# Bind ids resolved via the related-tab reverse-FK filter, not a hop walk.
+		args = mock_filters.call_args[0]
+		self.assertEqual(args[1], "Line Item Payments")
+		self.assertEqual(args[2], "enrollment_id")
 
 
 class TestPortalConfigKey(unittest.TestCase):
