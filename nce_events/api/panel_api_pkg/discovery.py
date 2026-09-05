@@ -420,19 +420,21 @@ def _build_mixed_doctype_adjacency(
 	return adj
 
 
-def _doctype_distance_sets(
+def _shortest_paths_from_root(
 	root_doctype: str,
 	adj: dict[str, list[tuple[str, str | None]]],
 	*,
 	max_depth: int = 3,
-) -> dict[str, set[int]]:
-	"""All path lengths (1..max_depth) from root to each reachable DocType."""
+) -> tuple[dict[str, set[int]], dict[str, list[str]]]:
+	"""Shortest path lengths and node chains from root (inclusive) per reachable DocType."""
 	distances: dict[str, set[int]] = {root_doctype: {0}}
+	paths: dict[str, list[str]] = {root_doctype: [root_doctype]}
 	queue: deque[tuple[str, int]] = deque([(root_doctype, 0)])
 	while queue:
 		node, depth = queue.popleft()
 		if depth >= max_depth:
 			continue
+		base_path = paths[node]
 		for neighbor, _qbtl in adj.get(node, []):
 			next_depth = depth + 1
 			if next_depth > max_depth:
@@ -441,14 +443,57 @@ def _doctype_distance_sets(
 				distances[neighbor] = set()
 			if next_depth not in distances[neighbor]:
 				distances[neighbor].add(next_depth)
+				if neighbor not in paths:
+					paths[neighbor] = base_path + [neighbor]
 				queue.append((neighbor, next_depth))
-	return distances
+	return distances, paths
+
+
+def _qbtl_via_label(
+	title: str,
+	hop: int,
+	endpoint: str,
+	paths: dict[str, list[str]],
+	label_map: dict[str, str],
+) -> str:
+	"""Format QBTL title with a (via …) chain matching Link-hop relationship labels."""
+	if hop <= 1:
+		return title
+	path = paths.get(endpoint) or []
+	if len(path) < 2:
+		return title
+	via_parts = path[1:]
+	if not via_parts:
+		return title
+	via = " → ".join(label_map.get(p, p) for p in via_parts)
+	return _("{0} (via {1})").format(title, via)
+
+
+def _pick_qbtl_path_endpoint(
+	left: str,
+	right: str,
+	root_doctype: str,
+	hop: int,
+	distances: dict[str, set[int]],
+) -> str:
+	before = hop - 1
+	candidates: list[str] = []
+	if before in distances.get(left, set()):
+		candidates.append(left)
+	if before in distances.get(right, set()):
+		candidates.append(right)
+	for dt in candidates:
+		if dt != root_doctype:
+			return dt
+	return candidates[0] if candidates else ""
 
 
 def _classify_query_based_links(
 	root_doctype: str,
 	qbtl_rows: list[dict[str, object]],
 	distances: dict[str, set[int]],
+	paths: dict[str, list[str]],
+	label_map: dict[str, str],
 ) -> tuple[list[dict[str, object]], dict[int, list[dict[str, object]]]]:
 	"""Return (self_qbtl, {1: [...], 2: [...], 3: [...]}) for capture wizard columns."""
 	self_qbtl: list[dict[str, object]] = []
@@ -478,7 +523,12 @@ def _classify_query_based_links(
 			if name in seen[hop]:
 				continue
 			seen[hop].add(name)
-			by_hop[hop].append(item)
+			endpoint = _pick_qbtl_path_endpoint(left, right, root_doctype, hop, distances)
+			labeled = {
+				**item,
+				"label": _qbtl_via_label(item["title"], hop, endpoint, paths, label_map),
+			}
+			by_hop[hop].append(labeled)
 
 	self_qbtl.sort(key=lambda r: cstr(r.get("label") or r.get("name")))
 	for hop in (1, 2, 3):
@@ -671,8 +721,10 @@ def get_multi_hop_children(root_doctype: str) -> dict[str, dict[str, list[dict[s
 
 	qbtl_rows = _load_query_based_table_links()
 	adj = _build_mixed_doctype_adjacency(wp_doctypes, qbtl_rows)
-	distances = _doctype_distance_sets(root_doctype, adj, max_depth=3)
-	self_qbtl, qbtl_by_hop = _classify_query_based_links(root_doctype, qbtl_rows, distances)
+	distances, paths = _shortest_paths_from_root(root_doctype, adj, max_depth=3)
+	self_qbtl, qbtl_by_hop = _classify_query_based_links(
+		root_doctype, qbtl_rows, distances, paths, label_map
+	)
 
 	return {
 		"self": {"relationships": self_relationships, "query_based_links": self_qbtl},

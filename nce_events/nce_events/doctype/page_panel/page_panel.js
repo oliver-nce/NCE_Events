@@ -3466,6 +3466,11 @@ function _show_capture_wizard_dialog(opts, onSubmit) {
 			}
 		},
 	});
+	d.onhide = function () {
+		if (typeof opts.onCancel === "function") {
+			opts.onCancel();
+		}
+	};
 	d.show();
 }
 
@@ -3631,49 +3636,63 @@ function _bind_dialogs_click_handlers(frm) {
 										scripts
 									);
 									setTimeout(function () {
-										_show_capture_wizard_dialog(
-											{
-												buckets: buckets,
-												rootDoctype: discoveryDoctype,
-												inlineOptions: inlineOpts,
-												discoveredTools: discovered,
-												preselectedRelated: current_related,
-												preselectedInlinePfns: preInlinePfns,
-												storedScriptGroups: current_sg,
-												onCancel: function () {
-													_pp_rebuild_pending = false;
+										try {
+											_show_capture_wizard_dialog(
+												{
+													buckets: buckets,
+													rootDoctype: discoveryDoctype,
+													inlineOptions: inlineOpts,
+													discoveredTools: discovered,
+													preselectedRelated: current_related,
+													preselectedInlinePfns: preInlinePfns,
+													storedScriptGroups: current_sg,
+													onCancel: function () {
+														_pp_rebuild_pending = false;
+													},
 												},
-											},
-											function (sel) {
-												frappe.call({
-													method: "nce_events.api.form_dialog.capture.rebuild_form_dialog",
-													args: {
-														name: current,
-														related_doctypes: JSON.stringify(sel.related || []),
-														inline_child_tables: JSON.stringify(sel.inline_child_tables || []),
-														script_tool_groups: JSON.stringify(sel.script_tool_groups || []),
-													},
-													freeze: true,
-													freeze_message: "Rebuilding schema…",
-													error: function () {
-														_pp_rebuild_pending = false;
-														frappe.msgprint({
-															title: __("Error"),
-															message: __("Rebuild failed."),
-															indicator: "red",
-														});
-													},
-													callback: function () {
-														_pp_rebuild_pending = false;
-														frappe.show_alert({
-															message: "Schema rebuilt.",
-															indicator: "green",
-														});
-														_render_dialogs_tab(frm);
-													},
-												});
-											}
-										);
+												function (sel) {
+													frappe.call({
+														method: "nce_events.api.form_dialog.capture.rebuild_form_dialog",
+														args: {
+															name: current,
+															related_doctypes: JSON.stringify(sel.related || []),
+															inline_child_tables: JSON.stringify(
+																sel.inline_child_tables || []
+															),
+															script_tool_groups: JSON.stringify(
+																sel.script_tool_groups || []
+															),
+														},
+														freeze: true,
+														freeze_message: "Rebuilding schema…",
+														error: function () {
+															_pp_rebuild_pending = false;
+															frappe.msgprint({
+																title: __("Error"),
+																message: __("Rebuild failed."),
+																indicator: "red",
+															});
+														},
+														callback: function () {
+															_pp_rebuild_pending = false;
+															frappe.show_alert({
+																message: "Schema rebuilt.",
+																indicator: "green",
+															});
+															_render_dialogs_tab(frm);
+														},
+													});
+												}
+											);
+										} catch (e) {
+											_pp_rebuild_pending = false;
+											console.error("[page_panel] capture wizard error", e);
+											frappe.msgprint({
+												title: __("Error"),
+												message: __("Could not open the capture wizard."),
+												indicator: "red",
+											});
+										}
 									}, 0);
 								},
 								function (errMsg) {

@@ -358,7 +358,7 @@ class TestSyncRelatedPreservesPortalConfig(unittest.TestCase):
 		self.assertEqual(len(doc.related_doctypes), 1)
 		self.assertEqual(doc.related_doctypes[0].get("portal_field_config"), cfg)
 
-	def test_preserves_existing_rows_when_incoming_list_empty(self):
+	def test_clears_existing_rows_when_incoming_list_empty(self):
 		from types import SimpleNamespace
 
 		from nce_events.api.form_dialog._helpers import _sync_related_doctypes
@@ -389,8 +389,32 @@ class TestSyncRelatedPreservesPortalConfig(unittest.TestCase):
 		):
 			_sync_related_doctypes(doc, [])
 
+		self.assertEqual(doc.related_doctypes, [])
+
+	def test_skips_sync_when_related_doctypes_not_provided(self):
+		from types import SimpleNamespace
+
+		from nce_events.api.form_dialog._helpers import _sync_related_doctypes
+
+		old = SimpleNamespace(
+			child_doctype="Event Sessions",
+			link_field="product_id",
+			hop_chain="[]",
+			portal_field_config="",
+		)
+
+		class StubDoc:
+			def __init__(self):
+				self.related_doctypes = [old]
+
+			def get(self, key, default=None):
+				if key == "related_doctypes":
+					return self.related_doctypes
+				return default
+
+		doc = StubDoc()
+		_sync_related_doctypes(doc, None)
 		self.assertEqual(len(doc.related_doctypes), 1)
-		self.assertEqual(doc.related_doctypes[0].child_doctype, "Event Sessions")
 
 
 if __name__ == "__main__":

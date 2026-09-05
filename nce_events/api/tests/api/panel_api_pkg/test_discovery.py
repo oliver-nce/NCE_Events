@@ -351,6 +351,7 @@ class TestGetMultiHopChildren(unittest.TestCase):
 		two_q = out["2_hop"]["query_based_links"]
 		self.assertEqual(len(two_q), 1)
 		self.assertEqual(two_q[0]["name"], "Enrollments to People")
+		self.assertEqual(two_q[0]["label"], "Enrollments to People (via Enrollments)")
 
 	def test_qbtl_self_join_on_root(self):
 		from nce_events.api.panel_api_pkg.discovery import get_multi_hop_children

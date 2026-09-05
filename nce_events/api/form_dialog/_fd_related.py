@@ -149,6 +149,9 @@ def _related_doctype_child_rows(related_doctypes: str | list | None) -> list[dic
 
 
 def _sync_related_doctypes(doc: Any, related_doctypes: str | list | None) -> None:
+	if related_doctypes is None:
+		return
+
 	preserved_portal: dict[str, str] = {}
 	preserved_actions: dict[str, str] = {}
 	for old in list(doc.get("related_doctypes") or []):
@@ -165,8 +168,6 @@ def _sync_related_doctypes(doc: Any, related_doctypes: str | list | None) -> Non
 			preserved_actions[key] = pa
 
 	parsed_rows = _related_doctype_child_rows(related_doctypes)
-	if not parsed_rows and doc.get("related_doctypes"):
-		return
 
 	doc.related_doctypes = []
 	for row in parsed_rows:
