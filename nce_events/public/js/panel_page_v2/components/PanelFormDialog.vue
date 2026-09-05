@@ -64,9 +64,11 @@
 					:row-nav-label="rowNavLabel"
 					:title="form.dialogTitle.value"
 					:closable="headerClosable"
+					:show-fit-width="hasTabularTabs"
 					@close="onCancel"
 					@nav-prev="onNavPrevClick"
 					@nav-next="onNavNextClick"
+					@fit-width="fitDialogWidthToRelatedTables"
 				/>
 			</div>
 		<PanelFormDialogBody
@@ -292,6 +294,84 @@ function scheduleFitDialogWidthToFooter() {
 	nextTick(() => {
 		requestAnimationFrame(() => fitDialogWidthToFooter());
 	});
+}
+
+/** True when the dialog has a related/inline table tab (drives the header fit-width button). */
+const hasTabularTabs = computed(() =>
+	(form.tabs.value || []).some((t) => t && (t._related || t._inlineChild)),
+);
+
+/** Single-line pixel height for a cell (falls back to font-size × 1.4 when line-height is "normal"). */
+function _cellLineHeight(el) {
+	const cs = window.getComputedStyle(el);
+	const lh = parseFloat(cs.lineHeight);
+	if (Number.isFinite(lh) && lh > 0) return lh;
+	const fs = parseFloat(cs.fontSize);
+	return Number.isFinite(fs) && fs > 0 ? fs * 1.4 : 18;
+}
+
+/** Max line count across related/inline table cells at the current layout. */
+function _maxRelatedCellLines(cells) {
+	let max = 1;
+	for (const el of cells) {
+		const lh = _cellLineHeight(el);
+		if (lh <= 0) continue;
+		const lines = Math.round(el.scrollHeight / lh);
+		if (lines > max) max = lines;
+	}
+	return max;
+}
+
+/**
+ * Widen the dialog (grow-only, capped at 95vw) until no related/inline table cell
+ * wraps beyond 2 lines. Binary-searches the smallest width that satisfies the target.
+ */
+function fitDialogWidthToRelatedTables() {
+	const dialog = dialogEl.value;
+	const bodyInst = fdBodyRef.value;
+	const bodyEl = bodyInst ? (bodyInst.$el ?? bodyInst) : null;
+	if (!dialog || !bodyEl || !props.open) return;
+
+	const cells = Array.from(bodyEl.querySelectorAll(".ppv2-fd-related-cell-text"));
+	if (!cells.length) return;
+
+	const maxW = Math.floor(window.innerWidth * 0.95);
+	const minW = 360;
+	const currentW =
+		dlgW.value != null ? dlgW.value : Math.ceil(dialog.getBoundingClientRect().width);
+
+	const applyWidth = (w) => {
+		dlgW.value = w;
+		// Force synchronous reflow so measurements reflect the new width.
+		void dialog.offsetWidth;
+	};
+
+	const TARGET_LINES = 2;
+
+	// Already within target at current width — nothing to do.
+	if (_maxRelatedCellLines(cells) <= TARGET_LINES) return;
+
+	applyWidth(maxW);
+	if (_maxRelatedCellLines(cells) > TARGET_LINES) {
+		// Even at the cap some cell needs >2 lines; keep the widest (best effort).
+		return;
+	}
+
+	// Binary-search the smallest width in (currentW, maxW] that keeps cells ≤2 lines.
+	let lo = Math.max(minW, currentW);
+	let hi = maxW;
+	let best = maxW;
+	for (let i = 0; i < 8 && hi - lo > 8; i++) {
+		const mid = Math.floor((lo + hi) / 2);
+		applyWidth(mid);
+		if (_maxRelatedCellLines(cells) <= TARGET_LINES) {
+			best = mid;
+			hi = mid;
+		} else {
+			lo = mid;
+		}
+	}
+	applyWidth(best);
 }
 
 let footerResizeObs = null;

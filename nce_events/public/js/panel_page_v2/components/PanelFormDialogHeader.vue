@@ -26,9 +26,21 @@
 			</div>
 			<span class="ppv2-fd-title">{{ title }}</span>
 		</div>
-		<button v-if="closable" class="ppv2-fd-close" type="button" @click="$emit('close')">
-			&times;
-		</button>
+		<div class="ppv2-fd-header-actions" @mousedown.stop>
+			<button
+				v-if="showFitWidth"
+				type="button"
+				class="ppv2-fd-fit-width"
+				title="Fit width so table cells use ≤2 lines"
+				aria-label="Fit width to tables"
+				@click="$emit('fit-width')"
+			>
+				<i class="fa fa-arrows-alt-h"></i>
+			</button>
+			<button v-if="closable" class="ppv2-fd-close" type="button" @click="$emit('close')">
+				&times;
+			</button>
+		</div>
 	</div>
 </template>
 
@@ -45,6 +57,8 @@ const props = defineProps({
 	rowNavLabel: { type: String, default: "" },
 	title: { type: String, default: "" },
 	closable: { type: Boolean, default: true },
+	/** Show the "fit width to tables" button (only when a related/inline table tab exists). */
+	showFitWidth: { type: Boolean, default: false },
 	/** Disable prev/next while typing find criteria (footer owns Perform/Cancel). */
 	freezeNav: { type: Boolean, default: false },
 });
@@ -54,7 +68,7 @@ const resolvedHeaderBgClass = computed(() => {
 	return v || panelChromeBg(null, "dialog_header_bg_class");
 });
 
-defineEmits(["close", "nav-prev", "nav-next"]);
+defineEmits(["close", "nav-prev", "nav-next", "fit-width"]);
 </script>
 
 <style scoped>
@@ -115,6 +129,29 @@ defineEmits(["close", "nav-prev", "nav-next"]);
 	overflow: hidden;
 	text-overflow: ellipsis;
 	white-space: nowrap;
+}
+.ppv2-fd-header-actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-shrink: 0;
+}
+.ppv2-fd-fit-width {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	color: inherit;
+	border: var(--nce-border-width) solid color-mix(in srgb, currentColor 28%, transparent);
+	border-radius: var(--border-radius-sm, 4px);
+	background: color-mix(in srgb, currentColor 10%, transparent);
+	cursor: pointer;
+	font-size: var(--font-size-sm);
+}
+.ppv2-fd-fit-width:hover {
+	background: color-mix(in srgb, currentColor 18%, transparent);
 }
 .ppv2-fd-close {
 	background: none;
