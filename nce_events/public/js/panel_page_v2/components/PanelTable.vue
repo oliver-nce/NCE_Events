@@ -33,7 +33,7 @@
 		<div v-else-if="error" class="ppv2-error theme-text-danger">{{ error }}</div>
 
 		<div v-else-if="config" class="ppv2-body">
-			<table class="ppv2-table theme-table" :style="tableMinWidthStyle">
+			<table class="ppv2-table theme-table" lang="en" :style="tableMinWidthStyle">
 				<thead>
 					<tr>
 						<th
@@ -47,7 +47,7 @@
 							}"
 							@contextmenu.prevent="openHeaderContextMenu($event, col)"
 						>
-							<span class="ppv2-col-header-label">{{ col.label }}</span>
+							<span class="ppv2-col-header-label">{{ headerTitleCase(col.label) }}</span>
 							<div
 								class="ppv2-col-resize"
 								@mousedown.prevent="startColResize($event, ci)"
@@ -190,6 +190,15 @@ import {
 	panelChromeFgTextClass,
 	panelChromeTableBorderStyleVars,
 } from "../utils/panelChromeClasses.js";
+
+/** Display labels in title case so browser hyphenation works (skips ALL CAPS). */
+function headerTitleCase(label) {
+	const s = String(label || "").trim();
+	if (!s) return "";
+	return s
+		.toLowerCase()
+		.replace(/(^|\s|[-/])\w/g, (m) => m.toUpperCase());
+}
 
 const props = defineProps({
 	title: { type: String, default: "" },
@@ -676,8 +685,6 @@ function startColResize(e, ci) {
 	   otherwise per-panel theme-bg-* on the <th>. Do not set color here. */
 	font-weight: var(--font-weight-bold);
 	font-size: var(--font-size-sm);
-	text-transform: uppercase;
-	letter-spacing: 0.3px;
 	padding: 6px 8px;
 	border-bottom: var(--ppv2-col-header-line-w) solid var(--ppv2-col-header-line-c);
 	text-align: left;
@@ -692,7 +699,8 @@ function startColResize(e, ci) {
 	-webkit-box-orient: vertical;
 	overflow: hidden;
 	overflow-wrap: break-word;
-	word-break: break-word;
+	hyphens: auto;
+	-webkit-hyphens: auto;
 	line-height: 1.2;
 	padding-right: 4px;
 }
