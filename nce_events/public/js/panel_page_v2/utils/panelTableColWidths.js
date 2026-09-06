@@ -17,6 +17,8 @@ const LONG_MAX_PX = 280;
 const LONG_SHRINK_FLOOR_PX = 96;
 const LONG_WEIGHT_CAP_CHARS = 28;
 const RESIZE_MIN_PX = 40;
+/** Column headers may wrap to this many lines (PanelTable.vue thead CSS). */
+const HEADER_WRAP_LINES = 2;
 /** Page Panel title_field: keep at least this fraction of the longest sample value visible. */
 const TITLE_VISIBLE_RATIO = 0.6;
 
@@ -88,10 +90,12 @@ function columnMetrics(columns, rows) {
 			total += s.length;
 			if (s.length > maxLen) maxLen = s.length;
 		});
-		const headerLen = String(col.label || col.fieldname || "").length;
+		const label = String(col.label || col.fieldname || "");
+		const headerLen = label.length;
+		const headerWrapChars = headerWrapCharsForLabel(label);
 		const avg = sample.length > 0 ? total / sample.length : headerLen;
 		const fieldtype = String(col.fieldtype || "").trim();
-		return { headerLen, avg, maxLen, fieldtype };
+		return { headerLen, headerWrapChars, avg, maxLen, fieldtype };
 	});
 }
 
@@ -117,10 +121,21 @@ function findTitleColumnIndex(columns, titleField) {
 	return -1;
 }
 
+/** Effective header char width when labels wrap to HEADER_WRAP_LINES. */
+function headerWrapCharsForLabel(label) {
+	const s = String(label || "").trim();
+	if (!s) return 1;
+	const words = s.split(/\s+/).filter(Boolean);
+	const longestWord = words.reduce((max, w) => Math.max(max, w.length), 0);
+	const perLine = Math.ceil(s.length / HEADER_WRAP_LINES);
+	return Math.max(longestWord, perLine);
+}
+
 /** Min width so at least 60% of the longest sample value stays visible (ellipsis after). */
 function titleColumnMinPx(m) {
-	const longest = Math.max(m.maxLen, m.headerLen, 1);
-	const visibleChars = Math.max(m.headerLen, Math.ceil(longest * TITLE_VISIBLE_RATIO));
+	const headerChars = m.headerWrapChars ?? m.headerLen;
+	const longest = Math.max(m.maxLen, headerChars, 1);
+	const visibleChars = Math.max(headerChars, Math.ceil(longest * TITLE_VISIBLE_RATIO));
 	return Math.ceil(visibleChars * CHAR_PX) + CELL_PAD_PX;
 }
 
@@ -132,7 +147,8 @@ function isLongContentColumn(m) {
 }
 
 function headerMinPx(m) {
-	return Math.ceil(m.headerLen * CHAR_PX) + CELL_PAD_PX;
+	const chars = m.headerWrapChars ?? m.headerLen;
+	return Math.ceil(chars * CHAR_PX) + CELL_PAD_PX;
 }
 
 function shortMaxPx(m) {

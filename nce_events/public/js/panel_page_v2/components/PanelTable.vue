@@ -681,9 +681,14 @@ function startColResize(e, ci) {
 	padding: 6px 8px;
 	border-bottom: var(--ppv2-col-header-line-w) solid var(--ppv2-col-header-line-c);
 	text-align: left;
-	white-space: nowrap;
+	white-space: normal;
+	overflow-wrap: break-word;
+	line-height: 1.2;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	line-clamp: 2;
+	-webkit-box-orient: vertical;
 	overflow: hidden;
-	text-overflow: ellipsis;
 	border-right: var(--ppv2-col-divider-w) solid var(--ppv2-col-divider-c);
 }
 .ppv2-table th:last-child {
