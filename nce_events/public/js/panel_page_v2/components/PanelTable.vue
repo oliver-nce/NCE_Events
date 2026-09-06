@@ -47,7 +47,7 @@
 							}"
 							@contextmenu.prevent="openHeaderContextMenu($event, col)"
 						>
-							{{ col.label }}
+							<span class="ppv2-col-header-label">{{ col.label }}</span>
 							<div
 								class="ppv2-col-resize"
 								@mousedown.prevent="startColResize($event, ci)"
@@ -681,15 +681,20 @@ function startColResize(e, ci) {
 	padding: 6px 8px;
 	border-bottom: var(--ppv2-col-header-line-w) solid var(--ppv2-col-header-line-c);
 	text-align: left;
-	white-space: normal;
-	overflow-wrap: break-word;
-	line-height: 1.2;
+	vertical-align: bottom;
+	overflow: hidden;
+	border-right: var(--ppv2-col-divider-w) solid var(--ppv2-col-divider-c);
+}
+.ppv2-col-header-label {
 	display: -webkit-box;
 	-webkit-line-clamp: 2;
 	line-clamp: 2;
 	-webkit-box-orient: vertical;
 	overflow: hidden;
-	border-right: var(--ppv2-col-divider-w) solid var(--ppv2-col-divider-c);
+	overflow-wrap: break-word;
+	word-break: break-word;
+	line-height: 1.2;
+	padding-right: 4px;
 }
 .ppv2-table th:last-child {
 	border-right: none;
