@@ -4,6 +4,16 @@
  * Returns: { component: string, props: object } for data fields
  * Returns: { layout: string } for layout-only fields
  * Returns: null for unknown fields (fallback to text input)
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Maps Frappe fieldtypes to panel form dialog component configs and layout-only fields.",
+ *  "read_when": "When adding fieldtype widget mapping or layout field handling in form dialog.",
+ *  "gotchas": [],
+ *  "keywords": ["getComponentConfig", "fieldtype", "layout field", "component props", "Frappe fieldtypes"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 export function getComponentConfig(field) {
   const map = {

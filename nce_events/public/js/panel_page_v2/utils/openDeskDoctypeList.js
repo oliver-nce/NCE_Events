@@ -2,6 +2,16 @@
  * Open standard Desk list view for a DocType in a new browser tab.
  * @param {string} doctype
  * @returns {boolean} false if doctype empty
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Opens standard Frappe Desk list view for a DocType in a new browser tab.",
+ *  "read_when": "When wiring open list in new tab actions from panel page or form dialog.",
+ *  "gotchas": [],
+ *  "keywords": ["openDeskDoctypeListInNewTab", "Desk list view", "doctype", "new tab"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 export function openDeskDoctypeListInNewTab(doctype) {
 	const dt = String(doctype || "").trim();

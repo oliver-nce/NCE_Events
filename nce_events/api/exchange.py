@@ -1,3 +1,16 @@
+"""WordPress data exchange helpers building WP API URLs, logging HTTP errors, and response snippets.
+
+code-index:begin
+{
+ "purpose": "WordPress data exchange helpers building WP API URLs, logging HTTP errors, and response snippets.",
+ "read_when": "When calling WordPress REST endpoints or handling exchange error logging from panel actions.",
+ "gotchas": [],
+ "keywords": ["exchange", "WordPress", "WP API", "HTTP error", "REST"],
+ "format": 1
+}
+code-index:end
+"""
+
 from __future__ import annotations
 
 import time

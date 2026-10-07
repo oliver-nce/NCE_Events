@@ -1,3 +1,17 @@
+// Desk utility page that grants Read Only role read access on WP Tables DocTypes.
+//
+// code-index:begin
+// {
+//  "purpose": "Desk utility page that grants Read Only role read access on WP Tables DocTypes.",
+//  "read_when": "Changing WP Tables read-permission sync UI or the grant_read_only_wp_tables call.",
+//  "gotchas": [
+//   "Safe to run again after WP Tables changes — already-granted DocTypes are skipped."
+//  ],
+//  "keywords": ["sync-read-only-perms", "Read Only", "WP Tables", "grant_read_only_wp_tables", "permissions"],
+//  "format": 1
+// }
+// code-index:end
+
 frappe.pages["sync-read-only-perms"].on_page_load = function (wrapper) {
 	const page = frappe.ui.make_app_page({
 		parent: wrapper,

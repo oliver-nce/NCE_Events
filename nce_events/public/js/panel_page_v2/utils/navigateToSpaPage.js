@@ -3,6 +3,16 @@
  * Preserves each Frappe Page wrapper's mounted Vue app (wrapper._vue_app).
  *
  * @param {string} route — e.g. "/app/panel-page-mirrored"
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Desk navigation to another panel SPA route preserving mounted Vue apps on page wrappers.",
+ *  "read_when": "When changing SPA page switch without full reload or wrapper._vue_app preservation.",
+ *  "gotchas": [],
+ *  "keywords": ["navigateToSpaPage", "panel-page", "wrapper._vue_app", "Desk navigation", "SPA route"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 export function navigateToSpaPage(route) {
 	const raw = String(route || "").trim();

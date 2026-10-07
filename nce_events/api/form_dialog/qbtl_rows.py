@@ -1,4 +1,15 @@
-"""Fetch related-tab rows via Query Based Table Link joins."""
+"""Fetch related-tab rows via Query Based Table Link joins.
+
+code-index:begin
+{
+ "purpose": "Fetch related-tab rows via Query Based Table Link joins and parsed QBTL conditions.",
+ "read_when": "When related tabs use Query Based Table Link instead of standard child-table links.",
+ "gotchas": [],
+ "keywords": ["QBTL", "Query Based Table Link", "related rows", "join", "Form Dialog"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

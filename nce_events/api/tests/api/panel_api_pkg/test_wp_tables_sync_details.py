@@ -1,4 +1,15 @@
-"""Tests for WP Tables catalog sync-status helpers on get_panel_data."""
+"""Tests for WP Tables catalog sync-status helpers on get_panel_data.
+
+code-index:begin
+{
+ "purpose": "Tests for WP Tables catalog sync-status helpers used by get_panel_data responses.",
+ "read_when": "When changing panel_data sync status column flags or WP Tables catalog filtering.",
+ "gotchas": [],
+ "keywords": ["test sync details", "WP Tables", "sync status", "get_panel_data", "unittest"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

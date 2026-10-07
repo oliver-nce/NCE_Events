@@ -1,3 +1,15 @@
+// Portal-action modal and row-action execution for related-doctype tabs on panel page v2.
+//
+// code-index:begin
+// {
+//  "purpose": "Portal-action modal and row-action execution for related-doctype tabs on panel page v2.",
+//  "read_when": "When changing related tab portal actions, row actions, or fetchRelatedForTab refresh.",
+//  "gotchas": [],
+//  "keywords": ["useRelatedActions", "fetchRelatedForTab", "portal action", "related doctype", "rootDoctype", "definitionName", "row action"],
+//  "format": 1
+// }
+// code-index:end
+
 import { reactive, ref } from "vue";
 import { frappeCall } from "../utils/frappeCall.js";
 import {

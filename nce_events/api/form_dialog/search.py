@@ -1,4 +1,15 @@
-"""Form Dialog FileMaker-style find: match rows by frozen-meta fields."""
+"""Form Dialog FileMaker-style find: match rows by frozen-meta fields.
+
+code-index:begin
+{
+ "purpose": "Form Dialog FileMaker-style find: match rows by frozen-meta field conditions and find terms.",
+ "read_when": "When implementing panel find/search against frozen Form Dialog field metadata.",
+ "gotchas": [],
+ "keywords": ["search", "find", "frozen meta", "field condition", "Form Dialog"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

@@ -1,3 +1,15 @@
+// Data store fetching pane rows for the Hierarchy Explorer drill-down UI.
+//
+// code-index:begin
+// {
+//  "purpose": "Data store fetching pane rows for the Hierarchy Explorer drill-down UI.",
+//  "read_when": "Changing hierarchy pane fetch logic or cached row state.",
+//  "gotchas": [],
+//  "keywords": ["hierarchy", "Store", "fetch_pane", "explorer", "pane data"],
+//  "format": 1
+// }
+// code-index:end
+
 frappe.provide("nce_events.hierarchy");
 
 nce_events.hierarchy.Store = class Store {

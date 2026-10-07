@@ -2,6 +2,16 @@
 
 Run:
 	bench run-tests --app nce_events --module nce_events.api.tests.api.form_dialog.test_edit_condition
+
+code-index:begin
+{
+ "purpose": "Tests for Form Dialog related-tab edit condition validation and evaluation rules.",
+ "read_when": "When changing edit_condition.py validators or related-tab edit gating SQL.",
+ "gotchas": [],
+ "keywords": ["test edit condition", "related tab", "validate", "Form Dialog", "unittest"],
+ "format": 1
+}
+code-index:end
 """
 
 import frappe

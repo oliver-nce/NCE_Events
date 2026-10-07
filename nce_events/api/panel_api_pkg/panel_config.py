@@ -1,4 +1,17 @@
-"""Page Panel config dict construction and chrome/theme helpers."""
+"""Page Panel config dict construction and chrome/theme helpers.
+
+code-index:begin
+{
+ "purpose": "Build Page Panel config dict with column order, chrome classes, theme helpers, and derived sort.",
+ "read_when": "When constructing panel chrome/theme CSS classes or config payload for Vue panel load.",
+ "gotchas": [
+  "Panel chrome class and fg_type derive from theme link; missing theme falls back to defaults."
+ ],
+ "keywords": ["panel config", "chrome", "theme", "column order", "Page Panel"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

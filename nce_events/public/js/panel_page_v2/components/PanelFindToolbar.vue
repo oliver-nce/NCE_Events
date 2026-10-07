@@ -1,4 +1,17 @@
-<!-- ARCHIVED: find actions moved to PanelFindActionBar.vue (bar below header). -->
+<!-- ARCHIVED: find actions moved to PanelFindActionBar.vue (bar below header).
+
+code-index:begin
+{
+ "purpose": "Archived find toolbar; actions moved to PanelFindActionBar below the header.",
+ "read_when": "Understanding legacy find toolbar before editing current find action bar.",
+ "gotchas": [
+  "ARCHIVED: find actions moved to PanelFindActionBar.vue (bar below header)."
+ ],
+ "keywords": ["PanelFindToolbar", "ARCHIVED", "find actions", "PanelFindActionBar", "legacy"],
+ "format": 1
+}
+code-index:end
+-->
 <template>
 	<div class="ppv2-header-right" @mousedown.stop>
 		<!-- Find mode: search actions -->

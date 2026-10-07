@@ -1,3 +1,17 @@
+// Composable managing Panel Form Dialog state, load, validate, save, and field permissions.
+//
+// code-index:begin
+// {
+//  "purpose": "Composable managing Panel Form Dialog state, load, validate, save, and field permissions.",
+//  "read_when": "When changing form dialog lifecycle, requiredFields, readOnlyFields, or find-shell loadMode.",
+//  "gotchas": [
+//   "Silently reset broken inline child table rows so they are never presented as editable."
+//  ],
+//  "keywords": ["usePanelFormDialog", "definitionName", "loadMode", "find-shell", "requiredFields", "readOnlyFields", "frozen form"],
+//  "format": 1
+// }
+// code-index:end
+
 import { ref, reactive, computed, unref, watch } from "vue";
 import { isFormDataDirty } from "../utils/formDialogSnapshot.js";
 import { createHandleFetchFrom } from "./formDialogFetchFrom.js";

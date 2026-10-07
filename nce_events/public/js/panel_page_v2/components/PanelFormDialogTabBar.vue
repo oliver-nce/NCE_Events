@@ -1,3 +1,17 @@
+<!--
+Tab bar switching between form dialog tabs including find help access.
+
+code-index:begin
+{
+ "purpose": "Tab bar switching between form dialog tabs including find help access.",
+ "read_when": "Adding form dialog tabs or changing tab bar labels and selection.",
+ "gotchas": [],
+ "keywords": ["PanelFormDialogTabBar", "tabs", "form dialog", "find help", "Vue"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div v-if="tabs.length > 1 || showFindHelpButton" class="ppv2-fd-tab-bar">
 		<div v-if="tabs.length > 1" class="ppv2-fd-tab-buttons">

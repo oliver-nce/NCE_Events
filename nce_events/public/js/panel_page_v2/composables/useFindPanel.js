@@ -1,3 +1,15 @@
+// In-place Find mode for panel floats with criteria rows, found set, and matchFindCriterion filtering.
+//
+// code-index:begin
+// {
+//  "purpose": "In-place Find mode for panel floats with criteria rows, found set, and matchFindCriterion filtering.",
+//  "read_when": "When changing Find panel criteria rows, foundRows browse mode, or constrainNames filtering.",
+//  "gotchas": [],
+//  "keywords": ["useFindPanel", "matchFindCriterion", "criteriaRows", "foundRows", "findMatchActive", "constrainNames", "mode find browse"],
+//  "format": 1
+// }
+// code-index:end
+
 import { ref, reactive, computed, unref } from "vue";
 import { matchFindCriterion } from "../utils/findCriterion.js";
 

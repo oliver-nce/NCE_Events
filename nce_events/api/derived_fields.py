@@ -8,6 +8,16 @@ For **generic** building blocks use:
 
 This module stays **DocType-agnostic**: the caller passes ``doctype`` (any mapped DocType).
 No WooCommerce or Events-specific logic lives here.
+
+code-index:begin
+{
+ "purpose": "DocType-agnostic WP Tables derived field specs composed with sql_eval for row evaluation.",
+ "read_when": "When evaluating or merging derived SQL column values from WP Tables column_mapping.",
+ "gotchas": [],
+ "keywords": ["derived fields", "WP Tables", "sql_eval", "column_mapping", "evaluate_derived_fields"],
+ "format": 1
+}
+code-index:end
 """
 
 from __future__ import annotations

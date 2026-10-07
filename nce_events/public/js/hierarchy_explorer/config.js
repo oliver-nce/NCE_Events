@@ -1,3 +1,15 @@
+// Pane configuration for the Hierarchy Explorer multi-pane drill-down desk page.
+//
+// code-index:begin
+// {
+//  "purpose": "Pane configuration for the Hierarchy Explorer multi-pane drill-down desk page.",
+//  "read_when": "Adding hierarchy levels, labels, or fetch methods for explorer panes.",
+//  "gotchas": [],
+//  "keywords": ["PANE_CONFIG", "hierarchy", "explorer", "config", "drill-down"],
+//  "format": 1
+// }
+// code-index:end
+
 frappe.provide("nce_events.hierarchy");
 
 nce_events.hierarchy.PANE_CONFIG = [

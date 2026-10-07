@@ -1,3 +1,18 @@
+"""Build parameterized SQL for Page Panel queries from config, filters, and sort clauses.
+
+code-index:begin
+{
+ "purpose": "Build parameterized SQL for Page Panel queries from config, filters, and sort clauses.",
+ "read_when": "When tracing panel SQL generation or build_panel_sql_for_doc query assembly.",
+ "gotchas": [
+  "Panel SQL binds filter values; altering build_panel_sql affects all panel data fetches."
+ ],
+ "keywords": ["panel SQL", "build_panel_sql", "filters", "parameterized", "Page Panel"],
+ "format": 1
+}
+code-index:end
+"""
+
 from __future__ import annotations
 
 from typing import Any

@@ -1,3 +1,15 @@
+// Loads active SPA Page Definition entries for the panel page header navigation bar.
+//
+// code-index:begin
+// {
+//  "purpose": "Loads active SPA Page Definition entries for the panel page header navigation bar.",
+//  "read_when": "When changing SPA header nav items or is_active page definition filtering.",
+//  "gotchas": [],
+//  "keywords": ["useSpaPageNav", "SPA Page Definition", "is_active", "header nav", "spa page"],
+//  "format": 1
+// }
+// code-index:end
+
 import { ref } from "vue";
 import { frappeCall } from "../utils/frappeCall.js";
 import { navigateToSpaPage } from "../utils/navigateToSpaPage.js";

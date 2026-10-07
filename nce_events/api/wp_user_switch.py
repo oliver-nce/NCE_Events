@@ -1,4 +1,15 @@
-"""Signed URL builder for the NCE WordPress user-switch bridge plugin."""
+"""Signed URL builder for the NCE WordPress user-switch bridge plugin.
+
+code-index:begin
+{
+ "purpose": "Signed URL builder for the NCE WordPress user-switch bridge plugin.",
+ "read_when": "Building or whitelisting signed WP switch URLs for a Families.ID via API Connector credentials.",
+ "gotchas": [],
+ "keywords": ["build_wp_switch_url", "get_wp_switch_url", "nce-user-switch-bridge", "WP User Switch", "family_id", "api_secret", "hmac", "redirect_to"],
+ "format": 1
+}
+code-index:end
+"""
 from __future__ import annotations
 
 import hashlib

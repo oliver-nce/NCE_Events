@@ -1,4 +1,18 @@
 // ── DocType field cache ───────────────────────────────────────────────────────
+//
+// code-index:begin
+// {
+//  "purpose": "Desk form script for Page Panel: Display/Order/Query/Dialogs/Colours tabs and field matrices.",
+//  "read_when": "Changing Page Panel tab UI, display matrices, format rules, colours theme pickers, or capture wizard.",
+//  "gotchas": [
+//   "Prune stale display keys whenever Display is built from current meta.",
+//   "frappe.confirm closes fails in many Desk builds (related picker never appears).",
+//   "Preview tile always uses a theme-bg-* class (same visual language as the picker strip)."
+//  ],
+//  "keywords": ["TAB_ORDER", "_render_display", "_build_field_matrix", "_render_colours_tab", "_render_dialogs_tab", "format_rules", "column_order", "COLOUR_FIELDS", "capture_wizard", "page_panel"],
+//  "format": 1
+// }
+// code-index:end
 const _dt_field_cache = {};
 let _pp_rebuild_pending = false;
 

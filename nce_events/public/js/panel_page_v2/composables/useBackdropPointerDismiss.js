@@ -1,3 +1,17 @@
+// Arms backdrop dismiss only when mousedown and click both start on the backdrop avoiding text-selection overshoot.
+//
+// code-index:begin
+// {
+//  "purpose": "Arms backdrop dismiss only when mousedown and click both start on the backdrop avoiding text-selection overshoot.",
+//  "read_when": "When changing modal backdrop click-to-dismiss or text-selection overshoot false dismiss.",
+//  "gotchas": [
+//   "Text-selection overshoot release on backdrop must not dismiss because armed stays false."
+//  ],
+//  "keywords": ["useBackdropPointerDismiss", "onMouseDownSelf", "onClickSelf", "armed", "backdropElRef", "onDismiss", "disarm"],
+//  "format": 1
+// }
+// code-index:end
+
 import { onUnmounted } from "vue";
 
 /**

@@ -1,3 +1,15 @@
+// Tracks display-only dirty state by diffing DOM baseline against live form dialog field values.
+//
+// code-index:begin
+// {
+//  "purpose": "Tracks display-only dirty state by diffing DOM baseline against live form dialog field values.",
+//  "read_when": "When changing display dirty detection, baseline capture, or focusout listener wiring.",
+//  "gotchas": [],
+//  "keywords": ["useFormDialogDisplayDirty", "displayDirty", "captureDisplayBaseline", "diffDisplayBaseline", "commitFocusedFrappeWidget"],
+//  "format": 1
+// }
+// code-index:end
+
 import { ref, watch, onUnmounted, nextTick } from "vue";
 import {
 	captureDisplayBaseline,

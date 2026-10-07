@@ -1,3 +1,16 @@
+"""Query Based Table Link Document: validates join conditions, sort JSON, and WP Tables membership.
+
+code-index:begin
+{
+ "purpose": "Query Based Table Link Document: validates join conditions, sort JSON, and WP Tables membership.",
+ "read_when": "Changing QBTL validation, where_clause generation, or search index creation on update.",
+ "gotchas": [],
+ "keywords": ["QueryBasedTableLink", "conditions_json", "where_clause", "left_table", "right_table", "_assert_in_wp_tables", "ensure_search_index", "normalize_conditions"],
+ "format": 1
+}
+code-index:end
+"""
+
 from __future__ import annotations
 
 import json

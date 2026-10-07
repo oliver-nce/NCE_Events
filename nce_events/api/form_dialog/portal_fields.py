@@ -4,6 +4,16 @@ Portal field editor for Form Dialog Related DocType rows.
 Configures which fields appear (and are editable) in the related-rows grid that
 lives inside a Form Dialog's "related tabs". The editor is Desk-only (System
 Manager) and persists its state on the Form Dialog Related DocType child row.
+
+code-index:begin
+{
+ "purpose": "Portal field editor for Form Dialog Related DocType rows and name-field display config.",
+ "read_when": "When configuring which meta fields appear in portal editors for related DocType rows.",
+ "gotchas": [],
+ "keywords": ["portal fields", "portal editor", "Related DocType", "name field", "Form Dialog"],
+ "format": 1
+}
+code-index:end
 """
 
 from __future__ import annotations

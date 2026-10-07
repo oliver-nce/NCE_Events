@@ -1,3 +1,15 @@
+// Stacked Card modals for Card Definition drill-down with parseOpenCardOpts for window._nce_open_card.
+//
+// code-index:begin
+// {
+//  "purpose": "Stacked Card modals for Card Definition drill-down with parseOpenCardOpts for window._nce_open_card.",
+//  "read_when": "When changing nested card modal stack or CardForm onOpenCard wiring on panel page.",
+//  "gotchas": [],
+//  "keywords": ["useNceCardStack", "parseOpenCardOpts", "CardForm", "CardModal", "_nce_open_card", "cardDefName", "stacked card"],
+//  "format": 1
+// }
+// code-index:end
+
 import { reactive } from "vue";
 
 /**

@@ -3,6 +3,16 @@ Unit tests for nce_events.api.form_dialog.related_rows.
 
 Run with:
     bench run-tests --app nce_events --module nce_events.api.tests.api.form_dialog.test_related_rows
+
+code-index:begin
+{
+ "purpose": "Unit tests for form_dialog.related_rows fetch, save, and guest rejection behavior.",
+ "read_when": "When modifying related_rows endpoints or child save permlevel handling.",
+ "gotchas": [],
+ "keywords": ["test related rows", "save related", "guest rejected", "unittest"],
+ "format": 1
+}
+code-index:end
 """
 
 import json

@@ -1,3 +1,16 @@
+"""Check whether a DocType sync job is busy and return sync job status for panel indicators.
+
+code-index:begin
+{
+ "purpose": "Check whether a DocType sync job is busy and return sync job status for panel indicators.",
+ "read_when": "When panel UI shows last sync status or must block actions during active WP sync.",
+ "gotchas": [],
+ "keywords": ["sync status", "is_doctype_sync_busy", "sync job", "WP Tables"],
+ "format": 1
+}
+code-index:end
+"""
+
 from __future__ import annotations
 
 import frappe

@@ -1,4 +1,15 @@
-/* SPA switch bar — Frappe desk page head (next to page title) */
+/* SPA switch bar — Frappe desk page head (next to page title)
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Styles the SPA switch bar in the Frappe desk page head next to the page title.",
+ *  "read_when": "Adjusting desk SPA navigation bar appearance or page-head placement.",
+ *  "gotchas": [],
+ *  "keywords": ["SPA switch bar", "desk nav", "page head", "nce_spa_desk_nav", "CSS"],
+ *  "format": 1
+ * }
+ * code-index:end
+ */
 .page-head .nce-spa-desk-nav {
 	display: inline-flex;
 	align-items: center;

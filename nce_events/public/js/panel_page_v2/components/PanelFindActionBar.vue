@@ -1,3 +1,17 @@
+<!--
+In-panel find action bar with perform, constrain, extend, and exit find controls.
+
+code-index:begin
+{
+ "purpose": "In-panel find action bar with perform, constrain, extend, and exit find controls.",
+ "read_when": "Changing FileMaker-style find toolbar buttons below the panel header.",
+ "gotchas": [],
+ "keywords": ["PanelFindActionBar", "find", "perform find", "constrain", "panel header"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div
 		class="ppv2-find-actions"

@@ -1,3 +1,15 @@
+// Panel float composable fetching definition, rows, columns, and actions for a doctype panel.
+//
+// code-index:begin
+// {
+//  "purpose": "Panel float composable fetching definition, rows, columns, and actions for a doctype panel.",
+//  "read_when": "When changing panel row fetch, column config, or panel float open/close lifecycle.",
+//  "gotchas": [],
+//  "keywords": ["usePanel", "doctype", "parentFilter", "definition", "rows", "columns", "fetchPanel"],
+//  "format": 1
+// }
+// code-index:end
+
 import { ref, shallowRef } from "vue";
 import { frappeCall } from "../utils/frappeCall.js";
 

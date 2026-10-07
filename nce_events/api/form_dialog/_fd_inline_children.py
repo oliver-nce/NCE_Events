@@ -1,4 +1,15 @@
-"""Inline child-table helpers for Form Dialog capture."""
+"""Inline child-table helpers for Form Dialog capture.
+
+code-index:begin
+{
+ "purpose": "Inline child-table helpers for Form Dialog capture wizard row building and table fields.",
+ "read_when": "When capturing or parsing inline child tables for Form Dialog related inline tabs.",
+ "gotchas": [],
+ "keywords": ["inline children", "child table", "capture wizard", "Form Dialog"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

@@ -2,6 +2,16 @@
  * WP SQL read-back helpers — job-poll edition.
  * Used by PanelFormDialog after save: poll NCE Sync job IDs until all finish,
  * then fetch the fresh doc from Frappe.
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "WP SQL read-back helpers polling NCE Sync jobs then fetching fresh Frappe doc after form save.",
+ *  "read_when": "When changing post-save sync job polling or mergeFreshDocIntoPanel row update.",
+ *  "gotchas": [],
+ *  "keywords": ["wpReadbackFlow", "pollSyncJobsUntilDone", "mergeFreshDocIntoPanel", "fetchFreshDocAfterSync", "NCE Sync", "jobIds", "PanelFormDialog"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 
 import { frappeCall } from "../utils/frappeCall.js";

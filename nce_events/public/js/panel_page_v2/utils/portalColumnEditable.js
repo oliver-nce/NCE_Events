@@ -1,3 +1,17 @@
+// Decides portal grid column editability from fieldtype, meta read_only, and panel read_only_fields.
+//
+// code-index:begin
+// {
+//  "purpose": "Decides portal grid column editability from fieldtype, meta read_only, and panel read_only_fields.",
+//  "read_when": "When changing related or inline child column edit rules excluding portal_field_config.editable.",
+//  "gotchas": [
+//   "Editability is not driven by portal_field_config.editable only Show fieldtype and read_only rules."
+//  ],
+//  "keywords": ["portalColumnEditable", "isPortalGridColumnEditable", "RELATED_GRID_NON_EDITABLE_TYPES", "read_only_fields", "isMetaReadOnly"],
+//  "format": 1
+// }
+// code-index:end
+
 import { isFieldInPanelReadOnlyList } from "./panelFieldReadOnly.js";
 
 export const RELATED_GRID_NON_EDITABLE_TYPES = new Set([

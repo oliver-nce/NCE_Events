@@ -1,3 +1,15 @@
+// API Connector form script that generates credential_config JSON via LLM prompt.
+//
+// code-index:begin
+// {
+//  "purpose": "API Connector form script that generates credential_config JSON via LLM prompt.",
+//  "read_when": "Changing AI credential config generation or the Credential Config form button.",
+//  "gotchas": [],
+//  "keywords": ["API Connector", "credential_config", "llm_send_prompt", "auth_type", "form script"],
+//  "format": 1
+// }
+// code-index:end
+
 frappe.ui.form.on("API Connector", {
 	refresh(frm) {
 		frm.add_custom_button(

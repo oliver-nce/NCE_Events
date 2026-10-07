@@ -5,6 +5,16 @@ Expressions must come from **trusted** configuration (e.g. WP Tables), not end-u
 
 This module does not reference any specific DocType or WooCommerce — callers supply
 ``expressions``, ``row``, and ``token_allowlist``.
+
+code-index:begin
+{
+ "purpose": "Generic server-side evaluation of MariaDB scalar SQL against row dicts with token allowlists.",
+ "read_when": "When evaluating SQL expressions for derived fields, computed columns, or whitelisted API eval.",
+ "gotchas": [],
+ "keywords": ["sql_eval", "evaluate_sql_expressions", "allowlist", "MariaDB", "scalar SQL"],
+ "format": 1
+}
+code-index:end
 """
 
 from __future__ import annotations

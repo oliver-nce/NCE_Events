@@ -2,6 +2,18 @@
 
 Idempotent. Re-runs are safe: if the row already exists, the patch leaves it
 alone so admins can edit fields by hand.
+
+code-index:begin
+{
+ "purpose": "Seeds the new-woo-product Panel Action with a captured Form Dialog for WooCommerce publish.",
+ "read_when": "Tracing WooCommerce product action setup or frozen_meta_json capture logic.",
+ "gotchas": [
+  "Idempotent: if the row already exists, the patch leaves it alone so admins can edit by hand."
+ ],
+ "keywords": ["new-woo-product", "Panel Action", "Form Dialog", "WooCommerce", "frozen_meta_json"],
+ "format": 1
+}
+code-index:end
 """
 
 from __future__ import annotations

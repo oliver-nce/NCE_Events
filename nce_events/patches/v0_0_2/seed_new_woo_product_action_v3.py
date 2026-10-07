@@ -1,6 +1,18 @@
 """Apply on_submit_method + submit_label and remove legacy Publish custom button.
 
 Runs once per site. Idempotent: safe on empty or already-upgraded rows.
+
+code-index:begin
+{
+ "purpose": "Applies on_submit_method and submit_label and removes legacy Publish custom button.",
+ "read_when": "Fixing missing submit handler on new-woo-product Panel Action after upgrade.",
+ "gotchas": [
+  "Idempotent: safe on empty or already-upgraded rows."
+ ],
+ "keywords": ["new-woo-product", "on_submit_method", "submit_label", "Publish", "Panel Action"],
+ "format": 1
+}
+code-index:end
 """
 
 from __future__ import annotations

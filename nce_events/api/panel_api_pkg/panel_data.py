@@ -1,3 +1,18 @@
+"""Fetch Page Panel row data with WP Tables catalog filtering, sync status flags, and permissions.
+
+code-index:begin
+{
+ "purpose": "Fetch Page Panel row data with WP Tables catalog filtering, sync status flags, and permissions.",
+ "read_when": "When implementing get_panel_data or debugging panel row queries and sync status columns.",
+ "gotchas": [
+  "Requires root DocType read permission; WP Tables catalog rows may be filtered from results."
+ ],
+ "keywords": ["panel data", "get_panel_data", "WP Tables", "sync status", "Page Panel"],
+ "format": 1
+}
+code-index:end
+"""
+
 from __future__ import annotations
 
 import json

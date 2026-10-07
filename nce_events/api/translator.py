@@ -1,3 +1,16 @@
+"""Translate WordPress query fragments for panel readback using mapping-aware SQL helpers.
+
+code-index:begin
+{
+ "purpose": "Translate WordPress query fragments for panel readback using mapping-aware SQL helpers.",
+ "read_when": "When panel WordPress readback needs translate_wp_query for mapped table queries.",
+ "gotchas": [],
+ "keywords": ["translator", "translate_wp_query", "WordPress", "readback", "SQL"],
+ "format": 1
+}
+code-index:end
+"""
+
 from __future__ import annotations
 
 import json

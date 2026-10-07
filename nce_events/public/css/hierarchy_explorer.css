@@ -5,6 +5,16 @@
  * --nce-color-primary-200, --nce-color-primary-300, --nce-color-primary-500,
  * --nce-color-text, --nce-color-muted, --nce-color-border, --nce-color-row-alt,
  * --nce-color-primary-fg. Hex fallbacks when Themes is not loaded.
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Styles for the two-pane Hierarchy Explorer drill-down desk page.",
+ *  "read_when": "Changing hierarchy explorer pane layout, dividers, or loading states.",
+ *  "gotchas": [],
+ *  "keywords": ["hierarchy-explorer", "two-pane", "drill-down", "pane", "CSS"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 
 .hierarchy-explorer {

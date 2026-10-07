@@ -18,6 +18,18 @@ dialog acquires the marks at submit start (``begin_dialog_edit``) and clears the
 when the whole flow finishes (``end_dialog_edit``); a short TTL in nce_sync is the
 crash backstop. The dialog's own write-back / read-back jobs deliberately do NOT
 consult the marks — they are part of the edit, not syncs to hold off.
+
+code-index:begin
+{
+ "purpose": "Post-save linked DocType sync for Form Dialog read-back and qualifying related links.",
+ "read_when": "When Form Dialog save must propagate changes to linked related DocTypes after write.",
+ "gotchas": [
+  "Only qualifying related links sync; dialog edit DocTypes filter which links are eligible."
+ ],
+ "keywords": ["sync related", "read-back", "linked DocType", "post-save", "Form Dialog"],
+ "format": 1
+}
+code-index:end
 """
 
 from __future__ import annotations

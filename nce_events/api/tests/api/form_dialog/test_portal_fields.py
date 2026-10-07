@@ -3,6 +3,16 @@ Unit tests for nce_events.api.form_dialog.portal_fields.
 
 Run with:
     bench run-tests --app nce_events --module nce_events.api.tests.api.form_dialog.test_portal_fields
+
+code-index:begin
+{
+ "purpose": "Unit tests for portal field editor save, defaults, and name-field row building.",
+ "read_when": "When modifying portal_fields.py editor config or Related DocType portal display.",
+ "gotchas": [],
+ "keywords": ["test portal fields", "portal editor", "name field", "unittest"],
+ "format": 1
+}
+code-index:end
 """
 
 import json

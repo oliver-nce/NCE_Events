@@ -1,4 +1,15 @@
-"""Form Dialog gating helpers — WP Tables validation and permission guards."""
+"""Form Dialog gating helpers — WP Tables validation and permission guards.
+
+code-index:begin
+{
+ "purpose": "Form Dialog gating helpers: WP Tables validation, permissions, and capture schema readiness.",
+ "read_when": "When blocking capture or portal use for DocTypes not in WP Tables or missing required panel values.",
+ "gotchas": [],
+ "keywords": ["gating", "WP Tables", "permissions", "capture schema", "Form Dialog"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

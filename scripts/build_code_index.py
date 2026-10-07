@@ -41,6 +41,18 @@ Layout of CODE_INDEX.manual.json
 If a path in ``module_overrides`` is not found on disk the script raises an
 error so renames/deletes are surfaced loudly. Entries on disk without an
 override get a placeholder ``"purpose": "TODO: describe in CODE_INDEX.manual.json"``.
+
+code-index:begin
+{
+ "purpose": "Scans repo to rebuild CODE_INDEX.json exports and whitelist endpoints with manual overrides.",
+ "read_when": "When regenerating code index after file moves or updating CODE_INDEX.manual.json overrides.",
+ "gotchas": [
+  "Missing module_overrides path on disk raises error so renames and deletes surface loudly."
+ ],
+ "keywords": ["build_code_index", "CODE_INDEX.json", "CODE_INDEX.manual.json", "GROUP_RULES", "whitelist_endpoints", "extract_python"],
+ "format": 1
+}
+code-index:end
 """
 
 from __future__ import annotations

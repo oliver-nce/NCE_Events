@@ -1,4 +1,15 @@
-"""Tests for nce_events.api.panel_api_pkg.discovery."""
+"""Tests for nce_events.api.panel_api_pkg.discovery.
+
+code-index:begin
+{
+ "purpose": "Tests for panel_api_pkg.discovery link-path and related DocType discovery logic.",
+ "read_when": "When changing discovery.py path keys, child table skipping, or link traversal.",
+ "gotchas": [],
+ "keywords": ["test discovery", "link paths", "panel_api_pkg", "unittest"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

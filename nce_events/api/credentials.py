@@ -1,4 +1,17 @@
-"""Credential helper — read credential_config from API Connector."""
+"""Credential helper — read credential_config from API Connector.
+
+code-index:begin
+{
+ "purpose": "Read API Connector credential_config JSON and return auth_pattern, base_url, and secret fields.",
+ "read_when": "When integrating external APIs that need connector credentials or auth_type fallback.",
+ "gotchas": [
+  "Always include username if it has a value (often used for sender identity)."
+ ],
+ "keywords": ["credentials", "API Connector", "credential_config", "auth_pattern", "get_credentials"],
+ "format": 1
+}
+code-index:end
+"""
 from __future__ import annotations
 
 import json

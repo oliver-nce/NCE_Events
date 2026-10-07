@@ -1,6 +1,18 @@
 """Seed SPA Page Definition rows for Mirror and Native panel SPAs.
 
 Idempotent: skips rows that already exist (by page_slug).
+
+code-index:begin
+{
+ "purpose": "Seeds SPA Page Definition rows for mirrored, native, and v2 panel desk pages.",
+ "read_when": "Adding or changing SPA page slugs like panel-page-mirrored or panel-page-v2.",
+ "gotchas": [
+  "Idempotent: skips rows that already exist (by page_slug)."
+ ],
+ "keywords": ["SPA Page Definition", "panel-page-mirrored", "panel-page-native", "panel-page-v2", "seed"],
+ "format": 1
+}
+code-index:end
 """
 
 from __future__ import annotations

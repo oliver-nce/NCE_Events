@@ -1,3 +1,19 @@
+"""Migrates Page Panel core_filter strings into default_filters child table rows.
+
+code-index:begin
+{
+ "purpose": "Migrates Page Panel core_filter strings into default_filters child table rows.",
+ "read_when": "Debugging legacy core_filter parsing or default_filters migration on Page Panel.",
+ "gotchas": [
+  "Skip if default_filters already has rows (don't overwrite manual entries).",
+  "SQL date functions are NOT resolved — stored as-is for the panel editor."
+ ],
+ "keywords": ["core_filter", "default_filters", "Page Panel", "migrate", "AND parser"],
+ "format": 1
+}
+code-index:end
+"""
+
 from __future__ import annotations
 
 import re

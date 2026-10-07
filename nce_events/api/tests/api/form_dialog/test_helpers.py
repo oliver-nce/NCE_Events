@@ -3,6 +3,16 @@ Unit tests for nce_events.api.form_dialog._helpers.
 
 Run with:
     bench run-tests --app nce_events --module nce_events.api.tests.api.form_dialog.test_helpers
+
+code-index:begin
+{
+ "purpose": "Unit tests for form_dialog._helpers WP Tables gating and related-doctype parse helpers.",
+ "read_when": "When refactoring _helpers or submodule gating and QBTL related parse utilities.",
+ "gotchas": [],
+ "keywords": ["test helpers", "WP Tables", "QBTL", "form_dialog", "unittest"],
+ "format": 1
+}
+code-index:end
 """
 
 import json

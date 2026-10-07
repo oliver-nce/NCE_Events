@@ -1,3 +1,15 @@
+// Panel page toolbar actions wiring openFormDialogStandalone, refresh, cascade, and closeAllPanels.
+//
+// code-index:begin
+// {
+//  "purpose": "Panel page toolbar actions wiring openFormDialogStandalone, refresh, cascade, and closeAllPanels.",
+//  "read_when": "When changing panel toolbar actions or cascade open panel behavior.",
+//  "gotchas": [],
+//  "keywords": ["usePanelActions", "openFormDialogStandalone", "refreshPanelByDoctype", "cascadeOpenPanels", "closeAllPanels", "panel actions"],
+//  "format": 1
+// }
+// code-index:end
+
 import { ref } from "vue";
 import { frappeCall } from "../utils/frappeCall.js";
 import { ppv2DebugWarn } from "../utils/ppv2Debug.js";

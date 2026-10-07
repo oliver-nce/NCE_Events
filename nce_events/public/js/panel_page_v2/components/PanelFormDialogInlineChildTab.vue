@@ -1,3 +1,17 @@
+<!--
+Inline child table tab editing portal columns inside a panel form dialog.
+
+code-index:begin
+{
+ "purpose": "Inline child table tab editing portal columns inside a panel form dialog.",
+ "read_when": "Changing inline child row add/remove or cell editors in form dialog tabs.",
+ "gotchas": [],
+ "keywords": ["InlineChildTab", "inline child", "portal columns", "addRow", "form dialog"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div v-if="tab._inlineChild" class="ppv2-fd-inline-root">
 		<p class="ppv2-fd-related-meta">

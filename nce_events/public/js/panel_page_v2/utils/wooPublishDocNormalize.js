@@ -1,6 +1,16 @@
 /**
  * Normalize Events doc dates before WooCommerce preview/publish.
  * Ensures YYYY-MM-DD strings (Frappe Date / JSON Date / Moment) so Python getdate sees them.
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Normalizes Events doc date fields to YYYY-MM-DD before WooCommerce preview and publish.",
+ *  "read_when": "When fixing US MM-DD-YYYY date coercion for Woo publish or normalizeDocForWooEventsPublish.",
+ *  "gotchas": [],
+ *  "keywords": ["wooPublishDocNormalize", "normalizeDocForWooEventsPublish", "coerceToYmd", "usStyleMmDdYyyyToYmd", "WooCommerce", "Events doc"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 const WOO_EVENTS_DATE_FIELDNAMES = ["first_session_date"];
 

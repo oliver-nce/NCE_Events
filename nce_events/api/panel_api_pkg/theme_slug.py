@@ -1,4 +1,17 @@
-"""Resolve Page Panel NCE Theme links to Active theme slugs."""
+"""Resolve Page Panel NCE Theme links to Active theme slugs.
+
+code-index:begin
+{
+ "purpose": "Resolve Page Panel NCE Theme links to active theme slug strings for panel chrome.",
+ "read_when": "When panel float theming needs the active slug from a linked NCE Theme document.",
+ "gotchas": [
+  "Falls back to site default theme name when panel theme link is empty or inactive."
+ ],
+ "keywords": ["theme slug", "NCE Theme", "active slug", "Page Panel", "resolve"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

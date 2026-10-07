@@ -1,3 +1,15 @@
+// Resizable related-tab label column widths persisted in localStorage per definition and tab index.
+//
+// code-index:begin
+// {
+//  "purpose": "Resizable related-tab label column widths persisted in localStorage per definition and tab index.",
+//  "read_when": "When changing relatedLabelColByTab sizing, localStorage keys, or drag resize handles.",
+//  "gotchas": [],
+//  "keywords": ["useRelatedLabelWidths", "relatedLabelColByTab", "relatedLabelStorageKey", "readSavedRelatedLabelWidth", "defaultRelatedLabelWidthForTab", "onRelatedLabelResizeMove"],
+//  "format": 1
+// }
+// code-index:end
+
 import { reactive, onUnmounted } from "vue";
 
 export function useRelatedLabelWidths(props) {

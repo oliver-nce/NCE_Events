@@ -1,4 +1,15 @@
-"""NCE Events API — whitelisted entry points."""
+"""NCE Events API — whitelisted entry points.
+
+code-index:begin
+{
+ "purpose": "NCE Events API whitelisted entry points including Page Panel CSV export via get_panel.",
+ "read_when": "When adding top-level whitelisted methods or tracing GET panel CSV download routing.",
+ "gotchas": [],
+ "keywords": ["get_panel", "whitelisted", "CSV export", "Page Panel", "panel_export"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

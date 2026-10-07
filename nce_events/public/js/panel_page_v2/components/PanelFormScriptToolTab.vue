@@ -1,3 +1,17 @@
+<!--
+Form dialog tab hosting a script tool panel for custom client-side utilities.
+
+code-index:begin
+{
+ "purpose": "Form dialog tab hosting a script tool panel for custom client-side utilities.",
+ "read_when": "Adding or mounting script tools inside panel form dialog tabs.",
+ "gotchas": [],
+ "keywords": ["ScriptToolTab", "script tool", "form dialog tab", "mount", "panel form"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div ref="containerRef" class="ppv2-script-tool-tab"></div>
 </template>

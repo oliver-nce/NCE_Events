@@ -1,3 +1,15 @@
+// Draggable resizable email send dialog with template, preview, and recipient selection.
+//
+// code-index:begin
+// {
+//  "purpose": "Draggable resizable email send dialog with template, preview, and recipient selection.",
+//  "read_when": "Changing bulk email send UX, preview, or template loading in panel pages.",
+//  "gotchas": [],
+//  "keywords": ["EmailDialog", "send-panel", "template", "preview", "recipients", "draggable"],
+//  "format": 1
+// }
+// code-index:end
+
 frappe.provide("nce_events.panel_page");
 
 nce_events.panel_page.EmailDialog = class EmailDialog {

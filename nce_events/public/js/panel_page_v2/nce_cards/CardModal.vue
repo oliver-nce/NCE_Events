@@ -1,3 +1,17 @@
+<!--
+Teleport card modal backdrop wrapping CardForm with pointer dismiss and Escape close.
+
+code-index:begin
+{
+ "purpose": "Teleport card modal backdrop wrapping CardForm with pointer dismiss and Escape close.",
+ "read_when": "When changing card modal backdrop dismiss, z-index, or Escape key handling.",
+ "gotchas": [],
+ "keywords": ["CardModal", "CardForm", "useBackdropPointerDismiss", "card-modal-backdrop", "Escape", "Teleport"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<Teleport to="body">
 		<div ref="backdropRef" class="card-modal-backdrop" @mousedown.self="onMouseDownSelf" @click.self="onClickSelf">

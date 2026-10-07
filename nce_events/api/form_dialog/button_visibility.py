@@ -10,6 +10,18 @@ Hide-if modes (mutually exclusive on each Form Dialog Button row):
 - ``sql_expression``: hide when the SQL expression returns a truthy first column
   in the first row. Uses ``%(name)s`` for the root document name. Table tokens
   ``{{t:DocType Name}}`` expand to Frappe physical table names (``tab...``).
+
+code-index:begin
+{
+ "purpose": "Evaluate Form Dialog footer button hide_if SQL visibility rules for panel V2.",
+ "read_when": "When validating or evaluating custom button visibility SQL for Form Dialog footers.",
+ "gotchas": [
+  "hide_if SQL must be a single SELECT; table tokens are expanded before evaluation."
+ ],
+ "keywords": ["button visibility", "hide_if", "SQL", "Form Dialog", "footer"],
+ "format": 1
+}
+code-index:end
 """
 
 from __future__ import annotations

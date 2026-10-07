@@ -1,3 +1,17 @@
+<!--
+Form dialog header with title, navigation, and chrome styling for panel dialogs.
+
+code-index:begin
+{
+ "purpose": "Form dialog header with title, navigation, and chrome styling for panel dialogs.",
+ "read_when": "Changing form dialog header layout or panel chrome classes on dialogs.",
+ "gotchas": [],
+ "keywords": ["PanelFormDialogHeader", "form dialog", "header", "panelChromeClasses", "Vue"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div class="ppv2-fd-header" :class="[resolvedHeaderBgClass, headerFgTextClass]">
 		<div class="ppv2-fd-header-main">

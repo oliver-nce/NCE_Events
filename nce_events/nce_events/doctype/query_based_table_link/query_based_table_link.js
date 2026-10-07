@@ -1,5 +1,15 @@
 // Copyright (c) 2026, Oliver Reid and contributors
 // For license information, please see license.txt
+//
+// code-index:begin
+// {
+//  "purpose": "Desk form script for Query Based Table Link: criteria builder, sort dialog, and index field UI.",
+//  "read_when": "Changing QBTL join criteria builder, sort configuration, or field index pickers.",
+//  "gotchas": [],
+//  "keywords": ["_qbtl_render", "_qbtl_bind", "conditions_json", "where_clause", "left_table", "right_table", "_qbtl_sort_dialog", "Query Based Table Link"],
+//  "format": 1
+// }
+// code-index:end
 
 const _QBTL_OPS = [
 	{ value: "=", label: "=" },

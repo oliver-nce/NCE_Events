@@ -1,4 +1,14 @@
 // Form Dialog — Desk UI for portal_field_config on Related DocTypes (Display-tab pattern).
+//
+// code-index:begin
+// {
+//  "purpose": "Desk UI for Form Dialog portal_field_config on Related DocTypes using the Display-tab pattern.",
+//  "read_when": "Changing Form Dialog field editor, portal mirror config, or related-doctype display matrices.",
+//  "gotchas": [],
+//  "keywords": ["portal_field_config", "form_dialog", "Related DocTypes", "Display-tab", "portal", "mirror", "field editor"],
+//  "format": 1
+// }
+// code-index:end
 
 (function () {
 	const SKIP_TYPES = new Set([

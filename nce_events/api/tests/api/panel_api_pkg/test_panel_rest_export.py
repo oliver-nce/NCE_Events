@@ -1,4 +1,15 @@
-"""Tests for Page Panel REST CSV export helpers."""
+"""Tests for Page Panel REST CSV export helpers.
+
+code-index:begin
+{
+ "purpose": "Tests for Page Panel REST CSV export column selection including search-only columns.",
+ "read_when": "When changing panel_export CSV column deduplication or search-only append rules.",
+ "gotchas": [],
+ "keywords": ["test panel export", "CSV columns", "search-only", "unittest"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

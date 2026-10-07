@@ -1,3 +1,15 @@
+// Desk form script for Panel Action: role visibility and action button configuration.
+//
+// code-index:begin
+// {
+//  "purpose": "Desk form script for Panel Action: role visibility and action button configuration.",
+//  "read_when": "Changing Panel Action form client behaviour or button setup.",
+//  "gotchas": [],
+//  "keywords": ["panel_action", "frappe", "Panel Action", "roles"],
+//  "format": 1
+// }
+// code-index:end
+
 frappe.ui.form.on("Panel Action", {
 	refresh(frm) {
 		if (frm.doc.action_type !== "Form Dialog") {

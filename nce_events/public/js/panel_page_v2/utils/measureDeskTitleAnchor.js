@@ -1,6 +1,16 @@
 /**
  * Anchor the SPA page switcher inside Zone 2 (.ppv2-zone-pages).
  * All coordinates are positive and relative to that zone's top-left.
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Measures Desk title anchor coordinates for SPA page switcher inside ppv2-zone-pages.",
+ *  "read_when": "When positioning panel page switcher float relative to Desk zone 2 title.",
+ *  "gotchas": [],
+ *  "keywords": ["measureDeskTitleAnchor", "ppv2-zone-pages", "DEFAULT_H", "DEFAULT_W", "Desk title anchor"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 const DEFAULT_W = 420;
 /* Header (28) + body 36 button + 2px top + 2px bottom (40) + borders (2). No footer. */

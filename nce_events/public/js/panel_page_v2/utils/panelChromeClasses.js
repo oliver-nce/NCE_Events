@@ -1,4 +1,15 @@
-/** Per-panel surface bg defaults — match runtime fallbacks when Page Panel fields are empty. */
+/** Per-panel surface bg defaults — match runtime fallbacks when Page Panel fields are empty.
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Resolves per-panel chrome bg, border, shadow CSS classes from Page Panel colour config defaults.",
+ *  "read_when": "When changing panel float surface colours, border width vars, or PANEL_CHROME_DEFAULTS.",
+ *  "gotchas": [],
+ *  "keywords": ["panelChromeClasses", "PANEL_CHROME_DEFAULTS", "panelChromeBg", "panelChromeBorder", "PANEL_BORDER_DEFAULTS", "Colours tab"],
+ *  "format": 1
+ * }
+ * code-index:end
+ */
 export const PANEL_CHROME_DEFAULTS = {
 	frame_bg_class: "theme-bg-surface",
 	header_bg_class: "theme-bg-primary-600",

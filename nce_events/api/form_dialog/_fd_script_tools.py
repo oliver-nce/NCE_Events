@@ -1,4 +1,15 @@
-"""Script tool group sync helpers for Form Dialog capture."""
+"""Script tool group sync helpers for Form Dialog capture.
+
+code-index:begin
+{
+ "purpose": "Parse and sync script tool group arguments during Form Dialog schema capture.",
+ "read_when": "When Form Dialog capture must persist script tool groups from Desk wizard input.",
+ "gotchas": [],
+ "keywords": ["script tools", "tool groups", "capture", "Form Dialog"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

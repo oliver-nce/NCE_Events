@@ -1,3 +1,15 @@
+// Runs Frappe client scripts and handler specs inside the panel page v2 form dialog host.
+//
+// code-index:begin
+// {
+//  "purpose": "Runs Frappe client scripts and handler specs inside the panel page v2 form dialog host.",
+//  "read_when": "When wiring client script triggers, parseClientHandlerSpec, or form dialog script lifecycle.",
+//  "gotchas": [],
+//  "keywords": ["useFormClientScript", "client script", "parseClientHandlerSpec", "form dialog", "frappe.ui.form"],
+//  "format": 1
+// }
+// code-index:end
+
 import { ppv2DebugWarn } from "../utils/ppv2Debug.js";
 
 /**

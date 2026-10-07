@@ -1,4 +1,17 @@
-"""Update existing Frappe Events records on WooCommerce via the REST API."""
+"""Update existing Frappe Events records on WooCommerce via the REST API.
+
+code-index:begin
+{
+ "purpose": "Publish and update Frappe Events records on WooCommerce via REST using mapped product fields.",
+ "read_when": "When syncing Events DocType rows to WooCommerce products or debugging publish payloads.",
+ "gotchas": [
+  "Uses WooCommerce client and WP Tables mapping; validate slug and category payloads before bulk publish."
+ ],
+ "keywords": ["events publish", "WooCommerce", "product slug", "Events", "REST"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

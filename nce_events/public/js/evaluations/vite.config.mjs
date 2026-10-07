@@ -1,3 +1,15 @@
+// Vite build config for bundling the evaluations Vue desk SPA assets.
+//
+// code-index:begin
+// {
+//  "purpose": "Vite build config for bundling the evaluations Vue desk SPA assets.",
+//  "read_when": "Changing evaluations build output paths or Vue plugin setup.",
+//  "gotchas": [],
+//  "keywords": ["vite.config", "evaluations", "plugin-vue", "build", "bundle"],
+//  "format": 1
+// }
+// code-index:end
+
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 

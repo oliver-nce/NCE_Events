@@ -1,7 +1,38 @@
+<!--
+AI agent codebase reference for NCE Events architecture, DocTypes, API, and Form Dialog flow.
+
+code-index:begin
+{
+ "purpose": "AI agent codebase reference for NCE Events architecture, DocTypes, API, and Form Dialog flow.",
+ "read_when": "When onboarding to NCE Events or tracing Form Dialog capture, panel V2, and API modules.",
+ "gotchas": [
+  "Never run bench commands or git reset --hard; deployment is separate.",
+  "_captureHandlers intercept replaces frappe.ui.form.on during script capture; always restored in finally."
+ ],
+ "keywords": ["codebase reference", "Form Dialog", "Page Panel", "panel_page_v2", "DocType", "capture"],
+ "format": 1
+}
+code-index:end
+-->
+
 # NCE Events — Codebase Reference for AI Agents
 
 **Read this file before making any changes.**
 For deeper architecture detail see `Docs/panel_page_architecture_v2.md` and `Docs/panel_page_spec_rules.md`.
+
+**Finding code: ask the code index, do not read files.** `code_index/elements.json` maps every function, class,
+route, test and doc section here, each with a one-line label. Ask it, then read only what it prints; open a whole
+file only to edit it.
+
+```bash
+TOOL="/Users/oliver3/Documents/_NCE_projects/_Project support files/code-index/codeindex.py"
+python3 "$TOOL" --root . find WORDS...        # best-matching elements, with labels and line numbers
+python3 "$TOOL" --root . show ID_OR_NAME      # just that element's source, what it calls, its tests
+python3 "$TOOL" --root . callers ID_OR_NAME   # who calls it
+```
+
+Covers Python, JavaScript, TypeScript, Vue, PHP, CSS and Markdown. After code changes run `python3 "$TOOL" --root . --write` (free);
+new or changed functions get a Haiku label (paid, small): see `_Project support files/code-index/README.md`.
 
 ---
 

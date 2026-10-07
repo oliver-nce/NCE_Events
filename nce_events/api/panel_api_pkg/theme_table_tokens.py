@@ -1,4 +1,15 @@
-"""Resolve NCE Theme table tokens for Page Panel Desk previews and docs."""
+"""Resolve NCE Theme table tokens for Page Panel Desk previews and docs.
+
+code-index:begin
+{
+ "purpose": "Resolve NCE Theme table tokens for Page Panel Desk previews and Colours tab display.",
+ "read_when": "When panel Desk preview needs theme table width tiers or token JSON from linked theme.",
+ "gotchas": [],
+ "keywords": ["theme table tokens", "NCE Theme", "Colours tab", "table width", "Desk preview"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

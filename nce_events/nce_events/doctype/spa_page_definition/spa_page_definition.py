@@ -1,3 +1,16 @@
+"""SPA Page Definition Document: enforces unique doctype_source_mode per page slug.
+
+code-index:begin
+{
+ "purpose": "SPA Page Definition Document: enforces unique doctype_source_mode per page slug.",
+ "read_when": "Adding SPA page validation or duplicate doctype_source_mode checks.",
+ "gotchas": [],
+ "keywords": ["SPAPageDefinition", "page_slug", "doctype_source_mode", "validate", "SPA Page Definition"],
+ "format": 1
+}
+code-index:end
+"""
+
 from __future__ import annotations
 
 import frappe

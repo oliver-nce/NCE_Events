@@ -1,4 +1,15 @@
-"""Tests for nce_events.api.derived_fields (composition over sql_eval + wp_tables_mapping)."""
+"""Tests for nce_events.api.derived_fields (composition over sql_eval + wp_tables_mapping).
+
+code-index:begin
+{
+ "purpose": "Tests for derived_fields composition over sql_eval literals and WP Tables mapping specs.",
+ "read_when": "When changing derived field spec parsing or SQL literal splitting in derived_fields.",
+ "gotchas": [],
+ "keywords": ["test derived fields", "sql_eval", "column_mapping", "unittest"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

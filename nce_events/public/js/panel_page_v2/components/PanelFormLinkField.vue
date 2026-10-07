@@ -1,3 +1,20 @@
+<!--
+Mounts Frappe Link control with autocomplete for panel form dialog link fields.
+
+code-index:begin
+{
+ "purpose": "Mounts Frappe Link control with autocomplete for panel form dialog link fields.",
+ "read_when": "Fixing Link field change events not reaching Vue from Frappe awesomplete control.",
+ "gotchas": [
+  "Action items (Create new, Advanced Search) always pass through.",
+  "df.change fires without Vue seeing it; forward changes here."
+ ],
+ "keywords": ["PanelFormLinkField", "Link field", "awesomplete", "frappe control", "autocomplete"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
   <div ref="hostRef" class="ppv2-fd-link-frappe" />
 </template>

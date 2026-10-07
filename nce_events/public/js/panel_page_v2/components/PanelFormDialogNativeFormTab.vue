@@ -1,3 +1,17 @@
+<!--
+Embeds a native Frappe form in a form dialog tab for full DocType editing.
+
+code-index:begin
+{
+ "purpose": "Embeds a native Frappe form in a form dialog tab for full DocType editing.",
+ "read_when": "Changing native Frappe form mount/remount inside panel form dialog tabs.",
+ "gotchas": [],
+ "keywords": ["NativeFormTab", "native form", "remount", "Frappe form", "form dialog"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div class="ppv2-native-form-tab">
 		<div v-if="bootstrapping" class="ppv2-native-form-tab-status theme-text-muted">

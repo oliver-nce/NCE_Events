@@ -1,4 +1,15 @@
-"""Desk permission helpers: read-only access for WP Tables DocTypes."""
+"""Desk permission helpers: read-only access for WP Tables DocTypes.
+
+code-index:begin
+{
+ "purpose": "Desk permission helpers granting read-only access for WP Tables DocTypes and system manager checks.",
+ "read_when": "When gating API endpoints by DocType read perm or requiring System Manager role.",
+ "gotchas": [],
+ "keywords": ["permissions", "read perm", "System Manager", "WP Tables", "Desk"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

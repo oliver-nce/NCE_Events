@@ -1,6 +1,18 @@
 /**
  * Anchor for frozen layout tabs that appear before the first Tab Break in DocType meta.
  * Keep in sync with ``nce_events.api.form_dialog._fd_capture_meta.FD_LEAD_TAB_ANCHOR``.
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Parses frozen DocType meta into form dialog tabs and sections with lead tab anchor.",
+ *  "read_when": "When changing FORM_DIALOG_LEAD_TAB_ANCHOR, section columns, or visible tab filtering.",
+ *  "gotchas": [
+ *   "Keep FORM_DIALOG_LEAD_TAB_ANCHOR in sync with server FD_LEAD_TAB_ANCHOR in form_dialog capture meta."
+ *  ],
+ *  "keywords": ["parseLayout", "FORM_DIALOG_LEAD_TAB_ANCHOR", "syncSectionColumnCount", "tabHasVisibleFields", "sectionHasVisibleFields"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 export const FORM_DIALOG_LEAD_TAB_ANCHOR = "__lead__";
 

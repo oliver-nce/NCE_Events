@@ -1,3 +1,18 @@
+// Validates mandatory and panel-required fields on frozen form dialogs with Frappe depends_on rules.
+//
+// code-index:begin
+// {
+//  "purpose": "Validates mandatory and panel-required fields on frozen form dialogs with Frappe depends_on rules.",
+//  "read_when": "When changing mandatory validation, virtual field skipping, or panel Required keys.",
+//  "gotchas": [
+//   "Virtual DocField is computed not stored and is always read-only on Desk.",
+//   "Panel Required keys skip dotted link fieldnames."
+//  ],
+//  "keywords": ["validateFrozenForm", "validatePanelRequiredFields", "isVirtualDocField", "mandatory_depends_on", "depends_on", "isMandatoryValueEmpty"],
+//  "format": 1
+// }
+// code-index:end
+
 import { evaluateExpression, isLayoutField } from "../utils/frappeFieldExpr.js";
 
 /** Same emptiness rule as mandatory DocField validation in validateFrozenForm. */

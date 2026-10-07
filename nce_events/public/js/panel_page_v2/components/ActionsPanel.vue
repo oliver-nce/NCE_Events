@@ -1,3 +1,17 @@
+<!--
+Vue actions bar combining SpaPageNavBar page switcher and Panel Action buttons.
+
+code-index:begin
+{
+ "purpose": "Vue actions bar combining SpaPageNavBar page switcher and Panel Action buttons.",
+ "read_when": "Changing actions bar layout, SPA nav integration, or action button clicks.",
+ "gotchas": [],
+ "keywords": ["ppv2-actions", "SpaPageNavBar", "useSpaPageNav", "action_id", "loadPages"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div class="ppv2-actions-bar-inner theme-bg-card">
 		<SpaPageNavBar

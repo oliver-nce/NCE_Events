@@ -1,5 +1,15 @@
 /**
  * Open WordPress in a new tab logged in as the family user (signed bridge URL).
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Opens WordPress in new tab logged in as family user via signed bridge URL from panel row.",
+ *  "read_when": "When changing familyIdFromRow extraction or openWpUserSwitch bridge API call.",
+ *  "gotchas": [],
+ *  "keywords": ["wpUserSwitch", "openWpUserSwitch", "familyIdFromRow", "WordPress", "signed bridge", "family user"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 
 export function familyIdFromRow(row, fieldname) {

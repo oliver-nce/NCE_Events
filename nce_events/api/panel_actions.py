@@ -1,3 +1,16 @@
+"""Panel Action endpoints listing enabled actions by scope with role visibility and SPA handler resolution.
+
+code-index:begin
+{
+ "purpose": "Panel Action endpoints listing enabled actions by scope with role visibility and SPA handler resolution.",
+ "read_when": "When wiring panel footer actions, get_panel_actions scope filters, or Panel Action DocType reads.",
+ "gotchas": [],
+ "keywords": ["panel", "action", "get_panel_actions", "Panel Action", "scope", "form_dialog"],
+ "format": 1
+}
+code-index:end
+"""
+
 from __future__ import annotations
 
 import json

@@ -3,6 +3,16 @@ Unit tests for nce_events.api.form_dialog.portal_actions.
 
 Run with:
     bench run-tests --app nce_events --module nce_events.api.tests.api.form_dialog.test_portal_actions
+
+code-index:begin
+{
+ "purpose": "Unit tests for form_dialog.portal_actions param resolution and allow-list enforcement.",
+ "read_when": "When changing portal action registration, param binding, or run_portal_action security.",
+ "gotchas": [],
+ "keywords": ["test portal actions", "run portal action", "allow-list", "unittest"],
+ "format": 1
+}
+code-index:end
 """
 
 import json

@@ -1,4 +1,17 @@
-"""Tests for nce_events.api.credentials."""
+"""Tests for nce_events.api.credentials.
+
+code-index:begin
+{
+ "purpose": "Tests for credentials.get_credentials auth_type and credential_config field reading.",
+ "read_when": "When changing credentials.py auth patterns or secret field read behavior.",
+ "gotchas": [
+  "Secret auth must never read api_key; tests assert api_secret-only paths."
+ ],
+ "keywords": ["test credentials", "get_credentials", "auth_type", "api_secret", "unittest"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

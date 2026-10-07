@@ -1,4 +1,15 @@
-"""Read ``WP Tables`` ``column_mapping`` JSON — generic; no DocType-specific behaviour."""
+"""Read ``WP Tables`` ``column_mapping`` JSON — generic; no DocType-specific behaviour.
+
+code-index:begin
+{
+ "purpose": "Read WP Tables column_mapping JSON and derived SQL specs for any Frappe DocType.",
+ "read_when": "Loading column_mapping defaults, derived SQL expressions, or whitelisted mapping APIs for panel Form Dialog.",
+ "gotchas": [],
+ "keywords": ["get_wp_tables_column_mapping", "column_mapping", "derived_sql_specs", "WP Tables", "frappe_doctype", "sql_expression", "fieldname", "is_derived"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

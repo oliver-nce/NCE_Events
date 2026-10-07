@@ -1,3 +1,17 @@
+<!--
+Root Vue shell for the Evaluations desk SPA with view switching via shell store.
+
+code-index:begin
+{
+ "purpose": "Root Vue shell for the Evaluations desk SPA with view switching via shell store.",
+ "read_when": "Adding a new evaluations view or changing the eval page header layout.",
+ "gotchas": [],
+ "keywords": ["Evaluations", "App.vue", "rating_kanban", "shell store", "activeView"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div class="nce-eval-root">
 		<header class="nce-eval-header">

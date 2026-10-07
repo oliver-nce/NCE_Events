@@ -6,6 +6,16 @@
  *
  * Enable popup after regular submit: localStorage.setItem("nce_fd_submit_trace", "1")
  * Disable: localStorage.removeItem("nce_fd_submit_trace")
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Form Dialog submit timing trace to console with optional Shift+click live msgprint stream.",
+ *  "read_when": "When debugging form dialog save performance or nce_fd_submit_trace localStorage gate.",
+ *  "gotchas": [],
+ *  "keywords": ["submitPerfTrace", "createSubmitPerfTrace", "nce_fd_submit_trace", "Shift+click", "submit timings", "msgprint"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 
 export function createSubmitPerfTrace({ liveDialog = false } = {}) {

@@ -1,4 +1,15 @@
-"""Unit tests for nce_events.api.evaluations.get_event_enrollments."""
+"""Unit tests for nce_events.api.evaluations.get_event_enrollments.
+
+code-index:begin
+{
+ "purpose": "Unit tests for evaluations.get_event_enrollments physical table naming and int clamping.",
+ "read_when": "When changing evaluations enrollment query table name resolution or limits.",
+ "gotchas": [],
+ "keywords": ["test evaluations", "enrollments", "physical table", "unittest"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

@@ -1,3 +1,15 @@
+// Vite entry mounting the Evaluations Vue app with Pinia on a desk page element.
+//
+// code-index:begin
+// {
+//  "purpose": "Vite entry mounting the Evaluations Vue app with Pinia on a desk page element.",
+//  "read_when": "Changing evaluations SPA bootstrap, mount target, or Pinia setup.",
+//  "gotchas": [],
+//  "keywords": ["evaluations", "main.js", "createApp", "Pinia", "mount"],
+//  "format": 1
+// }
+// code-index:end
+
 import { createApp } from "vue";
 import { createPinia } from "pinia";
 import App from "./App.vue";

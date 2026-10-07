@@ -3,6 +3,16 @@
  *
  * Root frozen fields: exact fieldname match (no dots).
  * Related / inline child columns: bare fieldname or `{linkField}.{fieldname}`.
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Matches Page Panel read_only_fields keys against root and related form dialog fields.",
+ *  "read_when": "When changing panel read-only field matching for root vs link-prefixed fieldnames.",
+ *  "gotchas": [],
+ *  "keywords": ["panelFieldReadOnly", "isFieldInPanelReadOnlyList", "isRootFieldPanelReadOnly", "read_only_fields", "linkField"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 
 export function isFieldInPanelReadOnlyList(fieldname, readOnlyFields, linkField = null) {

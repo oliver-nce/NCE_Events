@@ -1,5 +1,15 @@
 /**
  * Panel table column sizing (shared by PanelTable.vue and App.vue pre-layout).
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Panel table column sizing shared by PanelTable.vue and App.vue pre-layout float width.",
+ *  "read_when": "When changing column metrics, title_field min width, or PANEL_FLOAT_DEFAULT_W sizing.",
+ *  "gotchas": [],
+ *  "keywords": ["panelTableColWidths", "columnMetrics", "PANEL_FLOAT_DEFAULT_W", "panelFloatWidthFromTableMin", "PanelTable", "title_field"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 
 export const PANEL_FLOAT_DEFAULT_W = 1200;

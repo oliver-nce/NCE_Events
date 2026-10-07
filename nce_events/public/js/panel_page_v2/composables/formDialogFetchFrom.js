@@ -1,3 +1,17 @@
+// Factory for Link field fetch_from handlers pulling remote DocField values into form dialog data.
+//
+// code-index:begin
+// {
+//  "purpose": "Factory for Link field fetch_from handlers pulling remote DocField values into form dialog data.",
+//  "read_when": "When changing fetch_from link pull behavior or fetch_if_empty skipping in form dialogs.",
+//  "gotchas": [
+//   "fetch_from failures are silently ignored because fetch is a convenience not critical."
+//  ],
+//  "keywords": ["fetch_from", "createHandleFetchFrom", "link field", "frappeCall", "get_value", "fetch_if_empty", "formData"],
+//  "format": 1
+// }
+// code-index:end
+
 import { frappeCall } from "../utils/frappeCall.js";
 
 /**

@@ -1,3 +1,15 @@
+// Tag Finder state composable loading doctype columns and building merge tag strings with filters.
+//
+// code-index:begin
+// {
+//  "purpose": "Tag Finder state composable loading doctype columns and building merge tag strings with filters.",
+//  "read_when": "When changing tag column loading, buildTag paths, or applyFilters for merge tags.",
+//  "gotchas": [],
+//  "keywords": ["useTagFinder", "loadColumn", "buildTag", "applyFilters", "_buildLinkChainTag", "_buildTableTag", "columns"],
+//  "format": 1
+// }
+// code-index:end
+
 import { ref, reactive } from "vue";
 import { frappeCall } from "../utils/frappeCall.js";
 

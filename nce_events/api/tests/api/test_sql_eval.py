@@ -1,4 +1,15 @@
-"""Tests for nce_events.api.sql_eval (generic SQL scalar evaluation)."""
+"""Tests for nce_events.api.sql_eval (generic SQL scalar evaluation).
+
+code-index:begin
+{
+ "purpose": "Tests for sql_eval generic SQL scalar evaluation, literals, and allowlisted token binding.",
+ "read_when": "When changing evaluate_sql_expressions or substitution token allowlist behavior.",
+ "gotchas": [],
+ "keywords": ["test sql_eval", "evaluate_sql_expressions", "allowlist", "unittest"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

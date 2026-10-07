@@ -1,3 +1,15 @@
+// Conditional format rule lookup and inline style for panel table and dialog column cells.
+//
+// code-index:begin
+// {
+//  "purpose": "Conditional format rule lookup and inline style for panel table and dialog column cells.",
+//  "read_when": "When changing formatRuleForColumn, isFormatRuleActive, or cell colour/weight overrides.",
+//  "gotchas": [],
+//  "keywords": ["panelFormatRules", "formatRuleForColumn", "isFormatRuleActive", "activeFormatRule", "fieldKeyMatchesColumn", "conditional format"],
+//  "format": 1
+// }
+// code-index:end
+
 import { panelRowVal } from "./panelTableColWidths.js";
 
 export function fieldKeyMatchesColumn(fieldKey, col) {

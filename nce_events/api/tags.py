@@ -1,3 +1,16 @@
+"""Tag helpers generating gender-conditional Jinja pronoun tags for Tag Finder field paths.
+
+code-index:begin
+{
+ "purpose": "Tag helpers generating gender-conditional Jinja pronoun tags for Tag Finder field paths.",
+ "read_when": "When building pronoun tags or get_pronoun_tags_for_doctype for schema explorer.",
+ "gotchas": [],
+ "keywords": ["tags", "Jinja", "pronoun", "gender", "Tag Finder"],
+ "format": 1
+}
+code-index:end
+"""
+
 from __future__ import annotations
 
 import frappe

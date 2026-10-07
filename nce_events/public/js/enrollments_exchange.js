@@ -1,3 +1,17 @@
+// Enrollments form script for Switch to Another Event and Cancel Registration actions.
+//
+// code-index:begin
+// {
+//  "purpose": "Enrollments form script for Switch to Another Event and Cancel Registration actions.",
+//  "read_when": "Changing enrollment exchange/refund UX or WooCommerce product switch API calls.",
+//  "gotchas": [
+//   "Only show on saved, non-cancelled records."
+//  ],
+//  "keywords": ["Enrollments", "execute_product_exchange", "Switch to Another Event", "refund", "WooCommerce"],
+//  "format": 1
+// }
+// code-index:end
+
 frappe.ui.form.on("Enrollments", {
 	refresh(frm) {
 		// Only show on saved, non-cancelled records

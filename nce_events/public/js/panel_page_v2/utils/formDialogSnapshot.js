@@ -1,3 +1,17 @@
+// Scalar dirty-check helpers comparing formData snapshots with Check 0/1 normalization.
+//
+// code-index:begin
+// {
+//  "purpose": "Scalar dirty-check helpers comparing formData snapshots with Check 0/1 normalization.",
+//  "read_when": "When changing isFormDataDirty, snapshotForCompare, or scalarValuesEquivalent rules.",
+//  "gotchas": [
+//   "Check fields with value 0 or 1 are never treated as empty scalars."
+//  ],
+//  "keywords": ["formDialogSnapshot", "isFormDataDirty", "snapshotForCompare", "scalarValuesEquivalent", "isEmptyScalarValue"],
+//  "format": 1
+// }
+// code-index:end
+
 import { toRaw } from "vue";
 
 /** Loose scalar compare — matches PanelFormDialogBody field dirty highlighting. */

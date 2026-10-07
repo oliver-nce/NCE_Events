@@ -2,6 +2,16 @@
  * FileMaker-style criterion match against a single cell value.
  * Operators: = (empty), * (nonempty), >=, <=, !=, >, <, =value (exact),
  * ~value (contains), wildcard (* / %), default (contains).
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "FileMaker-style find criterion matching for panel Find with wildcard and operator tokens.",
+ *  "read_when": "When changing find match operators, wildcard parsing, or matchFindCriterion rules.",
+ *  "gotchas": [],
+ *  "keywords": ["matchFindCriterion", "FileMaker", "wildcard", "contains", "operators", "find criterion"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 export function matchFindCriterion(cellValue, term) {
 	const s = String(term ?? "").trim();

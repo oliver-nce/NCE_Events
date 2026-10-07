@@ -1,3 +1,19 @@
+<!--
+Gender-lane rating kanban board for event enrollments in the evaluations SPA.
+
+code-index:begin
+{
+ "purpose": "Gender-lane rating kanban board for event enrollments in the evaluations SPA.",
+ "read_when": "Changing kanban lanes, gender colors, or enrollment display in evaluations.",
+ "gotchas": [
+  "Gender lane colors are theme-exempt per evaluations spec."
+ ],
+ "keywords": ["RatingKanbanView", "kanban", "gender", "LANES", "useEnrollments", "evaluations"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div class="rk-root">
 		<div v-if="!shell.eventId" class="rk-hint">

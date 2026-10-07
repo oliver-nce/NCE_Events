@@ -7,6 +7,16 @@
  * @param {object[]} rows — loaded related-tab rows (must include `name` for multi-hop)
  * @param {string} [rootDoctype] — Form Dialog target DocType (same-table group tabs)
  * @returns {Record<string, string | [string, string[]]> | null} null when filter cannot be built
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Builds get_panel_data drill-down filters for Form Dialog related-tab Go to panel action.",
+ *  "read_when": "When changing related tab Go to filters or canGoToRelatedPanel eligibility.",
+ *  "gotchas": [],
+ *  "keywords": ["buildRelatedTabPanelFilter", "canGoToRelatedPanel", "related tab", "hop_chain", "get_panel_data", "link_field"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 export function buildRelatedTabPanelFilter(related, rootDocName, rows, rootDoctype) {
 	const linkField = String(related?.link_field || "").trim();

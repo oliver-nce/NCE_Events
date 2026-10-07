@@ -1,3 +1,16 @@
+"""Legacy hierarchy explorer API for pane data fetch and CSV export in two-pane event views.
+
+code-index:begin
+{
+ "purpose": "Legacy hierarchy explorer API for pane data fetch and CSV export in two-pane event views.",
+ "read_when": "When working with frozen hierarchy_explorer pane data or export endpoints.",
+ "gotchas": [],
+ "keywords": ["hierarchy explorer", "pane data", "export", "events", "legacy"],
+ "format": 1
+}
+code-index:end
+"""
+
 from __future__ import annotations
 
 import csv

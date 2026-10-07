@@ -3,6 +3,16 @@ Allow-listed server methods for Form Dialog portal row buttons.
 
 Portal actions may only call methods registered here. The runner resolves
 ``dotted_path`` via ``frappe.get_attr`` at call time (no import of target modules).
+
+code-index:begin
+{
+ "purpose": "Allow-listed server methods registry for Form Dialog portal row button actions.",
+ "read_when": "When registering or validating portal action methods callable from Form Dialog buttons.",
+ "gotchas": [],
+ "keywords": ["action registry", "portal actions", "allow-list", "Form Dialog", "method spec"],
+ "format": 1
+}
+code-index:end
 """
 
 from __future__ import annotations

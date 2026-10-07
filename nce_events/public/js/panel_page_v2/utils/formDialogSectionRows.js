@@ -1,3 +1,15 @@
+// Row-major section grid layout for form dialog tab panes from parsed section columns.
+//
+// code-index:begin
+// {
+//  "purpose": "Row-major section grid layout for form dialog tab panes from parsed section columns.",
+//  "read_when": "When changing sectionGridRows layout or visibleFormDialogSections filtering.",
+//  "gotchas": [],
+//  "keywords": ["sectionGridRows", "sectionColumnCount", "visibleFormDialogSections", "form dialog section", "column stacks"],
+//  "format": 1
+// }
+// code-index:end
+
 import { sectionHasVisibleFields } from "./parseLayout.js";
 
 /**

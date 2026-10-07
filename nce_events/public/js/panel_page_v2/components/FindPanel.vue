@@ -1,4 +1,17 @@
-<!-- ARCHIVED: separate Find float replaced by in-place find on PanelFloat (App.vue + PanelFindActionBar.vue). -->
+<!-- ARCHIVED: separate Find float replaced by in-place find on PanelFloat (App.vue + PanelFindActionBar.vue).
+
+code-index:begin
+{
+ "purpose": "Archived separate Find float; replaced by in-place find on PanelFloat and action bar.",
+ "read_when": "Understanding legacy find float code before editing current find UX.",
+ "gotchas": [
+  "ARCHIVED: separate Find float replaced by in-place find on PanelFloat (App.vue + PanelFindActionBar.vue)."
+ ],
+ "keywords": ["FindPanel", "ARCHIVED", "find float", "PanelFindActionBar", "legacy"],
+ "format": 1
+}
+code-index:end
+-->
 <template>
 	<PanelFloat
 		:init-x="initX"

@@ -1,4 +1,17 @@
-"""Frozen meta capture — tab skeleton, client scripts, and tab-notes sync."""
+"""Frozen meta capture — tab skeleton, client scripts, and tab-notes sync.
+
+code-index:begin
+{
+ "purpose": "Frozen meta capture for Form Dialog: tab skeleton, client scripts, and tab-note sync.",
+ "read_when": "When extending Desk capture of form layout sections, scripts, or tab visibility for Form Dialog.",
+ "gotchas": [
+  "Section column count sync affects frozen layout skeleton; review _sync_section_column_count changes."
+ ],
+ "keywords": ["capture meta", "frozen meta", "client scripts", "tab skeleton", "Form Dialog"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

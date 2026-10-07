@@ -1,3 +1,19 @@
+<!--
+Tag Finder column listing doctype field tiles with link/table navigation and circular reference detection.
+
+code-index:begin
+{
+ "purpose": "Tag Finder column listing doctype field tiles with link/table navigation and circular reference detection.",
+ "read_when": "When editing tag finder field tiles, badges, or circular link navigation blocking.",
+ "gotchas": [
+  "Table and pronoun tile border colors are theme-exempt categorical type indicators."
+ ],
+ "keywords": ["TagColumn", "tag finder", "field tile", "circular link", "is_link", "is_table", "navigate", "select-field", "tf-tile"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div class="tf-column">
 		<div class="tf-col-header theme-bg-primary-100">

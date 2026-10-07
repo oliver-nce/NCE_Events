@@ -4,6 +4,18 @@ Covers:
   - panel_api._build_core_filter_where
   - tags._compute_jinja_tag
   - translator.translate_wp_query  (mocked frappe.get_all)
+
+code-index:begin
+{
+ "purpose": "Unit tests for pure panel API helpers including core filter WHERE clause construction.",
+ "read_when": "When refactoring _build_core_filter_where or shared filter SQL helper behavior.",
+ "gotchas": [
+  "Core filter merges with user filters; empty filters dict still applies core_filter SQL."
+ ],
+ "keywords": ["test core functions", "core filter", "WHERE clause", "unittest"],
+ "format": 1
+}
+code-index:end
 """
 
 from __future__ import annotations

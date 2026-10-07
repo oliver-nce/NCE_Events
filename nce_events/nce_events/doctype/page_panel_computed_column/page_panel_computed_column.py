@@ -1,3 +1,16 @@
+"""Page Panel Computed Column Document with validation for computed SQL column definitions.
+
+code-index:begin
+{
+ "purpose": "Page Panel Computed Column Document with validation for computed SQL column definitions.",
+ "read_when": "Adding validation or hooks for computed column rows on Page Panel.",
+ "gotchas": [],
+ "keywords": ["PagePanelComputedColumn", "Document", "frappe", "page_panel_computed_column", "validate"],
+ "format": 1
+}
+code-index:end
+"""
+
 from __future__ import annotations
 
 import frappe

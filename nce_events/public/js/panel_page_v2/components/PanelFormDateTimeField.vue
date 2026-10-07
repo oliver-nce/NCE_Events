@@ -1,3 +1,17 @@
+<!--
+Mounts Frappe date/time controls for panel form dialog datetime field types.
+
+code-index:begin
+{
+ "purpose": "Mounts Frappe date/time controls for panel form dialog datetime field types.",
+ "read_when": "Fixing date or datetime field syncing between Vue and Frappe controls.",
+ "gotchas": [],
+ "keywords": ["PanelFormDateTimeField", "frappe control", "datetime", "mountFrappeControl", "form"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div ref="hostRef" class="ppv2-fd-datetime-frappe" />
 </template>

@@ -1,3 +1,15 @@
+// Frappe Page boot script for Evaluations: mounts the NCEEvaluations Vue Kanban SPA.
+//
+// code-index:begin
+// {
+//  "purpose": "Frappe Page boot script for Evaluations: mounts the NCEEvaluations Vue Kanban SPA.",
+//  "read_when": "Changing Evaluations desk page load, asset bundle, or eventId route parsing.",
+//  "gotchas": [],
+//  "keywords": ["evaluations", "NCEEvaluations", "on_page_show", "evaluations_dist", "eventId", "frappe.pages"],
+//  "format": 1
+// }
+// code-index:end
+
 frappe.pages["evaluations"].on_page_show = function (wrapper) {
 	if (!wrapper._page_obj) {
 		wrapper._page_obj = frappe.ui.make_app_page({

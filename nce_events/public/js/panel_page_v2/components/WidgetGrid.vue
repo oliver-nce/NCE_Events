@@ -1,3 +1,17 @@
+<!--
+CSS grid layout placing field and display widgets on the panel page v2 canvas.
+
+code-index:begin
+{
+ "purpose": "CSS grid layout placing field and display widgets on the panel page v2 canvas.",
+ "read_when": "When changing widget grid placement, cell sizing, or adding new widget types.",
+ "gotchas": [],
+ "keywords": ["WidgetGrid", "widget grid", "FieldWidget", "DisplayWidget", "gridColumns", "cellSize", "save-field"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div class="widget-grid" :style="gridStyle">
 		<div

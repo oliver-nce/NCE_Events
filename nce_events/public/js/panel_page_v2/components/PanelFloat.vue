@@ -1,3 +1,20 @@
+<!--
+Draggable resizable floating panel shell hosting header, find bar, and table content.
+
+code-index:begin
+{
+ "purpose": "Draggable resizable floating panel shell hosting header, find bar, and table content.",
+ "read_when": "Changing panel float drag/resize, z-order, or overlay performance during drag.",
+ "gotchas": [
+  "Grow when parent recomputes table min-width; never shrink (user may have resized wider).",
+  "Full-screen overlay prevents expensive hit-testing on table DOM during drag/resize."
+ ],
+ "keywords": ["PanelFloat", "drag", "resize", "bringToFront", "ppv2-float", "overlay"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div
 		ref="floatEl"

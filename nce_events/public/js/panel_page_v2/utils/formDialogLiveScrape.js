@@ -1,5 +1,15 @@
 /**
  * Legacy re-exports — display baseline replaced formData-writing scrape.
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Deprecated re-exports after display baseline replaced formData-writing live scrape helpers.",
+ *  "read_when": "When removing legacy scrape calls or migrating to display baseline dirty checks.",
+ *  "gotchas": [],
+ *  "keywords": ["formDialogLiveScrape", "syncWritableControlsIntoFormData", "deprecated", "display baseline", "readLiveFieldValue"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 import {
 	findFieldWrap,

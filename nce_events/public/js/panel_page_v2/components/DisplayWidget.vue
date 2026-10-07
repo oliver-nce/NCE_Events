@@ -1,3 +1,17 @@
+<!--
+Read-only display-widget showing a label and resolved field value from record hops.
+
+code-index:begin
+{
+ "purpose": "Read-only display-widget showing a label and resolved field value from record hops.",
+ "read_when": "Changing display-only field rendering using config.path and resolvedHops.",
+ "gotchas": [],
+ "keywords": ["display-widget", "displayValue", "displayLabel", "config", "resolvedHops"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div class="display-widget">
 		<label class="display-label theme-text-muted">{{ displayLabel }}</label>

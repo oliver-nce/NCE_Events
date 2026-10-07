@@ -1,3 +1,15 @@
+# GitHub Actions workflow that runs the panel theme style audit on public asset changes.
+#
+# code-index:begin
+# {
+#  "purpose": "GitHub Actions workflow that runs the panel theme style audit on public asset changes.",
+#  "read_when": "When changing panel CSS/JS under nce_events/public or scripts/style-audit and need CI coverage.",
+#  "gotchas": [],
+#  "keywords": ["style audit", "GitHub Actions", "theme contract", "panel", "public", "CI"],
+#  "format": 1
+# }
+# code-index:end
+
 name: Panel style audit
 
 on:

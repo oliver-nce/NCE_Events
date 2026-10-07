@@ -1,4 +1,15 @@
-/** Pure cell-format helpers for related-doctype and similar portal grids. */
+/** Pure cell-format helpers for related-doctype and similar portal grids.
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Pure helpers formatting related-doctype portal grid cell values, selects, and mandatory markers.",
+ *  "read_when": "When changing relatedCellRaw, parseSelectOptions, or relatedColumnMandatory display.",
+ *  "gotchas": [],
+ *  "keywords": ["relatedCellFormat", "relatedCellRaw", "relatedColumnMandatory", "parseSelectOptions", "isSelectColumn", "portal grid"],
+ *  "format": 1
+ * }
+ * code-index:end
+ */
 
 export {
 	isPortalGridColumnEditable as isRelatedColEditable,

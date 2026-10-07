@@ -1,6 +1,16 @@
 /**
  * Mount a real frappe.ui.form.Form inside Panel Form Dialog tab panes.
  * One host instance per dialog open; reparents frm.wrapper when switching tabs.
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Mounts real frappe.ui.form.Form inside Panel Form Dialog tab panes with tab reparenting.",
+ *  "read_when": "When changing native Frappe form host lifecycle, tab switch reparent, or layout fieldtypes.",
+ *  "gotchas": [],
+ *  "keywords": ["nativeFormHost", "createNativeFormHost", "frappe.ui.form", "ensureFrappeFormReady", "frm.wrapper", "tab panes"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 
 function layoutFieldtypes() {

@@ -1,3 +1,16 @@
+"""Tests for spa_page switch-page target slug parsing from client script handler strings.
+
+code-index:begin
+{
+ "purpose": "Tests for spa_page switch-page target slug parsing from client script handler strings.",
+ "read_when": "When changing switch-page slug extraction in spa_page config helpers.",
+ "gotchas": [],
+ "keywords": ["test spa page", "switch page", "slug parsing", "unittest"],
+ "format": 1
+}
+code-index:end
+"""
+
 from __future__ import annotations
 
 import unittest

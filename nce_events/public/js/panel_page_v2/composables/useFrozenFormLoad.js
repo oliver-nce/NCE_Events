@@ -1,3 +1,17 @@
+// Load sequence and reset for frozen Panel Form Dialog meta, doc, WP Tables defaults, and related hops.
+//
+// code-index:begin
+// {
+//  "purpose": "Load sequence and reset for frozen Panel Form Dialog meta, doc, WP Tables defaults, and related hops.",
+//  "read_when": "When changing form dialog load, WP Tables default merge, hop chain parsing, or load debug.",
+//  "gotchas": [
+//   "Fail-open editable on permission errors so load never blocks editing."
+//  ],
+//  "keywords": ["createFrozenFormLoad", "frozen form load", "mergeWpTablesMappingDefaults", "normalizeHopChainForRelated", "loadSeq", "formDialogLoadDebug"],
+//  "format": 1
+// }
+// code-index:end
+
 import { unref, nextTick } from "vue";
 import { frappeCall } from "../utils/frappeCall.js";
 import { isLayoutField } from "../utils/frappeFieldExpr.js";

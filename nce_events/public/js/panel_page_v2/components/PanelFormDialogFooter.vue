@@ -1,3 +1,17 @@
+<!--
+Form dialog footer with FileMaker-style find buttons and conditional submit visibility.
+
+code-index:begin
+{
+ "purpose": "Form dialog footer with FileMaker-style find buttons and conditional submit visibility.",
+ "read_when": "Changing find footer buttons or submit_hide_if visibility rules.",
+ "gotchas": [],
+ "keywords": ["PanelFormDialogFooter", "find", "submit_hide_if", "HIDE_NEVER", "footer buttons"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div class="ppv2-fd-footer">
 		<!-- FileMaker-style find: criteria entry -->

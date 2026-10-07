@@ -1,3 +1,15 @@
+// Opens Frappe send-email and send-sms dialogs for selected panel rows via useSendDialogs.
+//
+// code-index:begin
+// {
+//  "purpose": "Opens Frappe send-email and send-sms dialogs for selected panel rows via useSendDialogs.",
+//  "read_when": "When changing send email or SMS dialog wiring from panel row selection.",
+//  "gotchas": [],
+//  "keywords": ["useSendDialogs", "_openSendDialog", "send email", "send sms", "closeSendDialog", "panel row"],
+//  "format": 1
+// }
+// code-index:end
+
 let _sendDialog = null;
 
 function _openSendDialog(p, mode) {

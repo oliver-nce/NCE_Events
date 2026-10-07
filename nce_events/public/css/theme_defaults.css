@@ -4,6 +4,19 @@
  * that still use scoped CSS aliases (V1 panel_page.css, legacy dialogs, find inputs).
  * V2 panel floats/tables use contract classes from nce_theme.css where possible.
  * Each var() keeps a hex fallback when Themes is not loaded.
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Maps legacy --primary and panel CSS aliases to --nce-color-* theme contract tokens.",
+ *  "read_when": "Bridging legacy panel/dialog CSS to Themes contract vars or adding alias scopes.",
+ *  "gotchas": [
+ *   "Each var() keeps a hex fallback when Themes is not loaded.",
+ *   "Static categorical palette is NOT brand-themed (reserved for gender / type UI)."
+ *  ],
+ *  "keywords": ["theme_defaults", "--nce-color", "ppv2-root", "alias bridge", "legacy vars"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 
 .ppv2-root,

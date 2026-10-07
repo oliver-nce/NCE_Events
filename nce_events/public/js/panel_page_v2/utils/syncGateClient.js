@@ -1,6 +1,16 @@
 /**
  * Client check for nce_sync per-DocType sync busy flag (Redis gate).
  * Used before opening panel Form Dialogs on mirrored tables.
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Client check for nce_sync per-DocType Redis busy gate before opening mirrored form dialogs.",
+ *  "read_when": "When blocking form dialog open during sync or changing assertDoctypeNotSyncBusy.",
+ *  "gotchas": [],
+ *  "keywords": ["syncGateClient", "isDoctypeSyncBusy", "assertDoctypeNotSyncBusy", "nce_sync", "Redis gate", "mirrored tables"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 
 import { frappeCall } from "./frappeCall.js";

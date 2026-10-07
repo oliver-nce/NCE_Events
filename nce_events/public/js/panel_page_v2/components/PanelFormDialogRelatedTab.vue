@@ -1,3 +1,19 @@
+<!--
+Related DocType tab with editable grid, format rules, and Go to panel navigation.
+
+code-index:begin
+{
+ "purpose": "Related DocType tab with editable grid, format rules, and Go to panel navigation.",
+ "read_when": "Changing related table editing, staged new rows, or related fetch/reload logic.",
+ "gotchas": [
+  "Refetch this grid whenever the host bumps reloadTick (e.g. after WP read-back)."
+ ],
+ "keywords": ["RelatedTab", "related grid", "edit_condition", "reloadTick", "Go to panel"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<!-- Related DocType tab: data table + optional field-metadata details -->
 	<div v-if="tab._related" class="ppv2-fd-related-root">

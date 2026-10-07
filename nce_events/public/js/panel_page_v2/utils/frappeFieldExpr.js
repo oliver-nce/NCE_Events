@@ -5,6 +5,18 @@
  *   "eval:doc.status=='Open'"  — JS expression with doc in scope
  *   "fieldname"                 — truthy check on field value
  *   ""                          — always true
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Evaluates Frappe depends_on mandatory_depends_on and read_only_depends_on expressions on formData.",
+ *  "read_when": "When changing conditional field visibility, mandatory, or read-only expression parsing.",
+ *  "gotchas": [
+ *   "Empty depends_on string is always true."
+ *  ],
+ *  "keywords": ["frappeFieldExpr", "evaluateExpression", "depends_on", "mandatory_depends_on", "read_only_depends_on", "isLayoutField"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 export function evaluateExpression(expr, doc) {
 	if (!expr) return true;

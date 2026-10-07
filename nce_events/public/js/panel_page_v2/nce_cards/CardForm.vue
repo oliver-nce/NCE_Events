@@ -1,3 +1,17 @@
+<!--
+Card Definition form view with TabBar, WidgetGrid, ActionsPanel, and nested open-card drill-down.
+
+code-index:begin
+{
+ "purpose": "Card Definition form view with TabBar, WidgetGrid, ActionsPanel, and nested open-card drill-down.",
+ "read_when": "When changing card modal field widgets, saveField, or tab widget collection.",
+ "gotchas": [],
+ "keywords": ["CardForm", "useCardForm", "WidgetGrid", "TabBar", "ActionsPanel", "cardDefName", "save-field", "open-card"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div class="card-form" :style="cardStyles">
 		<div class="card-form-header">

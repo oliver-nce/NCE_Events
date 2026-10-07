@@ -1,3 +1,17 @@
+<!--
+Panel data table with sort, context menu, format rules, links, and column resize.
+
+code-index:begin
+{
+ "purpose": "Panel data table with sort, context menu, format rules, links, and column resize.",
+ "read_when": "Changing panel table rendering, row click, sync status, or column widths.",
+ "gotchas": [],
+ "keywords": ["PanelTable", "panel table", "format rules", "column resize", "sync status"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<Teleport to="body">
 		<div

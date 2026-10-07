@@ -1,3 +1,16 @@
+"""Create or update Frappe Query Reports from Page Panel column definitions and titles.
+
+code-index:begin
+{
+ "purpose": "Create or update Frappe Query Reports from Page Panel column definitions and titles.",
+ "read_when": "When syncing panel columns into Query Report records for desk reporting.",
+ "gotchas": [],
+ "keywords": ["reports", "Query Report", "create_or_update_report", "columns", "Page Panel"],
+ "format": 1
+}
+code-index:end
+"""
+
 from __future__ import annotations
 
 from typing import Any

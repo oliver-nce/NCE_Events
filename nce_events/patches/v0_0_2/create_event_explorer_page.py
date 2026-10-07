@@ -1,3 +1,16 @@
+"""Seeds the event-explorer Panel Page with Events and Players SQL drill-down panels.
+
+code-index:begin
+{
+ "purpose": "Seeds the event-explorer Panel Page with Events and Players SQL drill-down panels.",
+ "read_when": "Understanding the Event Explorer proof-of-concept panel layout or SQL queries.",
+ "gotchas": [],
+ "keywords": ["event-explorer", "Panel Page", "Events", "Players", "SQL", "migration"],
+ "format": 1
+}
+code-index:end
+"""
+
 import frappe
 
 

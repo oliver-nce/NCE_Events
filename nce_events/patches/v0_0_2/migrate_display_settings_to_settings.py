@@ -1,4 +1,15 @@
-"""Copy Display Settings data to new Settings single doctype."""
+"""Copy Display Settings data to new Settings single doctype.
+
+code-index:begin
+{
+ "purpose": "Copies Display Settings font and color fields into the Settings single DocType.",
+ "read_when": "Tracing display typography migration from Display Settings to Settings.",
+ "gotchas": [],
+ "keywords": ["Display Settings", "Settings", "font_family", "migrate", "typography"],
+ "format": 1
+}
+code-index:end
+"""
 import frappe
 
 

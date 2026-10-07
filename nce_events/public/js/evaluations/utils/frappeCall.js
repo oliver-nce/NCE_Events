@@ -2,6 +2,16 @@
  * Promise wrapper for frappe.call (mirrors panel_page_v2 pattern).
  *
  * @param {{ freeze?: boolean; freeze_message?: string }} [opts]
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Promise wrapper for frappe.call used by the evaluations Vue SPA.",
+ *  "read_when": "Changing async Frappe RPC calls in evaluations or adding freeze options.",
+ *  "gotchas": [],
+ *  "keywords": ["frappeCall", "frappe.call", "Promise", "evaluations", "freeze"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 export function frappeCall(method, args, opts = {}) {
 	const freeze = opts?.freeze;

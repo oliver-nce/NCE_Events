@@ -1,3 +1,15 @@
+// Loads Card Definition doc, resolves hop paths, and saves field values for card drill-down forms.
+//
+// code-index:begin
+// {
+//  "purpose": "Loads Card Definition doc, resolves hop paths, and saves field values for card drill-down forms.",
+//  "read_when": "When changing card form load, resolveHopPath, saveField, or refresh behavior.",
+//  "gotchas": [],
+//  "keywords": ["useCardForm", "Card Definition", "resolveHopPath", "resolvedHops", "saveField", "frappeCall", "getDoc"],
+//  "format": 1
+// }
+// code-index:end
+
 import { ref, shallowRef } from "vue";
 import { frappeCall } from "../utils/frappeCall.js";
 

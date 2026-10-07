@@ -1,4 +1,15 @@
-/* ── Source Sans 3 (variable weight 200–900, bundled) ── */
+/* ── Source Sans 3 (variable weight 200–900, bundled) ──
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Legacy V1 panel page styles including Source Sans 3, floats, tables, and send dialogs.",
+ *  "read_when": "Changing V1 panel float, table, or send-dialog styling before V2 migration.",
+ *  "gotchas": [],
+ *  "keywords": ["panel_page.css", "Source Sans 3", "panel-float", "send-panel", "V1"],
+ *  "format": 1
+ * }
+ * code-index:end
+ */
 
 @font-face {
 	font-family: "Source Sans 3";

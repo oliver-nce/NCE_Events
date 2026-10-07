@@ -1,5 +1,17 @@
 /**
  * Boot a panel-page V2 SPA from SPA Page Definition (server config).
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Boots panel page V2 SPA from SPA Page Definition loading Vue assets and layout scope styles.",
+ *  "read_when": "When changing SPA page boot, get_spa_page_config, or spa-panel-page layout CSS hiding page-head.",
+ *  "gotchas": [
+ *   "Frappe Page routes have no .page wrapper so page-head is direct child of wrapper."
+ *  ],
+ *  "keywords": ["spa_panel_page.boot", "get_spa_page_config", "_VUE_ASSETS", "spa-panel-page", "clearLayoutScope", "panel_page_v2_dist"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 frappe.provide("nce_events.spa_panel_page");
 

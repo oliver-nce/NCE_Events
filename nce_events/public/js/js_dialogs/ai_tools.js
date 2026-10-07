@@ -1,3 +1,15 @@
+// Shared AI tools bar HTML and handlers for send email/SMS dialog footers.
+//
+// code-index:begin
+// {
+//  "purpose": "Shared AI tools bar HTML and handlers for send email/SMS dialog footers.",
+//  "read_when": "Adding AI assist buttons to send dialogs or changing ai_tools bar markup.",
+//  "gotchas": [],
+//  "keywords": ["ai_tools", "send-panel", "build_bar_html", "LLM", "email SMS"],
+//  "format": 1
+// }
+// code-index:end
+
 frappe.provide("nce_events.panel_page");
 
 /**

@@ -1,3 +1,18 @@
+// Form dialog host wiring save, find-shell archive, WP read-back, and App.vue panel integration.
+//
+// code-index:begin
+// {
+//  "purpose": "Form dialog host wiring save, find-shell archive, WP read-back, and App.vue panel integration.",
+//  "read_when": "When changing form dialog host save path, WP read-back after save, or removing archived find-shell code.",
+//  "gotchas": [
+//   "WP read-back save path never emits saved event unlike the standard save path.",
+//   "Archived find-shell symbols in this file should be deleted once Find Panel is proven."
+//  ],
+//  "keywords": ["usePanelFormDialogHost", "FindPanel", "find-shell", "wpReadbackFlow", "openFormDialogForFind", "_matchFindCriterion", "saved event"],
+//  "format": 1
+// }
+// code-index:end
+
 import { ref, computed } from "vue";
 import { useFormDialogRecordNav, panelRowArray } from "./useFormDialogRecordNav.js";
 import { mergeFreshDocIntoPanel } from "./wpReadbackFlow.js";

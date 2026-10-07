@@ -18,6 +18,16 @@ by domain:
 - ``related_rows``   — ``get_form_dialog_related_rows``, ``save_form_dialog_related_rows``.
 - ``portal_fields``  — ``get_related_portal_field_editor``, ``save_related_portal_field_config``.
 - ``save``           — ``save_form_dialog_document``.
+
+code-index:begin
+{
+ "purpose": "Server API package for Form Dialog CRUD, frozen schema capture, and related panel endpoints.",
+ "read_when": "When locating Form Dialog whitelisted methods or importing the form_dialog API surface.",
+ "gotchas": [],
+ "keywords": ["form_dialog", "Form Dialog", "frozen schema", "capture", "whitelisted"],
+ "format": 1
+}
+code-index:end
 """
 
 from __future__ import annotations

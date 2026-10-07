@@ -1,3 +1,15 @@
+// Panel Action handler opening a Frappe Desk DocType list in a new browser tab.
+//
+// code-index:begin
+// {
+//  "purpose": "Panel Action handler opening a Frappe Desk DocType list in a new browser tab.",
+//  "read_when": "Changing show_dt client action or desk list navigation from panel actions.",
+//  "gotchas": [],
+//  "keywords": ["showDt", "show_dt", "Desk list", "DocType", "Panel Action"],
+//  "format": 1
+// }
+// code-index:end
+
 import { frappeCall } from "../../utils/frappeCall.js";
 import { openDeskDoctypeListInNewTab } from "../../utils/openDeskDoctypeList.js";
 

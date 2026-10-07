@@ -1,4 +1,15 @@
-"""Tests for Page Panel theme slug resolution (linked NCE Theme doc → slug)."""
+"""Tests for Page Panel theme slug resolution (linked NCE Theme doc → slug).
+
+code-index:begin
+{
+ "purpose": "Tests for Page Panel theme slug resolution from linked NCE Theme active records.",
+ "read_when": "When changing theme_slug.py fallback or active slug lookup for panel theming.",
+ "gotchas": [],
+ "keywords": ["test theme slug", "NCE Theme", "active slug", "unittest"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

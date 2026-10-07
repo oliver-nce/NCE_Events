@@ -3,6 +3,16 @@ Unit tests for Query Based Table Link condition / sort / index helpers.
 
 Run with:
     bench run-tests --app nce_events --module nce_events.api.tests.api.test_query_based_table_link
+
+code-index:begin
+{
+ "purpose": "Unit tests for Query Based Table Link condition, sort, and operator normalization.",
+ "read_when": "When changing QBTL condition parsing or operator alias handling in mapping layer.",
+ "gotchas": [],
+ "keywords": ["test QBTL", "Query Based Table Link", "normalize op", "conditions", "unittest"],
+ "format": 1
+}
+code-index:end
 """
 
 import json

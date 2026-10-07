@@ -2,6 +2,16 @@
 
 Run:
 	bench run-tests --app nce_events --module nce_events.api.tests.api.form_dialog.test_button_visibility
+
+code-index:begin
+{
+ "purpose": "Tests for Form Dialog custom button hide_if SQL validation and visibility evaluation.",
+ "read_when": "When changing button_visibility.py hide rules or adding hide_if SQL edge cases.",
+ "gotchas": [],
+ "keywords": ["test button visibility", "hide_if", "Form Dialog", "unittest", "SQL validation"],
+ "format": 1
+}
+code-index:end
 """
 
 import frappe

@@ -1,3 +1,15 @@
+// Enrollment WordPress action helpers for cancellation fee prompt and HTML-safe money formatting.
+//
+// code-index:begin
+// {
+//  "purpose": "Enrollment WordPress action helpers for cancellation fee prompt and HTML-safe money formatting.",
+//  "read_when": "When changing cancellation fee prompt, CANCELLATION_FEE_PROMPT_FIELD, or enrollment WP actions.",
+//  "gotchas": [],
+//  "keywords": ["enrollmentWpActions", "promptCancellationFee", "CANCELLATION_FEE_PROMPT_FIELD", "parseCancellationFeeInput", "money", "escapeHtml"],
+//  "format": 1
+// }
+// code-index:end
+
 import { frappeCall } from "./frappeCall.js";
 
 function __(s) {

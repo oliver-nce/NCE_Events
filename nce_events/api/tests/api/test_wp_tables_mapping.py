@@ -1,4 +1,15 @@
-"""Tests for nce_events.api.wp_tables_mapping."""
+"""Tests for nce_events.api.wp_tables_mapping.
+
+code-index:begin
+{
+ "purpose": "Tests for wp_tables_mapping derived SQL spec extraction from column_mapping JSON.",
+ "read_when": "When changing get_derived_sql_specs or column_mapping derived field filtering.",
+ "gotchas": [],
+ "keywords": ["test wp_tables_mapping", "derived SQL specs", "column_mapping", "unittest"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

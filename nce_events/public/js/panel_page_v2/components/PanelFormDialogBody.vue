@@ -1,3 +1,17 @@
+<!--
+Form dialog body rendering sections, fields, and tab content for all dialog modes.
+
+code-index:begin
+{
+ "purpose": "Form dialog body rendering sections, fields, and tab content for all dialog modes.",
+ "read_when": "Changing form section collapse, field layout, or tab switching in form dialog.",
+ "gotchas": [],
+ "keywords": ["PanelFormDialogBody", "sections", "collapsible", "RelatedTab", "find mode"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div class="ppv2-fd-body">
 		<div v-if="loading" class="ppv2-fd-loading theme-text-muted">Loading…</div>

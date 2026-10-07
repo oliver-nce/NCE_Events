@@ -1,3 +1,16 @@
+"""Form Dialog Document controller: validates edit conditions and requires DocType in WP Tables.
+
+code-index:begin
+{
+ "purpose": "Form Dialog Document controller: validates edit conditions and requires DocType in WP Tables.",
+ "read_when": "Adding Form Dialog server validation or WP Tables membership checks.",
+ "gotchas": [],
+ "keywords": ["FormDialog", "validate", "_assert_doctype_in_wp_tables", "WP Tables", "button_visibility", "edit_condition"],
+ "format": 1
+}
+code-index:end
+"""
+
 import frappe
 from frappe.model.document import Document
 

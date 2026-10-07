@@ -1,3 +1,17 @@
+<!--
+Editable field widget wrapper for panel form dialog custom field rendering.
+
+code-index:begin
+{
+ "purpose": "Editable field widget wrapper for panel form dialog custom field rendering.",
+ "read_when": "Changing editable field widget save/check behavior in form dialogs.",
+ "gotchas": [],
+ "keywords": ["FieldWidget", "editable", "onSave", "panel form", "Vue"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div class="field-widget">
 		<label class="field-label theme-text-muted">

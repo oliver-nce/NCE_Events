@@ -1,5 +1,15 @@
 """
 Run allow-listed portal actions from Form Dialog related / inline grids.
+
+code-index:begin
+{
+ "purpose": "Run allow-listed portal actions from Form Dialog related and inline row buttons.",
+ "read_when": "When wiring portal row buttons to server methods with param resolution from row/root context.",
+ "gotchas": [],
+ "keywords": ["portal actions", "run portal action", "param resolution", "Form Dialog"],
+ "format": 1
+}
+code-index:end
 """
 
 from __future__ import annotations

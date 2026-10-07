@@ -1,3 +1,18 @@
+"""Resolve and rewrite Page Panel format rule conditions referencing field keys and maps.
+
+code-index:begin
+{
+ "purpose": "Resolve and rewrite Page Panel format rule conditions referencing field keys and maps.",
+ "read_when": "When panel cell formatting rules reference other columns or need condition rewriting.",
+ "gotchas": [
+  "Resolution maps rewrite condition tokens; changing maps affects displayed cell styles."
+ ],
+ "keywords": ["format rules", "condition rewrite", "resolution maps", "Page Panel"],
+ "format": 1
+}
+code-index:end
+"""
+
 from __future__ import annotations
 
 import json

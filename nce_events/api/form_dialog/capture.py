@@ -9,6 +9,16 @@ Whitelisted as System Manager:
 - ``get_form_dialog_definition`` — read the frozen schema for the V2 panel
   renderer (logged-in users; the DocType itself stays SM-only for Desk).
 - ``list_form_dialogs_for_doctype`` — Desk Page Panel "Dialogs" tab listing.
+
+code-index:begin
+{
+ "purpose": "Form Dialog schema capture endpoints: Desk to frozen meta JSON, rebuild, and list by DocType.",
+ "read_when": "When capturing, rebuilding, or loading Form Dialog definitions from Desk or Vue panel.",
+ "gotchas": [],
+ "keywords": ["capture", "rebuild_form_dialog", "frozen meta", "get_form_dialog_definition", "Form Dialog"],
+ "format": 1
+}
+code-index:end
 """
 
 from __future__ import annotations

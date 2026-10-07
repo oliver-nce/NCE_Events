@@ -1,3 +1,17 @@
+<!--
+Project README for NCE Events Frappe app: panels, Tag Finder, install, and contributing.
+
+code-index:begin
+{
+ "purpose": "Project README for NCE Events Frappe app: panels, Tag Finder, install, and contributing.",
+ "read_when": "When you need a high-level overview, install steps, or links to project_reference.md.",
+ "gotchas": [],
+ "keywords": ["NCE Events", "Panel Explorer", "Tag Finder", "installation", "NCE Sync"],
+ "format": 1
+}
+code-index:end
+-->
+
 # NCE Events
 
 A Frappe v15 app that provides a multi-panel floating-window data explorer for NCE soccer operations. Built on top of data synced by the [NCE Sync](https://github.com/oliver-nce/NCE_Sync) app.

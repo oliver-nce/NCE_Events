@@ -1,3 +1,15 @@
+// Desk form script for Display Settings: font weight sync, HSV color pickers, and live sample rendering.
+//
+// code-index:begin
+// {
+//  "purpose": "Desk form script for Display Settings: font weight sync, HSV color pickers, and live sample rendering.",
+//  "read_when": "Changing font family/weight options, color picker UI, or display preview on the Display Settings form.",
+//  "gotchas": [],
+//  "keywords": ["_sync_weight_options", "_attach_color_pickers", "_render_sample", "font_weight", "font_family", "_hsvToHex", "_hexToHSV", "display_settings"],
+//  "format": 1
+// }
+// code-index:end
+
 var _WEIGHT_OPTIONS = {
 	"Inter":          ["100 Thin","200 Extra Light","300 Light","400 Regular","500 Medium","600 Semi Bold","700 Bold","800 Extra Bold","900 Black"],
 	"Source Sans 3":  ["200 Extra Light","300 Light","400 Regular","500 Medium","600 Semi Bold","700 Bold","800 Extra Bold","900 Black"],

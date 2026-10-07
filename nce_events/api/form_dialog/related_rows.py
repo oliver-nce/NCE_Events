@@ -6,6 +6,18 @@ Reads (``get_form_dialog_related_rows``) and writes
 tabs of a Form Dialog. All field selection and editability is gated by the
 portal_field_config persisted on the Form Dialog Related DocType row.
 Editability at runtime follows DocType read_only and Page Panel read_only_fields (not portal editable flags).
+
+code-index:begin
+{
+ "purpose": "Related-rows endpoints for panel V2 Form Dialog: fetch, save, permlevels, and write context.",
+ "read_when": "When loading or saving child rows on Form Dialog related tabs from Vue panel V2.",
+ "gotchas": [
+  "Child write context respects permlevels; guest access is rejected on save endpoints."
+ ],
+ "keywords": ["related rows", "save related", "permlevel", "Form Dialog", "panel V2"],
+ "format": 1
+}
+code-index:end
 """
 
 from __future__ import annotations

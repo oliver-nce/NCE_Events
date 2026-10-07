@@ -1,3 +1,17 @@
+<!--
+Floating resizable Tag Finder panel browsing doctype field columns and opening tag copy dialogs.
+
+code-index:begin
+{
+ "purpose": "Floating resizable Tag Finder panel browsing doctype field columns and opening tag copy dialogs.",
+ "read_when": "When changing Tag Finder layout, column navigation, resize, or tag dialog stacking.",
+ "gotchas": [],
+ "keywords": ["TagFinder", "rootDoctype", "TagColumn", "useTagFinder", "loadColumn", "buildTag", "resize handle", "float panel"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div
 		class="tf-float"

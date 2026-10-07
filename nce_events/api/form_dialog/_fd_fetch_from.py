@@ -1,4 +1,15 @@
-"""fetch_from field enrichment for frozen Form Dialog schemas."""
+"""fetch_from field enrichment for frozen Form Dialog schemas.
+
+code-index:begin
+{
+ "purpose": "Enrich fetch_from fields in frozen Form Dialog schemas during capture.",
+ "read_when": "When Link fetch_from metadata is missing or wrong in captured Form Dialog field JSON.",
+ "gotchas": [],
+ "keywords": ["fetch_from", "frozen schema", "Form Dialog", "field enrichment"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

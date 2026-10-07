@@ -1,3 +1,20 @@
+<!--
+Root Vue app orchestrating panel floats, find, form dialogs, and SPA navigation.
+
+code-index:begin
+{
+ "purpose": "Root Vue app orchestrating panel floats, find, form dialogs, and SPA navigation.",
+ "read_when": "Changing panel open/close, cascade, find, drill-down, or export behavior.",
+ "gotchas": [
+  "Close drilled panels and overlay dialogs; root WP Tables panel stays open.",
+  "Vue auto-unwraps reactive panel.rows ref when accessed on the panel object."
+ ],
+ "keywords": ["App.vue", "panel_page_v2", "PanelFloat", "find", "cascade", "form dialog"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div class="ppv2-root">
 		<div class="ppv2-top-row">

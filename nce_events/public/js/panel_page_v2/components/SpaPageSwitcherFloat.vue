@@ -1,3 +1,17 @@
+<!--
+PanelFloat SPA page switcher anchored via measureDeskTitleAnchor near desk title.
+
+code-index:begin
+{
+ "purpose": "PanelFloat SPA page switcher anchored via measureDeskTitleAnchor near desk title.",
+ "read_when": "Changing floating SPA switcher placement or loadPages on mount.",
+ "gotchas": [],
+ "keywords": ["PanelFloat", "SpaPageNavBar", "measureDeskTitleAnchor", "loadPages", "switchTo"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<PanelFloat
 		v-if="ready && pages.length"

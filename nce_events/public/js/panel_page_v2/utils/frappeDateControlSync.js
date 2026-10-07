@@ -4,6 +4,18 @@
  * Custom df.change skips Frappe's set_model_value, so stub `doc[fieldname]` must be
  * updated manually. Programmatic Vue updates must use set_input — not set_value —
  * or df.change retriggers and can freeze the tab.
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Bridge Vue modelValue and Frappe Date/Datetime controls updating stub doc without retrigger loops.",
+ *  "read_when": "When fixing date control sync, set_input vs set_value, or df.change handler wiring.",
+ *  "gotchas": [
+ *   "Programmatic Vue updates must use set_input not set_value or df.change retriggers and can freeze the tab."
+ *  ],
+ *  "keywords": ["frappeDateControlSync", "applyVueValueToDateControl", "writeStubDocField", "stubDocMatchesModel", "Date control", "df.change"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 
 /** @returns {boolean} */

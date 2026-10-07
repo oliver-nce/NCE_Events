@@ -1,4 +1,15 @@
-"""LLM integration — send prompts to Anthropic, OpenAI, etc. via API Connector."""
+"""LLM integration — send prompts to Anthropic, OpenAI, etc. via API Connector.
+
+code-index:begin
+{
+ "purpose": "LLM integration sending prompts to Anthropic, OpenAI, and configured providers via API Connector.",
+ "read_when": "When adding panel or portal features that call llm_send_prompt or provider defaults.",
+ "gotchas": [],
+ "keywords": ["LLM", "Anthropic", "OpenAI", "send_prompt", "API Connector"],
+ "format": 1
+}
+code-index:end
+"""
 from __future__ import annotations
 
 from typing import Any

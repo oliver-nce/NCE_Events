@@ -1,5 +1,15 @@
 /**
  * Panel Form Dialog shell: dirty confirm + Alt+Arrow row navigation key handler.
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Form dialog shell helpers for dirty discard confirm and Alt+Arrow row navigation keydown handler.",
+ *  "read_when": "When changing unsaved changes discard confirm or Alt+Arrow prev/next keyboard nav.",
+ *  "gotchas": [],
+ *  "keywords": ["confirmDiscardIfDirty", "createRowNavKeydownHandler", "onFormDialogKeydown", "Alt ArrowLeft", "getCanPrev", "getCanNext", "unsaved changes"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 
 function __(t) {

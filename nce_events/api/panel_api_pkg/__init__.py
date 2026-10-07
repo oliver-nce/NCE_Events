@@ -1,3 +1,16 @@
+"""Panel API package re-exporting panel data, config, discovery, SQL, and export submodules.
+
+code-index:begin
+{
+ "purpose": "Panel API package re-exporting panel data, config, discovery, SQL, and export submodules.",
+ "read_when": "When importing panel_api_pkg public surface instead of individual submodule paths.",
+ "gotchas": [],
+ "keywords": ["panel_api_pkg", "panel data", "discovery", "export", "package"],
+ "format": 1
+}
+code-index:end
+"""
+
 from __future__ import annotations
 
 from nce_events.api.panel_api_pkg._helpers import (

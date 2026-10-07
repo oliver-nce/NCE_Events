@@ -1,3 +1,16 @@
+"""Shared panel API helpers: contact field detection, link lookup, and title_case formatting.
+
+code-index:begin
+{
+ "purpose": "Shared panel API helpers: contact field detection, link lookup, and title_case formatting.",
+ "read_when": "When reusing _find_link_field, _auto_detect_contact_fields, or _title_case across panel modules.",
+ "gotchas": [],
+ "keywords": ["panel helpers", "link field", "contact fields", "title_case", "auto detect"],
+ "format": 1
+}
+code-index:end
+"""
+
 from __future__ import annotations
 
 from typing import Any

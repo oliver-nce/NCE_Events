@@ -1,3 +1,17 @@
+// Display-baseline dirty check comparing control DOM values against load snapshot without writing formData.
+//
+// code-index:begin
+// {
+//  "purpose": "Display-baseline dirty check comparing control DOM values against load snapshot without writing formData.",
+//  "read_when": "When changing display dirty baseline capture, diffDisplayBaseline, or field wrap selectors.",
+//  "gotchas": [
+//   "Read-only baseline never writes into formData to avoid Frappe date format side effects."
+//  ],
+//  "keywords": ["formDialogDisplayBaseline", "captureDisplayBaseline", "diffDisplayBaseline", "findFieldWrap", "isBaselineField", "displayValueKey"],
+//  "format": 1
+// }
+// code-index:end
+
 import { isLayoutField } from "./frappeFieldExpr.js";
 import { isVirtualDocField } from "../composables/frozenFormValidate.js";
 

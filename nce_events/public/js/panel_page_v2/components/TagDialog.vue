@@ -1,3 +1,19 @@
+<!--
+Draggable Tag Finder dialog to copy merge tags with optional fallback value and HTML filter.
+
+code-index:begin
+{
+ "purpose": "Draggable Tag Finder dialog to copy merge tags with optional fallback value and HTML filter.",
+ "read_when": "When changing tag clipboard copy, fallback filters, or dialog drag and toast behavior.",
+ "gotchas": [
+  "theme-bg-primary toast must not set inline background or color."
+ ],
+ "keywords": ["TagDialog", "copy tag", "clipboard", "fallback", "applyFilters", "isHtml", "baseTag", "drag panel"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div
 		class="tf-tag-panel theme-bg-surface theme-border theme-rounded theme-shadow-theme"

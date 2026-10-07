@@ -1,5 +1,15 @@
 /**
  * Root fields eligible for FileMaker-style find (must match server search.py skips).
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Root fields eligible for FileMaker-style find matching server search.py skip rules.",
+ *  "read_when": "When changing find-searchable root fields or firstNonRelatedTabIndex for find shell.",
+ *  "gotchas": [],
+ *  "keywords": ["isFindSearchableRootField", "stringifyFindCriterionSeed", "firstNonRelatedTabIndex", "find shell", "search.py"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 const SKIP_FIELDTYPES = new Set([
 	"Table",

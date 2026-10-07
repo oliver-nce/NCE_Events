@@ -1,4 +1,15 @@
-"""Generic WooCommerce REST v3 client using API Connector credentials (server-side only)."""
+"""Generic WooCommerce REST v3 client using API Connector credentials (server-side only).
+
+code-index:begin
+{
+ "purpose": "Generic WooCommerce REST v3 client using API Connector credentials and validated relative paths.",
+ "read_when": "When calling WooCommerce products or orders endpoints from events_publish or exchange.",
+ "gotchas": [],
+ "keywords": ["woocommerce client", "REST v3", "API Connector", "credentials", "HTTP"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

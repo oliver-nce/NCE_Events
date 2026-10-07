@@ -1,3 +1,17 @@
+<!--
+Help modal explaining FileMaker-style find/search operators in form dialog find.
+
+code-index:begin
+{
+ "purpose": "Help modal explaining FileMaker-style find/search operators in form dialog find.",
+ "read_when": "Updating find/search help text or modal layout for form dialog find mode.",
+ "gotchas": [],
+ "keywords": ["FindSearchHelpModal", "find help", "search operators", "form dialog", "modal"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<Teleport to="body">
 		<div

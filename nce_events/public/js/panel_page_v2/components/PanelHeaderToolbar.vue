@@ -1,3 +1,17 @@
+<!--
+Panel float header toolbar with refresh, find, filter, and action buttons.
+
+code-index:begin
+{
+ "purpose": "Panel float header toolbar with refresh, find, filter, and action buttons.",
+ "read_when": "Changing panel header toolbar buttons or drag-handle mouse-down behavior.",
+ "gotchas": [],
+ "keywords": ["PanelHeaderToolbar", "toolbar", "panel header", "refresh", "find"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div
 		class="ppv2-header-right"

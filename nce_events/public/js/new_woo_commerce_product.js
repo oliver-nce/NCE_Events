@@ -1,3 +1,15 @@
+// Form script for New Woo Commerce Product singleton publish-to-WooCommerce action.
+//
+// code-index:begin
+// {
+//  "purpose": "Form script for New Woo Commerce Product singleton publish-to-WooCommerce action.",
+//  "read_when": "Changing WooCommerce publish button behavior on the product singleton form.",
+//  "gotchas": [],
+//  "keywords": ["New Woo Commerce Product", "publish", "WooCommerce", "submit_new_woo_commerce_product"],
+//  "format": 1
+// }
+// code-index:end
+
 frappe.ui.form.on("New Woo Commerce Product", {
 	refresh(frm) {
 		frm.add_custom_button(__("Publish to WooCommerce"), () => _do_publish(frm)).addClass(

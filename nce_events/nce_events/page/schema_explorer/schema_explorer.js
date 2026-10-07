@@ -1,3 +1,15 @@
+// Desk page handler for schema-explorer that opens the Tag Finder floating window.
+//
+// code-index:begin
+// {
+//  "purpose": "Desk page handler for schema-explorer that opens the Tag Finder floating window.",
+//  "read_when": "Changing Tag Finder desk page behavior or the re-open placeholder UI.",
+//  "gotchas": [],
+//  "keywords": ["schema-explorer", "Tag Finder", "schema_explorer", "on_page_show", "floating window"],
+//  "format": 1
+// }
+// code-index:end
+
 frappe.pages["schema-explorer"].on_page_show = function (wrapper) {
 	if (!$(wrapper).find(".se-page-wrap").length) {
 		$(wrapper).html(

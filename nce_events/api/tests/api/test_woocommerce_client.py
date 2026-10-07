@@ -1,4 +1,15 @@
-"""Tests for nce_events.api.woocommerce_client."""
+"""Tests for nce_events.api.woocommerce_client.
+
+code-index:begin
+{
+ "purpose": "Tests for woocommerce_client REST path validation and JSON POST product helpers.",
+ "read_when": "When changing WooCommerce client HTTP methods or relative path validation rules.",
+ "gotchas": [],
+ "keywords": ["test woocommerce client", "REST v3", "post products", "unittest"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

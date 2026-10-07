@@ -1,3 +1,18 @@
+"""Whitelisted writeback of editable fetch_from fields to linked source documents after save.
+
+code-index:begin
+{
+ "purpose": "Whitelisted writeback of editable fetch_from fields to linked source documents after save.",
+ "read_when": "When changing fetch_from writeback logic or batch server writeback_fetched_fields API.",
+ "gotchas": [
+  "Panel Form Dialog save uses save_form_dialog_document writeback_fetches instead of this standalone method."
+ ],
+ "keywords": ["writeback_fetched_fields", "fetch_from", "writeback", "save_form_dialog_document", "updated_count", "_writeback_root_fields"],
+ "format": 1
+}
+code-index:end
+"""
+
 from __future__ import annotations
 
 import frappe

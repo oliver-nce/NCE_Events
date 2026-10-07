@@ -1,3 +1,19 @@
+<!--
+ppv2-filter-widget bar for column filters with date SQL and days-ago inputs.
+
+code-index:begin
+{
+ "purpose": "ppv2-filter-widget bar for column filters with date SQL and days-ago inputs.",
+ "read_when": "Changing panel table filter rows, ops buttons, or defaultFilters wiring.",
+ "gotchas": [
+  "Clear stale value whenever the field changes."
+ ],
+ "keywords": ["ppv2-filter", "filters", "defaultFilters", "emitFilterChange", "isDateField"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div
 		v-if="props.showFilter"

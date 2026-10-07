@@ -4,6 +4,16 @@
  * --nce-color-primary-300, --nce-color-primary-500, --nce-color-primary-700,
  * --nce-color-text, --nce-color-muted, --nce-color-border, --nce-color-row-alt,
  * --nce-color-focus. Hex fallbacks preserve layout when Themes is not loaded.
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Styles for the Tag Finder (Schema Explorer) floating window and themed indicators.",
+ *  "read_when": "Changing Tag Finder float layout, tag types, or categorical color indicators.",
+ *  "gotchas": [],
+ *  "keywords": ["Tag Finder", "schema_explorer", "tf-float", "categorical", "CSS"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 
 /* ── Floating window ── */

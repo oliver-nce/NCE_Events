@@ -3,6 +3,16 @@ Unit tests for nce_events.api.form_dialog.capture.
 
 Run with:
     bench run-tests --app nce_events --module nce_events.api.tests.api.form_dialog.test_capture
+
+code-index:begin
+{
+ "purpose": "Unit tests for form_dialog.capture endpoints: capture, definition load, and list by DocType.",
+ "read_when": "When modifying capture_form_dialog_from_desk or get_form_dialog_definition behavior.",
+ "gotchas": [],
+ "keywords": ["test capture", "form_dialog.capture", "frozen meta", "unittest"],
+ "format": 1
+}
+code-index:end
 """
 
 import json

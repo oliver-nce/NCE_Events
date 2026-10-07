@@ -1,3 +1,15 @@
+// Saves frozen form dialog documents via save_form_dialog_document with validation and writeback.
+//
+// code-index:begin
+// {
+//  "purpose": "Saves frozen form dialog documents via save_form_dialog_document with validation and writeback.",
+//  "read_when": "When changing form dialog save flow, server error parsing, or writeback_on_submit handling.",
+//  "gotchas": [],
+//  "keywords": ["saveFrozenFormDocument", "save_form_dialog_document", "writeback_fetches", "extractServerMessage", "validationError", "frozen form"],
+//  "format": 1
+// }
+// code-index:end
+
 import { unref } from "vue";
 import { frappeCall } from "../utils/frappeCall.js";
 

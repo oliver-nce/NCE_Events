@@ -1,3 +1,17 @@
+<!--
+Modal dialog showing ppv2-sync-err status, summary, and detail for sync failures.
+
+code-index:begin
+{
+ "purpose": "Modal dialog showing ppv2-sync-err status, summary, and detail for sync failures.",
+ "read_when": "Changing sync error dialog layout or status/summary/detail display.",
+ "gotchas": [],
+ "keywords": ["ppv2-sync-err", "Sync error", "modelValue", "status", "summary"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<Teleport to="body">
 		<div

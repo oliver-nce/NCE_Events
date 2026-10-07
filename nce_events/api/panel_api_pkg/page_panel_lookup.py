@@ -2,6 +2,16 @@
 
 Historically ``name`` matched ``root_doctype`` via autoname. Names may now differ,
 so APIs must load rows using the Link field ``root_doctype`` (still unique).
+
+code-index:begin
+{
+ "purpose": "Resolve Page Panel documents by root_doctype rather than by panel name string.",
+ "read_when": "When finding the Page Panel record for a given root DocType in API or tests.",
+ "gotchas": [],
+ "keywords": ["page panel lookup", "root_doctype", "page_panel_docname", "resolve"],
+ "format": 1
+}
+code-index:end
 """
 
 from __future__ import annotations

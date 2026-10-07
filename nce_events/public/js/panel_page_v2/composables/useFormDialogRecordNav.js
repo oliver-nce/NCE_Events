@@ -1,3 +1,17 @@
+// Prev/next navigation over the panel row list that opened the form dialog including find filters.
+//
+// code-index:begin
+// {
+//  "purpose": "Prev/next navigation over the panel row list that opened the form dialog including find filters.",
+//  "read_when": "When changing form dialog record navigation or findMatchNames filtered row lists.",
+//  "gotchas": [
+//   "Clear sourcePanelId when only a single record is in play so nav chrome stays disabled."
+//  ],
+//  "keywords": ["useFormDialogRecordNav", "formDialogNavInfo", "panelRowArray", "findMatchNames", "sourcePanelId", "prev next"],
+//  "format": 1
+// }
+// code-index:end
+
 import { computed, unref } from "vue";
 
 /** Live row array from a panel (`_panelRows` ref may unwrap on reactive panel). */

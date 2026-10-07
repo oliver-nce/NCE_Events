@@ -1,3 +1,15 @@
+// Mounts FormatRuleEditor Vue widget for panel format rules with nceMountFormatRuleEditor global.
+//
+// code-index:begin
+// {
+//  "purpose": "Mounts FormatRuleEditor Vue widget for panel format rules with nceMountFormatRuleEditor global.",
+//  "read_when": "When changing format rule editor mount options or last_validated_sql callback wiring.",
+//  "gotchas": [],
+//  "keywords": ["mountFormatRuleEditor", "FormatRuleEditor", "nceMountFormatRuleEditor", "rootDoctype", "allowedFields", "last_validated_sql"],
+//  "format": 1
+// }
+// code-index:end
+
 import { createApp, h } from "vue";
 
 import FormatRuleEditor from "./components/FormatRuleEditor.vue";

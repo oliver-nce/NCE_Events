@@ -1,3 +1,20 @@
+"""Page Panel Document controller: autoname, panel_sql generation, and pre-save SQL refresh.
+
+code-index:begin
+{
+ "purpose": "Page Panel Document controller: autoname, panel_sql generation, and pre-save SQL refresh.",
+ "read_when": "Changing Page Panel naming, panel_sql computation, or before_save SQL regeneration.",
+ "gotchas": [
+  "Never allow name == doctype (Frappe rejects singleton-style naming).",
+  "Regenerate panel_sql before the DB write so the save response always includes fresh SQL.",
+  "Never block saves on SQL generation errors."
+ ],
+ "keywords": ["PagePanel", "autoname", "before_save", "_compute_panel_sql", "panel_sql", "validate_naming", "_DESK_NEW_ROUTE"],
+ "format": 1
+}
+code-index:end
+"""
+
 from __future__ import annotations
 
 import re

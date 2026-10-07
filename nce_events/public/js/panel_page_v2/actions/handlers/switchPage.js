@@ -1,3 +1,15 @@
+// Panel Action handler switch_page navigating to another SPA page by slug.
+//
+// code-index:begin
+// {
+//  "purpose": "Panel Action handler switch_page navigating to another SPA page by slug.",
+//  "read_when": "Changing SPA page switch action or target slug resolution from panel actions.",
+//  "gotchas": [],
+//  "keywords": ["switchPage", "switch_page", "SPA", "page_slug", "navigateToSpaPage"],
+//  "format": 1
+// }
+// code-index:end
+
 import { frappeCall } from "../../utils/frappeCall.js";
 import { navigateToSpaPage } from "../../utils/navigateToSpaPage.js";
 

@@ -1,3 +1,18 @@
+"""SMS via Twilio and email via SendGrid with Jinja body render and row context enrichment.
+
+code-index:begin
+{
+ "purpose": "SMS via Twilio and email via SendGrid with Jinja body render and row context enrichment.",
+ "read_when": "When sending bulk SMS/email from panels or extending template context for messaging.",
+ "gotchas": [
+  "Gender and Link fields are enriched into row context before Jinja render."
+ ],
+ "keywords": ["messaging", "Twilio", "SendGrid", "SMS", "email", "Jinja"],
+ "format": 1
+}
+code-index:end
+"""
+
 from __future__ import annotations
 
 import json

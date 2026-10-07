@@ -1,6 +1,37 @@
+<!--
+Agent guide for NCE Events: where to add code, reusable helpers, and project conventions.
+
+code-index:begin
+{
+ "purpose": "Agent guide for NCE Events: where to add code, reusable helpers, and project conventions.",
+ "read_when": "Before adding features or searching for existing helpers in api/, panel_page, or panel_page_v2.",
+ "gotchas": [
+  "Read Docs/project_reference.md first; do not change code without it.",
+  "No bench commands; push to GitHub for deployment."
+ ],
+ "keywords": ["agent guide", "code index", "panel", "form dialog", "conventions", "helpers"],
+ "format": 1
+}
+code-index:end
+-->
+
 # Agent Guide — NCE Events
 
 **Read `Docs/project_reference.md` first.** It is the single source of truth. Do not make changes without reading it fully.
+
+**Finding code: ask the code index, do not read files.** `code_index/elements.json` maps every function, class,
+route, test and doc section here, each with a one-line label. Ask it, then read only what it prints; open a whole
+file only to edit it.
+
+```bash
+TOOL="/Users/oliver3/Documents/_NCE_projects/_Project support files/code-index/codeindex.py"
+python3 "$TOOL" --root . find WORDS...        # best-matching elements, with labels and line numbers
+python3 "$TOOL" --root . show ID_OR_NAME      # just that element's source, what it calls, its tests
+python3 "$TOOL" --root . callers ID_OR_NAME   # who calls it
+```
+
+Covers Python, JavaScript, TypeScript, Vue, PHP, CSS and Markdown. After code changes run `python3 "$TOOL" --root . --write` (free);
+new or changed functions get a Haiku label (paid, small): see `_Project support files/code-index/README.md`.
 
 ---
 

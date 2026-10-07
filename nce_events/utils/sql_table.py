@@ -1,3 +1,16 @@
+"""Returns MariaDB physical table name tab plus DocType for raw SQL queries.
+
+code-index:begin
+{
+ "purpose": "Returns MariaDB physical table name tab plus DocType for raw SQL queries.",
+ "read_when": "When writing raw SQL needing tabDocType table names without Database.get_table_name.",
+ "gotchas": [],
+ "keywords": ["physical_table_name", "tab", "doctype", "MariaDB", "raw SQL", "get_table_name"],
+ "format": 1
+}
+code-index:end
+"""
+
 from __future__ import annotations
 
 

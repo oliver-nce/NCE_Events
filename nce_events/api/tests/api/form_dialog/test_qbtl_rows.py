@@ -3,6 +3,18 @@ Unit tests for Query Based Table Link related-tab fetch helpers.
 
 Run with:
     bench run-tests --app nce_events --module nce_events.api.tests.api.form_dialog.test_qbtl_rows
+
+code-index:begin
+{
+ "purpose": "Unit tests for Query Based Table Link related-tab fetch helpers and QBTL parsing.",
+ "read_when": "When changing qbtl_rows.py join logic or related QBTL selection parsing.",
+ "gotchas": [
+  "Tests install frappe stubs; follow _install_frappe_stub pattern when adding cases."
+ ],
+ "keywords": ["test QBTL", "Query Based Table Link", "qbtl_rows", "unittest"],
+ "format": 1
+}
+code-index:end
 """
 
 from __future__ import annotations

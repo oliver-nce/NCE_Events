@@ -1,4 +1,15 @@
-"""Panel CSV export helpers and implementation."""
+"""Panel CSV export helpers and implementation.
+
+code-index:begin
+{
+ "purpose": "Page Panel CSV export helpers building column lists and downloadable CSV text for get_panel.",
+ "read_when": "When changing panel CSV export columns or build_page_panel_csv_text behavior.",
+ "gotchas": [],
+ "keywords": ["panel export", "CSV", "build_page_panel_csv_text", "search-only columns"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

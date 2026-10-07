@@ -2,6 +2,18 @@
 Validate and evaluate Form Dialog related-tab edit conditions (implicit IF SQL).
 
 Empty expression => editing always allowed. Truthy IF result => disable edit/add/remove.
+
+code-index:begin
+{
+ "purpose": "Validate and evaluate Form Dialog related-tab edit conditions against pending root values.",
+ "read_when": "When related tabs gate editing via SQL conditions or validating edit_condition expressions.",
+ "gotchas": [
+  "Edit conditions reject SELECT FROM and semicolons; only scalar root field tokens allowed."
+ ],
+ "keywords": ["edit condition", "related tab", "validate", "pending root", "Form Dialog"],
+ "format": 1
+}
+code-index:end
 """
 
 from __future__ import annotations

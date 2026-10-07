@@ -1,3 +1,15 @@
+// Legacy floating schema explorer for WP Tables doctypes with tag copy into focused inputs.
+//
+// code-index:begin
+// {
+//  "purpose": "Legacy floating schema explorer for WP Tables doctypes with tag copy into focused inputs.",
+//  "read_when": "When changing schema explorer columns, tag panels, or WP Tables doctype picker.",
+//  "gotchas": [],
+//  "keywords": ["schema_explorer", "nce_events.schema_explorer", "se-float", "se-tag-panel", "WP Tables", "SKIP_FIELDTYPES", "_open_explorer"],
+//  "format": 1
+// }
+// code-index:end
+
 (function () {
 	"use strict";
 

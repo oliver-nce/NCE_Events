@@ -1,3 +1,19 @@
+<!--
+Renders individual form dialog fields including find-mode criteria controls.
+
+code-index:begin
+{
+ "purpose": "Renders individual form dialog fields including find-mode criteria controls.",
+ "read_when": "Adding fieldtype support or changing find exact-match criteria on form fields.",
+ "gotchas": [
+  "HTML-label fields: always render value as HTML, never editable."
+ ],
+ "keywords": ["PanelFormField", "fieldtype", "find mode", "Link field", "exact criteria"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
   <!-- Table fields: placeholder -->
   <div v-if="config?.layout === 'table'" class="ppv2-fd-table-placeholder theme-text-muted">

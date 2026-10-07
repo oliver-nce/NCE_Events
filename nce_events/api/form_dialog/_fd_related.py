@@ -1,4 +1,17 @@
-"""Related-doctype helpers — hop chains, row sync, filters, and column derivation."""
+"""Related-doctype helpers — hop chains, row sync, filters, and column derivation.
+
+code-index:begin
+{
+ "purpose": "Related-doctype helpers: hop chains, row signatures, sync filters, and QBTL row matching.",
+ "read_when": "When debugging related-tab hop chains, row deduplication, or related DocType sync logic.",
+ "gotchas": [
+  "Hop chain normalization affects related row signatures; changing _normalize_hop_chain_value impacts dedup."
+ ],
+ "keywords": ["related doctype", "hop chain", "row signature", "QBTL", "sync"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

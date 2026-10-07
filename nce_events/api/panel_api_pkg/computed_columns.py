@@ -1,3 +1,16 @@
+"""Evaluate Page Panel computed columns via SQL expressions against panel row data.
+
+code-index:begin
+{
+ "purpose": "Evaluate Page Panel computed columns via SQL expressions against panel row data.",
+ "read_when": "When adding or debugging computed column SQL on Page Panel column definitions.",
+ "gotchas": [],
+ "keywords": ["computed columns", "SQL", "Page Panel", "evaluate", "column"],
+ "format": 1
+}
+code-index:end
+"""
+
 from __future__ import annotations
 
 import re

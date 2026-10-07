@@ -1,3 +1,15 @@
+// Hierarchy Explorer UI class rendering resizable two-pane drill-down desk layout.
+//
+// code-index:begin
+// {
+//  "purpose": "Hierarchy Explorer UI class rendering resizable two-pane drill-down desk layout.",
+//  "read_when": "Changing pane rendering, dividers, loading states, or drill-down navigation.",
+//  "gotchas": [],
+//  "keywords": ["hierarchy", "Explorer", "pane", "divider", "load_pane", "drill-down"],
+//  "format": 1
+// }
+// code-index:end
+
 frappe.provide("nce_events.hierarchy");
 
 nce_events.hierarchy.Explorer = class Explorer {

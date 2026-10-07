@@ -1,3 +1,20 @@
+<!--
+Main form dialog shell with find, native form, related tabs, submit, and WP readback.
+
+code-index:begin
+{
+ "purpose": "Main form dialog shell with find, native form, related tabs, submit, and WP readback.",
+ "read_when": "Changing form dialog save/submit flow, find layout, or dialog drag/resize.",
+ "gotchas": [
+  "Widen dialog (never shrink) so footer buttons stay on one row.",
+  "Do not emit saved when no Frappe form save; host must not run onFormDialogSaved refresh."
+ ],
+ "keywords": ["PanelFormDialog", "form dialog", "find", "submit", "WP readback", "related tab"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div
 		ref="backdropRef"

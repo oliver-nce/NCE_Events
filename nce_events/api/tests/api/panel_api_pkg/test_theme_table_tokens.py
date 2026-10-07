@@ -1,4 +1,15 @@
-"""Tests for theme table token resolution (Page Panel Colours tab previews)."""
+"""Tests for theme table token resolution (Page Panel Colours tab previews).
+
+code-index:begin
+{
+ "purpose": "Tests for theme table token resolution and table width tier normalization.",
+ "read_when": "When changing theme_table_tokens.py Desk preview token parsing or width tiers.",
+ "gotchas": [],
+ "keywords": ["test theme table tokens", "table width tier", "NCE Theme", "unittest"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

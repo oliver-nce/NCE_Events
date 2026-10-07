@@ -1,3 +1,16 @@
+"""Backfills scope=Both on existing Panel Action rows missing a scope value.
+
+code-index:begin
+{
+ "purpose": "Backfills scope=Both on existing Panel Action rows missing a scope value.",
+ "read_when": "Debugging Panel Action scope defaults after the scope field was added.",
+ "gotchas": [],
+ "keywords": ["Panel Action", "scope", "Both", "backfill", "idempotent"],
+ "format": 1
+}
+code-index:end
+"""
+
 from __future__ import annotations
 
 import frappe

@@ -1,3 +1,15 @@
+// Vue composable loading event enrollments when the evaluations shell eventId changes.
+//
+// code-index:begin
+// {
+//  "purpose": "Vue composable loading event enrollments when the evaluations shell eventId changes.",
+//  "read_when": "Changing enrollment fetch API or reactive reload on event selection.",
+//  "gotchas": [],
+//  "keywords": ["useEnrollments", "get_event_enrollments", "eventId", "composable", "evaluations"],
+//  "format": 1
+// }
+// code-index:end
+
 import { ref, watch } from "vue";
 
 import { frappeCall } from "../utils/frappeCall.js";

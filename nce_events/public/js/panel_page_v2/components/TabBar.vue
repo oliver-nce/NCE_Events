@@ -1,3 +1,17 @@
+<!--
+Panel page v2 tab bar sorting tabs by sort_order and hiding when only one tab with hide_bar.
+
+code-index:begin
+{
+ "purpose": "Panel page v2 tab bar sorting tabs by sort_order and hiding when only one tab with hide_bar.",
+ "read_when": "When changing panel tab navigation UI or single-tab hide_bar visibility.",
+ "gotchas": [],
+ "keywords": ["TabBar", "tab bar", "panel page v2", "sort_order", "hide_bar", "activeTab", "theme-text-heading"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div v-if="showBar" class="tab-bar">
 		<button

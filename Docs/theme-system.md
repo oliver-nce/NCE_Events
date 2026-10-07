@@ -92,6 +92,9 @@ These are always available on every page once the theme has been saved:
 
 /* Layout */
 --nce-border-radius
+--nce-border-width-thin
+--nce-border-width
+--nce-border-width-strong
 --nce-spacing-base
 --nce-shadow
 --nce-shadow-color
@@ -151,7 +154,9 @@ So in Vue templates inside the SPA you can write:
 
 These **unprefixed** utilities are internal to the SPA's own Tailwind build and **only work inside the SPA** (`/themes/*` pages). Do not use them on Desk pages.
 
-For downstream apps and Desk pages, use the **`theme-`-prefixed** classes emitted into `nce_theme.css` instead (`theme-bg-primary`, `theme-text-muted`, …) — see `theme-classes-reference.md`.
+For downstream apps and Desk pages, use the **`theme-`-prefixed** classes emitted into `nce_theme.css` instead (`theme-bg-primary`, `theme-text-muted`, `theme-border`, `theme-border-thin`, `theme-border-strong`, …) — see `theme-classes-reference.md`.
+
+Border widths are theme-configurable via `--nce-border-width-thin`, `--nce-border-width`, and `--nce-border-width-strong` (Theme Editor → Layout → Line Widths). There is no directional `theme-border-b` — use the width vars in scoped CSS for table row lines and tab underlines.
 
 ---
 

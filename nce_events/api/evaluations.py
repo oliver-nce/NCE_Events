@@ -1,4 +1,15 @@
-"""Evaluations API — enrollment rows for event-scoped rating Kanban."""
+"""Evaluations API — enrollment rows for event-scoped rating Kanban.
+
+code-index:begin
+{
+ "purpose": "Evaluations API returning enrollment rows for event-scoped rating Kanban and related views.",
+ "read_when": "When fetching event enrollment data for evaluations UI or rating workflows.",
+ "gotchas": [],
+ "keywords": ["evaluations", "enrollment", "event", "rating", "Kanban"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

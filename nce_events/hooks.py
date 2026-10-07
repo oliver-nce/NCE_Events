@@ -1,3 +1,18 @@
+"""Frappe app hooks for NCE Events: assets, desk routes, and WooCommerce publish extension points.
+
+code-index:begin
+{
+ "purpose": "Frappe app hooks for NCE Events: assets, desk routes, and WooCommerce publish extension points.",
+ "read_when": "Adding JS/CSS bundles, desk app screen entry, or after_events_publish_to_woocommerce handlers.",
+ "gotchas": [
+  "Other apps register after_events_publish_to_woocommerce in their hooks.py; each callable receives doctype and name."
+ ],
+ "keywords": ["app_include_js", "app_include_css", "doctype_js", "add_to_apps_screen", "after_events_publish_to_woocommerce", "required_apps", "nce_sync", "page-view"],
+ "format": 1
+}
+code-index:end
+"""
+
 app_name = "nce_events"
 app_title = "NCE Events"
 app_publisher = "Oliver Reid"

@@ -7,6 +7,18 @@ required-field rules (root + Page Panel ``required_fields``), then optionally
 pushes fetch_from values back into their source records before saving — keeping
 the Frappe fetch chain intact when the dialog edits both the parent and the
 linked source field in one round trip.
+
+code-index:begin
+{
+ "purpose": "Server-side Form Dialog document save with optional fetch_from and write context helpers.",
+ "read_when": "When persisting Form Dialog root document edits from Vue including scalar field sanitization.",
+ "gotchas": [
+  "Scalar field sanitization runs before save; fetch_from may populate linked fields post-save."
+ ],
+ "keywords": ["save form dialog", "fetch_from", "write context", "sanitize", "Form Dialog"],
+ "format": 1
+}
+code-index:end
 """
 
 from __future__ import annotations

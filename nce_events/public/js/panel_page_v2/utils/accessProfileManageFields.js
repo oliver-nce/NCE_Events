@@ -1,6 +1,16 @@
 /**
  * Manage Fields dialog for NCE Access Profile Table rows (panel inline grid).
  * Mirrors nce_access_profile.js show_manage_fields_dialog.
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Manage Fields dialog for NCE Access Profile Table rows mirroring nce_access_profile.js.",
+ *  "read_when": "When changing access profile inline grid Manage Fields dialog or documentType picker.",
+ *  "gotchas": [],
+ *  "keywords": ["openManageFieldsDialog", "Manage Fields", "NCE Access Profile", "documentType", "panel inline grid"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 
 export function openManageFieldsDialog(documentType) {

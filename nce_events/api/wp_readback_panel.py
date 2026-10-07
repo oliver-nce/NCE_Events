@@ -1,4 +1,17 @@
-"""Panel V2 helpers: detect NCE Sync SQL write-back / WP read-back for a DocType."""
+"""Panel V2 helpers: detect NCE Sync SQL write-back / WP read-back for a DocType.
+
+code-index:begin
+{
+ "purpose": "Panel V2 helpers: detect NCE Sync SQL write-back and WP read-back for a DocType.",
+ "read_when": "Checking whether a DocType has live WP Tables SQL write-back enabled for panel refresh timing.",
+ "gotchas": [
+  "Client uses write_back_refresh_seconds to pause before re-fetching the doc after submit."
+ ],
+ "keywords": ["doctype_has_wp_sql_live_readback", "WP Tables", "write_back_mode", "SQL Direct", "write_back_refresh_seconds", "mirror_status", "listen_for_changes", "nce_sync"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

@@ -3,6 +3,16 @@
  * Examples: `refresh_x`, `show_dt(error-log)`, `show_dt("Error Log")`
  * @param {string} raw
  * @returns {{ key: string; args: string[] }}
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Parses Panel Action client_handler strings into handler key and parenthesized args.",
+ *  "read_when": "When adding client_handler keys or parsing show_dt style action specs.",
+ *  "gotchas": [],
+ *  "keywords": ["parseClientHandlerSpec", "client_handler", "Panel Action", "refresh_x", "show_dt", "handler key"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 export function parseClientHandlerSpec(raw) {
 	const s = String(raw || "").trim();

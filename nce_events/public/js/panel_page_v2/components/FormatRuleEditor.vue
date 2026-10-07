@@ -1,3 +1,17 @@
+<!--
+Vue editor for panel table cell format rules with color and weight toggles.
+
+code-index:begin
+{
+ "purpose": "Vue editor for panel table cell format rules with color and weight toggles.",
+ "read_when": "Changing format rule validation or color/weight editing in panel settings.",
+ "gotchas": [],
+ "keywords": ["FormatRuleEditor", "format rule", "ColorPicker", "validate", "panel table"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div class="pp-fmt-editor">
 		<div class="pp-fmt-header">

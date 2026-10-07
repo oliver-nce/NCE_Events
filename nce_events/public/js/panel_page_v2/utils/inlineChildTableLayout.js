@@ -1,6 +1,16 @@
 /**
  * Column layout for form-dialog inline child-table grids (any DocType).
  * Uses fieldtype + label length — not hardcoded fieldnames.
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Column layout helpers for form-dialog inline child-table grids based on fieldtype and label length.",
+ *  "read_when": "When changing inline child table column roles, labelWidthRem, or action button columns.",
+ *  "gotchas": [],
+ *  "keywords": ["inlineChildTableLayout", "primaryInlineColumnIndex", "inlineColumnRole", "labelWidthRem", "isInlineActionButtonColumn"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 
 const PRIMARY_FIELD_TYPES = new Set([

@@ -1,3 +1,15 @@
+# Pre-commit hook configuration for ruff, prettier, eslint, pyupgrade and commit checks.
+#
+# code-index:begin
+# {
+#  "purpose": "Pre-commit hook configuration for ruff, prettier, eslint, pyupgrade and commit checks.",
+#  "read_when": "When adding or adjusting local lint/format hooks or CI pre-commit mirror settings.",
+#  "gotchas": [],
+#  "keywords": ["pre-commit", "ruff", "eslint", "prettier", "hooks", "formatting"],
+#  "format": 1
+# }
+# code-index:end
+
 exclude: 'node_modules|.git'
 default_stages: [pre-commit]
 fail_fast: false

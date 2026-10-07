@@ -1,5 +1,15 @@
 /**
  * Column list for Find Panel: visible panel columns + search-only columns on the right.
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Builds Find Panel column list from visible panel columns plus search-only columns.",
+ *  "read_when": "When changing Find Panel column layout or search-only column inclusion.",
+ *  "gotchas": [],
+ *  "keywords": ["buildFindColumns", "Find Panel", "search-only columns", "panel columns", "visible columns"],
+ *  "format": 1
+ * }
+ * code-index:end
  */
 export function buildFindColumns(panel) {
 	const visibleCols = (Array.isArray(panel?.columns) ? panel.columns : []).filter(

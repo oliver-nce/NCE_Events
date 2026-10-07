@@ -1,5 +1,16 @@
 #!/usr/bin/env python3
-"""Theme contract guard for panel / Vue UI. Run via scripts/style-audit.sh."""
+"""Theme contract guard for panel / Vue UI. Run via scripts/style-audit.sh.
+
+code-index:begin
+{
+ "purpose": "Theme contract guard scanning panel Vue UI for bare hex, unknown CSS vars, and typography violations.",
+ "read_when": "When running style-audit.sh or adding theme bridge alias checks for panel_page_v2.",
+ "gotchas": [],
+ "keywords": ["style-audit", "theme_defaults.css", "check_bare_hex", "check_unknown_aliases", "SCOPE_DIRS", "panel_page_v2", "theme contract"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 
@@ -81,8 +92,16 @@ ALLOWED_CUSTOM_PROPERTIES = frozenset(
     {
         "default-cell-min-width",
         "my-color",
+        "ppv2-col-divider-c",
+        "ppv2-col-divider-w",
+        "ppv2-col-header-line-c",
+        "ppv2-col-header-line-w",
         "ppv2-fd-rel-lbl",
+        "ppv2-filter-divider-c",
+        "ppv2-filter-divider-w",
         "ppv2-left-col",
+        "ppv2-row-divider-c",
+        "ppv2-row-divider-w",
         "tl",
         "tw",
     }

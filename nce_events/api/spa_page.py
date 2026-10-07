@@ -1,3 +1,16 @@
+"""SPA page config helpers resolving switch-page target slugs and SPA definition rows.
+
+code-index:begin
+{
+ "purpose": "SPA page config helpers resolving switch-page target slugs and SPA definition rows.",
+ "read_when": "When panel SPA navigation or switch-page slug parsing needs server-side config lookup.",
+ "gotchas": [],
+ "keywords": ["spa page", "switch page", "slug", "SPA definition", "config"],
+ "format": 1
+}
+code-index:end
+"""
+
 from __future__ import annotations
 
 import re

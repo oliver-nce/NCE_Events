@@ -1,3 +1,19 @@
+<!--
+Theme-exempt HSV color picker with swatches, hex input, and eye-dropper for format rules.
+
+code-index:begin
+{
+ "purpose": "Theme-exempt HSV color picker with swatches, hex input, and eye-dropper for format rules.",
+ "read_when": "Changing panel format-rule color selection or picker grid behavior.",
+ "gotchas": [
+  "Uses literal hex swatches; theme-exempt per format rule editor."
+ ],
+ "keywords": ["ColorPicker", "HSV", "hex", "swatches", "format rule", "eye-dropper"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div class="relative" ref="wrapper">
 		<label class="block text-sm font-medium text-gray-700 mb-1">{{ label }}</label>

@@ -1,3 +1,17 @@
+<!--
+ppv2-spa-nav button row for switching between SPA pages by page_slug.
+
+code-index:begin
+{
+ "purpose": "ppv2-spa-nav button row for switching between SPA pages by page_slug.",
+ "read_when": "Changing SPA nav button styling or currentSlug disabled state.",
+ "gotchas": [],
+ "keywords": ["ppv2-spa-nav", "pages", "currentSlug", "page_slug", "page_title"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<nav v-if="pages.length" class="ppv2-spa-nav" @mousedown.stop>
 		<button

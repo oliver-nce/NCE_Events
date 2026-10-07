@@ -1,4 +1,15 @@
-"""Add model field to API Connector so each provider can set its default model."""
+"""Add model field to API Connector so each provider can set its default model.
+
+code-index:begin
+{
+ "purpose": "Migration patch adding a model Custom Field to API Connector for default LLM model.",
+ "read_when": "Tracing API Connector schema changes or why model field is missing on old sites.",
+ "gotchas": [],
+ "keywords": ["API Connector", "model", "Custom Field", "migration", "execute"],
+ "format": 1
+}
+code-index:end
+"""
 import frappe
 
 

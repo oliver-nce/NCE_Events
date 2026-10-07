@@ -1,3 +1,16 @@
+"""Build core filter WHERE clauses combining user filters with Page Panel core SQL filters.
+
+code-index:begin
+{
+ "purpose": "Build core filter WHERE clauses combining user filters with Page Panel core SQL filters.",
+ "read_when": "When panel queries must merge user_filters with immutable core_filter SQL constraints.",
+ "gotchas": [],
+ "keywords": ["core filter", "WHERE clause", "user filters", "Page Panel", "SQL"],
+ "format": 1
+}
+code-index:end
+"""
+
 from __future__ import annotations
 
 import json

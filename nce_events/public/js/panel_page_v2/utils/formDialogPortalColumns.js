@@ -1,4 +1,15 @@
-/** Mirror Desk ``form_dialog.js`` / server portal_fields for inline-child grids. */
+/** Mirror Desk ``form_dialog.js`` / server portal_fields for inline-child grids.
+ *
+ * code-index:begin
+ * {
+ *  "purpose": "Portal grid column parsing mirroring Desk form_dialog.js and server portal_fields for inline child tables.",
+ *  "read_when": "When changing portal field config parsing, in_list_view columns, or fieldEligible rules.",
+ *  "gotchas": [],
+ *  "keywords": ["formDialogPortalColumns", "parsePortalFieldConfigRaw", "portal_fields", "in_list_view", "fieldEligible", "metaFieldsForPortalEditor"],
+ *  "format": 1
+ * }
+ * code-index:end
+ */
 
 import { metaReadOnlyFromField } from "./portalColumnEditable.js";
 

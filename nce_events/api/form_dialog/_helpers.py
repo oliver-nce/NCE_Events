@@ -3,6 +3,16 @@ Back-compat façade re-exporting form_dialog domain submodules.
 
 New code should import from ``_fd_*`` modules directly; these re-exports keep
 existing call sites and tests working with zero churn.
+
+code-index:begin
+{
+ "purpose": "Back-compat facade re-exporting form_dialog domain submodule helpers for older imports.",
+ "read_when": "When tracing legacy imports of form_dialog helpers consolidated into submodules.",
+ "gotchas": [],
+ "keywords": ["form_dialog helpers", "re-export", "back-compat", "facade"],
+ "format": 1
+}
+code-index:end
 """
 
 from __future__ import annotations

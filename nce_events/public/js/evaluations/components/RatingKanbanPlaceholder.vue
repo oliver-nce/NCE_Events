@@ -1,3 +1,17 @@
+<!--
+Placeholder kanban view shown when no event is selected in the evaluations shell.
+
+code-index:begin
+{
+ "purpose": "Placeholder kanban view shown when no event is selected in the evaluations shell.",
+ "read_when": "Changing empty-state messaging for the evaluations rating kanban.",
+ "gotchas": [],
+ "keywords": ["RatingKanbanPlaceholder", "evaluations", "kanban", "placeholder", "shell"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<div class="nce-eval-placeholder">
 		<p class="nce-eval-placeholder-line">

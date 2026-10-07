@@ -1,4 +1,17 @@
-"""Tests for nce_events.api.events_publish."""
+"""Tests for nce_events.api.events_publish.
+
+code-index:begin
+{
+ "purpose": "Tests for events_publish slugify, category payloads, and WooCommerce publish flows.",
+ "read_when": "When modifying Events-to-WooCommerce publish mapping or slug generation rules.",
+ "gotchas": [
+  "Slug max length and empty fallback behavior are covered; keep parity when changing slugify."
+ ],
+ "keywords": ["test events publish", "slugify", "WooCommerce", "Events", "unittest"],
+ "format": 1
+}
+code-index:end
+"""
 
 from __future__ import annotations
 

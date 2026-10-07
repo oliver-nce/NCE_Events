@@ -11,6 +11,8 @@ This folder explains HOW the theme system works. For the catalog of available cl
 | How does the editor change classes' values? Architecture overview. | `01-architecture.md` |
 | How do multi-theme scoped palettes work? `data-nce-theme`? base vs Active? | `01-architecture.md` |
 | What's the naming convention for tokens and classes? | `02-token-naming.md` |
+| What border/line width classes exist? Thin vs normal vs strong? | `02-token-naming.md`, `THEME_CLASS_CONTRACT.json` → `border_and_focus` |
+| How do I style table row dividers or tab underlines? | `07-using-in-vue.md` (directional CSS with width vars) |
 | What is primary vs secondary vs accent vs success/info/warning/danger? | `03-color-roles.md` |
 | How does the 11-stop shade scale work? Which stops have classes? | `04-shade-scale.md` |
 | How does text contrast auto-pair with backgrounds? Mono vs tonal? Threshold? | `05-foreground-pairing.md` |
@@ -39,7 +41,7 @@ Reusable picker that writes a single `theme-{kind}-{role}-{shade}` class string 
 
 **Assumption:** `nce_theme.css` is published on the site (`publish_theme()` on save of Active/base themes). Swatches paint via `theme-bg-*` classes inside a `data-nce-theme="{slug}"` wrapper — zero color math in the widget. On Desk, `themeField` holds the **NCE Theme link** (doc name); the adapter looks up **`slug`** before scoping the modal (Page Panel `theme`, not the slug string).
 
-**Agent — Vue Form Dialog save:** `ThemeSwatchPicker.vue` does not use `frm.set_value`. In `panel_page_v2`, wire `:set-field="(fn, val) => { formData[fn] = val }"` (and matching `:get-field`) or the picked class **will not save**. See `../theme-swatch-picker.md` §8.1. Desk embed is unaffected.
+**Agent — Vue embed save path:** `ThemeSwatchPicker.vue` does not call `frm.set_value`. Downstream apps that save via reactive `formData` (e.g. NCE Events `usePanelFormDialog`) **must** pass `:set-field` / `:get-field` bound to that object or the pick will not persist. See `../theme-swatch-picker.md` §8.1.
 
 ## Quick Answers (vague-question → file)
 
@@ -51,6 +53,7 @@ Reusable picker that writes a single `theme-{kind}-{role}-{shade}` class string 
 | "pick a theme class" / "header_color" / "swatch picker" / "theme-text-secondary-500" | `../theme-swatch-picker.md` |
 | "theme field is Link not slug" / "Page Panel theme picker" | `../theme-swatch-picker.md` §3–§4 (Desk resolves Link → slug) |
 | "ThemeSwatchPicker Vue save" / "setField formData" / "picker won't persist" | `../theme-swatch-picker.md` §8.1 |
+| "table row border" / "divider thickness" / "line width" | `07-using-in-vue.md`, `THEME_CLASS_CONTRACT.json` → `border_and_focus` |
 | "what class should I use for X" | (use `THEME_CLASS_CONTRACT.json` instead) |
 | "how do themes work in this app" | `01-architecture.md` |
 | "I want to add a brand color" | `08-extending.md` |

@@ -1,3 +1,17 @@
+<!--
+Single ppv2-find-row criterion inputs with OR label and find-perform on Enter.
+
+code-index:begin
+{
+ "purpose": "Single ppv2-find-row criterion inputs with OR label and find-perform on Enter.",
+ "read_when": "Changing find criterion row inputs, activate-row, or OR label display.",
+ "gotchas": [],
+ "keywords": ["ppv2-find-row", "criteria", "columns", "find-perform", "activate-row"],
+ "format": 1
+}
+code-index:end
+-->
+
 <template>
 	<tr class="ppv2-find-row" :class="{ 'ppv2-find-row--active': active }"
 		@mousedown="onRowActivate"

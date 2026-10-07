@@ -1,3 +1,16 @@
+"""Discover link hop paths, QBTL bridges, and child table fields for panel root DocType exploration.
+
+code-index:begin
+{
+ "purpose": "Discover link hop paths, QBTL bridges, and child table fields for panel root DocType exploration.",
+ "read_when": "When building related column pickers or tracing inbound link paths from root doctype.",
+ "gotchas": [],
+ "keywords": ["link", "hop", "doctype", "qbtl", "child", "root", "field"],
+ "format": 1
+}
+code-index:end
+"""
+
 from __future__ import annotations
 
 import json

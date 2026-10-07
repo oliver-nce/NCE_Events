@@ -1,3 +1,16 @@
+"""Frappe version helpers returning major version and is_v16_or_later check.
+
+code-index:begin
+{
+ "purpose": "Frappe version helpers returning major version and is_v16_or_later check.",
+ "read_when": "When branching behavior on Frappe v15 vs v16 or reading frappe.__version__.",
+ "gotchas": [],
+ "keywords": ["get_frappe_major_version", "is_v16_or_later", "frappe.__version__", "Frappe version"],
+ "format": 1
+}
+code-index:end
+"""
+
 import frappe
 
 

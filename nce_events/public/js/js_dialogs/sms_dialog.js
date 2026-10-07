@@ -1,3 +1,17 @@
+// Draggable SMS send dialog with template load, preview, and test-send support.
+//
+// code-index:begin
+// {
+//  "purpose": "Draggable SMS send dialog with template load, preview, and test-send support.",
+//  "read_when": "Changing bulk SMS send UX or message body resolution from templates.",
+//  "gotchas": [
+//   "Message body always comes from the message area; template just loads into it."
+//  ],
+//  "keywords": ["SmsDialog", "send-panel", "SMS", "template", "preview", "Jinja2"],
+//  "format": 1
+// }
+// code-index:end
+
 frappe.provide("nce_events.panel_page");
 
 nce_events.panel_page.SmsDialog = class SmsDialog {
