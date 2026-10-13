@@ -14364,8 +14364,9 @@
 "wired_by": [
 "nce_events/nce_events/doctype/display_settings/display_settings.js"
 ],
-"label": "",
-"label_source": "none"
+"label": "Apply and save display settings changes with user confirmation",
+"label_source": "generated",
+"label_hash": "3083a56ad9"
 },
 {
 "id": "nce_events/nce_events/doctype/display_settings/display_settings.js::form.on Display Settings.font_family",
@@ -14383,8 +14384,9 @@
 "wired_by": [
 "nce_events/nce_events/doctype/display_settings/display_settings.js"
 ],
-"label": "",
-"label_source": "none"
+"label": "Update font weight options when font family changes",
+"label_source": "generated",
+"label_hash": "71d59a0fe4"
 },
 {
 "id": "nce_events/nce_events/doctype/display_settings/display_settings.js::form.on Display Settings.font_weight",
@@ -14404,8 +14406,9 @@
 "tested_by": [
 "nce_events/api/tests/api/form_dialog/test_related_rows.py::TestGetFormDialogRelatedRows.test_format_rules_from_child_panel"
 ],
-"label": "",
-"label_source": "none"
+"label": "Re-render sample text when font weight changes",
+"label_source": "generated",
+"label_hash": "4e695c3c16"
 },
 {
 "id": "nce_events/nce_events/doctype/display_settings/display_settings.js::form.on Display Settings.font_size",
@@ -14422,8 +14425,9 @@
 "wired_by": [
 "nce_events/nce_events/doctype/display_settings/display_settings.js"
 ],
-"label": "",
-"label_source": "none"
+"label": "Re-render sample text when font size changes",
+"label_source": "generated",
+"label_hash": "484db5c4cd"
 },
 {
 "id": "nce_events/nce_events/doctype/display_settings/display_settings.js::form.on Display Settings.text_color",
@@ -14440,8 +14444,9 @@
 "wired_by": [
 "nce_events/nce_events/doctype/display_settings/display_settings.js"
 ],
-"label": "",
-"label_source": "none"
+"label": "Re-render sample text when text color changes",
+"label_source": "generated",
+"label_hash": "123956388c"
 },
 {
 "id": "nce_events/nce_events/doctype/display_settings/display_settings.js::form.on Display Settings.muted_text_color",
@@ -14458,8 +14463,9 @@
 "wired_by": [
 "nce_events/nce_events/doctype/display_settings/display_settings.js"
 ],
-"label": "",
-"label_source": "none"
+"label": "Re-render sample text when muted text color changes",
+"label_source": "generated",
+"label_hash": "1a9ab5df91"
 },
 {
 "id": "nce_events/nce_events/doctype/display_settings/display_settings.js::_sync_weight_options",
@@ -14579,8 +14585,9 @@
 "nce_events/nce_events/doctype/display_settings/display_settings.js::_hexToHSV",
 "nce_events/nce_events/doctype/display_settings/display_settings.js::_open_picker.syncUI"
 ],
-"label": "",
-"label_source": "none"
+"label": "Select and highlight color cell in interactive picker",
+"label_source": "generated",
+"label_hash": "45edacb4af"
 },
 {
 "id": "nce_events/nce_events/doctype/display_settings/display_settings.js::_open_picker.addCell",
@@ -14597,8 +14604,9 @@
 "wired_by": [
 "nce_events/nce_events/doctype/display_settings/display_settings.js::_open_picker"
 ],
-"label": "",
-"label_source": "none"
+"label": "Add clickable color cell to grid in color picker",
+"label_source": "generated",
+"label_hash": "4cbe4e8029"
 },
 {
 "id": "nce_events/nce_events/doctype/display_settings/display_settings.js::_open_picker.syncUI",
@@ -14612,8 +14620,9 @@
 "calls": [
 "nce_events/nce_events/doctype/display_settings/display_settings.js::_hsvToHex"
 ],
-"label": "",
-"label_source": "none"
+"label": "Update color picker UI elements to reflect current HSV values",
+"label_source": "generated",
+"label_hash": "a054ec08aa"
 },
 {
 "id": "nce_events/nce_events/doctype/display_settings/display_settings.js::_open_picker.onSlider",
@@ -14627,8 +14636,9 @@
 "calls": [
 "nce_events/nce_events/doctype/display_settings/display_settings.js::_open_picker.syncUI"
 ],
-"label": "",
-"label_source": "none"
+"label": "Update HSV values from slider or numeric input changes",
+"label_source": "generated",
+"label_hash": "a6ff73f7af"
 },
 {
 "id": "nce_events/nce_events/doctype/display_settings/display_settings.js::_FONT_MAP",
@@ -14670,8 +14680,9 @@
 "hash": "57bc0de3be",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Convert value to integer, returning zero on invalid input",
+"label_source": "generated",
+"label_hash": "57bc0de3be"
 },
 {
 "id": "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_parseInfo",
@@ -14683,8 +14694,9 @@
 "hash": "6a72d10089",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Parse JSON info field from row configuration",
+"label_source": "generated",
+"label_hash": "6a72d10089"
 },
 {
 "id": "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_parsePortalRaw",
@@ -14696,8 +14708,9 @@
 "hash": "f74b30fefc",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Parse and validate JSON array from portal raw configuration",
+"label_source": "generated",
+"label_hash": "f74b30fefc"
 },
 {
 "id": "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_fieldEligible",
@@ -14714,8 +14727,9 @@
 "wired_by": [
 "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_metaFieldsForEditor"
 ],
-"label": "",
-"label_source": "none"
+"label": "Check if a field is eligible for portal editor display",
+"label_source": "generated",
+"label_hash": "95bbce71b4"
 },
 {
 "id": "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_metaFieldsForEditor",
@@ -14727,8 +14741,9 @@
 "hash": "ee5771801e",
 "exported": false,
 "calls": [],
-"label": "Mirror api/form_dialog/portal_fields._portal_meta_fields_for_editor */",
-"label_source": "docstring"
+"label": "Build eligible fields list for portal editor with name field prepended",
+"label_source": "generated",
+"label_hash": "ee5771801e"
 },
 {
 "id": "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_buildEditorRows",
@@ -14743,8 +14758,9 @@
 "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_cint",
 "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_metaFieldsForEditor"
 ],
-"label": "Mirror api/form_dialog/portal_fields._build_portal_editor_rows */",
-"label_source": "docstring"
+"label": "Build portal editor rows from metadata and configuration entries",
+"label_source": "generated",
+"label_hash": "bc12dcf1fb"
 },
 {
 "id": "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_injectCssOnce",
@@ -14756,8 +14772,9 @@
 "hash": "636da15af1",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Inject portal matrix styling CSS once into document head",
+"label_source": "generated",
+"label_hash": "636da15af1"
 },
 {
 "id": "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_portalRowsWithKind",
@@ -14769,8 +14786,9 @@
 "hash": "ad785b42b5",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Get portal rows with kind identifier for related and inline tables",
+"label_source": "generated",
+"label_hash": "ad785b42b5"
 },
 {
 "id": "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_getPortalRowBundle",
@@ -14784,8 +14802,9 @@
 "calls": [
 "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_portalRowsWithKind"
 ],
-"label": "",
-"label_source": "none"
+"label": "Retrieve portal row bundle by name from related or inline tables",
+"label_source": "generated",
+"label_hash": "d052c67c43"
 },
 {
 "id": "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_payloadFromTbody",
@@ -14797,8 +14816,9 @@
 "hash": "1123b91d0a",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Extract field configuration payload from portal matrix table body",
+"label_source": "generated",
+"label_hash": "1123b91d0a"
 },
 {
 "id": "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_applySortUi",
@@ -14810,8 +14830,9 @@
 "hash": "e369dc42e0",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Update sort UI controls and display for a form dialog field row",
+"label_source": "generated",
+"label_hash": "e369dc42e0"
 },
 {
 "id": "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_updateSortSummary",
@@ -14823,8 +14844,9 @@
 "hash": "6667a872bc",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Display summary of active sort configuration for portal fields",
+"label_source": "generated",
+"label_hash": "6667a872bc"
 },
 {
 "id": "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_maxSortRank",
@@ -14836,8 +14858,9 @@
 "hash": "c354fa3dab",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Get highest sort rank number from field table rows",
+"label_source": "generated",
+"label_hash": "c354fa3dab"
 },
 {
 "id": "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_renumberSortRanks",
@@ -14852,8 +14875,9 @@
 "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_applySortUi",
 "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_updateSortSummary"
 ],
-"label": "",
-"label_source": "none"
+"label": "Renumber and reorder sort ranks for visible portal fields",
+"label_source": "generated",
+"label_hash": "b2e9e089c5"
 },
 {
 "id": "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_fieldsTbodyForSync",
@@ -14865,8 +14889,9 @@
 "hash": "661ea97c74",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Retrieve current field table body element for syncing to document",
+"label_source": "generated",
+"label_hash": "661ea97c74"
 },
 {
 "id": "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_syncRowToDoc",
@@ -14882,8 +14907,9 @@
 "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_getPortalRowBundle",
 "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_payloadFromTbody"
 ],
-"label": "",
-"label_source": "none"
+"label": "Sync field configuration changes from table back to document row",
+"label_source": "generated",
+"label_hash": "3ec2179dff"
 },
 {
 "id": "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_wireFieldsTabEvents",
@@ -14901,8 +14927,9 @@
 "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_syncRowToDoc",
 "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_updateSortSummary"
 ],
-"label": "",
-"label_source": "none"
+"label": "Attach drag-drop and event handlers to fields configuration table",
+"label_source": "generated",
+"label_hash": "d60130a7e7"
 },
 {
 "id": "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_renderOrderTab",
@@ -14916,8 +14943,9 @@
 "calls": [
 "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_syncRowToDoc"
 ],
-"label": "",
-"label_source": "none"
+"label": "Render order tab UI for setting visible portal field column order",
+"label_source": "generated",
+"label_hash": "eb0099b792"
 },
 {
 "id": "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_renderFieldsTab",
@@ -14932,8 +14960,9 @@
 "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_updateSortSummary",
 "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_wireFieldsTabEvents"
 ],
-"label": "",
-"label_source": "none"
+"label": "Render fields tab UI for managing portal field visibility and sorting",
+"label_source": "generated",
+"label_hash": "1b69d1c79c"
 },
 {
 "id": "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_showInnerTab",
@@ -14952,8 +14981,9 @@
 "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_renderFieldsTab",
 "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_renderOrderTab"
 ],
-"label": "",
-"label_source": "none"
+"label": "Display and switch between fields and display order inner tabs in portal configuration",
+"label_source": "generated",
+"label_hash": "3433d2996c"
 },
 {
 "id": "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_wireTabOptions",
@@ -14967,8 +14997,9 @@
 "calls": [
 "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_getPortalRowBundle"
 ],
-"label": "",
-"label_source": "none"
+"label": "Attach event handlers to tab option controls for editing portal row settings",
+"label_source": "generated",
+"label_hash": "f50ff5de17"
 },
 {
 "id": "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_showOuterTab",
@@ -14985,8 +15016,9 @@
 "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_syncRowToDoc",
 "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_wireTabOptions"
 ],
-"label": "",
-"label_source": "none"
+"label": "Switch active outer tab and render inner tab shell for portal field configuration",
+"label_source": "generated",
+"label_hash": "f4bc47a8c9"
 },
 {
 "id": "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_renderPortalShell",
@@ -15002,8 +15034,9 @@
 "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_portalRowsWithKind",
 "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_showOuterTab"
 ],
-"label": "",
-"label_source": "none"
+"label": "Build and render the complete portal shell UI structure for related doctypes",
+"label_source": "generated",
+"label_hash": "385bbf75a1"
 },
 {
 "id": "nce_events/nce_events/doctype/form_dialog/form_dialog.js::ensurePortalUi",
@@ -15017,8 +15050,9 @@
 "calls": [
 "nce_events/nce_events/doctype/form_dialog/form_dialog.js::_renderPortalShell"
 ],
-"label": "",
-"label_source": "none"
+"label": "Initialize portal UI when form dialog has related doctypes or inline child tables",
+"label_source": "generated",
+"label_hash": "7f4e7d6873"
 },
 {
 "id": "nce_events/nce_events/doctype/form_dialog/form_dialog.py::FormDialog",
@@ -15613,8 +15647,9 @@
 "hash": "ac12de0c05",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Attach resize handle to table column header for drag-to-resize functionality",
+"label_source": "generated",
+"label_hash": "ac12de0c05"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_wire_display_matrix_col_resize._attachHandle.onMove",
@@ -15629,8 +15664,9 @@
 "wired_by": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_wire_display_matrix_col_resize._attachHandle"
 ],
-"label": "",
-"label_source": "none"
+"label": "Handle mouse movement during column resize to update column width dynamically",
+"label_source": "generated",
+"label_hash": "9f7de5211e"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_wire_display_matrix_col_resize._attachHandle.onUp",
@@ -15647,8 +15683,9 @@
 "wired_by": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_wire_display_matrix_col_resize._attachHandle"
 ],
-"label": "",
-"label_source": "none"
+"label": "Finalize column resize and save updated column widths to backend",
+"label_source": "generated",
+"label_hash": "61b0b36a5d"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_collect_valid_display_keys",
@@ -15695,8 +15732,9 @@
 "calls": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_parse_csv"
 ],
-"label": "",
-"label_source": "none"
+"label": "Filter CSV field list to keep only valid keys and remove deleted ones",
+"label_source": "generated",
+"label_hash": "e221af79c3"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_display_has_orphan_keys",
@@ -15726,8 +15764,9 @@
 "calls": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_parse_csv"
 ],
-"label": "",
-"label_source": "none"
+"label": "Check if display configuration contains references to deleted or unavailable fields",
+"label_source": "generated",
+"label_hash": "89d556c041"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_display",
@@ -15758,8 +15797,9 @@
 "calls": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_display_tabs"
 ],
-"label": "",
-"label_source": "none"
+"label": "Clear container and build display tabs once metadata is ready",
+"label_source": "generated",
+"label_hash": "f598fd1d6b"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_get_computed_fields",
@@ -15876,8 +15916,9 @@
 "calls": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_isDocfieldMetaReqd"
 ],
-"label": "",
-"label_source": "none"
+"label": "Register required field metadata keys from docfield meta information",
+"label_source": "generated",
+"label_hash": "5249a82e6a"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_display_tabs._registerMetaReadOnly",
@@ -15891,8 +15932,9 @@
 "calls": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_isDocfieldMetaReadOnly"
 ],
-"label": "",
-"label_source": "none"
+"label": "Register read-only field metadata keys including computed and meta-read-only fields",
+"label_source": "generated",
+"label_hash": "5a2b606e46"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_display_tabs._sync_all",
@@ -15912,8 +15954,9 @@
 "wired_by": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_display_tabs"
 ],
-"label": "Sync function — collects from ALL matrices",
-"label_source": "docstring"
+"label": "Collect and synchronize all display, order, and property settings from page panel tabs",
+"label_source": "generated",
+"label_hash": "0101e08e18"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_display_tabs._enforceShowSearchExclusivity",
@@ -15925,8 +15968,9 @@
 "hash": "e48ef1b0e0",
 "exported": false,
 "calls": [],
-"label": "Show ↔ Search Only mutual exclusion: checking one clears the other on the same row",
-"label_source": "docstring"
+"label": "Enforce mutual exclusion between Show and Search Only checkboxes for fields",
+"label_source": "generated",
+"label_hash": "e48ef1b0e0"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_display_tabs._show_sub",
@@ -15944,8 +15988,9 @@
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_order_tab",
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_wire_display_matrix_col_resize"
 ],
-"label": "Show sub-tab handler",
-"label_source": "docstring"
+"label": "Switch sub-tab view and render selected tab content with toolbar",
+"label_source": "generated",
+"label_hash": "d2e5054d48"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_fmt_has_rule",
@@ -16064,8 +16109,9 @@
 "hash": "77bd12c681",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Handle failure when conditional formatting editor module fails to load",
+"label_source": "generated",
+"label_hash": "77bd12c681"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_format_rule_dialog",
@@ -16099,8 +16145,9 @@
 "wired_by": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_format_rule_dialog"
 ],
-"label": "",
-"label_source": "none"
+"label": "Unmount and cleanup conditional formatting rule dialog Vue application",
+"label_source": "generated",
+"label_hash": "b6a937608c"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_order_tab",
@@ -16240,8 +16287,9 @@
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_filter_fields_from_columns",
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build._render_rows"
 ],
-"label": "",
-"label_source": "none"
+"label": "Build custom default filters widget with field selection and operator buttons",
+"label_source": "generated",
+"label_hash": "ddf7e41190"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build._field_options_html",
@@ -16253,8 +16301,9 @@
 "hash": "2d2e00537f",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Generate field option list HTML for default filter field selector dropdown",
+"label_source": "generated",
+"label_hash": "2d2e00537f"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build._ops_for_field",
@@ -16266,8 +16315,9 @@
 "hash": "f5b897c59e",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Return appropriate comparison operators based on field type",
+"label_source": "generated",
+"label_hash": "f5b897c59e"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build._is_date_field",
@@ -16279,8 +16329,9 @@
 "hash": "75c48b7a17",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Determine if field is date type based on fieldtype or naming convention",
+"label_source": "generated",
+"label_hash": "75c48b7a17"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build._render_rows",
@@ -16298,8 +16349,9 @@
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build._is_date_field",
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build._ops_for_field"
 ],
-"label": "",
-"label_source": "none"
+"label": "Render and populate default filter rows from page panel configuration",
+"label_source": "generated",
+"label_hash": "185b953ade"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build._esc",
@@ -16311,8 +16363,9 @@
 "hash": "645cb00154",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Escape HTML special characters in field values for safe display",
+"label_source": "generated",
+"label_hash": "645cb00154"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build._save_rows",
@@ -16324,8 +16377,9 @@
 "hash": "4bcaefaaea",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Persist default filter widget state back to page panel document",
+"label_source": "generated",
+"label_hash": "4bcaefaaea"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build._bind_events",
@@ -16340,8 +16394,9 @@
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build._ops_for_field",
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build._render_rows"
 ],
-"label": "",
-"label_source": "none"
+"label": "Bind event handlers for default filter field, operator, and value inputs",
+"label_source": "generated",
+"label_hash": "e49543c95c"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_close_related_portal_float",
@@ -16415,8 +16470,9 @@
 "hash": "82d5011749",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Find portal action method specification by key identifier",
+"label_source": "generated",
+"label_hash": "82d5011749"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_render_portal_actions_tab.renderList",
@@ -16430,8 +16486,9 @@
 "calls": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_render_portal_actions_tab.methodSpecByKey"
 ],
-"label": "",
-"label_source": "none"
+"label": "Render list of portal action buttons with add, edit, delete controls",
+"label_source": "generated",
+"label_hash": "e612a3d020"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_render_portal_actions_tab.renderParamGrid",
@@ -16443,8 +16500,9 @@
 "hash": "ff45870804",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Render parameter grid for portal action method arguments",
+"label_source": "generated",
+"label_hash": "ff45870804"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_render_portal_actions_tab.openForm",
@@ -16460,8 +16518,9 @@
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_render_portal_actions_tab.methodSpecByKey",
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_render_portal_actions_tab.renderParamGrid"
 ],
-"label": "",
-"label_source": "none"
+"label": "Open form to edit or create a new portal action button",
+"label_source": "generated",
+"label_hash": "a2d86c2e86"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_render_portal_actions_tab.collectFormAction",
@@ -16473,8 +16532,9 @@
 "hash": "a92e03cb30",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Collect and validate portal action form data before saving",
+"label_source": "generated",
+"label_hash": "a92e03cb30"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_related_portal_float",
@@ -16508,8 +16568,9 @@
 "wired_by": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_related_portal_float"
 ],
-"label": "",
-"label_source": "none"
+"label": "Handle escape key to close related portal editor dialog",
+"label_source": "generated",
+"label_hash": "75457f3866"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_related_portal_float.ppMountPortalEditor",
@@ -16530,8 +16591,9 @@
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_render_portal_actions_tab",
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_dialogs_tab"
 ],
-"label": "",
-"label_source": "none"
+"label": "Mount portal editor UI with columns and actions tabs",
+"label_source": "generated",
+"label_hash": "4f7fa35262"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_related_portal_float.ppMaxSortRank",
@@ -16543,8 +16605,9 @@
 "hash": "a0d205e5b9",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Find maximum sort rank value from table rows",
+"label_source": "generated",
+"label_hash": "a0d205e5b9"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_related_portal_float.ppApplySortUI",
@@ -16556,8 +16619,9 @@
 "hash": "3808310c58",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Update sort UI controls based on checkbox and sort settings",
+"label_source": "generated",
+"label_hash": "3808310c58"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_related_portal_float.ppRefreshAllSortUI",
@@ -16571,8 +16635,9 @@
 "calls": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_related_portal_float.ppApplySortUI"
 ],
-"label": "",
-"label_source": "none"
+"label": "Refresh sort UI display for all table rows",
+"label_source": "generated",
+"label_hash": "c22182f7b2"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_related_portal_float.ppRenumberSortRanks",
@@ -16586,8 +16651,9 @@
 "calls": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_related_portal_float.ppRefreshAllSortUI"
 ],
-"label": "",
-"label_source": "none"
+"label": "Renumber and reorder sort ranks sequentially for checked items",
+"label_source": "generated",
+"label_hash": "8a4ff8d6df"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_normalizeHopChainForPickerKey",
@@ -16695,8 +16761,9 @@
 "hash": "2adf246790",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Create self-referencing proxy that absorbs any operation",
+"label_source": "generated",
+"label_hash": "2adf246790"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_desk_discover_script_tool_groups.makeFieldsDictProxy",
@@ -16708,8 +16775,9 @@
 "hash": "0497354cf8",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Create proxy object mimicking fields dictionary for portal editor",
+"label_source": "generated",
+"label_hash": "0497354cf8"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_desk_discover_script_tool_groups.assembleShim",
@@ -16724,8 +16792,9 @@
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_desk_discover_script_tool_groups.absorbProxy",
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_desk_discover_script_tool_groups.makeFieldsDictProxy"
 ],
-"label": "",
-"label_source": "none"
+"label": "Assemble form shim with stubs to capture custom button groups",
+"label_source": "generated",
+"label_hash": "2c8d2467b7"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_normalizeCaptureHopBuckets",
@@ -16820,8 +16889,9 @@
 "calls": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_htmlEscAttr"
 ],
-"label": "",
-"label_source": "none"
+"label": "Generate checkbox HTML rows for relationship and query-based link selection",
+"label_source": "generated",
+"label_hash": "0983bf0561"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_show_capture_wizard_dialog.colHtml",
@@ -16838,8 +16908,9 @@
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_relatedPickerFingerprint",
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_show_capture_wizard_dialog._checkboxRows"
 ],
-"label": "",
-"label_source": "none"
+"label": "Generate column HTML for relationship picker dialog sections",
+"label_source": "generated",
+"label_hash": "ee2fc5c1f3"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_load_capture_wizard_sources",
@@ -16868,8 +16939,9 @@
 "hash": "4056ea9500",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Mark load operation as failed and invoke failure callback",
+"label_source": "generated",
+"label_hash": "4056ea9500"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_load_capture_wizard_sources.tick",
@@ -16881,8 +16953,9 @@
 "hash": "8ed944a70b",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Decrement pending counter and invoke callback when complete",
+"label_source": "generated",
+"label_hash": "8ed944a70b"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_dialogs_tab",
@@ -16937,8 +17010,9 @@
 "wired_by": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_dialogs_click_handlers"
 ],
-"label": "",
-"label_source": "none"
+"label": "Delete Form Dialog via API and refresh display",
+"label_source": "generated",
+"label_hash": "014a6283a1"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_dialogs_tab_html",
@@ -17270,8 +17344,9 @@
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_reload_nce_theme_stylesheet",
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_colours_tab_previews"
 ],
-"label": "",
-"label_source": "none"
+"label": "Reload theme stylesheet and update colour preview display",
+"label_source": "generated",
+"label_hash": "7076fe0345"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_fetch_active_nce_themes_for_colours",
@@ -17381,8 +17456,9 @@
 "calls": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_update_colours_theme_edit_btn"
 ],
-"label": "",
-"label_source": "none"
+"label": "Sync selected theme value to dropdown and update edit button",
+"label_source": "generated",
+"label_hash": "3907733854"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_tab_styles_html",
@@ -17654,8 +17730,9 @@
 "wired_by": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js"
 ],
-"label": "",
-"label_source": "none"
+"label": "Refresh Page Panel form with tabs, filters, and theme visibility",
+"label_source": "generated",
+"label_hash": "13a138dcaa"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::form.on Page Panel.theme",
@@ -17672,8 +17749,9 @@
 "wired_by": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js"
 ],
-"label": "",
-"label_source": "none"
+"label": "Rerender colours tab when theme field value changes",
+"label_source": "generated",
+"label_hash": "92a4ced4e7"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::form.on Page Panel.root_doctype",
@@ -17692,8 +17770,9 @@
 "wired_by": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js"
 ],
-"label": "",
-"label_source": "none"
+"label": "Reset panel configuration when root doctype changes",
+"label_source": "generated",
+"label_hash": "f99519c664"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::form.on Page Panel.column_order",
@@ -17710,8 +17789,9 @@
 "wired_by": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js"
 ],
-"label": "",
-"label_source": "none"
+"label": "Refresh filter widget after column order updates",
+"label_source": "generated",
+"label_hash": "1226f3885f"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::form.on Page Panel.validate",
@@ -17728,8 +17808,9 @@
 "wired_by": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js"
 ],
-"label": "",
-"label_source": "none"
+"label": "Validate panel name and remove empty format rules before save",
+"label_source": "generated",
+"label_hash": "8ec8a8aecd"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::form.on Page Panel.before_save",
@@ -17746,8 +17827,9 @@
 "wired_by": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js"
 ],
-"label": "",
-"label_source": "none"
+"label": "Sync display settings and prune format rules before saving panel",
+"label_source": "generated",
+"label_hash": "2ef0430a60"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::form.on Page Panel.after_save",
@@ -17762,8 +17844,9 @@
 "wired_by": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js"
 ],
-"label": "",
-"label_source": "none"
+"label": "Refresh panel SQL field after panel is saved",
+"label_source": "generated",
+"label_hash": "03418fb7bd"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.py::_compute_panel_sql",
@@ -17845,8 +17928,9 @@
 "tested_by": [
 "nce_events/api/tests/api/form_dialog/test_related_rows.py::TestGetFormDialogRelatedRows.test_format_rules_from_child_panel"
 ],
-"label": "",
-"label_source": "none"
+"label": "Auto-populate label from field name in computed column row",
+"label_source": "generated",
+"label_hash": "e8924b20a3"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel_computed_column/page_panel_computed_column.js::_title_case",
@@ -17953,8 +18037,9 @@
 "wired_by": [
 "nce_events/nce_events/doctype/panel_action/panel_action.js"
 ],
-"label": "",
-"label_source": "none"
+"label": "Add capture button to Panel Action form for Form Dialog type actions",
+"label_source": "generated",
+"label_hash": "0893a84b6e"
 },
 {
 "id": "nce_events/nce_events/doctype/panel_action/panel_action.js::form.on Panel Action.refresh.proceed",
@@ -17966,8 +18051,9 @@
 "hash": "fc37c346e2",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Capture panel action dialog configuration from current Desk form",
+"label_source": "generated",
+"label_hash": "fc37c346e2"
 },
 {
 "id": "nce_events/nce_events/doctype/panel_action/panel_action.py::PanelAction",
@@ -18044,8 +18130,9 @@
 "wired_by": [
 "nce_events/nce_events/doctype/query_based_table_link/query_based_table_link.js"
 ],
-"label": "",
-"label_source": "none"
+"label": "Initialize table queries for Query Based Table Link on form load",
+"label_source": "generated",
+"label_hash": "f82552678f"
 },
 {
 "id": "nce_events/nce_events/doctype/query_based_table_link/query_based_table_link.js::form.on Query Based Table Link.refresh",
@@ -18063,8 +18150,9 @@
 "wired_by": [
 "nce_events/nce_events/doctype/query_based_table_link/query_based_table_link.js"
 ],
-"label": "",
-"label_source": "none"
+"label": "Set up and render Query Based Table Link interface with field lists",
+"label_source": "generated",
+"label_hash": "fcf9d5bfd6"
 },
 {
 "id": "nce_events/nce_events/doctype/query_based_table_link/query_based_table_link.js::form.on Query Based Table Link.before_save",
@@ -18082,8 +18170,9 @@
 "wired_by": [
 "nce_events/nce_events/doctype/query_based_table_link/query_based_table_link.js"
 ],
-"label": "",
-"label_source": "none"
+"label": "Persist field ordering for left and right tables before saving",
+"label_source": "generated",
+"label_hash": "dbd9bc5739"
 },
 {
 "id": "nce_events/nce_events/doctype/query_based_table_link/query_based_table_link.js::form.on Query Based Table Link.left_table",
@@ -18104,8 +18193,9 @@
 "nce_events/api/tests/api/panel_api_pkg/test_discovery.py::TestGetMultiHopChildren.test_qbtl_mixed_path_two_hop",
 "nce_events/api/tests/api/panel_api_pkg/test_discovery.py::TestGetMultiHopChildren.test_qbtl_self_join_on_root"
 ],
-"label": "",
-"label_source": "none"
+"label": "Re-render Query Based Table Link when left table changes",
+"label_source": "generated",
+"label_hash": "4d608c12a6"
 },
 {
 "id": "nce_events/nce_events/doctype/query_based_table_link/query_based_table_link.js::form.on Query Based Table Link.right_table",
@@ -18126,8 +18216,9 @@
 "nce_events/api/tests/api/panel_api_pkg/test_discovery.py::TestGetMultiHopChildren.test_qbtl_mixed_path_two_hop",
 "nce_events/api/tests/api/panel_api_pkg/test_discovery.py::TestGetMultiHopChildren.test_qbtl_self_join_on_root"
 ],
-"label": "",
-"label_source": "none"
+"label": "Re-render Query Based Table Link when right table changes",
+"label_source": "generated",
+"label_hash": "94c30ef346"
 },
 {
 "id": "nce_events/nce_events/doctype/query_based_table_link/query_based_table_link.js::_qbtl_set_table_queries",
@@ -18536,8 +18627,9 @@
 "nce_events/nce_events/doctype/query_based_table_link/query_based_table_link.js::_qbtl_persist_side_index",
 "nce_events/nce_events/doctype/query_based_table_link/query_based_table_link.js::_qbtl_sort_fields"
 ],
-"label": "",
-"label_source": "none"
+"label": "Populate and index field list for table join side",
+"label_source": "generated",
+"label_hash": "6be621f623"
 },
 {
 "id": "nce_events/nce_events/doctype/query_based_table_link/query_based_table_link.js::_qbtl_sort_rows_html",
@@ -18601,8 +18693,9 @@
 "nce_events/nce_events/doctype/query_based_table_link/query_based_table_link.js::_qbtl_read_sort_rows",
 "nce_events/nce_events/doctype/query_based_table_link/query_based_table_link.js::_qbtl_sort_rows_html"
 ],
-"label": "",
-"label_source": "none"
+"label": "Render and update sort configuration dialog with add/remove controls",
+"label_source": "generated",
+"label_hash": "b7b4ab825f"
 },
 {
 "id": "nce_events/nce_events/doctype/query_based_table_link/query_based_table_link.py::normalize_op",
@@ -18829,8 +18922,9 @@
 "wired_by": [
 "nce_events/nce_events/doctype/settings/settings.js"
 ],
-"label": "",
-"label_source": "none"
+"label": "Add primary Save button with green confirmation alert to Settings",
+"label_source": "generated",
+"label_hash": "e80907e889"
 },
 {
 "id": "nce_events/nce_events/doctype/settings/settings.py::Settings",
@@ -19224,8 +19318,9 @@
 "wired_by": [
 "nce_events/public/js/api_connector_tags.js"
 ],
-"label": "",
-"label_source": "none"
+"label": "Add AI-powered button to generate credential configuration for API Connector",
+"label_source": "generated",
+"label_hash": "fbf7d2fc00"
 },
 {
 "id": "nce_events/public/js/api_connector_tags.js::_generate_credential_config",
@@ -19254,8 +19349,9 @@
 "wired_by": [
 "nce_events/public/js/email_template_tags.js"
 ],
-"label": "",
-"label_source": "none"
+"label": "Add Insert Tag button to Email Template form for schema exploration",
+"label_source": "generated",
+"label_hash": "cf10957eca"
 },
 {
 "id": "nce_events/public/js/enrollments_exchange.js::form.on Enrollments.refresh",
@@ -19273,8 +19369,9 @@
 "wired_by": [
 "nce_events/public/js/enrollments_exchange.js"
 ],
-"label": "",
-"label_source": "none"
+"label": "Add Switch Event and Cancel Registration buttons to Enrollments form",
+"label_source": "generated",
+"label_hash": "e5a6a15e38"
 },
 {
 "id": "nce_events/public/js/enrollments_exchange.js::_do_exchange",
@@ -19335,8 +19432,9 @@
 "hash": "16910cf43c",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Escape HTML special characters for safe display in refund results",
+"label_source": "generated",
+"label_hash": "16910cf43c"
 },
 {
 "id": "nce_events/public/js/enrollments_exchange.js::_show_refund_success.money",
@@ -19348,8 +19446,9 @@
 "hash": "701ffad127",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Format currency amount as dollar string with two decimal places",
+"label_source": "generated",
+"label_hash": "701ffad127"
 },
 {
 "id": "nce_events/public/js/enrollments_exchange.js::_show_success",
@@ -19378,8 +19477,9 @@
 "hash": "16910cf43c",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Escape HTML special characters for safe display in event exchange results",
+"label_source": "generated",
+"label_hash": "16910cf43c"
 },
 {
 "id": "nce_events/public/js/enrollments_exchange.js::_show_success.money",
@@ -19391,8 +19491,9 @@
 "hash": "701ffad127",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Format currency amount as dollar string with two decimal places",
+"label_source": "generated",
+"label_hash": "701ffad127"
 },
 {
 "id": "nce_events/public/js/evaluations/App.vue::App",
@@ -19403,8 +19504,9 @@
 "sig": "",
 "hash": "cbbbd767e1",
 "calls": [],
-"label": "Root Vue shell for the Evaluations desk SPA with view switching via shell store.",
-"label_source": "docstring"
+"label": "Root Vue component for evaluations desk with view switching",
+"label_source": "generated",
+"label_hash": "cbbbd767e1"
 },
 {
 "id": "nce_events/public/js/evaluations/App.vue::VIEWS",
@@ -19429,8 +19531,9 @@
 "sig": "",
 "hash": "fad83e2944",
 "calls": [],
-"label": "Placeholder kanban view shown when no event is selected in the evaluations shell.",
-"label_source": "docstring"
+"label": "Empty state placeholder shown when no event selected in evaluations",
+"label_source": "generated",
+"label_hash": "fad83e2944"
 },
 {
 "id": "nce_events/public/js/evaluations/components/RatingKanbanView.vue::RatingKanbanView",
@@ -19441,8 +19544,9 @@
 "sig": "",
 "hash": "49c2a40373",
 "calls": [],
-"label": "Gender-lane rating kanban board for event enrollments in the evaluations SPA.",
-"label_source": "docstring"
+"label": "Gender-lane rating kanban board for event enrollment evaluations",
+"label_source": "generated",
+"label_hash": "49c2a40373"
 },
 {
 "id": "nce_events/public/js/evaluations/components/RatingKanbanView.vue::COLOR_MALE",
@@ -19573,8 +19677,9 @@
 "wired_by": [
 "nce_events/public/js/evaluations/composables/useEnrollments.js::useEnrollments"
 ],
-"label": "",
-"label_source": "none"
+"label": "Load event enrollments from server when shell event ID changes",
+"label_source": "generated",
+"label_hash": "53a9501d24"
 },
 {
 "id": "nce_events/public/js/evaluations/main.js::NCEEvaluations",
@@ -19600,8 +19705,9 @@
 "hash": "b7aad68f89",
 "exported": false,
 "calls": [],
-"label": "@param {string} selector @param {{ eventId?: string, activeView?: string }} [opts]",
-"label_source": "docstring"
+"label": "Mount evaluations Vue app on desk page with options",
+"label_source": "generated",
+"label_hash": "b7aad68f89"
 },
 {
 "id": "nce_events/public/js/evaluations/utils/frappeCall.js::frappeCall",
@@ -19627,8 +19733,9 @@
 "hash": "8308cfaef8",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Data store managing pane rows for hierarchy explorer drill-down",
+"label_source": "generated",
+"label_hash": "8308cfaef8"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/store.js::Store.constructor",
@@ -19640,8 +19747,9 @@
 "hash": "f8faaf57eb",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Initialize store with empty panes, selection path, and loading state",
+"label_source": "generated",
+"label_hash": "f8faaf57eb"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/store.js::Store.get_pane_state",
@@ -19653,8 +19761,9 @@
 "hash": "79e5021d0a",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Retrieve pane state at given index from store",
+"label_source": "generated",
+"label_hash": "79e5021d0a"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/store.js::Store.set_pane_data",
@@ -19666,8 +19775,9 @@
 "hash": "74809acaf1",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Set pane data rows, total count, pagination in store",
+"label_source": "generated",
+"label_hash": "74809acaf1"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/store.js::Store.append_pane_data",
@@ -19679,8 +19789,9 @@
 "hash": "6cd72d98ad",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Append additional rows to existing pane in store",
+"label_source": "generated",
+"label_hash": "6cd72d98ad"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/store.js::Store.select_row",
@@ -19692,8 +19803,9 @@
 "hash": "73a300026a",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Select row and truncate selected path and panes at index",
+"label_source": "generated",
+"label_hash": "73a300026a"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/store.js::Store.get_selected",
@@ -19705,8 +19817,9 @@
 "hash": "ab259248e2",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Get selected row name from given pane index",
+"label_source": "generated",
+"label_hash": "ab259248e2"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/store.js::Store.has_more",
@@ -19718,8 +19831,9 @@
 "hash": "8e94f2f7f7",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Check if more rows available to load in pane",
+"label_source": "generated",
+"label_hash": "8e94f2f7f7"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/store.js::Store.fetch_pane",
@@ -19731,8 +19845,9 @@
 "hash": "18b8d97490",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Fetch pane rows from server for hierarchy drill-down display",
+"label_source": "generated",
+"label_hash": "18b8d97490"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/ui.js::Explorer",
@@ -19744,8 +19859,9 @@
 "hash": "bf7013e283",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Render resizable two-pane hierarchy explorer UI component",
+"label_source": "generated",
+"label_hash": "bf7013e283"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.constructor",
@@ -19759,8 +19875,9 @@
 "calls": [
 "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.setup"
 ],
-"label": "",
-"label_source": "none"
+"label": "Initialize hierarchy explorer with store and pane containers",
+"label_source": "generated",
+"label_hash": "92848ee5a0"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.setup",
@@ -19774,8 +19891,9 @@
 "calls": [
 "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.load_pane"
 ],
-"label": "",
-"label_source": "none"
+"label": "Create and setup initial hierarchy explorer container and first pane",
+"label_source": "generated",
+"label_hash": "a17097eb03"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.load_pane",
@@ -19787,8 +19905,9 @@
 "hash": "8de5ffc7ea",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Load and render pane data from store by index and parent",
+"label_source": "generated",
+"label_hash": "8de5ffc7ea"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.show_pane_loading",
@@ -19802,8 +19921,9 @@
 "calls": [
 "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.ensure_pane_element"
 ],
-"label": "",
-"label_source": "none"
+"label": "Display loading indicator in pane body",
+"label_source": "generated",
+"label_hash": "4fff00fa6c"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.ensure_pane_element",
@@ -19818,8 +19938,9 @@
 "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.create_divider",
 "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.create_pane_element"
 ],
-"label": "",
-"label_source": "none"
+"label": "Ensure pane and divider elements exist up to given index",
+"label_source": "generated",
+"label_hash": "5fc356f84f"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.remove_panes_after",
@@ -19833,8 +19954,9 @@
 "calls": [
 "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.distribute_widths"
 ],
-"label": "",
-"label_source": "none"
+"label": "Remove panes and dividers after specified index and redistribute widths",
+"label_source": "generated",
+"label_hash": "c2c74ea122"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.create_pane_element",
@@ -19846,8 +19968,9 @@
 "hash": "5a921f75b6",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Create DOM element for single pane with header and body sections",
+"label_source": "generated",
+"label_hash": "5a921f75b6"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.create_divider",
@@ -19859,8 +19982,9 @@
 "hash": "6a382fdc56",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Create resizable divider element between panes with drag handlers",
+"label_source": "generated",
+"label_hash": "6a382fdc56"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.start_resize",
@@ -19872,8 +19996,9 @@
 "hash": "254d5bfa81",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Initialize pane resize operation on mouse or touch down event",
+"label_source": "generated",
+"label_hash": "254d5bfa81"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.do_resize",
@@ -19885,8 +20010,9 @@
 "hash": "09ab5bfbd9",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Apply new widths to left and right panes during resize drag",
+"label_source": "generated",
+"label_hash": "09ab5bfbd9"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.distribute_widths",
@@ -19898,8 +20024,9 @@
 "hash": "4058404aa1",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Distribute available width equally among all pane elements",
+"label_source": "generated",
+"label_hash": "4058404aa1"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.render_pane",
@@ -19911,8 +20038,9 @@
 "hash": "a83f5e37dd",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Render pane content including rows, count, actions, and event bindings",
+"label_source": "generated",
+"label_hash": "a83f5e37dd"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.build_actions_html",
@@ -19924,8 +20052,9 @@
 "hash": "e6f4dcd25f",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Build HTML for export and action buttons in pane header",
+"label_source": "generated",
+"label_hash": "e6f4dcd25f"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.build_table_html",
@@ -19940,8 +20069,9 @@
 "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.build_table_html.me_is_selected",
 "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.build_table_html.me_store_has_more"
 ],
-"label": "",
-"label_source": "none"
+"label": "Generate HTML table markup for hierarchy explorer with columns, rows, and conditional styling",
+"label_source": "generated",
+"label_hash": "d156678486"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.build_table_html.me_is_selected",
@@ -19953,8 +20083,9 @@
 "hash": "d98e5b4f9f",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Check if row is selected in current explorer store",
+"label_source": "generated",
+"label_hash": "d98e5b4f9f"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.build_table_html.me_store_has_more",
@@ -19966,8 +20097,9 @@
 "hash": "9a586d4c91",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Check if explorer store has more rows to load for pane",
+"label_source": "generated",
+"label_hash": "9a586d4c91"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.bind_pane_events",
@@ -19979,8 +20111,9 @@
 "hash": "40955d505d",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Bind click handlers to hierarchy rows, load-more button, export buttons, and sheets link",
+"label_source": "generated",
+"label_hash": "40955d505d"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.on_sheets_link",
@@ -19992,8 +20125,9 @@
 "hash": "3372df01d5",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Export pane data to CSV and copy Google Sheets IMPORTDATA formula to clipboard",
+"label_source": "generated",
+"label_hash": "3372df01d5"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.on_row_click",
@@ -20005,8 +20139,9 @@
 "hash": "38b1d8769b",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Select hierarchy row and load next drill-down pane with child records",
+"label_source": "generated",
+"label_hash": "38b1d8769b"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.on_load_more",
@@ -20018,8 +20153,9 @@
 "hash": "68e85a1da7",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Fetch additional rows for pane and re-render table",
+"label_source": "generated",
+"label_hash": "68e85a1da7"
 },
 {
 "id": "nce_events/public/js/hierarchy_explorer/ui.js::Explorer.on_export",
@@ -20031,8 +20167,9 @@
 "hash": "fc583fb048",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Download pane data as CSV or other format file",
+"label_source": "generated",
+"label_hash": "fc583fb048"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog",
@@ -20044,8 +20181,9 @@
 "hash": "597d13704e",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Draggable resizable email dialog with template selection, message editor, and send options",
+"label_source": "generated",
+"label_hash": "597d13704e"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog.constructor",
@@ -20060,8 +20198,9 @@
 "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._bind",
 "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._build"
 ],
-"label": "",
-"label_source": "none"
+"label": "Initialize email dialog with doctype, filters, recipients, and UI components",
+"label_source": "generated",
+"label_hash": "e7a196bdfe"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._build",
@@ -20073,8 +20212,9 @@
 "hash": "646a434842",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Build HTML markup for email dialog form with fields, template section, and action buttons",
+"label_source": "generated",
+"label_hash": "646a434842"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._bind",
@@ -20086,8 +20226,9 @@
 "hash": "fbc63d00b0",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Bind email dialog UI events and template selection behavior",
+"label_source": "generated",
+"label_hash": "fbc63d00b0"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._load_from_accounts",
@@ -20099,8 +20240,9 @@
 "hash": "07d9fba2ff",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Populate email account dropdown from available sender accounts",
+"label_source": "generated",
+"label_hash": "07d9fba2ff"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._open_tags",
@@ -20112,8 +20254,9 @@
 "hash": "199f0d287d",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Open tag finder dialog near email compose window",
+"label_source": "generated",
+"label_hash": "199f0d287d"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._close_tags",
@@ -20125,8 +20268,9 @@
 "hash": "722dad3b30",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Close tag finder dialog when email dialog closes",
+"label_source": "generated",
+"label_hash": "722dad3b30"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._load_template_into_editor",
@@ -20138,8 +20282,9 @@
 "hash": "ad05eb1fb8",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Load selected email template content into compose editor",
+"label_source": "generated",
+"label_hash": "ad05eb1fb8"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._resolve_body",
@@ -20151,8 +20296,9 @@
 "hash": "fad40dbd43",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Retrieve and validate email body and subject for sending",
+"label_source": "generated",
+"label_hash": "fad40dbd43"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._setup_template_autocomplete",
@@ -20166,8 +20312,9 @@
 "calls": [
 "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._setup_template_autocomplete.do_search"
 ],
-"label": "",
-"label_source": "none"
+"label": "Setup autocomplete search for email template selection",
+"label_source": "generated",
+"label_hash": "b93fcea548"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._setup_template_autocomplete.position_and_show",
@@ -20179,8 +20326,9 @@
 "hash": "c2caf70882",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Position and display template autocomplete dropdown list",
+"label_source": "generated",
+"label_hash": "c2caf70882"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._setup_template_autocomplete.do_search",
@@ -20194,8 +20342,9 @@
 "calls": [
 "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._setup_template_autocomplete.position_and_show"
 ],
-"label": "",
-"label_source": "none"
+"label": "Search email templates by name with live autocomplete results",
+"label_source": "generated",
+"label_hash": "aafba77e09"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._do_preview",
@@ -20207,8 +20356,9 @@
 "hash": "5428466c25",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Preview rendered email message with subject and body",
+"label_source": "generated",
+"label_hash": "5428466c25"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._do_send",
@@ -20220,8 +20370,9 @@
 "hash": "25c858947d",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Initiate email send process after body validation",
+"label_source": "generated",
+"label_hash": "25c858947d"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._start_review",
@@ -20233,8 +20384,9 @@
 "hash": "ac19a68684",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Start review process with email queue and send state",
+"label_source": "generated",
+"label_hash": "ac19a68684"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._build_review_panel",
@@ -20246,8 +20398,9 @@
 "hash": "1c518c0f10",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Build email send review panel with progress, recipient, subject, and action buttons",
+"label_source": "generated",
+"label_hash": "1c518c0f10"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._review_next",
@@ -20259,8 +20412,9 @@
 "hash": "3b016bac60",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Load and display next email in review queue with recipient and subject preview",
+"label_source": "generated",
+"label_hash": "3b016bac60"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._review_do_send",
@@ -20272,8 +20426,9 @@
 "hash": "b686f961c2",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Send single email from review panel and advance to next in queue",
+"label_source": "generated",
+"label_hash": "b686f961c2"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._review_send_all",
@@ -20287,8 +20442,9 @@
 "calls": [
 "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._review_send_all.sendNext"
 ],
-"label": "",
-"label_source": "none"
+"label": "Queue all remaining emails for background sending and close dialog",
+"label_source": "generated",
+"label_hash": "cc0c08ee2d"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._review_send_all.sendNext",
@@ -20300,8 +20456,9 @@
 "hash": "32913a61dc",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Recursively send queued emails one at a time with progress updates",
+"label_source": "generated",
+"label_hash": "32913a61dc"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._review_finish",
@@ -20313,8 +20470,9 @@
 "hash": "6f31fb3fac",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Close review panel and show final send completion or stopped status message",
+"label_source": "generated",
+"label_hash": "6f31fb3fac"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._do_show_recipients",
@@ -20326,8 +20484,9 @@
 "hash": "a0d088772b",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Fetch and display list of all recipients who will receive the email",
+"label_source": "generated",
+"label_hash": "a0d088772b"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._show_recipients_popup",
@@ -20339,8 +20498,9 @@
 "hash": "c05c280862",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Display popup showing resolved and skipped email recipients from filtered rows",
+"label_source": "generated",
+"label_hash": "c05c280862"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._do_send_test",
@@ -20352,8 +20512,9 @@
 "hash": "e3bc79cf9c",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Send test email to specified address with current template and subject",
+"label_source": "generated",
+"label_hash": "e3bc79cf9c"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._make_draggable_preview",
@@ -20365,8 +20526,9 @@
 "hash": "a10d362736",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Enable drag functionality for email preview panel header",
+"label_source": "generated",
+"label_hash": "a10d362736"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._make_resizable_preview",
@@ -20378,8 +20540,9 @@
 "hash": "9bcbe995f1",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Enable resize functionality for email preview panel with minimum dimensions",
+"label_source": "generated",
+"label_hash": "9bcbe995f1"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._setup_preview_zoom",
@@ -20393,8 +20556,9 @@
 "calls": [
 "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._setup_preview_zoom.apply"
 ],
-"label": "",
-"label_source": "none"
+"label": "Add zoom in/out/reset controls to email preview body",
+"label_source": "generated",
+"label_hash": "c88e40c57b"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._setup_preview_zoom.apply",
@@ -20406,8 +20570,9 @@
 "hash": "e604e726c2",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Apply zoom transformation to preview body and update zoom percentage label",
+"label_source": "generated",
+"label_hash": "e604e726c2"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog.close",
@@ -20421,8 +20586,9 @@
 "calls": [
 "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._close_tags"
 ],
-"label": "",
-"label_source": "none"
+"label": "Remove all dialog UI elements and cleanup event handlers",
+"label_source": "generated",
+"label_hash": "01d3e537a9"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._make_popup_draggable",
@@ -20434,8 +20600,9 @@
 "hash": "5d7e6d1d0d",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Make any popup element draggable from specified handle selector",
+"label_source": "generated",
+"label_hash": "5d7e6d1d0d"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._make_draggable",
@@ -20447,8 +20614,9 @@
 "hash": "3b41d8a502",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Make email send dialog draggable with ghost preview during drag",
+"label_source": "generated",
+"label_hash": "3b41d8a502"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._make_draggable.start_drag",
@@ -20463,8 +20631,9 @@
 "wired_by": [
 "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._make_draggable"
 ],
-"label": "",
-"label_source": "none"
+"label": "Handle mousedown event to initiate email dialog drag with visual feedback",
+"label_source": "generated",
+"label_hash": "1496a0b11d"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._make_resizable",
@@ -20476,8 +20645,9 @@
 "hash": "27c70c35e8",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Make email dialog resizable with mouse drag handle",
+"label_source": "generated",
+"label_hash": "27c70c35e8"
 },
 {
 "id": "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog",
@@ -20489,8 +20659,9 @@
 "hash": "733df8d1f5",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "SMS send dialog with templates, preview, and test-send features",
+"label_source": "generated",
+"label_hash": "733df8d1f5"
 },
 {
 "id": "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog.constructor",
@@ -20505,8 +20676,9 @@
 "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._bind",
 "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._build"
 ],
-"label": "",
-"label_source": "none"
+"label": "Initialize SMS dialog with configuration and event binding",
+"label_source": "generated",
+"label_hash": "11e83aa4be"
 },
 {
 "id": "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._build",
@@ -20518,8 +20690,9 @@
 "hash": "f0efb71fc4",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Build SMS dialog DOM with form fields and action buttons",
+"label_source": "generated",
+"label_hash": "f0efb71fc4"
 },
 {
 "id": "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._bind",
@@ -20531,8 +20704,9 @@
 "hash": "220e4af1d4",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Attach event handlers to SMS dialog form elements and actions",
+"label_source": "generated",
+"label_hash": "220e4af1d4"
 },
 {
 "id": "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._open_tags",
@@ -20544,8 +20718,9 @@
 "hash": "a91cae48b0",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Open tag finder window for inserting Jinja2 template variables",
+"label_source": "generated",
+"label_hash": "a91cae48b0"
 },
 {
 "id": "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._close_tags",
@@ -20557,8 +20732,9 @@
 "hash": "722dad3b30",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Close tag finder window when SMS dialog closes",
+"label_source": "generated",
+"label_hash": "722dad3b30"
 },
 {
 "id": "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._load_template_into_editor",
@@ -20570,8 +20746,9 @@
 "hash": "32d5d3abf8",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Fetch and load email template content into message textarea",
+"label_source": "generated",
+"label_hash": "32d5d3abf8"
 },
 {
 "id": "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._resolve_body",
@@ -20583,8 +20760,9 @@
 "hash": "75e4ef6676",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Retrieve and validate message body text before sending",
+"label_source": "generated",
+"label_hash": "75e4ef6676"
 },
 {
 "id": "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._setup_template_autocomplete",
@@ -20598,8 +20776,9 @@
 "calls": [
 "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._setup_template_autocomplete.do_search"
 ],
-"label": "",
-"label_source": "none"
+"label": "Setup autocomplete dropdown for searching email templates",
+"label_source": "generated",
+"label_hash": "534618bb43"
 },
 {
 "id": "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._setup_template_autocomplete.position_and_show",
@@ -20611,8 +20790,9 @@
 "hash": "c2caf70882",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Position and display template autocomplete list below input",
+"label_source": "generated",
+"label_hash": "c2caf70882"
 },
 {
 "id": "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._setup_template_autocomplete.do_search",
@@ -20626,8 +20806,9 @@
 "calls": [
 "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._setup_template_autocomplete.position_and_show"
 ],
-"label": "",
-"label_source": "none"
+"label": "Search email templates by name for SMS dialog autocomplete",
+"label_source": "generated",
+"label_hash": "2f6ba427ee"
 },
 {
 "id": "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._do_preview",
@@ -20639,8 +20820,9 @@
 "hash": "3702444717",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Preview rendered SMS message body with applied filters",
+"label_source": "generated",
+"label_hash": "3702444717"
 },
 {
 "id": "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._do_send",
@@ -20652,8 +20834,9 @@
 "hash": "f2dd39863c",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Send SMS messages to selected recipients via panel",
+"label_source": "generated",
+"label_hash": "f2dd39863c"
 },
 {
 "id": "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._do_send_test",
@@ -20665,8 +20848,9 @@
 "hash": "3a7ada3f38",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Send test SMS to specified phone number for validation",
+"label_source": "generated",
+"label_hash": "3a7ada3f38"
 },
 {
 "id": "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog.close",
@@ -20680,8 +20864,9 @@
 "calls": [
 "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._close_tags"
 ],
-"label": "",
-"label_source": "none"
+"label": "Close and clean up SMS send dialog and template list",
+"label_source": "generated",
+"label_hash": "76d9f6c06b"
 },
 {
 "id": "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._make_draggable",
@@ -20693,8 +20878,9 @@
 "hash": "3267671365",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Enable dragging of SMS send dialog by header",
+"label_source": "generated",
+"label_hash": "3267671365"
 },
 {
 "id": "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._make_draggable.start_drag",
@@ -20709,8 +20895,9 @@
 "wired_by": [
 "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._make_draggable"
 ],
-"label": "",
-"label_source": "none"
+"label": "Handle mouse drag movements for SMS send dialog positioning",
+"label_source": "generated",
+"label_hash": "d1957228fe"
 },
 {
 "id": "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._make_resizable",
@@ -20722,8 +20909,9 @@
 "hash": "27c70c35e8",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Enable resizing of SMS send dialog from bottom-right corner",
+"label_source": "generated",
+"label_hash": "27c70c35e8"
 },
 {
 "id": "nce_events/public/js/new_woo_commerce_product.js::form.on New Woo Commerce Product.refresh",
@@ -20740,8 +20928,9 @@
 "wired_by": [
 "nce_events/public/js/new_woo_commerce_product.js"
 ],
-"label": "",
-"label_source": "none"
+"label": "Publish New Woo Commerce Product to WooCommerce platform",
+"label_source": "generated",
+"label_hash": "26b306c335"
 },
 {
 "id": "nce_events/public/js/new_woo_commerce_product.js::_do_publish",
@@ -20766,8 +20955,9 @@
 "sig": "",
 "hash": "aba7ed26cb",
 "calls": [],
-"label": "Root Vue app orchestrating panel floats, find, form dialogs, and SPA navigation.",
-"label_source": "docstring"
+"label": "Root Vue app orchestrating panel floats, find, form dialogs, and SPA navigation",
+"label_source": "generated",
+"label_hash": "aba7ed26cb"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/App.vue::ROOT_INIT_X",
@@ -21839,8 +22029,9 @@
 "sig": "",
 "hash": "cac7177c9c",
 "calls": [],
-"label": "Vue actions bar combining SpaPageNavBar page switcher and Panel Action buttons.",
-"label_source": "docstring"
+"label": "Actions bar combining page switcher and panel action buttons",
+"label_source": "generated",
+"label_hash": "cac7177c9c"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/ColorPicker.vue::ColorPicker",
@@ -21851,8 +22042,9 @@
 "sig": "",
 "hash": "0270d1332d",
 "calls": [],
-"label": "Theme-exempt HSV color picker with swatches, hex input, and eye-dropper for format rules.",
-"label_source": "docstring"
+"label": "Theme-exempt HSV color picker with swatches, hex input, and eye-dropper tool",
+"label_source": "generated",
+"label_hash": "0270d1332d"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/ColorPicker.vue::hsvToHex",
@@ -21880,8 +22072,9 @@
 "hash": "263ac39ee6",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Convert RGB component to hexadecimal string for color display",
+"label_source": "generated",
+"label_hash": "263ac39ee6"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/ColorPicker.vue::hexToHSV",
@@ -22014,8 +22207,9 @@
 "sig": "",
 "hash": "57a6e6f0af",
 "calls": [],
-"label": "Read-only display-widget showing a label and resolved field value from record hops.",
-"label_source": "docstring"
+"label": "Read-only display widget showing label and resolved field value",
+"label_source": "generated",
+"label_hash": "57a6e6f0af"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/FieldWidget.vue::FieldWidget",
@@ -22026,8 +22220,9 @@
 "sig": "",
 "hash": "657572e171",
 "calls": [],
-"label": "Editable field widget wrapper for panel form dialog custom field rendering.",
-"label_source": "docstring"
+"label": "Editable field widget wrapper for panel form dialog custom field rendering",
+"label_source": "generated",
+"label_hash": "657572e171"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/FieldWidget.vue::onSave",
@@ -22074,8 +22269,9 @@
 "sig": "",
 "hash": "a1f428e57f",
 "calls": [],
-"label": "ARCHIVED: separate Find float replaced by in-place find on PanelFloat (App.vue + PanelFindActionBar.vue).",
-"label_source": "docstring"
+"label": "Archived separate find float component replaced by in-place find",
+"label_source": "generated",
+"label_hash": "a1f428e57f"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/FindPanel.vue::label",
@@ -22154,8 +22350,9 @@
 "sig": "",
 "hash": "5c71d2eafa",
 "calls": [],
-"label": "Vue editor for panel table cell format rules with color and weight toggles.",
-"label_source": "docstring"
+"label": "Edit cell format rules with color, weight, and text styling options",
+"label_source": "generated",
+"label_hash": "5c71d2eafa"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/FormatRuleEditor.vue::syncFromProps",
@@ -22254,8 +22451,9 @@
 "sig": "",
 "hash": "3bc8cd2571",
 "calls": [],
-"label": "In-panel find action bar with perform, constrain, extend, and exit find controls.",
-"label_source": "docstring"
+"label": "Control bar for find operations: perform, constrain, extend, and exit",
+"label_source": "generated",
+"label_hash": "3bc8cd2571"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFindActionBar.vue::label",
@@ -22280,8 +22478,9 @@
 "sig": "",
 "hash": "1127039fb2",
 "calls": [],
-"label": "Single ppv2-find-row criterion inputs with OR label and find-perform on Enter.",
-"label_source": "docstring"
+"label": "Input row for find criteria with OR logic and Enter-key search",
+"label_source": "generated",
+"label_hash": "1127039fb2"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFindRow.vue::onRowActivate",
@@ -22326,8 +22525,9 @@
 "sig": "",
 "hash": "70968fcdbe",
 "calls": [],
-"label": "ARCHIVED: find actions moved to PanelFindActionBar.vue (bar below header).",
-"label_source": "docstring"
+"label": "Archived find toolbar with filtering, download, and communication actions",
+"label_source": "generated",
+"label_hash": "70968fcdbe"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFindToolbar.vue::label",
@@ -22352,8 +22552,9 @@
 "sig": "",
 "hash": "91939b5834",
 "calls": [],
-"label": "Draggable resizable floating panel shell hosting header, find bar, and table content.",
-"label_source": "docstring"
+"label": "Draggable resizable floating panel shell for headers and tables",
+"label_source": "generated",
+"label_hash": "91939b5834"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::getNextZ",
@@ -22446,8 +22647,9 @@
 "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::startDrag",
 "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::startDrag.onUp"
 ],
-"label": "",
-"label_source": "none"
+"label": "Update floating panel position during mouse drag movement",
+"label_source": "generated",
+"label_hash": "0b9bc9fad1"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::startDrag.onUp",
@@ -22464,8 +22666,9 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::startDrag"
 ],
-"label": "",
-"label_source": "none"
+"label": "Finalize floating panel position and detect click versus drag",
+"label_source": "generated",
+"label_hash": "9f4c35d8da"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::startResize",
@@ -22501,8 +22704,9 @@
 "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::startResize",
 "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::startResize.onUp"
 ],
-"label": "",
-"label_source": "none"
+"label": "Update resize outline dimensions during mouse drag movement",
+"label_source": "generated",
+"label_hash": "8659857af8"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::startResize.onUp",
@@ -22517,8 +22721,9 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::startResize"
 ],
-"label": "",
-"label_source": "none"
+"label": "Apply final panel dimensions and clean up resize overlay",
+"label_source": "generated",
+"label_hash": "f5526cd4a9"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDateTimeField.vue::PanelFormDateTimeField",
@@ -22529,8 +22734,9 @@
 "sig": "",
 "hash": "14e42032ff",
 "calls": [],
-"label": "Mounts Frappe date/time controls for panel form dialog datetime field types.",
-"label_source": "docstring"
+"label": "Mount Frappe date/time picker controls for panel form dialog fields",
+"label_source": "generated",
+"label_hash": "14e42032ff"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDateTimeField.vue::buildDf",
@@ -22573,8 +22779,9 @@
 "sig": "",
 "hash": "1b4cb04fe7",
 "calls": [],
-"label": "Main form dialog shell with find, native form, related tabs, submit, and WP readback.",
-"label_source": "docstring"
+"label": "Main form dialog with sections, tabs, find search, and WooCommerce sync",
+"label_source": "generated",
+"label_hash": "1b4cb04fe7"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::escapeForPreHtml",
@@ -22713,8 +22920,9 @@
 "hash": "983935ae22",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Apply calculated width to dialog to fit related table content",
+"label_source": "generated",
+"label_hash": "983935ae22"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::_addDragResizeOverlay",
@@ -22763,8 +22971,9 @@
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::startDrag",
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::startDrag.onUp"
 ],
-"label": "",
-"label_source": "none"
+"label": "Update dialog position during mouse drag movement",
+"label_source": "generated",
+"label_hash": "caa4fa619a"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::startDrag.onUp",
@@ -22779,8 +22988,9 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::startDrag"
 ],
-"label": "",
-"label_source": "none"
+"label": "Finalize dialog position and clean up drag event listeners",
+"label_source": "generated",
+"label_hash": "7feeee51f9"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::startResize",
@@ -22815,8 +23025,9 @@
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::startResize",
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::startResize.onUp"
 ],
-"label": "",
-"label_source": "none"
+"label": "Update dialog size outline during corner resize dragging",
+"label_source": "generated",
+"label_hash": "a4c007df86"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::startResize.onUp",
@@ -22831,8 +23042,9 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::startResize"
 ],
-"label": "",
-"label_source": "none"
+"label": "Finalize dialog dimensions and remove resize overlay",
+"label_source": "generated",
+"label_hash": "a7daffd936"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::teardownNativeForm",
@@ -23058,8 +23270,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::bootstrapNativeForm"
 ],
-"label": "",
-"label_source": "none"
+"label": "Discard unsaved changes and restore form to last saved state",
+"label_source": "generated",
+"label_hash": "c842e2b349"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::onNavPrevClick",
@@ -23283,8 +23496,9 @@
 "hash": "cac356fa53",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Log performance metrics during WooCommerce sync polling",
+"label_source": "generated",
+"label_hash": "cac356fa53"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::runEnrollmentProductRefund",
@@ -23354,10 +23568,11 @@
 "name": "PanelFormDialogBody",
 "qualname": "PanelFormDialogBody",
 "sig": "",
-"hash": "e8a97f7ebd",
+"hash": "e45dd5c130",
 "calls": [],
-"label": "Form dialog body rendering sections, fields, and tab content for all dialog modes.",
-"label_source": "docstring"
+"label": "Render form sections, fields, tabs, and find search interface",
+"label_source": "generated",
+"label_hash": "e45dd5c130"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue::COLLAPSIBLE_SECTION_FALLBACK_LABEL",
@@ -23599,8 +23814,9 @@
 "sig": "",
 "hash": "dfdc568556",
 "calls": [],
-"label": "Form dialog footer with FileMaker-style find buttons and conditional submit visibility.",
-"label_source": "docstring"
+"label": "Dialog footer with find buttons and conditional submit visibility",
+"label_source": "generated",
+"label_hash": "dfdc568556"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialogFooter.vue::HIDE_NEVER",
@@ -23774,8 +23990,9 @@
 "sig": "",
 "hash": "54b533a7af",
 "calls": [],
-"label": "Form dialog header with title, navigation, and chrome styling for panel dialogs.",
-"label_source": "docstring"
+"label": "Dialog header with title, navigation controls, and fit-width button",
+"label_source": "generated",
+"label_hash": "54b533a7af"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialogInlineChildTab.vue::PanelFormDialogInlineChildTab",
@@ -23786,8 +24003,9 @@
 "sig": "",
 "hash": "f417fc9fe2",
 "calls": [],
-"label": "Inline child table tab editing portal columns inside a panel form dialog.",
-"label_source": "docstring"
+"label": "Edit inline child table columns within panel form dialog tabs",
+"label_source": "generated",
+"label_hash": "f417fc9fe2"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialogInlineChildTab.vue::rowKey",
@@ -24182,8 +24400,9 @@
 "sig": "",
 "hash": "195d9b7312",
 "calls": [],
-"label": "Embeds a native Frappe form in a form dialog tab for full DocType editing.",
-"label_source": "docstring"
+"label": "Embed native Frappe form in dialog tab for full DocType editing",
+"label_source": "generated",
+"label_hash": "195d9b7312"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialogNativeFormTab.vue::remount",
@@ -24210,8 +24429,9 @@
 "sig": "",
 "hash": "8dca6ff9f5",
 "calls": [],
-"label": "Related DocType tab with editable grid, format rules, and Go to panel navigation.",
-"label_source": "docstring"
+"label": "Display related DocType tab with editable grid and format rules",
+"label_source": "generated",
+"label_hash": "8dca6ff9f5"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::STAGED_NEW_ROW_PREFIX",
@@ -25022,8 +25242,9 @@
 "sig": "",
 "hash": "c8e5ef777a",
 "calls": [],
-"label": "Tab bar switching between form dialog tabs including find help access.",
-"label_source": "docstring"
+"label": "Switch between form dialog tabs with find help access",
+"label_source": "generated",
+"label_hash": "c8e5ef777a"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormField.vue::PanelFormField",
@@ -25034,8 +25255,9 @@
 "sig": "",
 "hash": "4e304ff04c",
 "calls": [],
-"label": "Renders individual form dialog fields including find-mode criteria controls.",
-"label_source": "docstring"
+"label": "Render individual form fields including find-mode criteria controls",
+"label_source": "generated",
+"label_hash": "4e304ff04c"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormField.vue::normFieldtype",
@@ -25153,8 +25375,9 @@
 "sig": "",
 "hash": "583c6c666b",
 "calls": [],
-"label": "Help modal explaining FileMaker-style find/search operators in form dialog find.",
-"label_source": "docstring"
+"label": "Display help modal explaining FileMaker-style find and search operators",
+"label_source": "generated",
+"label_hash": "583c6c666b"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormFindSearchHelpModal.vue::tr",
@@ -25179,8 +25402,9 @@
 "sig": "",
 "hash": "e886f89e9b",
 "calls": [],
-"label": "Mounts Frappe Link control with autocomplete for panel form dialog link fields.",
-"label_source": "docstring"
+"label": "Mount Frappe Link field control with autocomplete for panel form dialogs",
+"label_source": "generated",
+"label_hash": "e886f89e9b"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormLinkField.vue::makeDoc",
@@ -25236,8 +25460,9 @@
 "sig": "",
 "hash": "8e37135591",
 "calls": [],
-"label": "Form dialog tab hosting a script tool panel for custom client-side utilities.",
-"label_source": "docstring"
+"label": "Host custom client-side script tool panel within form dialog tab",
+"label_source": "generated",
+"label_hash": "8e37135591"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelHeaderToolbar.vue::PanelHeaderToolbar",
@@ -25248,8 +25473,9 @@
 "sig": "",
 "hash": "2f3f1615c4",
 "calls": [],
-"label": "Panel float header toolbar with refresh, find, filter, and action buttons.",
-"label_source": "docstring"
+"label": "Float header toolbar with refresh, find, filter, and action buttons for panels",
+"label_source": "generated",
+"label_hash": "2f3f1615c4"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelHeaderToolbar.vue::onToolbarMouseDown",
@@ -25277,8 +25503,9 @@
 "sig": "",
 "hash": "5fd98a22bb",
 "calls": [],
-"label": "Panel data table with sort, context menu, format rules, links, and column resize.",
-"label_source": "docstring"
+"label": "Data table with sorting, context menu, format rules, links, and resizable columns",
+"label_source": "generated",
+"label_hash": "5fd98a22bb"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelTable.vue::headerTitleCase",
@@ -25766,8 +25993,9 @@
 "nce_events/public/js/panel_page_v2/components/PanelTable.vue::startColResize",
 "nce_events/public/js/panel_page_v2/components/PanelTable.vue::startColResize.onUp"
 ],
-"label": "",
-"label_source": "none"
+"label": "Handle column resize drag movement by updating column width dynamically",
+"label_source": "generated",
+"label_hash": "611412e396"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelTable.vue::startColResize.onUp",
@@ -25782,8 +26010,9 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelTable.vue::startColResize"
 ],
-"label": "",
-"label_source": "none"
+"label": "End column resize drag interaction and remove mouse event listeners",
+"label_source": "generated",
+"label_hash": "3528c1b180"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelTableFilterBar.vue::PanelTableFilterBar",
@@ -25794,8 +26023,9 @@
 "sig": "",
 "hash": "ae5d1fc3b4",
 "calls": [],
-"label": "ppv2-filter-widget bar for column filters with date SQL and days-ago inputs.",
-"label_source": "docstring"
+"label": "Filter bar widget for panel columns with date SQL and days-ago input options",
+"label_source": "generated",
+"label_hash": "ae5d1fc3b4"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelTableFilterBar.vue::DATE_FIELDTYPES",
@@ -25985,8 +26215,9 @@
 "sig": "",
 "hash": "a5ec20f2e6",
 "calls": [],
-"label": "ppv2-spa-nav button row for switching between SPA pages by page_slug.",
-"label_source": "docstring"
+"label": "Navigation button row for switching between SPA pages by page slug",
+"label_source": "generated",
+"label_hash": "a5ec20f2e6"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/SpaPageNavBar.vue::tr",
@@ -26027,8 +26258,9 @@
 "sig": "",
 "hash": "0b6d40878c",
 "calls": [],
-"label": "PanelFloat SPA page switcher anchored via measureDeskTitleAnchor near desk title.",
-"label_source": "docstring"
+"label": "Switch between SPA pages with floating panel anchored to desk title",
+"label_source": "generated",
+"label_hash": "0b6d40878c"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/SpaPageSwitcherFloat.vue::tr",
@@ -26053,8 +26285,9 @@
 "sig": "",
 "hash": "099994926a",
 "calls": [],
-"label": "Modal dialog showing ppv2-sync-err status, summary, and detail for sync failures.",
-"label_source": "docstring"
+"label": "Display modal dialog for sync error status, summary, and details",
+"label_source": "generated",
+"label_hash": "099994926a"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/SyncErrorDialog.vue::tr",
@@ -26079,8 +26312,9 @@
 "sig": "",
 "hash": "3ba4657063",
 "calls": [],
-"label": "Panel page v2 tab bar sorting tabs by sort_order and hiding when only one tab with hide_bar.",
-"label_source": "docstring"
+"label": "Render sorted tab bar hiding when only one tab is present",
+"label_source": "generated",
+"label_hash": "3ba4657063"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/TagColumn.vue::TagColumn",
@@ -26091,8 +26325,9 @@
 "sig": "",
 "hash": "2d894ffb01",
 "calls": [],
-"label": "Tag Finder column listing doctype field tiles with link/table navigation and circular reference detection.",
-"label_source": "docstring"
+"label": "List doctype fields with navigation for link/table relationships and circular detection",
+"label_source": "generated",
+"label_hash": "2d894ffb01"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/TagColumn.vue::isCircular",
@@ -26166,8 +26401,9 @@
 "sig": "",
 "hash": "340ce5c2a1",
 "calls": [],
-"label": "Draggable Tag Finder dialog to copy merge tags with optional fallback value and HTML filter.",
-"label_source": "docstring"
+"label": "Draggable dialog for copying merge tags with optional fallback and HTML filter",
+"label_source": "generated",
+"label_hash": "340ce5c2a1"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/TagDialog.vue::bringToFront",
@@ -26265,8 +26501,9 @@
 "nce_events/public/js/panel_page_v2/components/TagDialog.vue::startDrag",
 "nce_events/public/js/panel_page_v2/components/TagDialog.vue::startDrag.onUp"
 ],
-"label": "",
-"label_source": "none"
+"label": "Update dialog position on mouse movement during drag",
+"label_source": "generated",
+"label_hash": "540c26217a"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/TagDialog.vue::startDrag.onUp",
@@ -26281,8 +26518,9 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/TagDialog.vue::startDrag"
 ],
-"label": "",
-"label_source": "none"
+"label": "Remove mouse event listeners when drag ends",
+"label_source": "generated",
+"label_hash": "3528c1b180"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/TagFinder.vue::TagFinder",
@@ -26293,8 +26531,9 @@
 "sig": "",
 "hash": "a1a6a620c9",
 "calls": [],
-"label": "Floating resizable Tag Finder panel browsing doctype field columns and opening tag copy dialogs.",
-"label_source": "docstring"
+"label": "Browse and navigate doctype field columns with floating resizable Tag Finder panel",
+"label_source": "generated",
+"label_hash": "a1a6a620c9"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/TagFinder.vue::bringToFront",
@@ -26346,8 +26585,9 @@
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::startDrag",
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::startDrag.onUp"
 ],
-"label": "",
-"label_source": "none"
+"label": "Update panel position on mouse movement during drag operation",
+"label_source": "generated",
+"label_hash": "373b060384"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/TagFinder.vue::startDrag.onUp",
@@ -26362,8 +26602,9 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::startDrag"
 ],
-"label": "",
-"label_source": "none"
+"label": "Stop listening for panel drag mouse events when user releases mouse",
+"label_source": "generated",
+"label_hash": "3528c1b180"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/TagFinder.vue::startResize",
@@ -26398,8 +26639,9 @@
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::startResize",
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::startResize.onUp"
 ],
-"label": "",
-"label_source": "none"
+"label": "Update panel width and height as user drags resize handle",
+"label_source": "generated",
+"label_hash": "6eb850e706"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/TagFinder.vue::startResize.onUp",
@@ -26414,8 +26656,9 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::startResize"
 ],
-"label": "",
-"label_source": "none"
+"label": "Stop listening for panel resize mouse events when user releases mouse",
+"label_source": "generated",
+"label_hash": "3528c1b180"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/TagFinder.vue::onNavigate",
@@ -26460,8 +26703,9 @@
 "sig": "",
 "hash": "6721d54be5",
 "calls": [],
-"label": "CSS grid layout placing field and display widgets on the panel page v2 canvas.",
-"label_source": "docstring"
+"label": "CSS grid layout component displaying field and display widgets on canvas",
+"label_source": "generated",
+"label_hash": "6721d54be5"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/WidgetGrid.vue::widgetMap",
@@ -26517,8 +26761,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/utils/frappeCall.js::frappeCall"
 ],
-"label": "When a Link field changes, pull fetch_from targets from the linked document.",
-"label_source": "docstring"
+"label": "Fetch remote field values via link field and populate form automatically",
+"label_source": "generated",
+"label_hash": "afc5bdc6fa"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/frozenFormSave.js::extractServerMessage",
@@ -26690,8 +26935,9 @@
 "hash": "0b53b76dca",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Arm backdrop dismiss handler on primary mouse button press",
+"label_source": "generated",
+"label_hash": "0b53b76dca"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useBackdropPointerDismiss.js::useBackdropPointerDismiss.onClickSelf",
@@ -26706,8 +26952,9 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/composables/useBackdropPointerDismiss.js::useBackdropPointerDismiss"
 ],
-"label": "",
-"label_source": "none"
+"label": "Dismiss backdrop only if armed by preceding mousedown on same backdrop",
+"label_source": "generated",
+"label_hash": "950255bead"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useBackdropPointerDismiss.js::useBackdropPointerDismiss.disarm",
@@ -26722,8 +26969,9 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/composables/useBackdropPointerDismiss.js::useBackdropPointerDismiss"
 ],
-"label": "",
-"label_source": "none"
+"label": "Disarm backdrop dismiss handler to prevent accidental dismissal",
+"label_source": "generated",
+"label_hash": "4f7e59a559"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::resolveAllRows",
@@ -26811,8 +27059,9 @@
 "hash": "48d5b95fa8",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Initialize search criteria row with empty values for all columns",
+"label_source": "generated",
+"label_hash": "48d5b95fa8"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel.initCriteriaForColumns",
@@ -26826,8 +27075,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel.initCriteriaForRow"
 ],
-"label": "",
-"label_source": "none"
+"label": "Initialize all search criteria rows with column fieldnames and values",
+"label_source": "generated",
+"label_hash": "baa21bdcfd"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel._makeEmptyRow",
@@ -26841,8 +27091,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel.initCriteriaForRow"
 ],
-"label": "",
-"label_source": "none"
+"label": "Create new empty search criteria row for column fieldnames",
+"label_source": "generated",
+"label_hash": "2dc964f988"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel._resetCriteriaRows",
@@ -26856,8 +27107,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel._makeEmptyRow"
 ],
-"label": "",
-"label_source": "none"
+"label": "Reset search criteria rows to single empty row",
+"label_source": "generated",
+"label_hash": "5eee7d8eca"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel._clearRowValues",
@@ -26869,8 +27121,9 @@
 "hash": "d6b6f91e32",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Clear all field values from single search criteria row",
+"label_source": "generated",
+"label_hash": "d6b6f91e32"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel._clearAllRowValues",
@@ -26884,8 +27137,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel._clearRowValues"
 ],
-"label": "",
-"label_source": "none"
+"label": "Clear all field values from all search criteria rows",
+"label_source": "generated",
+"label_hash": "612a2b25e9"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel.setActiveRowIndex",
@@ -26897,8 +27151,9 @@
 "hash": "67f89f5bc4",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Set active search criteria row index for user interaction",
+"label_source": "generated",
+"label_hash": "67f89f5bc4"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel.setCriterion",
@@ -26910,8 +27165,9 @@
 "hash": "a83b0d05ce",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Set search criterion value in specific row and field",
+"label_source": "generated",
+"label_hash": "a83b0d05ce"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel._criteriaRowForSingleFind",
@@ -26925,8 +27181,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::rowHasCriteria"
 ],
-"label": "",
-"label_source": "none"
+"label": "Get single search criteria row with active or most recent criteria",
+"label_source": "generated",
+"label_hash": "245bb1dca6"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel._matchRows",
@@ -26941,8 +27198,9 @@
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::resolveAllRows",
 "nce_events/public/js/panel_page_v2/utils/findCriterion.js::matchFindCriterion"
 ],
-"label": "",
-"label_source": "none"
+"label": "Filter rows matching all criteria in given row across fieldnames",
+"label_source": "generated",
+"label_hash": "71694ec122"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel._unionMatchAllRows",
@@ -26957,8 +27215,9 @@
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::activeCriterionKeys",
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel._matchRows"
 ],
-"label": "",
-"label_source": "none"
+"label": "Union search results from all criteria rows with OR logic",
+"label_source": "generated",
+"label_hash": "9fd3fa9381"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel._applyBrowse",
@@ -26970,8 +27229,9 @@
 "hash": "1087248b79",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Apply found rows to browse mode and save criteria snapshot",
+"label_source": "generated",
+"label_hash": "1087248b79"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel._restoreCriteriaFromSnapshot",
@@ -26986,8 +27246,9 @@
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel._resetCriteriaRows",
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel.initCriteriaForRow"
 ],
-"label": "",
-"label_source": "none"
+"label": "Restore search criteria rows from saved snapshot with column structure",
+"label_source": "generated",
+"label_hash": "5ede7e9a7c"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel.activate",
@@ -27002,8 +27263,9 @@
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel._resetCriteriaRows",
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel.initCriteriaForColumns"
 ],
-"label": "",
-"label_source": "none"
+"label": "Activate find mode with all rows and column metadata",
+"label_source": "generated",
+"label_hash": "28ba894545"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel.newFind",
@@ -27018,8 +27280,9 @@
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel._resetCriteriaRows",
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel.initCriteriaForColumns"
 ],
-"label": "",
-"label_source": "none"
+"label": "Start new find with fresh criteria and mode reset",
+"label_source": "generated",
+"label_hash": "4348c8b38d"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel.addOrRow",
@@ -27034,8 +27297,9 @@
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel._makeEmptyRow",
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel.initCriteriaForColumns"
 ],
-"label": "",
-"label_source": "none"
+"label": "Add new OR row to search criteria if criteria already exist",
+"label_source": "generated",
+"label_hash": "2219efbee6"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel.duplicateOrRow",
@@ -27051,8 +27315,9 @@
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel.initCriteriaForColumns",
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel.initCriteriaForRow"
 ],
-"label": "",
-"label_source": "none"
+"label": "Duplicate the active criteria row or add a new row for panel find",
+"label_source": "generated",
+"label_hash": "2b3f7bca01"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel.performFind",
@@ -27068,8 +27333,9 @@
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel._applyBrowse",
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel._unionMatchAllRows"
 ],
-"label": "",
-"label_source": "none"
+"label": "Execute find search based on active criteria rows",
+"label_source": "generated",
+"label_hash": "3de42432b8"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel.performFindConstrain",
@@ -27086,8 +27352,9 @@
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel._criteriaRowForSingleFind",
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel._matchRows"
 ],
-"label": "",
-"label_source": "none"
+"label": "Constrain current found set by adding a new search criteria",
+"label_source": "generated",
+"label_hash": "473c29ce7f"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel.extendFind",
@@ -27104,8 +27371,9 @@
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel._criteriaRowForSingleFind",
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel._matchRows"
 ],
-"label": "",
-"label_source": "none"
+"label": "Extend current found set to include additional matching rows",
+"label_source": "generated",
+"label_hash": "21b6b7610f"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel.modifyFind",
@@ -27119,8 +27387,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel._restoreCriteriaFromSnapshot"
 ],
-"label": "",
-"label_source": "none"
+"label": "Restore previous find criteria for editing",
+"label_source": "generated",
+"label_hash": "8b4460ec92"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel.enterConstrainMode",
@@ -27134,8 +27403,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel._clearAllRowValues"
 ],
-"label": "",
-"label_source": "none"
+"label": "Enter constrain mode to narrow down the found set",
+"label_source": "generated",
+"label_hash": "e18af57544"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel.cancelFindCriteria",
@@ -27149,8 +27419,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel.exitFind"
 ],
-"label": "",
-"label_source": "none"
+"label": "Cancel find criteria and exit or return to browse mode",
+"label_source": "generated",
+"label_hash": "034f8e2965"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel.exitFind",
@@ -27162,8 +27433,9 @@
 "hash": "80589ce63f",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Exit find mode and reset all find state",
+"label_source": "generated",
+"label_hash": "80589ce63f"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel.reapplyLastFind",
@@ -27178,8 +27450,9 @@
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel._restoreCriteriaFromSnapshot",
 "nce_events/public/js/panel_page_v2/composables/useFindPanel.js::useFindPanel.performFind"
 ],
-"label": "",
-"label_source": "none"
+"label": "Reapply the last saved find criteria to search again",
+"label_source": "generated",
+"label_hash": "42687a4657"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js::useFormClientScript",
@@ -27205,8 +27478,9 @@
 "hash": "c5b4bcec48",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Resolve doctype from reference or direct value",
+"label_source": "generated",
+"label_hash": "c5b4bcec48"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js::useFormClientScript._captureHandlers",
@@ -27221,8 +27495,9 @@
 "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js::useFormClientScript._resolveDoctype",
 "nce_events/public/js/panel_page_v2/utils/ppv2Debug.js::ppv2DebugWarn"
 ],
-"label": "Run all script bodies, intercepting frappe.ui.form.on to capture handlers.",
-"label_source": "docstring"
+"label": "Capture form client script event handlers from definition",
+"label_source": "generated",
+"label_hash": "da7dfeff13"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js::useFormClientScript._buildBaseShim",
@@ -27236,8 +27511,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js::useFormClientScript._resolveDoctype"
 ],
-"label": "Build a base shim for frm.",
-"label_source": "docstring"
+"label": "Build base shim object with form data and field methods",
+"label_source": "generated",
+"label_hash": "20580b4f83"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js::useFormClientScript._buildBaseShim.df",
@@ -27249,8 +27525,9 @@
 "hash": "004c154975",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Find field definition by fieldname",
+"label_source": "generated",
+"label_hash": "004c154975"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js::useFormClientScript._makeAbsorbProxy",
@@ -27262,8 +27539,9 @@
 "hash": "53005ad1a2",
 "exported": false,
 "calls": [],
-"label": "Build a Proxy that silently absorbs all property reads and method calls.",
-"label_source": "docstring"
+"label": "Create proxy that absorbs any property or method calls",
+"label_source": "generated",
+"label_hash": "53005ad1a2"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js::useFormClientScript._makeAbsorbProxy.fn",
@@ -27277,8 +27555,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js::useFormClientScript._makeAbsorbProxy"
 ],
-"label": "",
-"label_source": "none"
+"label": "Recursive proxy function that absorbs calls",
+"label_source": "generated",
+"label_hash": "f37815d40c"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js::useFormClientScript._makeFieldsDictProxy",
@@ -27290,8 +27569,9 @@
 "hash": "dac654011a",
 "exported": false,
 "calls": [],
-"label": "Build a fields_dict Proxy that returns a fake field object for every fieldname.",
-"label_source": "docstring"
+"label": "Create proxy for fields dictionary with jQuery wrapper support",
+"label_source": "generated",
+"label_hash": "dac654011a"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js::useFormClientScript._makeHiddenHost",
@@ -27303,8 +27583,9 @@
 "hash": "a3e02fc0c1",
 "exported": false,
 "calls": [],
-"label": "Create an off-screen hidden host element with a child anchor, returning a disposer.",
-"label_source": "docstring"
+"label": "Create hidden DOM host element for script compatibility",
+"label_source": "generated",
+"label_hash": "a3e02fc0c1"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js::useFormClientScript._assembleShim",
@@ -27320,8 +27601,9 @@
 "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js::useFormClientScript._makeAbsorbProxy",
 "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js::useFormClientScript._makeFieldsDictProxy"
 ],
-"label": "Assemble a full shim ready to pass to a captured refresh handler.",
-"label_source": "docstring"
+"label": "Assemble complete shim with form, fields, and custom button support",
+"label_source": "generated",
+"label_hash": "3a4fb297ce"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js::useFormClientScript.activateScripts",
@@ -27338,8 +27620,9 @@
 "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js::useFormClientScript._makeHiddenHost",
 "nce_events/public/js/panel_page_v2/utils/ppv2Debug.js::ppv2DebugWarn"
 ],
-"label": "Phase 1 — call after load completes.",
-"label_source": "docstring"
+"label": "Activate and discover client script tool groups and refresh handlers",
+"label_source": "generated",
+"label_hash": "9577ff855b"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js::useFormClientScript.activateScripts.captureCustomButton",
@@ -27351,8 +27634,9 @@
 "hash": "5d9617516d",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Capture and group custom button from client script handler",
+"label_source": "generated",
+"label_hash": "5d9617516d"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js::useFormClientScript.mountTool",
@@ -27371,8 +27655,9 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js::useFormClientScript"
 ],
-"label": "Phase 2 — called by PanelFormScriptToolTab on mount.",
-"label_source": "docstring"
+"label": "Execute Frappe client scripts within panel form dialog with DOM handler support",
+"label_source": "generated",
+"label_hash": "3e3a7b2037"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js::useFormClientScript.mountTool.renderCustomButton",
@@ -27386,8 +27671,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/utils/ppv2Debug.js::ppv2DebugWarn"
 ],
-"label": "Render any add_custom_button registrations as real DOM buttons inside the container.",
-"label_source": "docstring"
+"label": "Render custom button from form script registration with click handler",
+"label_source": "generated",
+"label_hash": "446f23f78b"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js::useFormClientScript.runOnChange",
@@ -27405,8 +27691,9 @@
 "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js::useFormClientScript._makeHiddenHost",
 "nce_events/public/js/panel_page_v2/utils/ppv2Debug.js::ppv2DebugWarn"
 ],
-"label": "Call after a field value changes to trigger field-level event handlers.",
-"label_source": "docstring"
+"label": "Run field onChange handler from Frappe client script",
+"label_source": "generated",
+"label_hash": "cdf6fd1fde"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormDialogChrome.js::__",
@@ -27482,8 +27769,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/utils/formDialogDisplayBaseline.js::isBaselineField"
 ],
-"label": "",
-"label_source": "none"
+"label": "Get editable visible fields from form",
+"label_source": "generated",
+"label_hash": "e11a5aa1ad"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormDialogDisplayDirty.js::useFormDialogDisplayDirty.writableFieldnames",
@@ -27497,8 +27785,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/useFormDialogDisplayDirty.js::useFormDialogDisplayDirty.writableFields"
 ],
-"label": "",
-"label_source": "none"
+"label": "Get set of fieldnames that are writable on form",
+"label_source": "generated",
+"label_hash": "2a7f54b4d0"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormDialogDisplayDirty.js::useFormDialogDisplayDirty.captureCurrentDisplay",
@@ -27513,8 +27802,9 @@
 "nce_events/public/js/panel_page_v2/composables/useFormDialogDisplayDirty.js::useFormDialogDisplayDirty.writableFields",
 "nce_events/public/js/panel_page_v2/utils/formDialogDisplayBaseline.js::captureDisplayBaseline"
 ],
-"label": "",
-"label_source": "none"
+"label": "Capture current display state of all writable form fields",
+"label_source": "generated",
+"label_hash": "b80acc36ac"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormDialogDisplayDirty.js::useFormDialogDisplayDirty.recomputeDirty",
@@ -27529,8 +27819,9 @@
 "nce_events/public/js/panel_page_v2/composables/useFormDialogDisplayDirty.js::useFormDialogDisplayDirty.captureCurrentDisplay",
 "nce_events/public/js/panel_page_v2/utils/formDialogDisplayBaseline.js::diffDisplayBaseline"
 ],
-"label": "",
-"label_source": "none"
+"label": "Detect and track dirty changes between baseline and current form display",
+"label_source": "generated",
+"label_hash": "9e1d49d0b6"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormDialogDisplayDirty.js::useFormDialogDisplayDirty.scheduleRecompute",
@@ -27544,8 +27835,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/useFormDialogDisplayDirty.js::useFormDialogDisplayDirty.recomputeDirty"
 ],
-"label": "",
-"label_source": "none"
+"label": "Schedule animation frame debounced dirty state recompute",
+"label_source": "generated",
+"label_hash": "365b20bd8c"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormDialogDisplayDirty.js::useFormDialogDisplayDirty.onBodyEvent",
@@ -27563,8 +27855,9 @@
 "nce_events/public/js/panel_page_v2/composables/useFormDialogDisplayDirty.js::useFormDialogDisplayDirty.attachListeners",
 "nce_events/public/js/panel_page_v2/composables/useFormDialogDisplayDirty.js::useFormDialogDisplayDirty.detachListeners"
 ],
-"label": "",
-"label_source": "none"
+"label": "Handle form input/change/focusout events for dirty tracking",
+"label_source": "generated",
+"label_hash": "9a4e273c5b"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormDialogDisplayDirty.js::useFormDialogDisplayDirty.attachListeners",
@@ -27578,8 +27871,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/useFormDialogDisplayDirty.js::useFormDialogDisplayDirty.detachListeners"
 ],
-"label": "",
-"label_source": "none"
+"label": "Attach listeners to form dialog for display change events",
+"label_source": "generated",
+"label_hash": "6c25f5a6d8"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormDialogDisplayDirty.js::useFormDialogDisplayDirty.detachListeners",
@@ -27591,8 +27885,9 @@
 "hash": "2da54e3878",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Remove listeners from form dialog",
+"label_source": "generated",
+"label_hash": "2da54e3878"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormDialogDisplayDirty.js::useFormDialogDisplayDirty.captureBaselineFromDom",
@@ -27607,8 +27902,9 @@
 "nce_events/public/js/panel_page_v2/composables/useFormDialogDisplayDirty.js::useFormDialogDisplayDirty.captureCurrentDisplay",
 "nce_events/public/js/panel_page_v2/composables/useFormDialogDisplayDirty.js::useFormDialogDisplayDirty.recomputeDirty"
 ],
-"label": "",
-"label_source": "none"
+"label": "Capture baseline display state after DOM render completes",
+"label_source": "generated",
+"label_hash": "b7961d8e34"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormDialogDisplayDirty.js::useFormDialogDisplayDirty.refreshBaselineAfterLoad",
@@ -27623,8 +27919,9 @@
 "nce_events/public/js/panel_page_v2/composables/useFormDialogDisplayDirty.js::useFormDialogDisplayDirty.attachListeners",
 "nce_events/public/js/panel_page_v2/composables/useFormDialogDisplayDirty.js::useFormDialogDisplayDirty.captureBaselineFromDom"
 ],
-"label": "",
-"label_source": "none"
+"label": "Attach listeners and capture baseline after form load",
+"label_source": "generated",
+"label_hash": "3b5f2fddf4"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormDialogDisplayDirty.js::useFormDialogDisplayDirty.refreshBaselineAfterRevert",
@@ -27638,8 +27935,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/useFormDialogDisplayDirty.js::useFormDialogDisplayDirty.captureBaselineFromDom"
 ],
-"label": "",
-"label_source": "none"
+"label": "Reset baseline capture after form revert",
+"label_source": "generated",
+"label_hash": "0fe2ff5933"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormDialogDisplayDirty.js::useFormDialogDisplayDirty.commitFocusedFrappeWidget",
@@ -27655,8 +27953,9 @@
 "nce_events/public/js/panel_page_v2/composables/useFormDialogDisplayDirty.js::useFormDialogDisplayDirty.writableFieldnames",
 "nce_events/public/js/panel_page_v2/utils/formDialogDisplayBaseline.js::blurFocusedFrappeWidget"
 ],
-"label": "Before save: commit focused Frappe date/link picker only.",
-"label_source": "docstring"
+"label": "Commit focused Frappe widget and trigger dirty recompute",
+"label_source": "generated",
+"label_hash": "7b6ad23292"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormDialogRecordNav.js::panelRowArray",
@@ -27699,8 +27998,9 @@
 "hash": "35c44f41b5",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Filter row list by current find/search matches",
+"label_source": "generated",
+"label_hash": "35c44f41b5"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormDialogRecordNav.js::useFormDialogRecordNav.onFormDialogNavPrev",
@@ -27715,8 +28015,9 @@
 "nce_events/public/js/panel_page_v2/composables/useFormDialogRecordNav.js::panelRowArray",
 "nce_events/public/js/panel_page_v2/composables/useFormDialogRecordNav.js::useFormDialogRecordNav.effectiveList"
 ],
-"label": "",
-"label_source": "none"
+"label": "Navigate to previous record in form dialog",
+"label_source": "generated",
+"label_hash": "078863d19d"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFormDialogRecordNav.js::useFormDialogRecordNav.onFormDialogNavNext",
@@ -27731,8 +28032,9 @@
 "nce_events/public/js/panel_page_v2/composables/useFormDialogRecordNav.js::panelRowArray",
 "nce_events/public/js/panel_page_v2/composables/useFormDialogRecordNav.js::useFormDialogRecordNav.effectiveList"
 ],
-"label": "",
-"label_source": "none"
+"label": "Navigate to next record in form dialog",
+"label_source": "generated",
+"label_hash": "d812ed867b"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFrozenFormLoad.js::formDataValueEmptyForWpDefault",
@@ -27805,8 +28107,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/utils/formDialogLoadDebug.js::isFdLoadDebugEnabled"
 ],
-"label": "",
-"label_source": "none"
+"label": "Log form load debug event with timestamp and status",
+"label_source": "generated",
+"label_hash": "548d99cd18"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFrozenFormLoad.js::createFrozenFormLoad.resetWhenClosed",
@@ -27820,8 +28123,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/utils/formDialogLoadDebug.js::isFdLoadDebugEnabled"
 ],
-"label": "",
-"label_source": "none"
+"label": "Reset form state and clear data when dialog closes",
+"label_source": "generated",
+"label_hash": "43e4ea6f8b"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFrozenFormLoad.js::createFrozenFormLoad.load",
@@ -27841,8 +28145,9 @@
 "nce_events/public/js/panel_page_v2/utils/frappeFieldExpr.js::isLayoutField",
 "nce_events/public/js/panel_page_v2/utils/parseLayout.js::parseLayout"
 ],
-"label": "",
-"label_source": "none"
+"label": "Load frozen form dialog with definition, document, permissions, and field metadata",
+"label_source": "generated",
+"label_hash": "da6812f601"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useFrozenFormLoad.js::createFrozenFormLoad.load.parentField",
@@ -27854,8 +28159,9 @@
 "hash": "93d3993e72",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Find parent table field by fieldname from fields array",
+"label_source": "generated",
+"label_hash": "93d3993e72"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useNceCardStack.js::useNceCardStack",
@@ -27881,8 +28187,9 @@
 "hash": "9cd4f621f3",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Open card definition modal with doctype and record name",
+"label_source": "generated",
+"label_hash": "9cd4f621f3"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useNceCardStack.js::useNceCardStack.closeTopCard",
@@ -27894,8 +28201,9 @@
 "hash": "8c780297e4",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Close top card from stacked card modal",
+"label_source": "generated",
+"label_hash": "8c780297e4"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useNceCardStack.js::useNceCardStack.onOpenCard",
@@ -27909,8 +28217,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/useNceCardStack.js::useNceCardStack.openCardModal"
 ],
-"label": "Payload from WidgetGrid / ActionsPanel: { cardDefName, doctype, name } */",
-"label_source": "docstring"
+"label": "Handle card open event and push to card stack",
+"label_source": "generated",
+"label_hash": "605b05cc12"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useNceCardStack.js::parseOpenCardOpts",
@@ -27952,8 +28261,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/utils/frappeCall.js::frappeCall"
 ],
-"label": "",
-"label_source": "none"
+"label": "Fetch panel configuration with definition, columns, actions",
+"label_source": "generated",
+"label_hash": "4e76d6b640"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel.fetchData",
@@ -27967,8 +28277,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/utils/frappeCall.js::frappeCall"
 ],
-"label": "",
-"label_source": "none"
+"label": "Fetch panel data rows with applied filters",
+"label_source": "generated",
+"label_hash": "14db5570af"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel._resolveFilterValue",
@@ -27980,8 +28291,9 @@
 "hash": "d3ba9ecbc9",
 "exported": false,
 "calls": [],
-"label": "── Relative date resolution ────────────────────────────────────────────── Resolves date shorthand to a concrete yyyy-mm-dd string.",
-"label_source": "docstring"
+"label": "Resolve filter value including date expressions and relative dates",
+"label_source": "generated",
+"label_hash": "d3ba9ecbc9"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel._applyUserFilters",
@@ -27995,8 +28307,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel._resolveFilterValue"
 ],
-"label": "── User filter application ─────────────────────────────────────────────── Single path used for both core filters and user-entered filters.",
-"label_source": "docstring"
+"label": "Apply user filters to row set with field comparison operators",
+"label_source": "generated",
+"label_hash": "67f7d511c8"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel._applyFilters",
@@ -28010,8 +28323,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel._applyUserFilters"
 ],
-"label": "── Filter orchestration ────────────────────────────────────────────────── User filters from the filter bar only; empty = full loaded set (_allRows).",
-"label_source": "docstring"
+"label": "Apply active user filters to all rows and update row list",
+"label_source": "generated",
+"label_hash": "5f98df60f7"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel.setFoundSet",
@@ -28023,8 +28337,9 @@
 "hash": "ebc5fafa82",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Set found set to fixed rows, pinning active filter state",
+"label_source": "generated",
+"label_hash": "ebc5fafa82"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel.clearFoundSet",
@@ -28038,8 +28353,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel._applyFilters"
 ],
-"label": "",
-"label_source": "none"
+"label": "Clear found set and reapply user filters to all rows",
+"label_source": "generated",
+"label_hash": "d67f2b37d9"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel.load",
@@ -28055,8 +28371,9 @@
 "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel.fetchConfig",
 "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel.fetchData"
 ],
-"label": "── Load / reload ─────────────────────────────────────────────────────────",
-"label_source": "docstring"
+"label": "Load panel configuration and data rows initially",
+"label_source": "generated",
+"label_hash": "7a60bf8041"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel.reload",
@@ -28072,8 +28389,9 @@
 "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel.fetchConfig",
 "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel.fetchData"
 ],
-"label": "",
-"label_source": "none"
+"label": "Reload panel configuration and data rows",
+"label_source": "generated",
+"label_hash": "b6306dcf58"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel.setFilters",
@@ -28087,8 +28405,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel._applyFilters"
 ],
-"label": "Set user filters and re-apply (synchronous, no API call)",
-"label_source": "docstring"
+"label": "Set new user filter set and reapply to all rows",
+"label_source": "generated",
+"label_hash": "0c94d02af5"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel.setFiltersOnFoundSet",
@@ -28102,8 +28421,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel._applyUserFilters"
 ],
-"label": "Layer filter bar on a fixed row set (Find browse mode).",
-"label_source": "docstring"
+"label": "Set user filters on fixed row set with filter application",
+"label_source": "generated",
+"label_hash": "fcd5c02c70"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelActions.js::usePanelActions",
@@ -28134,8 +28454,9 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/composables/usePanelActions.js::usePanelActions"
 ],
-"label": "",
-"label_source": "none"
+"label": "Load available panel actions for current scope",
+"label_source": "generated",
+"label_hash": "13091e9000"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelActions.js::usePanelActions._ctx",
@@ -28147,8 +28468,9 @@
 "hash": "de0834115e",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Prepare context object with frappe utilities and panel action handlers",
+"label_source": "generated",
+"label_hash": "de0834115e"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelActions.js::usePanelActions._resolveFormDialogDocName",
@@ -28162,8 +28484,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/utils/frappeCall.js::frappeCall"
 ],
-"label": "",
-"label_source": "none"
+"label": "Resolve target document name for form dialog based on action mode",
+"label_source": "generated",
+"label_hash": "e000acc7de"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelActions.js::usePanelActions.executeAction",
@@ -28180,8 +28503,9 @@
 "nce_events/public/js/panel_page_v2/utils/parseClientHandlerSpec.js::parseClientHandlerSpec",
 "nce_events/public/js/panel_page_v2/utils/ppv2Debug.js::ppv2DebugWarn"
 ],
-"label": "",
-"label_source": "none"
+"label": "Execute panel action for form dialog or client script",
+"label_source": "generated",
+"label_hash": "3c22e6df05"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialog.js::usePanelFormDialog",
@@ -28214,8 +28538,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/frozenFormValidate.js::validatePanelRequiredFields"
 ],
-"label": "",
-"label_source": "none"
+"label": "Validate panel form for WooCommerce publish requirements",
+"label_source": "generated",
+"label_hash": "141080355b"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialog.js::usePanelFormDialog.validate",
@@ -28230,8 +28555,9 @@
 "nce_events/public/js/panel_page_v2/composables/frozenFormValidate.js::validateFrozenForm",
 "nce_events/public/js/panel_page_v2/composables/frozenFormValidate.js::validatePanelRequiredFields"
 ],
-"label": "",
-"label_source": "none"
+"label": "Validate form data against frozen form and panel required fields",
+"label_source": "generated",
+"label_hash": "5a7c23f2ad"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialog.js::usePanelFormDialog.save",
@@ -28245,8 +28571,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/frozenFormSave.js::saveFrozenFormDocument"
 ],
-"label": "",
-"label_source": "none"
+"label": "Save form document with validation and change tracking",
+"label_source": "generated",
+"label_hash": "183ab230dd"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialog.js::usePanelFormDialog.revert",
@@ -28258,8 +28585,9 @@
 "hash": "bcbc31b213",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Revert form data to original unchanged state",
+"label_source": "generated",
+"label_hash": "bcbc31b213"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialog.js::usePanelFormDialog.isFieldVisible",
@@ -28273,8 +28601,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/frozenFormValidate.js::isFieldVisible"
 ],
-"label": "",
-"label_source": "none"
+"label": "Determine if form field should be displayed to user",
+"label_source": "generated",
+"label_hash": "0b805cd029"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialog.js::usePanelFormDialog.isFieldMandatory",
@@ -28288,8 +28617,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/frozenFormValidate.js::isFieldMandatory"
 ],
-"label": "",
-"label_source": "none"
+"label": "Determine if form field is mandatory based on rules and panel config",
+"label_source": "generated",
+"label_hash": "8997150ba1"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialog.js::usePanelFormDialog.isFieldWritableByPerm",
@@ -28301,8 +28631,9 @@
 "hash": "6815d5e556",
 "exported": false,
 "calls": [],
-"label": "True when the user may write this field, honouring DocType write + permlevel.",
-"label_source": "docstring"
+"label": "Check if user permissions allow writing to form field",
+"label_source": "generated",
+"label_hash": "6815d5e556"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialog.js::usePanelFormDialog.isFieldReadOnly",
@@ -28318,8 +28649,9 @@
 "nce_events/public/js/panel_page_v2/composables/usePanelFormDialog.js::usePanelFormDialog.isFieldWritableByPerm",
 "nce_events/public/js/panel_page_v2/utils/panelFieldReadOnly.js::isRootFieldPanelReadOnly"
 ],
-"label": "",
-"label_source": "none"
+"label": "Determine if form field should be read-only",
+"label_source": "generated",
+"label_hash": "d9f5616d09"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialog.js::usePanelFormDialog.onFieldChange",
@@ -28331,8 +28663,9 @@
 "hash": "7a40aae8a0",
 "exported": false,
 "calls": [],
-"label": "Call after any field value changes to run captured client scripts for that field.",
-"label_source": "docstring"
+"label": "Execute on-change handlers when form field value changes",
+"label_source": "generated",
+"label_hash": "7a40aae8a0"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::_matchFindCriterion",
@@ -28379,8 +28712,9 @@
 "nce_events/public/js/panel_page_v2/composables/useFormDialogRecordNav.js::panelRowArray",
 "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost._getPanelForNav"
 ],
-"label": "",
-"label_source": "none"
+"label": "Get effective panel row list filtered by find matches",
+"label_source": "generated",
+"label_hash": "ba89ec41d7"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.openFormDialogFromPanelRow",
@@ -28394,8 +28728,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/utils/syncGateClient.js::assertDoctypeNotSyncBusy"
 ],
-"label": "@returns {Promise<boolean>} true if the form dialog was opened */",
-"label_source": "docstring"
+"label": "Open form dialog to edit existing panel row record",
+"label_source": "generated",
+"label_hash": "842521f414"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.openFormDialogForNewRecord",
@@ -28410,8 +28745,9 @@
 "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost._resetPendingSlot",
 "nce_events/public/js/panel_page_v2/utils/syncGateClient.js::assertDoctypeNotSyncBusy"
 ],
-"label": "New document in the same frozen Form Dialog as row edit — requires Page Panel Form Dialog link.",
-"label_source": "docstring"
+"label": "Open form dialog to create new record in panel",
+"label_source": "generated",
+"label_hash": "b2f002e00d"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.openFormDialogForFind",
@@ -28425,8 +28761,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost._resetPendingSlot"
 ],
-"label": "Toolbar Find — empty criteria layout, same Form Dialog definition as the panel.",
-"label_source": "docstring"
+"label": "Open form dialog in search mode with find criteria",
+"label_source": "generated",
+"label_hash": "32549dcc8f"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.openFormDialogForFind.visibleCols",
@@ -28438,8 +28775,9 @@
 "hash": "d906caa47c",
 "exported": false,
 "calls": [],
-"label": "Capture all panel-known columns (visible + search-only) so the Find dialog can render extra criteria inputs for fields not in the frozen Form Dialog layout.",
-"label_source": "docstring"
+"label": "Filter panel columns excluding system and related columns",
+"label_source": "generated",
+"label_hash": "d906caa47c"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.openFormDialogStandalone",
@@ -28454,8 +28792,9 @@
 "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost._resetPendingSlot",
 "nce_events/public/js/panel_page_v2/utils/syncGateClient.js::assertDoctypeNotSyncBusy"
 ],
-"label": "Open Form Dialog without a parent panel context (e.g.",
-"label_source": "docstring"
+"label": "Open standalone form dialog outside panel context",
+"label_source": "generated",
+"label_hash": "d9efe7a581"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.onFormDialogClose",
@@ -28469,8 +28808,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost._resetPendingSlot"
 ],
-"label": "",
-"label_source": "none"
+"label": "Close form dialog and reset all form state variables",
+"label_source": "generated",
+"label_hash": "a5ca7b4cfe"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.onFormDialogFindCriteria",
@@ -28485,8 +28825,9 @@
 "nce_events/public/js/panel_page_v2/composables/useFormDialogRecordNav.js::panelRowArray",
 "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::_matchFindCriterion"
 ],
-"label": "",
-"label_source": "none"
+"label": "Search panel rows by criteria and return matching record names",
+"label_source": "generated",
+"label_hash": "28fe29d5c8"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.onFormDialogFindClear",
@@ -28498,8 +28839,9 @@
 "hash": "458cd4d0f6",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Clear form dialog find results and search state",
+"label_source": "generated",
+"label_hash": "458cd4d0f6"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.onFormDialogFindShowAll",
@@ -28513,8 +28855,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.onFormDialogFindClear"
 ],
-"label": "",
-"label_source": "none"
+"label": "Reset find results to show all records in form dialog",
+"label_source": "generated",
+"label_hash": "e4d27c98f8"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.onFormDialogFindModify",
@@ -28526,8 +28869,9 @@
 "hash": "06202d901f",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Restore previous search criteria for editing in form dialog",
+"label_source": "generated",
+"label_hash": "06202d901f"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.onFormDialogFindConstrain",
@@ -28539,8 +28883,9 @@
 "hash": "050478ae2e",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Prepare to constrain current find results with new criteria",
+"label_source": "generated",
+"label_hash": "050478ae2e"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.onFormDialogFindCriteriaConstrain",
@@ -28554,8 +28899,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.onFormDialogFindCriteria"
 ],
-"label": "\"Constrain Found Set\" clicked while in criteria phase.",
-"label_source": "docstring"
+"label": "Apply new criteria to constrain existing form dialog search results",
+"label_source": "generated",
+"label_hash": "9bc2291e31"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.onFormDialogFindCancelCriteria",
@@ -28569,8 +28915,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.onFormDialogClose"
 ],
-"label": "",
-"label_source": "none"
+"label": "Cancel criteria entry and close form dialog",
+"label_source": "generated",
+"label_hash": "87ca63f82e"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.onFormDialogSaved",
@@ -28584,8 +28931,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost._clearDialogRefs"
 ],
-"label": "",
-"label_source": "none"
+"label": "Reload source panel after form dialog document is saved",
+"label_source": "generated",
+"label_hash": "cfe0d3ec72"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.onReadbackMerged",
@@ -28599,8 +28947,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/wpReadbackFlow.js::mergeFreshDocIntoPanel"
 ],
-"label": "After WP read-back wait in the dialog: patch the floated panel row + PK if renamed.",
-"label_source": "docstring"
+"label": "Merge fresh document data into panel row after form save",
+"label_source": "generated",
+"label_hash": "19f225b6c8"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost._resetPendingSlot",
@@ -28612,8 +28961,9 @@
 "hash": "64ef38e51a",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Reset pending document slot for form dialog navigation",
+"label_source": "generated",
+"label_hash": "64ef38e51a"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost._clearDialogRefs",
@@ -28625,8 +28975,9 @@
 "hash": "b9f152edd4",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Clear all form dialog state and close dialog completely",
+"label_source": "generated",
+"label_hash": "b9f152edd4"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost._getPanelForNav",
@@ -28638,8 +28989,9 @@
 "hash": "6bfcf7065a",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Get source panel for form dialog record navigation",
+"label_source": "generated",
+"label_hash": "6bfcf7065a"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost._targetRowName",
@@ -28653,8 +29005,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost._effectiveNavList"
 ],
-"label": "",
-"label_source": "none"
+"label": "Find target row name for previous or next record navigation",
+"label_source": "generated",
+"label_hash": "fcb63bc272"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.preparePendingNav",
@@ -28668,8 +29021,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost._targetRowName"
 ],
-"label": "",
-"label_source": "none"
+"label": "Prepare pending navigation to adjacent record in form dialog",
+"label_source": "generated",
+"label_hash": "1e9414deca"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.commitPendingNav",
@@ -28685,8 +29039,9 @@
 "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.onFormDialogNavNext",
 "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.onFormDialogNavPrev"
 ],
-"label": "",
-"label_source": "none"
+"label": "Execute animated transition to next form dialog record",
+"label_source": "generated",
+"label_hash": "18ee3f7f11"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.commitPendingNav.step",
@@ -28701,8 +29056,9 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.commitPendingNav"
 ],
-"label": "",
-"label_source": "none"
+"label": "Animate opacity change during form dialog record transition",
+"label_source": "generated",
+"label_hash": "dfcaf1b26c"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.onFormDialogNavPrev",
@@ -28716,8 +29072,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.preparePendingNav"
 ],
-"label": "",
-"label_source": "none"
+"label": "Navigate to previous record in form dialog",
+"label_source": "generated",
+"label_hash": "3e4ee107db"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.onFormDialogNavNext",
@@ -28731,8 +29088,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.preparePendingNav"
 ],
-"label": "",
-"label_source": "none"
+"label": "Navigate to next record in form dialog",
+"label_source": "generated",
+"label_hash": "a8fdf9e985"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.onFormDialogSwitchDoc",
@@ -28744,8 +29102,9 @@
 "hash": "cb81f04b59",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Switch form dialog to display different document by name",
+"label_source": "generated",
+"label_hash": "cb81f04b59"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js::usePanelFormDialogHost.reloadPanelForFormDialogDoctype",
@@ -28757,8 +29116,9 @@
 "hash": "7fcc5b6aac",
 "exported": false,
 "calls": [],
-"label": "Reload the open panel whose doctype matches the current form dialog (e.g.",
-"label_source": "docstring"
+"label": "Reload panel data for current form dialog document type",
+"label_source": "generated",
+"label_hash": "7fcc5b6aac"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useRelatedActions.js::useRelatedActions",
@@ -28784,8 +29144,9 @@
 "hash": "bfd8151c53",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Generate unique key for action-row combination",
+"label_source": "generated",
+"label_hash": "bfd8151c53"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useRelatedActions.js::useRelatedActions.closeActionModal",
@@ -28797,8 +29158,9 @@
 "hash": "69799ad6a9",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Close action modal and reset action execution state",
+"label_source": "generated",
+"label_hash": "69799ad6a9"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useRelatedActions.js::useRelatedActions.formatActionResultSummary",
@@ -28810,8 +29172,9 @@
 "hash": "72044ac049",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Format action result summary with message and financial details for display",
+"label_source": "generated",
+"label_hash": "72044ac049"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useRelatedActions.js::useRelatedActions.handleExchangeActionResult",
@@ -28826,8 +29189,9 @@
 "nce_events/public/js/panel_page_v2/composables/useRelatedActions.js::useRelatedActions.handleExchangeActionResult.e",
 "nce_events/public/js/panel_page_v2/composables/useRelatedActions.js::useRelatedActions.handleExchangeActionResult.money"
 ],
-"label": "",
-"label_source": "none"
+"label": "Display formatted event switch result with order, credit, and payment details",
+"label_source": "generated",
+"label_hash": "1dca4aac74"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useRelatedActions.js::useRelatedActions.handleExchangeActionResult.e",
@@ -28839,8 +29203,9 @@
 "hash": "3812aaefe1",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Escape HTML special characters in string values safely",
+"label_source": "generated",
+"label_hash": "3812aaefe1"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useRelatedActions.js::useRelatedActions.handleExchangeActionResult.money",
@@ -28852,8 +29217,9 @@
 "hash": "991447a07e",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Format numeric value as USD currency string",
+"label_source": "generated",
+"label_hash": "991447a07e"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useRelatedActions.js::useRelatedActions.handleRefundActionResult",
@@ -28867,8 +29233,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/utils/enrollmentWpActions.js::showRefundActionResult"
 ],
-"label": "",
-"label_source": "none"
+"label": "Handle and display refund action result confirmation details",
+"label_source": "generated",
+"label_hash": "92303a8319"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useRelatedActions.js::useRelatedActions.isRefundOutcome",
@@ -28880,8 +29247,9 @@
 "hash": "dedfa5a302",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Determine if action result represents a refund or event switch outcome",
+"label_source": "generated",
+"label_hash": "dedfa5a302"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useRelatedActions.js::useRelatedActions.runPortalAction",
@@ -28895,8 +29263,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/utils/frappeCall.js::frappeCall"
 ],
-"label": "",
-"label_source": "none"
+"label": "Execute portal action via server API for related row with prompts",
+"label_source": "generated",
+"label_hash": "2a23920192"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useRelatedActions.js::useRelatedActions.submitActionModal",
@@ -28916,8 +29285,9 @@
 "nce_events/public/js/panel_page_v2/composables/useRelatedActions.js::useRelatedActions.isRefundOutcome",
 "nce_events/public/js/panel_page_v2/composables/useRelatedActions.js::useRelatedActions.runPortalAction"
 ],
-"label": "",
-"label_source": "none"
+"label": "Submit action modal with validation and execute portal action",
+"label_source": "generated",
+"label_hash": "cee4a91855"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useRelatedActions.js::useRelatedActions.onRelatedActionClick",
@@ -28931,8 +29301,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/useRelatedActions.js::useRelatedActions.submitActionModalDirect"
 ],
-"label": "",
-"label_source": "none"
+"label": "Open action modal or execute action directly based on prompt requirements",
+"label_source": "generated",
+"label_hash": "272ae36390"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useRelatedActions.js::useRelatedActions.submitActionModalDirect",
@@ -28951,8 +29322,9 @@
 "nce_events/public/js/panel_page_v2/composables/useRelatedActions.js::useRelatedActions.isRefundOutcome",
 "nce_events/public/js/panel_page_v2/composables/useRelatedActions.js::useRelatedActions.runPortalAction"
 ],
-"label": "",
-"label_source": "none"
+"label": "Execute portal action immediately without modal confirmation",
+"label_source": "generated",
+"label_hash": "ecc03aa58e"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useRelatedLabelWidths.js::useRelatedLabelWidths",
@@ -28978,8 +29350,9 @@
 "hash": "37acda6575",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Generate localStorage key for related tab label column width",
+"label_source": "generated",
+"label_hash": "37acda6575"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useRelatedLabelWidths.js::useRelatedLabelWidths.readSavedRelatedLabelWidth",
@@ -28993,8 +29366,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/useRelatedLabelWidths.js::useRelatedLabelWidths.relatedLabelStorageKey"
 ],
-"label": "",
-"label_source": "none"
+"label": "Retrieve saved label column width from localStorage for tab",
+"label_source": "generated",
+"label_hash": "06ca5ceec3"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useRelatedLabelWidths.js::useRelatedLabelWidths.defaultRelatedLabelWidthForTab",
@@ -29006,8 +29380,9 @@
 "hash": "d2e252ae37",
 "exported": false,
 "calls": [],
-"label": "Default label column width from longest label / fieldname in that tab.",
-"label_source": "docstring"
+"label": "Calculate default label column width based on field lengths",
+"label_source": "generated",
+"label_hash": "d2e252ae37"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useRelatedLabelWidths.js::useRelatedLabelWidths.syncRelatedLabelWidthsFromTabs",
@@ -29022,8 +29397,9 @@
 "nce_events/public/js/panel_page_v2/composables/useRelatedLabelWidths.js::useRelatedLabelWidths.defaultRelatedLabelWidthForTab",
 "nce_events/public/js/panel_page_v2/composables/useRelatedLabelWidths.js::useRelatedLabelWidths.readSavedRelatedLabelWidth"
 ],
-"label": "",
-"label_source": "none"
+"label": "Sync related tab label widths from saved settings or defaults",
+"label_source": "generated",
+"label_hash": "244e358f92"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useRelatedLabelWidths.js::useRelatedLabelWidths.relatedLabelColPx",
@@ -29035,8 +29411,9 @@
 "hash": "57ea1bdaf9",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Get current label column pixel width for related tab",
+"label_source": "generated",
+"label_hash": "57ea1bdaf9"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useRelatedLabelWidths.js::useRelatedLabelWidths.onRelatedLabelResizeMove",
@@ -29053,8 +29430,9 @@
 "nce_events/public/js/panel_page_v2/composables/useRelatedLabelWidths.js::useRelatedLabelWidths.onRelatedLabelResizeDown",
 "nce_events/public/js/panel_page_v2/composables/useRelatedLabelWidths.js::useRelatedLabelWidths.onRelatedLabelResizeUp"
 ],
-"label": "",
-"label_source": "none"
+"label": "Update label column width during mouse drag resize operation",
+"label_source": "generated",
+"label_hash": "440056b28f"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useRelatedLabelWidths.js::useRelatedLabelWidths.onRelatedLabelResizeUp",
@@ -29072,8 +29450,9 @@
 "nce_events/public/js/panel_page_v2/composables/useRelatedLabelWidths.js::useRelatedLabelWidths",
 "nce_events/public/js/panel_page_v2/composables/useRelatedLabelWidths.js::useRelatedLabelWidths.onRelatedLabelResizeDown"
 ],
-"label": "",
-"label_source": "none"
+"label": "Save label column width to localStorage when resize completes",
+"label_source": "generated",
+"label_hash": "d79cacbb76"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useRelatedLabelWidths.js::useRelatedLabelWidths.onRelatedLabelResizeDown",
@@ -29087,8 +29466,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/useRelatedLabelWidths.js::useRelatedLabelWidths.relatedLabelColPx"
 ],
-"label": "",
-"label_source": "none"
+"label": "Handle resizable related-tab label column resize start event",
+"label_source": "generated",
+"label_hash": "d8100370dd"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useSendDialogs.js::_openSendDialog",
@@ -29178,8 +29558,9 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/composables/useSpaPageNav.js::useSpaPageNav"
 ],
-"label": "",
-"label_source": "none"
+"label": "Load available SPA pages for panel header navigation",
+"label_source": "generated",
+"label_hash": "9574c530ac"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useSpaPageNav.js::useSpaPageNav.switchTo",
@@ -29194,8 +29575,9 @@
 "nce_events/public/js/panel_page_v2/utils/frappeCall.js::frappeCall",
 "nce_events/public/js/panel_page_v2/utils/navigateToSpaPage.js::navigateToSpaPage"
 ],
-"label": "",
-"label_source": "none"
+"label": "Switch to another SPA page with route resolution",
+"label_source": "generated",
+"label_hash": "1bc21c841b"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useTagFinder.js::SKIP_FIELDTYPES",
@@ -29252,8 +29634,9 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/composables/useTagFinder.js::useTagFinder"
 ],
-"label": "",
-"label_source": "none"
+"label": "Clear Tag Finder visited doctypes and column state",
+"label_source": "generated",
+"label_hash": "22f06b15d5"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useTagFinder.js::useTagFinder.loadColumn",
@@ -29270,8 +29653,9 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/composables/useTagFinder.js::useTagFinder"
 ],
-"label": "",
-"label_source": "none"
+"label": "Load doctype fields and linked options into Tag Finder column",
+"label_source": "generated",
+"label_hash": "a83fbec0e3"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useTagFinder.js::useTagFinder.loadColumn.tags",
@@ -29283,8 +29667,9 @@
 "hash": "78e2d5b811",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Build merge tag objects from pronoun field rows",
+"label_source": "generated",
+"label_hash": "78e2d5b811"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useTagFinder.js::useTagFinder.buildTag",
@@ -29302,8 +29687,9 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/composables/useTagFinder.js::useTagFinder"
 ],
-"label": "",
-"label_source": "none"
+"label": "Build Jinja merge tag string from field and hop path",
+"label_source": "generated",
+"label_hash": "924e260b45"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useTagFinder.js::useTagFinder.buildPath",
@@ -29318,8 +29704,9 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/composables/useTagFinder.js::useTagFinder"
 ],
-"label": "",
-"label_source": "none"
+"label": "Build human-readable doctype navigation path for field",
+"label_source": "generated",
+"label_hash": "ec79bf6f10"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useTagFinder.js::useTagFinder.applyFilters",
@@ -29331,8 +29718,9 @@
 "hash": "415e88359a",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Apply Jinja filters for default value and HTML safety",
+"label_source": "generated",
+"label_hash": "415e88359a"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useTagFinder.js::_buildLinkChainTag",
@@ -29493,8 +29881,9 @@
 "hash": "b7cc1d8c0a",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Mount Vue app with panel configuration and injection",
+"label_source": "generated",
+"label_hash": "b7cc1d8c0a"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/mount_format_rule_editor.js::mountFormatRuleEditor",
@@ -29519,8 +29908,9 @@
 "sig": "",
 "hash": "c4fd0f8906",
 "calls": [],
-"label": "Card Definition form view with TabBar, WidgetGrid, ActionsPanel, and nested open-card drill-down.",
-"label_source": "docstring"
+"label": "Card Definition form with tabs, widgets, and actions",
+"label_source": "generated",
+"label_hash": "c4fd0f8906"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/nce_cards/CardForm.vue::collectWidgets",
@@ -29582,8 +29972,9 @@
 "sig": "",
 "hash": "85ad58ee75",
 "calls": [],
-"label": "Teleport card modal backdrop wrapping CardForm with pointer dismiss and Escape close.",
-"label_source": "docstring"
+"label": "Modal backdrop wrapper for card form with dismiss gestures",
+"label_source": "generated",
+"label_hash": "85ad58ee75"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/nce_cards/CardModal.vue::onKeyDown",
@@ -29642,8 +30033,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/nce_cards/useCardForm.js::getDoc"
 ],
-"label": "",
-"label_source": "none"
+"label": "Resolve nested doctype field values by hop path",
+"label_source": "generated",
+"label_hash": "891231d351"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/nce_cards/useCardForm.js::useCardForm.load",
@@ -29659,8 +30051,9 @@
 "nce_events/public/js/panel_page_v2/nce_cards/useCardForm.js::useCardForm.resolveHopPath",
 "nce_events/public/js/panel_page_v2/utils/frappeCall.js::frappeCall"
 ],
-"label": "",
-"label_source": "none"
+"label": "Load card definition, metadata, and record data with resolved field hop paths",
+"label_source": "generated",
+"label_hash": "4c7bf3ea7c"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/nce_cards/useCardForm.js::useCardForm.saveField",
@@ -29672,8 +30065,9 @@
 "hash": "baf3a59e61",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Save a single card field value to the database",
+"label_source": "generated",
+"label_hash": "baf3a59e61"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/nce_cards/useCardForm.js::useCardForm.refresh",
@@ -29688,8 +30082,9 @@
 "nce_events/public/js/panel_page_v2/nce_cards/useCardForm.js::getDoc",
 "nce_events/public/js/panel_page_v2/nce_cards/useCardForm.js::useCardForm.resolveHopPath"
 ],
-"label": "",
-"label_source": "none"
+"label": "Refresh card record data and resolved field hop paths",
+"label_source": "generated",
+"label_hash": "fcdca08839"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/accessProfileManageFields.js::openManageFieldsDialog",
@@ -29718,8 +30113,9 @@
 "hash": "1771424e87",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Render manage fields dialog with restricted field checkboxes for access profile",
+"label_source": "generated",
+"label_hash": "1771424e87"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/accessProfileManageFields.js::openManageFieldsDialog.bulkSet",
@@ -29733,8 +30129,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/utils/accessProfileManageFields.js::openManageFieldsDialog.render"
 ],
-"label": "",
-"label_source": "none"
+"label": "Bulk set all fields as restricted or unrestricted for access profile doctype",
+"label_source": "generated",
+"label_hash": "b1a2f1f057"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/enrollmentWpActions.js::__",
@@ -29915,8 +30312,9 @@
 "hash": "4c2f595587",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Filter visible panel columns excluding internal and related link fields",
+"label_source": "generated",
+"label_hash": "4c2f595587"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/findCriterion.js::matchFindCriterion",
@@ -30963,8 +31361,9 @@
 "hash": "ef3a9cb7fb",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Notify parent when native form data changes",
+"label_source": "generated",
+"label_hash": "ef3a9cb7fb"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/nativeFormHost.js::createNativeFormHost._bindDirtyListeners",
@@ -30978,8 +31377,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/utils/nativeFormHost.js::createNativeFormHost._notifyDirty"
 ],
-"label": "",
-"label_source": "none"
+"label": "Bind change listeners to form inputs and grid actions to track dirty state",
+"label_source": "generated",
+"label_hash": "75a014b839"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/nativeFormHost.js::createNativeFormHost._hideFormChrome",
@@ -30991,8 +31391,9 @@
 "hash": "b4f200a616",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Hide frappe form chrome like buttons and footers from mounted native form",
+"label_source": "generated",
+"label_hash": "b4f200a616"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/nativeFormHost.js::createNativeFormHost._applyView",
@@ -31004,8 +31405,9 @@
 "hash": "2e540270a7",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Apply view mode and field visibility rules to mounted native form",
+"label_source": "generated",
+"label_hash": "2e540270a7"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/nativeFormHost.js::createNativeFormHost.bootstrap",
@@ -31021,8 +31423,9 @@
 "nce_events/public/js/panel_page_v2/utils/nativeFormHost.js::createNativeFormHost._hideFormChrome",
 "nce_events/public/js/panel_page_v2/utils/nativeFormHost.js::ensureFrappeFormReady"
 ],
-"label": "",
-"label_source": "none"
+"label": "Bootstrap native frappe form in hidden container for panel dialog use",
+"label_source": "generated",
+"label_hash": "3f8277c5db"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/nativeFormHost.js::createNativeFormHost.mountTo",
@@ -31037,8 +31440,9 @@
 "nce_events/public/js/panel_page_v2/utils/nativeFormHost.js::createNativeFormHost._applyView",
 "nce_events/public/js/panel_page_v2/utils/nativeFormHost.js::createNativeFormHost._hideFormChrome"
 ],
-"label": "",
-"label_source": "none"
+"label": "Mount bootstrapped native form to container with applied view options",
+"label_source": "generated",
+"label_hash": "e2f72fd8b0"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/nativeFormHost.js::createNativeFormHost.syncDocToFormData",
@@ -31050,8 +31454,9 @@
 "hash": "f159225e0c",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Copy mounted form document data to external form data object",
+"label_source": "generated",
+"label_hash": "f159225e0c"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/nativeFormHost.js::createNativeFormHost.destroy",
@@ -31063,8 +31468,9 @@
 "hash": "7bbf9a27a5",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Clean up and remove native form from Panel Form Dialog",
+"label_source": "generated",
+"label_hash": "7bbf9a27a5"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/nativeFormHost.js::createNativeFormHost.isActive",
@@ -31076,8 +31482,9 @@
 "hash": "2af7b7ab53",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Check if native form is currently active and bootstrapped",
+"label_source": "generated",
+"label_hash": "2af7b7ab53"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/nativeFormHost.js::createNativeFormHost.getFrm",
@@ -31089,8 +31496,9 @@
 "hash": "8ed1b0e1b1",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Retrieve the current frappe form instance",
+"label_source": "generated",
+"label_hash": "8ed1b0e1b1"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/nativeFormHost.js::createNativeFormHost.collectInlineFieldnames",
@@ -31102,8 +31510,9 @@
 "hash": "63ffaaf7c9",
 "exported": false,
 "calls": [],
-"label": "Fieldnames of inline child tabs on this definition — hide on Details view.",
-"label_source": "docstring"
+"label": "Extract parent fieldnames from inline child tabs",
+"label_source": "generated",
+"label_hash": "63ffaaf7c9"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/navigateToSpaPage.js::navigateToSpaPage",
@@ -32006,8 +32415,9 @@
 "hash": "a5311449ff",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Sum column widths for table layout calculation",
+"label_source": "generated",
+"label_hash": "a5311449ff"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/panelTableColWidths.js::calcColWidths",
@@ -32481,8 +32891,9 @@
 "hash": "5d80fd6c8b",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Update live performance trace dialog with timing messages",
+"label_source": "generated",
+"label_hash": "5d80fd6c8b"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/submitPerfTrace.js::createSubmitPerfTrace.push",
@@ -32496,8 +32907,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/utils/submitPerfTrace.js::createSubmitPerfTrace.updateLiveDialog"
 ],
-"label": "",
-"label_source": "none"
+"label": "Log performance timing event to trace and console",
+"label_source": "generated",
+"label_hash": "434b60224f"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/submitPerfTrace.js::createSubmitPerfTrace.shouldPopup",
@@ -32512,8 +32924,9 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/utils/submitPerfTrace.js::createSubmitPerfTrace"
 ],
-"label": "",
-"label_source": "none"
+"label": "Check if submit trace popup is enabled in local storage",
+"label_source": "generated",
+"label_hash": "892d4170e5"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/submitPerfTrace.js::createSubmitPerfTrace.showCopyDialog",
@@ -32530,8 +32943,9 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/utils/submitPerfTrace.js::createSubmitPerfTrace"
 ],
-"label": "",
-"label_source": "none"
+"label": "Display copyable submit timing trace in dialog or message",
+"label_source": "generated",
+"label_hash": "a50e559ab0"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/submitPerfTrace.js::createSubmitPerfTrace.join",
@@ -32543,8 +32957,9 @@
 "hash": "2f391a4bbe",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Join performance trace lines into single string",
+"label_source": "generated",
+"label_hash": "2f391a4bbe"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/syncGateClient.js::isDoctypeSyncBusy",
@@ -32677,8 +33092,9 @@
 "hash": "d00751038f",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Save text selection state in editable element",
+"label_source": "generated",
+"label_hash": "d00751038f"
 },
 {
 "id": "nce_events/public/js/schema_explorer.js::_prompt_doctype",
@@ -32692,8 +33108,9 @@
 "calls": [
 "nce_events/public/js/schema_explorer.js::_open_explorer"
 ],
-"label": "",
-"label_source": "none"
+"label": "Prompt user to select DocType from WP Tables schema",
+"label_source": "generated",
+"label_hash": "d124ed5bac"
 },
 {
 "id": "nce_events/public/js/schema_explorer.js::_open_explorer",
@@ -32709,8 +33126,9 @@
 "nce_events/public/js/schema_explorer.js::_inject_css",
 "nce_events/public/js/schema_explorer.js::_load_column"
 ],
-"label": "",
-"label_source": "none"
+"label": "Open floating schema explorer for WP Tables DocType",
+"label_source": "generated",
+"label_hash": "edab169c59"
 },
 {
 "id": "nce_events/public/js/schema_explorer.js::_create_float",
@@ -32724,8 +33142,9 @@
 "calls": [
 "nce_events/public/js/schema_explorer.js::_make_draggable"
 ],
-"label": "",
-"label_source": "none"
+"label": "Create draggable floating panel for schema explorer",
+"label_source": "generated",
+"label_hash": "775a2c27aa"
 },
 {
 "id": "nce_events/public/js/schema_explorer.js::_make_draggable",
@@ -32737,8 +33156,9 @@
 "hash": "27508a1881",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Make floating element draggable by mouse on handle",
+"label_source": "generated",
+"label_hash": "27508a1881"
 },
 {
 "id": "nce_events/public/js/schema_explorer.js::_load_column",
@@ -32752,8 +33172,9 @@
 "calls": [
 "nce_events/public/js/schema_explorer.js::_render_column"
 ],
-"label": "",
-"label_source": "none"
+"label": "Load and populate a column in the schema explorer with doctype fields",
+"label_source": "generated",
+"label_hash": "0f2f1caa0c"
 },
 {
 "id": "nce_events/public/js/schema_explorer.js::_render_column",
@@ -32768,8 +33189,9 @@
 "nce_events/public/js/schema_explorer.js::_load_column",
 "nce_events/public/js/schema_explorer.js::_show_tag_dialog"
 ],
-"label": "",
-"label_source": "none"
+"label": "Render a column's HTML display with field tiles and metadata",
+"label_source": "generated",
+"label_hash": "efa10482ec"
 },
 {
 "id": "nce_events/public/js/schema_explorer.js::_build_tag",
@@ -32784,8 +33206,9 @@
 "nce_events/public/js/schema_explorer.js::_build_link_chain_tag",
 "nce_events/public/js/schema_explorer.js::_build_table_tag"
 ],
-"label": "",
-"label_source": "none"
+"label": "Build a template tag for a field by routing through link or table relationships",
+"label_source": "generated",
+"label_hash": "ad786478d6"
 },
 {
 "id": "nce_events/public/js/schema_explorer.js::_build_link_chain_tag",
@@ -32797,8 +33220,9 @@
 "hash": "ef94e94abd",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Generate a template tag for linked document field access via get_value calls",
+"label_source": "generated",
+"label_hash": "ef94e94abd"
 },
 {
 "id": "nce_events/public/js/schema_explorer.js::_build_table_tag",
@@ -32810,8 +33234,9 @@
 "hash": "ceaac11611",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Generate a template tag for table field access with loop iteration",
+"label_source": "generated",
+"label_hash": "ceaac11611"
 },
 {
 "id": "nce_events/public/js/schema_explorer.js::_build_path_string",
@@ -32823,8 +33248,9 @@
 "hash": "fa2259099e",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Build a human-readable path string showing field traversal route",
+"label_source": "generated",
+"label_hash": "fa2259099e"
 },
 {
 "id": "nce_events/public/js/schema_explorer.js::_apply_filters",
@@ -32836,8 +33262,9 @@
 "hash": "726d6572a4",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Apply fallback value and HTML safety filters to a generated template tag",
+"label_source": "generated",
+"label_hash": "726d6572a4"
 },
 {
 "id": "nce_events/public/js/schema_explorer.js::_show_tag_dialog",
@@ -32855,8 +33282,9 @@
 "nce_events/public/js/schema_explorer.js::_insert_at_cursor",
 "nce_events/public/js/schema_explorer.js::_make_draggable"
 ],
-"label": "",
-"label_source": "none"
+"label": "Display dialog panel for copying or inserting a generated field template tag",
+"label_source": "generated",
+"label_hash": "78eab6393a"
 },
 {
 "id": "nce_events/public/js/schema_explorer.js::_show_tag_dialog._update_tag",
@@ -32873,8 +33301,9 @@
 "wired_by": [
 "nce_events/public/js/schema_explorer.js::_show_tag_dialog"
 ],
-"label": "",
-"label_source": "none"
+"label": "Update displayed tag with fallback value and HTML safety filter applied",
+"label_source": "generated",
+"label_hash": "8a038e2809"
 },
 {
 "id": "nce_events/public/js/schema_explorer.js::_insert_at_cursor",
@@ -32888,8 +33317,9 @@
 "calls": [
 "nce_events/public/js/schema_explorer.js::_save_selection"
 ],
-"label": "",
-"label_source": "none"
+"label": "Insert text at cursor position in textarea or contenteditable element",
+"label_source": "generated",
+"label_hash": "c219e3f3de"
 },
 {
 "id": "nce_events/public/js/schema_explorer.js::_clipboard_fallback",
@@ -32901,8 +33331,9 @@
 "hash": "6ac98cc5e0",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Copy text to clipboard with fallback method and show confirmation alert",
+"label_source": "generated",
+"label_hash": "6ac98cc5e0"
 },
 {
 "id": "nce_events/public/js/schema_explorer.js::_inject_css",
@@ -32914,8 +33345,9 @@
 "hash": "a58159db01",
 "exported": false,
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Remove existing schema explorer CSS stylesheet from document",
+"label_source": "generated",
+"label_hash": "a58159db01"
 },
 {
 "id": "nce_events/public/js/spa_panel_page_boot.js::_VUE_ASSETS",

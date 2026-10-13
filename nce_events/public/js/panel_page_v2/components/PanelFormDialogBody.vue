@@ -387,9 +387,12 @@ defineExpose({
 <style scoped>
 .ppv2-fd-body {
 	flex: 1 1 auto;
+	min-width: 0;
+	width: 100%;
 	overflow-y: auto;
 	overflow-x: hidden;
 	padding: 16px;
+	box-sizing: border-box;
 }
 .ppv2-fd-loading {
 	text-align: center;
@@ -401,19 +404,21 @@ defineExpose({
 	padding: 32px;
 	font-size: var(--font-size-base);
 }
+/* Only the active tab participates in layout (hidden tabs stay mounted, display:none). */
 .ppv2-fd-tab-panels {
-	display: grid;
-	overflow: visible;
+	width: 100%;
+	min-width: 0;
+	max-width: 100%;
 }
 .ppv2-fd-tab-panel {
-	grid-area: 1 / 1;
-	visibility: hidden;
-	pointer-events: none;
-	overflow: visible;
+	display: none;
+	width: 100%;
+	min-width: 0;
+	max-width: 100%;
+	box-sizing: border-box;
 }
 .ppv2-fd-tab-panel-active {
-	visibility: visible;
-	pointer-events: auto;
+	display: block;
 }
 .ppv2-fd-section {
 	margin-bottom: 16px;
@@ -467,9 +472,12 @@ defineExpose({
 .ppv2-fd-row {
 	display: grid;
 	gap: 12px;
+	width: 100%;
+	min-width: 0;
 	overflow: visible;
 	align-items: start;
 	margin-bottom: 0;
+	box-sizing: border-box;
 }
 .ppv2-fd-row > * {
 	min-width: 0;
