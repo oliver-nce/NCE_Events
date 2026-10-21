@@ -161,7 +161,10 @@ function onTileClick(f) {
 	border-radius: 3px;
 }
 
-.tf-tile-link {
+.tf-tile-link,
+.tf-tile-link:hover {
+	background: #fff;
+	color: #1c1c1c;
 	border-left: 3px solid var(--nce-color-primary);
 }
 /* categorical color — type indicator, not brand-themed */

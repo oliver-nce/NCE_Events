@@ -26369,11 +26369,11 @@
 "name": "TagColumn",
 "qualname": "TagColumn",
 "sig": "",
-"hash": "2d894ffb01",
+"hash": "e0dadeeb3b",
 "calls": [],
-"label": "List doctype fields with navigation for link/table relationships and circular detection",
+"label": "Display doctype fields as navigable tiles with link/table relationships and circular reference detection",
 "label_source": "generated",
-"label_hash": "2d894ffb01"
+"label_hash": "e0dadeeb3b"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/TagColumn.vue::isCircular",
