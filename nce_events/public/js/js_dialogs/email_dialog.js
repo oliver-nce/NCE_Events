@@ -71,6 +71,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 					<div class="send-panel-actions">
 						<button class="btn btn-xs btn-default send-preview-btn"><i class="fa fa-eye"></i> Preview</button>
 						<button class="btn btn-xs btn-default send-recipients-btn" title="Check who will receive this email"><i class="fa fa-users"></i> Who receives this?</button>
+						<button class="btn btn-xs btn-default send-save-tpl-btn" title="Save this subject and message as an Email Template"><i class="fa fa-save"></i> Save as Template</button>
 						<span class="send-actions-right">
 							<button class="btn btn-xs btn-default send-cancel-btn">Cancel</button>
 							<button class="btn btn-xs btn-primary send-send-btn">Send</button>
@@ -166,9 +167,11 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 			if (source_sel.val() === "type") {
 				tpl_section.hide();
 				msg_section.show();
+				el.find(".send-save-tpl-btn").show();
 			} else {
 				tpl_section.show();
 				msg_section.show();
+				el.find(".send-save-tpl-btn").hide();
 			}
 		});
 
@@ -196,6 +199,9 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 		});
 		el.on("click", ".send-recipients-btn", function () {
 			me._do_show_recipients();
+		});
+		el.on("click", ".send-save-tpl-btn", function () {
+			me._do_save_template();
 		});
 		el.on("click", ".send-tags-btn", function () {
 			me._open_tags();
@@ -261,7 +267,10 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 				const subject = r.message.subject || "";
 				el.find(".send-subject-input").val(subject);
 				me._template_body = body;
-				if (me._message_control && me._message_control.quill) {
+				me._template_is_html = !!r.message.use_html;
+				if (!r.message.use_html && me._message_control) {
+					me._message_control.set_value(body);
+				} else if (me._message_control && me._message_control.quill) {
 					me._message_control.quill.setText(body);
 				}
 			},
@@ -273,12 +282,12 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 	_resolve_body(callback) {
 		const el = this.el;
 		const subject = el.find(".send-subject-input").val() || "";
-		const body =
-			this._template_body ||
+		const editorBody =
 			(this._message_control &&
 				this._message_control.get_value &&
 				this._message_control.get_value()) ||
 			"";
+		const body = (this._template_is_html && this._template_body) || editorBody;
 		if (!body || !String(body).trim()) {
 			frappe.msgprint(__("Enter a message first."));
 			return;
@@ -314,6 +323,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 					doctype: "Email Template",
 					filters: filters,
 					fields: ["name"],
+					order_by: "modified desc",
 					limit_page_length: 20,
 				},
 				freeze: false,
@@ -408,6 +418,96 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 				},
 			});
 		});
+	}
+
+	_do_save_template() {
+		const me = this;
+		const el = me.el;
+		const subject = (el.find(".send-subject-input").val() || "").trim();
+		const body =
+			(me._message_control &&
+				me._message_control.get_value &&
+				me._message_control.get_value()) ||
+			"";
+		if (!String(body).trim()) {
+			frappe.msgprint(__("Enter a message first."));
+			return;
+		}
+		if (!subject) {
+			frappe.msgprint(__("Enter a subject first."));
+			return;
+		}
+		const d = new frappe.ui.Dialog({
+			title: __("Save as Email Template"),
+			fields: [
+				{
+					fieldname: "template_name",
+					fieldtype: "Data",
+					label: __("Template Name"),
+					reqd: 1,
+				},
+			],
+			primary_action_label: __("Save"),
+			primary_action(values) {
+				const name = (values.template_name || "").trim();
+				if (!name) return;
+				function done() {
+					d.hide();
+					frappe.show_alert({
+						message: __("Saved template {0}", [name]),
+						indicator: "green",
+					});
+				}
+				function save(overwrite) {
+					if (overwrite) {
+						frappe.call({
+							method: "frappe.client.set_value",
+							args: {
+								doctype: "Email Template",
+								name: name,
+								fieldname: {
+									subject: subject,
+									response: body,
+									use_html: 0,
+								},
+							},
+							callback(r) {
+								if (!r.exc) done();
+							},
+						});
+					} else {
+						frappe.call({
+							method: "frappe.client.insert",
+							args: {
+								doc: {
+									doctype: "Email Template",
+									__newname: name,
+									subject: subject,
+									response: body,
+									use_html: 0,
+								},
+							},
+							callback(r) {
+								if (!r.exc) done();
+							},
+						});
+					}
+				}
+				frappe.db.exists("Email Template", name).then(function (exists) {
+					if (exists) {
+						frappe.confirm(
+							__("Template {0} already exists. Overwrite it?", [name]),
+							function () {
+								save(true);
+							}
+						);
+					} else {
+						save(false);
+					}
+				});
+			},
+		});
+		d.show();
 	}
 
 	/* ── Send — step-through reviewer ── */

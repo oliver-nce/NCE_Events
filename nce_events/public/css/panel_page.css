@@ -896,12 +896,14 @@ body.panel-float-dragging * {
 	gap: 6px;
 }
 
-.send-preview-btn {
+.send-preview-btn,
+.send-save-tpl-btn {
 	color: var(--nce-color-primary) !important;
 	border-color: var(--nce-color-primary-300, #a2ccf6) !important;
 }
 
-.send-preview-btn:hover {
+.send-preview-btn:hover,
+.send-save-tpl-btn:hover {
 	background: var(--nce-color-primary-100, #e3f0fc) !important;
 }
 
@@ -1048,6 +1050,27 @@ body.panel-float-dragging * {
 	color: var(--nce-color-text);
 	overflow: auto;
 	line-height: 1.5;
+}
+
+.send-preview-body,
+.send-review-body,
+.send-panel .send-message-editor-wrap .ql-container,
+.send-panel .send-message-editor-wrap .frappe-control .ql-editor:not(.read-mode) {
+	background: #fff;
+	color: #1c1c1c;
+	font-weight: 400;
+}
+
+body:has(.send-panel) .modal-backdrop {
+	z-index: 10190 !important;
+}
+
+body:has(.send-panel) .modal {
+	z-index: 10200 !important;
+}
+
+body:has(.send-panel) #alert-container {
+	z-index: 10300;
 }
 
 /* ── Send panel resize handle ── */

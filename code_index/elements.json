@@ -2,7 +2,7 @@
 "_meta": {
 "description": "The single authoritative code index of this project: every function, class, method, route, test, Vue component, CSS section and doc section with a label, plus each file's purpose. Query it with the shared code-index tool (find / show / callers); do not read this file whole. Generated: never edit by hand; hand-written notes live in code_index/project.json.",
 "generator": "_Project support files/code-index/codeindex.py",
-"count": 1905,
+"count": 1908,
 "project_sha256": "4149da0557eced977397fd926c9ce2ebca6a2b3cea453cc77dde71de6d1839c7",
 "headers_sha256": "c2fa568103e610cc7f9aac3001af8d84212aaff9508737b20ed83ee633fd3955"
 },
@@ -19274,7 +19274,7 @@
 "name": "all",
 "qualname": "all",
 "sig": "",
-"hash": "84ea63258f",
+"hash": "5355b96f11",
 "calls": [],
 "label": "panel_page.css (the whole file)",
 "label_source": "title"
@@ -20178,12 +20178,12 @@
 "name": "EmailDialog",
 "qualname": "EmailDialog",
 "sig": "",
-"hash": "597d13704e",
+"hash": "d4b730fb24",
 "exported": false,
 "calls": [],
-"label": "Draggable resizable email dialog with template selection, message editor, and send options",
+"label": "Create draggable resizable email send dialog with templates and recipients",
 "label_source": "generated",
-"label_hash": "597d13704e"
+"label_hash": "d4b730fb24"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog.constructor",
@@ -20209,12 +20209,12 @@
 "name": "_build",
 "qualname": "EmailDialog._build",
 "sig": "()",
-"hash": "646a434842",
+"hash": "016844646f",
 "exported": false,
 "calls": [],
-"label": "Build HTML markup for email dialog form with fields, template section, and action buttons",
+"label": "Build HTML DOM structure for email composition panel",
 "label_source": "generated",
-"label_hash": "646a434842"
+"label_hash": "016844646f"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._bind",
@@ -20223,12 +20223,12 @@
 "name": "_bind",
 "qualname": "EmailDialog._bind",
 "sig": "()",
-"hash": "fbc63d00b0",
+"hash": "849f37cb92",
 "exported": false,
 "calls": [],
-"label": "Bind email dialog UI events and template selection behavior",
+"label": "Bind event handlers to email dialog elements and user interactions",
 "label_source": "generated",
-"label_hash": "fbc63d00b0"
+"label_hash": "849f37cb92"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._load_from_accounts",
@@ -20279,12 +20279,12 @@
 "name": "_load_template_into_editor",
 "qualname": "EmailDialog._load_template_into_editor",
 "sig": "(tpl_name)",
-"hash": "ad05eb1fb8",
+"hash": "03dd4f593e",
 "exported": false,
 "calls": [],
-"label": "Load selected email template content into compose editor",
+"label": "Load selected email template subject and body into message editor",
 "label_source": "generated",
-"label_hash": "ad05eb1fb8"
+"label_hash": "03dd4f593e"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._resolve_body",
@@ -20293,12 +20293,12 @@
 "name": "_resolve_body",
 "qualname": "EmailDialog._resolve_body",
 "sig": "(callback)",
-"hash": "fad40dbd43",
+"hash": "cec33960a1",
 "exported": false,
 "calls": [],
-"label": "Retrieve and validate email body and subject for sending",
+"label": "Retrieve and validate email subject and message body for sending",
 "label_source": "generated",
-"label_hash": "fad40dbd43"
+"label_hash": "cec33960a1"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._setup_template_autocomplete",
@@ -20307,14 +20307,14 @@
 "name": "_setup_template_autocomplete",
 "qualname": "EmailDialog._setup_template_autocomplete",
 "sig": "(input_el, on_pick)",
-"hash": "b93fcea548",
+"hash": "eb2feec1e7",
 "exported": false,
 "calls": [
 "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._setup_template_autocomplete.do_search"
 ],
-"label": "Setup autocomplete search for email template selection",
+"label": "Set up autocomplete search dropdown for email template selection",
 "label_source": "generated",
-"label_hash": "b93fcea548"
+"label_hash": "eb2feec1e7"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._setup_template_autocomplete.position_and_show",
@@ -20337,14 +20337,14 @@
 "name": "do_search",
 "qualname": "EmailDialog._setup_template_autocomplete.do_search",
 "sig": "(q)",
-"hash": "aafba77e09",
+"hash": "5c01dc7832",
 "exported": false,
 "calls": [
 "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._setup_template_autocomplete.position_and_show"
 ],
-"label": "Search email templates by name with live autocomplete results",
+"label": "Search email templates by name and populate autocomplete list",
 "label_source": "generated",
-"label_hash": "aafba77e09"
+"label_hash": "5c01dc7832"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._do_preview",
@@ -20359,6 +20359,52 @@
 "label": "Preview rendered email message with subject and body",
 "label_source": "generated",
 "label_hash": "5428466c25"
+},
+{
+"id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._do_save_template",
+"file": "nce_events/public/js/js_dialogs/email_dialog.js",
+"kind": "method",
+"name": "_do_save_template",
+"qualname": "EmailDialog._do_save_template",
+"sig": "()",
+"hash": "9bb5b226bf",
+"exported": false,
+"calls": [
+"nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._do_save_template.save"
+],
+"label": "Save email message and subject as reusable template with optional overwrite",
+"label_source": "generated",
+"label_hash": "9bb5b226bf"
+},
+{
+"id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._do_save_template.done",
+"file": "nce_events/public/js/js_dialogs/email_dialog.js",
+"kind": "function",
+"name": "done",
+"qualname": "EmailDialog._do_save_template.done",
+"sig": "()",
+"hash": "d3e3767d2f",
+"exported": false,
+"calls": [],
+"label": "Display confirmation alert after successfully saving email template",
+"label_source": "generated",
+"label_hash": "d3e3767d2f"
+},
+{
+"id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._do_save_template.save",
+"file": "nce_events/public/js/js_dialogs/email_dialog.js",
+"kind": "function",
+"name": "save",
+"qualname": "EmailDialog._do_save_template.save",
+"sig": "(overwrite)",
+"hash": "5d9e950756",
+"exported": false,
+"calls": [
+"nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._do_save_template.done"
+],
+"label": "Create or update email template with subject and body content",
+"label_source": "generated",
+"label_hash": "5d9e950756"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._do_send",
