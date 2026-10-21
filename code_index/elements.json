@@ -8730,17 +8730,17 @@
 "kind": "function",
 "name": "send_test_email",
 "qualname": "send_test_email",
-"sig": "(root_doctype: str, filters: str | dict | None=None, user_filters: str | list | None=None, body: str='', subject: str='', test_email: str='', from_email: str='') -> dict[str, Any]",
-"hash": "e4127423a6",
+"sig": "(root_doctype: str, filters: str | dict | None=None, user_filters: str | list | None=None, body: str='', subject: str='', test_email: str='', from_email: str='', row_names: str | list | None=None) -> dict[str, Any]",
+"hash": "c6f858befa",
 "calls": [
 "nce_events/api/messaging.py::_enrich_row_context",
 "nce_events/api/messaging.py::_render_body",
 "nce_events/api/messaging.py::_send_email",
 "nce_events/api/panel_api_pkg/panel_data.py::get_panel_data"
 ],
-"label": "Render email template and send test message to specified address",
+"label": "Send a test email with rendered template to verify content before bulk send",
 "label_source": "generated",
-"label_hash": "e4127423a6"
+"label_hash": "c6f858befa"
 },
 {
 "id": "nce_events/api/messaging.py::send_test_sms",
@@ -19274,7 +19274,7 @@
 "name": "all",
 "qualname": "all",
 "sig": "",
-"hash": "5355b96f11",
+"hash": "bad851bbb2",
 "calls": [],
 "label": "panel_page.css (the whole file)",
 "label_source": "title"
@@ -20178,12 +20178,12 @@
 "name": "EmailDialog",
 "qualname": "EmailDialog",
 "sig": "",
-"hash": "d4b730fb24",
+"hash": "9b243f26a0",
 "exported": false,
 "calls": [],
-"label": "Create draggable resizable email send dialog with templates and recipients",
+"label": "Email send dialog with template selection, message composition, and recipient preview",
 "label_source": "generated",
-"label_hash": "d4b730fb24"
+"label_hash": "9b243f26a0"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog.constructor",
@@ -20209,12 +20209,12 @@
 "name": "_build",
 "qualname": "EmailDialog._build",
 "sig": "()",
-"hash": "016844646f",
+"hash": "855133eea1",
 "exported": false,
 "calls": [],
-"label": "Build HTML DOM structure for email composition panel",
+"label": "Build HTML structure for draggable email dialog with form fields and action buttons",
 "label_source": "generated",
-"label_hash": "016844646f"
+"label_hash": "855133eea1"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._bind",
@@ -20223,12 +20223,12 @@
 "name": "_bind",
 "qualname": "EmailDialog._bind",
 "sig": "()",
-"hash": "849f37cb92",
+"hash": "4fe896ef94",
 "exported": false,
 "calls": [],
-"label": "Bind event handlers to email dialog elements and user interactions",
+"label": "Attach event handlers for template selection, preview, and message editor functionality",
 "label_source": "generated",
-"label_hash": "849f37cb92"
+"label_hash": "4fe896ef94"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._load_from_accounts",
@@ -20279,12 +20279,12 @@
 "name": "_load_template_into_editor",
 "qualname": "EmailDialog._load_template_into_editor",
 "sig": "(tpl_name)",
-"hash": "03dd4f593e",
+"hash": "acb715dbc4",
 "exported": false,
 "calls": [],
-"label": "Load selected email template subject and body into message editor",
+"label": "Load selected email template subject and body into the message editor",
 "label_source": "generated",
-"label_hash": "03dd4f593e"
+"label_hash": "acb715dbc4"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._resolve_body",
@@ -20555,12 +20555,12 @@
 "name": "_do_send_test",
 "qualname": "EmailDialog._do_send_test",
 "sig": "()",
-"hash": "e3bc79cf9c",
+"hash": "5354603091",
 "exported": false,
 "calls": [],
-"label": "Send test email to specified address with current template and subject",
+"label": "Send test email to specified address with rendered template to verify output",
 "label_source": "generated",
-"label_hash": "e3bc79cf9c"
+"label_hash": "5354603091"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._make_draggable_preview",

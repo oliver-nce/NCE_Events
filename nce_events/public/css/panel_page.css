@@ -794,6 +794,16 @@ body.panel-float-dragging * {
 	background: var(--nce-color-surface);
 }
 
+.send-subject-input {
+	display: block;
+	resize: none;
+	overflow: hidden;
+	min-height: 34px;
+	line-height: 1.4;
+	white-space: pre-wrap;
+	overflow-wrap: anywhere;
+}
+
 .send-message-section {
 	flex: 1;
 	display: flex;
@@ -1059,6 +1069,13 @@ body.panel-float-dragging * {
 	background: #fff;
 	color: #1c1c1c;
 	font-weight: 400;
+}
+
+.send-preview-body,
+.send-preview-body *:not(a),
+.send-review-body,
+.send-review-body *:not(a) {
+	color: #000;
 }
 
 body:has(.send-panel) .modal-backdrop {

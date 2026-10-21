@@ -60,7 +60,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 						<input class="send-field send-template-input" type="text" placeholder="Pick template to load into message below...">
 					</div>
 					<label class="send-field-label">Subject</label>
-					<input class="send-field send-subject-input" type="text">
+					<textarea class="send-field send-subject-input" rows="1"></textarea>
 					<div class="send-message-section">
 						<label class="send-field-label send-field-label-required">Message</label>
 						<div class="send-message-editor-wrap"></div>
@@ -191,6 +191,20 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 			me._preview_el.hide();
 		});
 
+		const subject_input = el.find(".send-subject-input");
+		me._grow_subject = function () {
+			const node = subject_input[0];
+			if (!node) return;
+			const max = 96;
+			node.style.height = "auto";
+			node.style.height = Math.min(node.scrollHeight, max) + "px";
+			node.style.overflowY = node.scrollHeight > max ? "auto" : "hidden";
+		};
+		subject_input.on("input", me._grow_subject);
+		subject_input.on("keydown", function (e) {
+			if (e.key === "Enter") e.preventDefault();
+		});
+
 		el.on("click", ".send-preview-btn", function () {
 			me._do_preview();
 		});
@@ -266,6 +280,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 				const body = r.message.response_html || r.message.response || "";
 				const subject = r.message.subject || "";
 				el.find(".send-subject-input").val(subject);
+				if (me._grow_subject) me._grow_subject();
 				me._template_body = body;
 				me._template_is_html = !!r.message.use_html;
 				if (!r.message.use_html && me._message_control) {
@@ -917,6 +932,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 					root_doctype: me.doctype,
 					filters: JSON.stringify(me.filters),
 					user_filters: JSON.stringify(me.user_filters),
+					row_names: JSON.stringify(me.row_names),
 					body: body_text,
 					subject: subject_text,
 					test_email: test_value,

@@ -75,18 +75,25 @@ def send_test_email(
 	subject: str = "",
 	test_email: str = "",
 	from_email: str = "",
+	row_names: str | list | None = None,
 ) -> dict[str, Any]:
-	"""Render the template against the first row and send to a test address."""
+	"""Render the template against the first recipient and send to a test address."""
 	if not test_email or not test_email.strip():
 		return {"error": "No test email address provided."}
 	test_email = test_email.strip()
 
-	result = get_panel_data(root_doctype, filters, user_filters=user_filters)
-	rows = result.get("rows") or []
-	if not rows:
-		return {"error": "No rows to preview."}
+	if isinstance(row_names, str):
+		row_names = json.loads(row_names) if row_names else []
+	row_names = row_names or []
 
-	row = rows[0]
+	if row_names:
+		row = {"name": row_names[0]}
+	else:
+		result = get_panel_data(root_doctype, filters, user_filters=user_filters)
+		rows = result.get("rows") or []
+		if not rows:
+			return {"error": "No rows to preview."}
+		row = rows[0]
 	context = _enrich_row_context(root_doctype, row)
 	rendered_body = _render_body(body, context, for_html=True)
 
