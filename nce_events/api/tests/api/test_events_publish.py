@@ -238,7 +238,19 @@ class TestUpdateEventsToWebsite(unittest.TestCase):
 	):
 		mock_db.exists.return_value = "501"
 		mock_db.get_value.return_value = dict(self._FRESH_ROW)
-		mock_wc.return_value = {"id": 501, "slug": "spring-camp", "sku": "sku-1"}
+		mock_wc.return_value = {
+			"id": 501,
+			"slug": "spring-camp",
+			"sku": "sku-1",
+			"status": "publish",
+			"name": "Spring Camp",
+			"regular_price": "50",
+			"categories": [{"id": 9, "name": "Workshops"}],
+			"meta_data": [
+				{"key": "WooCommerceEventsDateMySQLFormat", "value": "2026-06-01"},
+				{"key": "WooCommerceEventsEndDateMySQLFormat", "value": "2026-06-01"},
+			],
+		}
 
 		from nce_events.api.events_publish import update_events_to_website
 
@@ -250,6 +262,19 @@ class TestUpdateEventsToWebsite(unittest.TestCase):
 		self.assertEqual(out["wp_id"], 501)
 		self.assertNotIn("skipped", out)
 		mock_hooks.assert_called_once_with("501")
+		woo = out["woocommerce"]
+		self.assertEqual(woo["status"], "publish")
+		self.assertEqual(woo["name"], "Spring Camp")
+		self.assertEqual(woo["regular_price"], "50")
+		self.assertEqual(woo["categories"], ["Workshops"])
+		self.assertEqual(woo["WooCommerceEventsDateMySQLFormat"], "2026-06-01")
+		self.assertEqual(woo["WooCommerceEventsEndDateMySQLFormat"], "2026-06-01")
+		confirmation = out["confirmation"]
+		self.assertTrue(isinstance(confirmation, list) and confirmation)
+		status_row = next(r for r in confirmation if r["field"] == "status")
+		self.assertTrue(status_row["matches"])
+		self.assertEqual(status_row["sent"], "publish")
+		self.assertEqual(status_row["saved"], "publish")
 
 	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)
 	@patch("nce_events.api.events_publish.validate_document_page_panel_required_roots")
@@ -294,6 +319,41 @@ class TestUpdateEventsToWebsite(unittest.TestCase):
 
 		with self.assertRaises(frappe.ValidationError):
 			update_events_to_website({"doctype": "Events", "name": "501"})
+
+	@patch("nce_events.api.events_publish.frappe.has_permission", return_value=True)
+	@patch("nce_events.api.events_publish.validate_document_page_panel_required_roots")
+	@patch("nce_events.api.events_publish._resolve_and_patch_categories")
+	@patch("nce_events.api.events_publish._run_after_publish_hooks")
+	@patch("nce_events.api.events_publish.frappe.db")
+	@patch("nce_events.api.events_publish.wc_request")
+	def test_confirmation_flags_status_mismatch(
+		self, mock_wc, mock_db, mock_hooks, mock_cats, mock_validate, mock_perm
+	):
+		mock_db.exists.return_value = "501"
+		mock_db.get_value.return_value = dict(self._FRESH_ROW)
+		mock_wc.return_value = {
+			"id": 501,
+			"slug": "spring-camp",
+			"sku": "sku-1",
+			"status": "private",
+			"name": "Spring Camp",
+			"regular_price": "50",
+			"categories": [{"id": 9, "name": "Workshops"}],
+			"meta_data": [
+				{"key": "WooCommerceEventsDateMySQLFormat", "value": "2026-06-01"},
+				{"key": "WooCommerceEventsEndDateMySQLFormat", "value": "2026-06-01"},
+			],
+		}
+
+		from nce_events.api.events_publish import update_events_to_website
+
+		out = update_events_to_website({"doctype": "Events", "name": "501"})
+
+		status_row = next(r for r in out["confirmation"] if r["field"] == "status")
+		self.assertEqual(status_row["sent"], "publish")
+		self.assertEqual(status_row["saved"], "private")
+		self.assertFalse(status_row["matches"])
+		self.assertEqual(out["woocommerce"]["status"], "private")
 
 
 class TestUpdateWooCommerceProduct(unittest.TestCase):

@@ -200,6 +200,52 @@ function escapeForPreHtml(s) {
 		.replace(/>/g, "&gt;");
 }
 
+function escapeHtmlForMsgprint(value) {
+	const s = value == null ? "" : String(value);
+	if (typeof frappe !== "undefined" && frappe.utils?.escape_html) {
+		return frappe.utils.escape_html(s);
+	}
+	return escapeForPreHtml(s);
+}
+
+/** Dialog after Woo publish hook — table of sent vs saved fields, or green alert fallback. */
+function showWooCommerceUpdateConfirmation(hookResult) {
+	if (!hookResult || hookResult.skipped) return;
+	const rows = hookResult.confirmation;
+	if (!Array.isArray(rows) || !rows.length) {
+		if (typeof frappe !== "undefined" && frappe.show_alert) {
+			frappe.show_alert({ message: "WooCommerce product updated", indicator: "green" }, 5);
+		}
+		return;
+	}
+	if (typeof frappe === "undefined" || !frappe.msgprint) {
+		return;
+	}
+	const esc = escapeHtmlForMsgprint;
+	const anyMismatch = rows.some((r) => r.matches === false);
+	let html = `<p><strong>Product ID:</strong> ${esc(hookResult.wp_id)}</p>`;
+	if (anyMismatch) {
+		html +=
+			'<p style="color:#e65100;margin:0 0 8px;">Some values differ from what was sent</p>';
+	}
+	html +=
+		'<table class="table table-bordered" style="width:100%;font-size:12px;margin:0;">' +
+		"<thead><tr><th>Field</th><th>Sent</th><th>Saved in Woo</th><th></th></tr></thead><tbody>";
+	for (const row of rows) {
+		const rowStyle = row.matches === false ? ' style="background:#fff3e0;"' : "";
+		const mark = row.matches === false ? "⚠" : "✓";
+		html += `<tr${rowStyle}><td>${esc(row.label)}</td><td>${esc(row.sent)}</td><td>${esc(
+			row.saved,
+		)}</td><td>${mark}</td></tr>`;
+	}
+	html += "</tbody></table>";
+	frappe.msgprint({
+		title: "WooCommerce product updated",
+		message: html,
+		indicator: anyMismatch ? "orange" : "green",
+	});
+}
+
 const props = defineProps({
 	open: { type: Boolean, default: false },
 	definitionName: { type: String, required: true },
@@ -1218,12 +1264,6 @@ async function runForcedSubmitRefreshReadback({
 		}
 	}
 
-	if (hookResult && !hookResult.skipped) {
-		if (typeof frappe !== "undefined" && frappe.show_alert) {
-			frappe.show_alert({ message: "WooCommerce product updated", indicator: "green" }, 5);
-		}
-	}
-
 	const readbackOk = await runSyncReadbackAfterSave({
 		result,
 		relatedSaveJobIds,
@@ -1233,6 +1273,7 @@ async function runForcedSubmitRefreshReadback({
 	});
 	if (readbackOk) {
 		await refreshFormAfterSave();
+		showWooCommerceUpdateConfirmation(hookResult);
 	}
 	return readbackOk;
 }
@@ -1469,12 +1510,6 @@ async function onSubmit(opts = {}) {
 			perf.push("related", "skip saveAllRelatedRows (unchanged)");
 		}
 
-		if (hookResult) {
-			if (typeof frappe !== "undefined" && frappe.show_alert) {
-				frappe.show_alert({ message: "WooCommerce product updated", indicator: "green" }, 5);
-			}
-		}
-
 		const oldRowName = props.docName;
 		const readbackOk = await runSyncReadbackAfterSave({
 			result,
@@ -1493,6 +1528,7 @@ async function onSubmit(opts = {}) {
 			perf.push("saved", "emit saved");
 			emit("saved");
 		}
+		showWooCommerceUpdateConfirmation(hookResult);
 	} catch (e) {
 		const msg =
 			e?.message ||

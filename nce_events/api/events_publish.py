@@ -293,6 +293,150 @@ def _do_woo_product_put(wp_id: int, wc_body: dict[str, Any], conn: str) -> dict[
 	return wc_request(conn, "PUT", f"/products/{wp_id}", json_body=wc_body)
 
 
+def _meta_value_from_wc_meta(meta_data: object, key: str) -> str:
+	if not isinstance(meta_data, list):
+		return ""
+	for row in meta_data:
+		if isinstance(row, dict) and cstr(row.get("key")).strip() == key:
+			return cstr(row.get("value")).strip()
+	return ""
+
+
+def _category_names_from_wc_response(categories: object) -> list[str]:
+	if not isinstance(categories, list):
+		return []
+	names: list[str] = []
+	for cat in categories:
+		if isinstance(cat, dict):
+			n = cstr(cat.get("name")).strip()
+			if n:
+				names.append(n)
+	return names
+
+
+def _format_sent_categories_for_display(categories: object) -> str:
+	if not isinstance(categories, list):
+		return ""
+	parts: list[str] = []
+	for cat in categories:
+		if not isinstance(cat, dict):
+			continue
+		if cat.get("name") is not None:
+			parts.append(cstr(cat["name"]).strip())
+		elif cat.get("id") is not None:
+			parts.append(cstr(cat["id"]).strip())
+	return ", ".join(p for p in parts if p)
+
+
+def _sent_categories_include_names(categories: object) -> bool:
+	if not isinstance(categories, list):
+		return False
+	return any(
+		isinstance(cat, dict) and cat.get("name") is not None for cat in categories
+	)
+
+
+def _categories_confirmation_matches(sent_categories: object, saved_names: list[str]) -> bool:
+	if _sent_categories_include_names(sent_categories):
+		sent_names = [
+			cstr(cat.get("name")).strip().lower()
+			for cat in (sent_categories or [])
+			if isinstance(cat, dict) and cat.get("name") is not None
+		]
+		saved_lower = [n.lower() for n in saved_names]
+		return sent_names == saved_lower
+	return bool(saved_names)
+
+
+def _confirmation_values_match(field: str, sent: object, saved: object) -> bool:
+	if field == "regular_price":
+		s_sent, s_saved = cstr(sent).strip(), cstr(saved).strip()
+		if s_sent == s_saved:
+			return True
+		if not s_sent and not s_saved:
+			return True
+		try:
+			return float(s_sent) == float(s_saved)
+		except ValueError:
+			return False
+	return cstr(sent).strip() == cstr(saved).strip()
+
+
+def _display_confirmation_value(value: object) -> str:
+	return cstr(value).strip() if value is not None else ""
+
+
+def _woocommerce_response_summary(wc_resp: dict[str, Any]) -> dict[str, Any]:
+	meta = wc_resp.get("meta_data")
+	return {
+		"id": wc_resp.get("id"),
+		"slug": wc_resp.get("slug"),
+		"sku": wc_resp.get("sku"),
+		"status": wc_resp.get("status"),
+		"name": wc_resp.get("name"),
+		"regular_price": wc_resp.get("regular_price"),
+		"categories": _category_names_from_wc_response(wc_resp.get("categories")),
+		"WooCommerceEventsDateMySQLFormat": _meta_value_from_wc_meta(
+			meta, "WooCommerceEventsDateMySQLFormat"
+		),
+		"WooCommerceEventsEndDateMySQLFormat": _meta_value_from_wc_meta(
+			meta, "WooCommerceEventsEndDateMySQLFormat"
+		),
+	}
+
+
+def _build_woo_update_confirmation(
+	wc_body: dict[str, Any], wc_resp: dict[str, Any]
+) -> list[dict[str, Any]]:
+	sent_categories = wc_body.get("categories")
+	saved_category_names = _category_names_from_wc_response(wc_resp.get("categories"))
+	meta_sent = wc_body.get("meta_data")
+	meta_saved = wc_resp.get("meta_data")
+
+	rows: list[tuple[str, str, object, object]] = [
+		("status", "Status", wc_body.get("status"), wc_resp.get("status")),
+		("name", "Name", wc_body.get("name"), wc_resp.get("name")),
+		("sku", "SKU", wc_body.get("sku"), wc_resp.get("sku")),
+		("slug", "Slug", wc_body.get("slug"), wc_resp.get("slug")),
+		("regular_price", "Price", wc_body.get("regular_price"), wc_resp.get("regular_price")),
+		(
+			"categories",
+			"Categories",
+			_format_sent_categories_for_display(sent_categories),
+			", ".join(saved_category_names),
+		),
+		(
+			"WooCommerceEventsDateMySQLFormat",
+			"Event start date",
+			_meta_value_from_wc_meta(meta_sent, "WooCommerceEventsDateMySQLFormat"),
+			_meta_value_from_wc_meta(meta_saved, "WooCommerceEventsDateMySQLFormat"),
+		),
+		(
+			"WooCommerceEventsEndDateMySQLFormat",
+			"Event end date",
+			_meta_value_from_wc_meta(meta_sent, "WooCommerceEventsEndDateMySQLFormat"),
+			_meta_value_from_wc_meta(meta_saved, "WooCommerceEventsEndDateMySQLFormat"),
+		),
+	]
+
+	confirmation: list[dict[str, Any]] = []
+	for field, label, sent, saved in rows:
+		if field == "categories":
+			matches = _categories_confirmation_matches(sent_categories, saved_category_names)
+		else:
+			matches = _confirmation_values_match(field, sent, saved)
+		confirmation.append(
+			{
+				"field": field,
+				"label": label,
+				"sent": _display_confirmation_value(sent),
+				"saved": _display_confirmation_value(saved),
+				"matches": matches,
+			}
+		)
+	return confirmation
+
+
 @frappe.whitelist()
 def update_events_to_website(
 	doc: dict[str, Any] | str,
@@ -338,15 +482,14 @@ def update_events_to_website(
 	wc_body = build_woocommerce_product_payload(fresh)
 	wc_resp = _do_woo_product_put(wp_id, wc_body, conn)
 	_run_after_publish_hooks(str(wp_id))
+	woo_summary = _woocommerce_response_summary(wc_resp)
+	woo_summary["id"] = wc_resp.get("id", wp_id)
 	return {
 		"ok": 1,
 		"name": str(wp_id),
 		"wp_id": wp_id,
-		"woocommerce": {
-			"id": wc_resp.get("id", wp_id),
-			"slug": wc_resp.get("slug"),
-			"sku": wc_resp.get("sku"),
-		},
+		"woocommerce": woo_summary,
+		"confirmation": _build_woo_update_confirmation(wc_body, wc_resp),
 	}
 
 

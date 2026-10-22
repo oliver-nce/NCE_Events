@@ -2,7 +2,7 @@
 "_meta": {
 "description": "The single authoritative code index of this project: every function, class, method, route, test, Vue component, CSS section and doc section with a label, plus each file's purpose. Query it with the shared code-index tool (find / show / callers); do not read this file whole. Generated: never edit by hand; hand-written notes live in code_index/project.json.",
 "generator": "_Project support files/code-index/codeindex.py",
-"count": 1908,
+"count": 1920,
 "project_sha256": "4149da0557eced977397fd926c9ce2ebca6a2b3cea453cc77dde71de6d1839c7",
 "headers_sha256": "c2fa568103e610cc7f9aac3001af8d84212aaff9508737b20ed83ee633fd3955"
 },
@@ -5461,6 +5461,7 @@
 "calls": [],
 "tested_by": [
 "nce_events/api/tests/api/test_events_publish.py::TestUpdateEventsToWebsite.test_always_puts_using_fresh_db_row",
+"nce_events/api/tests/api/test_events_publish.py::TestUpdateEventsToWebsite.test_confirmation_flags_status_mismatch",
 "nce_events/api/tests/api/test_events_publish.py::TestUpdateEventsToWebsite.test_slug_built_from_fresh_sku_not_caller_doc"
 ],
 "label": "Execute registered hooks after publishing event to WooCommerce",
@@ -5561,29 +5562,151 @@
 "label_hash": "67af069816"
 },
 {
+"id": "nce_events/api/events_publish.py::_meta_value_from_wc_meta",
+"file": "nce_events/api/events_publish.py",
+"kind": "function",
+"name": "_meta_value_from_wc_meta",
+"qualname": "_meta_value_from_wc_meta",
+"sig": "(meta_data: object, key: str) -> str",
+"hash": "a9e3570a1b",
+"calls": [],
+"label": "",
+"label_source": "none"
+},
+{
+"id": "nce_events/api/events_publish.py::_category_names_from_wc_response",
+"file": "nce_events/api/events_publish.py",
+"kind": "function",
+"name": "_category_names_from_wc_response",
+"qualname": "_category_names_from_wc_response",
+"sig": "(categories: object) -> list[str]",
+"hash": "46549773a0",
+"calls": [],
+"label": "",
+"label_source": "none"
+},
+{
+"id": "nce_events/api/events_publish.py::_format_sent_categories_for_display",
+"file": "nce_events/api/events_publish.py",
+"kind": "function",
+"name": "_format_sent_categories_for_display",
+"qualname": "_format_sent_categories_for_display",
+"sig": "(categories: object) -> str",
+"hash": "49740a52d0",
+"calls": [],
+"label": "",
+"label_source": "none"
+},
+{
+"id": "nce_events/api/events_publish.py::_sent_categories_include_names",
+"file": "nce_events/api/events_publish.py",
+"kind": "function",
+"name": "_sent_categories_include_names",
+"qualname": "_sent_categories_include_names",
+"sig": "(categories: object) -> bool",
+"hash": "6d6788277d",
+"calls": [],
+"label": "",
+"label_source": "none"
+},
+{
+"id": "nce_events/api/events_publish.py::_categories_confirmation_matches",
+"file": "nce_events/api/events_publish.py",
+"kind": "function",
+"name": "_categories_confirmation_matches",
+"qualname": "_categories_confirmation_matches",
+"sig": "(sent_categories: object, saved_names: list[str]) -> bool",
+"hash": "798955afa5",
+"calls": [
+"nce_events/api/events_publish.py::_sent_categories_include_names"
+],
+"label": "",
+"label_source": "none"
+},
+{
+"id": "nce_events/api/events_publish.py::_confirmation_values_match",
+"file": "nce_events/api/events_publish.py",
+"kind": "function",
+"name": "_confirmation_values_match",
+"qualname": "_confirmation_values_match",
+"sig": "(field: str, sent: object, saved: object) -> bool",
+"hash": "74ff300dae",
+"calls": [],
+"label": "",
+"label_source": "none"
+},
+{
+"id": "nce_events/api/events_publish.py::_display_confirmation_value",
+"file": "nce_events/api/events_publish.py",
+"kind": "function",
+"name": "_display_confirmation_value",
+"qualname": "_display_confirmation_value",
+"sig": "(value: object) -> str",
+"hash": "e053870225",
+"calls": [],
+"label": "",
+"label_source": "none"
+},
+{
+"id": "nce_events/api/events_publish.py::_woocommerce_response_summary",
+"file": "nce_events/api/events_publish.py",
+"kind": "function",
+"name": "_woocommerce_response_summary",
+"qualname": "_woocommerce_response_summary",
+"sig": "(wc_resp: dict[str, Any]) -> dict[str, Any]",
+"hash": "21e5b0e269",
+"calls": [
+"nce_events/api/events_publish.py::_category_names_from_wc_response",
+"nce_events/api/events_publish.py::_meta_value_from_wc_meta"
+],
+"label": "",
+"label_source": "none"
+},
+{
+"id": "nce_events/api/events_publish.py::_build_woo_update_confirmation",
+"file": "nce_events/api/events_publish.py",
+"kind": "function",
+"name": "_build_woo_update_confirmation",
+"qualname": "_build_woo_update_confirmation",
+"sig": "(wc_body: dict[str, Any], wc_resp: dict[str, Any]) -> list[dict[str, Any]]",
+"hash": "1d0d0786c0",
+"calls": [
+"nce_events/api/events_publish.py::_categories_confirmation_matches",
+"nce_events/api/events_publish.py::_category_names_from_wc_response",
+"nce_events/api/events_publish.py::_confirmation_values_match",
+"nce_events/api/events_publish.py::_display_confirmation_value",
+"nce_events/api/events_publish.py::_format_sent_categories_for_display",
+"nce_events/api/events_publish.py::_meta_value_from_wc_meta"
+],
+"label": "",
+"label_source": "none"
+},
+{
 "id": "nce_events/api/events_publish.py::update_events_to_website",
 "file": "nce_events/api/events_publish.py",
 "kind": "function",
 "name": "update_events_to_website",
 "qualname": "update_events_to_website",
 "sig": "(doc: dict[str, Any] | str, connector_name: str | None=None) -> dict[str, Any]",
-"hash": "f74ea84d20",
+"hash": "5029be3ddb",
 "calls": [
+"nce_events/api/events_publish.py::_build_woo_update_confirmation",
 "nce_events/api/events_publish.py::_do_woo_product_put",
 "nce_events/api/events_publish.py::_is_existing_events_row",
 "nce_events/api/events_publish.py::_run_after_publish_hooks",
+"nce_events/api/events_publish.py::_woocommerce_response_summary",
 "nce_events/api/events_publish.py::build_woocommerce_product_payload",
 "nce_events/api/panel_api_pkg/_helpers.py::validate_document_page_panel_required_roots"
 ],
 "tested_by": [
 "nce_events/api/tests/api/test_events_publish.py::TestUpdateEventsToWebsite.test_always_puts_using_fresh_db_row",
+"nce_events/api/tests/api/test_events_publish.py::TestUpdateEventsToWebsite.test_confirmation_flags_status_mismatch",
 "nce_events/api/tests/api/test_events_publish.py::TestUpdateEventsToWebsite.test_missing_row_throws",
 "nce_events/api/tests/api/test_events_publish.py::TestUpdateEventsToWebsite.test_non_numeric_name_throws",
 "nce_events/api/tests/api/test_events_publish.py::TestUpdateEventsToWebsite.test_slug_built_from_fresh_sku_not_caller_doc"
 ],
-"label": "Publish event to WooCommerce with fresh database values",
-"label_source": "generated",
-"label_hash": "f74ea84d20"
+"label": "Unconditionally push the current Events row to WooCommerce.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/api/events_publish.py::update_woo_commerce_product",
@@ -5661,6 +5784,7 @@
 ],
 "tested_by": [
 "nce_events/api/tests/api/test_events_publish.py::TestUpdateEventsToWebsite.test_always_puts_using_fresh_db_row",
+"nce_events/api/tests/api/test_events_publish.py::TestUpdateEventsToWebsite.test_confirmation_flags_status_mismatch",
 "nce_events/api/tests/api/test_events_publish.py::TestUpdateEventsToWebsite.test_slug_built_from_fresh_sku_not_caller_doc",
 "nce_events/api/tests/api/test_events_publish.py::TestUpdateWooCommerceProduct.test_put_called_with_correct_path"
 ],
@@ -9124,6 +9248,7 @@
 ],
 "tested_by": [
 "nce_events/api/tests/api/test_events_publish.py::TestUpdateEventsToWebsite.test_always_puts_using_fresh_db_row",
+"nce_events/api/tests/api/test_events_publish.py::TestUpdateEventsToWebsite.test_confirmation_flags_status_mismatch",
 "nce_events/api/tests/api/test_events_publish.py::TestUpdateEventsToWebsite.test_slug_built_from_fresh_sku_not_caller_doc"
 ],
 "label": "Validate document has required root fields from Page Panel and DocType",
@@ -12657,7 +12782,7 @@
 "name": "test_always_puts_using_fresh_db_row",
 "qualname": "TestUpdateEventsToWebsite.test_always_puts_using_fresh_db_row",
 "sig": "(self, mock_wc, mock_db, mock_hooks, mock_cats, mock_validate, mock_perm)",
-"hash": "aa1c296cd8",
+"hash": "1baae2351c",
 "calls": [
 "nce_events/api/events_publish.py::update_events_to_website"
 ],
@@ -12704,6 +12829,20 @@
 "nce_events/api/events_publish.py::update_events_to_website"
 ],
 "label": "missing row throws",
+"label_source": "name"
+},
+{
+"id": "nce_events/api/tests/api/test_events_publish.py::TestUpdateEventsToWebsite.test_confirmation_flags_status_mismatch",
+"file": "nce_events/api/tests/api/test_events_publish.py",
+"kind": "test",
+"name": "test_confirmation_flags_status_mismatch",
+"qualname": "TestUpdateEventsToWebsite.test_confirmation_flags_status_mismatch",
+"sig": "(self, mock_wc, mock_db, mock_hooks, mock_cats, mock_validate, mock_perm)",
+"hash": "b51e997811",
+"calls": [
+"nce_events/api/events_publish.py::update_events_to_website"
+],
+"label": "confirmation flags status mismatch",
 "label_source": "name"
 },
 {
@@ -22823,11 +22962,10 @@
 "name": "PanelFormDialog",
 "qualname": "PanelFormDialog",
 "sig": "",
-"hash": "1b4cb04fe7",
+"hash": "01052be9a1",
 "calls": [],
-"label": "Main form dialog with sections, tabs, find search, and WooCommerce sync",
-"label_source": "generated",
-"label_hash": "1b4cb04fe7"
+"label": "Main form dialog shell with find, native form, related tabs, submit, and WP readback.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::escapeForPreHtml",
@@ -22842,6 +22980,34 @@
 "label": "Escape HTML special characters for safe pre element display",
 "label_source": "generated",
 "label_hash": "09ad957c90"
+},
+{
+"id": "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::escapeHtmlForMsgprint",
+"file": "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue",
+"kind": "function",
+"name": "escapeHtmlForMsgprint",
+"qualname": "escapeHtmlForMsgprint",
+"sig": "(value)",
+"hash": "60b162a7e2",
+"exported": false,
+"calls": [
+"nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::escapeForPreHtml"
+],
+"label": "",
+"label_source": "none"
+},
+{
+"id": "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::showWooCommerceUpdateConfirmation",
+"file": "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue",
+"kind": "function",
+"name": "showWooCommerceUpdateConfirmation",
+"qualname": "showWooCommerceUpdateConfirmation",
+"sig": "(hookResult)",
+"hash": "f684111c79",
+"exported": false,
+"calls": [],
+"label": "Dialog after Woo publish hook — table of sent vs saved fields, or green alert fallback.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::resetDialogPositionAndSize",
@@ -23458,19 +23624,19 @@
 "name": "runForcedSubmitRefreshReadback",
 "qualname": "runForcedSubmitRefreshReadback",
 "sig": "({ initialSyncJobIds = [], pollLog, skipPresubmit = false, skipSave = false, skipRelatedSave = false, } = {})",
-"hash": "19778f556f",
+"hash": "64080e7daa",
 "exported": false,
 "calls": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::refreshFormAfterSave",
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::runSyncReadbackAfterSave",
+"nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::showWooCommerceUpdateConfirmation",
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::syncNativeFormToFormData",
 "nce_events/public/js/panel_page_v2/composables/frozenFormSave.js::extractServerMessage",
 "nce_events/public/js/panel_page_v2/utils/frappeCall.js::frappeCall",
 "nce_events/public/js/panel_page_v2/utils/wooPublishDocNormalize.js::normalizeDocForWooEventsPublish"
 ],
-"label": "Run presubmit hook, save form, and poll sync jobs for forced submit",
-"label_source": "generated",
-"label_hash": "19778f556f"
+"label": "Full Submit-and-Refresh pipeline for a saved record — presubmit hook, save, related rows, WP read-back, form reload.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::onSubmitClose",
@@ -23517,11 +23683,12 @@
 "name": "onSubmit",
 "qualname": "onSubmit",
 "sig": "(opts = {})",
-"hash": "d9dd79d58c",
+"hash": "60a7ab917a",
 "exported": false,
 "calls": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::refreshFormAfterSave",
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::runSyncReadbackAfterSave",
+"nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::showWooCommerceUpdateConfirmation",
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::syncNativeFormToFormData",
 "nce_events/public/js/panel_page_v2/composables/frozenFormSave.js::extractServerMessage",
 "nce_events/public/js/panel_page_v2/utils/frappeCall.js::frappeCall",
@@ -23529,7 +23696,7 @@
 "nce_events/public/js/panel_page_v2/utils/wooPublishDocNormalize.js::normalizeDocForWooEventsPublish"
 ],
 "label": "Validate and save form, handling custom submit methods and WooCommerce sync",
-"label_source": "generated",
+"label_source": "generated-stale",
 "label_hash": "d9dd79d58c"
 },
 {
