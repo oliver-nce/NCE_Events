@@ -21,6 +21,7 @@ from unittest.mock import MagicMock, patch
 
 import frappe
 from frappe.tests.utils import FrappeTestCase
+from frappe.utils import cint
 
 
 class TestCaptureFormDialog(FrappeTestCase):
@@ -133,6 +134,100 @@ class TestListFormDialogsForDoctype(FrappeTestCase):
 		self.assertTrue(rd0.get("child_row_name"))
 
 		frappe.delete_doc("Form Dialog", title, force=True)
+		frappe.db.commit()
+
+	@patch("nce_events.api.form_dialog.capture._require_system_manager")
+	def test_list_includes_inactive_dialogs(self, mock_sm):
+		from nce_events.api.form_dialog.capture import list_form_dialogs_for_doctype
+
+		suffix = frappe.generate_hash(length=8)
+		active_title = f"List Inactive Active {suffix}"
+		inactive_title = f"List Inactive Off {suffix}"
+		for title, active in ((active_title, 1), (inactive_title, 0)):
+			doc = frappe.get_doc(
+				{
+					"doctype": "Form Dialog",
+					"title": title,
+					"target_doctype": "DocType",
+					"frozen_meta_json": '{"fields": []}',
+					"captured_at": frappe.utils.now_datetime(),
+					"is_active": active,
+				}
+			)
+			doc.insert(ignore_permissions=True)
+		frappe.db.commit()
+
+		rows = list_form_dialogs_for_doctype("DocType")
+		names = {r.get("name") for r in rows}
+		self.assertIn(active_title, names)
+		self.assertIn(inactive_title, names)
+		inactive_row = next(r for r in rows if r.get("name") == inactive_title)
+		self.assertEqual(inactive_row.get("is_active"), 0)
+
+		for title in (active_title, inactive_title):
+			frappe.delete_doc("Form Dialog", title, force=True)
+		frappe.db.commit()
+
+
+class TestCaptureFormDialogCreateNew(FrappeTestCase):
+	"""create_new=1 always inserts; copy_from copies desk settings."""
+
+	@patch("nce_events.api.form_dialog.capture._require_system_manager")
+	@patch("nce_events.api.form_dialog.capture._assert_doctype_in_wp_tables")
+	def test_create_new_second_dialog_inactive_copies_writeback_and_buttons(
+		self, mock_validate, mock_role
+	):
+		from nce_events.api.form_dialog.capture import capture_form_dialog_from_desk
+
+		suffix = frappe.generate_hash(length=8)
+		base_title = f"Create New Source {suffix}"
+
+		source = frappe.get_doc(
+			{
+				"doctype": "Form Dialog",
+				"title": base_title,
+				"target_doctype": "Test DocType",
+				"frozen_meta_json": '{"fields": []}',
+				"captured_at": frappe.utils.now_datetime(),
+				"is_active": 1,
+				"writeback_on_submit": 1,
+				"buttons": [{"label": "Copy Me", "sort_order": 1, "button_script": "test_token"}],
+			}
+		)
+		source.insert(ignore_permissions=True)
+		frappe.db.commit()
+
+		mock_field = MagicMock()
+		mock_field.as_dict.return_value = {
+			"fieldname": "test_field",
+			"fieldtype": "Data",
+			"label": "Test Field",
+		}
+		mock_meta = MagicMock()
+		mock_meta.fields = [mock_field]
+
+		with patch("nce_events.api.form_dialog.capture.frappe.get_meta", return_value=mock_meta):
+			new_name = capture_form_dialog_from_desk(
+				doctype="Test DocType",
+				title=base_title,
+				create_new=1,
+				copy_from=base_title,
+			)
+
+		self.assertNotEqual(new_name, base_title)
+		self.assertTrue(new_name.startswith(base_title))
+
+		new_doc = frappe.get_doc("Form Dialog", new_name)
+		self.assertEqual(cint(new_doc.is_active), 0)
+		self.assertEqual(cint(new_doc.writeback_on_submit), 1)
+		self.assertEqual(len(new_doc.buttons or []), 1)
+		self.assertEqual(new_doc.buttons[0].label, "Copy Me")
+
+		source_after = frappe.get_doc("Form Dialog", base_title)
+		self.assertEqual(cint(source_after.is_active), 1)
+
+		for name in (new_name, base_title):
+			frappe.delete_doc("Form Dialog", name, force=True)
 		frappe.db.commit()
 
 

@@ -2,7 +2,7 @@
 "_meta": {
 "description": "The single authoritative code index of this project: every function, class, method, route, test, Vue component, CSS section and doc section with a label, plus each file's purpose. Query it with the shared code-index tool (find / show / callers); do not read this file whole. Generated: never edit by hand; hand-written notes live in code_index/project.json.",
 "generator": "_Project support files/code-index/codeindex.py",
-"count": 1920,
+"count": 1926,
 "project_sha256": "4149da0557eced977397fd926c9ce2ebca6a2b3cea453cc77dde71de6d1839c7",
 "headers_sha256": "c2fa568103e610cc7f9aac3001af8d84212aaff9508737b20ed83ee633fd3955"
 },
@@ -5570,8 +5570,9 @@
 "sig": "(meta_data: object, key: str) -> str",
 "hash": "a9e3570a1b",
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Extract metadata value by key from WooCommerce response",
+"label_source": "generated",
+"label_hash": "a9e3570a1b"
 },
 {
 "id": "nce_events/api/events_publish.py::_category_names_from_wc_response",
@@ -5582,8 +5583,9 @@
 "sig": "(categories: object) -> list[str]",
 "hash": "46549773a0",
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Extract category names from WooCommerce product response",
+"label_source": "generated",
+"label_hash": "46549773a0"
 },
 {
 "id": "nce_events/api/events_publish.py::_format_sent_categories_for_display",
@@ -5594,8 +5596,9 @@
 "sig": "(categories: object) -> str",
 "hash": "49740a52d0",
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Format sent WooCommerce categories as display string",
+"label_source": "generated",
+"label_hash": "49740a52d0"
 },
 {
 "id": "nce_events/api/events_publish.py::_sent_categories_include_names",
@@ -5606,8 +5609,9 @@
 "sig": "(categories: object) -> bool",
 "hash": "6d6788277d",
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Check if sent categories include category names",
+"label_source": "generated",
+"label_hash": "6d6788277d"
 },
 {
 "id": "nce_events/api/events_publish.py::_categories_confirmation_matches",
@@ -5620,8 +5624,9 @@
 "calls": [
 "nce_events/api/events_publish.py::_sent_categories_include_names"
 ],
-"label": "",
-"label_source": "none"
+"label": "Match sent categories against saved category names",
+"label_source": "generated",
+"label_hash": "798955afa5"
 },
 {
 "id": "nce_events/api/events_publish.py::_confirmation_values_match",
@@ -5632,8 +5637,9 @@
 "sig": "(field: str, sent: object, saved: object) -> bool",
 "hash": "74ff300dae",
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Compare field values from sent and saved WooCommerce data",
+"label_source": "generated",
+"label_hash": "74ff300dae"
 },
 {
 "id": "nce_events/api/events_publish.py::_display_confirmation_value",
@@ -5644,8 +5650,9 @@
 "sig": "(value: object) -> str",
 "hash": "e053870225",
 "calls": [],
-"label": "",
-"label_source": "none"
+"label": "Format value for confirmation display",
+"label_source": "generated",
+"label_hash": "e053870225"
 },
 {
 "id": "nce_events/api/events_publish.py::_woocommerce_response_summary",
@@ -5659,8 +5666,9 @@
 "nce_events/api/events_publish.py::_category_names_from_wc_response",
 "nce_events/api/events_publish.py::_meta_value_from_wc_meta"
 ],
-"label": "",
-"label_source": "none"
+"label": "Build summary dict from WooCommerce product response",
+"label_source": "generated",
+"label_hash": "21e5b0e269"
 },
 {
 "id": "nce_events/api/events_publish.py::_build_woo_update_confirmation",
@@ -5678,8 +5686,9 @@
 "nce_events/api/events_publish.py::_format_sent_categories_for_display",
 "nce_events/api/events_publish.py::_meta_value_from_wc_meta"
 ],
-"label": "",
-"label_source": "none"
+"label": "Build confirmation rows comparing sent vs saved WooCommerce product data",
+"label_source": "generated",
+"label_hash": "1d0d0786c0"
 },
 {
 "id": "nce_events/api/events_publish.py::update_events_to_website",
@@ -5705,8 +5714,9 @@
 "nce_events/api/tests/api/test_events_publish.py::TestUpdateEventsToWebsite.test_non_numeric_name_throws",
 "nce_events/api/tests/api/test_events_publish.py::TestUpdateEventsToWebsite.test_slug_built_from_fresh_sku_not_caller_doc"
 ],
-"label": "Unconditionally push the current Events row to WooCommerce.",
-"label_source": "docstring"
+"label": "Push current Events row to WooCommerce unconditionally",
+"label_source": "generated",
+"label_hash": "5029be3ddb"
 },
 {
 "id": "nce_events/api/events_publish.py::update_woo_commerce_product",
@@ -7152,13 +7162,39 @@
 "label_hash": "4bf75610e7"
 },
 {
+"id": "nce_events/api/form_dialog/capture.py::_next_available_form_dialog_title",
+"file": "nce_events/api/form_dialog/capture.py",
+"kind": "function",
+"name": "_next_available_form_dialog_title",
+"qualname": "_next_available_form_dialog_title",
+"sig": "(title: str) -> str",
+"hash": "100c250d03",
+"calls": [],
+"label": "Generate unused Form Dialog title with auto-incrementing suffix",
+"label_source": "generated",
+"label_hash": "100c250d03"
+},
+{
+"id": "nce_events/api/form_dialog/capture.py::_copy_form_dialog_settings_from",
+"file": "nce_events/api/form_dialog/capture.py",
+"kind": "function",
+"name": "_copy_form_dialog_settings_from",
+"qualname": "_copy_form_dialog_settings_from",
+"sig": "(source_name: str | None, target: frappe.model.document.Document) -> None",
+"hash": "3d94e9e3f3",
+"calls": [],
+"label": "Copy desk-tuned settings from source Form Dialog to target",
+"label_source": "generated",
+"label_hash": "3d94e9e3f3"
+},
+{
 "id": "nce_events/api/form_dialog/capture.py::capture_form_dialog_from_desk",
 "file": "nce_events/api/form_dialog/capture.py",
 "kind": "function",
 "name": "capture_form_dialog_from_desk",
 "qualname": "capture_form_dialog_from_desk",
-"sig": "(doctype: str, title: str | None=None, related_doctypes: str | list | None=None, inline_child_tables: str | list | None=None, script_tool_groups: str | list | None=None) -> str",
-"hash": "5aaed9e8ec",
+"sig": "(doctype: str, title: str | None=None, related_doctypes: str | list | None=None, inline_child_tables: str | list | None=None, script_tool_groups: str | list | None=None, create_new: int | str | bool=0, copy_from: str | None=None) -> str",
+"hash": "516f9fd86a",
 "calls": [
 "nce_events/api/form_dialog/_fd_capture_meta.py::_build_frozen_meta_json",
 "nce_events/api/form_dialog/_fd_capture_meta.py::_sync_form_dialog_tab_notes_from_fields",
@@ -7168,14 +7204,32 @@
 "nce_events/api/form_dialog/_fd_inline_children.py::_sync_inline_child_tables",
 "nce_events/api/form_dialog/_fd_related.py::_related_doctype_child_rows",
 "nce_events/api/form_dialog/_fd_related.py::_sync_related_doctypes",
-"nce_events/api/form_dialog/_fd_script_tools.py::_sync_script_tool_groups"
+"nce_events/api/form_dialog/_fd_script_tools.py::_sync_script_tool_groups",
+"nce_events/api/form_dialog/capture.py::_copy_form_dialog_settings_from",
+"nce_events/api/form_dialog/capture.py::_next_available_form_dialog_title"
 ],
 "tested_by": [
-"nce_events/api/tests/api/form_dialog/test_capture.py::TestCaptureFormDialog.test_capture_stores_fields_key"
+"nce_events/api/tests/api/form_dialog/test_capture.py::TestCaptureFormDialog.test_capture_stores_fields_key",
+"nce_events/api/tests/api/form_dialog/test_capture.py::TestCaptureFormDialogCreateNew.test_create_new_second_dialog_inactive_copies_writeback_and_buttons"
 ],
-"label": "Create or update a Form Dialog by capturing live DocType schema from Desk",
+"label": "Capture live DocType schema from Desk into Form Dialog",
 "label_source": "generated",
-"label_hash": "5aaed9e8ec"
+"label_hash": "516f9fd86a"
+},
+{
+"id": "nce_events/api/form_dialog/capture.py::set_form_dialog_active",
+"file": "nce_events/api/form_dialog/capture.py",
+"kind": "function",
+"name": "set_form_dialog_active",
+"qualname": "set_form_dialog_active",
+"sig": "(name: str, active: int | str | bool=1, page_panel: str | None=None) -> dict[str, Any]",
+"hash": "2ea2d5f075",
+"calls": [
+"nce_events/api/form_dialog/_fd_gating.py::_require_system_manager"
+],
+"label": "Set Form Dialog active status for target doctype",
+"label_source": "generated",
+"label_hash": "2ea2d5f075"
 },
 {
 "id": "nce_events/api/form_dialog/capture.py::rebuild_form_dialog",
@@ -7263,17 +7317,18 @@
 "name": "list_form_dialogs_for_doctype",
 "qualname": "list_form_dialogs_for_doctype",
 "sig": "(doctype: str) -> list[dict]",
-"hash": "f58fde474e",
+"hash": "3fd058e327",
 "calls": [
 "nce_events/api/form_dialog/_fd_gating.py::_require_system_manager",
 "nce_events/api/form_dialog/_fd_related.py::_normalize_hop_chain_value"
 ],
 "tested_by": [
+"nce_events/api/tests/api/form_dialog/test_capture.py::TestListFormDialogsForDoctype.test_list_includes_inactive_dialogs",
 "nce_events/api/tests/api/form_dialog/test_capture.py::TestListFormDialogsForDoctype.test_list_includes_related_doctypes"
 ],
-"label": "List active Form Dialogs for a given target DocType",
+"label": "List all Form Dialogs with details for a given doctype",
 "label_source": "generated",
-"label_hash": "f58fde474e"
+"label_hash": "3fd058e327"
 },
 {
 "id": "nce_events/api/form_dialog/edit_condition.py::_parse_pending_root_values",
@@ -11040,6 +11095,34 @@
 "nce_events/api/form_dialog/capture.py::list_form_dialogs_for_doctype"
 ],
 "label": "list includes related doctypes",
+"label_source": "name"
+},
+{
+"id": "nce_events/api/tests/api/form_dialog/test_capture.py::TestListFormDialogsForDoctype.test_list_includes_inactive_dialogs",
+"file": "nce_events/api/tests/api/form_dialog/test_capture.py",
+"kind": "test",
+"name": "test_list_includes_inactive_dialogs",
+"qualname": "TestListFormDialogsForDoctype.test_list_includes_inactive_dialogs",
+"sig": "(self, mock_sm)",
+"hash": "21ba49a580",
+"calls": [
+"nce_events/api/form_dialog/capture.py::list_form_dialogs_for_doctype"
+],
+"label": "list includes inactive dialogs",
+"label_source": "name"
+},
+{
+"id": "nce_events/api/tests/api/form_dialog/test_capture.py::TestCaptureFormDialogCreateNew.test_create_new_second_dialog_inactive_copies_writeback_and_buttons",
+"file": "nce_events/api/tests/api/form_dialog/test_capture.py",
+"kind": "test",
+"name": "test_create_new_second_dialog_inactive_copies_writeback_and_buttons",
+"qualname": "TestCaptureFormDialogCreateNew.test_create_new_second_dialog_inactive_copies_writeback_and_buttons",
+"sig": "(self, mock_validate, mock_role)",
+"hash": "1f6bdfb411",
+"calls": [
+"nce_events/api/form_dialog/capture.py::capture_form_dialog_from_desk"
+],
+"label": "create new second dialog inactive copies writeback and buttons",
 "label_source": "name"
 },
 {
@@ -17120,19 +17203,39 @@
 "name": "_bind_dialogs_click_handlers",
 "qualname": "_bind_dialogs_click_handlers",
 "sig": "(frm)",
-"hash": "7c55b5c1f3",
+"hash": "173ad5d59c",
 "exported": false,
 "calls": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_dialogs_click_handlers.doDelete",
+"nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_dialogs_click_handlers.openCaptureWizard",
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_desk_discover_script_tool_groups",
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_load_capture_wizard_sources",
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_related_portal_float",
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_dialogs_tab",
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_show_capture_wizard_dialog"
 ],
-"label": "Bind click handlers for form dialog rebuild and open actions",
+"label": "Dialogs tab click handlers for rebuild and capture actions",
 "label_source": "generated",
-"label_hash": "7c55b5c1f3"
+"label_hash": "173ad5d59c"
+},
+{
+"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_dialogs_click_handlers.openCaptureWizard",
+"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
+"kind": "function",
+"name": "openCaptureWizard",
+"qualname": "_bind_dialogs_click_handlers.openCaptureWizard",
+"sig": "(prefill)",
+"hash": "1999e65860",
+"exported": false,
+"calls": [
+"nce_events/nce_events/doctype/page_panel/page_panel.js::_desk_discover_script_tool_groups",
+"nce_events/nce_events/doctype/page_panel/page_panel.js::_load_capture_wizard_sources",
+"nce_events/nce_events/doctype/page_panel/page_panel.js::_render_dialogs_tab",
+"nce_events/nce_events/doctype/page_panel/page_panel.js::_show_capture_wizard_dialog"
+],
+"label": "Open capture wizard to create or edit Form Dialog schema",
+"label_source": "generated",
+"label_hash": "1999e65860"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_dialogs_click_handlers.doDelete",
@@ -17160,12 +17263,12 @@
 "name": "_build_dialogs_tab_html",
 "qualname": "_build_dialogs_tab_html",
 "sig": "(frm, $container, dialogs)",
-"hash": "f377c2d37a",
+"hash": "035e159f2c",
 "exported": false,
 "calls": [],
-"label": "Build HTML table displaying available form dialogs with status and actions",
+"label": "Build and render dialogs table with active checkbox and actions",
 "label_source": "generated",
-"label_hash": "f377c2d37a"
+"label_hash": "035e159f2c"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_hide_colour_schema_fields",
@@ -17856,7 +17959,7 @@
 "name": "refresh",
 "qualname": "form.on Page Panel.refresh",
 "sig": "(frm)",
-"hash": "13a138dcaa",
+"hash": "ab8fa96ac2",
 "exported": false,
 "calls": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_ensure_panel_id_controls",
@@ -17869,9 +17972,9 @@
 "wired_by": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js"
 ],
-"label": "Refresh Page Panel form with tabs, filters, and theme visibility",
+"label": "Initialize Page Panel form with custom tabs and filter logic",
 "label_source": "generated",
-"label_hash": "13a138dcaa"
+"label_hash": "ab8fa96ac2"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::form.on Page Panel.theme",
@@ -22964,8 +23067,9 @@
 "sig": "",
 "hash": "01052be9a1",
 "calls": [],
-"label": "Main form dialog shell with find, native form, related tabs, submit, and WP readback.",
-"label_source": "docstring"
+"label": "Main form dialog shell for panels with find, native form, related tabs, submit, and WordPress readback",
+"label_source": "generated",
+"label_hash": "01052be9a1"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::escapeForPreHtml",
@@ -22993,8 +23097,9 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::escapeForPreHtml"
 ],
-"label": "",
-"label_source": "none"
+"label": "Escape HTML special characters for safe message printing",
+"label_source": "generated",
+"label_hash": "60b162a7e2"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::showWooCommerceUpdateConfirmation",
@@ -23006,8 +23111,9 @@
 "hash": "f684111c79",
 "exported": false,
 "calls": [],
-"label": "Dialog after Woo publish hook — table of sent vs saved fields, or green alert fallback.",
-"label_source": "docstring"
+"label": "Display WooCommerce product update confirmation with field-by-field verification results",
+"label_source": "generated",
+"label_hash": "f684111c79"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::resetDialogPositionAndSize",
@@ -23635,8 +23741,9 @@
 "nce_events/public/js/panel_page_v2/utils/frappeCall.js::frappeCall",
 "nce_events/public/js/panel_page_v2/utils/wooPublishDocNormalize.js::normalizeDocForWooEventsPublish"
 ],
-"label": "Full Submit-and-Refresh pipeline for a saved record — presubmit hook, save, related rows, WP read-back, form reload.",
-"label_source": "docstring"
+"label": "Execute full submit-and-refresh pipeline with sync polling, presubmit hooks, and WordPress readback",
+"label_source": "generated",
+"label_hash": "64080e7daa"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::onSubmitClose",
@@ -23695,9 +23802,9 @@
 "nce_events/public/js/panel_page_v2/utils/submitPerfTrace.js::createSubmitPerfTrace",
 "nce_events/public/js/panel_page_v2/utils/wooPublishDocNormalize.js::normalizeDocForWooEventsPublish"
 ],
-"label": "Validate and save form, handling custom submit methods and WooCommerce sync",
-"label_source": "generated-stale",
-"label_hash": "d9dd79d58c"
+"label": "Handle form submission with validation, dirty detection, and post-save actions",
+"label_source": "generated",
+"label_hash": "60a7ab917a"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::onSubmit.pollLog",

@@ -15,6 +15,7 @@
 // code-index:end
 const _dt_field_cache = {};
 let _pp_rebuild_pending = false;
+let _pp_active_switch_pending = false;
 
 /** Coerce to int like Frappe ``cint``. Desk exposes ``cint`` globally — it is not ``frappe.utils.cint``. */
 function _cint(val) {
@@ -3644,7 +3645,10 @@ function _render_dialogs_tab(frm) {
 // the first Page Panel's `frm` and mutate the wrong document on other panels.
 function _bind_dialogs_click_handlers(frm) {
 	const $wrapper = $(frm.layout.wrapper);
-	$wrapper.off("click.ppFormDialogs");
+	// Remove click and change handlers. off("click...") leaves the change
+	// handler in place, so each re-render after a switch adds another one.
+	// The next click then fires two updates at once and MariaDB deadlocks.
+	$wrapper.off(".ppFormDialogs");
 	$wrapper.on("click.ppFormDialogs", ".pp-dialog-rebuild", function () {
 		if (_pp_rebuild_pending) return;
 		_pp_rebuild_pending = true;
@@ -3807,66 +3811,110 @@ function _bind_dialogs_click_handlers(frm) {
 			},
 			function (values) {
 				setTimeout(function () {
-					_load_capture_wizard_sources(
-						doctype,
-						function (buckets, inlineOpts, scripts) {
-							const discovered = _desk_discover_script_tool_groups(doctype, scripts);
-							setTimeout(function () {
-								_show_capture_wizard_dialog(
-									{
-										buckets: buckets,
-										rootDoctype: doctype,
-										inlineOptions: inlineOpts,
-										discoveredTools: discovered,
-										preselectedRelated: [],
-										preselectedInlinePfns: new Set(),
-										storedScriptGroups: [],
-									},
-									function (sel) {
-										frappe.call({
-											method: "nce_events.api.form_dialog.capture.capture_form_dialog_from_desk",
-											args: {
-												doctype: doctype,
-												title: values.title,
-												related_doctypes: JSON.stringify(sel.related || []),
-												inline_child_tables: JSON.stringify(sel.inline_child_tables || []),
-												script_tool_groups: JSON.stringify(sel.script_tool_groups || []),
-											},
-											freeze: true,
-											freeze_message: "Capturing schema from Desk…",
-											error: function () {
-												frappe.msgprint({
-													title: __("Error"),
-													message: __("Capture failed."),
-													indicator: "red",
-												});
-											},
-											callback: function (cap_r) {
-												if (cap_r && cap_r.message) {
-													frm.set_value("form_dialog", cap_r.message);
-													frm.dirty();
-													frm.save().then(function () {
+					function openCaptureWizard(prefill) {
+						const pre = prefill || {};
+						const currentRelated = pre.related || [];
+						const preInlinePfns =
+							pre.inlinePfns instanceof Set
+								? pre.inlinePfns
+								: new Set(pre.inlinePfns || []);
+						const storedScriptGroups = pre.scriptGroups || [];
+
+						_load_capture_wizard_sources(
+							doctype,
+							function (buckets, inlineOpts, scripts) {
+								const discovered = _desk_discover_script_tool_groups(doctype, scripts);
+								setTimeout(function () {
+									_show_capture_wizard_dialog(
+										{
+											buckets: buckets,
+											rootDoctype: doctype,
+											inlineOptions: inlineOpts,
+											discoveredTools: discovered,
+											preselectedRelated: currentRelated,
+											preselectedInlinePfns: preInlinePfns,
+											storedScriptGroups: storedScriptGroups,
+										},
+										function (sel) {
+											frappe.call({
+												method: "nce_events.api.form_dialog.capture.capture_form_dialog_from_desk",
+												args: {
+													doctype: doctype,
+													title: values.title,
+													related_doctypes: JSON.stringify(sel.related || []),
+													inline_child_tables: JSON.stringify(
+														sel.inline_child_tables || []
+													),
+													script_tool_groups: JSON.stringify(
+														sel.script_tool_groups || []
+													),
+													create_new: 1,
+													copy_from: frm.doc.form_dialog || "",
+												},
+												freeze: true,
+												freeze_message: "Capturing schema from Desk…",
+												error: function () {
+													frappe.msgprint({
+														title: __("Error"),
+														message: __("Capture failed."),
+														indicator: "red",
+													});
+												},
+												callback: function (cap_r) {
+													if (cap_r && cap_r.message) {
 														_render_dialogs_tab(frm);
-													});
-													frappe.show_alert({
-														message: "Dialog captured: " + cap_r.message,
-														indicator: "green",
-													});
-												}
-											},
-										});
-									}
+														frappe.show_alert({
+															message:
+																"Dialog captured as " +
+																cap_r.message +
+																" (inactive). Check Active to use it on this panel.",
+															indicator: "orange",
+														});
+													}
+												},
+											});
+										}
+									);
+								}, 0);
+							},
+							function (errMsg) {
+								frappe.msgprint({
+									title: __("Error"),
+									message: errMsg,
+									indicator: "red",
+								});
+							}
+						);
+					}
+
+					const linked = (frm.doc.form_dialog || "").trim();
+					if (linked) {
+						frappe.call({
+							method: "nce_events.api.form_dialog.capture.get_form_dialog_definition",
+							args: { name: linked },
+							callback: function (defn_r) {
+								const msg = (defn_r && defn_r.message) || {};
+								const currentInline = msg.inline_child_tables || [];
+								const preInlinePfns = new Set(
+									currentInline
+										.map(function (row) {
+											return String(row.parent_fieldname || "").trim();
+										})
+										.filter(Boolean)
 								);
-							}, 0);
-						},
-						function (errMsg) {
-							frappe.msgprint({
-								title: __("Error"),
-								message: errMsg,
-								indicator: "red",
-							});
-						}
-					);
+								openCaptureWizard({
+									related: msg.related_doctypes || [],
+									inlinePfns: preInlinePfns,
+									scriptGroups: msg.script_tool_groups || [],
+								});
+							},
+							error: function () {
+								openCaptureWizard({});
+							},
+						});
+					} else {
+						openCaptureWizard({});
+					}
 				}, 200);
 			},
 			"Create Form Dialog",
@@ -3874,10 +3922,53 @@ function _bind_dialogs_click_handlers(frm) {
 		);
 	});
 
-	$wrapper.on("click.ppFormDialogs", ".pp-dialog-open", function () {
-		const current = frm.doc.form_dialog || "";
-		if (!current) return;
-		window.open(frappe.utils.get_form_link("Form Dialog", current), "_blank");
+	$wrapper.on("change.ppFormDialogs", ".pp-dialog-active-check", function () {
+		const $cb = $(this);
+		const name = $cb.data("name") || "";
+		if (!name) return;
+		if (_pp_active_switch_pending) {
+			_render_dialogs_tab(frm);
+			return;
+		}
+		_pp_active_switch_pending = true;
+
+		const activate = $cb.prop("checked");
+		if (activate) {
+			$wrapper.find(".pp-dialog-active-check").not($cb).prop("checked", false);
+		}
+
+		frappe.call({
+			method: "nce_events.api.form_dialog.capture.set_form_dialog_active",
+			args: {
+				name: name,
+				active: activate ? 1 : 0,
+				page_panel: frm.doc.name || "",
+			},
+			freeze: true,
+			freeze_message: activate ? "Setting active dialog…" : "Clearing active dialog…",
+			error: function () {
+				_pp_active_switch_pending = false;
+				_render_dialogs_tab(frm);
+			},
+			callback: function (r) {
+				_pp_active_switch_pending = false;
+				if (!r || r.exc || !r.message) {
+					_render_dialogs_tab(frm);
+					return;
+				}
+				// Server already wrote Page Panel.form_dialog. Do not frm.save() —
+				// saving the whole panel here deadlocks with the dialog update.
+				frm.doc.form_dialog = r.message.form_dialog || "";
+				frm.refresh_field("form_dialog");
+				_render_dialogs_tab(frm);
+			},
+		});
+	});
+
+	$wrapper.on("click.ppFormDialogs", ".pp-dialog-details", function () {
+		const name = $(this).attr("data-name") || "";
+		if (!name) return;
+		window.open(frappe.utils.get_form_link("Form Dialog", name), "_blank");
 	});
 
 	$wrapper.on("click.ppFormDialogs", ".pp-dialog-select", function () {
@@ -3970,16 +4061,9 @@ function _build_dialogs_tab_html(frm, $container, dialogs) {
 	const current = frm.doc.form_dialog || "";
 	const doctype = frm.doc.root_doctype;
 
-	// ── Current selection ──
+	// The checked row is the active dialog. Show a note only when none is linked.
 	let current_html = "";
-	if (current) {
-		current_html = `
-			<div style="margin-bottom:12px;padding:8px 12px;background:#f4f5f6;border-radius:4px;font-size:12px;">
-				<strong>Active dialog:</strong> ${frappe.utils.escape_html(current)}
-				<button class="btn btn-xs btn-default pp-dialog-rebuild" style="margin-left:8px;">Rebuild</button>
-				<button class="btn btn-xs btn-default pp-dialog-open" style="margin-left:4px;">Open in full form</button>
-			</div>`;
-	} else {
+	if (!current) {
 		current_html = `
 			<div style="margin-bottom:12px;padding:8px 12px;background:#fef9e7;border-radius:4px;font-size:12px;">
 				No dialog linked to this panel. Create or select one below.
@@ -3992,9 +4076,11 @@ function _build_dialogs_tab_html(frm, $container, dialogs) {
 		list_html = `<table style="width:100%;font-size:12px;border-collapse:collapse;">
 			<thead>
 				<tr style="border-bottom:1px solid #d1d8dd;text-align:left;">
+					<th style="padding:4px 8px;">Active</th>
 					<th style="padding:4px 8px;">Title</th>
 					<th style="padding:4px 8px;">Size</th>
 					<th style="padding:4px 8px;">Captured</th>
+					<th style="padding:4px 8px;">Submit Hook?</th>
 					<th style="padding:4px 8px;"></th>
 				</tr>
 			</thead>
@@ -4002,20 +4088,29 @@ function _build_dialogs_tab_html(frm, $container, dialogs) {
 		dialogs.forEach(function (d) {
 			const is_current = d.name === current;
 			const row_bg = is_current ? "background:#e8f5e9;" : "";
+			const activeChecked = is_current ? " checked" : "";
 			list_html += `<tr style="border-bottom:1px solid #ededed;${row_bg}">
+				<td style="padding:4px 8px;text-align:center;">
+					<input type="checkbox" class="pp-dialog-active-check" data-name="${frappe.utils.escape_html(
+						d.name
+					)}"${activeChecked} title="${__("Use this dialog on the panel")}" />
+				</td>
 				<td style="padding:4px 8px;">${frappe.utils.escape_html(d.title)}</td>
 				<td style="padding:4px 8px;">${frappe.utils.escape_html(d.dialog_size || "xl")}</td>
 				<td style="padding:4px 8px;">${
 					d.captured_at ? frappe.datetime.str_to_user(d.captured_at) : "—"
 				}</td>
-				<td style="padding:4px 8px;">
-					${
-						is_current
-							? '<span style="color:#27ae60;font-weight:600;">Active</span>'
-							: '<button class="btn btn-xs btn-default pp-dialog-select" data-name="' +
-							  frappe.utils.escape_html(d.name) +
-							  '">Set as active</button>'
-					}
+				<td style="padding:4px 8px;">${
+					d.has_submit_hook
+						? '<strong style="color:#b85c00;" title="' +
+						  frappe.utils.escape_html(d.submit_hook || "") +
+						  '">Y</strong>'
+						: '<span style="color:#8d99a6;">N</span>'
+				}</td>
+				<td style="padding:4px 8px;white-space:nowrap;">
+					<button type="button" class="btn btn-xs btn-default pp-dialog-details" data-name="${frappe.utils.escape_html(
+						d.name
+					)}">Details</button>
 					<button class="btn btn-xs btn-default pp-dialog-delete" data-name="${frappe.utils.escape_html(
 						d.name
 					)}" style="margin-left:4px;color:#c0392b;">Delete</button>
@@ -4039,7 +4134,7 @@ function _build_dialogs_tab_html(frm, $container, dialogs) {
 						lf
 					)}">${frappe.utils.escape_html(lab)}</button>`;
 				});
-				list_html += `<tr style="border-bottom:1px solid #ededed;${row_bg}"><td colspan="4" style="padding:4px 8px 8px 20px;background:#fafbfc;font-size:11px;">
+				list_html += `<tr style="border-bottom:1px solid #ededed;${row_bg}"><td colspan="6" style="padding:4px 8px 8px 20px;background:#fafbfc;font-size:11px;">
 					<div style="color:#8d99a6;margin-bottom:4px;">${__("Related table tabs (preview)")}</div>
 					<div style="display:flex;flex-wrap:wrap;align-items:center;gap:2px;">${rel_btns}</div>
 				</td></tr>`;
@@ -4067,7 +4162,7 @@ function _build_dialogs_tab_html(frm, $container, dialogs) {
 						lab
 					)}</button>`;
 				});
-				list_html += `<tr style="border-bottom:1px solid #ededed;${row_bg}"><td colspan="4" style="padding:4px 8px 8px 20px;background:#fafbfc;font-size:11px;">
+				list_html += `<tr style="border-bottom:1px solid #ededed;${row_bg}"><td colspan="6" style="padding:4px 8px 8px 20px;background:#fafbfc;font-size:11px;">
 					<div style="color:#8d99a6;margin-bottom:4px;">${__("Inline child tabs (preview)")}</div>
 					<div style="display:flex;flex-wrap:wrap;align-items:center;gap:2px;">${inl_btns}</div>
 				</td></tr>`;
@@ -5228,6 +5323,8 @@ frappe.ui.form.on("Page Panel", {
 		_ensure_panel_id_controls(frm);
 		_ensure_query_refresh_button(frm);
 		_hide_colour_schema_fields(frm);
+		// The Dialogs tab checkbox writes form_dialog. The link field duplicates it.
+		frm.set_df_property("form_dialog", "hidden", 1);
 		_render_default_filters(frm);
 		// Hide Frappe's native tab bar (rendered when Tab Break fields exist in the DocType)
 		$(frm.layout.wrapper).find(".form-tabs-list, .nav-tabs").hide();

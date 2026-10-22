@@ -51,6 +51,49 @@ from .related_rows import (
 )
 
 
+def _next_available_form_dialog_title(title: str) -> str:
+	"""Return ``title`` if unused, else ``title (2)``, ``title (3)``, … (autoname = field:title)."""
+	base = (title or "").strip() or "Dialog"
+	if not frappe.db.exists("Form Dialog", base):
+		return base
+	n = 2
+	while True:
+		candidate = f"{base} ({n})"
+		if not frappe.db.exists("Form Dialog", candidate):
+			return candidate
+		n += 1
+
+
+def _copy_form_dialog_settings_from(source_name: str | None, target: frappe.model.document.Document) -> None:
+	"""Copy desk-tuned settings (not frozen meta) from an existing Form Dialog onto ``target``."""
+	if not (source_name or "").strip():
+		return
+	if not frappe.db.exists("Form Dialog", source_name):
+		return
+	source = frappe.get_doc("Form Dialog", source_name)
+	target.dialog_size = source.dialog_size or target.dialog_size or "xl"
+	target.submit_hide_if = getattr(source, "submit_hide_if", None) or target.submit_hide_if or "Never"
+	target.submit_hide_if_sql = getattr(source, "submit_hide_if_sql", None) or ""
+	target.writeback_on_submit = cint(source.writeback_on_submit)
+	meta = frappe.get_meta("Form Dialog")
+	if meta.has_field("custom_presubmit_script"):
+		target.custom_presubmit_script = getattr(source, "custom_presubmit_script", None) or ""
+
+	target.set("buttons", [])
+	for row in source.get("buttons") or []:
+		target.append(
+			"buttons",
+			{
+				"label": row.label,
+				"hide_if": row.hide_if or "Never",
+				"hide_if_sql": row.hide_if_sql or "",
+				"button_script": row.button_script or "",
+				"sort_order": cint(row.sort_order),
+				"source_note": row.source_note or "",
+			},
+		)
+
+
 @frappe.whitelist()
 def capture_form_dialog_from_desk(
 	doctype: str,
@@ -58,6 +101,8 @@ def capture_form_dialog_from_desk(
 	related_doctypes: str | list | None = None,
 	inline_child_tables: str | list | None = None,
 	script_tool_groups: str | list | None = None,
+	create_new: int | str | bool = 0,
+	copy_from: str | None = None,
 ) -> str:
 	"""
 	Create or update a Form Dialog by capturing the live DocType schema from Desk.
@@ -68,6 +113,8 @@ def capture_form_dialog_from_desk(
 	    related_doctypes: Optional JSON string or list of selected related DocTypes.
 	    inline_child_tables: Optional JSON list of dicts with ``parent_fieldname`` and optional ``tab_label``.
 	    script_tool_groups: Optional JSON list of dicts with ``group_key`` and ``tab_label`` for Tools tabs.
+	    create_new: When truthy, always insert a new dialog (inactive); never overwrite an existing title.
+	    copy_from: Optional Form Dialog name to copy desk settings from (size, submit rules, buttons, etc.).
 
 	Returns:
 	    The name of the created/updated Form Dialog document.
@@ -81,38 +128,110 @@ def capture_form_dialog_from_desk(
 	if not title:
 		title = f"{doctype} — dialog"
 
-	# Check if a Form Dialog with this title already exists
-	existing = frappe.db.exists("Form Dialog", title)
-	if existing:
-		doc = frappe.get_doc("Form Dialog", title)
-		doc.target_doctype = doctype
-		doc.frozen_meta_json = frozen_json
-		doc.captured_at = frappe.utils.now_datetime()
-		_sync_related_doctypes(doc, related_doctypes)
-		_sync_inline_child_tables(doc, inline_child_tables, doctype)
-		_sync_script_tool_groups(doc, script_tool_groups)
-		_sync_form_dialog_tab_notes_from_fields(doc, fields_list)
-		doc.save(ignore_permissions=True)
-	else:
+	if cint(create_new):
+		resolved_title = _next_available_form_dialog_title(title)
 		doc = frappe.get_doc(
 			{
 				"doctype": "Form Dialog",
-				"title": title,
+				"title": resolved_title,
 				"target_doctype": doctype,
 				"frozen_meta_json": frozen_json,
 				"captured_at": frappe.utils.now_datetime(),
 				"dialog_size": "xl",
-				"is_active": 1,
+				"is_active": 0,
 				"related_doctypes": _related_doctype_child_rows(related_doctypes, doctype),
 			}
 		)
 		_sync_inline_child_tables(doc, inline_child_tables, doctype)
 		_sync_script_tool_groups(doc, script_tool_groups)
 		_sync_form_dialog_tab_notes_from_fields(doc, fields_list)
+		_copy_form_dialog_settings_from(copy_from, doc)
 		doc.insert(ignore_permissions=True)
+	else:
+		# Check if a Form Dialog with this title already exists
+		existing = frappe.db.exists("Form Dialog", title)
+		if existing:
+			doc = frappe.get_doc("Form Dialog", title)
+			doc.target_doctype = doctype
+			doc.frozen_meta_json = frozen_json
+			doc.captured_at = frappe.utils.now_datetime()
+			_sync_related_doctypes(doc, related_doctypes)
+			_sync_inline_child_tables(doc, inline_child_tables, doctype)
+			_sync_script_tool_groups(doc, script_tool_groups)
+			_sync_form_dialog_tab_notes_from_fields(doc, fields_list)
+			doc.save(ignore_permissions=True)
+		else:
+			doc = frappe.get_doc(
+				{
+					"doctype": "Form Dialog",
+					"title": title,
+					"target_doctype": doctype,
+					"frozen_meta_json": frozen_json,
+					"captured_at": frappe.utils.now_datetime(),
+					"dialog_size": "xl",
+					"is_active": 1,
+					"related_doctypes": _related_doctype_child_rows(related_doctypes, doctype),
+				}
+			)
+			_sync_inline_child_tables(doc, inline_child_tables, doctype)
+			_sync_script_tool_groups(doc, script_tool_groups)
+			_sync_form_dialog_tab_notes_from_fields(doc, fields_list)
+			doc.insert(ignore_permissions=True)
 
 	frappe.db.commit()
 	return doc.name
+
+
+@frappe.whitelist()
+def set_form_dialog_active(
+	name: str,
+	active: int | str | bool = 1,
+	page_panel: str | None = None,
+) -> dict[str, Any]:
+	"""
+	Set ``is_active`` on a Form Dialog. At most one dialog per ``target_doctype`` may be active.
+
+	Used by the Page Panel Dialogs tab exclusive Active checkbox (System Manager only).
+
+	One UPDATE, with no ``get_doc`` before it. Reading the row and then updating it in the
+	same request raises MariaDB ER_CHECKREAD, which Desk shows as "Deadlock Occurred".
+	When ``page_panel`` is passed, that panel's ``form_dialog`` link is updated here too,
+	so the Desk form does not have to save the whole Page Panel.
+	"""
+	_require_system_manager()
+	name = (name or "").strip()
+	if not name:
+		frappe.throw(_("Missing Form Dialog name."))
+
+	active_flag = 1 if cint(active) else 0
+	# No get_doc / exists before this UPDATE. A read of the same row earlier in
+	# the request makes MariaDB raise ER_CHECKREAD, shown in Desk as a deadlock.
+	if active_flag:
+		frappe.db.sql(
+			"""
+			UPDATE `tabForm Dialog` AS d
+			INNER JOIN `tabForm Dialog` AS src ON src.name = %s
+			SET d.is_active = IF(d.name = src.name, 1, 0)
+			WHERE d.target_doctype = src.target_doctype
+			""",
+			(name,),
+		)
+	else:
+		frappe.db.sql(
+			"UPDATE `tabForm Dialog` SET is_active = 0 WHERE name = %s",
+			(name,),
+		)
+	if not frappe.db.sql("select name from `tabForm Dialog` where name=%s", name):
+		frappe.throw(_("Form Dialog {0} not found.").format(name))
+	frappe.clear_document_cache("Form Dialog", name)
+
+	panel = (page_panel or "").strip()
+	linked = name if active_flag else ""
+	if panel and frappe.db.exists("Page Panel", panel):
+		# Leave `modified` alone so the open Page Panel form can still be saved.
+		frappe.db.set_value("Page Panel", panel, "form_dialog", linked, update_modified=False)
+
+	return {"name": name, "is_active": active_flag, "form_dialog": linked}
 
 
 @frappe.whitelist()
@@ -264,7 +383,7 @@ def preview_capture_client_scripts(doctype: str) -> dict[str, Any]:
 @frappe.whitelist()
 def list_form_dialogs_for_doctype(doctype: str) -> list[dict]:
 	"""
-	List active Form Dialogs for a given target DocType.
+	List Form Dialogs (all versions) for a given target DocType.
 	Used by the Dialogs tab in the Page Panel Desk form.
 
 	Args:
@@ -278,7 +397,7 @@ def list_form_dialogs_for_doctype(doctype: str) -> list[dict]:
 
 	dialogs = frappe.get_all(
 		"Form Dialog",
-		filters={"target_doctype": doctype, "is_active": 1},
+		filters={"target_doctype": doctype},
 		fields=["name", "title", "target_doctype", "dialog_size", "captured_at", "is_active"],
 		order_by="title asc",
 	)
@@ -286,6 +405,24 @@ def list_form_dialogs_for_doctype(doctype: str) -> list[dict]:
 		return []
 
 	names = [d["name"] for d in dialogs]
+	hook_by_name: dict[str, str] = {}
+	# The column exists on sites that use "Run this script first on Submit". It is not in
+	# form_dialog.json, so only read it when the table actually has it.
+	if frappe.db.has_column("Form Dialog", "custom_presubmit_script"):
+		for row in frappe.db.sql(
+			"""
+			SELECT name, custom_presubmit_script
+			FROM `tabForm Dialog`
+			WHERE name IN %s
+			""",
+			[names],
+			as_dict=True,
+		):
+			hook_by_name[cstr(row.get("name") or "")] = cstr(row.get("custom_presubmit_script") or "").strip()
+	for d in dialogs:
+		script = hook_by_name.get(cstr(d.get("name") or ""), "")
+		d["submit_hook"] = script
+		d["has_submit_hook"] = 1 if script else 0
 	child_rows = frappe.get_all(
 		"Form Dialog Related DocType",
 		filters={
