@@ -353,6 +353,7 @@ class TestGetEventPeopleMap(unittest.TestCase):
 				"family_id": "FAM1",
 				"latitude": 39.95,
 				"longitude": -75.16,
+				"error_message": "",
 			},
 		)
 		inserted[0][1].insert.assert_called_once_with(ignore_permissions=True)
@@ -392,7 +393,7 @@ class TestGetEventPeopleMap(unittest.TestCase):
 		mock_set_value.assert_called_once_with(
 			"Family GPS",
 			"GPS9",
-			{"latitude": 41.2, "longitude": -73.4},
+			{"latitude": 41.2, "longitude": -73.4, "error_message": ""},
 			update_modified=True,
 		)
 		self.assertEqual(inserted, [])
@@ -475,9 +476,60 @@ class TestGetEventPeopleMap(unittest.TestCase):
 
 		self.assertEqual(out["pins"], [])
 		self.assertEqual(out["geocode_failed"], 1)
-		self.assertEqual(inserted, [])
+		self.assertEqual(len(inserted), 1)
+		self.assertEqual(
+			inserted[0][0],
+			{
+				"doctype": "Family GPS",
+				"family_id": "FAM1",
+				"error_message": "ZERO_RESULTS",
+			},
+		)
+		inserted[0][1].insert.assert_called_once_with(ignore_permissions=True)
 		mock_set_value.assert_not_called()
-		mock_commit.assert_not_called()
+		mock_commit.assert_called_once()
+
+	@patch("nce_events.api.event_people_map.frappe.db.commit")
+	@patch("nce_events.api.event_people_map.frappe.db.set_value")
+	@patch("nce_events.api.event_people_map.requests.get")
+	@patch("nce_events.api.event_people_map.frappe.get_doc")
+	@patch("nce_events.api.event_people_map.frappe.db.sql")
+	@patch("nce_events.api.event_people_map.frappe.has_permission")
+	@patch("nce_events.api.event_people_map.frappe.db.exists", return_value=True)
+	def test_geocode_failure_updates_existing_error(
+		self,
+		mock_exists,
+		mock_perm,
+		mock_sql,
+		mock_get_doc,
+		mock_requests_get,
+		mock_set_value,
+		mock_commit,
+	):
+		mock_session = MagicMock()
+		mock_session.user = "Administrator"
+		inserted: list[tuple[dict, MagicMock]] = []
+		connector = _mock_connector("test-maps-key")
+		mock_get_doc.side_effect = _connector_or_gps(connector, inserted)
+		mock_sql.return_value = [_person_row(gps_name="GPS9", latitude=0, longitude=0)]
+		fail_resp = MagicMock()
+		fail_resp.raise_for_status = MagicMock()
+		fail_resp.json.return_value = {"status": "ZERO_RESULTS", "results": []}
+		mock_requests_get.return_value = fail_resp
+
+		with patch("nce_events.api.event_people_map.frappe.session", mock_session):
+			out = get_event_people_map("EVT1")
+
+		self.assertEqual(out["pins"], [])
+		self.assertEqual(out["geocode_failed"], 1)
+		mock_set_value.assert_called_once_with(
+			"Family GPS",
+			"GPS9",
+			{"error_message": "ZERO_RESULTS"},
+			update_modified=True,
+		)
+		self.assertEqual(inserted, [])
+		mock_commit.assert_called_once()
 
 
 if __name__ == "__main__":

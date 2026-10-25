@@ -7,7 +7,7 @@ code-index:begin
  "gotchas": [
   "Pins use Family GPS latitude/longitude first; Google is called only when both coordinates are missing or zero.",
   "A successful Google lookup is saved onto Family GPS without overwriting a usable coordinate pair.",
-  "Geocode failures skip individual pins; the request still succeeds.",
+  "Geocode failures skip individual pins, write error_message on Family GPS, and the request still succeeds.",
   "People without a usable family address are counted in skipped_no_address."
  ],
  "keywords": ["event", "map", "people", "geocode", "pins", "Google Maps"],
@@ -59,7 +59,7 @@ def _family_address(row: dict[str, Any]) -> str:
 	return ", ".join(p for p in parts if p)
 
 
-def _geocode_address(address: str, api_key: str) -> tuple[float, float] | None:
+def _geocode_address(address: str, api_key: str) -> tuple[float, float] | str:
 	try:
 		resp = requests.get(
 			_GEOCODE_URL,
@@ -69,28 +69,35 @@ def _geocode_address(address: str, api_key: str) -> tuple[float, float] | None:
 		resp.raise_for_status()
 		data = resp.json()
 	except Exception:
-		return None
-	if data.get("status") != "OK":
-		return None
+		return "Geocode request failed"
+	status = data.get("status")
+	if status != "OK":
+		error_message = (data.get("error_message") or "").strip()
+		if error_message:
+			combined = f"{status}: {error_message}"
+			return combined[:500]
+		if status:
+			return str(status)
+		return "Geocode failed"
 	results = data.get("results") or []
 	if not results:
-		return None
+		return "No coordinates returned"
 	loc = (results[0].get("geometry") or {}).get("location") or {}
 	lat, lng = loc.get("lat"), loc.get("lng")
 	if lat is None or lng is None:
-		return None
+		return "No coordinates returned"
 	try:
 		return float(lat), float(lng)
 	except (TypeError, ValueError):
-		return None
+		return "No coordinates returned"
 
 
-def _geocode_addresses(addresses: list[str], api_key: str) -> dict[str, tuple[float, float] | None]:
+def _geocode_addresses(addresses: list[str], api_key: str) -> dict[str, tuple[float, float] | str]:
 	"""Look up every distinct address at once. Google takes one address per call."""
 	unique = list(dict.fromkeys(addresses))
 	if not unique:
 		return {}
-	found: dict[str, tuple[float, float] | None] = {}
+	found: dict[str, tuple[float, float] | str] = {}
 	workers = len(unique)
 	with ThreadPoolExecutor(max_workers=workers) as pool:
 		futures = {pool.submit(_geocode_address, address, api_key): address for address in unique}
@@ -124,7 +131,7 @@ def _save_family_gps(pending: dict[str, tuple[str, float, float]]) -> None:
 			frappe.db.set_value(
 				"Family GPS",
 				gps_name,
-				{"latitude": latitude, "longitude": longitude},
+				{"latitude": latitude, "longitude": longitude, "error_message": ""},
 				update_modified=True,
 			)
 			continue
@@ -135,6 +142,31 @@ def _save_family_gps(pending: dict[str, tuple[str, float, float]]) -> None:
 					"family_id": family_id,
 					"latitude": latitude,
 					"longitude": longitude,
+					"error_message": "",
+				}
+			)
+			doc.insert(ignore_permissions=True)
+		except frappe.DuplicateEntryError:
+			continue
+
+
+def _save_family_gps_error(pending: dict[str, tuple[str, str]]) -> None:
+	"""Save one geocode error per family. Values are (gps_name, error_message)."""
+	for family_id, (gps_name, message) in pending.items():
+		if gps_name:
+			frappe.db.set_value(
+				"Family GPS",
+				gps_name,
+				{"error_message": message},
+				update_modified=True,
+			)
+			continue
+		try:
+			doc = frappe.get_doc(
+				{
+					"doctype": "Family GPS",
+					"family_id": family_id,
+					"error_message": message,
 				}
 			)
 			doc.insert(ignore_permissions=True)
@@ -249,20 +281,40 @@ def get_event_people_map(event_id: str) -> dict[str, Any]:
 	pins: list[dict[str, Any]] = []
 	geocode_failed = 0
 	pending_gps: dict[str, tuple[str, float, float]] = {}
+	pending_gps_errors: dict[str, tuple[str, str]] = {}
 
 	for person in people:
 		if person["stored"] is not None:
 			lat, lng = person["stored"]
 		else:
 			address = person["address"]
-			coords = coord_cache.get(address)
-			if coords is None or _both_coords_empty(coords[0], coords[1]):
-				geocode_failed += 1
-				continue
-			lat, lng = coords
+			cached = coord_cache.get(address)
 			family_id = person["family_id"]
-			if family_id and family_id not in pending_gps:
-				pending_gps[family_id] = (person["gps_name"], lat, lng)
+			if isinstance(cached, tuple):
+				if _both_coords_empty(cached[0], cached[1]):
+					geocode_failed += 1
+					if family_id and family_id not in pending_gps_errors:
+						pending_gps_errors[family_id] = (
+							person["gps_name"],
+							"No coordinates returned",
+						)
+					continue
+				lat, lng = cached
+				if family_id and family_id not in pending_gps:
+					pending_gps[family_id] = (person["gps_name"], lat, lng)
+			elif isinstance(cached, str) and cached.strip():
+				geocode_failed += 1
+				if family_id and family_id not in pending_gps_errors:
+					pending_gps_errors[family_id] = (person["gps_name"], cached)
+				continue
+			else:
+				geocode_failed += 1
+				if family_id and family_id not in pending_gps_errors:
+					pending_gps_errors[family_id] = (
+						person["gps_name"],
+						"Geocode request failed",
+					)
+				continue
 
 		pins.append(
 			{
@@ -276,6 +328,9 @@ def get_event_people_map(event_id: str) -> dict[str, Any]:
 
 	if pending_gps:
 		_save_family_gps(pending_gps)
+	if pending_gps_errors:
+		_save_family_gps_error(pending_gps_errors)
+	if pending_gps or pending_gps_errors:
 		frappe.db.commit()
 
 	return {
