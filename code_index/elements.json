@@ -2,7 +2,7 @@
 "_meta": {
 "description": "The single authoritative code index of this project: every function, class, method, route, test, Vue component, CSS section and doc section with a label, plus each file's purpose. Query it with the shared code-index tool (find / show / callers); do not read this file whole. Generated: never edit by hand; hand-written notes live in code_index/project.json.",
 "generator": "_Project support files/code-index/codeindex.py",
-"count": 1926,
+"count": 1959,
 "project_sha256": "4149da0557eced977397fd926c9ce2ebca6a2b3cea453cc77dde71de6d1839c7",
 "headers_sha256": "c2fa568103e610cc7f9aac3001af8d84212aaff9508737b20ed83ee633fd3955"
 },
@@ -155,6 +155,25 @@
 "event",
 "rating",
 "Kanban"
+],
+"depends_on": [
+"nce_events/utils/sql_table.py"
+]
+},
+"nce_events/api/event_people_map.py": {
+"purpose": "Whitelisted API returning Google Maps pins for people enrolled on an event, geocoded via family address.",
+"read_when": "When loading the event people map or geocoding enrollment addresses for map pins.",
+"gotchas": [
+"Geocode failures skip individual pins; the request still succeeds.",
+"People without a usable family address are counted in skipped_no_address."
+],
+"keywords": [
+"event",
+"map",
+"people",
+"geocode",
+"pins",
+"Google Maps"
 ],
 "depends_on": [
 "nce_events/utils/sql_table.py"
@@ -1199,6 +1218,20 @@
 "depends_on": [
 "nce_events/api/evaluations.py",
 "nce_events/utils/sql_table.py"
+]
+},
+"nce_events/api/tests/test_event_people_map.py": {
+"purpose": "Unit tests for event people map API permissions, address filtering, and geocode caching.",
+"read_when": "When changing get_event_people_map SQL, geocoding, or credential validation.",
+"gotchas": [],
+"keywords": [
+"test event people map",
+"geocode",
+"Google Maps",
+"unittest"
+],
+"depends_on": [
+"nce_events/api/event_people_map.py"
 ]
 },
 "nce_events/api/tests/test_spa_page.py": {
@@ -2825,6 +2858,7 @@
 "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue",
 "nce_events/public/js/panel_page_v2/components/PanelFormDialogFooter.vue",
 "nce_events/public/js/panel_page_v2/components/PanelFormDialogHeader.vue",
+"nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue",
 "nce_events/public/js/panel_page_v2/composables/frozenFormSave.js",
 "nce_events/public/js/panel_page_v2/composables/useBackdropPointerDismiss.js",
 "nce_events/public/js/panel_page_v2/composables/useFormDialogChrome.js",
@@ -3074,6 +3108,25 @@
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js"
+]
+},
+"nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue": {
+"purpose": "Modal map of enrolled people by family address for an Event record.",
+"read_when": "Changing event people map dialog, Google Maps load, or pin info windows.",
+"gotchas": [
+"Google Maps script is loaded once per page via data-nce-google-maps marker.",
+"api_key is used only in the script URL, never shown in dialog text."
+],
+"keywords": [
+"PeopleMapDialog",
+"event map",
+"Google Maps",
+"get_event_people_map",
+"pins"
+],
+"depends_on": [
+"nce_events/public/js/panel_page_v2/composables/frozenFormSave.js",
+"nce_events/public/js/panel_page_v2/utils/frappeCall.js"
 ]
 },
 "nce_events/public/js/panel_page_v2/components/SpaPageNavBar.vue": {
@@ -5278,6 +5331,100 @@
 "label": "Fetch enrollment records with player details for event",
 "label_source": "generated",
 "label_hash": "3657d377e0"
+},
+{
+"id": "nce_events/api/event_people_map.py::_google_maps_api_key",
+"file": "nce_events/api/event_people_map.py",
+"kind": "function",
+"name": "_google_maps_api_key",
+"qualname": "_google_maps_api_key",
+"sig": "() -> str",
+"hash": "80c06ee463",
+"calls": [],
+"label": "Retrieve Google Maps API key from connector configuration.",
+"label_source": "generated",
+"label_hash": "80c06ee463"
+},
+{
+"id": "nce_events/api/event_people_map.py::_person_display_name",
+"file": "nce_events/api/event_people_map.py",
+"kind": "function",
+"name": "_person_display_name",
+"qualname": "_person_display_name",
+"sig": "(first_name: str, last_name: str, people_name: str) -> str",
+"hash": "0effe7628f",
+"calls": [],
+"label": "Format person's display name from first, last, and fallback name fields.",
+"label_source": "generated",
+"label_hash": "0effe7628f"
+},
+{
+"id": "nce_events/api/event_people_map.py::_family_address",
+"file": "nce_events/api/event_people_map.py",
+"kind": "function",
+"name": "_family_address",
+"qualname": "_family_address",
+"sig": "(row: dict[str, Any]) -> str",
+"hash": "7357fe6155",
+"calls": [],
+"label": "Combine address components into single formatted address string.",
+"label_source": "generated",
+"label_hash": "7357fe6155"
+},
+{
+"id": "nce_events/api/event_people_map.py::_geocode_address",
+"file": "nce_events/api/event_people_map.py",
+"kind": "function",
+"name": "_geocode_address",
+"qualname": "_geocode_address",
+"sig": "(address: str, api_key: str) -> tuple[float, float] | None",
+"hash": "52ddefefb9",
+"calls": [],
+"wired_by": [
+"nce_events/api/event_people_map.py::_geocode_addresses"
+],
+"label": "Look up latitude and longitude for an address using Google Maps Geocoding API.",
+"label_source": "generated",
+"label_hash": "52ddefefb9"
+},
+{
+"id": "nce_events/api/event_people_map.py::_geocode_addresses",
+"file": "nce_events/api/event_people_map.py",
+"kind": "function",
+"name": "_geocode_addresses",
+"qualname": "_geocode_addresses",
+"sig": "(addresses: list[str], api_key: str) -> dict[str, tuple[float, float] | None]",
+"hash": "716c6fbc8c",
+"calls": [],
+"label": "Batch geocode multiple distinct addresses in parallel using thread pool.",
+"label_source": "generated",
+"label_hash": "716c6fbc8c"
+},
+{
+"id": "nce_events/api/event_people_map.py::get_event_people_map",
+"file": "nce_events/api/event_people_map.py",
+"kind": "function",
+"name": "get_event_people_map",
+"qualname": "get_event_people_map",
+"sig": "(event_id: str) -> dict[str, Any]",
+"hash": "e16fe61dce",
+"calls": [
+"nce_events/api/event_people_map.py::_family_address",
+"nce_events/api/event_people_map.py::_geocode_addresses",
+"nce_events/api/event_people_map.py::_google_maps_api_key",
+"nce_events/api/event_people_map.py::_person_display_name",
+"nce_events/utils/sql_table.py::physical_table_name"
+],
+"tested_by": [
+"nce_events/api/tests/test_event_people_map.py::TestGetEventPeopleMap.test_guest_rejected",
+"nce_events/api/tests/test_event_people_map.py::TestGetEventPeopleMap.test_missing_api_key",
+"nce_events/api/tests/test_event_people_map.py::TestGetEventPeopleMap.test_missing_event_raises_validation_error",
+"nce_events/api/tests/test_event_people_map.py::TestGetEventPeopleMap.test_one_person_one_pin",
+"nce_events/api/tests/test_event_people_map.py::TestGetEventPeopleMap.test_reads_api_key_only"
+],
+"label": "Return map pins for people enrolled on an event, geocoded by family address.",
+"label_source": "generated",
+"label_hash": "e16fe61dce"
 },
 {
 "id": "nce_events/api/events_publish.py::slugify_product_slug",
@@ -14041,6 +14188,104 @@
 "nce_events/api/evaluations.py::get_event_enrollments"
 ],
 "label": "returns normalized rows",
+"label_source": "name"
+},
+{
+"id": "nce_events/api/tests/test_event_people_map.py::TestGetEventPeopleMap.test_guest_rejected",
+"file": "nce_events/api/tests/test_event_people_map.py",
+"kind": "test",
+"name": "test_guest_rejected",
+"qualname": "TestGetEventPeopleMap.test_guest_rejected",
+"sig": "(self)",
+"hash": "94eaee5458",
+"calls": [
+"nce_events/api/event_people_map.py::get_event_people_map"
+],
+"label": "guest rejected",
+"label_source": "name"
+},
+{
+"id": "nce_events/api/tests/test_event_people_map.py::TestGetEventPeopleMap.test_missing_event_raises_validation_error",
+"file": "nce_events/api/tests/test_event_people_map.py",
+"kind": "test",
+"name": "test_missing_event_raises_validation_error",
+"qualname": "TestGetEventPeopleMap.test_missing_event_raises_validation_error",
+"sig": "(self)",
+"hash": "cd8f2f8bcc",
+"calls": [
+"nce_events/api/event_people_map.py::get_event_people_map"
+],
+"label": "missing event raises validation error",
+"label_source": "name"
+},
+{
+"id": "nce_events/api/tests/test_event_people_map.py::TestGetEventPeopleMap.test_one_person_one_pin",
+"file": "nce_events/api/tests/test_event_people_map.py",
+"kind": "test",
+"name": "test_one_person_one_pin",
+"qualname": "TestGetEventPeopleMap.test_one_person_one_pin",
+"sig": "(self, mock_exists, mock_perm, mock_sql, mock_get_doc, mock_requests_get)",
+"hash": "4e84c06145",
+"calls": [
+"nce_events/api/event_people_map.py::get_event_people_map"
+],
+"label": "one person one pin",
+"label_source": "name"
+},
+{
+"id": "nce_events/api/tests/test_event_people_map.py::TestGetEventPeopleMap.test_same_address_geocoded_once",
+"file": "nce_events/api/tests/test_event_people_map.py",
+"kind": "test",
+"name": "test_same_address_geocoded_once",
+"qualname": "TestGetEventPeopleMap.test_same_address_geocoded_once",
+"sig": "(self, mock_exists, mock_perm, mock_sql, mock_get_doc, mock_requests_get)",
+"hash": "d589bd1d2b",
+"calls": [
+"nce_events/api/event_people_map.py::get_event_people_map"
+],
+"label": "same address geocoded once",
+"label_source": "name"
+},
+{
+"id": "nce_events/api/tests/test_event_people_map.py::TestGetEventPeopleMap.test_skipped_no_address",
+"file": "nce_events/api/tests/test_event_people_map.py",
+"kind": "test",
+"name": "test_skipped_no_address",
+"qualname": "TestGetEventPeopleMap.test_skipped_no_address",
+"sig": "(self, mock_exists, mock_perm, mock_sql, mock_get_doc, mock_requests_get)",
+"hash": "ab9faef6da",
+"calls": [
+"nce_events/api/event_people_map.py::get_event_people_map"
+],
+"label": "skipped no address",
+"label_source": "name"
+},
+{
+"id": "nce_events/api/tests/test_event_people_map.py::TestGetEventPeopleMap.test_missing_api_key",
+"file": "nce_events/api/tests/test_event_people_map.py",
+"kind": "test",
+"name": "test_missing_api_key",
+"qualname": "TestGetEventPeopleMap.test_missing_api_key",
+"sig": "(self, mock_exists, mock_perm, mock_get_doc)",
+"hash": "7860ec6fdf",
+"calls": [
+"nce_events/api/event_people_map.py::get_event_people_map"
+],
+"label": "missing api key",
+"label_source": "name"
+},
+{
+"id": "nce_events/api/tests/test_event_people_map.py::TestGetEventPeopleMap.test_reads_api_key_only",
+"file": "nce_events/api/tests/test_event_people_map.py",
+"kind": "test",
+"name": "test_reads_api_key_only",
+"qualname": "TestGetEventPeopleMap.test_reads_api_key_only",
+"sig": "(self, mock_exists, mock_perm, mock_sql, mock_get_doc, mock_requests_get)",
+"hash": "d12ce9e5da",
+"calls": [
+"nce_events/api/event_people_map.py::get_event_people_map"
+],
+"label": "reads api key only",
 "label_source": "name"
 },
 {
@@ -23065,11 +23310,11 @@
 "name": "PanelFormDialog",
 "qualname": "PanelFormDialog",
 "sig": "",
-"hash": "01052be9a1",
+"hash": "90f4bae5f9",
 "calls": [],
-"label": "Main form dialog shell for panels with find, native form, related tabs, submit, and WordPress readback",
+"label": "Main form dialog shell with find, native form, related tabs, submit, and WP read.",
 "label_source": "generated",
-"label_hash": "01052be9a1"
+"label_hash": "90f4bae5f9"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::escapeForPreHtml",
@@ -24132,11 +24377,11 @@
 "name": "PanelFormDialogFooter",
 "qualname": "PanelFormDialogFooter",
 "sig": "",
-"hash": "dfdc568556",
+"hash": "2d49d2b305",
 "calls": [],
-"label": "Dialog footer with find buttons and conditional submit visibility",
+"label": "Form dialog footer with FileMaker-style find buttons and conditional submit visibility.",
 "label_source": "generated",
-"label_hash": "dfdc568556"
+"label_hash": "2d49d2b305"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialogFooter.vue::HIDE_NEVER",
@@ -26525,6 +26770,331 @@
 "label": "Emit filter change after debounce delay",
 "label_source": "generated",
 "label_hash": "5bca3381f7"
+},
+{
+"id": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::PeopleMapDialog",
+"file": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue",
+"kind": "component",
+"name": "PeopleMapDialog",
+"qualname": "PeopleMapDialog",
+"sig": "",
+"hash": "c92ce3421a",
+"calls": [],
+"label": "Modal map of enrolled people by family address for an Event record.",
+"label_source": "generated",
+"label_hash": "c92ce3421a"
+},
+{
+"id": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::PIN_PATH",
+"file": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue",
+"kind": "const",
+"name": "PIN_PATH",
+"qualname": "PIN_PATH",
+"sig": "",
+"hash": "1e5eaa8631",
+"exported": false,
+"calls": [],
+"label": "SVG path data for map pin marker icon.",
+"label_source": "generated",
+"label_hash": "1e5eaa8631"
+},
+{
+"id": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::escapeHtml",
+"file": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue",
+"kind": "function",
+"name": "escapeHtml",
+"qualname": "escapeHtml",
+"sig": "(text)",
+"hash": "909a118172",
+"exported": false,
+"calls": [],
+"label": "Escape HTML special characters to prevent injection in map pin info windows.",
+"label_source": "generated",
+"label_hash": "909a118172"
+},
+{
+"id": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::pinInfoHtml",
+"file": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue",
+"kind": "function",
+"name": "pinInfoHtml",
+"qualname": "pinInfoHtml",
+"sig": "(pin)",
+"hash": "77f6b07874",
+"exported": false,
+"calls": [
+"nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::escapeHtml"
+],
+"label": "Generate HTML content for map pin info window showing person details.",
+"label_source": "generated",
+"label_hash": "77f6b07874"
+},
+{
+"id": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::teardownMap",
+"file": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue",
+"kind": "function",
+"name": "teardownMap",
+"qualname": "teardownMap",
+"sig": "()",
+"hash": "5059c5b9ab",
+"exported": false,
+"calls": [],
+"label": "Clean up map instance, markers, and info window when closing map display.",
+"label_source": "generated",
+"label_hash": "5059c5b9ab"
+},
+{
+"id": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::smallPinIcon",
+"file": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue",
+"kind": "function",
+"name": "smallPinIcon",
+"qualname": "smallPinIcon",
+"sig": "()",
+"hash": "e2aa22def7",
+"exported": false,
+"calls": [],
+"label": "Define small red pin icon styling for event people map markers",
+"label_source": "generated",
+"label_hash": "e2aa22def7"
+},
+{
+"id": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::fitPins",
+"file": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue",
+"kind": "function",
+"name": "fitPins",
+"qualname": "fitPins",
+"sig": "()",
+"hash": "a5f6cd9607",
+"exported": false,
+"calls": [],
+"wired_by": [
+"nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::initMap",
+"nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::startResize.onUp"
+],
+"label": "Fit all map pins within the map viewport boundaries",
+"label_source": "generated",
+"label_hash": "a5f6cd9607"
+},
+{
+"id": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::addDragOverlay",
+"file": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue",
+"kind": "function",
+"name": "addDragOverlay",
+"qualname": "addDragOverlay",
+"sig": "(cursor)",
+"hash": "242de371c2",
+"exported": false,
+"calls": [],
+"label": "Add full-screen overlay div for drag or resize operations",
+"label_source": "generated",
+"label_hash": "242de371c2"
+},
+{
+"id": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::startDrag",
+"file": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue",
+"kind": "function",
+"name": "startDrag",
+"qualname": "startDrag",
+"sig": "(e)",
+"hash": "727adb175a",
+"exported": false,
+"calls": [
+"nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::addDragOverlay"
+],
+"wired_by": [
+"nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::PeopleMapDialog"
+],
+"label": "Handle dragging the modal dialog across the screen",
+"label_source": "generated",
+"label_hash": "727adb175a"
+},
+{
+"id": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::startDrag.onMove",
+"file": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue",
+"kind": "function",
+"name": "onMove",
+"qualname": "startDrag.onMove",
+"sig": "(ev)",
+"hash": "41d96f9836",
+"exported": false,
+"calls": [],
+"wired_by": [
+"nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::startDrag",
+"nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::startDrag.onUp"
+],
+"label": "Update modal position as user drags the dialog",
+"label_source": "generated",
+"label_hash": "41d96f9836"
+},
+{
+"id": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::startDrag.onUp",
+"file": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue",
+"kind": "function",
+"name": "onUp",
+"qualname": "startDrag.onUp",
+"sig": "(ev)",
+"hash": "937ee646ea",
+"exported": false,
+"calls": [],
+"wired_by": [
+"nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::startDrag"
+],
+"label": "Finalize modal position and remove drag overlay",
+"label_source": "generated",
+"label_hash": "937ee646ea"
+},
+{
+"id": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::startResize",
+"file": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue",
+"kind": "function",
+"name": "startResize",
+"qualname": "startResize",
+"sig": "(e)",
+"hash": "e66886661a",
+"exported": false,
+"calls": [
+"nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::addDragOverlay"
+],
+"wired_by": [
+"nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::PeopleMapDialog"
+],
+"label": "Handle resizing the modal dialog with mouse drag",
+"label_source": "generated",
+"label_hash": "e66886661a"
+},
+{
+"id": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::startResize.onMove",
+"file": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue",
+"kind": "function",
+"name": "onMove",
+"qualname": "startResize.onMove",
+"sig": "(ev)",
+"hash": "c731da9cb7",
+"exported": false,
+"calls": [],
+"wired_by": [
+"nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::startResize",
+"nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::startResize.onUp"
+],
+"label": "Update modal dimensions as user resizes the dialog",
+"label_source": "generated",
+"label_hash": "c731da9cb7"
+},
+{
+"id": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::startResize.onUp",
+"file": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue",
+"kind": "function",
+"name": "onUp",
+"qualname": "startResize.onUp",
+"sig": "()",
+"hash": "bf7b358dc2",
+"exported": false,
+"calls": [],
+"wired_by": [
+"nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::startResize"
+],
+"label": "Finalize modal size and refit map pins after resize",
+"label_source": "generated",
+"label_hash": "bf7b358dc2"
+},
+{
+"id": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::resetState",
+"file": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue",
+"kind": "function",
+"name": "resetState",
+"qualname": "resetState",
+"sig": "()",
+"hash": "7e12fb70cb",
+"exported": false,
+"calls": [
+"nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::teardownMap"
+],
+"label": "Reset map loading state and clear all displayed markers",
+"label_source": "generated",
+"label_hash": "7e12fb70cb"
+},
+{
+"id": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::waitForGoogleMaps",
+"file": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue",
+"kind": "function",
+"name": "waitForGoogleMaps",
+"qualname": "waitForGoogleMaps",
+"sig": "(timeoutMs)",
+"hash": "e8e4637fe1",
+"exported": false,
+"calls": [
+"nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::waitForGoogleMaps.tick"
+],
+"label": "Wait for Google Maps library to load within timeout period",
+"label_source": "generated",
+"label_hash": "e8e4637fe1"
+},
+{
+"id": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::waitForGoogleMaps.tick",
+"file": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue",
+"kind": "function",
+"name": "tick",
+"qualname": "waitForGoogleMaps.tick",
+"sig": "()",
+"hash": "f0101e8240",
+"exported": false,
+"calls": [],
+"label": "Poll for Google Maps availability until timeout or load",
+"label_source": "generated",
+"label_hash": "f0101e8240"
+},
+{
+"id": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::loadGoogleMapsScript",
+"file": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue",
+"kind": "function",
+"name": "loadGoogleMapsScript",
+"qualname": "loadGoogleMapsScript",
+"sig": "(apiKey)",
+"hash": "552f7d34e3",
+"exported": false,
+"calls": [
+"nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::waitForGoogleMaps"
+],
+"label": "Load Google Maps API script with API key asynchronously",
+"label_source": "generated",
+"label_hash": "552f7d34e3"
+},
+{
+"id": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::initMap",
+"file": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue",
+"kind": "function",
+"name": "initMap",
+"qualname": "initMap",
+"sig": "(pins)",
+"hash": "86227a0ab0",
+"exported": false,
+"calls": [
+"nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::fitPins",
+"nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::pinInfoHtml",
+"nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::smallPinIcon"
+],
+"label": "Initialize Google Map with enrolled people location pins",
+"label_source": "generated",
+"label_hash": "86227a0ab0"
+},
+{
+"id": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::loadMapData",
+"file": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue",
+"kind": "function",
+"name": "loadMapData",
+"qualname": "loadMapData",
+"sig": "(eventId)",
+"hash": "102755185b",
+"exported": false,
+"calls": [
+"nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::initMap",
+"nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::loadGoogleMapsScript",
+"nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::resetState",
+"nce_events/public/js/panel_page_v2/composables/frozenFormSave.js::extractServerMessage",
+"nce_events/public/js/panel_page_v2/utils/frappeCall.js::frappeCall"
+],
+"label": "Fetch event people coordinates and display pins on map",
+"label_source": "generated",
+"label_hash": "102755185b"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/SpaPageNavBar.vue::SpaPageNavBar",

@@ -137,6 +137,7 @@ code-index:end
 				:browse-actions-locked="findCriteriaActive"
 				:find-chrome-phase="findChromePhase"
 				:find-match-active="findMatchActive"
+				:show-map-button="showMapButton"
 				@cancel="onCancel"
 				@revert="onRevert"
 				@submit-close="onSubmitClose"
@@ -149,9 +150,17 @@ code-index:end
 				@find-modify="emit('find-modify')"
 				@find-show-all="emit('find-show-all')"
 				@layout-updated="scheduleFitDialogWidthToFooter"
+				@map="mapDialogOpen = true"
 			/>
 			<div class="ppv2-fd-resize-handle" @mousedown.prevent="startResize" />
 		</div>
+		<Teleport to="body">
+			<PeopleMapDialog
+				:open="mapDialogOpen"
+				:event-id="mapEventId"
+				@close="mapDialogOpen = false"
+			/>
+		</Teleport>
 	</div>
 </template>
 
@@ -164,6 +173,7 @@ import {
 import PanelFormDialogHeader from "./PanelFormDialogHeader.vue";
 import PanelFormDialogBody from "./PanelFormDialogBody.vue";
 import PanelFormDialogFooter from "./PanelFormDialogFooter.vue";
+import PeopleMapDialog from "./PeopleMapDialog.vue";
 import { usePanelFormDialog } from "../composables/usePanelFormDialog.js";
 import { extractServerMessage } from "../composables/frozenFormSave.js";
 import { frappeCall } from "../utils/frappeCall.js";
@@ -534,6 +544,23 @@ const rowNavEnabledEffective = computed(
 );
 
 const findCriteriaActive = computed(() => props.findChromePhase === "criteria");
+
+const mapDialogOpen = ref(false);
+
+const showMapButton = computed(() => {
+	if (findCriteriaActive.value) return false;
+	if (props.doctype !== "Events") return false;
+	return Boolean(String(props.docName || "").trim());
+});
+
+const mapEventId = computed(() => String(props.docName || "").trim());
+
+watch(
+	() => props.open,
+	(open) => {
+		if (!open) mapDialogOpen.value = false;
+	},
+);
 
 // Set of fieldnames from panel effective_searchable — only these are enterable in Find mode.
 // null when no panel context (allows all searchable fields).

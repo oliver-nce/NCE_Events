@@ -70,6 +70,15 @@ code-index:end
 
 			<div class="ppv2-fd-custom-buttons">
 				<button
+					v-if="showMapButton"
+					type="button"
+					class="ppv2-fd-tab-btn theme-bg-primary-100 theme-border"
+					:disabled="browseActionsLocked || submitBusy || customActionBusy"
+					@click="$emit('map')"
+				>
+					MAP
+				</button>
+				<button
 					v-for="(btn, bi) in visibleButtons"
 					:key="'fd-btn-' + bi + '-' + (btn.label || bi) + '-' + (btn.name || '')"
 					type="button"
@@ -150,6 +159,7 @@ const props = defineProps({
 	/** True when a found set is active — enables Constrain Found Set in criteria phase. */
 	findMatchActive: { type: Boolean, default: false },
 	customActionBusy: { type: Boolean, default: false },
+	showMapButton: { type: Boolean, default: false },
 });
 
 const emit = defineEmits([
@@ -165,6 +175,7 @@ const emit = defineEmits([
 	"find-modify",
 	"find-show-all",
 	"layout-updated",
+	"map",
 ]);
 
 function __(s) {
