@@ -5,6 +5,8 @@ code-index:begin
  "purpose": "Whitelisted API returning Google Maps pins for people enrolled on an event, geocoded via family address.",
  "read_when": "When loading the event people map or geocoding enrollment addresses for map pins.",
  "gotchas": [
+  "Pins use Family GPS latitude/longitude first; Google is called only when both coordinates are missing or zero.",
+  "A successful Google lookup is saved onto Family GPS without overwriting a usable coordinate pair.",
   "Geocode failures skip individual pins; the request still succeeds.",
   "People without a usable family address are counted in skipped_no_address."
  ],
@@ -97,6 +99,49 @@ def _geocode_addresses(addresses: list[str], api_key: str) -> dict[str, tuple[fl
 	return found
 
 
+def _both_coords_empty(lat: Any, lng: Any) -> bool:
+	def _empty(value: Any) -> bool:
+		if value is None or value == "":
+			return True
+		try:
+			return float(value) == 0.0
+		except (TypeError, ValueError):
+			return True
+
+	return _empty(lat) and _empty(lng)
+
+
+def _as_float(value: Any) -> float:
+	if value is None or value == "":
+		return 0.0
+	return float(value)
+
+
+def _save_family_gps(pending: dict[str, tuple[str, float, float]]) -> None:
+	"""Save one geocode per family. Values are (gps_name, latitude, longitude)."""
+	for family_id, (gps_name, latitude, longitude) in pending.items():
+		if gps_name:
+			frappe.db.set_value(
+				"Family GPS",
+				gps_name,
+				{"latitude": latitude, "longitude": longitude},
+				update_modified=True,
+			)
+			continue
+		try:
+			doc = frappe.get_doc(
+				{
+					"doctype": "Family GPS",
+					"family_id": family_id,
+					"latitude": latitude,
+					"longitude": longitude,
+				}
+			)
+			doc.insert(ignore_permissions=True)
+		except frappe.DuplicateEntryError:
+			continue
+
+
 @frappe.whitelist()
 def get_event_people_map(event_id: str) -> dict[str, Any]:
 	"""Return map pins for people enrolled on an event, geocoded by family address."""
@@ -125,6 +170,7 @@ def get_event_people_map(event_id: str) -> dict[str, Any]:
 	enroll_tn = physical_table_name("Enrollments")
 	people_tn = physical_table_name("People")
 	families_tn = physical_table_name("Families")
+	gps_tn = physical_table_name("Family GPS")
 
 	q = f"""
 		SELECT
@@ -133,6 +179,10 @@ def get_event_people_map(event_id: str) -> dict[str, Any]:
 			IFNULL(p.last_name, '') AS last_name,
 			IFNULL(p.`position`, '') AS `position`,
 			p.rating AS rating,
+			p.family_id AS family_id,
+			g.name AS gps_name,
+			g.latitude AS latitude,
+			g.longitude AS longitude,
 			IFNULL(f.address_1, '') AS address_1,
 			IFNULL(f.address_2, '') AS address_2,
 			IFNULL(f.city, '') AS city,
@@ -141,6 +191,12 @@ def get_event_people_map(event_id: str) -> dict[str, Any]:
 		FROM `{enroll_tn}` e
 		INNER JOIN `{people_tn}` p ON e.`player_id` = p.`name`
 		LEFT JOIN `{families_tn}` f ON p.`family_id` = f.`name`
+		LEFT JOIN `{gps_tn}` g ON g.name = (
+			SELECT g2.name FROM `{gps_tn}` g2
+			WHERE g2.family_id = p.family_id
+			ORDER BY g2.creation DESC, g2.name DESC
+			LIMIT 1
+		)
 		WHERE e.`product_id` = %s
 		ORDER BY p.`name` ASC
 	"""
@@ -162,6 +218,13 @@ def get_event_people_map(event_id: str) -> dict[str, Any]:
 			skipped_no_address += 1
 			continue
 
+		family_id = (row.get("family_id") or "").strip()
+		gps_name = row.get("gps_name") or ""
+		if _both_coords_empty(row.get("latitude"), row.get("longitude")):
+			stored = None
+		else:
+			stored = (_as_float(row.get("latitude")), _as_float(row.get("longitude")))
+
 		rating_val = row.get("rating")
 		rating = "" if rating_val is None else str(rating_val)
 
@@ -175,20 +238,32 @@ def get_event_people_map(event_id: str) -> dict[str, Any]:
 				"position": (row.get("position") or "").strip(),
 				"rating": rating,
 				"address": address,
+				"family_id": family_id,
+				"gps_name": gps_name,
+				"stored": stored,
 			}
 		)
 
-	coord_cache = _geocode_addresses([person["address"] for person in people], api_key)
+	needs_geocode = [person["address"] for person in people if person["stored"] is None]
+	coord_cache = _geocode_addresses(needs_geocode, api_key) if needs_geocode else {}
 	pins: list[dict[str, Any]] = []
 	geocode_failed = 0
+	pending_gps: dict[str, tuple[str, float, float]] = {}
 
 	for person in people:
-		address = person["address"]
-		coords = coord_cache.get(address)
-		if coords is None:
-			geocode_failed += 1
-			continue
-		lat, lng = coords
+		if person["stored"] is not None:
+			lat, lng = person["stored"]
+		else:
+			address = person["address"]
+			coords = coord_cache.get(address)
+			if coords is None or _both_coords_empty(coords[0], coords[1]):
+				geocode_failed += 1
+				continue
+			lat, lng = coords
+			family_id = person["family_id"]
+			if family_id and family_id not in pending_gps:
+				pending_gps[family_id] = (person["gps_name"], lat, lng)
+
 		pins.append(
 			{
 				"person_name": person["person_name"],
@@ -198,6 +273,10 @@ def get_event_people_map(event_id: str) -> dict[str, Any]:
 				"lng": lng,
 			}
 		)
+
+	if pending_gps:
+		_save_family_gps(pending_gps)
+		frappe.db.commit()
 
 	return {
 		"api_key": api_key,

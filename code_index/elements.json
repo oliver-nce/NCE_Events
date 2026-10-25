@@ -2,7 +2,7 @@
 "_meta": {
 "description": "The single authoritative code index of this project: every function, class, method, route, test, Vue component, CSS section and doc section with a label, plus each file's purpose. Query it with the shared code-index tool (find / show / callers); do not read this file whole. Generated: never edit by hand; hand-written notes live in code_index/project.json.",
 "generator": "_Project support files/code-index/codeindex.py",
-"count": 1959,
+"count": 1968,
 "project_sha256": "4149da0557eced977397fd926c9ce2ebca6a2b3cea453cc77dde71de6d1839c7",
 "headers_sha256": "c2fa568103e610cc7f9aac3001af8d84212aaff9508737b20ed83ee633fd3955"
 },
@@ -164,6 +164,8 @@
 "purpose": "Whitelisted API returning Google Maps pins for people enrolled on an event, geocoded via family address.",
 "read_when": "When loading the event people map or geocoding enrollment addresses for map pins.",
 "gotchas": [
+"Pins use Family GPS latitude/longitude first; Google is called only when both coordinates are missing or zero.",
+"A successful Google lookup is saved onto Family GPS without overwriting a usable coordinate pair.",
 "Geocode failures skip individual pins; the request still succeeds.",
 "People without a usable family address are counted in skipped_no_address."
 ],
@@ -1221,7 +1223,7 @@
 ]
 },
 "nce_events/api/tests/test_event_people_map.py": {
-"purpose": "Unit tests for event people map API permissions, address filtering, and geocode caching.",
+"purpose": "Unit tests for event people map API permissions, address filtering, Family GPS, and geocode caching.",
 "read_when": "When changing get_event_people_map SQL, geocoding, or credential validation.",
 "gotchas": [],
 "keywords": [
@@ -5401,30 +5403,87 @@
 "label_hash": "716c6fbc8c"
 },
 {
+"id": "nce_events/api/event_people_map.py::_both_coords_empty",
+"file": "nce_events/api/event_people_map.py",
+"kind": "function",
+"name": "_both_coords_empty",
+"qualname": "_both_coords_empty",
+"sig": "(lat: Any, lng: Any) -> bool",
+"hash": "b03bc64099",
+"calls": [
+"nce_events/api/event_people_map.py::_both_coords_empty._empty"
+],
+"label": "Check if latitude and longitude coordinates are both empty or zero",
+"label_source": "generated",
+"label_hash": "b03bc64099"
+},
+{
+"id": "nce_events/api/event_people_map.py::_both_coords_empty._empty",
+"file": "nce_events/api/event_people_map.py",
+"kind": "function",
+"name": "_empty",
+"qualname": "_both_coords_empty._empty",
+"sig": "(value: Any) -> bool",
+"hash": "14fc5087f5",
+"calls": [],
+"label": "Check if a coordinate value is empty, null, or zero",
+"label_source": "generated",
+"label_hash": "14fc5087f5"
+},
+{
+"id": "nce_events/api/event_people_map.py::_as_float",
+"file": "nce_events/api/event_people_map.py",
+"kind": "function",
+"name": "_as_float",
+"qualname": "_as_float",
+"sig": "(value: Any) -> float",
+"hash": "54de798d22",
+"calls": [],
+"label": "Convert coordinate value to float, defaulting to zero if empty",
+"label_source": "generated",
+"label_hash": "54de798d22"
+},
+{
+"id": "nce_events/api/event_people_map.py::_save_family_gps",
+"file": "nce_events/api/event_people_map.py",
+"kind": "function",
+"name": "_save_family_gps",
+"qualname": "_save_family_gps",
+"sig": "(pending: dict[str, tuple[str, float, float]]) -> None",
+"hash": "fcebbc380b",
+"calls": [],
+"label": "Save or update geocode latitude and longitude for families",
+"label_source": "generated",
+"label_hash": "fcebbc380b"
+},
+{
 "id": "nce_events/api/event_people_map.py::get_event_people_map",
 "file": "nce_events/api/event_people_map.py",
 "kind": "function",
 "name": "get_event_people_map",
 "qualname": "get_event_people_map",
 "sig": "(event_id: str) -> dict[str, Any]",
-"hash": "e16fe61dce",
+"hash": "f2aff52ae2",
 "calls": [
+"nce_events/api/event_people_map.py::_as_float",
+"nce_events/api/event_people_map.py::_both_coords_empty",
 "nce_events/api/event_people_map.py::_family_address",
 "nce_events/api/event_people_map.py::_geocode_addresses",
 "nce_events/api/event_people_map.py::_google_maps_api_key",
 "nce_events/api/event_people_map.py::_person_display_name",
+"nce_events/api/event_people_map.py::_save_family_gps",
 "nce_events/utils/sql_table.py::physical_table_name"
 ],
 "tested_by": [
+"nce_events/api/tests/test_event_people_map.py::TestGetEventPeopleMap.test_geocode_failure_writes_nothing",
 "nce_events/api/tests/test_event_people_map.py::TestGetEventPeopleMap.test_guest_rejected",
 "nce_events/api/tests/test_event_people_map.py::TestGetEventPeopleMap.test_missing_api_key",
 "nce_events/api/tests/test_event_people_map.py::TestGetEventPeopleMap.test_missing_event_raises_validation_error",
-"nce_events/api/tests/test_event_people_map.py::TestGetEventPeopleMap.test_one_person_one_pin",
-"nce_events/api/tests/test_event_people_map.py::TestGetEventPeopleMap.test_reads_api_key_only"
+"nce_events/api/tests/test_event_people_map.py::TestGetEventPeopleMap.test_missing_gps_geocodes_and_inserts"
 ],
-"label": "Return map pins for people enrolled on an event, geocoded by family address.",
+"label": "Return map pins for event enrollees geocoded by family address",
 "label_source": "generated",
-"label_hash": "e16fe61dce"
+"label_hash": "f2aff52ae2"
 },
 {
 "id": "nce_events/api/events_publish.py::slugify_product_slug",
@@ -14286,6 +14345,76 @@
 "nce_events/api/event_people_map.py::get_event_people_map"
 ],
 "label": "reads api key only",
+"label_source": "name"
+},
+{
+"id": "nce_events/api/tests/test_event_people_map.py::TestGetEventPeopleMap.test_stored_gps_skips_google",
+"file": "nce_events/api/tests/test_event_people_map.py",
+"kind": "test",
+"name": "test_stored_gps_skips_google",
+"qualname": "TestGetEventPeopleMap.test_stored_gps_skips_google",
+"sig": "(self, mock_exists, mock_perm, mock_sql, mock_get_doc, mock_requests_get, mock_set_value, mock_commit)",
+"hash": "7cea1e7e3f",
+"calls": [
+"nce_events/api/event_people_map.py::get_event_people_map"
+],
+"label": "stored gps skips google",
+"label_source": "name"
+},
+{
+"id": "nce_events/api/tests/test_event_people_map.py::TestGetEventPeopleMap.test_missing_gps_geocodes_and_inserts",
+"file": "nce_events/api/tests/test_event_people_map.py",
+"kind": "test",
+"name": "test_missing_gps_geocodes_and_inserts",
+"qualname": "TestGetEventPeopleMap.test_missing_gps_geocodes_and_inserts",
+"sig": "(self, mock_exists, mock_perm, mock_sql, mock_get_doc, mock_requests_get, mock_set_value, mock_commit)",
+"hash": "7b92f023c7",
+"calls": [
+"nce_events/api/event_people_map.py::get_event_people_map"
+],
+"label": "missing gps geocodes and inserts",
+"label_source": "name"
+},
+{
+"id": "nce_events/api/tests/test_event_people_map.py::TestGetEventPeopleMap.test_zero_coordinates_update_existing_row",
+"file": "nce_events/api/tests/test_event_people_map.py",
+"kind": "test",
+"name": "test_zero_coordinates_update_existing_row",
+"qualname": "TestGetEventPeopleMap.test_zero_coordinates_update_existing_row",
+"sig": "(self, mock_exists, mock_perm, mock_sql, mock_get_doc, mock_requests_get, mock_set_value, mock_commit)",
+"hash": "7f05fb7be4",
+"calls": [
+"nce_events/api/event_people_map.py::get_event_people_map"
+],
+"label": "zero coordinates update existing row",
+"label_source": "name"
+},
+{
+"id": "nce_events/api/tests/test_event_people_map.py::TestGetEventPeopleMap.test_same_family_one_geocode_one_insert",
+"file": "nce_events/api/tests/test_event_people_map.py",
+"kind": "test",
+"name": "test_same_family_one_geocode_one_insert",
+"qualname": "TestGetEventPeopleMap.test_same_family_one_geocode_one_insert",
+"sig": "(self, mock_exists, mock_perm, mock_sql, mock_get_doc, mock_requests_get, mock_set_value, mock_commit)",
+"hash": "2ca5166f69",
+"calls": [
+"nce_events/api/event_people_map.py::get_event_people_map"
+],
+"label": "same family one geocode one insert",
+"label_source": "name"
+},
+{
+"id": "nce_events/api/tests/test_event_people_map.py::TestGetEventPeopleMap.test_geocode_failure_writes_nothing",
+"file": "nce_events/api/tests/test_event_people_map.py",
+"kind": "test",
+"name": "test_geocode_failure_writes_nothing",
+"qualname": "TestGetEventPeopleMap.test_geocode_failure_writes_nothing",
+"sig": "(self, mock_exists, mock_perm, mock_sql, mock_get_doc, mock_requests_get, mock_set_value, mock_commit)",
+"hash": "8febef4c78",
+"calls": [
+"nce_events/api/event_people_map.py::get_event_people_map"
+],
+"label": "geocode failure writes nothing",
 "label_source": "name"
 },
 {
