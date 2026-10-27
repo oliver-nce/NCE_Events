@@ -18111,11 +18111,11 @@
 "name": "_colours_tab_styles_html",
 "qualname": "_colours_tab_styles_html",
 "sig": "()",
-"hash": "1b5eb5fbf2",
+"hash": "cf4530006c",
 "exported": false,
 "calls": [],
 "label": "Generate CSS styles for color configuration tab interface elements",
-"label_source": "generated",
+"label_source": "generated-stale",
 "label_hash": "1b5eb5fbf2"
 },
 {
@@ -18293,13 +18293,13 @@
 "name": "_colours_update_arrow_buttons",
 "qualname": "_colours_update_arrow_buttons",
 "sig": "($container)",
-"hash": "e39250e824",
+"hash": "224a43f6d4",
 "exported": false,
 "calls": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_other_selected_names"
 ],
 "label": "Enable or disable copy arrow buttons based on selected panel count",
-"label_source": "generated",
+"label_source": "generated-stale",
 "label_hash": "e39250e824"
 },
 {
@@ -18309,14 +18309,14 @@
 "name": "_render_other_panels_table",
 "qualname": "_render_other_panels_table",
 "sig": "(frm, $container)",
-"hash": "0cd95842ea",
+"hash": "9942a83f1f",
 "exported": false,
 "calls": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_copy_arrows",
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_update_arrow_buttons"
 ],
 "label": "Render table of other page panels for colour copying",
-"label_source": "generated",
+"label_source": "generated-stale",
 "label_hash": "0cd95842ea"
 },
 {

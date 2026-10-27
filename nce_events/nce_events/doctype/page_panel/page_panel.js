@@ -4861,6 +4861,31 @@ function _colours_tab_styles_html() {
 			.pp-colours-other-table tbody tr.pp-panel-row--selected .pp-colours-other-theme {
 				color: #495057;
 			}
+			.pp-colours-select-actions {
+				display: flex;
+				gap: 8px;
+				margin: 0 0 8px;
+			}
+			.pp-colours-select-btn {
+				padding: 4px 8px;
+				border: 1px solid #dee2e6;
+				border-radius: 4px;
+				background: #fff;
+				color: #495057;
+				font-size: 12px;
+				font-weight: 600;
+				cursor: pointer;
+				line-height: 1.2;
+			}
+			.pp-colours-select-btn:hover:not(:disabled) {
+				border-color: #495057;
+				background: #f1f3f5;
+				color: #212529;
+			}
+			.pp-colours-select-btn:disabled {
+				opacity: 0.45;
+				cursor: default;
+			}
 			.pp-colours-section-title {
 				margin: 18px 0 8px;
 				font-weight: 600;
@@ -5180,6 +5205,12 @@ function _colours_update_arrow_buttons($container) {
 		$from.prop("disabled", true).attr("aria-hidden", "true");
 		$to.prop("disabled", false).attr("aria-hidden", "false");
 	}
+
+	const $otherRows = $container.find(".pp-colours-other-row");
+	const totalOther = $otherRows.length;
+	const allOtherSelected = totalOther > 0 && count === totalOther;
+	$container.find(".pp-colours-select-all").prop("disabled", totalOther === 0 || allOtherSelected);
+	$container.find(".pp-colours-deselect-all").prop("disabled", count === 0);
 }
 
 function _render_other_panels_table(frm, $container) {
@@ -5216,6 +5247,10 @@ function _render_other_panels_table(frm, $container) {
 
 			const tableHtml =
 				`<div class="pp-colours-section-title pp-colours-other-panels-title">${__("Other panels")}</div>` +
+				`<div class="pp-colours-select-actions">` +
+				`<button type="button" class="pp-colours-select-btn pp-colours-select-all">${__("Select all")}</button>` +
+				`<button type="button" class="pp-colours-select-btn pp-colours-deselect-all" disabled>${__("Deselect all")}</button>` +
+				`</div>` +
 				`<table class="table table-bordered pp-colours-chrome-table pp-colours-other-table">` +
 				`<thead><tr><th>${__("Panel ID")}</th><th>${__("Theme")}</th></tr></thead>` +
 				`<tbody>${rows}</tbody>` +
@@ -5236,6 +5271,15 @@ function _render_other_panels_table(frm, $container) {
 						$row.addClass("pp-panel-row--selected");
 					}
 				}
+				_colours_update_arrow_buttons($container);
+			});
+
+			$host.off("click", ".pp-colours-select-all").on("click", ".pp-colours-select-all", function () {
+				$host.find(".pp-colours-other-row").addClass("pp-panel-row--selected");
+				_colours_update_arrow_buttons($container);
+			});
+			$host.off("click", ".pp-colours-deselect-all").on("click", ".pp-colours-deselect-all", function () {
+				$host.find(".pp-colours-other-row").removeClass("pp-panel-row--selected");
 				_colours_update_arrow_buttons($container);
 			});
 
