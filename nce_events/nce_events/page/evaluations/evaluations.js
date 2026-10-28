@@ -16,6 +16,7 @@ frappe.pages["evaluations"].on_page_show = function (wrapper) {
 			parent: wrapper,
 			title: "Evaluations",
 			single_column: true,
+			hide_sidebar: true,
 		});
 	}
 

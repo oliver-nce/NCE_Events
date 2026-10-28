@@ -94,6 +94,7 @@ nce_events.spa_panel_page.boot = function (wrapper, pageSlug, mountElId) {
 					parent: wrapper,
 					title: "",
 					single_column: true,
+					hide_sidebar: true,
 				});
 			} else if (wrapper._page_obj.page && wrapper._page_obj.page.set_title) {
 				wrapper._page_obj.page.set_title("");

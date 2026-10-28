@@ -16,6 +16,7 @@ frappe.pages["page-view"].on_page_show = function (wrapper) {
 			parent: wrapper,
 			title: "NCE Events",
 			single_column: true,
+			hide_sidebar: true,
 		});
 	}
 

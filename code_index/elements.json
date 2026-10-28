@@ -10408,11 +10408,13 @@
 "name": "copy_panel_colours",
 "qualname": "copy_panel_colours",
 "sig": "(source_name: str, target_names: str | list) -> dict[str, Any]",
-"hash": "c668b98d05",
-"calls": [],
-"label": "Copy all colour fields from source Page Panel to one or more target panels.",
+"hash": "8c9aeaa189",
+"calls": [
+"nce_events/api/panel_api_pkg/theme_slug.py::resolve_theme_slug"
+],
+"label": "Copy colour configuration fields from source Page Panel to multiple target panels",
 "label_source": "generated",
-"label_hash": "c668b98d05"
+"label_hash": "8c9aeaa189"
 },
 {
 "id": "nce_events/api/panel_api_pkg/panel_data.py::export_panel_data",
@@ -18114,9 +18116,9 @@
 "hash": "cf4530006c",
 "exported": false,
 "calls": [],
-"label": "Generate CSS styles for color configuration tab interface elements",
-"label_source": "generated-stale",
-"label_hash": "1b5eb5fbf2"
+"label": "Generate CSS styles for colour customization tab display and layout",
+"label_source": "generated",
+"label_hash": "cf4530006c"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_colours_preview_table_html",
@@ -18298,9 +18300,9 @@
 "calls": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_other_selected_names"
 ],
-"label": "Enable or disable copy arrow buttons based on selected panel count",
-"label_source": "generated-stale",
-"label_hash": "e39250e824"
+"label": "Enable or disable copy direction buttons based on selected panels",
+"label_source": "generated",
+"label_hash": "224a43f6d4"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_other_panels_table",
@@ -18315,9 +18317,9 @@
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_copy_arrows",
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_update_arrow_buttons"
 ],
-"label": "Render table of other page panels for colour copying",
-"label_source": "generated-stale",
-"label_hash": "0cd95842ea"
+"label": "Display table of other Page Panels for colour copying operations",
+"label_source": "generated",
+"label_hash": "9942a83f1f"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_copy_arrows",
@@ -18326,15 +18328,15 @@
 "name": "_bind_copy_arrows",
 "qualname": "_bind_copy_arrows",
 "sig": "(frm, $container)",
-"hash": "1192c897c2",
+"hash": "bbd53cdd58",
 "exported": false,
 "calls": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_other_selected_names",
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_colours_tab"
 ],
-"label": "Bind copy arrow buttons to copy colours between panels",
+"label": "Handle copy colour arrows to transfer settings between panels",
 "label_source": "generated",
-"label_hash": "1192c897c2"
+"label_hash": "bbd53cdd58"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_colours_tab",
