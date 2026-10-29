@@ -32,6 +32,8 @@ app_include_js = [
 app_include_css = [
 	"/assets/nce_events/css/schema_explorer.css",
 	"/assets/nce_events/css/theme_defaults.css",
+	# Frappe v16 desk no longer bundles Font Awesome. Panel buttons use fa classes.
+	"/assets/frappe/css/fonts/fontawesome/font-awesome.min.css",
 ]
 
 doctype_js = {

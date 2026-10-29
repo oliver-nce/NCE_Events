@@ -564,20 +564,37 @@ def get_theme_table_tokens(theme_link: str | None = None) -> dict[str, str]:
 
 @frappe.whitelist()
 def copy_panel_colours(source_name: str, target_names: str | list) -> dict[str, Any]:
-	"""Copy all colour fields from source Page Panel to one or more target panels."""
+	"""Copy colour fields from source Page Panel to target panels.
+
+	Requires the source to have a theme Link that resolves to an Active NCE Theme slug.
+	Each target is saved in its own database savepoint so one failure does not undo others.
+	"""
 	if isinstance(target_names, str):
 		import json as _json
 		target_names = _json.loads(target_names) if target_names.startswith("[") else [target_names]
 
 	source = frappe.get_doc("Page Panel", source_name)
+	if not (source.theme or "").strip():
+		frappe.throw(_("Source panel has no theme. Assign an Active theme before copying colours."))
+	if not resolve_theme_slug(source.theme):
+		frappe.throw(_("The source panel's theme is not Active. Copy cancelled."))
+
 	updated: list[str] = []
-	for target_name in target_names:
-		target = frappe.get_doc("Page Panel", target_name)
-		for field in _COLOUR_COPY_FIELDS:
-			target.set(field, getattr(source, field, None) or "")
-		target.save(ignore_permissions=False)
-		updated.append(target_name)
-	return {"updated": updated}
+	failed: list[dict[str, str]] = []
+	for name in target_names:
+		frappe.db.savepoint("copy_colours")
+		try:
+			target = frappe.get_doc("Page Panel", name)
+			for field in _COLOUR_COPY_FIELDS:
+				target.set(field, getattr(source, field, None) or "")
+			target.flags.ignore_links = True
+			target.save(ignore_permissions=False)
+			updated.append(name)
+		except Exception as e:
+			frappe.db.rollback(save_point="copy_colours")
+			failed.append({"panel": name, "reason": str(e)})
+			frappe.clear_messages()
+	return {"updated": updated, "failed": failed}
 
 
 @frappe.whitelist()
