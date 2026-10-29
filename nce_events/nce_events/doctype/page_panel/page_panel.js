@@ -5324,29 +5324,56 @@ function _bind_copy_arrows(frm, $container) {
 		const selected = _colours_other_selected_names($container);
 		if (!selected.length) return;
 
-		const label = selected.length === 1
+		let label = selected.length === 1
 			? __("Copy all colour settings from this panel TO <b>{0}</b>? This will overwrite that panel's settings.", [selected[0]])
 			: __("Copy all colour settings from this panel TO {0} other panels? This will overwrite their settings.", [selected.length]);
+		if (frm.is_dirty()) {
+			label += " " + __("Unsaved changes on this panel will be saved first.");
+		}
 
 		frappe.confirm(label, function () {
-			frappe.call({
-				method: "nce_events.api.panel_api_pkg.panel_data.copy_panel_colours",
-				args: {
-					source_name: frm.doc.name,
-					target_names: JSON.stringify(selected),
-				},
-				freeze: true,
-				freeze_message: __("Copying colour settings…"),
-				callback: function (r) {
-					const updated = (r && r.message && r.message.updated) || [];
-					frappe.show_alert({
-						message: updated.length === 1
-							? __("Colours copied to {0}", [updated[0]])
-							: __("Colours copied to {0} panels", [updated.length]),
-						indicator: "green",
-					});
-				},
-			});
+			function run_copy() {
+				frappe.call({
+					method: "nce_events.api.panel_api_pkg.panel_data.copy_panel_colours",
+					args: {
+						source_name: frm.doc.name,
+						target_names: JSON.stringify(selected),
+					},
+					freeze: true,
+					freeze_message: __("Copying colour settings…"),
+					callback: function (r) {
+						const updated = (r && r.message && r.message.updated) || [];
+						const failed = (r && r.message && r.message.failed) || [];
+						if (!failed.length) {
+							frappe.show_alert({
+								message: updated.length === 1
+									? __("Colours copied to {0}", [updated[0]])
+									: __("Colours copied to {0} panels", [updated.length]),
+								indicator: "green",
+							});
+							return;
+						}
+						let message = __("Copied to {0} panel(s)", [updated.length]);
+						message += "<ul>";
+						failed.forEach(function (item) {
+							const panel = frappe.utils.escape_html(item.panel || "");
+							const reason = frappe.utils.escape_html(item.reason || "");
+							message += "<li><b>" + panel + "</b>: " + reason + "</li>";
+						});
+						message += "</ul>";
+						frappe.msgprint({
+							title: __("Copy colours completed"),
+							message: message,
+							indicator: updated.length ? "orange" : "red",
+						});
+					},
+				});
+			}
+			if (frm.is_dirty()) {
+				frm.save().then(run_copy);
+			} else {
+				run_copy();
+			}
 		});
 	});
 }

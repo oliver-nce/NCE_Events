@@ -2,7 +2,7 @@
 "_meta": {
 "description": "The single authoritative code index of this project: every function, class, method, route, test, Vue component, CSS section and doc section with a label, plus each file's purpose. Query it with the shared code-index tool (find / show / callers); do not read this file whole. Generated: never edit by hand; hand-written notes live in code_index/project.json.",
 "generator": "_Project support files/code-index/codeindex.py",
-"count": 1970,
+"count": 1971,
 "project_sha256": "4149da0557eced977397fd926c9ce2ebca6a2b3cea453cc77dde71de6d1839c7",
 "headers_sha256": "c2fa568103e610cc7f9aac3001af8d84212aaff9508737b20ed83ee633fd3955"
 },
@@ -18328,15 +18328,33 @@
 "name": "_bind_copy_arrows",
 "qualname": "_bind_copy_arrows",
 "sig": "(frm, $container)",
-"hash": "bbd53cdd58",
+"hash": "420990d85b",
 "exported": false,
 "calls": [
+"nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_copy_arrows.run_copy",
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_other_selected_names",
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_colours_tab"
 ],
-"label": "Handle copy colour arrows to transfer settings between panels",
+"label": "Bind click handlers for copying colour settings between Page Panels",
 "label_source": "generated",
-"label_hash": "bbd53cdd58"
+"label_hash": "420990d85b"
+},
+{
+"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_copy_arrows.run_copy",
+"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
+"kind": "function",
+"name": "run_copy",
+"qualname": "_bind_copy_arrows.run_copy",
+"sig": "()",
+"hash": "c2ab75ec86",
+"exported": false,
+"calls": [],
+"wired_by": [
+"nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_copy_arrows"
+],
+"label": "Execute colour settings copy operation to target panels via API call",
+"label_source": "generated",
+"label_hash": "c2ab75ec86"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_colours_tab",
