@@ -74,6 +74,9 @@ const props = defineProps({
 	themeSlug: { type: String, default: "" },
 	/** Page Panel chrome config (subset of get_panel_config). */
 	chromeConfig: { type: Object, default: null },
+	/** Fixed width; height sizes to content, capped so the float keeps `inset` px from the right/bottom edges. */
+	autoSize: { type: Boolean, default: false },
+	inset: { type: Number, default: 60 },
 });
 
 const frameBgClass = computed(() =>
@@ -141,12 +144,23 @@ watch(
  * and does NOT trigger layout or repaint of siblings during drag.
  * Width/height still need layout but only change during resize, not drag.
  */
-const floatStyle = computed(() => ({
-	transform: `translate3d(${x.value}px, ${y.value}px, 0)`,
-	width: w.value + "px",
-	height: h.value + "px",
-	zIndex: z.value,
-}));
+const userSized = ref(false);
+const floatStyle = computed(() => {
+	const base = {
+		transform: `translate3d(${x.value}px, ${y.value}px, 0)`,
+		zIndex: z.value,
+	};
+	if (props.autoSize && !userSized.value) {
+		return {
+			...base,
+			width: w.value + "px",
+			height: "max-content",
+			maxWidth: `calc(100% - ${x.value + props.inset}px)`,
+			maxHeight: `calc(100% - ${y.value + props.inset}px)`,
+		};
+	}
+	return { ...base, width: w.value + "px", height: h.value + "px" };
+});
 
 function bringToFront() {
 	z.value = getNextZ();
@@ -216,6 +230,11 @@ function startDrag(e) {
 
 function startResize(e) {
 	bringToFront();
+	if (props.autoSize && !userSized.value) {
+		const r = floatEl.value.getBoundingClientRect();
+		h.value = Math.round(r.height);
+		userSized.value = true;
+	}
 	const sx = e.clientX, sy = e.clientY;
 	const ow = w.value, oh = h.value;
 	const el = floatEl.value;

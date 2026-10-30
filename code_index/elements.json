@@ -2,9 +2,8 @@
 "_meta": {
 "description": "The single authoritative code index of this project: every function, class, method, route, test, Vue component, CSS section and doc section with a label, plus each file's purpose. Query it with the shared code-index tool (find / show / callers); do not read this file whole. Generated: never edit by hand; hand-written notes live in code_index/project.json.",
 "generator": "_Project support files/code-index/codeindex.py",
-"count": 1971,
-"project_sha256": "4149da0557eced977397fd926c9ce2ebca6a2b3cea453cc77dde71de6d1839c7",
-"headers_sha256": "c2fa568103e610cc7f9aac3001af8d84212aaff9508737b20ed83ee633fd3955"
+"count": 1965,
+"project_sha256": "4149da0557eced977397fd926c9ce2ebca6a2b3cea453cc77dde71de6d1839c7"
 },
 "files": {
 ".github/workflows/style-audit.yml": {
@@ -63,19 +62,6 @@
 "panel_page_v2",
 "DocType",
 "capture"
-]
-},
-"Frappe Context/fc-route.ts": {
-"purpose": "Frappe Context routing tool: ranks fc_index.json chunks by weighted B/U/F scores within token budget.",
-"read_when": "When wiring fc_route tool calls or adjusting how agents pick mandatory Frappe context files.",
-"gotchas": [],
-"keywords": [
-"fc-route",
-"fc_index",
-"Frappe Context",
-"rankChunks",
-"token budget",
-"weighted"
 ]
 },
 "README.md": {
@@ -4340,18 +4326,6 @@
 "panel_page_v2",
 "theme contract"
 ]
-},
-"template/config/__init__.py": {
-"purpose": ""
-},
-"template/template/__init__.py": {
-"purpose": ""
-},
-"template/templates/__init__.py": {
-"purpose": ""
-},
-"template/templates/pages/__init__.py": {
-"purpose": ""
 }
 },
 "elements": [
@@ -4882,118 +4856,6 @@
 "calls": [],
 "label": "Docs Folder -- | File | Contents |",
 "label_source": "title"
-},
-{
-"id": "Frappe Context/fc-route.ts::FcChunk",
-"file": "Frappe Context/fc-route.ts",
-"kind": "type",
-"name": "FcChunk",
-"qualname": "FcChunk",
-"sig": "",
-"hash": "ca919b319b",
-"exported": false,
-"calls": [],
-"label": "Store chunks of Frappe documentation with file path, token count, and relevance tier",
-"label_source": "generated",
-"label_hash": "ca919b319b"
-},
-{
-"id": "Frappe Context/fc-route.ts::FcIndex",
-"file": "Frappe Context/fc-route.ts",
-"kind": "type",
-"name": "FcIndex",
-"qualname": "FcIndex",
-"sig": "",
-"hash": "8b7cb86133",
-"exported": false,
-"calls": [],
-"label": "Index of all documentation chunks with version and total token count",
-"label_source": "generated",
-"label_hash": "8b7cb86133"
-},
-{
-"id": "Frappe Context/fc-route.ts::loadIndex",
-"file": "Frappe Context/fc-route.ts",
-"kind": "function",
-"name": "loadIndex",
-"qualname": "loadIndex",
-"sig": "(projectRoot: string) -> FcIndex",
-"hash": "f670bf0a1d",
-"exported": false,
-"calls": [],
-"label": "Load Frappe Context index from project or support files directory",
-"label_source": "generated",
-"label_hash": "f670bf0a1d"
-},
-{
-"id": "Frappe Context/fc-route.ts::WeightedChunk",
-"file": "Frappe Context/fc-route.ts",
-"kind": "type",
-"name": "WeightedChunk",
-"qualname": "WeightedChunk",
-"sig": "",
-"hash": "310f911c4f",
-"exported": false,
-"calls": [],
-"label": "Documentation chunk with relevance score for ranking results",
-"label_source": "generated",
-"label_hash": "310f911c4f"
-},
-{
-"id": "Frappe Context/fc-route.ts::rankChunks",
-"file": "Frappe Context/fc-route.ts",
-"kind": "function",
-"name": "rankChunks",
-"qualname": "rankChunks",
-"sig": "( chunks: FcChunk[], wb: number, wu: number, wf: number, tokenBudget: number, preferTiers: string[] = [\"rag\", \"guide\", \"standalone\", \"jsonl…",
-"hash": "ee50d1a1e3",
-"exported": false,
-"calls": [],
-"label": "Rank and select documentation chunks by relevance score within token budget",
-"label_source": "generated",
-"label_hash": "ee50d1a1e3"
-},
-{
-"id": "Frappe Context/fc-route.ts::MANDATORY",
-"file": "Frappe Context/fc-route.ts",
-"kind": "const",
-"name": "MANDATORY",
-"qualname": "MANDATORY",
-"sig": "",
-"hash": "fa06a40e0e",
-"exported": false,
-"calls": [],
-"label": "Map keywords to mandatory documentation files for context inclusion",
-"label_source": "generated",
-"label_hash": "fa06a40e0e"
-},
-{
-"id": "Frappe Context/fc-route.ts::getMandatoryFiles",
-"file": "Frappe Context/fc-route.ts",
-"kind": "function",
-"name": "getMandatoryFiles",
-"qualname": "getMandatoryFiles",
-"sig": "(taskDesc: string) -> string[]",
-"hash": "fc7eb919ca",
-"exported": false,
-"calls": [],
-"label": "Get mandatory documentation files based on task description keywords",
-"label_source": "generated",
-"label_hash": "fc7eb919ca"
-},
-{
-"id": "Frappe Context/fc-route.ts::tool",
-"file": "Frappe Context/fc-route.ts",
-"kind": "const",
-"name": "tool",
-"qualname": "tool",
-"sig": "",
-"hash": "362d7ade34",
-"exported": true,
-"calls": [],
-"label": "Route to most relevant Frappe Context documents for a task with ranked file list",
-"label_source": "generated",
-"label_hash": "362d7ade34"
 },
 {
 "id": "README.md::nce-events",
@@ -21663,11 +21525,25 @@
 "name": "App",
 "qualname": "App",
 "sig": "",
-"hash": "aba7ed26cb",
+"hash": "ffd215ace7",
 "calls": [],
-"label": "Root Vue app orchestrating panel floats, find, form dialogs, and SPA navigation",
+"label": "Root Vue app orchestrating panel floats, find dialogs, and table navigation",
 "label_source": "generated",
-"label_hash": "aba7ed26cb"
+"label_hash": "ffd215ace7"
+},
+{
+"id": "nce_events/public/js/panel_page_v2/App.vue::ROOT_INSET",
+"file": "nce_events/public/js/panel_page_v2/App.vue",
+"kind": "const",
+"name": "ROOT_INSET",
+"qualname": "ROOT_INSET",
+"sig": "",
+"hash": "8cde29d02f",
+"exported": false,
+"calls": [],
+"label": "Root panel inset distance from top and left edges in pixels",
+"label_source": "generated",
+"label_hash": "8cde29d02f"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/App.vue::ROOT_INIT_X",
@@ -21676,12 +21552,12 @@
 "name": "ROOT_INIT_X",
 "qualname": "ROOT_INIT_X",
 "sig": "",
-"hash": "f45fe12fbc",
+"hash": "dde045c50b",
 "exported": false,
 "calls": [],
-"label": "Initial X coordinate for root panel float position",
+"label": "Root panel initial X position in pixels",
 "label_source": "generated",
-"label_hash": "f45fe12fbc"
+"label_hash": "dde045c50b"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/App.vue::ROOT_INIT_Y",
@@ -21690,12 +21566,12 @@
 "name": "ROOT_INIT_Y",
 "qualname": "ROOT_INIT_Y",
 "sig": "",
-"hash": "4ef1a32b04",
+"hash": "9e39da6c5b",
 "exported": false,
 "calls": [],
-"label": "Initial Y coordinate for root panel float position",
+"label": "Root panel initial Y position in pixels",
 "label_source": "generated",
-"label_hash": "4ef1a32b04"
+"label_hash": "9e39da6c5b"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/App.vue::refreshPanelByDoctype",
@@ -22163,12 +22039,12 @@
 "name": "nextPos",
 "qualname": "nextPos",
 "sig": "(parentId)",
-"hash": "8b88e63288",
+"hash": "f8761e9b4c",
 "exported": false,
 "calls": [],
-"label": "Calculate next cascading position for new floating panel",
+"label": "Calculate next panel position offset from parent or root panel",
 "label_source": "generated",
-"label_hash": "8b88e63288"
+"label_hash": "f8761e9b4c"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/App.vue::CASCADE_STEP_X",
@@ -22737,11 +22613,28 @@
 "name": "ActionsPanel",
 "qualname": "ActionsPanel",
 "sig": "",
-"hash": "cac7177c9c",
+"hash": "a88f4b3d5a",
 "calls": [],
 "label": "Actions bar combining page switcher and panel action buttons",
 "label_source": "generated",
-"label_hash": "cac7177c9c"
+"label_hash": "a88f4b3d5a"
+},
+{
+"id": "nce_events/public/js/panel_page_v2/components/ActionsPanel.vue::goWorkspace",
+"file": "nce_events/public/js/panel_page_v2/components/ActionsPanel.vue",
+"kind": "function",
+"name": "goWorkspace",
+"qualname": "goWorkspace",
+"sig": "()",
+"hash": "7158f4843f",
+"exported": false,
+"calls": [],
+"wired_by": [
+"nce_events/public/js/panel_page_v2/components/ActionsPanel.vue::ActionsPanel"
+],
+"label": "Navigate to NCE Events workspace",
+"label_source": "generated",
+"label_hash": "7158f4843f"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/ColorPicker.vue::ColorPicker",
@@ -23260,11 +23153,11 @@
 "name": "PanelFloat",
 "qualname": "PanelFloat",
 "sig": "",
-"hash": "91939b5834",
+"hash": "da676a922d",
 "calls": [],
-"label": "Draggable resizable floating panel shell for headers and tables",
+"label": "Draggable resizable floating panel shell hosting header, find bar, and table",
 "label_source": "generated",
-"label_hash": "91939b5834"
+"label_hash": "da676a922d"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::getNextZ",
@@ -23387,7 +23280,7 @@
 "name": "startResize",
 "qualname": "startResize",
 "sig": "(e)",
-"hash": "77335dafe9",
+"hash": "d79d6fb096",
 "exported": false,
 "calls": [
 "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::_addOverlay",
@@ -23396,9 +23289,9 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::PanelFloat"
 ],
-"label": "Start resize operation for floating panel with outline preview",
+"label": "Start resizing panel with live outline preview and snap to final dimensions",
 "label_source": "generated",
-"label_hash": "77335dafe9"
+"label_hash": "d79d6fb096"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::startResize.onMove",

@@ -30,6 +30,8 @@ code-index:end
 			:init-y="ROOT_INIT_Y"
 			:init-w="900"
 			:init-h="550"
+			auto-size
+			:inset="ROOT_INSET"
 			:theme-slug="config?.theme_slug || ''"
 			:chrome-config="config || null"
 			@brought-to-front="onTablePanelBroughtToFront"
@@ -428,8 +430,10 @@ import {
 import { frappeCall } from "./utils/frappeCall.js";
 import { openWpUserSwitch, familyIdFromRow } from "./utils/wpUserSwitch.js";
 
-const ROOT_INIT_X = 16;
-const ROOT_INIT_Y = 16;
+/** Root float starts 60px from top/left, sizes to its content, and is capped 60px from right/bottom. */
+const ROOT_INSET = 60;
+const ROOT_INIT_X = ROOT_INSET;
+const ROOT_INIT_Y = ROOT_INSET;
 
 const rootPanelFloatRef = ref(null);
 const tablePanelZTick = ref(0);
@@ -799,7 +803,7 @@ function nextPos(parentId) {
 	/* Find the parent panel's position and offset from it */
 	if (parentId === "root") {
 		/* Offset from the root WP Tables panel (matches :init-x / :init-y on root PanelFloat) */
-		return { x: 16 + 80, y: 16 + 24 };
+		return { x: ROOT_INIT_X + 80, y: ROOT_INIT_Y + 24 };
 	}
 	const parent = openPanels.find((p) => p.id === parentId);
 	if (parent) {

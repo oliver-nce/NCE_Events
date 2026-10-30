@@ -10,31 +10,19 @@
 // }
 // code-index:end
 
+// page-view is an alias of the panel-page-mirrored SPA: same definition, title and nav highlight.
+frappe.provide("nce_events.spa_panel_page");
+
 frappe.pages["page-view"].on_page_show = function (wrapper) {
-	if (!wrapper._page_obj) {
-		wrapper._page_obj = frappe.ui.make_app_page({
-			parent: wrapper,
-			title: "NCE Events",
-			single_column: true,
-			hide_sidebar: true,
-		});
-	}
+	frappe.require(["/assets/nce_events/js/spa_panel_page_boot.js"], function () {
+		nce_events.spa_panel_page.boot(wrapper, "panel-page-mirrored", "page-view-v2-app");
+	});
+};
 
-	if (wrapper._vue_app) return;
-
-	frappe.require(
-		[
-			"/assets/nce_events/js/panel_page_v2_dist/panel_page_v2.js",
-			"/assets/nce_events/js/panel_page_v2_dist/style.css",
-		],
-		function () {
-			const mount_el = document.createElement("div");
-			mount_el.id = "page-view-v2-app";
-			mount_el.style.cssText = "height:100%;width:100%;";
-			wrapper._page_obj.main.append(mount_el);
-			if (window.NCEPanelPageV2 && window.NCEPanelPageV2.mount) {
-				wrapper._vue_app = window.NCEPanelPageV2.mount("#page-view-v2-app");
-			}
-		},
-	);
+frappe.pages["page-view"].on_page_hide = function (wrapper) {
+	frappe.require(["/assets/nce_events/js/spa_panel_page_boot.js"], function () {
+		if (nce_events.spa_panel_page.clearLayoutScope) {
+			nce_events.spa_panel_page.clearLayoutScope(wrapper);
+		}
+	});
 };

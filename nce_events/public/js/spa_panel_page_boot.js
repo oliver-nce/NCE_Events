@@ -65,7 +65,8 @@ nce_events.spa_panel_page.clearLayoutScope = function (wrapper) {
 	if (wrapper) wrapper._nce_spa_scope_el = null;
 };
 
-nce_events.spa_panel_page.boot = function (wrapper, pageSlug, mountElId) {
+/** Mount the SPA with an already-resolved config (shared by boot() and page-view). */
+nce_events.spa_panel_page.bootWithConfig = function (wrapper, pageSlug, mountElId, cfg) {
 	const scopeEl = _findSpaScope(wrapper);
 	scopeEl.classList.add("spa-panel-page");
 	wrapper._nce_spa_scope_el = scopeEl;
@@ -74,6 +75,42 @@ nce_events.spa_panel_page.boot = function (wrapper, pageSlug, mountElId) {
 	if (wrapper._vue_app) {
 		return;
 	}
+	if (!wrapper._page_obj) {
+		wrapper._page_obj = frappe.ui.make_app_page({
+			parent: wrapper,
+			title: "",
+			single_column: true,
+			hide_sidebar: true,
+		});
+	} else if (wrapper._page_obj.page && wrapper._page_obj.page.set_title) {
+		wrapper._page_obj.page.set_title("");
+	}
+
+	frappe.require(_VUE_ASSETS, function () {
+		if (wrapper._vue_app) return;
+		const mount_el = document.createElement("div");
+		mount_el.id = mountElId;
+		mount_el.style.cssText = "height:100%;width:100%;";
+		wrapper._page_obj.main.append(mount_el);
+		if (window.NCEPanelPageV2 && window.NCEPanelPageV2.mount) {
+			wrapper._vue_app = window.NCEPanelPageV2.mount("#" + mountElId, {
+				pageSlug: pageSlug,
+				mode: cfg.doctype_source_mode || null,
+				label: cfg.panel_header_text || "NCE Tables",
+				pageTitle: cfg.page_title || cfg.panel_header_text || "",
+			});
+		}
+	});
+};
+
+nce_events.spa_panel_page.boot = function (wrapper, pageSlug, mountElId) {
+	if (wrapper._vue_app) {
+		return;
+	}
+	const scopeEl = _findSpaScope(wrapper);
+	scopeEl.classList.add("spa-panel-page");
+	wrapper._nce_spa_scope_el = scopeEl;
+	_ensureSpaLayoutStyles();
 
 	frappe.call({
 		method: "nce_events.api.spa_page.get_spa_page_config",
@@ -87,34 +124,7 @@ nce_events.spa_panel_page.boot = function (wrapper, pageSlug, mountElId) {
 				});
 				return;
 			}
-
-			const cfg = r.message;
-			if (!wrapper._page_obj) {
-				wrapper._page_obj = frappe.ui.make_app_page({
-					parent: wrapper,
-					title: "",
-					single_column: true,
-					hide_sidebar: true,
-				});
-			} else if (wrapper._page_obj.page && wrapper._page_obj.page.set_title) {
-				wrapper._page_obj.page.set_title("");
-			}
-
-			frappe.require(_VUE_ASSETS, function () {
-				if (wrapper._vue_app) return;
-				const mount_el = document.createElement("div");
-				mount_el.id = mountElId;
-				mount_el.style.cssText = "height:100%;width:100%;";
-				wrapper._page_obj.main.append(mount_el);
-				if (window.NCEPanelPageV2 && window.NCEPanelPageV2.mount) {
-					wrapper._vue_app = window.NCEPanelPageV2.mount("#" + mountElId, {
-						pageSlug: pageSlug,
-						mode: cfg.doctype_source_mode || null,
-						label: cfg.panel_header_text || "NCE Tables",
-						pageTitle: cfg.page_title || cfg.panel_header_text || "",
-					});
-				}
-			});
+			nce_events.spa_panel_page.bootWithConfig(wrapper, pageSlug, mountElId, r.message);
 		},
 	});
 };

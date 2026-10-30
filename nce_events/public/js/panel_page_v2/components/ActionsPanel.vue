@@ -14,6 +14,15 @@ code-index:end
 
 <template>
 	<div class="ppv2-actions-bar-inner theme-bg-card">
+		<button
+			v-if="canGoWorkspace"
+			type="button"
+			class="ppv2-action-btn ppv2-workspace-btn theme-bg-card theme-border theme-rounded-sm theme-text-primary"
+			title="Back to workspace"
+			@click="goWorkspace"
+		>
+			&lsaquo; Workspace
+		</button>
 		<SpaPageNavBar
 			v-if="pages.length"
 			class="ppv2-actions-pages"
@@ -41,7 +50,7 @@ code-index:end
 </template>
 
 <script setup>
-import { inject, onMounted } from "vue";
+import { computed, inject, onMounted } from "vue";
 import SpaPageNavBar from "./SpaPageNavBar.vue";
 import { useSpaPageNav } from "../composables/useSpaPageNav.js";
 
@@ -52,6 +61,19 @@ defineProps({
 defineEmits(["select"]);
 
 const pageSlug = inject("pageSlug", null);
+
+/** Display gate only (Desk routes are role-protected server-side): Administrator, Manager, System Manager. */
+const canGoWorkspace = computed(() => {
+	const f = window.frappe;
+	if (!f || !f.session) return false;
+	if (f.session.user === "Administrator") return true;
+	const roles = (f.boot && f.boot.user && f.boot.user.roles) || [];
+	return roles.includes("Manager") || roles.includes("System Manager");
+});
+
+function goWorkspace() {
+	window.frappe.set_route("Workspaces", "NCE Events");
+}
 const { pages, loadPages, switchTo } = useSpaPageNav();
 
 onMounted(() => {
