@@ -57,7 +57,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 					</select>
 					<div class="send-template-section" style="display:none;">
 						<label class="send-field-label">Load from Email Template</label>
-						<input class="send-field send-template-input" type="text" placeholder="Pick template to load into message below...">
+						<input class="send-field send-template-input" type="text" readonly placeholder="Click to pick a template...">
 					</div>
 					<label class="send-field-label">Subject</label>
 					<textarea class="send-field send-subject-input" rows="1"></textarea>
@@ -176,8 +176,8 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 		});
 
 		if (tpl_input.length) {
-			me._setup_template_autocomplete(tpl_input, function (tpl_name) {
-				me._load_template_into_editor(tpl_name);
+			tpl_input.on("click", function () {
+				me._open_template_picker(tpl_input);
 			});
 		}
 
@@ -277,6 +277,13 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 			freeze: false,
 			callback: function (r) {
 				if (!r.message) return;
+				const tpl_dt = r.message.reference_doctype || "";
+				if (tpl_dt && tpl_dt !== me.doctype) {
+					frappe.msgprint(
+						__("Template {0} is for {1}, not {2}.", [tpl_name.trim(), tpl_dt, me.doctype])
+					);
+					return;
+				}
 				const body = r.message.response_html || r.message.response || "";
 				const subject = r.message.subject || "";
 				el.find(".send-subject-input").val(subject);
@@ -310,79 +317,20 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 		callback(body, subject);
 	}
 
-	/* ── Template autocomplete ── */
+	/* ── Template picker ── */
 
-	_setup_template_autocomplete(input_el, on_pick) {
+	_open_template_picker(input_el) {
 		const me = this;
-		const list_el = $('<div class="send-template-list"></div>');
-		$(document.body).append(list_el);
-		let debounce;
-
-		function position_and_show() {
-			const rect = input_el[0].getBoundingClientRect();
-			list_el.css({
-				position: "fixed",
-				left: rect.left + "px",
-				top: rect.bottom + 2 + "px",
-				width: rect.width + "px",
-				zIndex: 99999,
-			});
-			list_el.show();
-		}
-
-		function do_search(q) {
-			const filters = q ? { name: ["like", `%${q}%`] } : {};
-			frappe.call({
-				method: "frappe.client.get_list",
-				args: {
-					doctype: "Email Template",
-					filters: filters,
-					fields: ["name"],
-					order_by: "modified desc",
-					limit_page_length: 20,
-				},
-				freeze: false,
-				callback: function (r) {
-					list_el.empty();
-					(r.message || []).forEach(function (t) {
-						const item = $('<div class="send-template-item"></div>').text(t.name);
-						item.on("mousedown", function (e) {
-							e.preventDefault();
-							input_el.val(t.name);
-							list_el.empty().hide();
-							if (on_pick) on_pick(t.name);
-						});
-						list_el.append(item);
-					});
-					if (r.message && r.message.length) {
-						position_and_show();
-					} else {
-						list_el.hide();
-					}
+		frappe.require("/assets/nce_events/js/js_dialogs/template_picker.js", function () {
+			nce_events.panel_page.template_picker.open({
+				doctype: me.doctype,
+				z_index: me.z_index,
+				on_pick(name) {
+					input_el.val(name);
+					me._load_template_into_editor(name);
 				},
 			});
-		}
-
-		input_el.on("focus", function (e) {
-			e.stopPropagation();
-			do_search(input_el.val().trim());
 		});
-		input_el.on("click", function (e) {
-			e.stopPropagation();
-		});
-		input_el.on("input", function () {
-			clearTimeout(debounce);
-			debounce = setTimeout(function () {
-				do_search(input_el.val().trim());
-			}, 200);
-		});
-		input_el.on("blur", function () {
-			setTimeout(function () {
-				list_el.hide();
-			}, 250);
-		});
-
-		me._tpl_list_el = list_el;
 	}
 
 	/* ── Preview ── */
@@ -484,6 +432,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 									subject: subject,
 									response: body,
 									use_html: 0,
+									reference_doctype: me.doctype,
 								},
 							},
 							callback(r) {
@@ -500,6 +449,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 									subject: subject,
 									response: body,
 									use_html: 0,
+									reference_doctype: me.doctype,
 								},
 							},
 							callback(r) {
@@ -1035,10 +985,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 	/* ── Close ── */
 
 	close() {
-		if (this._tpl_list_el) {
-			this._tpl_list_el.remove();
-			this._tpl_list_el = null;
-		}
+		$(".send-template-picker-backdrop").remove();
 		if (this._preview_el) {
 			this._preview_el.remove();
 			this._preview_el = null;
@@ -1089,7 +1036,7 @@ nce_events.panel_page.EmailDialog = class EmailDialog {
 		function start_drag(e) {
 			if (
 				$(e.target).closest(
-					"button, input, textarea, select, .send-template-list, .ql-editor, .ql-toolbar, .send-message-editor-wrap, .send-panel-footer"
+					"button, input, textarea, select, .send-template-picker-backdrop, .ql-editor, .ql-toolbar, .send-message-editor-wrap, .send-panel-footer"
 				).length
 			)
 				return;

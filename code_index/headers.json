@@ -1,0 +1,4694 @@
+{
+ "files": {
+  ".github/workflows/style-audit.yml": {
+   "body_hash": "b23f5fc710c01c8823e4a291787a0c733e9739be802286cfb5c92ac68f8ebc26",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "style audit",
+     "GitHub Actions",
+     "theme contract",
+     "panel",
+     "public",
+     "CI"
+    ],
+    "purpose": "GitHub Actions workflow that runs the panel theme style audit on public asset changes.",
+    "read_when": "When changing panel CSS/JS under nce_events/public or scripts/style-audit and need CI coverage."
+   }
+  },
+  ".pre-commit-config.yaml": {
+   "body_hash": "dc717f19fc5cdb9a90c331bee493683b854406a37206e67fb4ad01aa64836f5c",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "pre-commit",
+     "ruff",
+     "eslint",
+     "prettier",
+     "hooks",
+     "formatting"
+    ],
+    "purpose": "Pre-commit hook configuration for ruff, prettier, eslint, pyupgrade and commit checks.",
+    "read_when": "When adding or adjusting local lint/format hooks or CI pre-commit mirror settings."
+   }
+  },
+  "AGENTS.md": {
+   "body_hash": "a054d1b9387217b3d16352c0f9264e898b05c47546579eeea15c8b0acae1da8c",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Read Docs/project_reference.md first; do not change code without it.",
+     "No bench commands; push to GitHub for deployment."
+    ],
+    "keywords": [
+     "agent guide",
+     "code index",
+     "panel",
+     "form dialog",
+     "conventions",
+     "helpers"
+    ],
+    "purpose": "Agent guide for NCE Events: where to add code, reusable helpers, and project conventions.",
+    "read_when": "Before adding features or searching for existing helpers in api/, panel_page, or panel_page_v2."
+   }
+  },
+  "CLAUDE.md": {
+   "body_hash": "bee243229ec05782659a379a1cfb2aaf18be85c3d5c82edb3d6beccc141eb105",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Never run bench commands or git reset --hard; deployment is separate.",
+     "_captureHandlers intercept replaces frappe.ui.form.on during script capture; always restored in finally."
+    ],
+    "keywords": [
+     "codebase reference",
+     "Form Dialog",
+     "Page Panel",
+     "panel_page_v2",
+     "DocType",
+     "capture"
+    ],
+    "purpose": "AI agent codebase reference for NCE Events architecture, DocTypes, API, and Form Dialog flow.",
+    "read_when": "When onboarding to NCE Events or tracing Form Dialog capture, panel V2, and API modules."
+   }
+  },
+  "Frappe Context/fc-route.ts": {
+   "body_hash": "eb87c7bbf635ec135581de0a206cf74e1b8c8f922fe869ca57d3bdbed261e1fd",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "fc-route",
+     "fc_index",
+     "Frappe Context",
+     "rankChunks",
+     "token budget",
+     "weighted"
+    ],
+    "purpose": "Frappe Context routing tool: ranks fc_index.json chunks by weighted B/U/F scores within token budget.",
+    "read_when": "When wiring fc_route tool calls or adjusting how agents pick mandatory Frappe context files."
+   }
+  },
+  "README.md": {
+   "body_hash": "67a1f68c02ef31352b0600959a1796e2eca5692ba6d8c07066af6cc286a221f0",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "NCE Events",
+     "Panel Explorer",
+     "Tag Finder",
+     "installation",
+     "NCE Sync"
+    ],
+    "purpose": "Project README for NCE Events Frappe app: panels, Tag Finder, install, and contributing.",
+    "read_when": "When you need a high-level overview, install steps, or links to project_reference.md."
+   }
+  },
+  "nce_events/__init__.py": {
+   "body_hash": "ada7afaf718ac7aef3e87effa09b4f8e2fa7baa081535c23d3ad1d3d1c119467",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "__version__",
+     "0.0.8",
+     "init"
+    ],
+    "purpose": "NCE Events app package root defining the installed __version__ string for the Frappe app.",
+    "read_when": "When bumping or reading the nce_events __version__ for releases or compatibility checks."
+   }
+  },
+  "nce_events/api/__init__.py": {
+   "body_hash": "30611d930653a3a3e622c7c034acf5c7a1e0195b1962a5e3ecc15ff04ce09583",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "get_panel",
+     "whitelisted",
+     "CSV export",
+     "Page Panel",
+     "panel_export"
+    ],
+    "purpose": "NCE Events API whitelisted entry points including Page Panel CSV export via get_panel.",
+    "read_when": "When adding top-level whitelisted methods or tracing GET panel CSV download routing."
+   }
+  },
+  "nce_events/api/credentials.py": {
+   "body_hash": "4e67edeeb9a5d2a6aa2a38ed83315e5e6fcdf46ea029a25a9cdb98eb394e48a8",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Always include username if it has a value (often used for sender identity)."
+    ],
+    "keywords": [
+     "credentials",
+     "API Connector",
+     "credential_config",
+     "auth_pattern",
+     "get_credentials"
+    ],
+    "purpose": "Read API Connector credential_config JSON and return auth_pattern, base_url, and secret fields.",
+    "read_when": "When integrating external APIs that need connector credentials or auth_type fallback."
+   }
+  },
+  "nce_events/api/derived_fields.py": {
+   "body_hash": "5ab04add4b4a1df49e3b0b0ad0b293ca36cba1570df0331e91c9ab0e27b894b2",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "derived fields",
+     "WP Tables",
+     "sql_eval",
+     "column_mapping",
+     "evaluate_derived_fields"
+    ],
+    "purpose": "DocType-agnostic WP Tables derived field specs composed with sql_eval for row evaluation.",
+    "read_when": "When evaluating or merging derived SQL column values from WP Tables column_mapping."
+   }
+  },
+  "nce_events/api/evaluations.py": {
+   "body_hash": "1aa5eb697915a2c40331250d0b97face93050964564a711b44ec3e1221195372",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "evaluations",
+     "enrollment",
+     "event",
+     "rating",
+     "Kanban"
+    ],
+    "purpose": "Evaluations API returning enrollment rows for event-scoped rating Kanban and related views.",
+    "read_when": "When fetching event enrollment data for evaluations UI or rating workflows."
+   }
+  },
+  "nce_events/api/events_publish.py": {
+   "body_hash": "3094c180f63bf647735bbe1710c718c845ec75f9f50fe1a3fdf9c9c0f10f3b36",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Uses WooCommerce client and WP Tables mapping; validate slug and category payloads before bulk publish."
+    ],
+    "keywords": [
+     "events publish",
+     "WooCommerce",
+     "product slug",
+     "Events",
+     "REST"
+    ],
+    "purpose": "Publish and update Frappe Events records on WooCommerce via REST using mapped product fields.",
+    "read_when": "When syncing Events DocType rows to WooCommerce products or debugging publish payloads."
+   }
+  },
+  "nce_events/api/exchange.py": {
+   "body_hash": "eaef4ca04a025ca1a73b41a8b99bc7cb4dffa5bd6fa9f5cdfefba010874d92b0",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "exchange",
+     "WordPress",
+     "WP API",
+     "HTTP error",
+     "REST"
+    ],
+    "purpose": "WordPress data exchange helpers building WP API URLs, logging HTTP errors, and response snippets.",
+    "read_when": "When calling WordPress REST endpoints or handling exchange error logging from panel actions."
+   }
+  },
+  "nce_events/api/form_dialog/__init__.py": {
+   "body_hash": "63839bf3cf905ae79f83ddec62ec974d03a52df56c1e43a49458f521bee6e092",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "form_dialog",
+     "Form Dialog",
+     "frozen schema",
+     "capture",
+     "whitelisted"
+    ],
+    "purpose": "Server API package for Form Dialog CRUD, frozen schema capture, and related panel endpoints.",
+    "read_when": "When locating Form Dialog whitelisted methods or importing the form_dialog API surface."
+   }
+  },
+  "nce_events/api/form_dialog/_fd_capture_meta.py": {
+   "body_hash": "c54171fdbc6b6012fac2126d25b4fb652491e366e206e930b9ec86f72c68843b",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Section column count sync affects frozen layout skeleton; review _sync_section_column_count changes."
+    ],
+    "keywords": [
+     "capture meta",
+     "frozen meta",
+     "client scripts",
+     "tab skeleton",
+     "Form Dialog"
+    ],
+    "purpose": "Frozen meta capture for Form Dialog: tab skeleton, client scripts, and tab-note sync.",
+    "read_when": "When extending Desk capture of form layout sections, scripts, or tab visibility for Form Dialog."
+   }
+  },
+  "nce_events/api/form_dialog/_fd_fetch_from.py": {
+   "body_hash": "f67da4c8c8f623ad1f762f6e15273615357a0d7d85dc9abf795fa1153ad600c5",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "fetch_from",
+     "frozen schema",
+     "Form Dialog",
+     "field enrichment"
+    ],
+    "purpose": "Enrich fetch_from fields in frozen Form Dialog schemas during capture.",
+    "read_when": "When Link fetch_from metadata is missing or wrong in captured Form Dialog field JSON."
+   }
+  },
+  "nce_events/api/form_dialog/_fd_gating.py": {
+   "body_hash": "47765a2ecd5f1fbb62451ae124d38c72647fb9a2892128524e3de07c25c7c53f",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "gating",
+     "WP Tables",
+     "permissions",
+     "capture schema",
+     "Form Dialog"
+    ],
+    "purpose": "Form Dialog gating helpers: WP Tables validation, permissions, and capture schema readiness.",
+    "read_when": "When blocking capture or portal use for DocTypes not in WP Tables or missing required panel values."
+   }
+  },
+  "nce_events/api/form_dialog/_fd_inline_children.py": {
+   "body_hash": "2955966e577d6b7e54e2f347b9995fd67a20d22d627cc4cca0a9cbc0088c1e13",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "inline children",
+     "child table",
+     "capture wizard",
+     "Form Dialog"
+    ],
+    "purpose": "Inline child-table helpers for Form Dialog capture wizard row building and table fields.",
+    "read_when": "When capturing or parsing inline child tables for Form Dialog related inline tabs."
+   }
+  },
+  "nce_events/api/form_dialog/_fd_related.py": {
+   "body_hash": "c25b696f9e0b6890ff0a65e734355e0166f7bbeb6f67dc00fd8230e70637b0d3",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Hop chain normalization affects related row signatures; changing _normalize_hop_chain_value impacts dedup."
+    ],
+    "keywords": [
+     "related doctype",
+     "hop chain",
+     "row signature",
+     "QBTL",
+     "sync"
+    ],
+    "purpose": "Related-doctype helpers: hop chains, row signatures, sync filters, and QBTL row matching.",
+    "read_when": "When debugging related-tab hop chains, row deduplication, or related DocType sync logic."
+   }
+  },
+  "nce_events/api/form_dialog/_fd_script_tools.py": {
+   "body_hash": "d0d0b9961f01653e1e51101c3cbe8a56df28381ecd8be9470987a1b6599b171e",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "script tools",
+     "tool groups",
+     "capture",
+     "Form Dialog"
+    ],
+    "purpose": "Parse and sync script tool group arguments during Form Dialog schema capture.",
+    "read_when": "When Form Dialog capture must persist script tool groups from Desk wizard input."
+   }
+  },
+  "nce_events/api/form_dialog/_helpers.py": {
+   "body_hash": "498dfee84be7e0388c4786b2849fd6c507ce1f895fd7f0e98ab47274753fa9a3",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "form_dialog helpers",
+     "re-export",
+     "back-compat",
+     "facade"
+    ],
+    "purpose": "Back-compat facade re-exporting form_dialog domain submodule helpers for older imports.",
+    "read_when": "When tracing legacy imports of form_dialog helpers consolidated into submodules."
+   }
+  },
+  "nce_events/api/form_dialog/action_registry.py": {
+   "body_hash": "988804c2dc74a9184a536c18f7761eb010bd7a2de27fef4d00d24991555caebb",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "action registry",
+     "portal actions",
+     "allow-list",
+     "Form Dialog",
+     "method spec"
+    ],
+    "purpose": "Allow-listed server methods registry for Form Dialog portal row button actions.",
+    "read_when": "When registering or validating portal action methods callable from Form Dialog buttons."
+   }
+  },
+  "nce_events/api/form_dialog/button_visibility.py": {
+   "body_hash": "646a0a41d2d7d7e89f8b50c4542c3501bd9f6ed52cbf6d84d27ed4e4cb1a6db1",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "hide_if SQL must be a single SELECT; table tokens are expanded before evaluation."
+    ],
+    "keywords": [
+     "button visibility",
+     "hide_if",
+     "SQL",
+     "Form Dialog",
+     "footer"
+    ],
+    "purpose": "Evaluate Form Dialog footer button hide_if SQL visibility rules for panel V2.",
+    "read_when": "When validating or evaluating custom button visibility SQL for Form Dialog footers."
+   }
+  },
+  "nce_events/api/form_dialog/capture.py": {
+   "body_hash": "3236d3c21b67e166b9a4b5ebf185360c3b4f37c0e67e580ffb72cbe949a21a4c",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "capture",
+     "rebuild_form_dialog",
+     "frozen meta",
+     "get_form_dialog_definition",
+     "Form Dialog"
+    ],
+    "purpose": "Form Dialog schema capture endpoints: Desk to frozen meta JSON, rebuild, and list by DocType.",
+    "read_when": "When capturing, rebuilding, or loading Form Dialog definitions from Desk or Vue panel."
+   }
+  },
+  "nce_events/api/form_dialog/edit_condition.py": {
+   "body_hash": "b96e0cf7b63720fc725fbee086b833adc3beb01ce77bf8cdb7390afcd743a25f",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Edit conditions reject SELECT FROM and semicolons; only scalar root field tokens allowed."
+    ],
+    "keywords": [
+     "edit condition",
+     "related tab",
+     "validate",
+     "pending root",
+     "Form Dialog"
+    ],
+    "purpose": "Validate and evaluate Form Dialog related-tab edit conditions against pending root values.",
+    "read_when": "When related tabs gate editing via SQL conditions or validating edit_condition expressions."
+   }
+  },
+  "nce_events/api/form_dialog/portal_actions.py": {
+   "body_hash": "d4308c4e0a4c53a3420e1cc99e284b84a217cd24788fc9138c0acfb2f838e4ec",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "portal actions",
+     "run portal action",
+     "param resolution",
+     "Form Dialog"
+    ],
+    "purpose": "Run allow-listed portal actions from Form Dialog related and inline row buttons.",
+    "read_when": "When wiring portal row buttons to server methods with param resolution from row/root context."
+   }
+  },
+  "nce_events/api/form_dialog/portal_fields.py": {
+   "body_hash": "a0873ca36eada18c60da54afdb80fe8e9e9bc41f93604cb2f44b5b924f5265be",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "portal fields",
+     "portal editor",
+     "Related DocType",
+     "name field",
+     "Form Dialog"
+    ],
+    "purpose": "Portal field editor for Form Dialog Related DocType rows and name-field display config.",
+    "read_when": "When configuring which meta fields appear in portal editors for related DocType rows."
+   }
+  },
+  "nce_events/api/form_dialog/qbtl_rows.py": {
+   "body_hash": "0cd8e4c52a769a23893799303fcf1d3a0485c952edae4d0351bbebb307b9d83c",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "QBTL",
+     "Query Based Table Link",
+     "related rows",
+     "join",
+     "Form Dialog"
+    ],
+    "purpose": "Fetch related-tab rows via Query Based Table Link joins and parsed QBTL conditions.",
+    "read_when": "When related tabs use Query Based Table Link instead of standard child-table links."
+   }
+  },
+  "nce_events/api/form_dialog/related_rows.py": {
+   "body_hash": "0fd581b249b2e90ac7b4c544e34c3f6c928163491b69ceabb66b7b4a16aca6b0",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Child write context respects permlevels; guest access is rejected on save endpoints."
+    ],
+    "keywords": [
+     "related rows",
+     "save related",
+     "permlevel",
+     "Form Dialog",
+     "panel V2"
+    ],
+    "purpose": "Related-rows endpoints for panel V2 Form Dialog: fetch, save, permlevels, and write context.",
+    "read_when": "When loading or saving child rows on Form Dialog related tabs from Vue panel V2."
+   }
+  },
+  "nce_events/api/form_dialog/save.py": {
+   "body_hash": "0859f3726dff5a271f5626a9aa042651f303d3be6917ad1cceb8aade48cc7e06",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Scalar field sanitization runs before save; fetch_from may populate linked fields post-save."
+    ],
+    "keywords": [
+     "save form dialog",
+     "fetch_from",
+     "write context",
+     "sanitize",
+     "Form Dialog"
+    ],
+    "purpose": "Server-side Form Dialog document save with optional fetch_from and write context helpers.",
+    "read_when": "When persisting Form Dialog root document edits from Vue including scalar field sanitization."
+   }
+  },
+  "nce_events/api/form_dialog/search.py": {
+   "body_hash": "7f161e4125d62e9dc7bf50e392deaa61f0c7aac7375d77ff2b736eb090712506",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "search",
+     "find",
+     "frozen meta",
+     "field condition",
+     "Form Dialog"
+    ],
+    "purpose": "Form Dialog FileMaker-style find: match rows by frozen-meta field conditions and find terms.",
+    "read_when": "When implementing panel find/search against frozen Form Dialog field metadata."
+   }
+  },
+  "nce_events/api/form_dialog/sync_related.py": {
+   "body_hash": "50d202cbf9c0499358b0dcf58923ac27709265b50e3fa46d1eb8db7657cd13a7",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Only qualifying related links sync; dialog edit DocTypes filter which links are eligible."
+    ],
+    "keywords": [
+     "sync related",
+     "read-back",
+     "linked DocType",
+     "post-save",
+     "Form Dialog"
+    ],
+    "purpose": "Post-save linked DocType sync for Form Dialog read-back and qualifying related links.",
+    "read_when": "When Form Dialog save must propagate changes to linked related DocTypes after write."
+   }
+  },
+  "nce_events/api/hierarchy_explorer.py": {
+   "body_hash": "4597266edd4585bbb43bced331c871e94ca97c1465e883f1715db83515361a4f",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "hierarchy explorer",
+     "pane data",
+     "export",
+     "events",
+     "legacy"
+    ],
+    "purpose": "Legacy hierarchy explorer API for pane data fetch and CSV export in two-pane event views.",
+    "read_when": "When working with frozen hierarchy_explorer pane data or export endpoints."
+   }
+  },
+  "nce_events/api/llm.py": {
+   "body_hash": "ce5d3793c1b6f667624ecedbf8be93b747243f42de5f58a2b9c4b0ae8552e9a2",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "LLM",
+     "Anthropic",
+     "OpenAI",
+     "send_prompt",
+     "API Connector"
+    ],
+    "purpose": "LLM integration sending prompts to Anthropic, OpenAI, and configured providers via API Connector.",
+    "read_when": "When adding panel or portal features that call llm_send_prompt or provider defaults."
+   }
+  },
+  "nce_events/api/messaging.py": {
+   "body_hash": "2ad375b1ec98212118a3e41c0815b807ded1ab03b2064b81062fe2c8ba18127a",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Gender and Link fields are enriched into row context before Jinja render."
+    ],
+    "keywords": [
+     "messaging",
+     "Twilio",
+     "SendGrid",
+     "SMS",
+     "email",
+     "Jinja"
+    ],
+    "purpose": "SMS via Twilio and email via SendGrid with Jinja body render and row context enrichment.",
+    "read_when": "When sending bulk SMS/email from panels or extending template context for messaging."
+   }
+  },
+  "nce_events/api/panel_actions.py": {
+   "body_hash": "3006c6df9e85280d0408328b11d2bfddb8722ea845a80a790f4d2b1b4570c5d9",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "panel",
+     "action",
+     "get_panel_actions",
+     "Panel Action",
+     "scope",
+     "form_dialog"
+    ],
+    "purpose": "Panel Action endpoints listing enabled actions by scope with role visibility and SPA handler resolution.",
+    "read_when": "When wiring panel footer actions, get_panel_actions scope filters, or Panel Action DocType reads."
+   }
+  },
+  "nce_events/api/panel_api_pkg/__init__.py": {
+   "body_hash": "2bd3cdbbf6ca9a6f5eaae2fd6d1eebabdfad15c9f1b4e71926d4fbe10801a7e3",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "panel_api_pkg",
+     "panel data",
+     "discovery",
+     "export",
+     "package"
+    ],
+    "purpose": "Panel API package re-exporting panel data, config, discovery, SQL, and export submodules.",
+    "read_when": "When importing panel_api_pkg public surface instead of individual submodule paths."
+   }
+  },
+  "nce_events/api/panel_api_pkg/_helpers.py": {
+   "body_hash": "eff167e7a6970defaf349fe30c75aaa3ea2dfd7c9bec4ded40fe3a5894c9a5d2",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "panel helpers",
+     "link field",
+     "contact fields",
+     "title_case",
+     "auto detect"
+    ],
+    "purpose": "Shared panel API helpers: contact field detection, link lookup, and title_case formatting.",
+    "read_when": "When reusing _find_link_field, _auto_detect_contact_fields, or _title_case across panel modules."
+   }
+  },
+  "nce_events/api/panel_api_pkg/computed_columns.py": {
+   "body_hash": "a472abaecb4ed801837b184f3de68ed508cb1ce3ba64bfcf5d202b1dc7d37014",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "computed columns",
+     "SQL",
+     "Page Panel",
+     "evaluate",
+     "column"
+    ],
+    "purpose": "Evaluate Page Panel computed columns via SQL expressions against panel row data.",
+    "read_when": "When adding or debugging computed column SQL on Page Panel column definitions."
+   }
+  },
+  "nce_events/api/panel_api_pkg/core_filters.py": {
+   "body_hash": "4460925005203c112e01f9bb8d6bb31a49db2b5f957b227173cbaaade2b9132e",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "core filter",
+     "WHERE clause",
+     "user filters",
+     "Page Panel",
+     "SQL"
+    ],
+    "purpose": "Build core filter WHERE clauses combining user filters with Page Panel core SQL filters.",
+    "read_when": "When panel queries must merge user_filters with immutable core_filter SQL constraints."
+   }
+  },
+  "nce_events/api/panel_api_pkg/discovery.py": {
+   "body_hash": "e2860adacb718723a61f5821c88b91b1390a5bfb4877b7f98739fdaa59a4c676",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "link",
+     "hop",
+     "doctype",
+     "qbtl",
+     "child",
+     "root",
+     "field"
+    ],
+    "purpose": "Discover link hop paths, QBTL bridges, and child table fields for panel root DocType exploration.",
+    "read_when": "When building related column pickers or tracing inbound link paths from root doctype."
+   }
+  },
+  "nce_events/api/panel_api_pkg/format_rules.py": {
+   "body_hash": "c5ee7b1223e96d77dd4feee842590314e2c97ca7f8af6f34ba7e130106344320",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Resolution maps rewrite condition tokens; changing maps affects displayed cell styles."
+    ],
+    "keywords": [
+     "format rules",
+     "condition rewrite",
+     "resolution maps",
+     "Page Panel"
+    ],
+    "purpose": "Resolve and rewrite Page Panel format rule conditions referencing field keys and maps.",
+    "read_when": "When panel cell formatting rules reference other columns or need condition rewriting."
+   }
+  },
+  "nce_events/api/panel_api_pkg/page_panel_lookup.py": {
+   "body_hash": "f525f0c8c16202ca6b8f803969e0ec7300700b33e9059a27bbc937264cccc336",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "page panel lookup",
+     "root_doctype",
+     "page_panel_docname",
+     "resolve"
+    ],
+    "purpose": "Resolve Page Panel documents by root_doctype rather than by panel name string.",
+    "read_when": "When finding the Page Panel record for a given root DocType in API or tests."
+   }
+  },
+  "nce_events/api/panel_api_pkg/panel_config.py": {
+   "body_hash": "ff51aa13acddaec12d06770274f7634abe494adb9abff1a4a27e360349788cef",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Panel chrome class and fg_type derive from theme link; missing theme falls back to defaults."
+    ],
+    "keywords": [
+     "panel config",
+     "chrome",
+     "theme",
+     "column order",
+     "Page Panel"
+    ],
+    "purpose": "Build Page Panel config dict with column order, chrome classes, theme helpers, and derived sort.",
+    "read_when": "When constructing panel chrome/theme CSS classes or config payload for Vue panel load."
+   }
+  },
+  "nce_events/api/panel_api_pkg/panel_data.py": {
+   "body_hash": "1ad28bcb0a35375c788d22c33b43be5a749ea1418816fc9591f436625dc47ebc",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Requires root DocType read permission; WP Tables catalog rows may be filtered from results."
+    ],
+    "keywords": [
+     "panel data",
+     "get_panel_data",
+     "WP Tables",
+     "sync status",
+     "Page Panel"
+    ],
+    "purpose": "Fetch Page Panel row data with WP Tables catalog filtering, sync status flags, and permissions.",
+    "read_when": "When implementing get_panel_data or debugging panel row queries and sync status columns."
+   }
+  },
+  "nce_events/api/panel_api_pkg/panel_export.py": {
+   "body_hash": "2876d2bf56a0ed48fe690765d9c5a532f232b9e24607ed91e960476e55b79f12",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "panel export",
+     "CSV",
+     "build_page_panel_csv_text",
+     "search-only columns"
+    ],
+    "purpose": "Page Panel CSV export helpers building column lists and downloadable CSV text for get_panel.",
+    "read_when": "When changing panel CSV export columns or build_page_panel_csv_text behavior."
+   }
+  },
+  "nce_events/api/panel_api_pkg/sql.py": {
+   "body_hash": "8692eeb1eb6fb3ca54754cc7d7fc18efd8def875eab60222bf10c8233e9225d1",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Panel SQL binds filter values; altering build_panel_sql affects all panel data fetches."
+    ],
+    "keywords": [
+     "panel SQL",
+     "build_panel_sql",
+     "filters",
+     "parameterized",
+     "Page Panel"
+    ],
+    "purpose": "Build parameterized SQL for Page Panel queries from config, filters, and sort clauses.",
+    "read_when": "When tracing panel SQL generation or build_panel_sql_for_doc query assembly."
+   }
+  },
+  "nce_events/api/panel_api_pkg/theme_slug.py": {
+   "body_hash": "cf89ef3ababfe3adebbf9d2003c7c6f329eb1fda73fbf5dda5514eb03ba68284",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Falls back to site default theme name when panel theme link is empty or inactive."
+    ],
+    "keywords": [
+     "theme slug",
+     "NCE Theme",
+     "active slug",
+     "Page Panel",
+     "resolve"
+    ],
+    "purpose": "Resolve Page Panel NCE Theme links to active theme slug strings for panel chrome.",
+    "read_when": "When panel float theming needs the active slug from a linked NCE Theme document."
+   }
+  },
+  "nce_events/api/panel_api_pkg/theme_table_tokens.py": {
+   "body_hash": "5057d8f09f82d49b4dc8f1f86263bd450126c73296d7251a1c559f6b10c22d92",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "theme table tokens",
+     "NCE Theme",
+     "Colours tab",
+     "table width",
+     "Desk preview"
+    ],
+    "purpose": "Resolve NCE Theme table tokens for Page Panel Desk previews and Colours tab display.",
+    "read_when": "When panel Desk preview needs theme table width tiers or token JSON from linked theme."
+   }
+  },
+  "nce_events/api/permissions.py": {
+   "body_hash": "6457f3138fc6aab4621cbe82f145e02a516909adf01dff8ef4950cc64c68135e",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "permissions",
+     "read perm",
+     "System Manager",
+     "WP Tables",
+     "Desk"
+    ],
+    "purpose": "Desk permission helpers granting read-only access for WP Tables DocTypes and system manager checks.",
+    "read_when": "When gating API endpoints by DocType read perm or requiring System Manager role."
+   }
+  },
+  "nce_events/api/reports.py": {
+   "body_hash": "7a60f2515fb011323003d5ecfaa289ce30dd35537d9ec9b04b216c9067b45b44",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "reports",
+     "Query Report",
+     "create_or_update_report",
+     "columns",
+     "Page Panel"
+    ],
+    "purpose": "Create or update Frappe Query Reports from Page Panel column definitions and titles.",
+    "read_when": "When syncing panel columns into Query Report records for desk reporting."
+   }
+  },
+  "nce_events/api/spa_page.py": {
+   "body_hash": "5f685d60f3dfdd5990e35b919d53a0c1de4cb987f91bd4b6153603bfc334ef16",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "spa page",
+     "switch page",
+     "slug",
+     "SPA definition",
+     "config"
+    ],
+    "purpose": "SPA page config helpers resolving switch-page target slugs and SPA definition rows.",
+    "read_when": "When panel SPA navigation or switch-page slug parsing needs server-side config lookup."
+   }
+  },
+  "nce_events/api/sql_eval.py": {
+   "body_hash": "07a83ab97d93f9a0c33b0649e857f5b7697a37d945185e32612873aad077a24a",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "sql_eval",
+     "evaluate_sql_expressions",
+     "allowlist",
+     "MariaDB",
+     "scalar SQL"
+    ],
+    "purpose": "Generic server-side evaluation of MariaDB scalar SQL against row dicts with token allowlists.",
+    "read_when": "When evaluating SQL expressions for derived fields, computed columns, or whitelisted API eval."
+   }
+  },
+  "nce_events/api/sync_status.py": {
+   "body_hash": "63625913911d6d1bd6c6b816bbeccb9930afeb5c1c00f8878792e81c50cde22b",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "sync status",
+     "is_doctype_sync_busy",
+     "sync job",
+     "WP Tables"
+    ],
+    "purpose": "Check whether a DocType sync job is busy and return sync job status for panel indicators.",
+    "read_when": "When panel UI shows last sync status or must block actions during active WP sync."
+   }
+  },
+  "nce_events/api/tags.py": {
+   "body_hash": "30c0b70aa246a62ba26bd837c808e6c07d767d9b13cb555a8adfbcbf4ab91154",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "tags",
+     "Jinja",
+     "pronoun",
+     "gender",
+     "Tag Finder"
+    ],
+    "purpose": "Tag helpers generating gender-conditional Jinja pronoun tags for Tag Finder field paths.",
+    "read_when": "When building pronoun tags or get_pronoun_tags_for_doctype for schema explorer."
+   }
+  },
+  "nce_events/api/tests/api/form_dialog/test_button_visibility.py": {
+   "body_hash": "965936dcd97d6feb0752d009e9bb5361d35f293aa6da78be341d286fc5c11545",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "test button visibility",
+     "hide_if",
+     "Form Dialog",
+     "unittest",
+     "SQL validation"
+    ],
+    "purpose": "Tests for Form Dialog custom button hide_if SQL validation and visibility evaluation.",
+    "read_when": "When changing button_visibility.py hide rules or adding hide_if SQL edge cases."
+   }
+  },
+  "nce_events/api/tests/api/form_dialog/test_capture.py": {
+   "body_hash": "8f0ee7e5c4ba88125e75e09e1e53deb89dae78b494c953a5f5024067b1a53adf",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "test capture",
+     "form_dialog.capture",
+     "frozen meta",
+     "unittest"
+    ],
+    "purpose": "Unit tests for form_dialog.capture endpoints: capture, definition load, and list by DocType.",
+    "read_when": "When modifying capture_form_dialog_from_desk or get_form_dialog_definition behavior."
+   }
+  },
+  "nce_events/api/tests/api/form_dialog/test_edit_condition.py": {
+   "body_hash": "c8d8bf1dd5529f287ee82ff100da0f4135bb14513670d58e0be490ed58474907",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "test edit condition",
+     "related tab",
+     "validate",
+     "Form Dialog",
+     "unittest"
+    ],
+    "purpose": "Tests for Form Dialog related-tab edit condition validation and evaluation rules.",
+    "read_when": "When changing edit_condition.py validators or related-tab edit gating SQL."
+   }
+  },
+  "nce_events/api/tests/api/form_dialog/test_helpers.py": {
+   "body_hash": "b17ee28eed6dd6ceda6b0219c7d65ee59bbdf42c04fad76aed31e96c84529dbe",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "test helpers",
+     "WP Tables",
+     "QBTL",
+     "form_dialog",
+     "unittest"
+    ],
+    "purpose": "Unit tests for form_dialog._helpers WP Tables gating and related-doctype parse helpers.",
+    "read_when": "When refactoring _helpers or submodule gating and QBTL related parse utilities."
+   }
+  },
+  "nce_events/api/tests/api/form_dialog/test_portal_actions.py": {
+   "body_hash": "d33c6add3f5a438768e3fc4c09e10cdbd318556a4291cc8ec1fafb70974a26e7",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "test portal actions",
+     "run portal action",
+     "allow-list",
+     "unittest"
+    ],
+    "purpose": "Unit tests for form_dialog.portal_actions param resolution and allow-list enforcement.",
+    "read_when": "When changing portal action registration, param binding, or run_portal_action security."
+   }
+  },
+  "nce_events/api/tests/api/form_dialog/test_portal_fields.py": {
+   "body_hash": "8b2adf9d0e4b470a3b490ea8d8b1054e653964a3be69140c49f4d187ecb96fc6",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "test portal fields",
+     "portal editor",
+     "name field",
+     "unittest"
+    ],
+    "purpose": "Unit tests for portal field editor save, defaults, and name-field row building.",
+    "read_when": "When modifying portal_fields.py editor config or Related DocType portal display."
+   }
+  },
+  "nce_events/api/tests/api/form_dialog/test_qbtl_rows.py": {
+   "body_hash": "51177d570f352887dbf4b26c983aa9729e320220857c2d3e96fbca0550d42d29",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Tests install frappe stubs; follow _install_frappe_stub pattern when adding cases."
+    ],
+    "keywords": [
+     "test QBTL",
+     "Query Based Table Link",
+     "qbtl_rows",
+     "unittest"
+    ],
+    "purpose": "Unit tests for Query Based Table Link related-tab fetch helpers and QBTL parsing.",
+    "read_when": "When changing qbtl_rows.py join logic or related QBTL selection parsing."
+   }
+  },
+  "nce_events/api/tests/api/form_dialog/test_related_rows.py": {
+   "body_hash": "6241ae788167cc33704a7683feca30892623049db3bf493b9fb03138f11093f4",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "test related rows",
+     "save related",
+     "guest rejected",
+     "unittest"
+    ],
+    "purpose": "Unit tests for form_dialog.related_rows fetch, save, and guest rejection behavior.",
+    "read_when": "When modifying related_rows endpoints or child save permlevel handling."
+   }
+  },
+  "nce_events/api/tests/api/panel_api_pkg/test_discovery.py": {
+   "body_hash": "e2c8fcda490d9f27bfa4f8f5de135ca4691e938dd762e33459ec089c175c3751",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "test discovery",
+     "link paths",
+     "panel_api_pkg",
+     "unittest"
+    ],
+    "purpose": "Tests for panel_api_pkg.discovery link-path and related DocType discovery logic.",
+    "read_when": "When changing discovery.py path keys, child table skipping, or link traversal."
+   }
+  },
+  "nce_events/api/tests/api/panel_api_pkg/test_panel_rest_export.py": {
+   "body_hash": "911e122c1098d9ba735fcf086137755b2eb77df90280615fd66d5ec59a01d44c",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "test panel export",
+     "CSV columns",
+     "search-only",
+     "unittest"
+    ],
+    "purpose": "Tests for Page Panel REST CSV export column selection including search-only columns.",
+    "read_when": "When changing panel_export CSV column deduplication or search-only append rules."
+   }
+  },
+  "nce_events/api/tests/api/panel_api_pkg/test_theme_slug.py": {
+   "body_hash": "4744abb40c00c734f83b9afc5f76152c2793401d156c880c2b75a70423dcf3d6",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "test theme slug",
+     "NCE Theme",
+     "active slug",
+     "unittest"
+    ],
+    "purpose": "Tests for Page Panel theme slug resolution from linked NCE Theme active records.",
+    "read_when": "When changing theme_slug.py fallback or active slug lookup for panel theming."
+   }
+  },
+  "nce_events/api/tests/api/panel_api_pkg/test_theme_table_tokens.py": {
+   "body_hash": "99d991785ae38eb54ebb014aff6685becfac69a78de9e18f1ba7aafc09de591c",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "test theme table tokens",
+     "table width tier",
+     "NCE Theme",
+     "unittest"
+    ],
+    "purpose": "Tests for theme table token resolution and table width tier normalization.",
+    "read_when": "When changing theme_table_tokens.py Desk preview token parsing or width tiers."
+   }
+  },
+  "nce_events/api/tests/api/panel_api_pkg/test_wp_tables_sync_details.py": {
+   "body_hash": "89fba2c9f1fc4778f8809a70d00449b45765d8681cde95dc578389489f68492a",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "test sync details",
+     "WP Tables",
+     "sync status",
+     "get_panel_data",
+     "unittest"
+    ],
+    "purpose": "Tests for WP Tables catalog sync-status helpers used by get_panel_data responses.",
+    "read_when": "When changing panel_data sync status column flags or WP Tables catalog filtering."
+   }
+  },
+  "nce_events/api/tests/api/test_credentials.py": {
+   "body_hash": "ec9ca29d2b1a417801d44e19f0d762591140849d4d4f1a612ec07c3d3300acc1",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Secret auth must never read api_key; tests assert api_secret-only paths."
+    ],
+    "keywords": [
+     "test credentials",
+     "get_credentials",
+     "auth_type",
+     "api_secret",
+     "unittest"
+    ],
+    "purpose": "Tests for credentials.get_credentials auth_type and credential_config field reading.",
+    "read_when": "When changing credentials.py auth patterns or secret field read behavior."
+   }
+  },
+  "nce_events/api/tests/api/test_derived_fields.py": {
+   "body_hash": "c2be149f5784b4850d000fdc478d68f07b86836cfe9fcffb5adbb12d5bf7a447",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "test derived fields",
+     "sql_eval",
+     "column_mapping",
+     "unittest"
+    ],
+    "purpose": "Tests for derived_fields composition over sql_eval literals and WP Tables mapping specs.",
+    "read_when": "When changing derived field spec parsing or SQL literal splitting in derived_fields."
+   }
+  },
+  "nce_events/api/tests/api/test_events_publish.py": {
+   "body_hash": "28bbf4fcc46d70562217e059a5e9c55044804d7f83acfa9357aa38e593d44e8f",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Slug max length and empty fallback behavior are covered; keep parity when changing slugify."
+    ],
+    "keywords": [
+     "test events publish",
+     "slugify",
+     "WooCommerce",
+     "Events",
+     "unittest"
+    ],
+    "purpose": "Tests for events_publish slugify, category payloads, and WooCommerce publish flows.",
+    "read_when": "When modifying Events-to-WooCommerce publish mapping or slug generation rules."
+   }
+  },
+  "nce_events/api/tests/api/test_query_based_table_link.py": {
+   "body_hash": "01207af43225e52ad913e8f88dd8eb6efd08782aba935b28d91d8b5293170227",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "test QBTL",
+     "Query Based Table Link",
+     "normalize op",
+     "conditions",
+     "unittest"
+    ],
+    "purpose": "Unit tests for Query Based Table Link condition, sort, and operator normalization.",
+    "read_when": "When changing QBTL condition parsing or operator alias handling in mapping layer."
+   }
+  },
+  "nce_events/api/tests/api/test_sql_eval.py": {
+   "body_hash": "a7cef40e49fc6789e8ad23ebc917daf56e0a629929f40fec1af6b0621a12af93",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "test sql_eval",
+     "evaluate_sql_expressions",
+     "allowlist",
+     "unittest"
+    ],
+    "purpose": "Tests for sql_eval generic SQL scalar evaluation, literals, and allowlisted token binding.",
+    "read_when": "When changing evaluate_sql_expressions or substitution token allowlist behavior."
+   }
+  },
+  "nce_events/api/tests/api/test_woocommerce_client.py": {
+   "body_hash": "e2b4c12fe20e7f3c718e813113298832b0032fa6bcf71f07ffd34fec0a102fd0",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "test woocommerce client",
+     "REST v3",
+     "post products",
+     "unittest"
+    ],
+    "purpose": "Tests for woocommerce_client REST path validation and JSON POST product helpers.",
+    "read_when": "When changing WooCommerce client HTTP methods or relative path validation rules."
+   }
+  },
+  "nce_events/api/tests/api/test_wp_tables_mapping.py": {
+   "body_hash": "4f410e0fb9bd4ad0d8d0c70057e9653df98925e374f98c469d7f9f2f17310e8d",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "test wp_tables_mapping",
+     "derived SQL specs",
+     "column_mapping",
+     "unittest"
+    ],
+    "purpose": "Tests for wp_tables_mapping derived SQL spec extraction from column_mapping JSON.",
+    "read_when": "When changing get_derived_sql_specs or column_mapping derived field filtering."
+   }
+  },
+  "nce_events/api/tests/test_core_functions.py": {
+   "body_hash": "eef73452d2750816bbf83a48537848263a74f0a99501ce61581f128184d4a732",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Core filter merges with user filters; empty filters dict still applies core_filter SQL."
+    ],
+    "keywords": [
+     "test core functions",
+     "core filter",
+     "WHERE clause",
+     "unittest"
+    ],
+    "purpose": "Unit tests for pure panel API helpers including core filter WHERE clause construction.",
+    "read_when": "When refactoring _build_core_filter_where or shared filter SQL helper behavior."
+   }
+  },
+  "nce_events/api/tests/test_evaluations.py": {
+   "body_hash": "b5b1b0b0f1b9e2c2fe176400b0d8013f0ff29983830a608c999e6d015e6577c0",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "test evaluations",
+     "enrollments",
+     "physical table",
+     "unittest"
+    ],
+    "purpose": "Unit tests for evaluations.get_event_enrollments physical table naming and int clamping.",
+    "read_when": "When changing evaluations enrollment query table name resolution or limits."
+   }
+  },
+  "nce_events/api/tests/test_spa_page.py": {
+   "body_hash": "700339acbd46f4e7d02bf6e5c35a4d1a8892d5c80b5352a4690724bc52d3ea22",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "test spa page",
+     "switch page",
+     "slug parsing",
+     "unittest"
+    ],
+    "purpose": "Tests for spa_page switch-page target slug parsing from client script handler strings.",
+    "read_when": "When changing switch-page slug extraction in spa_page config helpers."
+   }
+  },
+  "nce_events/api/translator.py": {
+   "body_hash": "619db6471a8d935bae2519d2998f784801dbe1a9263dc5f93b41b79ccee70f85",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "translator",
+     "translate_wp_query",
+     "WordPress",
+     "readback",
+     "SQL"
+    ],
+    "purpose": "Translate WordPress query fragments for panel readback using mapping-aware SQL helpers.",
+    "read_when": "When panel WordPress readback needs translate_wp_query for mapped table queries."
+   }
+  },
+  "nce_events/api/woocommerce_client.py": {
+   "body_hash": "c0bf547b0370a60c6ce57d909b16a65865a65cd9cd2822b083861883964b3441",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "woocommerce client",
+     "REST v3",
+     "API Connector",
+     "credentials",
+     "HTTP"
+    ],
+    "purpose": "Generic WooCommerce REST v3 client using API Connector credentials and validated relative paths.",
+    "read_when": "When calling WooCommerce products or orders endpoints from events_publish or exchange."
+   }
+  },
+  "nce_events/api/wp_readback_panel.py": {
+   "body_hash": "99b0cd4435ebeb190268c4807a16286d401687a7830893792169ac86e1bc2799",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Client uses write_back_refresh_seconds to pause before re-fetching the doc after submit."
+    ],
+    "keywords": [
+     "doctype_has_wp_sql_live_readback",
+     "WP Tables",
+     "write_back_mode",
+     "SQL Direct",
+     "write_back_refresh_seconds",
+     "mirror_status",
+     "listen_for_changes",
+     "nce_sync"
+    ],
+    "purpose": "Panel V2 helpers: detect NCE Sync SQL write-back and WP read-back for a DocType.",
+    "read_when": "Checking whether a DocType has live WP Tables SQL write-back enabled for panel refresh timing."
+   }
+  },
+  "nce_events/api/wp_tables_mapping.py": {
+   "body_hash": "81f0288ef96d4e860ca48c2a3c96c94a5403b4f1cecb6fa5b81963ab6adcd437",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "get_wp_tables_column_mapping",
+     "column_mapping",
+     "derived_sql_specs",
+     "WP Tables",
+     "frappe_doctype",
+     "sql_expression",
+     "fieldname",
+     "is_derived"
+    ],
+    "purpose": "Read WP Tables column_mapping JSON and derived SQL specs for any Frappe DocType.",
+    "read_when": "Loading column_mapping defaults, derived SQL expressions, or whitelisted mapping APIs for panel Form Dialog."
+   }
+  },
+  "nce_events/api/wp_user_switch.py": {
+   "body_hash": "13b9e695ac5aeb27810b6164e54e178b0475ccbbfadd56cfbf19d2fa11fbdac6",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "build_wp_switch_url",
+     "get_wp_switch_url",
+     "nce-user-switch-bridge",
+     "WP User Switch",
+     "family_id",
+     "api_secret",
+     "hmac",
+     "redirect_to"
+    ],
+    "purpose": "Signed URL builder for the NCE WordPress user-switch bridge plugin.",
+    "read_when": "Building or whitelisting signed WP switch URLs for a Families.ID via API Connector credentials."
+   }
+  },
+  "nce_events/hooks.py": {
+   "body_hash": "710df8ee4bf7d2151062584a5c2fdde3bfb16aa37f7b9910aa1ae1938f6639cd",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Other apps register after_events_publish_to_woocommerce in their hooks.py; each callable receives doctype and name."
+    ],
+    "keywords": [
+     "app_include_js",
+     "app_include_css",
+     "doctype_js",
+     "add_to_apps_screen",
+     "after_events_publish_to_woocommerce",
+     "required_apps",
+     "nce_sync",
+     "page-view"
+    ],
+    "purpose": "Frappe app hooks for NCE Events: assets, desk routes, and WooCommerce publish extension points.",
+    "read_when": "Adding JS/CSS bundles, desk app screen entry, or after_events_publish_to_woocommerce handlers."
+   }
+  },
+  "nce_events/nce_events/doctype/card_action/card_action.py": {
+   "body_hash": "8e50e801a14323fd6496cca1287482f3767fbf267eacfa86038f220e51335e2f",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "CardAction",
+     "Document",
+     "frappe",
+     "card_action",
+     "__future__"
+    ],
+    "purpose": "Frappe Document subclass for the Card Action child-table DocType.",
+    "read_when": "Adding server-side hooks or validation to Card Action rows."
+   }
+  },
+  "nce_events/nce_events/doctype/card_definition/card_definition.py": {
+   "body_hash": "00714c9393a943c9e574abaaf475ce1eb706b66c7a16782b117608782e844464",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "CardDefinition",
+     "after_insert",
+     "tabs",
+     "Home",
+     "sort_order",
+     "hide_bar",
+     "Document"
+    ],
+    "purpose": "Card Definition Document controller; seeds a default Home tab on insert when tabs is empty.",
+    "read_when": "Changing default tab creation or Card Definition after_insert behaviour."
+   }
+  },
+  "nce_events/nce_events/doctype/card_display/card_display.py": {
+   "body_hash": "9c08bbbe51d626513ff626943489b48e30b241b79a64d62daf7aba7c763e3bce",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "CardDisplay",
+     "Document",
+     "frappe",
+     "card_display",
+     "__future__"
+    ],
+    "purpose": "Frappe Document subclass for the Card Display child-table DocType.",
+    "read_when": "Adding server-side hooks or validation to Card Display rows."
+   }
+  },
+  "nce_events/nce_events/doctype/card_field/card_field.py": {
+   "body_hash": "8607f9258710bdaa6da163a9b8057351ca05496e00122463d6a59faeb4b80bac",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "CardField",
+     "Document",
+     "frappe",
+     "card_field",
+     "__future__"
+    ],
+    "purpose": "Frappe Document subclass for the Card Field child-table DocType.",
+    "read_when": "Adding server-side hooks or validation to Card Field rows."
+   }
+  },
+  "nce_events/nce_events/doctype/card_graphic/card_graphic.py": {
+   "body_hash": "44b334dfb363693c28db456158ca20b0501ce6cd36fff0bed2f1ae72d38a5a6e",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "CardGraphic",
+     "Document",
+     "frappe",
+     "card_graphic",
+     "__future__"
+    ],
+    "purpose": "Frappe Document subclass for the Card Graphic child-table DocType.",
+    "read_when": "Adding server-side hooks or validation to Card Graphic rows."
+   }
+  },
+  "nce_events/nce_events/doctype/card_pivot_table/card_pivot_table.py": {
+   "body_hash": "233051a297b27e4848a2cad4096693e2ecdbf1d64c0f7cccd02c2f8fc159facc",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "CardPivotTable",
+     "Document",
+     "frappe",
+     "card_pivot_table",
+     "__future__"
+    ],
+    "purpose": "Frappe Document subclass for the Card Pivot Table child-table DocType.",
+    "read_when": "Adding server-side hooks or validation to Card Pivot Table rows."
+   }
+  },
+  "nce_events/nce_events/doctype/card_portal/card_portal.py": {
+   "body_hash": "0d46bbbc04e7fc336ea0bf619e869c06bc0cff5dbbae35b708ae1ae0a2e00734",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "CardPortal",
+     "Document",
+     "frappe",
+     "card_portal",
+     "__future__"
+    ],
+    "purpose": "Frappe Document subclass for the Card Portal child-table DocType.",
+    "read_when": "Adding server-side hooks or validation to Card Portal rows."
+   }
+  },
+  "nce_events/nce_events/doctype/card_portal_column/card_portal_column.py": {
+   "body_hash": "3ca6f6c92ddf5ffbd31c2b73021ee3e52509223a18c0388216c0e880b6d29caf",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "CardPortalColumn",
+     "Document",
+     "frappe",
+     "card_portal_column",
+     "__future__"
+    ],
+    "purpose": "Frappe Document subclass for the Card Portal Column child-table DocType.",
+    "read_when": "Adding server-side hooks or validation to Card Portal Column rows."
+   }
+  },
+  "nce_events/nce_events/doctype/card_script/card_script.py": {
+   "body_hash": "10f7b2988b48728074be2b91ee7da4a14ef7bc24def1772d9ab7c7721a57266e",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "CardScript",
+     "Document",
+     "frappe",
+     "card_script",
+     "__future__"
+    ],
+    "purpose": "Frappe Document subclass for the Card Script child-table DocType.",
+    "read_when": "Adding server-side hooks or validation to Card Script rows."
+   }
+  },
+  "nce_events/nce_events/doctype/card_tab/card_tab.py": {
+   "body_hash": "dfe3bb14b7c747f48bc6211502719f571753c2992cb104ebd67210c1c380639e",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "CardTab",
+     "Document",
+     "frappe",
+     "card_tab",
+     "__future__"
+    ],
+    "purpose": "Frappe Document subclass for the Card Tab child-table DocType.",
+    "read_when": "Adding server-side hooks or validation to Card Tab rows."
+   }
+  },
+  "nce_events/nce_events/doctype/card_text_block/card_text_block.py": {
+   "body_hash": "11029a502731446566b011326d81bf5ce4109eecbb957963098f554e80f4653f",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "CardTextBlock",
+     "Document",
+     "frappe",
+     "card_text_block",
+     "__future__"
+    ],
+    "purpose": "Frappe Document subclass for the Card Text Block child-table DocType.",
+    "read_when": "Adding server-side hooks or validation to Card Text Block rows."
+   }
+  },
+  "nce_events/nce_events/doctype/card_video/card_video.py": {
+   "body_hash": "ed50b0581d1fd67b4ebd19889d30ca9baa6b23210994e471c12ffe00d4dc71f1",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "CardVideo",
+     "Document",
+     "frappe",
+     "card_video",
+     "__future__"
+    ],
+    "purpose": "Frappe Document subclass for the Card Video child-table DocType.",
+    "read_when": "Adding server-side hooks or validation to Card Video rows."
+   }
+  },
+  "nce_events/nce_events/doctype/card_web_viewer/card_web_viewer.py": {
+   "body_hash": "de409588bd531ee8c3d43a6a24850ecf2a75adab832e8c9f16121a348d4f68bc",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "CardWebViewer",
+     "Document",
+     "frappe",
+     "card_web_viewer",
+     "__future__"
+    ],
+    "purpose": "Frappe Document subclass for the Card Web Viewer child-table DocType.",
+    "read_when": "Adding server-side hooks or validation to Card Web Viewer rows."
+   }
+  },
+  "nce_events/nce_events/doctype/display_settings/display_settings.js": {
+   "body_hash": "dcdacb664f74032f11ba789ee9fb5f8293816f8972798cec52491d50d665c256",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "_sync_weight_options",
+     "_attach_color_pickers",
+     "_render_sample",
+     "font_weight",
+     "font_family",
+     "_hsvToHex",
+     "_hexToHSV",
+     "display_settings"
+    ],
+    "purpose": "Desk form script for Display Settings: font weight sync, HSV color pickers, and live sample rendering.",
+    "read_when": "Changing font family/weight options, color picker UI, or display preview on the Display Settings form."
+   }
+  },
+  "nce_events/nce_events/doctype/display_settings/display_settings.py": {
+   "body_hash": "60ffb049bd9c85f06d36cd0ba3752e0c3dad19ad4bdcbf88f4b1f133c2c7a977",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "DisplaySettings",
+     "Document",
+     "frappe",
+     "display_settings"
+    ],
+    "purpose": "Frappe Document subclass for the Display Settings single DocType.",
+    "read_when": "Adding server-side hooks or validation to Display Settings records."
+   }
+  },
+  "nce_events/nce_events/doctype/form_dialog/form_dialog.js": {
+   "body_hash": "799271b4027009db410d4e91564f9e901f255952b9cf6d952aac6b704c0da4c9",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "portal_field_config",
+     "form_dialog",
+     "Related DocTypes",
+     "Display-tab",
+     "portal",
+     "mirror",
+     "field editor"
+    ],
+    "purpose": "Desk UI for Form Dialog portal_field_config on Related DocTypes using the Display-tab pattern.",
+    "read_when": "Changing Form Dialog field editor, portal mirror config, or related-doctype display matrices."
+   }
+  },
+  "nce_events/nce_events/doctype/form_dialog/form_dialog.py": {
+   "body_hash": "74160e341c3d3a89efefe9d62a2e60e268e4f6cf7f9d4a4edd7d20b826ad61eb",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "FormDialog",
+     "validate",
+     "_assert_doctype_in_wp_tables",
+     "WP Tables",
+     "button_visibility",
+     "edit_condition"
+    ],
+    "purpose": "Form Dialog Document controller: validates edit conditions and requires DocType in WP Tables.",
+    "read_when": "Adding Form Dialog server validation or WP Tables membership checks."
+   }
+  },
+  "nce_events/nce_events/doctype/form_dialog_button/form_dialog_button.py": {
+   "body_hash": "25751f2a339223bc873babb380db7bfde9043c844b348214c0d1464f93a40b45",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "FormDialogButton",
+     "Document",
+     "frappe",
+     "form_dialog_button"
+    ],
+    "purpose": "Frappe Document subclass for Form Dialog Button child-table rows.",
+    "read_when": "Adding server-side hooks for Form Dialog Button records."
+   }
+  },
+  "nce_events/nce_events/doctype/form_dialog_inline_child_table/form_dialog_inline_child_table.py": {
+   "body_hash": "e2b4ff9aee3f05ac13396b444dd51358f8e253e8548a9e6782393f0bebcca88f",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "FormDialogInlineChildTable",
+     "Document",
+     "frappe",
+     "form_dialog_inline_child_table"
+    ],
+    "purpose": "Frappe Document subclass for Form Dialog Inline Child Table rows.",
+    "read_when": "Adding server-side hooks for inline child table config on Form Dialog."
+   }
+  },
+  "nce_events/nce_events/doctype/form_dialog_related_doctype/form_dialog_related_doctype.py": {
+   "body_hash": "48bdbcccde77d3753f75908ed9956df88aed011b449f8e7b36dd288803e7a921",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "FormDialogRelatedDocType",
+     "Document",
+     "frappe",
+     "form_dialog_related_doctype"
+    ],
+    "purpose": "Frappe Document subclass for Form Dialog Related DocType child rows.",
+    "read_when": "Adding server-side hooks for related-doctype config on Form Dialog."
+   }
+  },
+  "nce_events/nce_events/doctype/form_dialog_script_tool_group/form_dialog_script_tool_group.py": {
+   "body_hash": "67ec548e39e1de449dee914664d89d9cbfe654217f2b29d24246b9cb4a98a87b",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "FormDialogScriptToolGroup",
+     "Document",
+     "frappe",
+     "form_dialog_script_tool_group"
+    ],
+    "purpose": "Frappe Document subclass for Form Dialog Script Tool Group child rows.",
+    "read_when": "Adding server-side hooks for script tool group config on Form Dialog."
+   }
+  },
+  "nce_events/nce_events/doctype/form_dialog_tab_note/form_dialog_tab_note.py": {
+   "body_hash": "2f042c48cec2214919ff40ca28aacdff1397db7deb54a607e5a8a3df428c1119",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "FormDialogTabNote",
+     "Document",
+     "frappe",
+     "form_dialog_tab_note"
+    ],
+    "purpose": "Frappe Document subclass for Form Dialog Tab Note child-table rows.",
+    "read_when": "Adding server-side hooks for tab note rows on Form Dialog."
+   }
+  },
+  "nce_events/nce_events/doctype/page_panel/page_panel.js": {
+   "body_hash": "38d950ea6a409f2f900bea8f827d0830d1e0792d85e8fddaf145418ea5a6e277",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Prune stale display keys whenever Display is built from current meta.",
+     "frappe.confirm closes fails in many Desk builds (related picker never appears).",
+     "Preview tile always uses a theme-bg-* class (same visual language as the picker strip)."
+    ],
+    "keywords": [
+     "TAB_ORDER",
+     "_render_display",
+     "_build_field_matrix",
+     "_render_colours_tab",
+     "_render_dialogs_tab",
+     "format_rules",
+     "column_order",
+     "COLOUR_FIELDS",
+     "capture_wizard",
+     "page_panel"
+    ],
+    "purpose": "Desk form script for Page Panel: Display/Order/Query/Dialogs/Colours tabs and field matrices.",
+    "read_when": "Changing Page Panel tab UI, display matrices, format rules, colours theme pickers, or capture wizard."
+   }
+  },
+  "nce_events/nce_events/doctype/page_panel/page_panel.py": {
+   "body_hash": "6185bdf732c144ad8d8efdebd03744cc0bbe10b9dc038878f7775eb44fecb3d3",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Never allow name == doctype (Frappe rejects singleton-style naming).",
+     "Regenerate panel_sql before the DB write so the save response always includes fresh SQL.",
+     "Never block saves on SQL generation errors."
+    ],
+    "keywords": [
+     "PagePanel",
+     "autoname",
+     "before_save",
+     "_compute_panel_sql",
+     "panel_sql",
+     "validate_naming",
+     "_DESK_NEW_ROUTE"
+    ],
+    "purpose": "Page Panel Document controller: autoname, panel_sql generation, and pre-save SQL refresh.",
+    "read_when": "Changing Page Panel naming, panel_sql computation, or before_save SQL regeneration."
+   }
+  },
+  "nce_events/nce_events/doctype/page_panel_computed_column/page_panel_computed_column.js": {
+   "body_hash": "dad582a3788db8dc893a2299fde6f62346f69e0ad3e3e69c1d7a8bcaaa86b089",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "page_panel_computed_column",
+     "frappe",
+     "computed",
+     "column"
+    ],
+    "purpose": "Desk list/form helpers for Page Panel Computed Column child rows.",
+    "read_when": "Changing client behaviour for computed column fields on Page Panel."
+   }
+  },
+  "nce_events/nce_events/doctype/page_panel_computed_column/page_panel_computed_column.py": {
+   "body_hash": "c3387b38491dfa7ca67d5e3d416e1d1fc79994d5a2143f8931a171ca97405a7a",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "PagePanelComputedColumn",
+     "Document",
+     "frappe",
+     "page_panel_computed_column",
+     "validate"
+    ],
+    "purpose": "Page Panel Computed Column Document with validation for computed SQL column definitions.",
+    "read_when": "Adding validation or hooks for computed column rows on Page Panel."
+   }
+  },
+  "nce_events/nce_events/doctype/page_panel_default_filter/page_panel_default_filter.py": {
+   "body_hash": "d0e3dde48c1abb27a4ee93b3d9817111b953e129930e089d16ad3a77af2dc885",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "PagePanelDefaultFilter",
+     "Document",
+     "frappe",
+     "page_panel_default_filter"
+    ],
+    "purpose": "Frappe Document subclass for Page Panel Default Filter child-table rows.",
+    "read_when": "Adding server-side hooks for default filter rows on Page Panel."
+   }
+  },
+  "nce_events/nce_events/doctype/page_panel_format_rule/page_panel_format_rule.py": {
+   "body_hash": "7d8961e89bb8deb1635e902fbf2e45dc9eda62e13701ceacfc9a5d7475a69c9e",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "PagePanelFormatRule",
+     "Document",
+     "frappe",
+     "page_panel_format_rule"
+    ],
+    "purpose": "Frappe Document subclass for Page Panel Format Rule conditional formatting rows.",
+    "read_when": "Adding server-side hooks for format rule rows on Page Panel."
+   }
+  },
+  "nce_events/nce_events/doctype/panel_action/panel_action.js": {
+   "body_hash": "cf4d456e181a2c008979cdd961a34f6933b4c5375de60c6af45750a8f18f9e5e",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "panel_action",
+     "frappe",
+     "Panel Action",
+     "roles"
+    ],
+    "purpose": "Desk form script for Panel Action: role visibility and action button configuration.",
+    "read_when": "Changing Panel Action form client behaviour or button setup."
+   }
+  },
+  "nce_events/nce_events/doctype/panel_action/panel_action.py": {
+   "body_hash": "5ec06fd03d1d6727cbebf3c0378a3c0c2ddc7921fd3603b28256dc16eb9cf13d",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "PanelAction",
+     "Document",
+     "frappe",
+     "panel_action"
+    ],
+    "purpose": "Frappe Document subclass for Panel Action child-table rows on Page Panel.",
+    "read_when": "Adding server-side hooks for panel action definitions."
+   }
+  },
+  "nce_events/nce_events/doctype/panel_action_role/panel_action_role.py": {
+   "body_hash": "6fd9a0bb3803e375fbdbad0a3985e6de103712b7bbabd5b0d6072bcadfe34953",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "PanelActionRole",
+     "Document",
+     "frappe",
+     "panel_action_role"
+    ],
+    "purpose": "Frappe Document subclass for Panel Action Role child-table rows linking actions to roles.",
+    "read_when": "Adding server-side hooks for panel action role assignments."
+   }
+  },
+  "nce_events/nce_events/doctype/query_based_table_link/query_based_table_link.js": {
+   "body_hash": "b174101ee02401bda3f851e15f5caf7d7b1fd088f6ae40b86811287750c1a0bb",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "_qbtl_render",
+     "_qbtl_bind",
+     "conditions_json",
+     "where_clause",
+     "left_table",
+     "right_table",
+     "_qbtl_sort_dialog",
+     "Query Based Table Link"
+    ],
+    "purpose": "Desk form script for Query Based Table Link: criteria builder, sort dialog, and index field UI.",
+    "read_when": "Changing QBTL join criteria builder, sort configuration, or field index pickers."
+   }
+  },
+  "nce_events/nce_events/doctype/query_based_table_link/query_based_table_link.py": {
+   "body_hash": "924f2c0ddc0de5d7c7bfb2906362bf8dcde9aa7a1dd84df2a4fabeee8be4d167",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "QueryBasedTableLink",
+     "conditions_json",
+     "where_clause",
+     "left_table",
+     "right_table",
+     "_assert_in_wp_tables",
+     "ensure_search_index",
+     "normalize_conditions"
+    ],
+    "purpose": "Query Based Table Link Document: validates join conditions, sort JSON, and WP Tables membership.",
+    "read_when": "Changing QBTL validation, where_clause generation, or search index creation on update."
+   }
+  },
+  "nce_events/nce_events/doctype/settings/settings.js": {
+   "body_hash": "98e788d1c53c15bb188e17159b9cb609b647e34270ddd835a368683170a0796d",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "Settings",
+     "refresh",
+     "add_custom_button",
+     "Settings saved",
+     "frappe.ui.form"
+    ],
+    "purpose": "Desk form script for Settings: primary Save button with green confirmation alert.",
+    "read_when": "Changing Settings form client behaviour or save confirmation UI."
+   }
+  },
+  "nce_events/nce_events/doctype/settings/settings.py": {
+   "body_hash": "9bb57cd6a73c572141620fae1869459abc25627a9ee90d07c22775f97c4b98ac",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "Settings",
+     "Document",
+     "frappe",
+     "settings"
+    ],
+    "purpose": "Frappe Document subclass for the NCE Events Settings single DocType.",
+    "read_when": "Adding server-side hooks or validation to global NCE Events settings."
+   }
+  },
+  "nce_events/nce_events/doctype/spa_page_definition/spa_page_definition.py": {
+   "body_hash": "1f5c76badb5125684e7f811f56f77bf75802875b6779f0a64009da499082f57f",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "SPAPageDefinition",
+     "page_slug",
+     "doctype_source_mode",
+     "validate",
+     "SPA Page Definition"
+    ],
+    "purpose": "SPA Page Definition Document: enforces unique doctype_source_mode per page slug.",
+    "read_when": "Adding SPA page validation or duplicate doctype_source_mode checks."
+   }
+  },
+  "nce_events/nce_events/page/evaluations/evaluations.js": {
+   "body_hash": "2322db296ba49367e171f9f5e9410bd2e988c0b6b01fe5de9bea0357d52a4fc9",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "evaluations",
+     "NCEEvaluations",
+     "on_page_show",
+     "evaluations_dist",
+     "eventId",
+     "frappe.pages"
+    ],
+    "purpose": "Frappe Page boot script for Evaluations: mounts the NCEEvaluations Vue Kanban SPA.",
+    "read_when": "Changing Evaluations desk page load, asset bundle, or eventId route parsing."
+   }
+  },
+  "nce_events/nce_events/page/hierarchy_explorer/hierarchy_explorer.js": {
+   "body_hash": "a569127dab7fd03afe97bb1077e3a7c0b7bc73acc4f14670e139c9fd821d9bec",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "hierarchy-explorer",
+     "hierarchy_explorer",
+     "nce_events.hierarchy.Explorer",
+     "on_page_show",
+     "Event Explorer"
+    ],
+    "purpose": "Frappe Page boot script for Event Explorer hierarchy UI using nce_events.hierarchy.Explorer.",
+    "read_when": "Changing hierarchy explorer page assets, title, or Explorer widget initialization."
+   }
+  },
+  "nce_events/nce_events/page/hierarchy_explorer/hierarchy_explorer.py": {
+   "body_hash": "399d0505be6aa34b1430c82db79469ae53775a2b28aec534ef3e9c18d2698219",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "get_context",
+     "hierarchy_explorer",
+     "frappe",
+     "context"
+    ],
+    "purpose": "Frappe page context hook for the hierarchy-explorer desk page (empty get_context stub).",
+    "read_when": "Adding server-side page context for the hierarchy explorer route."
+   }
+  },
+  "nce_events/nce_events/page/page_view/page_view.js": {
+   "body_hash": "b9ec4be367172590babac97a43756398640d9130ee2f5dd350e8748ba1397119",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "page-view",
+     "NCEPanelPageV2",
+     "panel_page_v2_dist",
+     "on_page_show",
+     "page-view-v2-app"
+    ],
+    "purpose": "Frappe Page boot script for page-view: mounts the NCEPanelPageV2 multi-panel SPA.",
+    "read_when": "Changing page-view desk route, panel_page_v2_dist assets, or Vue mount target."
+   }
+  },
+  "nce_events/nce_events/page/panel_page_mirrored/panel_page_mirrored.js": {
+   "body_hash": "def4615ee80dad519b0d3e6bcc3853695233e1bd951eedd66471e4c93ecff9a6",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "register.js is in app_include_js — must set on_page_show synchronously (not inside frappe.require)."
+    ],
+    "keywords": [
+     "panel-page-mirrored",
+     "spa_panel_page",
+     "register",
+     "on_page_show",
+     "app_include_js"
+    ],
+    "purpose": "Registers panel-page-mirrored SPA route via spa_panel_page synchronously on page show.",
+    "read_when": "Changing mirrored panel page registration; on_page_show must not wait on frappe.require."
+   }
+  },
+  "nce_events/nce_events/page/panel_page_native/panel_page_native.js": {
+   "body_hash": "67552ec57dfd938b592b78daa6f2c4c7a411a60e1932a9b600494bc79976f2fe",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "panel-page-native",
+     "spa_panel_page",
+     "register",
+     "native",
+     "desk page"
+    ],
+    "purpose": "Frappe desk page bootstrap that registers the native panel SPA slug panel-page-native.",
+    "read_when": "Tracing how the native DocTypes panel page loads or adding a new SPA registration."
+   }
+  },
+  "nce_events/nce_events/page/panel_page_v2/panel_page_v2.js": {
+   "body_hash": "d5de27d144d465f04ae66e4828ef312a02cd7d48889c7157e811356f6d14f7f0",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "panel-page-v2",
+     "spa_panel_page",
+     "register",
+     "desk page",
+     "Vue SPA"
+    ],
+    "purpose": "Frappe desk page bootstrap that registers the panel-page-v2 Vue SPA slug.",
+    "read_when": "Tracing how the Events Manager panel SPA loads or wiring a new panel page route."
+   }
+  },
+  "nce_events/nce_events/page/schema_explorer/schema_explorer.js": {
+   "body_hash": "9645914e79a4372552a8623d79576195831bea95b131f2b52d3cc6537b7783ba",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "schema-explorer",
+     "Tag Finder",
+     "schema_explorer",
+     "on_page_show",
+     "floating window"
+    ],
+    "purpose": "Desk page handler for schema-explorer that opens the Tag Finder floating window.",
+    "read_when": "Changing Tag Finder desk page behavior or the re-open placeholder UI."
+   }
+  },
+  "nce_events/nce_events/page/sync_read_only_perms/sync_read_only_perms.js": {
+   "body_hash": "551db46f1433540737f4f29fd0de2a3b7c9926a118e09f788dbc138d998bc123",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Safe to run again after WP Tables changes — already-granted DocTypes are skipped."
+    ],
+    "keywords": [
+     "sync-read-only-perms",
+     "Read Only",
+     "WP Tables",
+     "grant_read_only_wp_tables",
+     "permissions"
+    ],
+    "purpose": "Desk utility page that grants Read Only role read access on WP Tables DocTypes.",
+    "read_when": "Changing WP Tables read-permission sync UI or the grant_read_only_wp_tables call."
+   }
+  },
+  "nce_events/patches/v0_0_2/add_credential_config_to_api_connector.py": {
+   "body_hash": "01fed374a3382897c6ad0ef51f407275bf5ae78f73b3f149f4b1fd1ae6ddd2fb",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "credential_config",
+     "API Connector",
+     "no-op",
+     "nce_sync",
+     "patch"
+    ],
+    "purpose": "No-op patch; credential_config is now a native field on API Connector in nce_sync.",
+    "read_when": "Understanding why an old credential_config migration does nothing on upgrade."
+   }
+  },
+  "nce_events/patches/v0_0_2/add_model_field_to_api_connector.py": {
+   "body_hash": "0429b8eda35711c670d9b9c7a623c98710512423cf7c17d4e37be295589875c9",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "API Connector",
+     "model",
+     "Custom Field",
+     "migration",
+     "execute"
+    ],
+    "purpose": "Migration patch adding a model Custom Field to API Connector for default LLM model.",
+    "read_when": "Tracing API Connector schema changes or why model field is missing on old sites."
+   }
+  },
+  "nce_events/patches/v0_0_2/create_event_explorer_page.py": {
+   "body_hash": "6dfca1cac03ff48822a7c574b56ac34608f4f720e22ba3e2f84e779f733203bc",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "event-explorer",
+     "Panel Page",
+     "Events",
+     "Players",
+     "SQL",
+     "migration"
+    ],
+    "purpose": "Seeds the event-explorer Panel Page with Events and Players SQL drill-down panels.",
+    "read_when": "Understanding the Event Explorer proof-of-concept panel layout or SQL queries."
+   }
+  },
+  "nce_events/patches/v0_0_2/create_panel_page_routes.py": {
+   "body_hash": "7347da9c83d9e55695482bb505c659e069b5ac59b27b4a788d13e6bf5e6a253d",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "execute",
+     "pass",
+     "def"
+    ],
+    "purpose": "Legacy no-op patch retained in Patch Log; execute() is pass with no route logic.",
+    "read_when": "Wondering why this patch exists or whether it still creates panel page routes."
+   }
+  },
+  "nce_events/patches/v0_0_2/migrate_core_filter_to_default_filters.py": {
+   "body_hash": "3075b2460eb9d9e9d13a3fd2b56511fb32c7b1f86e7050de21ff4fcdc9bb88ab",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Skip if default_filters already has rows (don't overwrite manual entries).",
+     "SQL date functions are NOT resolved — stored as-is for the panel editor."
+    ],
+    "keywords": [
+     "core_filter",
+     "default_filters",
+     "Page Panel",
+     "migrate",
+     "AND parser"
+    ],
+    "purpose": "Migrates Page Panel core_filter strings into default_filters child table rows.",
+    "read_when": "Debugging legacy core_filter parsing or default_filters migration on Page Panel."
+   }
+  },
+  "nce_events/patches/v0_0_2/migrate_display_settings_to_settings.py": {
+   "body_hash": "76ccba0d887dcd51b59ffd5cf4b581943df3f664fa02bf1644747897fee92b23",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "Display Settings",
+     "Settings",
+     "font_family",
+     "migrate",
+     "typography"
+    ],
+    "purpose": "Copies Display Settings font and color fields into the Settings single DocType.",
+    "read_when": "Tracing display typography migration from Display Settings to Settings."
+   }
+  },
+  "nce_events/patches/v0_0_2/refresh_spa_page_definitions.py": {
+   "body_hash": "c469884a5fd4bf9e082ee9e652abecf5b7de5da6197c446863d43726b9443863",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "SPA Page Definition",
+     "panel-page-v2",
+     "upsert",
+     "is_active",
+     "seed"
+    ],
+    "purpose": "Upserts SPA Page Definition rows including panel-page-v2 and syncs is_active flags.",
+    "read_when": "Updating SPA page definitions on existing sites or adding panel-page-v2 row."
+   }
+  },
+  "nce_events/patches/v0_0_2/remove_messaging_configuration_doctypes.py": {
+   "body_hash": "6f9930830cd2635fcc0479a32797c6d7d52e87a5eccff8c565fc507a899d8602",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Tag Finder replaces Messaging Configuration. Pronoun tags are built-in."
+    ],
+    "keywords": [
+     "Messaging Configuration",
+     "Field Tag",
+     "Neutral Tag",
+     "Tag Finder",
+     "delete"
+    ],
+    "purpose": "Removes obsolete Messaging Configuration, Field Tag, and Neutral Tag DocTypes.",
+    "read_when": "Understanding Tag Finder replacement of Messaging Configuration on upgrade."
+   }
+  },
+  "nce_events/patches/v0_0_2/seed_new_woo_product_action.py": {
+   "body_hash": "070d1d205c64583f7c9c505c6843ee359d23bdeb4bb7ead90892ab4ce10a19f9",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Idempotent: if the row already exists, the patch leaves it alone so admins can edit by hand."
+    ],
+    "keywords": [
+     "new-woo-product",
+     "Panel Action",
+     "Form Dialog",
+     "WooCommerce",
+     "frozen_meta_json"
+    ],
+    "purpose": "Seeds the new-woo-product Panel Action with a captured Form Dialog for WooCommerce publish.",
+    "read_when": "Tracing WooCommerce product action setup or frozen_meta_json capture logic."
+   }
+  },
+  "nce_events/patches/v0_0_2/seed_new_woo_product_action_v2.py": {
+   "body_hash": "52c0bb44fe72a7633a38aa2602986c392c087b325a747608b55dbccb99bc2561",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "No-op when the row already exists, so it is safe everywhere."
+    ],
+    "keywords": [
+     "new-woo-product",
+     "seed",
+     "v2",
+     "Patch Log",
+     "Panel Action"
+    ],
+    "purpose": "Re-runs seed_new_woo_product_action for sites where the original patch is already logged.",
+    "read_when": "Understanding v2 re-seed when Patch Log blocks the original woo product action patch."
+   }
+  },
+  "nce_events/patches/v0_0_2/seed_new_woo_product_action_v3.py": {
+   "body_hash": "ace4504b4f7ea839d9abb2d2c4ca747e8db3ea93c3a88b9e505f0d47bbbaf579",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Idempotent: safe on empty or already-upgraded rows."
+    ],
+    "keywords": [
+     "new-woo-product",
+     "on_submit_method",
+     "submit_label",
+     "Publish",
+     "Panel Action"
+    ],
+    "purpose": "Applies on_submit_method and submit_label and removes legacy Publish custom button.",
+    "read_when": "Fixing missing submit handler on new-woo-product Panel Action after upgrade."
+   }
+  },
+  "nce_events/patches/v0_0_2/seed_spa_page_definitions.py": {
+   "body_hash": "89865e7d3abfb47e2777c1b605bd21177054c013546530d2c1f929b477a26c05",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Idempotent: skips rows that already exist (by page_slug)."
+    ],
+    "keywords": [
+     "SPA Page Definition",
+     "panel-page-mirrored",
+     "panel-page-native",
+     "panel-page-v2",
+     "seed"
+    ],
+    "purpose": "Seeds SPA Page Definition rows for mirrored, native, and v2 panel desk pages.",
+    "read_when": "Adding or changing SPA page slugs like panel-page-mirrored or panel-page-v2."
+   }
+  },
+  "nce_events/patches/v0_0_2/set_panel_action_scope_default.py": {
+   "body_hash": "e7580ec75b7051332b10c62352106c9e6db48cbc38ed6f6023ee361bf18ce4f7",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "Panel Action",
+     "scope",
+     "Both",
+     "backfill",
+     "idempotent"
+    ],
+    "purpose": "Backfills scope=Both on existing Panel Action rows missing a scope value.",
+    "read_when": "Debugging Panel Action scope defaults after the scope field was added."
+   }
+  },
+  "nce_events/patches/v0_0_2/sync_panel_page_shortcuts.py": {
+   "body_hash": "917c68bb8a569af2ddc81b528d21a860560fb9e7854683d7df810e3784d7776b",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "execute",
+     "pass",
+     "def"
+    ],
+    "purpose": "Legacy no-op patch retained in Patch Log; execute() is pass with no shortcut sync.",
+    "read_when": "Wondering whether this patch still syncs panel page workspace shortcuts."
+   }
+  },
+  "nce_events/patches/v0_0_2/sync_panel_page_shortcuts_v2.py": {
+   "body_hash": "27ac6a3727bf4db0c1b9f80b27cfc9a52eec1abd8dbdbba34aed6fc22c710daf",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "execute",
+     "pass",
+     "def"
+    ],
+    "purpose": "Legacy no-op v2 patch retained in Patch Log; execute() is pass with no logic.",
+    "read_when": "Wondering whether the v2 shortcut sync patch still runs any code."
+   }
+  },
+  "nce_events/patches/v0_0_2/update_workspace_shortcuts.py": {
+   "body_hash": "7e0f30a9d861310d2349ef4756adb8d3cd92f4c2e094425cf9c3f350f9c5d5df",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "execute",
+     "pass",
+     "def"
+    ],
+    "purpose": "Legacy no-op patch retained in Patch Log; execute() is pass with no workspace updates.",
+    "read_when": "Wondering whether this patch still updates Frappe workspace shortcuts."
+   }
+  },
+  "nce_events/public/css/hierarchy_explorer.css": {
+   "body_hash": "9cd65bf52ee4e99c7b8e1e18bcf50269a91badf34d5a3fd5cb2ea51a71a11a78",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "hierarchy-explorer",
+     "two-pane",
+     "drill-down",
+     "pane",
+     "CSS"
+    ],
+    "purpose": "Styles for the two-pane Hierarchy Explorer drill-down desk page.",
+    "read_when": "Changing hierarchy explorer pane layout, dividers, or loading states."
+   }
+  },
+  "nce_events/public/css/nce_spa_desk_nav.css": {
+   "body_hash": "17522efc269064ed93932c959844cdb7f8afcd2aa0420684687d3cc6e609dd1d",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "SPA switch bar",
+     "desk nav",
+     "page head",
+     "nce_spa_desk_nav",
+     "CSS"
+    ],
+    "purpose": "Styles the SPA switch bar in the Frappe desk page head next to the page title.",
+    "read_when": "Adjusting desk SPA navigation bar appearance or page-head placement."
+   }
+  },
+  "nce_events/public/css/panel_page.css": {
+   "body_hash": "08346ed8bd6fdf17ae30ee2fc0014dca61d3b37733c694ce88b2a362d5b526c9",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "panel_page.css",
+     "Source Sans 3",
+     "panel-float",
+     "send-panel",
+     "V1"
+    ],
+    "purpose": "Legacy V1 panel page styles including Source Sans 3, floats, tables, and send dialogs.",
+    "read_when": "Changing V1 panel float, table, or send-dialog styling before V2 migration."
+   }
+  },
+  "nce_events/public/css/schema_explorer.css": {
+   "body_hash": "cd8688544d31aa1c7ee792825b6ccd068522bc51efe0f38e65d4b175c70be202",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "Tag Finder",
+     "schema_explorer",
+     "tf-float",
+     "categorical",
+     "CSS"
+    ],
+    "purpose": "Styles for the Tag Finder (Schema Explorer) floating window and themed indicators.",
+    "read_when": "Changing Tag Finder float layout, tag types, or categorical color indicators."
+   }
+  },
+  "nce_events/public/css/theme_defaults.css": {
+   "body_hash": "c73b12baedb57618e53d4378b3eb9e4403e42a29e619ed39e22a576c2f7d1658",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Each var() keeps a hex fallback when Themes is not loaded.",
+     "Static categorical palette is NOT brand-themed (reserved for gender / type UI)."
+    ],
+    "keywords": [
+     "theme_defaults",
+     "--nce-color",
+     "ppv2-root",
+     "alias bridge",
+     "legacy vars"
+    ],
+    "purpose": "Maps legacy --primary and panel CSS aliases to --nce-color-* theme contract tokens.",
+    "read_when": "Bridging legacy panel/dialog CSS to Themes contract vars or adding alias scopes."
+   }
+  },
+  "nce_events/public/js/api_connector_tags.js": {
+   "body_hash": "633b5ae8efd2166e1031aeffc9a1dddec5b68afc3c8fd12dac9a3f7d48174632",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "API Connector",
+     "credential_config",
+     "llm_send_prompt",
+     "auth_type",
+     "form script"
+    ],
+    "purpose": "API Connector form script that generates credential_config JSON via LLM prompt.",
+    "read_when": "Changing AI credential config generation or the Credential Config form button."
+   }
+  },
+  "nce_events/public/js/email_template_tags.js": {
+   "body_hash": "8589809a16eda72cf9634f1b12be5f06cc2a443d226bf31d1819298729940405",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "Email Template",
+     "Insert Tag",
+     "schema_explorer",
+     "Tag Finder",
+     "form script"
+    ],
+    "purpose": "Email Template form script adding an Insert Tag button that opens Tag Finder.",
+    "read_when": "Wiring Tag Finder into Email Template or fixing Insert Tag availability."
+   }
+  },
+  "nce_events/public/js/enrollments_exchange.js": {
+   "body_hash": "290bfec7b366d8320e782d3b58370f38645b0cf6c8cb81a786ab4e0eca57473a",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Only show on saved, non-cancelled records."
+    ],
+    "keywords": [
+     "Enrollments",
+     "execute_product_exchange",
+     "Switch to Another Event",
+     "refund",
+     "WooCommerce"
+    ],
+    "purpose": "Enrollments form script for Switch to Another Event and Cancel Registration actions.",
+    "read_when": "Changing enrollment exchange/refund UX or WooCommerce product switch API calls."
+   }
+  },
+  "nce_events/public/js/evaluations/App.vue": {
+   "body_hash": "6095142cffe1ca3612233c1e9350f570c7a9df3f0b3a4f8c6d0e88c8c8ae28a3",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "Evaluations",
+     "App.vue",
+     "rating_kanban",
+     "shell store",
+     "activeView"
+    ],
+    "purpose": "Root Vue shell for the Evaluations desk SPA with view switching via shell store.",
+    "read_when": "Adding a new evaluations view or changing the eval page header layout."
+   }
+  },
+  "nce_events/public/js/evaluations/components/RatingKanbanPlaceholder.vue": {
+   "body_hash": "7d1d8500c5c87c2d1df9c5c34bb42d738136c993cd8d9ec3c8f569f23c2bd9db",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "RatingKanbanPlaceholder",
+     "evaluations",
+     "kanban",
+     "placeholder",
+     "shell"
+    ],
+    "purpose": "Placeholder kanban view shown when no event is selected in the evaluations shell.",
+    "read_when": "Changing empty-state messaging for the evaluations rating kanban."
+   }
+  },
+  "nce_events/public/js/evaluations/components/RatingKanbanView.vue": {
+   "body_hash": "83eb1bbfe68b56f7c04b46030ab13c0174baf169546cd9d489a08057df5beac2",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Gender lane colors are theme-exempt per evaluations spec."
+    ],
+    "keywords": [
+     "RatingKanbanView",
+     "kanban",
+     "gender",
+     "LANES",
+     "useEnrollments",
+     "evaluations"
+    ],
+    "purpose": "Gender-lane rating kanban board for event enrollments in the evaluations SPA.",
+    "read_when": "Changing kanban lanes, gender colors, or enrollment display in evaluations."
+   }
+  },
+  "nce_events/public/js/evaluations/composables/useEnrollments.js": {
+   "body_hash": "43fdc092af085ca319656de5d42ebe7905214435362bc86fd14296b782cc6360",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "useEnrollments",
+     "get_event_enrollments",
+     "eventId",
+     "composable",
+     "evaluations"
+    ],
+    "purpose": "Vue composable loading event enrollments when the evaluations shell eventId changes.",
+    "read_when": "Changing enrollment fetch API or reactive reload on event selection."
+   }
+  },
+  "nce_events/public/js/evaluations/main.js": {
+   "body_hash": "4c1f7eab8504842d8b9314a53245a9f4e5909b6d9cfcc566fbb244118a2b67b1",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "evaluations",
+     "main.js",
+     "createApp",
+     "Pinia",
+     "mount"
+    ],
+    "purpose": "Vite entry mounting the Evaluations Vue app with Pinia on a desk page element.",
+    "read_when": "Changing evaluations SPA bootstrap, mount target, or Pinia setup."
+   }
+  },
+  "nce_events/public/js/evaluations/stores/shell.js": {
+   "body_hash": "5e5333640292bd186288d6c90a6db59c5bcea89bdd891b810294d6ed36832c06",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "shell.js",
+     "Pinia",
+     "activeView",
+     "eventId",
+     "evaluations store"
+    ],
+    "purpose": "Pinia store holding evaluations shell state like activeView and selected eventId.",
+    "read_when": "Adding shared evaluations UI state or changing view/event selection."
+   }
+  },
+  "nce_events/public/js/evaluations/utils/frappeCall.js": {
+   "body_hash": "ea8f1337fe8861d9f49044a09ed72678f645613fdfd1b2a5bfa63a2b54e77604",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "frappeCall",
+     "frappe.call",
+     "Promise",
+     "evaluations",
+     "freeze"
+    ],
+    "purpose": "Promise wrapper for frappe.call used by the evaluations Vue SPA.",
+    "read_when": "Changing async Frappe RPC calls in evaluations or adding freeze options."
+   }
+  },
+  "nce_events/public/js/evaluations/vite.config.mjs": {
+   "body_hash": "9ebd2ad3c13d387d7c8da721492e55f990f72d66d108d762944a4c536e6cf84d",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "vite.config",
+     "evaluations",
+     "plugin-vue",
+     "build",
+     "bundle"
+    ],
+    "purpose": "Vite build config for bundling the evaluations Vue desk SPA assets.",
+    "read_when": "Changing evaluations build output paths or Vue plugin setup."
+   }
+  },
+  "nce_events/public/js/hierarchy_explorer/config.js": {
+   "body_hash": "013dc69b210f68ea520d7593a1b87e43d13f011d9d01f2d6c0e6812ae5394916",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "PANE_CONFIG",
+     "hierarchy",
+     "explorer",
+     "config",
+     "drill-down"
+    ],
+    "purpose": "Pane configuration for the Hierarchy Explorer multi-pane drill-down desk page.",
+    "read_when": "Adding hierarchy levels, labels, or fetch methods for explorer panes."
+   }
+  },
+  "nce_events/public/js/hierarchy_explorer/store.js": {
+   "body_hash": "554eef46d2c2d62ef61dc2278e3e1585b1acb209d4ffe1b65009dfaadcfdba87",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "hierarchy",
+     "Store",
+     "fetch_pane",
+     "explorer",
+     "pane data"
+    ],
+    "purpose": "Data store fetching pane rows for the Hierarchy Explorer drill-down UI.",
+    "read_when": "Changing hierarchy pane fetch logic or cached row state."
+   }
+  },
+  "nce_events/public/js/hierarchy_explorer/ui.js": {
+   "body_hash": "01a81aff702ea905f5842e77c833de426bd9af6523d5f188c0161875b757f0e6",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "hierarchy",
+     "Explorer",
+     "pane",
+     "divider",
+     "load_pane",
+     "drill-down"
+    ],
+    "purpose": "Hierarchy Explorer UI class rendering resizable two-pane drill-down desk layout.",
+    "read_when": "Changing pane rendering, dividers, loading states, or drill-down navigation."
+   }
+  },
+  "nce_events/public/js/js_dialogs/ai_tools.js": {
+   "body_hash": "0b90e3a43a43cf74c331e16de326589bab8f519f24c621df6f6791ab9c586493",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "ai_tools",
+     "send-panel",
+     "build_bar_html",
+     "LLM",
+     "email SMS"
+    ],
+    "purpose": "Shared AI tools bar HTML and handlers for send email/SMS dialog footers.",
+    "read_when": "Adding AI assist buttons to send dialogs or changing ai_tools bar markup."
+   }
+  },
+  "nce_events/public/js/js_dialogs/email_dialog.js": {
+   "body_hash": "57ccd672335701aa4b7b5f001e027c1a0099a869045b0aa97904c801aad2d0ad",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "EmailDialog",
+     "send-panel",
+     "template",
+     "preview",
+     "recipients",
+     "draggable"
+    ],
+    "purpose": "Draggable resizable email send dialog with template, preview, and recipient selection.",
+    "read_when": "Changing bulk email send UX, preview, or template loading in panel pages."
+   }
+  },
+  "nce_events/public/js/js_dialogs/sms_dialog.js": {
+   "body_hash": "6ed8d8b0265149c9cfd13b498b84f5f5fccba08fcf12781c78ccbf4560374d30",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Message body always comes from the message area; template just loads into it."
+    ],
+    "keywords": [
+     "SmsDialog",
+     "send-panel",
+     "SMS",
+     "template",
+     "preview",
+     "Jinja2"
+    ],
+    "purpose": "Draggable SMS send dialog with template load, preview, and test-send support.",
+    "read_when": "Changing bulk SMS send UX or message body resolution from templates."
+   }
+  },
+  "nce_events/public/js/new_woo_commerce_product.js": {
+   "body_hash": "2b3133bb6bb8d932a7dd55964604193b9ebd5696f8d108ca669d606209f8fbba",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "New Woo Commerce Product",
+     "publish",
+     "WooCommerce",
+     "submit_new_woo_commerce_product"
+    ],
+    "purpose": "Form script for New Woo Commerce Product singleton publish-to-WooCommerce action.",
+    "read_when": "Changing WooCommerce publish button behavior on the product singleton form."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/App.vue": {
+   "body_hash": "2c6fa6fe3339421398af3bdea03a3b25e1eff783e30e86a523892f48bc853019",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Close drilled panels and overlay dialogs; root WP Tables panel stays open.",
+     "Vue auto-unwraps reactive panel.rows ref when accessed on the panel object."
+    ],
+    "keywords": [
+     "App.vue",
+     "panel_page_v2",
+     "PanelFloat",
+     "find",
+     "cascade",
+     "form dialog"
+    ],
+    "purpose": "Root Vue app orchestrating panel floats, find, form dialogs, and SPA navigation.",
+    "read_when": "Changing panel open/close, cascade, find, drill-down, or export behavior."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/actions/handlers/cascadePanels.js": {
+   "body_hash": "e5b4c37f3ccaa6de8c7fe93c080defc40b898ca1b3c2fdf97c5edc31de4e83ff",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "cascade_panels",
+     "Panel Action",
+     "cascadePanels",
+     "drilled",
+     "float"
+    ],
+    "purpose": "Client Script handler cascade_panels staggering open drilled panel floats diagonally.",
+    "read_when": "Changing cascade panel action behavior or drill-down float placement."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/actions/handlers/closeAllPanels.js": {
+   "body_hash": "8f6286b55f0f9b7e8d27405b1a1d38aef03b795deaee6fc6c3328f6865ae684d",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "close_all_panels",
+     "closeAllPanels",
+     "Panel Action",
+     "overlay",
+     "SPA"
+    ],
+    "purpose": "Client Script handler close_all_panels closing drilled floats and overlay dialogs.",
+    "read_when": "Changing close-all panel action scope or which dialogs get dismissed."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/actions/handlers/showDt.js": {
+   "body_hash": "b0e7650ecb220fa93a6b98bd0c5dda98ba5eca6a276d20a8615e97c547957e84",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "showDt",
+     "show_dt",
+     "Desk list",
+     "DocType",
+     "Panel Action"
+    ],
+    "purpose": "Panel Action handler opening a Frappe Desk DocType list in a new browser tab.",
+    "read_when": "Changing show_dt client action or desk list navigation from panel actions."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/actions/handlers/switchPage.js": {
+   "body_hash": "08c28693b5952e814661db6be39b2fab6f0a2b39b1a8ec98332b77aaf0e8e1cd",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "switchPage",
+     "switch_page",
+     "SPA",
+     "page_slug",
+     "navigateToSpaPage"
+    ],
+    "purpose": "Panel Action handler switch_page navigating to another SPA page by slug.",
+    "read_when": "Changing SPA page switch action or target slug resolution from panel actions."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/actions/registry.js": {
+   "body_hash": "eafe075c8e5d54868731097418fbeb30d030abf7e12350088691e01e7aade56a",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "registry",
+     "Client Script",
+     "Panel Action",
+     "handler",
+     "ctx"
+    ],
+    "purpose": "Client-side handler registry mapping Panel Action Client Script keys to functions.",
+    "read_when": "Registering a new panel client action handler or debugging action dispatch."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/ActionsPanel.vue": {
+   "body_hash": "f18f39ee9606dd406f752e8b057202aab421429354d61794d14a34bf68c76241",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "ppv2-actions",
+     "SpaPageNavBar",
+     "useSpaPageNav",
+     "action_id",
+     "loadPages"
+    ],
+    "purpose": "Vue actions bar combining SpaPageNavBar page switcher and Panel Action buttons.",
+    "read_when": "Changing actions bar layout, SPA nav integration, or action button clicks."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/ColorPicker.vue": {
+   "body_hash": "ef77bcfbc28585087c5f261b86c748ebdf6672a8d3d8c4feb674551046c1f7ce",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Uses literal hex swatches; theme-exempt per format rule editor."
+    ],
+    "keywords": [
+     "ColorPicker",
+     "HSV",
+     "hex",
+     "swatches",
+     "format rule",
+     "eye-dropper"
+    ],
+    "purpose": "Theme-exempt HSV color picker with swatches, hex input, and eye-dropper for format rules.",
+    "read_when": "Changing panel format-rule color selection or picker grid behavior."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/DisplayWidget.vue": {
+   "body_hash": "ea2334f2a01170287d32975becadc3e0285d802b223d1a8caa8b569e1b32cd64",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "display-widget",
+     "displayValue",
+     "displayLabel",
+     "config",
+     "resolvedHops"
+    ],
+    "purpose": "Read-only display-widget showing a label and resolved field value from record hops.",
+    "read_when": "Changing display-only field rendering using config.path and resolvedHops."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/FieldWidget.vue": {
+   "body_hash": "a410259d6f4186cb09ecde1586748bf542675c0d92e8d21f64c250a2340eafb2",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "FieldWidget",
+     "editable",
+     "onSave",
+     "panel form",
+     "Vue"
+    ],
+    "purpose": "Editable field widget wrapper for panel form dialog custom field rendering.",
+    "read_when": "Changing editable field widget save/check behavior in form dialogs."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/FindPanel.vue": {
+   "body_hash": "4f3b9ecec0f563f9618b71efcfe2881754e215c603fc9a2e94bf48293bec5fcf",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "ARCHIVED: separate Find float replaced by in-place find on PanelFloat (App.vue + PanelFindActionBar.vue)."
+    ],
+    "keywords": [
+     "FindPanel",
+     "ARCHIVED",
+     "find float",
+     "PanelFindActionBar",
+     "legacy"
+    ],
+    "purpose": "Archived separate Find float; replaced by in-place find on PanelFloat and action bar.",
+    "read_when": "Understanding legacy find float code before editing current find UX."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/FormatRuleEditor.vue": {
+   "body_hash": "4477e260c780a1abb1281c4b988269ed650de7460ac431e6185aad883096fabb",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "FormatRuleEditor",
+     "format rule",
+     "ColorPicker",
+     "validate",
+     "panel table"
+    ],
+    "purpose": "Vue editor for panel table cell format rules with color and weight toggles.",
+    "read_when": "Changing format rule validation or color/weight editing in panel settings."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/PanelFindActionBar.vue": {
+   "body_hash": "f13fc815fbefaac8ae414900d5b3156f0e4dae507e0df38aaf68d2f4f1e21b68",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "PanelFindActionBar",
+     "find",
+     "perform find",
+     "constrain",
+     "panel header"
+    ],
+    "purpose": "In-panel find action bar with perform, constrain, extend, and exit find controls.",
+    "read_when": "Changing FileMaker-style find toolbar buttons below the panel header."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/PanelFindRow.vue": {
+   "body_hash": "69c14504a1a913eb8647362f22a7c2a512c1b67b505f94c765a7a48810cfe94b",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "ppv2-find-row",
+     "criteria",
+     "columns",
+     "find-perform",
+     "activate-row"
+    ],
+    "purpose": "Single ppv2-find-row criterion inputs with OR label and find-perform on Enter.",
+    "read_when": "Changing find criterion row inputs, activate-row, or OR label display."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/PanelFindToolbar.vue": {
+   "body_hash": "adacbc82293460c94aea454831fcd8e3c73c3849516ccd6973d3c173918db8d0",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "ARCHIVED: find actions moved to PanelFindActionBar.vue (bar below header)."
+    ],
+    "keywords": [
+     "PanelFindToolbar",
+     "ARCHIVED",
+     "find actions",
+     "PanelFindActionBar",
+     "legacy"
+    ],
+    "purpose": "Archived find toolbar; actions moved to PanelFindActionBar below the header.",
+    "read_when": "Understanding legacy find toolbar before editing current find action bar."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/PanelFloat.vue": {
+   "body_hash": "9013990bfcbb4e70dc62fea24b0d568d2a1e3379165725bca3cc490d76ceb684",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Grow when parent recomputes table min-width; never shrink (user may have resized wider).",
+     "Full-screen overlay prevents expensive hit-testing on table DOM during drag/resize."
+    ],
+    "keywords": [
+     "PanelFloat",
+     "drag",
+     "resize",
+     "bringToFront",
+     "ppv2-float",
+     "overlay"
+    ],
+    "purpose": "Draggable resizable floating panel shell hosting header, find bar, and table content.",
+    "read_when": "Changing panel float drag/resize, z-order, or overlay performance during drag."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/PanelFormDateTimeField.vue": {
+   "body_hash": "690cb0617507f9b7f833ea8d92de29339d156322c495348a37c1e6abf6aa8bb8",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "PanelFormDateTimeField",
+     "frappe control",
+     "datetime",
+     "mountFrappeControl",
+     "form"
+    ],
+    "purpose": "Mounts Frappe date/time controls for panel form dialog datetime field types.",
+    "read_when": "Fixing date or datetime field syncing between Vue and Frappe controls."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue": {
+   "body_hash": "4ecb80e634a7f5e7c99ea06239658e6c1d3899c87b750c2c9f279e72a8a953b0",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Widen dialog (never shrink) so footer buttons stay on one row.",
+     "Do not emit saved when no Frappe form save; host must not run onFormDialogSaved refresh."
+    ],
+    "keywords": [
+     "PanelFormDialog",
+     "form dialog",
+     "find",
+     "submit",
+     "WP readback",
+     "related tab"
+    ],
+    "purpose": "Main form dialog shell with find, native form, related tabs, submit, and WP readback.",
+    "read_when": "Changing form dialog save/submit flow, find layout, or dialog drag/resize."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue": {
+   "body_hash": "20ab1fd62a7c3a0afc563c952a2bdc3f31537cb453e54fd5bf9a2a5334e26fde",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "PanelFormDialogBody",
+     "sections",
+     "collapsible",
+     "RelatedTab",
+     "find mode"
+    ],
+    "purpose": "Form dialog body rendering sections, fields, and tab content for all dialog modes.",
+    "read_when": "Changing form section collapse, field layout, or tab switching in form dialog."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/PanelFormDialogFooter.vue": {
+   "body_hash": "bf68bdf274ebb201b09b00b856099101c5a347cb5970cb23b79b724833429e48",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "PanelFormDialogFooter",
+     "find",
+     "submit_hide_if",
+     "HIDE_NEVER",
+     "footer buttons"
+    ],
+    "purpose": "Form dialog footer with FileMaker-style find buttons and conditional submit visibility.",
+    "read_when": "Changing find footer buttons or submit_hide_if visibility rules."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/PanelFormDialogHeader.vue": {
+   "body_hash": "cf443972e4f0d6ad24966763af6a9031e9da0dfd21d62b9827dae35b7c506ce3",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "PanelFormDialogHeader",
+     "form dialog",
+     "header",
+     "panelChromeClasses",
+     "Vue"
+    ],
+    "purpose": "Form dialog header with title, navigation, and chrome styling for panel dialogs.",
+    "read_when": "Changing form dialog header layout or panel chrome classes on dialogs."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/PanelFormDialogInlineChildTab.vue": {
+   "body_hash": "808ed5610908ef06077db059157c1c5edf6100d621c086dd0a0d68f185571143",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "InlineChildTab",
+     "inline child",
+     "portal columns",
+     "addRow",
+     "form dialog"
+    ],
+    "purpose": "Inline child table tab editing portal columns inside a panel form dialog.",
+    "read_when": "Changing inline child row add/remove or cell editors in form dialog tabs."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/PanelFormDialogNativeFormTab.vue": {
+   "body_hash": "b968a5f4b081f63059b2c9463f4b9a8c1b176e40bc6413310975fc144f03a9c7",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "NativeFormTab",
+     "native form",
+     "remount",
+     "Frappe form",
+     "form dialog"
+    ],
+    "purpose": "Embeds a native Frappe form in a form dialog tab for full DocType editing.",
+    "read_when": "Changing native Frappe form mount/remount inside panel form dialog tabs."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue": {
+   "body_hash": "12e71feb1a27511d74058fd4c1c8f8f38ee8dd8db42885192e93eeddfccb9422",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Refetch this grid whenever the host bumps reloadTick (e.g. after WP read-back)."
+    ],
+    "keywords": [
+     "RelatedTab",
+     "related grid",
+     "edit_condition",
+     "reloadTick",
+     "Go to panel"
+    ],
+    "purpose": "Related DocType tab with editable grid, format rules, and Go to panel navigation.",
+    "read_when": "Changing related table editing, staged new rows, or related fetch/reload logic."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/PanelFormDialogTabBar.vue": {
+   "body_hash": "098861b88fee5527c045d3846c5f8df559ba887ac164d11acf22d5b6fa1468b9",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "PanelFormDialogTabBar",
+     "tabs",
+     "form dialog",
+     "find help",
+     "Vue"
+    ],
+    "purpose": "Tab bar switching between form dialog tabs including find help access.",
+    "read_when": "Adding form dialog tabs or changing tab bar labels and selection."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/PanelFormField.vue": {
+   "body_hash": "36d643fcc603384e0e3b34ec2f6a1bd8baa73e4793d1534fffd399ad772925e7",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "HTML-label fields: always render value as HTML, never editable."
+    ],
+    "keywords": [
+     "PanelFormField",
+     "fieldtype",
+     "find mode",
+     "Link field",
+     "exact criteria"
+    ],
+    "purpose": "Renders individual form dialog fields including find-mode criteria controls.",
+    "read_when": "Adding fieldtype support or changing find exact-match criteria on form fields."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/PanelFormFindSearchHelpModal.vue": {
+   "body_hash": "cc652502906e42f617629623d488a5701a1dcc86629b0523cc378f98e42a7cf3",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "FindSearchHelpModal",
+     "find help",
+     "search operators",
+     "form dialog",
+     "modal"
+    ],
+    "purpose": "Help modal explaining FileMaker-style find/search operators in form dialog find.",
+    "read_when": "Updating find/search help text or modal layout for form dialog find mode."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/PanelFormLinkField.vue": {
+   "body_hash": "594b5cde3c5919d0eb31663e1d2f22a062b5d0299c9a937e0f4b18cbb88ffdf9",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Action items (Create new, Advanced Search) always pass through.",
+     "df.change fires without Vue seeing it; forward changes here."
+    ],
+    "keywords": [
+     "PanelFormLinkField",
+     "Link field",
+     "awesomplete",
+     "frappe control",
+     "autocomplete"
+    ],
+    "purpose": "Mounts Frappe Link control with autocomplete for panel form dialog link fields.",
+    "read_when": "Fixing Link field change events not reaching Vue from Frappe awesomplete control."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/PanelFormScriptToolTab.vue": {
+   "body_hash": "59520946957f84eaef5d1abae87d117f3b8fb6186e5a424be37edec625ddf384",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "ScriptToolTab",
+     "script tool",
+     "form dialog tab",
+     "mount",
+     "panel form"
+    ],
+    "purpose": "Form dialog tab hosting a script tool panel for custom client-side utilities.",
+    "read_when": "Adding or mounting script tools inside panel form dialog tabs."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/PanelHeaderToolbar.vue": {
+   "body_hash": "2bfcee47ab4eb9ee210f3ca6a85b1980e7f5b88f08d4171399313aa38da61fb6",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "PanelHeaderToolbar",
+     "toolbar",
+     "panel header",
+     "refresh",
+     "find"
+    ],
+    "purpose": "Panel float header toolbar with refresh, find, filter, and action buttons.",
+    "read_when": "Changing panel header toolbar buttons or drag-handle mouse-down behavior."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/PanelTable.vue": {
+   "body_hash": "3e76d11c0a99b0e57e1fdd1d55e2030f7536411144fb9da0eeee26f5e0eb793e",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "PanelTable",
+     "panel table",
+     "format rules",
+     "column resize",
+     "sync status"
+    ],
+    "purpose": "Panel data table with sort, context menu, format rules, links, and column resize.",
+    "read_when": "Changing panel table rendering, row click, sync status, or column widths."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/PanelTableFilterBar.vue": {
+   "body_hash": "94af80a96328f35324f3015ef525afcd3dcd5d811476e1e4a05fed4875eda249",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Clear stale value whenever the field changes."
+    ],
+    "keywords": [
+     "ppv2-filter",
+     "filters",
+     "defaultFilters",
+     "emitFilterChange",
+     "isDateField"
+    ],
+    "purpose": "ppv2-filter-widget bar for column filters with date SQL and days-ago inputs.",
+    "read_when": "Changing panel table filter rows, ops buttons, or defaultFilters wiring."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/SpaPageNavBar.vue": {
+   "body_hash": "010d00a0aabeb5f7395db574e68b4d236b78ca546e4f184be3afb5329f2ecba2",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "ppv2-spa-nav",
+     "pages",
+     "currentSlug",
+     "page_slug",
+     "page_title"
+    ],
+    "purpose": "ppv2-spa-nav button row for switching between SPA pages by page_slug.",
+    "read_when": "Changing SPA nav button styling or currentSlug disabled state."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/SpaPageSwitcherFloat.vue": {
+   "body_hash": "aa93ea530549fc11b7a4c73205c0def2e7de97f8576bf9ab3942fa86f0d80de0",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "PanelFloat",
+     "SpaPageNavBar",
+     "measureDeskTitleAnchor",
+     "loadPages",
+     "switchTo"
+    ],
+    "purpose": "PanelFloat SPA page switcher anchored via measureDeskTitleAnchor near desk title.",
+    "read_when": "Changing floating SPA switcher placement or loadPages on mount."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/SyncErrorDialog.vue": {
+   "body_hash": "c656b74ad0ef1da7b8c6c5eb5fad576d85888b5b4261f87237719a80e0ad8506",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "ppv2-sync-err",
+     "Sync error",
+     "modelValue",
+     "status",
+     "summary"
+    ],
+    "purpose": "Modal dialog showing ppv2-sync-err status, summary, and detail for sync failures.",
+    "read_when": "Changing sync error dialog layout or status/summary/detail display."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/TabBar.vue": {
+   "body_hash": "b227bac416626cb1996f81e774ee9a25f6c7a1961767b23466b0dda40e2abfc2",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "TabBar",
+     "tab bar",
+     "panel page v2",
+     "sort_order",
+     "hide_bar",
+     "activeTab",
+     "theme-text-heading"
+    ],
+    "purpose": "Panel page v2 tab bar sorting tabs by sort_order and hiding when only one tab with hide_bar.",
+    "read_when": "When changing panel tab navigation UI or single-tab hide_bar visibility."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/TagColumn.vue": {
+   "body_hash": "50fbb6a034d1a94e2dcbdf12e7a63d49477e82bb4bc9056e3a84c4b4ed9ff34f",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Table and pronoun tile border colors are theme-exempt categorical type indicators."
+    ],
+    "keywords": [
+     "TagColumn",
+     "tag finder",
+     "field tile",
+     "circular link",
+     "is_link",
+     "is_table",
+     "navigate",
+     "select-field",
+     "tf-tile"
+    ],
+    "purpose": "Tag Finder column listing doctype field tiles with link/table navigation and circular reference detection.",
+    "read_when": "When editing tag finder field tiles, badges, or circular link navigation blocking."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/TagDialog.vue": {
+   "body_hash": "907586fbf7b896f5fc231cd5fc2607d6de1a8043d36786f9a1224a160892453e",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "theme-bg-primary toast must not set inline background or color."
+    ],
+    "keywords": [
+     "TagDialog",
+     "copy tag",
+     "clipboard",
+     "fallback",
+     "applyFilters",
+     "isHtml",
+     "baseTag",
+     "drag panel"
+    ],
+    "purpose": "Draggable Tag Finder dialog to copy merge tags with optional fallback value and HTML filter.",
+    "read_when": "When changing tag clipboard copy, fallback filters, or dialog drag and toast behavior."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/TagFinder.vue": {
+   "body_hash": "84783c966e6fa13c02aad701b3d318441dfe94ed9f621dd06eb0b0be255cbcae",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "TagFinder",
+     "rootDoctype",
+     "TagColumn",
+     "useTagFinder",
+     "loadColumn",
+     "buildTag",
+     "resize handle",
+     "float panel"
+    ],
+    "purpose": "Floating resizable Tag Finder panel browsing doctype field columns and opening tag copy dialogs.",
+    "read_when": "When changing Tag Finder layout, column navigation, resize, or tag dialog stacking."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/components/WidgetGrid.vue": {
+   "body_hash": "bfb1217f5ddf3e6ae9295a0475a99d69e2674aa961e55dc4325d771f0f6bbac1",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "WidgetGrid",
+     "widget grid",
+     "FieldWidget",
+     "DisplayWidget",
+     "gridColumns",
+     "cellSize",
+     "save-field"
+    ],
+    "purpose": "CSS grid layout placing field and display widgets on the panel page v2 canvas.",
+    "read_when": "When changing widget grid placement, cell sizing, or adding new widget types."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/composables/formDialogFetchFrom.js": {
+   "body_hash": "b10465fd4a57532af8c315bd116a4c317f21aac0679a458e80e48ba1fe17e04c",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "fetch_from failures are silently ignored because fetch is a convenience not critical."
+    ],
+    "keywords": [
+     "fetch_from",
+     "createHandleFetchFrom",
+     "link field",
+     "frappeCall",
+     "get_value",
+     "fetch_if_empty",
+     "formData"
+    ],
+    "purpose": "Factory for Link field fetch_from handlers pulling remote DocField values into form dialog data.",
+    "read_when": "When changing fetch_from link pull behavior or fetch_if_empty skipping in form dialogs."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/composables/frozenFormSave.js": {
+   "body_hash": "1c4d1e92ce2be2241ac794a299a29871f6e508f5d13643b613634365d2b12520",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "saveFrozenFormDocument",
+     "save_form_dialog_document",
+     "writeback_fetches",
+     "extractServerMessage",
+     "validationError",
+     "frozen form"
+    ],
+    "purpose": "Saves frozen form dialog documents via save_form_dialog_document with validation and writeback.",
+    "read_when": "When changing form dialog save flow, server error parsing, or writeback_on_submit handling."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/composables/frozenFormValidate.js": {
+   "body_hash": "d641386b692575c703f4af7e3b180becabdd1d39793fd00325d52da45035c61c",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Virtual DocField is computed not stored and is always read-only on Desk.",
+     "Panel Required keys skip dotted link fieldnames."
+    ],
+    "keywords": [
+     "validateFrozenForm",
+     "validatePanelRequiredFields",
+     "isVirtualDocField",
+     "mandatory_depends_on",
+     "depends_on",
+     "isMandatoryValueEmpty"
+    ],
+    "purpose": "Validates mandatory and panel-required fields on frozen form dialogs with Frappe depends_on rules.",
+    "read_when": "When changing mandatory validation, virtual field skipping, or panel Required keys."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/composables/useBackdropPointerDismiss.js": {
+   "body_hash": "cd5adcc8203568fdb5a8ff375cdd71e5c6eeeadf46370284dbe369dfc99e7358",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Text-selection overshoot release on backdrop must not dismiss because armed stays false."
+    ],
+    "keywords": [
+     "useBackdropPointerDismiss",
+     "onMouseDownSelf",
+     "onClickSelf",
+     "armed",
+     "backdropElRef",
+     "onDismiss",
+     "disarm"
+    ],
+    "purpose": "Arms backdrop dismiss only when mousedown and click both start on the backdrop avoiding text-selection overshoot.",
+    "read_when": "When changing modal backdrop click-to-dismiss or text-selection overshoot false dismiss."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/composables/useFindPanel.js": {
+   "body_hash": "859188b791ebb26073874f536be63f64b446a9e2a902aa2048360754b04b1cca",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "useFindPanel",
+     "matchFindCriterion",
+     "criteriaRows",
+     "foundRows",
+     "findMatchActive",
+     "constrainNames",
+     "mode find browse"
+    ],
+    "purpose": "In-place Find mode for panel floats with criteria rows, found set, and matchFindCriterion filtering.",
+    "read_when": "When changing Find panel criteria rows, foundRows browse mode, or constrainNames filtering."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/composables/useFormClientScript.js": {
+   "body_hash": "f8f5faf51c1415919ae79bec60bb30ab8140d80e08bc499b55b1d2fdc0329307",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "useFormClientScript",
+     "client script",
+     "parseClientHandlerSpec",
+     "form dialog",
+     "frappe.ui.form"
+    ],
+    "purpose": "Runs Frappe client scripts and handler specs inside the panel page v2 form dialog host.",
+    "read_when": "When wiring client script triggers, parseClientHandlerSpec, or form dialog script lifecycle."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/composables/useFormDialogChrome.js": {
+   "body_hash": "2c0f982010190b1c16c902a38f1d1a4f269a0195df710aeefe9dcd90d669e65b",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "confirmDiscardIfDirty",
+     "createRowNavKeydownHandler",
+     "onFormDialogKeydown",
+     "Alt ArrowLeft",
+     "getCanPrev",
+     "getCanNext",
+     "unsaved changes"
+    ],
+    "purpose": "Form dialog shell helpers for dirty discard confirm and Alt+Arrow row navigation keydown handler.",
+    "read_when": "When changing unsaved changes discard confirm or Alt+Arrow prev/next keyboard nav."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/composables/useFormDialogDisplayDirty.js": {
+   "body_hash": "13225cafd05bdcd83468b20ac9acf52b1f192d1ec0d7ee9cdd96a42b82398fc4",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "useFormDialogDisplayDirty",
+     "displayDirty",
+     "captureDisplayBaseline",
+     "diffDisplayBaseline",
+     "commitFocusedFrappeWidget"
+    ],
+    "purpose": "Tracks display-only dirty state by diffing DOM baseline against live form dialog field values.",
+    "read_when": "When changing display dirty detection, baseline capture, or focusout listener wiring."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/composables/useFormDialogRecordNav.js": {
+   "body_hash": "eae9c8a11b38f4580dee1d6fa4a26bc3e9521d5bed0cb2a3a1ecc5ad42fb11db",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Clear sourcePanelId when only a single record is in play so nav chrome stays disabled."
+    ],
+    "keywords": [
+     "useFormDialogRecordNav",
+     "formDialogNavInfo",
+     "panelRowArray",
+     "findMatchNames",
+     "sourcePanelId",
+     "prev next"
+    ],
+    "purpose": "Prev/next navigation over the panel row list that opened the form dialog including find filters.",
+    "read_when": "When changing form dialog record navigation or findMatchNames filtered row lists."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/composables/useFrozenFormLoad.js": {
+   "body_hash": "b2d6838f649ae9f42f1fa560b20d6c8201ae5a517883c64a60e6518ff2fb436c",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Fail-open editable on permission errors so load never blocks editing."
+    ],
+    "keywords": [
+     "createFrozenFormLoad",
+     "frozen form load",
+     "mergeWpTablesMappingDefaults",
+     "normalizeHopChainForRelated",
+     "loadSeq",
+     "formDialogLoadDebug"
+    ],
+    "purpose": "Load sequence and reset for frozen Panel Form Dialog meta, doc, WP Tables defaults, and related hops.",
+    "read_when": "When changing form dialog load, WP Tables default merge, hop chain parsing, or load debug."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/composables/useNceCardStack.js": {
+   "body_hash": "eb63047d434737c46f3c1d0e8ee64071d7d2d246523654c6a40f08349459ece2",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "useNceCardStack",
+     "parseOpenCardOpts",
+     "CardForm",
+     "CardModal",
+     "_nce_open_card",
+     "cardDefName",
+     "stacked card"
+    ],
+    "purpose": "Stacked Card modals for Card Definition drill-down with parseOpenCardOpts for window._nce_open_card.",
+    "read_when": "When changing nested card modal stack or CardForm onOpenCard wiring on panel page."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/composables/usePanel.js": {
+   "body_hash": "c981a8c33f4256082df30e2437222977f00ab9e052d8ef0f0fe7853d95153220",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "usePanel",
+     "doctype",
+     "parentFilter",
+     "definition",
+     "rows",
+     "columns",
+     "fetchPanel"
+    ],
+    "purpose": "Panel float composable fetching definition, rows, columns, and actions for a doctype panel.",
+    "read_when": "When changing panel row fetch, column config, or panel float open/close lifecycle."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/composables/usePanelActions.js": {
+   "body_hash": "91ff82d184efabea720afb40f1fb8e62bbf5f766fb8dd06b13a3d86c24e1bbc2",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "usePanelActions",
+     "openFormDialogStandalone",
+     "refreshPanelByDoctype",
+     "cascadeOpenPanels",
+     "closeAllPanels",
+     "panel actions"
+    ],
+    "purpose": "Panel page toolbar actions wiring openFormDialogStandalone, refresh, cascade, and closeAllPanels.",
+    "read_when": "When changing panel toolbar actions or cascade open panel behavior."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/composables/usePanelFormDialog.js": {
+   "body_hash": "322b0cdbbf4857f6215cb84e1383d40e6a2e2e4a99b69f6b645f5a197daf4d49",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Silently reset broken inline child table rows so they are never presented as editable."
+    ],
+    "keywords": [
+     "usePanelFormDialog",
+     "definitionName",
+     "loadMode",
+     "find-shell",
+     "requiredFields",
+     "readOnlyFields",
+     "frozen form"
+    ],
+    "purpose": "Composable managing Panel Form Dialog state, load, validate, save, and field permissions.",
+    "read_when": "When changing form dialog lifecycle, requiredFields, readOnlyFields, or find-shell loadMode."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/composables/usePanelFormDialogHost.js": {
+   "body_hash": "30009c0f3d8927c15cb910823c406d62ae1f2a3c4275ec69eb750a9128c5abe5",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "WP read-back save path never emits saved event unlike the standard save path.",
+     "Archived find-shell symbols in this file should be deleted once Find Panel is proven."
+    ],
+    "keywords": [
+     "usePanelFormDialogHost",
+     "FindPanel",
+     "find-shell",
+     "wpReadbackFlow",
+     "openFormDialogForFind",
+     "_matchFindCriterion",
+     "saved event"
+    ],
+    "purpose": "Form dialog host wiring save, find-shell archive, WP read-back, and App.vue panel integration.",
+    "read_when": "When changing form dialog host save path, WP read-back after save, or removing archived find-shell code."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/composables/useRelatedActions.js": {
+   "body_hash": "3d1b863c06e79ab58c75e38832b8b982fde2273690c56c8b6ade99fe24b1eee1",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "useRelatedActions",
+     "fetchRelatedForTab",
+     "portal action",
+     "related doctype",
+     "rootDoctype",
+     "definitionName",
+     "row action"
+    ],
+    "purpose": "Portal-action modal and row-action execution for related-doctype tabs on panel page v2.",
+    "read_when": "When changing related tab portal actions, row actions, or fetchRelatedForTab refresh."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/composables/useRelatedLabelWidths.js": {
+   "body_hash": "684cc71dbae710d5f93be8e93ad00aca52abb780b1f93eef8c281579a4f38232",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "useRelatedLabelWidths",
+     "relatedLabelColByTab",
+     "relatedLabelStorageKey",
+     "readSavedRelatedLabelWidth",
+     "defaultRelatedLabelWidthForTab",
+     "onRelatedLabelResizeMove"
+    ],
+    "purpose": "Resizable related-tab label column widths persisted in localStorage per definition and tab index.",
+    "read_when": "When changing relatedLabelColByTab sizing, localStorage keys, or drag resize handles."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/composables/useSendDialogs.js": {
+   "body_hash": "080f4a5b30e0f06b10372078f9960dd573539d44a669db7fd7a80aa67ce4f731",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "useSendDialogs",
+     "_openSendDialog",
+     "send email",
+     "send sms",
+     "closeSendDialog",
+     "panel row"
+    ],
+    "purpose": "Opens Frappe send-email and send-sms dialogs for selected panel rows via useSendDialogs.",
+    "read_when": "When changing send email or SMS dialog wiring from panel row selection."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/composables/useSpaPageNav.js": {
+   "body_hash": "3451a5836293dca3f593e604af7ff2437f4621edac7b4a6b30a84c841f5e2b41",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "useSpaPageNav",
+     "SPA Page Definition",
+     "is_active",
+     "header nav",
+     "spa page"
+    ],
+    "purpose": "Loads active SPA Page Definition entries for the panel page header navigation bar.",
+    "read_when": "When changing SPA header nav items or is_active page definition filtering."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/composables/useTagFinder.js": {
+   "body_hash": "b223bbe7ba699ec87df1fea7bf9bacbe6ccbe48194ef113edf468761b80094bd",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "useTagFinder",
+     "loadColumn",
+     "buildTag",
+     "applyFilters",
+     "_buildLinkChainTag",
+     "_buildTableTag",
+     "columns"
+    ],
+    "purpose": "Tag Finder state composable loading doctype columns and building merge tag strings with filters.",
+    "read_when": "When changing tag column loading, buildTag paths, or applyFilters for merge tags."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/composables/wpReadbackFlow.js": {
+   "body_hash": "0d84fa073c786b50cafad462a9aafafe876a31bee0ec306d0f2fcb6e598b2a54",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "wpReadbackFlow",
+     "pollSyncJobsUntilDone",
+     "mergeFreshDocIntoPanel",
+     "fetchFreshDocAfterSync",
+     "NCE Sync",
+     "jobIds",
+     "PanelFormDialog"
+    ],
+    "purpose": "WP SQL read-back helpers polling NCE Sync jobs then fetching fresh Frappe doc after form save.",
+    "read_when": "When changing post-save sync job polling or mergeFreshDocIntoPanel row update."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/main.js": {
+   "body_hash": "739fe661295547ac5f481a46d147b4b70fa552e439ae1c2ab87c5075088d57c4",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "NCEPanelPageV2",
+     "createApp",
+     "App.vue",
+     "panelMode",
+     "pageSlug",
+     "pageTitle",
+     "mount"
+    ],
+    "purpose": "Vue entry mounting NCEPanelPageV2 App with panelMode, pageSlug, and pageTitle injects.",
+    "read_when": "When changing panel page v2 bootstrap mount options or global NCEPanelPageV2 export."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/mount_format_rule_editor.js": {
+   "body_hash": "e4fdcbf88c410343689526aef90447688c93fa3901cb36bd934792ab9b730abe",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "mountFormatRuleEditor",
+     "FormatRuleEditor",
+     "nceMountFormatRuleEditor",
+     "rootDoctype",
+     "allowedFields",
+     "last_validated_sql"
+    ],
+    "purpose": "Mounts FormatRuleEditor Vue widget for panel format rules with nceMountFormatRuleEditor global.",
+    "read_when": "When changing format rule editor mount options or last_validated_sql callback wiring."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/nce_cards/CardForm.vue": {
+   "body_hash": "c75ba1cfd8335b83f0d971dc913a0496b66b6d9352055be2f94c37653b269a67",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "CardForm",
+     "useCardForm",
+     "WidgetGrid",
+     "TabBar",
+     "ActionsPanel",
+     "cardDefName",
+     "save-field",
+     "open-card"
+    ],
+    "purpose": "Card Definition form view with TabBar, WidgetGrid, ActionsPanel, and nested open-card drill-down.",
+    "read_when": "When changing card modal field widgets, saveField, or tab widget collection."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/nce_cards/CardModal.vue": {
+   "body_hash": "aa0ed2f4ab0bd3209e170d26cecf2cc63818b6ab2bab96bd99d4b01313c4e3bf",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "CardModal",
+     "CardForm",
+     "useBackdropPointerDismiss",
+     "card-modal-backdrop",
+     "Escape",
+     "Teleport"
+    ],
+    "purpose": "Teleport card modal backdrop wrapping CardForm with pointer dismiss and Escape close.",
+    "read_when": "When changing card modal backdrop dismiss, z-index, or Escape key handling."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/nce_cards/useCardForm.js": {
+   "body_hash": "2ab92b4c76a649ec3e3d04f1c8a381169c9c81197566773e5a9a57d10b3710cb",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "useCardForm",
+     "Card Definition",
+     "resolveHopPath",
+     "resolvedHops",
+     "saveField",
+     "frappeCall",
+     "getDoc"
+    ],
+    "purpose": "Loads Card Definition doc, resolves hop paths, and saves field values for card drill-down forms.",
+    "read_when": "When changing card form load, resolveHopPath, saveField, or refresh behavior."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/accessProfileManageFields.js": {
+   "body_hash": "6407263567849bcd0e815ebd714a9d30e12a1adf3f026ecb5f2f828f9868f053",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "openManageFieldsDialog",
+     "Manage Fields",
+     "NCE Access Profile",
+     "documentType",
+     "panel inline grid"
+    ],
+    "purpose": "Manage Fields dialog for NCE Access Profile Table rows mirroring nce_access_profile.js.",
+    "read_when": "When changing access profile inline grid Manage Fields dialog or documentType picker."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/enrollmentWpActions.js": {
+   "body_hash": "68feeca41dc1ba2ff25a53d874d0993b1cf3bdea568a0783070894343823b2f7",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "enrollmentWpActions",
+     "promptCancellationFee",
+     "CANCELLATION_FEE_PROMPT_FIELD",
+     "parseCancellationFeeInput",
+     "money",
+     "escapeHtml"
+    ],
+    "purpose": "Enrollment WordPress action helpers for cancellation fee prompt and HTML-safe money formatting.",
+    "read_when": "When changing cancellation fee prompt, CANCELLATION_FEE_PROMPT_FIELD, or enrollment WP actions."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/fieldTypeMap.js": {
+   "body_hash": "9ba0cf0487b337a525b151ec7c9fd50d9608ba79f7bd38a001e82fa5c9622f77",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "getComponentConfig",
+     "fieldtype",
+     "layout field",
+     "component props",
+     "Frappe fieldtypes"
+    ],
+    "purpose": "Maps Frappe fieldtypes to panel form dialog component configs and layout-only fields.",
+    "read_when": "When adding fieldtype widget mapping or layout field handling in form dialog."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/findColumns.js": {
+   "body_hash": "f2282992cfc23aafc57704bcc8af83ec2dc0e89e6d1f52401623c02c30260b5d",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "buildFindColumns",
+     "Find Panel",
+     "search-only columns",
+     "panel columns",
+     "visible columns"
+    ],
+    "purpose": "Builds Find Panel column list from visible panel columns plus search-only columns.",
+    "read_when": "When changing Find Panel column layout or search-only column inclusion."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/findCriterion.js": {
+   "body_hash": "2e2579bee73682b5d461c0ecef2215faba94303f4b7b213f7639ee4f7eb412ac",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "matchFindCriterion",
+     "FileMaker",
+     "wildcard",
+     "contains",
+     "operators",
+     "find criterion"
+    ],
+    "purpose": "FileMaker-style find criterion matching for panel Find with wildcard and operator tokens.",
+    "read_when": "When changing find match operators, wildcard parsing, or matchFindCriterion rules."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/formDialogDisplayBaseline.js": {
+   "body_hash": "6ff773ccd54365bb4c2c844e8dbf071a4f5dd033519d60990de9c2c61971198e",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Read-only baseline never writes into formData to avoid Frappe date format side effects."
+    ],
+    "keywords": [
+     "formDialogDisplayBaseline",
+     "captureDisplayBaseline",
+     "diffDisplayBaseline",
+     "findFieldWrap",
+     "isBaselineField",
+     "displayValueKey"
+    ],
+    "purpose": "Display-baseline dirty check comparing control DOM values against load snapshot without writing formData.",
+    "read_when": "When changing display dirty baseline capture, diffDisplayBaseline, or field wrap selectors."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/formDialogFindFields.js": {
+   "body_hash": "268e836a5a3414db44f00010c335db366db06491b357aa7abf1d0aea29fbd98e",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "isFindSearchableRootField",
+     "stringifyFindCriterionSeed",
+     "firstNonRelatedTabIndex",
+     "find shell",
+     "search.py"
+    ],
+    "purpose": "Root fields eligible for FileMaker-style find matching server search.py skip rules.",
+    "read_when": "When changing find-searchable root fields or firstNonRelatedTabIndex for find shell."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/formDialogLiveScrape.js": {
+   "body_hash": "f6402f3c9547b78d221100cf2e9d4a816e02457ab4baec44e6ee87b87d82735b",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "formDialogLiveScrape",
+     "syncWritableControlsIntoFormData",
+     "deprecated",
+     "display baseline",
+     "readLiveFieldValue"
+    ],
+    "purpose": "Deprecated re-exports after display baseline replaced formData-writing live scrape helpers.",
+    "read_when": "When removing legacy scrape calls or migrating to display baseline dirty checks."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/formDialogLoadDebug.js": {
+   "body_hash": "3be54dc2f21db4c1ebe52802b4c68092e58485a9a6bfe77808427cebd9630de8",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "isFdLoadDebugEnabled",
+     "FD_LOAD_DEBUG_STORAGE_KEY",
+     "nce_fd_load_debug",
+     "load debug overlay"
+    ],
+    "purpose": "localStorage gate and key for Panel Form Dialog load step debug overlay.",
+    "read_when": "When enabling or checking form dialog load debug via nce_fd_load_debug storage."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/formDialogPortalColumns.js": {
+   "body_hash": "e6b6cc7862a50f7ad428513035aafea99cee195af011ab0332b460ca30e22c97",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "formDialogPortalColumns",
+     "parsePortalFieldConfigRaw",
+     "portal_fields",
+     "in_list_view",
+     "fieldEligible",
+     "metaFieldsForPortalEditor"
+    ],
+    "purpose": "Portal grid column parsing mirroring Desk form_dialog.js and server portal_fields for inline child tables.",
+    "read_when": "When changing portal field config parsing, in_list_view columns, or fieldEligible rules."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/formDialogRelatedGoTo.js": {
+   "body_hash": "313086554e02d1530b4405970ed30cc648b0d37158240faa641f54424d577c36",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "buildRelatedTabPanelFilter",
+     "canGoToRelatedPanel",
+     "related tab",
+     "hop_chain",
+     "get_panel_data",
+     "link_field"
+    ],
+    "purpose": "Builds get_panel_data drill-down filters for Form Dialog related-tab Go to panel action.",
+    "read_when": "When changing related tab Go to filters or canGoToRelatedPanel eligibility."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/formDialogSectionRows.js": {
+   "body_hash": "9111fc19a7ca16601151beb349d117f7538fbcdbf2f1a922a6f2f95341fa2f4a",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "sectionGridRows",
+     "sectionColumnCount",
+     "visibleFormDialogSections",
+     "form dialog section",
+     "column stacks"
+    ],
+    "purpose": "Row-major section grid layout for form dialog tab panes from parsed section columns.",
+    "read_when": "When changing sectionGridRows layout or visibleFormDialogSections filtering."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/formDialogSnapshot.js": {
+   "body_hash": "a8d749d4a62a6d8ecd68a325b50452b07e6fd4b5a1fcfc210c0e0bde8663c447",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Check fields with value 0 or 1 are never treated as empty scalars."
+    ],
+    "keywords": [
+     "formDialogSnapshot",
+     "isFormDataDirty",
+     "snapshotForCompare",
+     "scalarValuesEquivalent",
+     "isEmptyScalarValue"
+    ],
+    "purpose": "Scalar dirty-check helpers comparing formData snapshots with Check 0/1 normalization.",
+    "read_when": "When changing isFormDataDirty, snapshotForCompare, or scalarValuesEquivalent rules."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/frappeCall.js": {
+   "body_hash": "e924a995859b48edb6a83b7c63c864100842c9566b0362985198abffe3108cdf",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "frappeCall",
+     "frappe.call",
+     "freeze_message",
+     "r.message",
+     "Promise wrapper"
+    ],
+    "purpose": "Promise wrapper for frappe.call resolving message or rejecting when response is empty.",
+    "read_when": "When changing panel page API call error handling or freeze options."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/frappeDateControlSync.js": {
+   "body_hash": "22effdf569409656eb235cd56b2080198d18fc762e5c142362691418f20691e7",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Programmatic Vue updates must use set_input not set_value or df.change retriggers and can freeze the tab."
+    ],
+    "keywords": [
+     "frappeDateControlSync",
+     "applyVueValueToDateControl",
+     "writeStubDocField",
+     "stubDocMatchesModel",
+     "Date control",
+     "df.change"
+    ],
+    "purpose": "Bridge Vue modelValue and Frappe Date/Datetime controls updating stub doc without retrigger loops.",
+    "read_when": "When fixing date control sync, set_input vs set_value, or df.change handler wiring."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/frappeFieldExpr.js": {
+   "body_hash": "544019682643d4486d765559ba1df5aebc4f28abc9e4270431a2a0ce7e078739",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Empty depends_on string is always true."
+    ],
+    "keywords": [
+     "frappeFieldExpr",
+     "evaluateExpression",
+     "depends_on",
+     "mandatory_depends_on",
+     "read_only_depends_on",
+     "isLayoutField"
+    ],
+    "purpose": "Evaluates Frappe depends_on mandatory_depends_on and read_only_depends_on expressions on formData.",
+    "read_when": "When changing conditional field visibility, mandatory, or read-only expression parsing."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/inlineChildTableLayout.js": {
+   "body_hash": "cc52b5e7430e6a3f66e9bb28752a16e8ab92e71eb837a2878e1ad9c299a98603",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "inlineChildTableLayout",
+     "primaryInlineColumnIndex",
+     "inlineColumnRole",
+     "labelWidthRem",
+     "isInlineActionButtonColumn"
+    ],
+    "purpose": "Column layout helpers for form-dialog inline child-table grids based on fieldtype and label length.",
+    "read_when": "When changing inline child table column roles, labelWidthRem, or action button columns."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/measureDeskTitleAnchor.js": {
+   "body_hash": "72057c92c72a6446d96b3dffc531daa369c702cc37cf3b2689e61fa898322cd5",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "measureDeskTitleAnchor",
+     "ppv2-zone-pages",
+     "DEFAULT_H",
+     "DEFAULT_W",
+     "Desk title anchor"
+    ],
+    "purpose": "Measures Desk title anchor coordinates for SPA page switcher inside ppv2-zone-pages.",
+    "read_when": "When positioning panel page switcher float relative to Desk zone 2 title."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/nativeFormHost.js": {
+   "body_hash": "8b047ee80d3cbdee131189bb406aa8f18f53374cea6e46e89045a10567b7b9c6",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "nativeFormHost",
+     "createNativeFormHost",
+     "frappe.ui.form",
+     "ensureFrappeFormReady",
+     "frm.wrapper",
+     "tab panes"
+    ],
+    "purpose": "Mounts real frappe.ui.form.Form inside Panel Form Dialog tab panes with tab reparenting.",
+    "read_when": "When changing native Frappe form host lifecycle, tab switch reparent, or layout fieldtypes."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/navigateToSpaPage.js": {
+   "body_hash": "d4212ce4fb6bcafefab7eb67866e907582cb0a1298ef6fdf2a2aae84dd75f9ae",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "navigateToSpaPage",
+     "panel-page",
+     "wrapper._vue_app",
+     "Desk navigation",
+     "SPA route"
+    ],
+    "purpose": "Desk navigation to another panel SPA route preserving mounted Vue apps on page wrappers.",
+    "read_when": "When changing SPA page switch without full reload or wrapper._vue_app preservation."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/openDeskDoctypeList.js": {
+   "body_hash": "fc91c7cfde38171a111d193820bed55a19cad8369d79f7a750b85030168bbe11",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "openDeskDoctypeListInNewTab",
+     "Desk list view",
+     "doctype",
+     "new tab"
+    ],
+    "purpose": "Opens standard Frappe Desk list view for a DocType in a new browser tab.",
+    "read_when": "When wiring open list in new tab actions from panel page or form dialog."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js": {
+   "body_hash": "892edb41702dcfd31890ccd329f07c89fedb700444a5ce0683f76a68c314e4ba",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "panelChromeClasses",
+     "PANEL_CHROME_DEFAULTS",
+     "panelChromeBg",
+     "panelChromeBorder",
+     "PANEL_BORDER_DEFAULTS",
+     "Colours tab"
+    ],
+    "purpose": "Resolves per-panel chrome bg, border, shadow CSS classes from Page Panel colour config defaults.",
+    "read_when": "When changing panel float surface colours, border width vars, or PANEL_CHROME_DEFAULTS."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/panelFieldReadOnly.js": {
+   "body_hash": "98d46c71a2dc518ae26f974d1004a227c2e52301d9d950305843383b1c7cb71c",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "panelFieldReadOnly",
+     "isFieldInPanelReadOnlyList",
+     "isRootFieldPanelReadOnly",
+     "read_only_fields",
+     "linkField"
+    ],
+    "purpose": "Matches Page Panel read_only_fields keys against root and related form dialog fields.",
+    "read_when": "When changing panel read-only field matching for root vs link-prefixed fieldnames."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/panelFormatRules.js": {
+   "body_hash": "cebccc33407a035fefed5379614cbc67991ac80e608e932f3431c7f2d62d157b",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "panelFormatRules",
+     "formatRuleForColumn",
+     "isFormatRuleActive",
+     "activeFormatRule",
+     "fieldKeyMatchesColumn",
+     "conditional format"
+    ],
+    "purpose": "Conditional format rule lookup and inline style for panel table and dialog column cells.",
+    "read_when": "When changing formatRuleForColumn, isFormatRuleActive, or cell colour/weight overrides."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/panelTableColWidths.js": {
+   "body_hash": "2737a0288fe961d089072721444aeea4cae7312a78724e1d07a02e8f8d37495b",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "panelTableColWidths",
+     "columnMetrics",
+     "PANEL_FLOAT_DEFAULT_W",
+     "panelFloatWidthFromTableMin",
+     "PanelTable",
+     "title_field"
+    ],
+    "purpose": "Panel table column sizing shared by PanelTable.vue and App.vue pre-layout float width.",
+    "read_when": "When changing column metrics, title_field min width, or PANEL_FLOAT_DEFAULT_W sizing."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/parseClientHandlerSpec.js": {
+   "body_hash": "b4a4296f004b229c3767f65e32a06e72e218cacf9015bcbfd0438d1718d21de9",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "parseClientHandlerSpec",
+     "client_handler",
+     "Panel Action",
+     "refresh_x",
+     "show_dt",
+     "handler key"
+    ],
+    "purpose": "Parses Panel Action client_handler strings into handler key and parenthesized args.",
+    "read_when": "When adding client_handler keys or parsing show_dt style action specs."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/parseLayout.js": {
+   "body_hash": "12d06cdf93cdb420c8dae95b1b1c2a539e56bcb8f406fb2dee4193fe422172a1",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Keep FORM_DIALOG_LEAD_TAB_ANCHOR in sync with server FD_LEAD_TAB_ANCHOR in form_dialog capture meta."
+    ],
+    "keywords": [
+     "parseLayout",
+     "FORM_DIALOG_LEAD_TAB_ANCHOR",
+     "syncSectionColumnCount",
+     "tabHasVisibleFields",
+     "sectionHasVisibleFields"
+    ],
+    "purpose": "Parses frozen DocType meta into form dialog tabs and sections with lead tab anchor.",
+    "read_when": "When changing FORM_DIALOG_LEAD_TAB_ANCHOR, section columns, or visible tab filtering."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/portalColumnEditable.js": {
+   "body_hash": "47726851130b98e9fd38b09117365db74dbe771f4bad57bdfbdab479691d30ce",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Editability is not driven by portal_field_config.editable only Show fieldtype and read_only rules."
+    ],
+    "keywords": [
+     "portalColumnEditable",
+     "isPortalGridColumnEditable",
+     "RELATED_GRID_NON_EDITABLE_TYPES",
+     "read_only_fields",
+     "isMetaReadOnly"
+    ],
+    "purpose": "Decides portal grid column editability from fieldtype, meta read_only, and panel read_only_fields.",
+    "read_when": "When changing related or inline child column edit rules excluding portal_field_config.editable."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/ppv2Debug.js": {
+   "body_hash": "fbf29c5da05b9153f717f6afe4a85b483cb21f2f682ce1cfa605c5bc1ca24f61",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "ppv2Debug",
+     "isPpv2DebugEnabled",
+     "PPV2_DEBUG_STORAGE_KEY",
+     "nce_ppv2_debug",
+     "ppv2DebugLog"
+    ],
+    "purpose": "Gated panel page v2 debug logging controlled by nce_ppv2_debug localStorage key.",
+    "read_when": "When enabling ppv2DebugLog console output or checking isPpv2DebugEnabled gate."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/relatedCellFormat.js": {
+   "body_hash": "33c4b3118eac1de79a4ef330ecfa2d248dbfe9195f96d17d50427cffed73490a",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "relatedCellFormat",
+     "relatedCellRaw",
+     "relatedColumnMandatory",
+     "parseSelectOptions",
+     "isSelectColumn",
+     "portal grid"
+    ],
+    "purpose": "Pure helpers formatting related-doctype portal grid cell values, selects, and mandatory markers.",
+    "read_when": "When changing relatedCellRaw, parseSelectOptions, or relatedColumnMandatory display."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/submitPerfTrace.js": {
+   "body_hash": "8f7251c0e7a1671c3b216de76a6037b633983e4218e9d328940e1972949a84ec",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "submitPerfTrace",
+     "createSubmitPerfTrace",
+     "nce_fd_submit_trace",
+     "Shift+click",
+     "submit timings",
+     "msgprint"
+    ],
+    "purpose": "Form Dialog submit timing trace to console with optional Shift+click live msgprint stream.",
+    "read_when": "When debugging form dialog save performance or nce_fd_submit_trace localStorage gate."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/syncGateClient.js": {
+   "body_hash": "2ed4f9f58b6df93d634203da0bf09ae21934377754ba2d9391501e19e2fff1c2",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "syncGateClient",
+     "isDoctypeSyncBusy",
+     "assertDoctypeNotSyncBusy",
+     "nce_sync",
+     "Redis gate",
+     "mirrored tables"
+    ],
+    "purpose": "Client check for nce_sync per-DocType Redis busy gate before opening mirrored form dialogs.",
+    "read_when": "When blocking form dialog open during sync or changing assertDoctypeNotSyncBusy."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/wooPublishDocNormalize.js": {
+   "body_hash": "a83bf5603af381c1be3e2430622ae2cc23b3c770d6fa4bef8d5d1d399b483305",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "wooPublishDocNormalize",
+     "normalizeDocForWooEventsPublish",
+     "coerceToYmd",
+     "usStyleMmDdYyyyToYmd",
+     "WooCommerce",
+     "Events doc"
+    ],
+    "purpose": "Normalizes Events doc date fields to YYYY-MM-DD before WooCommerce preview and publish.",
+    "read_when": "When fixing US MM-DD-YYYY date coercion for Woo publish or normalizeDocForWooEventsPublish."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/utils/wpUserSwitch.js": {
+   "body_hash": "b52fc02d1a1937be99c0289e6858fd864288c6b96f15e501b2773d285d51c9cb",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "wpUserSwitch",
+     "openWpUserSwitch",
+     "familyIdFromRow",
+     "WordPress",
+     "signed bridge",
+     "family user"
+    ],
+    "purpose": "Opens WordPress in new tab logged in as family user via signed bridge URL from panel row.",
+    "read_when": "When changing familyIdFromRow extraction or openWpUserSwitch bridge API call."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/vite.config.mjs": {
+   "body_hash": "7bc061dfaf8e5712b02cdc8a8a9b14d652c83586d3accf64e15b6db3ebd90ade",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "vite.config.mjs",
+     "defineConfig",
+     "panel_page_v2_dist",
+     "NCEPanelPageV2",
+     "main.js",
+     "iife",
+     "@vitejs/plugin-vue"
+    ],
+    "purpose": "Vite lib build config producing panel_page_v2.js IIFE bundle into panel_page_v2_dist.",
+    "read_when": "When changing panel page v2 build entry, outDir, or NCEPanelPageV2 IIFE output."
+   }
+  },
+  "nce_events/public/js/panel_page_v2/vite.mount.config.mjs": {
+   "body_hash": "b444c8c3a84d8357a21db30216b76f9c9b9debbc6b25fc012e4cc9a58cdf1015",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "vite.mount.config.mjs",
+     "mount_format_rule_editor.js",
+     "nceMountFormatRuleEditor",
+     "panel_page_v2_dist",
+     "emptyOutDir false",
+     "assetFileNames"
+    ],
+    "purpose": "Vite lib build for mount_format_rule_editor.js IIFE and CSS into panel_page_v2_dist.",
+    "read_when": "When changing format rule editor bundle entry or mount_format_rule_editor.css output."
+   }
+  },
+  "nce_events/public/js/schema_explorer.js": {
+   "body_hash": "12177ab12d7e18e79985b291619ad20c0651f2b4a9517ef199b61b0b3409baed",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "schema_explorer",
+     "nce_events.schema_explorer",
+     "se-float",
+     "se-tag-panel",
+     "WP Tables",
+     "SKIP_FIELDTYPES",
+     "_open_explorer"
+    ],
+    "purpose": "Legacy floating schema explorer for WP Tables doctypes with tag copy into focused inputs.",
+    "read_when": "When changing schema explorer columns, tag panels, or WP Tables doctype picker."
+   }
+  },
+  "nce_events/public/js/spa_panel_page_boot.js": {
+   "body_hash": "a3649659ff062981daf61671ee0d4f9610443c5f554220e9af8b7b268ef60af9",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Frappe Page routes have no .page wrapper so page-head is direct child of wrapper."
+    ],
+    "keywords": [
+     "spa_panel_page.boot",
+     "get_spa_page_config",
+     "_VUE_ASSETS",
+     "spa-panel-page",
+     "clearLayoutScope",
+     "panel_page_v2_dist"
+    ],
+    "purpose": "Boots panel page V2 SPA from SPA Page Definition loading Vue assets and layout scope styles.",
+    "read_when": "When changing SPA page boot, get_spa_page_config, or spa-panel-page layout CSS hiding page-head."
+   }
+  },
+  "nce_events/public/js/spa_panel_page_register.js": {
+   "body_hash": "35a02fea010bf95d5a593ea010ab464f379a546ff7e4d3e3c9f5d6143863cb50",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "register must run synchronously when Page script loads before on_page_show fires."
+    ],
+    "keywords": [
+     "spa_panel_page.register",
+     "on_page_show",
+     "on_page_hide",
+     "pageSlug",
+     "spa_panel_page_boot",
+     "frappe.pages"
+    ],
+    "purpose": "Registers Frappe Page route on_page_show to boot panel SPA from SPA Page Definition slug.",
+    "read_when": "When adding SPA page routes or wiring on_page_hide clearLayoutScope cleanup."
+   }
+  },
+  "nce_events/utils/__init__.py": {
+   "body_hash": "e83a050591ebc474ef78552949236bd88a63c080b15678571a938dbe9d8becaf",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "nce_events.utils",
+     "writeback_fetched_fields",
+     "__all__",
+     "writeback"
+    ],
+    "purpose": "Public utils package re-exporting writeback_fetched_fields for server callers.",
+    "read_when": "When importing nce_events.utils writeback helpers from other modules."
+   }
+  },
+  "nce_events/utils/sql_table.py": {
+   "body_hash": "68d5f6955f832a9399486e9b50949339c7d22eccd9f2e94d4ad0bf554a39fe5d",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "physical_table_name",
+     "tab",
+     "doctype",
+     "MariaDB",
+     "raw SQL",
+     "get_table_name"
+    ],
+    "purpose": "Returns MariaDB physical table name tab plus DocType for raw SQL queries.",
+    "read_when": "When writing raw SQL needing tabDocType table names without Database.get_table_name."
+   }
+  },
+  "nce_events/utils/version.py": {
+   "body_hash": "a78f7f4c86fecac0e37a12bbc770b87f031da7d1ef5a7f9a45ac63c7eb4b9445",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "get_frappe_major_version",
+     "is_v16_or_later",
+     "frappe.__version__",
+     "Frappe version"
+    ],
+    "purpose": "Frappe version helpers returning major version and is_v16_or_later check.",
+    "read_when": "When branching behavior on Frappe v15 vs v16 or reading frappe.__version__."
+   }
+  },
+  "nce_events/utils/writeback.py": {
+   "body_hash": "dcd7713df51c010f4fb0c09cff22445912241a7e685d9cfb99bf3f4bd4323c23",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Panel Form Dialog save uses save_form_dialog_document writeback_fetches instead of this standalone method."
+    ],
+    "keywords": [
+     "writeback_fetched_fields",
+     "fetch_from",
+     "writeback",
+     "save_form_dialog_document",
+     "updated_count",
+     "_writeback_root_fields"
+    ],
+    "purpose": "Whitelisted writeback of editable fetch_from fields to linked source documents after save.",
+    "read_when": "When changing fetch_from writeback logic or batch server writeback_fetched_fields API."
+   }
+  },
+  "scripts/build_code_index.py": {
+   "body_hash": "7f2e575554e2bfbefe37cf5d757783738c90329fb6259bf7a831960849d42f78",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Missing module_overrides path on disk raises error so renames and deletes surface loudly."
+    ],
+    "keywords": [
+     "build_code_index",
+     "CODE_INDEX.json",
+     "CODE_INDEX.manual.json",
+     "GROUP_RULES",
+     "whitelist_endpoints",
+     "extract_python"
+    ],
+    "purpose": "Scans repo to rebuild CODE_INDEX.json exports and whitelist endpoints with manual overrides.",
+    "read_when": "When regenerating code index after file moves or updating CODE_INDEX.manual.json overrides."
+   }
+  },
+  "scripts/style-audit.py": {
+   "body_hash": "3c8621d150657ad71d94d29522f78c523c295a772de806a5e4a906f7db045c9b",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "style-audit",
+     "theme_defaults.css",
+     "check_bare_hex",
+     "check_unknown_aliases",
+     "SCOPE_DIRS",
+     "panel_page_v2",
+     "theme contract"
+    ],
+    "purpose": "Theme contract guard scanning panel Vue UI for bare hex, unknown CSS vars, and typography violations.",
+    "read_when": "When running style-audit.sh or adding theme bridge alias checks for panel_page_v2."
+   }
+  }
+ },
+ "version": 1
+}

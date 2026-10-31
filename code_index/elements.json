@@ -2,7 +2,7 @@
 "_meta": {
 "description": "The single authoritative code index of this project: every function, class, method, route, test, Vue component, CSS section and doc section with a label, plus each file's purpose. Query it with the shared code-index tool (find / show / callers); do not read this file whole. Generated: never edit by hand; hand-written notes live in code_index/project.json.",
 "generator": "_Project support files/code-index/codeindex.py",
-"count": 1971,
+"count": 1972,
 "project_sha256": "4149da0557eced977397fd926c9ce2ebca6a2b3cea453cc77dde71de6d1839c7",
 "headers_sha256": "c2fa568103e610cc7f9aac3001af8d84212aaff9508737b20ed83ee633fd3955"
 },
@@ -2552,6 +2552,20 @@
 "template",
 "preview",
 "Jinja2"
+]
+},
+"nce_events/public/js/js_dialogs/template_picker.js": {
+"purpose": "Popup filterable Email Template picker limited to templates whose Reference DocType matches the panel DocType.",
+"read_when": "Changing how send dialogs pick Email Templates or the template DocType filter.",
+"gotchas": [
+"Only templates with reference_doctype equal to the panel DocType are listed; untagged templates are hidden."
+],
+"keywords": [
+"template_picker",
+"Email Template",
+"reference_doctype",
+"picker",
+"send dialog"
 ]
 },
 "nce_events/public/js/new_woo_commerce_product.js": {
@@ -19938,7 +19952,7 @@
 "name": "all",
 "qualname": "all",
 "sig": "",
-"hash": "bad851bbb2",
+"hash": "0eeb93921c",
 "calls": [],
 "label": "panel_page.css (the whole file)",
 "label_source": "title"
@@ -19962,7 +19976,7 @@
 "name": "all",
 "qualname": "all",
 "sig": "",
-"hash": "4938612638",
+"hash": "379e7522a0",
 "calls": [],
 "label": "theme_defaults.css (the whole file)",
 "label_source": "title"
@@ -20842,11 +20856,11 @@
 "name": "EmailDialog",
 "qualname": "EmailDialog",
 "sig": "",
-"hash": "9b243f26a0",
+"hash": "16432c62dc",
 "exported": false,
 "calls": [],
 "label": "Email send dialog with template selection, message composition, and recipient preview",
-"label_source": "generated",
+"label_source": "generated-stale",
 "label_hash": "9b243f26a0"
 },
 {
@@ -20873,11 +20887,11 @@
 "name": "_build",
 "qualname": "EmailDialog._build",
 "sig": "()",
-"hash": "855133eea1",
+"hash": "14f2a54d18",
 "exported": false,
 "calls": [],
 "label": "Build HTML structure for draggable email dialog with form fields and action buttons",
-"label_source": "generated",
+"label_source": "generated-stale",
 "label_hash": "855133eea1"
 },
 {
@@ -20887,11 +20901,11 @@
 "name": "_bind",
 "qualname": "EmailDialog._bind",
 "sig": "()",
-"hash": "4fe896ef94",
+"hash": "e44efd6f8c",
 "exported": false,
 "calls": [],
 "label": "Attach event handlers for template selection, preview, and message editor functionality",
-"label_source": "generated",
+"label_source": "generated-stale",
 "label_hash": "4fe896ef94"
 },
 {
@@ -20943,11 +20957,11 @@
 "name": "_load_template_into_editor",
 "qualname": "EmailDialog._load_template_into_editor",
 "sig": "(tpl_name)",
-"hash": "acb715dbc4",
+"hash": "98d2c7bfdb",
 "exported": false,
 "calls": [],
 "label": "Load selected email template subject and body into the message editor",
-"label_source": "generated",
+"label_source": "generated-stale",
 "label_hash": "acb715dbc4"
 },
 {
@@ -20965,50 +20979,17 @@
 "label_hash": "cec33960a1"
 },
 {
-"id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._setup_template_autocomplete",
+"id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._open_template_picker",
 "file": "nce_events/public/js/js_dialogs/email_dialog.js",
 "kind": "method",
-"name": "_setup_template_autocomplete",
-"qualname": "EmailDialog._setup_template_autocomplete",
-"sig": "(input_el, on_pick)",
-"hash": "eb2feec1e7",
-"exported": false,
-"calls": [
-"nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._setup_template_autocomplete.do_search"
-],
-"label": "Set up autocomplete search dropdown for email template selection",
-"label_source": "generated",
-"label_hash": "eb2feec1e7"
-},
-{
-"id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._setup_template_autocomplete.position_and_show",
-"file": "nce_events/public/js/js_dialogs/email_dialog.js",
-"kind": "function",
-"name": "position_and_show",
-"qualname": "EmailDialog._setup_template_autocomplete.position_and_show",
-"sig": "()",
-"hash": "c2caf70882",
+"name": "_open_template_picker",
+"qualname": "EmailDialog._open_template_picker",
+"sig": "(input_el)",
+"hash": "66e915941a",
 "exported": false,
 "calls": [],
-"label": "Position and display template autocomplete dropdown list",
-"label_source": "generated",
-"label_hash": "c2caf70882"
-},
-{
-"id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._setup_template_autocomplete.do_search",
-"file": "nce_events/public/js/js_dialogs/email_dialog.js",
-"kind": "function",
-"name": "do_search",
-"qualname": "EmailDialog._setup_template_autocomplete.do_search",
-"sig": "(q)",
-"hash": "5c01dc7832",
-"exported": false,
-"calls": [
-"nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._setup_template_autocomplete.position_and_show"
-],
-"label": "Search email templates by name and populate autocomplete list",
-"label_source": "generated",
-"label_hash": "5c01dc7832"
+"label": "",
+"label_source": "none"
 },
 {
 "id": "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._do_preview",
@@ -21031,13 +21012,13 @@
 "name": "_do_save_template",
 "qualname": "EmailDialog._do_save_template",
 "sig": "()",
-"hash": "9bb5b226bf",
+"hash": "b73ff3a105",
 "exported": false,
 "calls": [
 "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._do_save_template.save"
 ],
 "label": "Save email message and subject as reusable template with optional overwrite",
-"label_source": "generated",
+"label_source": "generated-stale",
 "label_hash": "9bb5b226bf"
 },
 {
@@ -21061,13 +21042,13 @@
 "name": "save",
 "qualname": "EmailDialog._do_save_template.save",
 "sig": "(overwrite)",
-"hash": "5d9e950756",
+"hash": "990d86662d",
 "exported": false,
 "calls": [
 "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._do_save_template.done"
 ],
 "label": "Create or update email template with subject and body content",
-"label_source": "generated",
+"label_source": "generated-stale",
 "label_hash": "5d9e950756"
 },
 {
@@ -21291,13 +21272,13 @@
 "name": "close",
 "qualname": "EmailDialog.close",
 "sig": "()",
-"hash": "01d3e537a9",
+"hash": "06a4eaced8",
 "exported": false,
 "calls": [
 "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._close_tags"
 ],
 "label": "Remove all dialog UI elements and cleanup event handlers",
-"label_source": "generated",
+"label_source": "generated-stale",
 "label_hash": "01d3e537a9"
 },
 {
@@ -21321,11 +21302,11 @@
 "name": "_make_draggable",
 "qualname": "EmailDialog._make_draggable",
 "sig": "(el)",
-"hash": "3b41d8a502",
+"hash": "227cc37bcf",
 "exported": false,
 "calls": [],
 "label": "Make email send dialog draggable with ghost preview during drag",
-"label_source": "generated",
+"label_source": "generated-stale",
 "label_hash": "3b41d8a502"
 },
 {
@@ -21335,14 +21316,14 @@
 "name": "start_drag",
 "qualname": "EmailDialog._make_draggable.start_drag",
 "sig": "(e)",
-"hash": "1496a0b11d",
+"hash": "ab702625a8",
 "exported": false,
 "calls": [],
 "wired_by": [
 "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._make_draggable"
 ],
 "label": "Handle mousedown event to initiate email dialog drag with visual feedback",
-"label_source": "generated",
+"label_source": "generated-stale",
 "label_hash": "1496a0b11d"
 },
 {
@@ -21366,11 +21347,11 @@
 "name": "SmsDialog",
 "qualname": "SmsDialog",
 "sig": "",
-"hash": "733df8d1f5",
+"hash": "5da27c6433",
 "exported": false,
 "calls": [],
 "label": "SMS send dialog with templates, preview, and test-send features",
-"label_source": "generated",
+"label_source": "generated-stale",
 "label_hash": "733df8d1f5"
 },
 {
@@ -21397,11 +21378,11 @@
 "name": "_build",
 "qualname": "SmsDialog._build",
 "sig": "()",
-"hash": "f0efb71fc4",
+"hash": "ce233a0bbc",
 "exported": false,
 "calls": [],
 "label": "Build SMS dialog DOM with form fields and action buttons",
-"label_source": "generated",
+"label_source": "generated-stale",
 "label_hash": "f0efb71fc4"
 },
 {
@@ -21411,11 +21392,11 @@
 "name": "_bind",
 "qualname": "SmsDialog._bind",
 "sig": "()",
-"hash": "220e4af1d4",
+"hash": "d959facdc3",
 "exported": false,
 "calls": [],
 "label": "Attach event handlers to SMS dialog form elements and actions",
-"label_source": "generated",
+"label_source": "generated-stale",
 "label_hash": "220e4af1d4"
 },
 {
@@ -21453,11 +21434,11 @@
 "name": "_load_template_into_editor",
 "qualname": "SmsDialog._load_template_into_editor",
 "sig": "(tpl_name)",
-"hash": "32d5d3abf8",
+"hash": "3b782ca16d",
 "exported": false,
 "calls": [],
 "label": "Fetch and load email template content into message textarea",
-"label_source": "generated",
+"label_source": "generated-stale",
 "label_hash": "32d5d3abf8"
 },
 {
@@ -21475,50 +21456,17 @@
 "label_hash": "75e4ef6676"
 },
 {
-"id": "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._setup_template_autocomplete",
+"id": "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._open_template_picker",
 "file": "nce_events/public/js/js_dialogs/sms_dialog.js",
 "kind": "method",
-"name": "_setup_template_autocomplete",
-"qualname": "SmsDialog._setup_template_autocomplete",
-"sig": "(input_el, on_pick)",
-"hash": "534618bb43",
-"exported": false,
-"calls": [
-"nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._setup_template_autocomplete.do_search"
-],
-"label": "Setup autocomplete dropdown for searching email templates",
-"label_source": "generated",
-"label_hash": "534618bb43"
-},
-{
-"id": "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._setup_template_autocomplete.position_and_show",
-"file": "nce_events/public/js/js_dialogs/sms_dialog.js",
-"kind": "function",
-"name": "position_and_show",
-"qualname": "SmsDialog._setup_template_autocomplete.position_and_show",
-"sig": "()",
-"hash": "c2caf70882",
+"name": "_open_template_picker",
+"qualname": "SmsDialog._open_template_picker",
+"sig": "(input_el)",
+"hash": "66e915941a",
 "exported": false,
 "calls": [],
-"label": "Position and display template autocomplete list below input",
-"label_source": "generated",
-"label_hash": "c2caf70882"
-},
-{
-"id": "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._setup_template_autocomplete.do_search",
-"file": "nce_events/public/js/js_dialogs/sms_dialog.js",
-"kind": "function",
-"name": "do_search",
-"qualname": "SmsDialog._setup_template_autocomplete.do_search",
-"sig": "(q)",
-"hash": "2f6ba427ee",
-"exported": false,
-"calls": [
-"nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._setup_template_autocomplete.position_and_show"
-],
-"label": "Search email templates by name for SMS dialog autocomplete",
-"label_source": "generated",
-"label_hash": "2f6ba427ee"
+"label": "",
+"label_source": "none"
 },
 {
 "id": "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._do_preview",
@@ -21569,13 +21517,13 @@
 "name": "close",
 "qualname": "SmsDialog.close",
 "sig": "()",
-"hash": "76d9f6c06b",
+"hash": "3c36d451ac",
 "exported": false,
 "calls": [
 "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._close_tags"
 ],
 "label": "Close and clean up SMS send dialog and template list",
-"label_source": "generated",
+"label_source": "generated-stale",
 "label_hash": "76d9f6c06b"
 },
 {
@@ -21585,11 +21533,11 @@
 "name": "_make_draggable",
 "qualname": "SmsDialog._make_draggable",
 "sig": "(el)",
-"hash": "3267671365",
+"hash": "1a082712ac",
 "exported": false,
 "calls": [],
 "label": "Enable dragging of SMS send dialog by header",
-"label_source": "generated",
+"label_source": "generated-stale",
 "label_hash": "3267671365"
 },
 {
@@ -21599,14 +21547,14 @@
 "name": "start_drag",
 "qualname": "SmsDialog._make_draggable.start_drag",
 "sig": "(e)",
-"hash": "d1957228fe",
+"hash": "02a8362cf2",
 "exported": false,
 "calls": [],
 "wired_by": [
 "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._make_draggable"
 ],
 "label": "Handle mouse drag movements for SMS send dialog positioning",
-"label_source": "generated",
+"label_source": "generated-stale",
 "label_hash": "d1957228fe"
 },
 {
@@ -21622,6 +21570,77 @@
 "label": "Enable resizing of SMS send dialog from bottom-right corner",
 "label_source": "generated",
 "label_hash": "27c70c35e8"
+},
+{
+"id": "nce_events/public/js/js_dialogs/template_picker.js::close",
+"file": "nce_events/public/js/js_dialogs/template_picker.js",
+"kind": "function",
+"name": "close",
+"qualname": "close",
+"sig": "()",
+"hash": "05b69beca1",
+"exported": false,
+"calls": [],
+"label": "",
+"label_source": "none"
+},
+{
+"id": "nce_events/public/js/js_dialogs/template_picker.js::pick",
+"file": "nce_events/public/js/js_dialogs/template_picker.js",
+"kind": "function",
+"name": "pick",
+"qualname": "pick",
+"sig": "(name)",
+"hash": "98c81c1b3a",
+"exported": false,
+"calls": [
+"nce_events/public/js/js_dialogs/template_picker.js::close"
+],
+"label": "",
+"label_source": "none"
+},
+{
+"id": "nce_events/public/js/js_dialogs/template_picker.js::visible_rows",
+"file": "nce_events/public/js/js_dialogs/template_picker.js",
+"kind": "function",
+"name": "visible_rows",
+"qualname": "visible_rows",
+"sig": "()",
+"hash": "cefb53d2d8",
+"exported": false,
+"calls": [],
+"label": "",
+"label_source": "none"
+},
+{
+"id": "nce_events/public/js/js_dialogs/template_picker.js::render",
+"file": "nce_events/public/js/js_dialogs/template_picker.js",
+"kind": "function",
+"name": "render",
+"qualname": "render",
+"sig": "()",
+"hash": "40469148b9",
+"exported": false,
+"calls": [
+"nce_events/public/js/js_dialogs/template_picker.js::pick",
+"nce_events/public/js/js_dialogs/template_picker.js::sync_active",
+"nce_events/public/js/js_dialogs/template_picker.js::visible_rows"
+],
+"label": "",
+"label_source": "none"
+},
+{
+"id": "nce_events/public/js/js_dialogs/template_picker.js::sync_active",
+"file": "nce_events/public/js/js_dialogs/template_picker.js",
+"kind": "function",
+"name": "sync_active",
+"qualname": "sync_active",
+"sig": "()",
+"hash": "9320d214fb",
+"exported": false,
+"calls": [],
+"label": "",
+"label_source": "none"
 },
 {
 "id": "nce_events/public/js/new_woo_commerce_product.js::form.on New Woo Commerce Product.refresh",
