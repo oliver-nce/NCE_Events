@@ -1,0 +1,2096 @@
+{
+ "files": {
+  ".github/workflows/style-audit.yml": {
+   "body_hash": "b23f5fc710c01c8823e4a291787a0c733e9739be802286cfb5c92ac68f8ebc26",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "Panel style audit",
+     "theme-contract",
+     "style-audit.sh",
+     "nce_events/public",
+     "pull_request",
+     "setup-python",
+     "ubuntu-latest",
+     "actions/checkout",
+     "main",
+     "paths"
+    ],
+    "purpose": "GitHub Actions workflow that runs the panel theme style audit when public assets or style-audit scripts change.",
+    "read_when": "When changing panel CSS/JS under nce_events/public, scripts/style-audit, or CI path triggers for the theme contract job."
+   }
+  },
+  ".pre-commit-config.yaml": {
+   "body_hash": "dc717f19fc5cdb9a90c331bee493683b854406a37206e67fb4ad01aa64836f5c",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Prettier and eslint exclude dist, node_modules, jinja includes, and nce_events panel/evaluations dist bundles.",
+     "Pyright runs in basic mode on nce_events/api; tests excluded via pyrightconfig until Phase 11.",
+     "build-code-index --check runs only when nce_events sources, CODE_INDEX.manual.json, or the build script change."
+    ],
+    "keywords": [
+     "pre-commit",
+     "ruff",
+     "eslint",
+     "prettier",
+     "pyright",
+     "build-code-index",
+     "fail_fast",
+     "trailing-whitespace",
+     "nce_events/api",
+     "pyrightconfig.json",
+     "autoupdate_schedule"
+    ],
+    "purpose": "Pre-commit configuration for ruff, prettier, eslint, pyright, standard hooks, and build-code-index sync on commit.",
+    "read_when": "When adding or adjusting local lint/format hooks, exclude patterns, or the build-code-index check scope."
+   }
+  },
+  "AGENTS.md": {
+   "body_hash": "a054d1b9387217b3d16352c0f9264e898b05c47546579eeea15c8b0acae1da8c",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Read Docs/project_reference.md first; do not change code without it.",
+     "No bench commands; push to GitHub for deployment."
+    ],
+    "keywords": [
+     "Agent Guide",
+     "project_reference.md",
+     "code_index",
+     "panel_page_v2",
+     "form dialog",
+     "usePanel",
+     "ThemeSwatchPicker",
+     "Explorer",
+     "SmsDialog",
+     "pre-commit",
+     "helpers table",
+     "codeindex.py"
+    ],
+    "purpose": "Agent guide for NCE Events: where to add code, reusable helpers, and project conventions.",
+    "read_when": "Before adding features or searching for existing helpers in api/, panel_page, or panel_page_v2."
+   }
+  },
+  "CLAUDE.md": {
+   "body_hash": "bee243229ec05782659a379a1cfb2aaf18be85c3d5c82edb3d6beccc141eb105",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Never run bench commands or git reset --hard; deployment is separate.",
+     "Script capture temporarily replaces frappe.ui.form.on; always restored in finally."
+    ],
+    "keywords": [
+     "Form Dialog",
+     "Page Panel",
+     "panel_page_v2",
+     "frozen_meta_json",
+     "useFormClientScript",
+     "capture_form_dialog_from_desk",
+     "PanelFloat",
+     "theme_slug",
+     "nce_sync",
+     "codeindex.py",
+     "activateScripts"
+    ],
+    "purpose": "AI agent codebase reference for NCE Events architecture, DocTypes, API, and Form Dialog capture flow.",
+    "read_when": "When onboarding to NCE Events or tracing Form Dialog capture, panel V2, and API modules."
+   }
+  },
+  "README.md": {
+   "body_hash": "67a1f68c02ef31352b0600959a1796e2eca5692ba6d8c07066af6cc286a221f0",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "NCE Events",
+     "Panel Explorer",
+     "Tag Finder",
+     "NCE Sync",
+     "Frappe v15",
+     "panel_api.py",
+     "schema_explorer.js",
+     "pre-commit",
+     "bench get-app",
+     "hierarchy_explorer"
+    ],
+    "purpose": "Project README for the NCE Events Frappe app: Panel Explorer, Tag Finder, install steps, and contributing.",
+    "read_when": "When you need a high-level overview, install steps, or links to Docs/project_reference.md."
+   }
+  },
+  "nce_events/__init__.py": {
+   "body_hash": "ada7afaf718ac7aef3e87effa09b4f8e2fa7baa081535c23d3ad1d3d1c119467",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "__version__",
+     "0.0.8",
+     "NCE Events",
+     "Frappe app",
+     "package root",
+     "nce_events",
+     "installed version",
+     "app version"
+    ],
+    "purpose": "NCE Events Frappe app package root defining the installed __version__ string for releases and compatibility.",
+    "read_when": "When bumping or reading the nce_events __version__ for releases or compatibility checks."
+   }
+  },
+  "nce_events/api/__init__.py": {
+   "body_hash": "30611d930653a3a3e622c7c034acf5c7a1e0195b1962a5e3ecc15ff04ce09583",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "get_panel",
+     "whitelisted",
+     "build_page_panel_csv_text",
+     "frappe.local.response",
+     "CSV download",
+     "Page Panel",
+     "nce_events.api"
+    ],
+    "purpose": "Top-level NCE Events whitelisted API methods including GET CSV download for a Page Panel dataset.",
+    "read_when": "When wiring GET /api/method/nce_events.api.get_panel or adding new package-level whitelisted entry points."
+   },
+   "labels": {
+    "nce_events/api/__init__.py::get_panel": {
+     "body_hash": "072009faa6",
+     "label": "Handles GET nce_events.api.get_panel; streams Page Panel CSV download after build_page_panel_csv_text permission checks."
+    }
+   }
+  },
+  "nce_events/api/credentials.py": {
+   "body_hash": "4e67edeeb9a5d2a6aa2a38ed83315e5e6fcdf46ea029a25a9cdb98eb394e48a8",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Always include username in the result when set; often used for sender identity outside auth_type fields."
+    ],
+    "keywords": [
+     "get_credentials",
+     "API Connector",
+     "credential_config",
+     "auth_pattern",
+     "_safe_get_password",
+     "auth_type",
+     "_PASSWORD_FIELDS",
+     "base_url"
+    ],
+    "purpose": "Load API Connector credential_config JSON or auth_type fallback into auth_pattern, base_url, and secret fields.",
+    "read_when": "When exchange, messaging, LLM, or WooCommerce clients need connector secrets without duplicating read logic."
+   },
+   "labels": {
+    "nce_events/api/credentials.py::_from_auth_type": {
+     "body_hash": "8a726d1115",
+     "label": "Fallback maps auth_type to auth_pattern and reads standard credential fields plus username when present."
+    },
+    "nce_events/api/credentials.py::_from_config": {
+     "body_hash": "b9a557adf2",
+     "label": "Parses credential_config JSON and returns auth_pattern, base_url, notes, and required field values."
+    },
+    "nce_events/api/credentials.py::_safe_get_password": {
+     "body_hash": "5f78f6b386",
+     "label": "Reads an encrypted connector password field and returns empty string when missing or on error."
+    },
+    "nce_events/api/credentials.py::get_credentials": {
+     "body_hash": "d781fdd49f",
+     "label": "Loads named API Connector credentials for exchange, messaging, LLM, and WooCommerce via config or auth_type."
+    }
+   }
+  },
+  "nce_events/api/derived_fields.py": {
+   "body_hash": "5ab04add4b4a1df49e3b0b0ad0b293ca36cba1570df0331e91c9ab0e27b894b2",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "evaluate_derived_fields",
+     "apply_derived_fields_to_doc",
+     "get_derived_field_specs",
+     "get_derived_sql_specs",
+     "evaluate_sql_expressions",
+     "substitution_token_allowlist_for_doctype",
+     "WP Tables",
+     "column_mapping",
+     "doctype",
+     "in_place",
+     "sql_eval"
+    ],
+    "purpose": "Compose WP Tables derived SQL specs with sql_eval to evaluate and merge derived values into document dicts.",
+    "read_when": "When applying column_mapping derived columns to a row or doc without calling wp_tables_mapping and sql_eval separately."
+   },
+   "labels": {
+    "nce_events/api/derived_fields.py::apply_derived_fields_to_doc": {
+     "body_hash": "cd11ec95ca",
+     "label": "Merge evaluated derived field values into a document dict for create or update flows, optionally in place."
+    },
+    "nce_events/api/derived_fields.py::evaluate_derived_fields": {
+     "body_hash": "67ecbdff3a",
+     "label": "Run all mapped derived SQL against a row using DocType token allowlist and evaluate_sql_expressions."
+    },
+    "nce_events/api/derived_fields.py::get_derived_field_specs": {
+     "body_hash": "1253ca6d01",
+     "label": "Expose derived fieldname and sql_expression list from WP Tables mapping for a caller-supplied DocType."
+    }
+   }
+  },
+  "nce_events/api/evaluations.py": {
+   "body_hash": "1aa5eb697915a2c40331250d0b97face93050964564a711b44ec3e1221195372",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "get_event_enrollments",
+     "event_id",
+     "Enrollments",
+     "Registrations",
+     "Family Members",
+     "rating",
+     "Kanban",
+     "physical_table_name",
+     "_norm_rating",
+     "Events",
+     "frappe.whitelist"
+    ],
+    "purpose": "Whitelisted API listing event enrollments with player details and normalized ratings for rating Kanban views.",
+    "read_when": "When changing event enrollment queries, rating lanes 0-7, or Enrollments versus Registrations schema detection."
+   },
+   "labels": {
+    "nce_events/api/evaluations.py::_enrollment_doctype": {
+     "body_hash": "c062804c9c",
+     "label": "Pick Enrollments or Registrations DocType depending on which exists in the site."
+    },
+    "nce_events/api/evaluations.py::_events_link_field": {
+     "body_hash": "b884675056",
+     "label": "Resolve the enrollment field linking rows to Events or Event for the SQL WHERE clause."
+    },
+    "nce_events/api/evaluations.py::_norm_rating": {
+     "body_hash": "00a69224d3",
+     "label": "Clamp enrollment rating values to integers 0 through 7 for Kanban lane assignment."
+    },
+    "nce_events/api/evaluations.py::_player_link_field": {
+     "body_hash": "2ca84f16ab",
+     "label": "Resolve the Link field from enrollment DocType to Family Members for the player join."
+    },
+    "nce_events/api/evaluations.py::_rating_sql_fragment": {
+     "body_hash": "9d8921ed16",
+     "label": "Choose enrollment row rating column when present, otherwise Family Members rating in SELECT."
+    },
+    "nce_events/api/evaluations.py::_validate_sql_identifier": {
+     "body_hash": "2ba4d3dc5a",
+     "label": "Reject unsafe meta fieldnames before embedding them as backtick SQL identifiers."
+    },
+    "nce_events/api/evaluations.py::get_event_enrollments": {
+     "body_hash": "3657d377e0",
+     "label": "Whitelisted query returning normalized enrollment rows with player names and rating for one event_id."
+    }
+   }
+  },
+  "nce_events/api/event_people_map.py": {
+   "body_hash": "6d255a14db46dc9c0c928827e55ea8437450ff95109c8c7fe7a44cf05ca70de3",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Pins use Family GPS latitude/longitude first; Google is called only when both coordinates are missing or zero.",
+     "A successful Google lookup is saved onto Family GPS without overwriting a usable coordinate pair.",
+     "Geocode failures skip individual pins, write error_message on Family GPS, and the request still succeeds.",
+     "People without a usable family address are counted in skipped_no_address."
+    ],
+    "keywords": [
+     "get_event_people_map",
+     "Family GPS",
+     "Google Maps",
+     "geocode",
+     "Enrollments",
+     "physical_table_name",
+     "skipped_no_address",
+     "geocode_failed",
+     "API Connector",
+     "event map pins",
+     "people enrolled"
+    ],
+    "purpose": "Whitelisted API that returns Google Maps pins for people enrolled on an event, geocoded from family addresses.",
+    "read_when": "When loading the event people map UI or debugging geocoding, Family GPS writes, or skipped pin counts."
+   },
+   "labels": {
+    "nce_events/api/event_people_map.py::_as_float": {
+     "body_hash": "54de798d22",
+     "label": "Converts Family GPS coordinate values to float for pin placement."
+    },
+    "nce_events/api/event_people_map.py::_both_coords_empty": {
+     "body_hash": "b03bc64099",
+     "label": "Detects when stored latitude and longitude are both unusable for map pins."
+    },
+    "nce_events/api/event_people_map.py::_both_coords_empty._empty": {
+     "body_hash": "14fc5087f5",
+     "label": "Treats null, blank, non-numeric, or zero as an empty coordinate value."
+    },
+    "nce_events/api/event_people_map.py::_family_address": {
+     "body_hash": "7357fe6155",
+     "label": "Builds a single comma-separated address string from family address columns."
+    },
+    "nce_events/api/event_people_map.py::_geocode_address": {
+     "body_hash": "d921f11e3b",
+     "label": "Requests Google Geocode JSON for one address and returns coordinates or an error string."
+    },
+    "nce_events/api/event_people_map.py::_geocode_addresses": {
+     "body_hash": "dec16c6833",
+     "label": "Geocodes each distinct address in parallel for missing Family GPS coordinates."
+    },
+    "nce_events/api/event_people_map.py::_google_maps_api_key": {
+     "body_hash": "80c06ee463",
+     "label": "Reads the Google Maps API Connector api_key field, not the api_secret."
+    },
+    "nce_events/api/event_people_map.py::_person_display_name": {
+     "body_hash": "0effe7628f",
+     "label": "Chooses map pin title from first and last name or the People record name."
+    },
+    "nce_events/api/event_people_map.py::_save_family_gps": {
+     "body_hash": "26d04ffdc0",
+     "label": "Persists successful geocode coordinates on Family GPS per family after lookup."
+    },
+    "nce_events/api/event_people_map.py::_save_family_gps_error": {
+     "body_hash": "cad291833f",
+     "label": "Stores geocode failure text on Family GPS so later map loads can skip retry noise."
+    },
+    "nce_events/api/event_people_map.py::get_event_people_map": {
+     "body_hash": "c0614e53c5",
+     "label": "Whitelisted endpoint returning api_key, pins, skipped_no_address, and geocode_failed for one event."
+    }
+   }
+  },
+  "nce_events/api/events_publish.py": {
+   "body_hash": "2d61067e2e07426778ad74a2774126c907a3e687e7722699ed7e700406bf9151",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "update_events_to_website always PUTs from a fresh DB read after save; generated sku needs committed row.",
+     "There is no change-detection on publish; every update_events_to_website call pushes WooCommerce.",
+     "New and duplicate products default wc_product_type to simple until WooCommerce assigns taxonomy.",
+     "clear_new_woo_commerce_product uses set_single_value only to avoid mandatory validation on blanking the form."
+    ],
+    "keywords": [
+     "update_events_to_website",
+     "build_woocommerce_product_payload",
+     "wc_request",
+     "duplicate_event_start",
+     "delete_event",
+     "slugify_product_slug",
+     "WooCommerceEventsDateMySQLFormat",
+     "after_events_publish_to_woocommerce",
+     "publish_new_woo_commerce_product",
+     "execute_bulk_refund_by_product"
+    ],
+    "purpose": "Sync Frappe Events rows to WooCommerce products and handle duplicate, new product, and delete flows.",
+    "read_when": "When publishing Events to WooCommerce, duplicating or deleting events, or reading update confirmation payloads."
+   },
+   "labels": {
+    "nce_events/api/events_publish.py::_build_woo_update_confirmation": {
+     "body_hash": "1d0d0786c0",
+     "label": "Builds sent versus saved confirmation rows with match flags for publish UI."
+    },
+    "nce_events/api/events_publish.py::_categories_confirmation_matches": {
+     "body_hash": "798955afa5",
+     "label": "Compares sent category names to categories saved on WooCommerce for confirmation."
+    },
+    "nce_events/api/events_publish.py::_categories_payload": {
+     "body_hash": "af34b92fdd",
+     "label": "Builds one WooCommerce categories array entry from numeric id or label name."
+    },
+    "nce_events/api/events_publish.py::_category_names_from_wc_response": {
+     "body_hash": "46549773a0",
+     "label": "Collects category names returned on a WooCommerce product response."
+    },
+    "nce_events/api/events_publish.py::_confirmation_values_match": {
+     "body_hash": "74ff300dae",
+     "label": "Compares sent versus saved publish fields including tolerant regular_price matching."
+    },
+    "nce_events/api/events_publish.py::_copy_event_sessions": {
+     "body_hash": "d46b4d08be",
+     "label": "Copies Event Sessions rows from source product id to the new product id."
+    },
+    "nce_events/api/events_publish.py::_count_enrollments_for_event": {
+     "body_hash": "f2ef6d5cac",
+     "label": "Counts Enrollments rows linked to an Events WooCommerce product id."
+    },
+    "nce_events/api/events_publish.py::_delete_event_sessions_for_product": {
+     "body_hash": "3e63cd5aa0",
+     "label": "Removes Event Sessions rows tied to an Events product id during delete."
+    },
+    "nce_events/api/events_publish.py::_delete_local_enrollments_for_event": {
+     "body_hash": "cd2f4a0035",
+     "label": "Deletes local Enrollments rows for a product when mirror cleanup is needed."
+    },
+    "nce_events/api/events_publish.py::_delete_wc_product_soft": {
+     "body_hash": "e7ad3d962b",
+     "label": "Moves WooCommerce product to trash via wc_request DELETE without force delete."
+    },
+    "nce_events/api/events_publish.py::_display_confirmation_value": {
+     "body_hash": "e053870225",
+     "label": "Stringifies confirmation row values for the publish response UI."
+    },
+    "nce_events/api/events_publish.py::_do_woo_product_put": {
+     "body_hash": "67af069816",
+     "label": "Resolves category term ids then PUTs product JSON through wc_request."
+    },
+    "nce_events/api/events_publish.py::_event_has_payment_plan": {
+     "body_hash": "1d9036894d",
+     "label": "Detects payment_plan on Events for delete preview messaging."
+    },
+    "nce_events/api/events_publish.py::_event_types_meta_field": {
+     "body_hash": "6e98782ec8",
+     "label": "Finds which Event Types meta field exists among candidate names."
+    },
+    "nce_events/api/events_publish.py::_events_stub_dict_from_source": {
+     "body_hash": "e63a682181",
+     "label": "Extracts minimal Events field subset used to POST a duplicate Woo product stub."
+    },
+    "nce_events/api/events_publish.py::_events_wp_id_fieldnames": {
+     "body_hash": "1e8ba9bc1e",
+     "label": "Lists Events fields that may store the linked WooCommerce product id."
+    },
+    "nce_events/api/events_publish.py::_format_sent_categories_for_display": {
+     "body_hash": "49740a52d0",
+     "label": "Formats outgoing category ids or names for confirmation UI display."
+    },
+    "nce_events/api/events_publish.py::_insert_duplicated_events_row": {
+     "body_hash": "633489bc6f",
+     "label": "Inserts duplicated Events document named after the new WooCommerce product id."
+    },
+    "nce_events/api/events_publish.py::_is_existing_events_row": {
+     "body_hash": "cab50ca4bd",
+     "label": "Checks name is a positive numeric Events row id suitable for Woo updates."
+    },
+    "nce_events/api/events_publish.py::_list_enrollment_names_for_event": {
+     "body_hash": "14a376cde9",
+     "label": "Lists Enrollments document names for an Events product id."
+    },
+    "nce_events/api/events_publish.py::_meta_value_from_wc_meta": {
+     "body_hash": "a9e3570a1b",
+     "label": "Reads one meta_data key value from a WooCommerce API response list."
+    },
+    "nce_events/api/events_publish.py::_mysql_date": {
+     "body_hash": "3dd741868a",
+     "label": "Formats an Events date value as MySQL Y-m-d for Woo meta."
+    },
+    "nce_events/api/events_publish.py::_normalize_wp_product_id": {
+     "body_hash": "e4f73cf8f0",
+     "label": "Canonicalizes WooCommerce product id strings including trailing decimal zeros."
+    },
+    "nce_events/api/events_publish.py::_parse_events_date": {
+     "body_hash": "6469f4f527",
+     "label": "Parses Events date fields from ISO, Desk, or US-style strings into a date."
+    },
+    "nce_events/api/events_publish.py::_patch_new_woo_body": {
+     "body_hash": "4d754f1589",
+     "label": "Forces private status on new WooCommerce product payloads before POST."
+    },
+    "nce_events/api/events_publish.py::_post_wc_private_product_from_events_stub": {
+     "body_hash": "f2e20326df",
+     "label": "POSTs private Woo product from stub and returns the new WooCommerce product id."
+    },
+    "nce_events/api/events_publish.py::_product_categories_meta_value": {
+     "body_hash": "632294203a",
+     "label": "Sets product_categories meta mirror string from the first category payload entry."
+    },
+    "nce_events/api/events_publish.py::_product_id_from_events_doc": {
+     "body_hash": "a39d34409c",
+     "label": "Resolves WooCommerce product id from Events wp_id fields or document name."
+    },
+    "nce_events/api/events_publish.py::_push_events_row_to_wp": {
+     "body_hash": "f4e14dfbdf",
+     "label": "Queues nce_sync push of duplicated Events row to WordPress when sync is installed."
+    },
+    "nce_events/api/events_publish.py::_resolve_and_patch_categories": {
+     "body_hash": "ba6e4ebae1",
+     "label": "Replaces category name in payload with resolved Woo term id or throws."
+    },
+    "nce_events/api/events_publish.py::_resolve_source_events_for_duplicate": {
+     "body_hash": "06d08fbc57",
+     "label": "Loads source Events with read permission for duplicate or delete flows."
+    },
+    "nce_events/api/events_publish.py::_resolve_wc_category_term_id": {
+     "body_hash": "0af0aa1d48",
+     "label": "Finds WooCommerce category term id by slug lookup then exact name search."
+    },
+    "nce_events/api/events_publish.py::_run_after_publish_hooks": {
+     "body_hash": "ef1371adb3",
+     "label": "Runs after_events_publish_to_woocommerce hooks after a successful product PUT."
+    },
+    "nce_events/api/events_publish.py::_sent_categories_include_names": {
+     "body_hash": "6d6788277d",
+     "label": "Indicates whether sent categories used names instead of numeric ids."
+    },
+    "nce_events/api/events_publish.py::_set_duplicate_edit_ok_flags": {
+     "body_hash": "a82743b524",
+     "label": "Enables session edit flags on duplicated Events copies for desk editing."
+    },
+    "nce_events/api/events_publish.py::_validate_events_stub_fields": {
+     "body_hash": "a70338c97e",
+     "label": "Ensures duplicate stub fields are filled before WooCommerce POST."
+    },
+    "nce_events/api/events_publish.py::_wc_categories_payload_from_doc": {
+     "body_hash": "c8dc290a63",
+     "label": "Picks Woo categories from event_type_id, Events type, or product_type on the doc."
+    },
+    "nce_events/api/events_publish.py::_wc_events_end_date_mysql_from_doc": {
+     "body_hash": "ae7b883abb",
+     "label": "Computes Woo end-date meta from first session plus seven days per session count."
+    },
+    "nce_events/api/events_publish.py::_wc_slug": {
+     "body_hash": "ed6bc63130",
+     "label": "Derives WooCommerce category slug from a human-readable label."
+    },
+    "nce_events/api/events_publish.py::_wc_status_from_events": {
+     "body_hash": "7603847a9c",
+     "label": "Translates Events status values into WooCommerce product status strings."
+    },
+    "nce_events/api/events_publish.py::_woo_category_label_from_event_type_row": {
+     "body_hash": "4ae65b814d",
+     "label": "Builds Woo category label from Event Types parent category and type fields."
+    },
+    "nce_events/api/events_publish.py::_woocommerce_response_summary": {
+     "body_hash": "21e5b0e269",
+     "label": "Summarizes key WooCommerce fields after PUT for client display."
+    },
+    "nce_events/api/events_publish.py::build_woocommerce_product_payload": {
+     "body_hash": "93e116eb1b",
+     "label": "Maps Events dict fields into WooCommerce REST product body including event date meta."
+    },
+    "nce_events/api/events_publish.py::clear_new_woo_commerce_product": {
+     "body_hash": "5d64389314",
+     "label": "Clears New Woo Commerce Product single fields without Document save hooks."
+    },
+    "nce_events/api/events_publish.py::delete_event": {
+     "body_hash": "2b5be86c81",
+     "label": "Whitelisted delete trashing Woo product, bulk-refunding enrollments when confirmed, removing sessions and Events."
+    },
+    "nce_events/api/events_publish.py::duplicate_event_finalize": {
+     "body_hash": "b94cc8ecec",
+     "label": "Whitelisted phase-two duplicate: insert Events row after session sync jobs complete."
+    },
+    "nce_events/api/events_publish.py::duplicate_event_start": {
+     "body_hash": "ff9bfd26ae",
+     "label": "Whitelisted phase-one duplicate: POST Woo product and copy sessions before Events insert."
+    },
+    "nce_events/api/events_publish.py::get_delete_event_preview": {
+     "body_hash": "274f08bf03",
+     "label": "Whitelisted delete guardrails with enrollment count and payment plan message for Form Dialog."
+    },
+    "nce_events/api/events_publish.py::publish_new_woo_commerce_product": {
+     "body_hash": "51f8103e30",
+     "label": "Whitelisted POST creating a private Woo product from New Woo Commerce Product fields."
+    },
+    "nce_events/api/events_publish.py::slugify_product_slug": {
+     "body_hash": "50ce25b20d",
+     "label": "Creates WooCommerce product slug from SKU with lowercase hyphen rules and length cap."
+    },
+    "nce_events/api/events_publish.py::submit_new_woo_commerce_product": {
+     "body_hash": "27c242a5c5",
+     "label": "Panel on_submit_method that publishes then clears the New Woo Commerce Product singleton."
+    },
+    "nce_events/api/events_publish.py::update_events_to_website": {
+     "body_hash": "5029be3ddb",
+     "label": "Whitelisted publish that PUTs WooCommerce from fresh DB row and returns confirmation."
+    },
+    "nce_events/api/events_publish.py::update_woo_commerce_product": {
+     "body_hash": "b7661974ab",
+     "label": "Whitelisted PUT from caller Events dict without updating the Frappe record."
+    }
+   }
+  },
+  "nce_events/api/exchange.py": {
+   "body_hash": "eaef4ca04a025ca1a73b41a8b99bc7cb4dffa5bd6fa9f5cdfefba010874d92b0",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Successful enrollment exchange or refund defers local Enrollments cleanup to the next WP→Frappe sync.",
+     "Exchange calls use WordPress Application Password Basic Auth with form-urlencoded bodies, not JSON.",
+     "Bulk refund 404 responses expect nce-product-exchange v1.3.0+ at refund-items-by-product."
+    ],
+    "keywords": [
+     "execute_product_exchange",
+     "execute_product_refund",
+     "execute_bulk_refund_by_product",
+     "WordPress REST",
+     "nce-exchange",
+     "EXCHANGE_CONNECTOR",
+     "refund-item",
+     "get_credentials",
+     "order_item_id",
+     "cancellation_fee"
+    ],
+    "purpose": "Posts WordPress nce-exchange and refund endpoints for enrollments, bulk refunds, and shared HTTP error handling.",
+    "read_when": "When wiring Form Dialog exchange/refund actions, bulk delete refunds, or debugging WordPress REST failures."
+   },
+   "labels": {
+    "nce_events/api/exchange.py::_build_wp_api_url": {
+     "body_hash": "1b9952e45e",
+     "label": "Assembles a WordPress REST URL under wp-json from connector base_url and path."
+    },
+    "nce_events/api/exchange.py::_exchange_error_snippet": {
+     "body_hash": "871f8494b0",
+     "label": "Extracts a short user-facing message from a failed WordPress HTTP response body."
+    },
+    "nce_events/api/exchange.py::_load_exchange_credentials": {
+     "body_hash": "8a4dd14983",
+     "label": "Loads username, password, and base_url from the WordPress REST API Connector."
+    },
+    "nce_events/api/exchange.py::_log_exchange_http_error": {
+     "body_hash": "81c7c0d46e",
+     "label": "Writes WordPress exchange failure details to Frappe Error Log for support."
+    },
+    "nce_events/api/exchange.py::_parse_cancellation_fee": {
+     "body_hash": "bbf1e52677",
+     "label": "Normalizes optional cancellation fee input to a non-negative float or throws."
+    },
+    "nce_events/api/exchange.py::_post_wp_enrollment_action": {
+     "body_hash": "8f108a9b3a",
+     "label": "POSTs per-enrollment exchange or refund to WordPress after sync gate and order_item_id body."
+    },
+    "nce_events/api/exchange.py::_post_wp_exchange_request": {
+     "body_hash": "c77df82f9a",
+     "label": "POSTs form data to a WordPress nce-exchange route and returns success JSON."
+    },
+    "nce_events/api/exchange.py::_wait_for_enrollments_sync_then_verify_exists": {
+     "body_hash": "7864797fb7",
+     "label": "Blocks until Enrollments sync finishes and confirms the enrollment row still exists."
+    },
+    "nce_events/api/exchange.py::execute_bulk_refund_by_product": {
+     "body_hash": "0feca4561f",
+     "label": "Refunds all enrollments for one WooCommerce product id via one WordPress call; delete_event uses it."
+    },
+    "nce_events/api/exchange.py::execute_product_exchange": {
+     "body_hash": "440cd52ba4",
+     "label": "Whitelisted Form Dialog action switching an enrollment to a new WooCommerce product via nce-exchange."
+    },
+    "nce_events/api/exchange.py::execute_product_refund": {
+     "body_hash": "6d70c8810e",
+     "label": "Whitelisted Form Dialog action canceling an enrollment via WordPress refund-item with optional fee."
+    }
+   }
+  },
+  "nce_events/api/form_dialog/_fd_capture_meta.py": {
+   "body_hash": "c54171fdbc6b6012fac2126d25b4fb652491e366e206e930b9ec86f72c68843b",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Section column count sync affects frozen layout skeleton; review _sync_section_column_count changes."
+    ],
+    "keywords": [
+     "frozen_meta_json",
+     "client_scripts",
+     "tab_notes",
+     "FD_LEAD_TAB_ANCHOR",
+     "tab skeleton",
+     "Form Dialog",
+     "_build_frozen_meta_json",
+     "parseLayout",
+     "capture meta",
+     "tab_anchor"
+    ],
+    "purpose": "Frozen meta capture for Form Dialog: tab skeleton, client scripts, table grid flags, and tab-note sync.",
+    "read_when": "When extending Desk capture of form layout sections, scripts, or tab visibility for Form Dialog."
+   },
+   "labels": {
+    "nce_events/api/form_dialog/_fd_capture_meta.py::_build_frozen_meta_json": {
+     "body_hash": "0faf258a14",
+     "label": "Snapshots enriched fields and client scripts JSON for capture_form_dialog_from_desk and rebuild_form_dialog."
+    },
+    "nce_events/api/form_dialog/_fd_capture_meta.py::_capture_client_scripts": {
+     "body_hash": "07ac801547",
+     "label": "Collects enabled Form Client Script rows and app doctype JS for frozen meta; preview_capture_client_scripts calls it."
+    },
+    "nce_events/api/form_dialog/_fd_capture_meta.py::_enrich_table_grid_flags": {
+     "body_hash": "ff89ffc86e",
+     "label": "Re-attaches cannot_add_rows and cannot_delete_rows on Table fields stripped by DocField as_dict."
+    },
+    "nce_events/api/form_dialog/_fd_capture_meta.py::_frozen_section_visually_nonempty": {
+     "body_hash": "2e48150650",
+     "label": "Returns true when any column in a frozen section contains at least one field."
+    },
+    "nce_events/api/form_dialog/_fd_capture_meta.py::_frozen_tab_visually_nonempty": {
+     "body_hash": "1d319e70d2",
+     "label": "Returns true when any section in a tab layout has visible fields."
+    },
+    "nce_events/api/form_dialog/_fd_capture_meta.py::_main_tab_skeleton_from_frozen_fields": {
+     "body_hash": "272f14b16c",
+     "label": "Builds anchor and label entries per visible tab matching parseLayout rules for tab_notes and UI."
+    },
+    "nce_events/api/form_dialog/_fd_capture_meta.py::_main_tab_skeleton_from_frozen_fields.maybe_push_tab_done": {
+     "body_hash": "33ce80523c",
+     "label": "Adds current tab to the skeleton when its sections contain visible data fields."
+    },
+    "nce_events/api/form_dialog/_fd_capture_meta.py::_new_layout_section": {
+     "body_hash": "188ea33caa",
+     "label": "Creates a new empty layout section dict from an optional Section Break field metadata."
+    },
+    "nce_events/api/form_dialog/_fd_capture_meta.py::_push_layout_section_if_visible": {
+     "body_hash": "b107b33f29",
+     "label": "Appends a section to tab sections only when it has fields and syncs column count."
+    },
+    "nce_events/api/form_dialog/_fd_capture_meta.py::_sync_form_dialog_tab_notes_from_fields": {
+     "body_hash": "7e2b92ccd3",
+     "label": "Rebuilds Form Dialog tab_notes child rows from the tab skeleton while preserving notes by tab_anchor."
+    },
+    "nce_events/api/form_dialog/_fd_capture_meta.py::_sync_section_column_count": {
+     "body_hash": "ec6213166a",
+     "label": "Sets section columnCount from the length of its columns array for frozen layout JSON."
+    }
+   }
+  },
+  "nce_events/api/form_dialog/_fd_fetch_from.py": {
+   "body_hash": "f67da4c8c8f623ad1f762f6e15273615357a0d7d85dc9abf795fa1153ad600c5",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "fetch_from",
+     "fieldtype",
+     "options",
+     "_enrich_fetch_from_fields",
+     "Form Dialog",
+     "frozen schema",
+     "Link field",
+     "frappe.get_meta",
+     "field enrichment",
+     "generic_types"
+    ],
+    "purpose": "Enrich fetch_from fields in frozen Form Dialog schemas so captured field JSON matches linked DocType display widgets.",
+    "read_when": "When Link fetch_from metadata is missing or wrong in captured Form Dialog field JSON."
+   },
+   "labels": {
+    "nce_events/api/form_dialog/_fd_fetch_from.py::_enrich_fetch_from_fields": {
+     "body_hash": "e9a47484ed",
+     "label": "Copies fieldtype and options from linked DocType sources into generic local fields for capture used by frozen meta builders."
+    }
+   }
+  },
+  "nce_events/api/form_dialog/_fd_gating.py": {
+   "body_hash": "47765a2ecd5f1fbb62451ae124d38c72647fb9a2892128524e3de07c25c7c53f",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "WP Tables",
+     "System Manager",
+     "Form Dialog",
+     "_assert_doctype_in_wp_tables",
+     "_require_system_manager",
+     "capture schema",
+     "frappe_doctype",
+     "inline_child_tables",
+     "script_tool_groups",
+     "gating"
+    ],
+    "purpose": "Form Dialog gating helpers: WP Tables validation, System Manager checks, and capture schema readiness.",
+    "read_when": "When blocking capture or portal use for DocTypes not in WP Tables or missing required panel values."
+   },
+   "labels": {
+    "nce_events/api/form_dialog/_fd_gating.py::_assert_doctype_in_wp_tables": {
+     "body_hash": "53ec867c89",
+     "label": "Throws when DocType is absent from WP Tables before capture wizard and related child row builds."
+    },
+    "nce_events/api/form_dialog/_fd_gating.py::_panel_required_value_empty": {
+     "body_hash": "41bf0cb4e3",
+     "label": "Reports whether a root field value is empty for validate_document_page_panel_required_roots on the server."
+    },
+    "nce_events/api/form_dialog/_fd_gating.py::_require_form_dialog_capture_schema_ready": {
+     "body_hash": "cf3e25a651",
+     "label": "Throws if migrate has not added Form Dialog inline_child_tables or script_tool_groups before capture or rebuild."
+    },
+    "nce_events/api/form_dialog/_fd_gating.py::_require_system_manager": {
+     "body_hash": "39d73bb496",
+     "label": "Throws PermissionError unless the user has System Manager for capture and portal action listing."
+    }
+   }
+  },
+  "nce_events/api/form_dialog/_fd_inline_children.py": {
+   "body_hash": "2955966e577d6b7e54e2f347b9995fd67a20d22d627cc4cca0a9cbc0088c1e13",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Nested Table child DocTypes used only as schema helpers may be absent from WP Tables; capture entry already gates root target_doctype."
+    ],
+    "keywords": [
+     "inline_child_tables",
+     "Form Dialog Inline Child Table",
+     "table_fields_for_capture_wizard",
+     "capture wizard",
+     "portal_field_config",
+     "_sync_inline_child_tables",
+     "parent_fieldname",
+     "child_doctype",
+     "_enrich_fetch_from_fields",
+     "capture_error"
+    ],
+    "purpose": "Build and sync Form Dialog Inline Child Table rows with frozen child field JSON during capture and rebuild.",
+    "read_when": "When capture or rebuild parses inline_child_tables or lists Table fields for the capture wizard."
+   },
+   "labels": {
+    "nce_events/api/form_dialog/_fd_inline_children.py::_build_inline_child_row_dict": {
+     "body_hash": "1d2fee94ca",
+     "label": "Assemble one inline child row with frozen info JSON, portal defaults, and optional capture_error."
+    },
+    "nce_events/api/form_dialog/_fd_inline_children.py::_parse_inline_child_tables_argument": {
+     "body_hash": "76b96203da",
+     "label": "Normalize inline_child_tables from JSON string or list into parent_fieldname and tab_label specs."
+    },
+    "nce_events/api/form_dialog/_fd_inline_children.py::_sync_inline_child_tables": {
+     "body_hash": "c376961ec0",
+     "label": "Replace inline_child_tables on capture or rebuild while preserving portal_field_config and portal_actions per tab."
+    },
+    "nce_events/api/form_dialog/_fd_inline_children.py::table_fields_for_capture_wizard": {
+     "body_hash": "8e33ef08f2",
+     "label": "List root DocType Table fields for the capture wizard inline-tab picker."
+    }
+   }
+  },
+  "nce_events/api/form_dialog/_fd_related.py": {
+   "body_hash": "c25b696f9e0b6890ff0a65e734355e0166f7bbeb6f67dc00fd8230e70637b0d3",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Hop chain normalization affects related row signatures; changing _normalize_hop_chain_value impacts dedup.",
+     "portal_fields is imported at call time in _related_list_columns_from_child_row to avoid circular load with _helpers.",
+     "Same-table related tab filters use the opened row's link_field value (sibling group), not root_name as row id.",
+     "When _hop_walk_final_identifiers returns None, _filters_for_related_rows sets force_empty so callers return zero rows."
+    ],
+    "keywords": [
+     "hop chain",
+     "related doctype",
+     "query_based_table_link",
+     "portal_field_config",
+     "hop_chain",
+     "bridge",
+     "parent_link",
+     "child_link",
+     "sync related",
+     "row signature",
+     "force_empty",
+     "capture_error",
+     "bind_doctype",
+     "display_doctype"
+    ],
+    "purpose": "Form Dialog related tab helpers for hop chains, QBTL rows, sync, list filters, and portal merge keys.",
+    "read_when": "When debugging related-tab hop chains, QBTL bind plans, capture sync, or related row list filters."
+   },
+   "labels": {
+    "nce_events/api/form_dialog/_fd_related.py::_build_related_child_row_dict": {
+     "body_hash": "6ee48e95ef",
+     "label": "Build one Related DocType child row with frozen info JSON and default portal config during capture."
+    },
+    "nce_events/api/form_dialog/_fd_related.py::_build_related_qbtl_child_row_dict": {
+     "body_hash": "1f039cacb5",
+     "label": "Build QBTL related tab child row with display DocType frozen fields and bind metadata for capture."
+    },
+    "nce_events/api/form_dialog/_fd_related.py::_filters_for_related_rows": {
+     "body_hash": "a088014118",
+     "label": "Build get_list filters from root document to related tab rows including multihop and same-table siblings."
+    },
+    "nce_events/api/form_dialog/_fd_related.py::_find_relationship_to_doctype": {
+     "body_hash": "fc85f94e5a",
+     "label": "Find shortest link_field and hop_chain from dialog root to a target DocType via discovery multi-hop data."
+    },
+    "nce_events/api/form_dialog/_fd_related.py::_hop_walk_final_identifiers": {
+     "body_hash": "b80e0ccf1d",
+     "label": "Walk hop_chain with permission-aware get_list to resolve final related DocType identifiers for filters."
+    },
+    "nce_events/api/form_dialog/_fd_related.py::_normalize_hop_chain_value": {
+     "body_hash": "fd61e73d8a",
+     "label": "Parse hop_chain JSON or lists into validated bridge, parent_link, and child_link steps for signatures and filters."
+    },
+    "nce_events/api/form_dialog/_fd_related.py::_parse_related_doctypes_argument": {
+     "body_hash": "e8d16f8d67",
+     "label": "Normalize Page Panel related_doctypes JSON into deduped tab specs with hop_chain or QBTL entries."
+    },
+    "nce_events/api/form_dialog/_fd_related.py::_qbtl_row_signature": {
+     "body_hash": "cac461e70b",
+     "label": "Fingerprint a Query Based Table Link name for QBTL related tab row deduplication."
+    },
+    "nce_events/api/form_dialog/_fd_related.py::_related_doctype_child_rows": {
+     "body_hash": "beb53a7584",
+     "label": "Convert capture wizard related_doctypes input into child row dicts for normal links and QBTL tabs."
+    },
+    "nce_events/api/form_dialog/_fd_related.py::_related_list_columns_from_child_row": {
+     "body_hash": "2f8413eeb3",
+     "label": "Build related grid columns and order_by from portal_field_config for get_form_dialog_related_rows."
+    },
+    "nce_events/api/form_dialog/_fd_related.py::_related_row_signature": {
+     "body_hash": "276b104552",
+     "label": "Fingerprint doctype, link_field, and hop_chain JSON so Page Panel picker specs dedupe consistently."
+    },
+    "nce_events/api/form_dialog/_fd_related.py::_related_tab_portal_config_key": {
+     "body_hash": "33b3b8e82d",
+     "label": "Stable key to restore portal_field_config and portal_actions after Form Dialog related row rebuilds."
+    },
+    "nce_events/api/form_dialog/_fd_related.py::_resolve_qbtl_tab_plan": {
+     "body_hash": "5a2de61d06",
+     "label": "Resolve QBTL display and bind DocTypes plus hop chain from the Form Dialog root for a QBTL tab."
+    },
+    "nce_events/api/form_dialog/_fd_related.py::_sanitize_get_list_fields": {
+     "body_hash": "b5e2ac75c4",
+     "label": "Keep only valid DocType fieldnames and ensure name is first for related row list queries."
+    },
+    "nce_events/api/form_dialog/_fd_related.py::_sync_related_doctypes": {
+     "body_hash": "f2662c83ed",
+     "label": "Replace related_doctypes on capture or rebuild while preserving portal config and actions by stable keys."
+    }
+   }
+  },
+  "nce_events/api/form_dialog/_fd_script_tools.py": {
+   "body_hash": "d0d0b9961f01653e1e51101c3cbe8a56df28381ecd8be9470987a1b6599b171e",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "script_tool_groups",
+     "group_key",
+     "tab_label",
+     "__ungrouped__",
+     "Tools",
+     "frozen_meta_json",
+     "client_scripts",
+     "Form Dialog",
+     "capture",
+     "_sync_script_tool_groups"
+    ],
+    "purpose": "Parse and sync script tool group rows on Form Dialog during schema capture from the Desk wizard.",
+    "read_when": "When Form Dialog capture must persist or preserve script tool groups from wizard input."
+   },
+   "labels": {
+    "nce_events/api/form_dialog/_fd_script_tools.py::_parse_script_tool_groups_argument": {
+     "body_hash": "99a7a93501",
+     "label": "Turns wizard JSON string or list into normalized group_key and tab_label dicts for sync."
+    },
+    "nce_events/api/form_dialog/_fd_script_tools.py::_sync_script_tool_groups": {
+     "body_hash": "08af888144",
+     "label": "Rewrites script_tool_groups on capture preserving labels, existing rows, or auto-seeding Tools when scripts exist."
+    }
+   }
+  },
+  "nce_events/api/form_dialog/_helpers.py": {
+   "body_hash": "498dfee84be7e0388c4786b2849fd6c507ce1f895fd7f0e98ab47274753fa9a3",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "New code should import from _fd_* modules directly; this module exists to avoid churn at old call sites."
+    ],
+    "keywords": [
+     "form_dialog",
+     "_helpers",
+     "__all__",
+     "_fd_related",
+     "_fd_capture_meta",
+     "re-export",
+     "back-compat",
+     "facade",
+     "_sync_related_doctypes"
+    ],
+    "purpose": "Back-compat facade re-exporting form_dialog _fd_* submodule helpers for older import paths.",
+    "read_when": "When tracing legacy imports of form_dialog helpers that now live in _fd_* modules."
+   }
+  },
+  "nce_events/api/form_dialog/action_registry.py": {
+   "body_hash": "988804c2dc74a9184a536c18f7761eb010bd7a2de27fef4d00d24991555caebb",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Only methods in PORTAL_ACTION_METHODS may run; runner uses frappe.get_attr without importing target modules."
+    ],
+    "keywords": [
+     "PORTAL_ACTION_METHODS",
+     "portal actions",
+     "get_action_method_spec",
+     "list_portal_action_methods",
+     "execute_product_exchange",
+     "execute_product_refund",
+     "dotted_path",
+     "applies_to_doctypes",
+     "allow-list",
+     "Form Dialog"
+    ],
+    "purpose": "Allow-listed server method specs for Form Dialog portal row buttons resolved at runtime via dotted_path.",
+    "read_when": "When validating portal action keys, building UI prompts, or listing methods for System Managers."
+   },
+   "labels": {
+    "nce_events/api/form_dialog/action_registry.py::get_action_method_spec": {
+     "body_hash": "4a69ed7131",
+     "label": "Return a copy of one registered portal action spec for run_portal_action and portal field save normalization."
+    },
+    "nce_events/api/form_dialog/action_registry.py::list_action_method_specs": {
+     "body_hash": "ff3f71aa4d",
+     "label": "Return all portal action method specs for configuration UIs and tests."
+    },
+    "nce_events/api/form_dialog/action_registry.py::list_portal_action_methods": {
+     "body_hash": "e7d3c7b4c1",
+     "label": "Whitelisted API listing allow-listed portal actions after System Manager permission check."
+    }
+   }
+  },
+  "nce_events/api/form_dialog/button_visibility.py": {
+   "body_hash": "646a0a41d2d7d7e89f8b50c4542c3501bd9f6ed52cbf6d84d27ed4e4cb1a6db1",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "hide_if SQL must be a single SELECT; table tokens {{t:DocType}} expand before evaluation.",
+     "SQL hide evaluation fails closed: errors log and treat the button as hidden."
+    ],
+    "keywords": [
+     "button_should_hide",
+     "evaluate_sql_hide",
+     "hide_if_sql",
+     "get_form_dialog_footer_visibility",
+     "HIDE_IF_SQL",
+     "physical_table_name",
+     "submit_hidden",
+     "Form Dialog Button",
+     "validate_hide_if_sql"
+    ],
+    "purpose": "Evaluate Form Dialog footer and Submit hide_if rules including saved-state modes and read-only SQL.",
+    "read_when": "When validating hide_if SQL on Form Dialog save or fetching footer button hidden maps for panel V2."
+   },
+   "labels": {
+    "nce_events/api/form_dialog/button_visibility.py::_first_cell_truthy": {
+     "body_hash": "f21c54b321",
+     "label": "Interprets first SQL result cell as hide signal; edit_condition reuses this helper."
+    },
+    "nce_events/api/form_dialog/button_visibility.py::_footer_visibility_core": {
+     "body_hash": "080b363cb0",
+     "label": "Builds per-button hidden flags and submit_hidden from Form Dialog configuration."
+    },
+    "nce_events/api/form_dialog/button_visibility.py::_load_form_dialog_for_visibility": {
+     "body_hash": "5346962b01",
+     "label": "Loads active Form Dialog for visibility APIs with login and ignore_permissions read."
+    },
+    "nce_events/api/form_dialog/button_visibility.py::_normalize_hide_if": {
+     "body_hash": "4d3c102e77",
+     "label": "Maps legacy hide_if keys to Desk Select labels for footer buttons and Submit."
+    },
+    "nce_events/api/form_dialog/button_visibility.py::_truthy_scalar": {
+     "body_hash": "611bc4fe7d",
+     "label": "Defines truthiness for SQL scalar values used by hide and edit condition checks."
+    },
+    "nce_events/api/form_dialog/button_visibility.py::button_should_hide": {
+     "body_hash": "b2f1f7bce8",
+     "label": "Combines never, saved, not_saved, and SQL hide_if modes for one footer control."
+    },
+    "nce_events/api/form_dialog/button_visibility.py::evaluate_sql_hide": {
+     "body_hash": "3a947c68fa",
+     "label": "Runs expanded hide SQL with %(name)s and returns whether the button should hide."
+    },
+    "nce_events/api/form_dialog/button_visibility.py::expand_hide_if_sql_table_tokens": {
+     "body_hash": "e62e118630",
+     "label": "Rewrites {{t:DocType}} tokens to backtick MariaDB table names for hide SQL."
+    },
+    "nce_events/api/form_dialog/button_visibility.py::expand_hide_if_sql_table_tokens.repl": {
+     "body_hash": "5a7682efad",
+     "label": "Resolves one {{t:...}} token via physical_table_name after DocType existence check."
+    },
+    "nce_events/api/form_dialog/button_visibility.py::get_form_dialog_button_hidden_map": {
+     "body_hash": "4bf75610e7",
+     "label": "Whitelisted legacy map of custom button row names to hidden flags only."
+    },
+    "nce_events/api/form_dialog/button_visibility.py::get_form_dialog_footer_visibility": {
+     "body_hash": "a9dca6abba",
+     "label": "Whitelisted API returning custom button hidden map and submit_hidden for panel footer."
+    },
+    "nce_events/api/form_dialog/button_visibility.py::validate_hide_if_sql": {
+     "body_hash": "e8e9634e8e",
+     "label": "Validates hide_if SQL as one SELECT; Form Dialog validate calls this before save."
+    }
+   }
+  },
+  "nce_events/api/form_dialog/portal_fields.py": {
+   "body_hash": "a0873ca36eada18c60da54afdb80fe8e9e9bc41f93604cb2f44b5b924f5265be",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Editor is Desk-only (System Manager) and persists state on the Form Dialog Related or Inline Child Table child row.",
+     "Layout fieldtypes in _PORTAL_EDITOR_SKIP_FIELDTYPES never appear in the related-table portal field editor."
+    ],
+    "keywords": [
+     "portal_field_config",
+     "portal_actions",
+     "portal editor",
+     "Related DocType",
+     "inline child",
+     "System Manager",
+     "get_related_portal_field_editor",
+     "action_registry",
+     "show",
+     "sort_rank"
+    ],
+    "purpose": "Portal field and action editor for Form Dialog related and inline child rows; grid columns and Desk APIs.",
+    "read_when": "When configuring portal_field_config, portal_actions, or whitelisted portal editor APIs on Form Dialog child rows."
+   },
+   "labels": {
+    "nce_events/api/form_dialog/portal_fields.py::_build_portal_editor_rows": {
+     "body_hash": "c4b75ebe10",
+     "label": "Merge saved portal entries with eligible meta for Desk editor rows and related list column derivation."
+    },
+    "nce_events/api/form_dialog/portal_fields.py::_find_inline_child_row": {
+     "body_hash": "f585af26ef",
+     "label": "Find one Inline Child Table child row on a Form Dialog by child row name."
+    },
+    "nce_events/api/form_dialog/portal_fields.py::_normalize_portal_actions_for_save": {
+     "body_hash": "bff74f008d",
+     "label": "Validate portal row button entries against action_registry specs before persisting portal_actions JSON."
+    },
+    "nce_events/api/form_dialog/portal_fields.py::_normalize_portal_field_config_for_save": {
+     "body_hash": "d7692e8912",
+     "label": "Validate saves against allowed fields, drop sort when hidden, and renumber sort_rank values."
+    },
+    "nce_events/api/form_dialog/portal_fields.py::_parse_portal_actions_entries": {
+     "body_hash": "c23b5113be",
+     "label": "Load portal_actions JSON from a child row into dict entries for the Desk editor."
+    },
+    "nce_events/api/form_dialog/portal_fields.py::_parse_portal_field_config_entries": {
+     "body_hash": "d977cd48ba",
+     "label": "Parse portal_field_config JSON into column show, editable, and sort entries."
+    },
+    "nce_events/api/form_dialog/portal_fields.py::_portal_allowed_fieldnames": {
+     "body_hash": "f5865fe808",
+     "label": "Collect allowed fieldnames from editor-eligible meta for normalizing saved portal_field_config."
+    },
+    "nce_events/api/form_dialog/portal_fields.py::_portal_meta_field_eligible_for_editor": {
+     "body_hash": "9194ab2b95",
+     "label": "Exclude hidden and layout fieldtypes so only data columns can appear in portal editors."
+    },
+    "nce_events/api/form_dialog/portal_fields.py::_portal_meta_fields_for_editor": {
+     "body_hash": "b54f0dd4ee",
+     "label": "Return eligible frozen fields plus a name row for editor UI and save validation."
+    },
+    "nce_events/api/form_dialog/portal_fields.py::_portal_name_field_dict": {
+     "body_hash": "549742424f",
+     "label": "Build read-only name column metadata with DocType label when PK is absent from frozen meta.fields."
+    },
+    "nce_events/api/form_dialog/portal_fields.py::default_portal_field_config_json": {
+     "body_hash": "acb1f9b8a2",
+     "label": "Serialize default portal column list JSON for storage on capture-built child rows."
+    },
+    "nce_events/api/form_dialog/portal_fields.py::default_portal_field_config_list": {
+     "body_hash": "a1f288310e",
+     "label": "Default every eligible column visible and editable when seeding a new portal grid config."
+    },
+    "nce_events/api/form_dialog/portal_fields.py::get_inline_child_portal_field_editor": {
+     "body_hash": "f44f5e9751",
+     "label": "Whitelisted Desk API loading portal editor rows and actions for an Inline Child Table row."
+    },
+    "nce_events/api/form_dialog/portal_fields.py::get_related_portal_field_editor": {
+     "body_hash": "86daaba297",
+     "label": "Whitelisted Desk API returning portal column and action editor payload for a Related DocType child row."
+    },
+    "nce_events/api/form_dialog/portal_fields.py::portal_field_config_from_info": {
+     "body_hash": "57984eedce",
+     "label": "Seed default portal_field_config from frozen info.fields during related and inline child capture."
+    },
+    "nce_events/api/form_dialog/portal_fields.py::save_inline_child_portal_actions": {
+     "body_hash": "b7f99b6a5f",
+     "label": "Whitelisted Desk API saving normalized portal_actions on an Inline Child Table row."
+    },
+    "nce_events/api/form_dialog/portal_fields.py::save_inline_child_portal_field_config": {
+     "body_hash": "7e33102247",
+     "label": "Whitelisted Desk API saving normalized portal_field_config on an Inline Child Table row."
+    },
+    "nce_events/api/form_dialog/portal_fields.py::save_related_portal_actions": {
+     "body_hash": "d28831556e",
+     "label": "Whitelisted Desk API persisting normalized portal_actions on a Related DocType child row."
+    },
+    "nce_events/api/form_dialog/portal_fields.py::save_related_portal_field_config": {
+     "body_hash": "e40abef1cf",
+     "label": "Whitelisted Desk API persisting normalized portal_field_config on a Related DocType child row."
+    }
+   }
+  },
+  "nce_events/api/panel_api_pkg/_helpers.py": {
+   "body_hash": "eff167e7a6970defaf349fe30c75aaa3ea2dfd7c9bec4ded40fe3a5894c9a5d2",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "validate_document_page_panel_required_roots skips dotted keys and shares emptiness rules with Form Dialog save."
+    ],
+    "keywords": [
+     "_find_link_field",
+     "_auto_detect_contact_fields",
+     "_title_case",
+     "required_fields",
+     "WP Tables",
+     "_parse_csv",
+     "_get_gender_field_key",
+     "panel helpers",
+     "link field"
+    ],
+    "purpose": "Shared panel and Form Dialog helpers for link fields, contact detection, labels, CSV parsing, and required-root validation.",
+    "read_when": "When panel config, discovery, export, or save needs link lookup, title labels, or required field checks."
+   },
+   "labels": {
+    "nce_events/api/panel_api_pkg/_helpers.py::_auto_detect_contact_fields": {
+     "body_hash": "038ebcf767",
+     "label": "Pick email and phone fieldnames on a DocType for panel contact columns in config."
+    },
+    "nce_events/api/panel_api_pkg/_helpers.py::_find_link_field": {
+     "body_hash": "ab7eeb37fa",
+     "label": "Find first Link field on a DocType pointing at a target DocType for discovery hop paths."
+    },
+    "nce_events/api/panel_api_pkg/_helpers.py::_get_gender_field_key": {
+     "body_hash": "0efe673398",
+     "label": "Resolve gender field on root or via a linked DocType for panel display config."
+    },
+    "nce_events/api/panel_api_pkg/_helpers.py::_get_link_fieldnames": {
+     "body_hash": "74c4f0b267",
+     "label": "List Link fieldnames on a DocType for panel config link metadata."
+    },
+    "nce_events/api/panel_api_pkg/_helpers.py::_get_link_fields_with_target": {
+     "body_hash": "45a7a437a8",
+     "label": "List Link fields with target DocType options for panel row link resolution."
+    },
+    "nce_events/api/panel_api_pkg/_helpers.py::_meta_reqd_root_fieldnames": {
+     "body_hash": "c5de77a7d1",
+     "label": "List meta-mandatory root fieldnames excluding layout and system fields."
+    },
+    "nce_events/api/panel_api_pkg/_helpers.py::_parse_csv": {
+     "body_hash": "43b1053ac7",
+     "label": "Split comma-separated Page Panel field lists into trimmed tokens."
+    },
+    "nce_events/api/panel_api_pkg/_helpers.py::_safe_filename": {
+     "body_hash": "2dd922f2cc",
+     "label": "Strip unsafe characters for CSV export download filename stems."
+    },
+    "nce_events/api/panel_api_pkg/_helpers.py::_title_case": {
+     "body_hash": "44a59370e0",
+     "label": "Turn a fieldname into a display label for discovery fields and panel data columns."
+    },
+    "nce_events/api/panel_api_pkg/_helpers.py::_wp_doctype_label_map": {
+     "body_hash": "877835eb21",
+     "label": "Load WP Tables frappe_doctype set and human labels for discovery and panel labeling."
+    },
+    "nce_events/api/panel_api_pkg/_helpers.py::validate_document_page_panel_required_roots": {
+     "body_hash": "671b37377f",
+     "label": "Throw on empty Page Panel required_fields and optional meta-mandatory roots before publish or Form Dialog save."
+    }
+   }
+  },
+  "nce_events/api/panel_api_pkg/computed_columns.py": {
+   "body_hash": "a472abaecb4ed801837b184f3de68ed508cb1ce3ba64bfcf5d202b1dc7d37014",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "SQL failures per row are stored as {_error: message} on that computed field instead of aborting the panel fetch."
+    ],
+    "keywords": [
+     "computed columns",
+     "sql_expression",
+     "unstored_calculation_fields",
+     "_run_computed_sql",
+     "Page Panel",
+     "fieldname",
+     "frappe.db.sql",
+     "_ensure_tab_prefix"
+    ],
+    "purpose": "Evaluate Page Panel unstored calculation SQL per row and expose computed fields in panel data.",
+    "read_when": "When adding or debugging unstored_calculation_fields SQL on Page Panel column definitions."
+   },
+   "labels": {
+    "nce_events/api/panel_api_pkg/computed_columns.py::_evaluate_computed_columns": {
+     "body_hash": "4c0512a0ac",
+     "label": "Fill each panel data row by running configured computed column SQL via get_panel_data."
+    },
+    "nce_events/api/panel_api_pkg/computed_columns.py::_get_computed_columns": {
+     "body_hash": "dc40ece90d",
+     "label": "Read Page Panel unstored_calculation_fields into runtime computed column config for panel_config."
+    },
+    "nce_events/api/panel_api_pkg/computed_columns.py::_run_computed_sql": {
+     "body_hash": "a1b266700c",
+     "label": "Substitute {fieldname} placeholders, tab-prefix SQL, and execute one computed expression for a row."
+    }
+   }
+  },
+  "nce_events/api/panel_api_pkg/core_filters.py": {
+   "body_hash": "4460925005203c112e01f9bb8d6bb31a49db2b5f957b227173cbaaade2b9132e",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "core_filter",
+     "user filters",
+     "WHERE clause",
+     "tab prefix",
+     "_ensure_tab_prefix",
+     "frappe.db.sql",
+     "Page Panel",
+     "IN operator"
+    ],
+    "purpose": "Merge Page Panel core_filter SQL with dict filters and post-filter row lists for panel queries.",
+    "read_when": "When panel SQL must combine core_filter with user filters or rewrite bare table names in expressions."
+   },
+   "labels": {
+    "nce_events/api/panel_api_pkg/core_filters.py::_apply_user_filters": {
+     "body_hash": "40845f66c5",
+     "label": "Filter in-memory panel row dicts by user filter rules including computed column values."
+    },
+    "nce_events/api/panel_api_pkg/core_filters.py::_apply_user_filters._cell_str": {
+     "body_hash": "b4fa0900d5",
+     "label": "Stringify a row cell for user filter comparison, JSON-encoding dict and list values."
+    },
+    "nce_events/api/panel_api_pkg/core_filters.py::_apply_user_filters._matches": {
+     "body_hash": "45b84bf6dd",
+     "label": "Evaluate one row against a single user filter condition for =, !=, comparisons, like, or in."
+    },
+    "nce_events/api/panel_api_pkg/core_filters.py::_build_core_filter_where": {
+     "body_hash": "188c7c40e6",
+     "label": "AND raw core_filter SQL with frappe-style dict filters into one WHERE clause and param list."
+    },
+    "nce_events/api/panel_api_pkg/core_filters.py::_count_with_core_filter": {
+     "body_hash": "d1561ca936",
+     "label": "Count tab rows matching Page Panel core_filter plus additional dict filters."
+    },
+    "nce_events/api/panel_api_pkg/core_filters.py::_ensure_tab_prefix": {
+     "body_hash": "384f812796",
+     "label": "Prefix bare DocType names in SQL FROM/JOIN and qualified refs for Frappe tab tables; used by computed SQL."
+    },
+    "nce_events/api/panel_api_pkg/core_filters.py::_ensure_tab_prefix.repl": {
+     "body_hash": "bc42e28be5",
+     "label": "Regex callback that prefixes one matched table identifier in a FROM or JOIN clause."
+    },
+    "nce_events/api/panel_api_pkg/core_filters.py::_query_with_core_filter": {
+     "body_hash": "ae6c7f744d",
+     "label": "Select panel fields with core_filter, order, and limit using frappe.db.sql on the root DocType table."
+    }
+   }
+  },
+  "nce_events/api/panel_api_pkg/discovery.py": {
+   "body_hash": "e2860adacb718723a61f5821c88b91b1390a5bfb4877b7f98739fdaa59a4c676",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Singles and virtual DocTypes are skipped because they lack physical child tables for counts.",
+     "Group-by same-doctype tabs are not auto-offered in get_multi_hop_children; client merges configured tabs on rebuild.",
+     "Via-path discovery skips circular paths when the via target equals the root DocType."
+    ],
+    "keywords": [
+     "get_multi_hop_children",
+     "get_child_doctypes",
+     "Query Based Table Link",
+     "hop_chain",
+     "WP Tables",
+     "_discover_via_link_paths",
+     "query_based_links",
+     "get_doctype_fields",
+     "self-Link",
+     "capture wizard"
+    ],
+    "purpose": "Discover inbound links, via-path hops, QBTL bridges, and field lists for Page Panel and Form Dialog capture pickers.",
+    "read_when": "When building related-column pickers, get_child_doctypes, or debugging link paths from a root DocType."
+   },
+   "labels": {
+    "nce_events/api/panel_api_pkg/discovery.py::_build_mixed_doctype_adjacency": {
+     "body_hash": "6cdc6f3681",
+     "label": "Build undirected DocType graph from Link fields plus QBTL-tagged edges."
+    },
+    "nce_events/api/panel_api_pkg/discovery.py::_build_mixed_doctype_adjacency.add_edge": {
+     "body_hash": "0d41431648",
+     "label": "Add one adjacency edge between WP Tables DocTypes with optional QBTL name tag."
+    },
+    "nce_events/api/panel_api_pkg/discovery.py::_classify_query_based_links": {
+     "body_hash": "798731d9c3",
+     "label": "Bucket QBTL entries into self and 1–3 hop lists using root distances."
+    },
+    "nce_events/api/panel_api_pkg/discovery.py::_discover_same_doctype_group_fields": {
+     "body_hash": "27e32bfd45",
+     "label": "Offer same-table group-by related tabs on scalar or non-self Link columns."
+    },
+    "nce_events/api/panel_api_pkg/discovery.py::_discover_self_link_relationships": {
+     "body_hash": "86583824c3",
+     "label": "List self-Link fields on the root for capture wizard SELF relationships."
+    },
+    "nce_events/api/panel_api_pkg/discovery.py::_discover_via_link_paths": {
+     "body_hash": "032e90d40d",
+     "label": "Add 1–3 hop related tabs by walking outbound Links from root or inbound bridge DocTypes."
+    },
+    "nce_events/api/panel_api_pkg/discovery.py::_empty_capture_hop_buckets": {
+     "body_hash": "3ddc9e3885",
+     "label": "Return empty self and hop buckets for invalid or missing root DocType."
+    },
+    "nce_events/api/panel_api_pkg/discovery.py::_load_query_based_table_links": {
+     "body_hash": "7247cc7a67",
+     "label": "Load Query Based Table Link catalog rows for mixed graph discovery."
+    },
+    "nce_events/api/panel_api_pkg/discovery.py::_pick_qbtl_path_endpoint": {
+     "body_hash": "20a2fd189e",
+     "label": "Choose QBTL graph endpoint at hop minus one for classification."
+    },
+    "nce_events/api/panel_api_pkg/discovery.py::_qbtl_via_label": {
+     "body_hash": "87acea99de",
+     "label": "Append (via …) path labels to QBTL titles to match Link-hop picker wording."
+    },
+    "nce_events/api/panel_api_pkg/discovery.py::_shortest_paths_from_root": {
+     "body_hash": "0ba857338c",
+     "label": "BFS shortest hop depths and node chains from root up to max_depth."
+    },
+    "nce_events/api/panel_api_pkg/discovery.py::_skip_as_panel_child_table": {
+     "body_hash": "2ad35abb83",
+     "label": "Exclude Single and virtual DocTypes from child-table relationship scans."
+    },
+    "nce_events/api/panel_api_pkg/discovery.py::_via_path_key": {
+     "body_hash": "5c44c5aed3",
+     "label": "Dedupe key for a related tab from target DocType plus serialized hop_chain."
+    },
+    "nce_events/api/panel_api_pkg/discovery.py::debug_child_lookup": {
+     "body_hash": "8e15190e89",
+     "label": "Whitelisted diagnostic dump of WP Tables rows and Link fields targeting a root."
+    },
+    "nce_events/api/panel_api_pkg/discovery.py::get_child_doctypes": {
+     "body_hash": "1395aa7708",
+     "label": "Whitelisted list of WP Tables DocTypes with a Link pointing at the root DocType."
+    },
+    "nce_events/api/panel_api_pkg/discovery.py::get_doctype_fields": {
+     "body_hash": "430483de83",
+     "label": "Whitelisted root field catalog with labels, link options, and exposed title_field name."
+    },
+    "nce_events/api/panel_api_pkg/discovery.py::get_multi_hop_children": {
+     "body_hash": "72ec2bd756",
+     "label": "Whitelisted capture wizard payload of SELF and 1–3 hop relationships plus reachable QBTL links."
+    }
+   }
+  },
+  "nce_events/api/panel_api_pkg/format_rules.py": {
+   "body_hash": "c5ee7b1223e96d77dd4feee842590314e2c97ca7f8af6f34ba7e130106344320",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Conditions target ( panel_sql ) AS pp_rows aliases; bare root fields stay unqualified.",
+     "Only shown or search-only columns may be referenced; others fail validation or are skipped at fetch.",
+     "RelatedDT.field maps only when exactly one Link targets that DocType."
+    ],
+    "keywords": [
+     "format_rules",
+     "_rewrite_condition",
+     "build_format_case_columns",
+     "validate_format_rule",
+     "_fmt_",
+     "condition_sql",
+     "pp_rows",
+     "resolution maps",
+     "CASE WHEN",
+     "whitelist"
+    ],
+    "purpose": "Rewrite Page Panel format-rule condition SQL to panel column aliases and add CASE flag columns on data fetch.",
+    "read_when": "When validating format rules, debugging Unknown column errors, or tracing _fmt_ flags in get_panel_data."
+   },
+   "labels": {
+    "nce_events/api/panel_api_pkg/format_rules.py::_build_resolution_maps": {
+     "body_hash": "bdfc257889",
+     "label": "Builds root field, single-link related, and SQL keyword maps used to resolve tokens in format conditions."
+    },
+    "nce_events/api/panel_api_pkg/format_rules.py::_referenced_field_keys": {
+     "body_hash": "013913a9da",
+     "label": "Collects lowercased display keys referenced in a condition after stripping string literals for allow-list checks."
+    },
+    "nce_events/api/panel_api_pkg/format_rules.py::_rewrite_condition": {
+     "body_hash": "40bf7a1d59",
+     "label": "Rewrites dotted condition tokens to backticked panel_sql column aliases for derived-table evaluation."
+    },
+    "nce_events/api/panel_api_pkg/format_rules.py::_rewrite_condition.repl": {
+     "body_hash": "99d0efa375",
+     "label": "Substitutes each matched token during rewrite using related_lookup or root_fields resolution."
+    },
+    "nce_events/api/panel_api_pkg/format_rules.py::build_format_case_columns": {
+     "body_hash": "3b3ab4c6d1",
+     "label": "Emits CASE WHEN columns as _fmt_ flags for get_panel_data and related-rows fetches using rewritten conditions."
+    },
+    "nce_events/api/panel_api_pkg/format_rules.py::validate_format_rule": {
+     "body_hash": "aa042e6021",
+     "label": "Whitelisted probe runs rewritten condition against wrapped panel_sql; returns ok, resolved_sql, or error."
+    }
+   }
+  },
+  "nce_events/api/panel_api_pkg/page_panel_lookup.py": {
+   "body_hash": "f525f0c8c16202ca6b8f803969e0ec7300700b33e9059a27bbc937264cccc336",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Panel name may differ from root_doctype; always query by root_doctype link field.",
+     "generate_auto_page_panel_name is for programmatic inserts; Desk creation uses Prompt autoname."
+    ],
+    "keywords": [
+     "Page Panel",
+     "root_doctype",
+     "page_panel_docname_for_root",
+     "get_page_panel_doc_for_root",
+     "generate_auto_page_panel_name",
+     "frappe.db.get_value",
+     "save_panel_sql",
+     "panel lookup",
+     "PP-",
+     "autoname"
+    ],
+    "purpose": "Look up Page Panel records by root_doctype instead of panel name when APIs need the right panel row.",
+    "read_when": "When panel_data, SQL save, or Form Dialog search need the Page Panel for a root DocType."
+   },
+   "labels": {
+    "nce_events/api/panel_api_pkg/page_panel_lookup.py::generate_auto_page_panel_name": {
+     "body_hash": "1c8191ae03",
+     "label": "Allocate a unique PP-prefixed name for save_panel_sql inserts and PagePanel autoname fallback."
+    },
+    "nce_events/api/panel_api_pkg/page_panel_lookup.py::get_page_panel_doc_for_root": {
+     "body_hash": "30480c8faf",
+     "label": "Load the full Page Panel document used by panel config, SQL build, and related-row read-only keys."
+    },
+    "nce_events/api/panel_api_pkg/page_panel_lookup.py::page_panel_docname_for_root": {
+     "body_hash": "9112167af4",
+     "label": "Return Page Panel document name for a root DocType via unique root_doctype field."
+    },
+    "nce_events/api/panel_api_pkg/page_panel_lookup.py::page_panel_exists_for_root": {
+     "body_hash": "b7bedfda4a",
+     "label": "Report whether any Page Panel is configured for the given root DocType."
+    }
+   }
+  },
+  "nce_events/api/panel_api_pkg/panel_config.py": {
+   "body_hash": "ff51aa13acddaec12d06770274f7634abe494adb9abff1a4a27e360349788cef",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Outer ORDER BY is omitted when the configured column is not in display or search fields, avoiding query errors.",
+     "Linked-table gender fields are not auto-joined unless explicitly configured in column or search fields."
+    ],
+    "keywords": [
+     "_panel_config_from_doc",
+     "column_order",
+     "theme_slug",
+     "frame_bg_class",
+     "format_rules",
+     "computed_columns",
+     "fetch_only_fields",
+     "Page Panel",
+     "ORDER BY",
+     "gender_column"
+    ],
+    "purpose": "Build Page Panel runtime config dict with columns, chrome classes, theme slug, format rules, and derived sort.",
+    "read_when": "When assembling panel payload for Vue load, CSV export, panel SQL, or related-rows ORDER BY."
+   },
+   "labels": {
+    "nce_events/api/panel_api_pkg/panel_config.py::_derived_order_clause": {
+     "body_hash": "f2066d09ce",
+     "label": "Appends safe outer ORDER BY for wrapped panel_sql when the sort column is known to panel_data and related rows."
+    },
+    "nce_events/api/panel_api_pkg/panel_config.py::_panel_chrome_class": {
+     "body_hash": "fc3d54f8a9",
+     "label": "Reads trimmed Page Panel per-slot background class or empty string for theme defaults."
+    },
+    "nce_events/api/panel_api_pkg/panel_config.py::_panel_chrome_fg_type": {
+     "body_hash": "66e76f6814",
+     "label": "Chooses mono or tonal foreground mode from the paired _fg_type field on the Page Panel."
+    },
+    "nce_events/api/panel_api_pkg/panel_config.py::_panel_config_from_doc": {
+     "body_hash": "62308c6283",
+     "label": "Converts Page Panel document fields into runtime config including resolve_theme_slug and chrome slots for get_panel_config and SQL."
+    }
+   }
+  },
+  "nce_events/api/panel_api_pkg/panel_data.py": {
+   "body_hash": "e2b6dfcfecd72807778edb769e5102f3e438d317b0c0a02f40fb9ef6d6ca013d",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "WP Tables skips root read gate; unreadable catalog rows are filtered per row instead.",
+     "user_filters, limit, and start are ignored; V2 filters and paginates client-side on the full dataset.",
+     "panel_sql is read from Page Panel when no drill-down filters; drill-down rebuilds SQL with WHERE."
+    ],
+    "keywords": [
+     "get_panel_data",
+     "get_panel_config",
+     "WP Tables",
+     "panel_sql",
+     "_build_panel_sql",
+     "format_rules",
+     "sync_error_drill",
+     "last_sync_duration",
+     "export_panel_data",
+     "whitelist",
+     "default_filters"
+    ],
+    "purpose": "Whitelisted Page Panel config and row fetch with permissions, WP Tables catalog filtering, sync columns, and export hooks.",
+    "read_when": "When implementing panel SPA data loads, WP Tables sync UI columns, or messaging preview row context."
+   },
+   "labels": {
+    "nce_events/api/panel_api_pkg/panel_data.py::_attach_wp_tables_sync_details": {
+     "body_hash": "ab04465516",
+     "label": "Loads WP Tables and latest Sync Log records then merges sync fields onto catalog rows in place."
+    },
+    "nce_events/api/panel_api_pkg/panel_data.py::_filter_wp_tables_catalog_rows": {
+     "body_hash": "8906d4b0c4",
+     "label": "Removes WP Tables catalog rows whose underlying DocType the current user cannot read explicitly."
+    },
+    "nce_events/api/panel_api_pkg/panel_data.py::_flag_last_sync_status_column": {
+     "body_hash": "0d66feb5a9",
+     "label": "Sets sync_error_drill on last_sync_status so the SPA can open sync error detail when status is not Success."
+    },
+    "nce_events/api/panel_api_pkg/panel_data.py::_format_sync_duration": {
+     "body_hash": "cbe2096e5c",
+     "label": "Formats Sync Log duration_seconds into a compact elapsed label for the WP Tables Elapsed column."
+    },
+    "nce_events/api/panel_api_pkg/panel_data.py::_insert_elapsed_column": {
+     "body_hash": "6ead070cc9",
+     "label": "Inserts last_sync_duration column metadata after Last Synced on the WP Tables panel column list."
+    },
+    "nce_events/api/panel_api_pkg/panel_data.py::_merge_latest_sync_log": {
+     "body_hash": "28a61f5639",
+     "label": "Fills row last_sync_log, error message, log name, and formatted duration from WP Tables and Sync Log lookups."
+    },
+    "nce_events/api/panel_api_pkg/panel_data.py::_require_root_doctype_read": {
+     "body_hash": "0279c5bd30",
+     "label": "Throws PermissionError unless the user has explicit read on the panel root DocType, except WP Tables."
+    },
+    "nce_events/api/panel_api_pkg/panel_data.py::copy_panel_colours": {
+     "body_hash": "8c9aeaa189",
+     "label": "Whitelisted copies chrome colour fields from a themed source Page Panel to targets with per-target savepoints."
+    },
+    "nce_events/api/panel_api_pkg/panel_data.py::export_panel_data": {
+     "body_hash": "8e1ffb92c7",
+     "label": "Whitelisted writes panel CSV to public files via panel_export and returns the download URL."
+    },
+    "nce_events/api/panel_api_pkg/panel_data.py::get_other_page_panels": {
+     "body_hash": "5cf2c8ee9c",
+     "label": "Whitelisted list of other Page Panel names and theme links for Desk panel switching UI."
+    },
+    "nce_events/api/panel_api_pkg/panel_data.py::get_panel_config": {
+     "body_hash": "efcc05eca4",
+     "label": "Whitelisted runtime Page Panel display config from doc or defaults when no panel exists for root_doctype."
+    },
+    "nce_events/api/panel_api_pkg/panel_data.py::get_panel_data": {
+     "body_hash": "4000f5aabc",
+     "label": "Whitelisted full row dataset via stored or rebuilt panel_sql, format flags, computed columns, and WP Tables extras."
+    },
+    "nce_events/api/panel_api_pkg/panel_data.py::get_theme_slug_for_link": {
+     "body_hash": "c26876b350",
+     "label": "Whitelisted resolves a Page Panel theme Link to the active NCE Theme slug for runtime and previews."
+    },
+    "nce_events/api/panel_api_pkg/panel_data.py::get_theme_table_tokens": {
+     "body_hash": "8396c1afc4",
+     "label": "Whitelisted returns NCE Theme table colour and divider tokens for Page Panel Colours tab previews."
+    }
+   }
+  },
+  "nce_events/api/panel_api_pkg/panel_export.py": {
+   "body_hash": "2876d2bf56a0ed48fe690765d9c5a532f232b9e24607ed91e960476e55b79f12",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "filtered_row_names must be a JSON array and is capped at 50000 names."
+    ],
+    "keywords": [
+     "build_page_panel_csv_text",
+     "export_panel_data_impl",
+     "get_panel",
+     "_csv_export_columns",
+     "filtered_row_names",
+     "CSV",
+     "search_only_columns",
+     "_EXPORT_NAME_CAP"
+    ],
+    "purpose": "Page Panel CSV export: column lists, CSV text, public file URL, and get_panel REST download path.",
+    "read_when": "When changing get_panel CSV download, filtered export subset, or search-only columns in exports."
+   },
+   "labels": {
+    "nce_events/api/panel_api_pkg/panel_export.py::_cell_str": {
+     "body_hash": "9496c8a36b",
+     "label": "Formats panel cell values as CSV strings, JSON-encoding dicts and lists."
+    },
+    "nce_events/api/panel_api_pkg/panel_export.py::_csv_export_columns": {
+     "body_hash": "66fd39b837",
+     "label": "Appends search-only column metadata not already in visible panel columns for export."
+    },
+    "nce_events/api/panel_api_pkg/panel_export.py::_names_for_filtered_export": {
+     "body_hash": "d26a0eb763",
+     "label": "Parses optional JSON name list to export only selected panel rows in order."
+    },
+    "nce_events/api/panel_api_pkg/panel_export.py::build_page_panel_csv_text": {
+     "body_hash": "b818999a3d",
+     "label": "Loads Page Panel with permissions, fetches panel data, and returns CSV for GET get_panel."
+    },
+    "nce_events/api/panel_api_pkg/panel_export.py::build_panel_csv_text": {
+     "body_hash": "b1deec3c2b",
+     "label": "Writes labelled header row and row values to CSV text from columns and rows."
+    },
+    "nce_events/api/panel_api_pkg/panel_export.py::export_panel_data_impl": {
+     "body_hash": "7d2b55bd5b",
+     "label": "Writes panel CSV under public files panels path and returns download URL via export_panel_data."
+    }
+   }
+  },
+  "nce_events/api/panel_api_pkg/sql.py": {
+   "body_hash": "8692eeb1eb6fb3ca54754cc7d7fc18efd8def875eab60222bf10c8233e9225d1",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Drill-down filters bind in WHERE at fetch time; they are not stored in cached panel_sql.",
+     "Format rule _fmt_ columns are excluded from panel_sql; get_panel_data wraps the query at fetch time.",
+     "Related-table fetch_only fields need Display, Search, or Gender Column selection or they are skipped."
+    ],
+    "keywords": [
+     "panel_sql",
+     "_build_panel_sql",
+     "build_panel_sql",
+     "LEFT JOIN",
+     "root_doctype",
+     "get_panel_config",
+     "order_by",
+     "Page Panel",
+     "parameterized",
+     "whitelist",
+     "column_order"
+    ],
+    "purpose": "Build parameterized SELECT SQL for Page Panel grids from column config, link JOINs, drill-down filters, and sort order.",
+    "read_when": "When tracing panel_sql generation, stored query refresh, or how get_panel_data executes panel rows."
+   },
+   "labels": {
+    "nce_events/api/panel_api_pkg/sql.py::_build_panel_sql": {
+     "body_hash": "5d7be72c3a",
+     "label": "Assembles SELECT with link JOINs, qualified ORDER BY, and bound drill-down WHERE; returns sql and params for execution."
+    },
+    "nce_events/api/panel_api_pkg/sql.py::build_panel_sql": {
+     "body_hash": "39d9303139",
+     "label": "Whitelisted Refresh for Page Panel Query tab; applies optional form fields then saves panel_sql for get_panel_data."
+    },
+    "nce_events/api/panel_api_pkg/sql.py::build_panel_sql_for_doc": {
+     "body_hash": "99f48aa560",
+     "label": "Builds panel SQL from a Page Panel doc in memory and writes panel_sql without bumping modified."
+    },
+    "nce_events/api/panel_api_pkg/sql.py::save_panel_sql": {
+     "body_hash": "db4d9a78af",
+     "label": "Whitelisted API to persist order_by on Page Panel, inserting a new panel row when none exists; core_filter is ignored."
+    }
+   }
+  },
+  "nce_events/api/panel_api_pkg/theme_slug.py": {
+   "body_hash": "cf89ef3ababfe3adebbf9d2003c7c6f329eb1fda73fbf5dda5514eb03ba68284",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Empty theme link uses site default NCE Theme (is_default=1) only if that doc is Active.",
+     "Explicit theme link never redirects; missing or inactive theme returns None so callers may omit data-nce-theme."
+    ],
+    "keywords": [
+     "resolve_theme_slug",
+     "NCE Theme",
+     "is_default",
+     "Active",
+     "slug",
+     "theme_link",
+     "Page Panel",
+     "_site_default_theme_name",
+     "_active_theme_slug",
+     "panel chrome"
+    ],
+    "purpose": "Resolve Page Panel NCE Theme links to active theme slug strings for panel chrome and data-nce-theme.",
+    "read_when": "When panel or preview code needs the active slug from a Page Panel theme Link or site default NCE Theme."
+   },
+   "labels": {
+    "nce_events/api/panel_api_pkg/theme_slug.py::_active_theme_slug": {
+     "body_hash": "f209b250dc",
+     "label": "Returns the slug field when the named NCE Theme exists and status is Active."
+    },
+    "nce_events/api/panel_api_pkg/theme_slug.py::_site_default_theme_name": {
+     "body_hash": "76e2270347",
+     "label": "Returns the NCE Theme document name marked is_default=1 for unassigned UI fallback."
+    },
+    "nce_events/api/panel_api_pkg/theme_slug.py::resolve_theme_slug": {
+     "body_hash": "8e86ce21c4",
+     "label": "Maps Page Panel theme Link to Active slug; panel_config and panel_data call it for runtime theming."
+    }
+   }
+  },
+  "nce_events/api/panel_api_pkg/theme_table_tokens.py": {
+   "body_hash": "5057d8f09f82d49b4dc8f1f86263bd450126c73296d7251a1c559f6b10c22d92",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "get_theme_table_tokens",
+     "theme_json",
+     "TIER_TO_BORDER_CLASS",
+     "table_row_divider_width",
+     "Colours tab",
+     "NCE Theme",
+     "LEGACY_PX_TIER",
+     "normalize_table_width_tier",
+     "_default_payload"
+    ],
+    "purpose": "Resolve NCE Theme table divider tiers and colour hex tokens for Page Panel Desk previews and Colours tab.",
+    "read_when": "When Colours tab or panel_data needs table chrome defaults from linked theme JSON or site default."
+   },
+   "labels": {
+    "nce_events/api/panel_api_pkg/theme_table_tokens.py::_default_payload": {
+     "body_hash": "c719fc4bb8",
+     "label": "Supplies baseline table colour and divider defaults from themes app or built-in fallbacks when theme JSON is absent."
+    },
+    "nce_events/api/panel_api_pkg/theme_table_tokens.py::_parse_theme_json": {
+     "body_hash": "4174b10743",
+     "label": "Loads and parses theme_json from an NCE Theme document into a dict for merging with defaults."
+    },
+    "nce_events/api/panel_api_pkg/theme_table_tokens.py::_theme_doc_name": {
+     "body_hash": "e6906d8278",
+     "label": "Picks linked NCE Theme name or site default via _site_default_theme_name for token lookup."
+    },
+    "nce_events/api/panel_api_pkg/theme_table_tokens.py::get_theme_table_tokens": {
+     "body_hash": "e43c310bc4",
+     "label": "Returns divider tier, width classes, and header or row hex colours for panel_data colour preview."
+    },
+    "nce_events/api/panel_api_pkg/theme_table_tokens.py::get_theme_table_tokens.colour": {
+     "body_hash": "50fc62652b",
+     "label": "Picks a hex string from payload keys with fallback chain inside get_theme_table_tokens."
+    },
+    "nce_events/api/panel_api_pkg/theme_table_tokens.py::normalize_table_width_tier": {
+     "body_hash": "6f3ac990d4",
+     "label": "Maps legacy px divider strings and raw values to thin, normal, or strong tier names."
+    },
+    "nce_events/api/panel_api_pkg/theme_table_tokens.py::tier_to_border_class": {
+     "body_hash": "5408890196",
+     "label": "Maps normalized width tier to theme-border CSS class names for panel preview."
+    }
+   }
+  },
+  "nce_events/api/permissions.py": {
+   "body_hash": "6457f3138fc6aab4621cbe82f145e02a516909adf01dff8ef4950cc64c68135e",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "has_explicit_doctype_read ignores if_owner and select-only perms unlike frappe.has_permission for User list access."
+    ],
+    "keywords": [
+     "has_explicit_doctype_read",
+     "sync_wp_tables_read_permissions",
+     "grant_read_only_wp_tables",
+     "WP Tables",
+     "Read Only",
+     "Custom DocPerm",
+     "System Manager",
+     "panel_data"
+    ],
+    "purpose": "Desk permission helpers: explicit DocType read checks, WP Tables read grants, and System Manager gating.",
+    "read_when": "When panel_data filters WP Tables by read perm or syncing Read Only role access to catalog DocTypes."
+   },
+   "labels": {
+    "nce_events/api/permissions.py::_doctype_from_wp_tables_row": {
+     "body_hash": "9206941a27",
+     "label": "Derives Frappe DocType name from frappe_doctype, nce_name, name, or table_name on a WP Tables row."
+    },
+    "nce_events/api/permissions.py::_grant_read": {
+     "body_hash": "4919202bd5",
+     "label": "Adds read permission for a role on a DocType when missing, with skip reasons for empty or missing types."
+    },
+    "nce_events/api/permissions.py::_has_read_perm": {
+     "body_hash": "faada6931a",
+     "label": "Checks Custom DocPerm or DocPerm for permlevel 0 read on a role."
+    },
+    "nce_events/api/permissions.py::_require_system_manager": {
+     "body_hash": "6fabaf5d3d",
+     "label": "Throws PermissionError unless current user has System Manager role."
+    },
+    "nce_events/api/permissions.py::doctypes_from_wp_tables": {
+     "body_hash": "4cb756118f",
+     "label": "Lists distinct DocTypes from all WP Tables rows plus optional Page Panel with row count."
+    },
+    "nce_events/api/permissions.py::grant_read_only_wp_tables": {
+     "body_hash": "a8f9244257",
+     "label": "Whitelisted System Manager entry that runs sync_wp_tables_read_permissions for Read Only or chosen role."
+    },
+    "nce_events/api/permissions.py::has_explicit_doctype_read": {
+     "body_hash": "a6a5df9f79",
+     "label": "True when user has non-if_owner Read or Write on a DocType; panel_data uses it for root and WP Tables catalog rows."
+    },
+    "nce_events/api/permissions.py::sync_wp_tables_read_permissions": {
+     "body_hash": "b3530ced0f",
+     "label": "Idempotently grants Read on every WP Tables DocType and Page Panel to the given role."
+    }
+   }
+  },
+  "nce_events/api/sql_eval.py": {
+   "body_hash": "07a83ab97d93f9a0c33b0649e857f5b7697a37d945185e32612873aad077a24a",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Expressions must come from trusted configuration such as WP Tables, not end-user text.",
+     "Bare identifier substitution applies only outside single-quoted string literals in each expression."
+    ],
+    "keywords": [
+     "evaluate_sql_expressions",
+     "evaluate_sql_expressions_api",
+     "substitution_token_allowlist_for_doctype",
+     "get_substitution_token_allowlist",
+     "token_allowlist",
+     "reference_doctype",
+     "split_sql_code_and_string_literals",
+     "FROM DUAL",
+     "MariaDB",
+     "frappe.whitelist",
+     "_coerce_sql_bind_value",
+     "derived_fields",
+     "scalar SQL",
+     "PyMySQL"
+    ],
+    "purpose": "Server-side MariaDB scalar SQL evaluation against row dicts with DocType token allowlists and whitelisted APIs.",
+    "read_when": "When fixing derived field SQL, Form Dialog evaluate_sql_expressions_api, or row token substitution and bind coercion."
+   },
+   "labels": {
+    "nce_events/api/sql_eval.py::_coerce_sql_bind_value": {
+     "body_hash": "842091920d",
+     "label": "Prepare row values for PyMySQL binds, JSON-encoding dicts and lists and normalizing bools."
+    },
+    "nce_events/api/sql_eval.py::_substitute_row_tokens_in_code": {
+     "body_hash": "e4d2243f25",
+     "label": "Rewrite allowlisted word-boundary identifiers to named placeholders and stash coerced row values in params."
+    },
+    "nce_events/api/sql_eval.py::evaluate_sql_expressions": {
+     "body_hash": "9b8193e071",
+     "label": "Evaluate a map of scalar SQL aliases as one SELECT FROM DUAL; called by derived_fields evaluate_derived_fields."
+    },
+    "nce_events/api/sql_eval.py::evaluate_sql_expressions_api": {
+     "body_hash": "59ff54a4f8",
+     "label": "Whitelisted client entry point for the same eval, accepting JSON strings and reference_doctype or token_allowlist."
+    },
+    "nce_events/api/sql_eval.py::get_substitution_token_allowlist": {
+     "body_hash": "8fd73f1398",
+     "label": "Whitelisted sorted bind-safe fieldnames for a DocType for Form Dialog and script composition."
+    },
+    "nce_events/api/sql_eval.py::split_sql_code_and_string_literals": {
+     "body_hash": "1c84c2c900",
+     "label": "Parse SQL into alternating code and single-quoted literal segments respecting doubled-quote escapes."
+    },
+    "nce_events/api/sql_eval.py::substitution_token_allowlist_for_doctype": {
+     "body_hash": "eeb21fc9f2",
+     "label": "Collect DocType meta fieldnames plus name as the frozenset allowed for row token binds; used by evaluate_derived_fields."
+    }
+   }
+  },
+  "nce_events/api/woocommerce_client.py": {
+   "body_hash": "c0bf547b0370a60c6ce57d909b16a65865a65cd9cd2822b083861883964b3441",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Only GET/POST/PUT/PATCH/DELETE are allowed and paths must stay under allowed products routes."
+    ],
+    "keywords": [
+     "wc_request",
+     "get_woocommerce_v3_base_url",
+     "DEFAULT_WOOCOMMERCE_CONNECTOR",
+     "consumer_key",
+     "consumer_secret",
+     "wp-json/wc/v3",
+     "get_credentials",
+     "WooCommerce HTTP error",
+     "products/categories"
+    ],
+    "purpose": "Server-side WooCommerce REST v3 HTTP client using API Connector consumer key and secret on allowed product paths.",
+    "read_when": "When events_publish calls WooCommerce products or categories or debugging wc_request auth and path errors."
+   },
+   "labels": {
+    "nce_events/api/woocommerce_client.py::_validate_relative_path": {
+     "body_hash": "f9d23f3bce",
+     "label": "Rejects unsafe or non-product WooCommerce v3 relative paths before HTTP."
+    },
+    "nce_events/api/woocommerce_client.py::_woocommerce_api_base_url": {
+     "body_hash": "1dd652bdd0",
+     "label": "Normalizes connector base_url to end at wp-json/wc/v3 for REST calls."
+    },
+    "nce_events/api/woocommerce_client.py::get_woocommerce_v3_base_url": {
+     "body_hash": "aaab25a6f6",
+     "label": "Resolves WooCommerce v3 base URL for a named API Connector without returning secrets."
+    },
+    "nce_events/api/woocommerce_client.py::wc_request": {
+     "body_hash": "e35057ff33",
+     "label": "Authenticated WooCommerce v3 request used by events_publish product and category operations."
+    }
+   }
+  },
+  "nce_events/api/wp_tables_mapping.py": {
+   "body_hash": "81f0288ef96d4e860ca48c2a3c96c94a5403b4f1cecb6fa5b81963ab6adcd437",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Derived specs skip entries with empty sql_expression even when is_derived is set.",
+     "derived_sql_specs_from_column_mapping ignores is_virtual; only is_derived and sql_expression matter."
+    ],
+    "keywords": [
+     "get_wp_tables_column_mapping",
+     "column_mapping",
+     "WP Tables",
+     "frappe_doctype",
+     "derived_sql_specs_from_column_mapping",
+     "get_derived_sql_specs",
+     "sql_expression",
+     "is_derived",
+     "get_wp_tables_default_field_values",
+     "default_value",
+     "wp_default",
+     "fieldname"
+    ],
+    "purpose": "Load WP Tables column_mapping JSON and expose derived SQL specs and default field values for any Frappe DocType.",
+    "read_when": "When wiring panel Form Dialog to column_mapping, derived sql_expression specs, or new-doc default seeding."
+   },
+   "labels": {
+    "nce_events/api/wp_tables_mapping.py::derived_sql_specs_from_column_mapping": {
+     "body_hash": "8d845ec9df",
+     "label": "Extract fieldname and sql_expression pairs for derived columns only from an already parsed mapping dict."
+    },
+    "nce_events/api/wp_tables_mapping.py::get_derived_sql_specs": {
+     "body_hash": "a12d531d0e",
+     "label": "Return derived SQL specs for a DocType; get_derived_field_specs in derived_fields delegates here."
+    },
+    "nce_events/api/wp_tables_mapping.py::get_derived_sql_specs_api": {
+     "body_hash": "4741e5df25",
+     "label": "Whitelisted derived specs only so clients avoid duplicating mapping parse logic."
+    },
+    "nce_events/api/wp_tables_mapping.py::get_wp_tables_column_mapping": {
+     "body_hash": "b169bd5d95",
+     "label": "Fetch and parse column_mapping JSON from the first WP Tables row matching a Frappe DocType."
+    },
+    "nce_events/api/wp_tables_mapping.py::get_wp_tables_column_mapping_api": {
+     "body_hash": "61cad8fb5d",
+     "label": "Whitelisted column_mapping read for client-side Form Dialog composition."
+    },
+    "nce_events/api/wp_tables_mapping.py::get_wp_tables_default_field_values": {
+     "body_hash": "5c906de58b",
+     "label": "Map Frappe fieldnames to first non-empty default_value, default, or wp_default from dict-shaped mapping entries."
+    },
+    "nce_events/api/wp_tables_mapping.py::get_wp_tables_default_field_values_api": {
+     "body_hash": "1b19f91e3e",
+     "label": "Whitelisted defaults for seeding new documents in panel Form Dialog."
+    }
+   }
+  },
+  "nce_events/utils/sql_table.py": {
+   "body_hash": "68d5f6955f832a9399486e9b50949339c7d22eccd9f2e94d4ad0bf554a39fe5d",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Some Database backends do not expose get_table_name; use this helper for raw SQL instead."
+    ],
+    "keywords": [
+     "physical_table_name",
+     "tab",
+     "doctype",
+     "MariaDB",
+     "raw SQL",
+     "get_table_name",
+     "evaluations",
+     "form_dialog"
+    ],
+    "purpose": "Resolve Frappe DocType names to MariaDB physical table names with the tab prefix for raw SQL.",
+    "read_when": "When building raw SQL joins and need tabDocType names where Database.get_table_name is unavailable."
+   },
+   "labels": {
+    "nce_events/utils/sql_table.py::physical_table_name": {
+     "body_hash": "776aac5533",
+     "label": "Return tab plus trimmed DocType as the MariaDB table name; used by evaluations and Form Dialog SQL helpers."
+    }
+   }
+  }
+ },
+ "version": 1
+}

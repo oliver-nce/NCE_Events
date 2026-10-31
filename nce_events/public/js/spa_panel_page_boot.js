@@ -8,12 +8,14 @@
  *  "gotchas": [
  *   "Frappe Page routes have no .page wrapper so page-head is direct child of wrapper."
  *  ],
- *  "keywords": ["spa_panel_page.boot", "get_spa_page_config", "_VUE_ASSETS", "spa-panel-page", "clearLayoutScope", "panel_page_v2_dist"],
+ *  "keywords": ["spa_panel_page.boot", "get_spa_page_config", "_VUE_ASSETS", "spa-panel-page", "clearLayoutScope", "panel_page_v2_dist", "_setBrowserTabTitle", "NCE Manager"],
  *  "format": 1
  * }
  * code-index:end
  */
 frappe.provide("nce_events.spa_panel_page");
+
+const _BROWSER_TAB_TITLE = "NCE Manager";
 
 const _VUE_ASSETS = [
 	"/assets/nce_events/js/panel_page_v2_dist/panel_page_v2.js",
@@ -28,6 +30,14 @@ function _findSpaScope(wrapper) {
 		el = el.parentElement;
 	}
 	return wrapper;
+}
+
+function _setBrowserTabTitle() {
+	if (typeof frappe !== "undefined" && frappe.utils && typeof frappe.utils.set_title === "function") {
+		frappe.utils.set_title(_BROWSER_TAB_TITLE);
+		return;
+	}
+	document.title = _BROWSER_TAB_TITLE;
 }
 
 function _ensureSpaLayoutStyles() {
@@ -65,7 +75,7 @@ nce_events.spa_panel_page.clearLayoutScope = function (wrapper) {
 	if (wrapper) wrapper._nce_spa_scope_el = null;
 };
 
-/** Mount the SPA with an already-resolved config (shared by boot() and page-view). */
+/** Mount the SPA with an already-resolved config. */
 nce_events.spa_panel_page.bootWithConfig = function (wrapper, pageSlug, mountElId, cfg) {
 	const scopeEl = _findSpaScope(wrapper);
 	scopeEl.classList.add("spa-panel-page");
@@ -85,6 +95,7 @@ nce_events.spa_panel_page.bootWithConfig = function (wrapper, pageSlug, mountElI
 	} else if (wrapper._page_obj.page && wrapper._page_obj.page.set_title) {
 		wrapper._page_obj.page.set_title("");
 	}
+	_setBrowserTabTitle();
 
 	frappe.require(_VUE_ASSETS, function () {
 		if (wrapper._vue_app) return;
@@ -104,6 +115,7 @@ nce_events.spa_panel_page.bootWithConfig = function (wrapper, pageSlug, mountElI
 };
 
 nce_events.spa_panel_page.boot = function (wrapper, pageSlug, mountElId) {
+	_setBrowserTabTitle();
 	if (wrapper._vue_app) {
 		return;
 	}
