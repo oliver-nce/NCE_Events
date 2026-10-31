@@ -368,7 +368,10 @@ function compareRowsForSort(ra, rb, fieldname, dir) {
 	const sb = String(vb).trim();
 	const dateRe = /^\d{4}-\d{2}-\d{2}/;
 	if (dateRe.test(sa) && dateRe.test(sb)) {
-		return mult * sa.slice(0, 10).localeCompare(sb.slice(0, 10));
+		// Compare full ISO string so datetime values on the same day (time part) sort too.
+		const ta = sa.replace(" ", "T");
+		const tb = sb.replace(" ", "T");
+		return mult * (ta < tb ? -1 : ta > tb ? 1 : 0);
 	}
 	const na = parseFloat(sa);
 	const nb = parseFloat(sb);

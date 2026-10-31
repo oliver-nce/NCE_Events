@@ -53,6 +53,7 @@ code-index:end
 import { computed, inject, onMounted } from "vue";
 import SpaPageNavBar from "./SpaPageNavBar.vue";
 import { useSpaPageNav } from "../composables/useSpaPageNav.js";
+import { canSeeWorkspace } from "../utils/canSeeWorkspace.js";
 
 defineProps({
 	actions: { type: Array, default: () => [] },
@@ -63,13 +64,7 @@ defineEmits(["select"]);
 const pageSlug = inject("pageSlug", null);
 
 /** Display gate only (Desk routes are role-protected server-side): Administrator, Manager, System Manager. */
-const canGoWorkspace = computed(() => {
-	const f = window.frappe;
-	if (!f || !f.session) return false;
-	if (f.session.user === "Administrator") return true;
-	const roles = (f.boot && f.boot.user && f.boot.user.roles) || [];
-	return roles.includes("Manager") || roles.includes("System Manager");
-});
+const canGoWorkspace = computed(() => canSeeWorkspace());
 
 function goWorkspace() {
 	window.frappe.set_route("Workspaces", "NCE Events");

@@ -19,6 +19,7 @@ code-index:end
 	<div class="ppv2-root">
 		<div class="ppv2-top-row">
 			<div class="ppv2-zone ppv2-zone-title">{{ pageTitle }}</div>
+			<SpaMagicSearch />
 		</div>
 		<div class="ppv2-actions-bar">
 			<ActionsPanel :actions="panelActions" @select="onPanelActionSelect" />
@@ -419,6 +420,7 @@ import PanelFormDialog from "./components/PanelFormDialog.vue";
 import SyncErrorDialog from "./components/SyncErrorDialog.vue";
 import { panelChromeFgTextClass } from "./utils/panelChromeClasses.js";
 import ActionsPanel from "./components/ActionsPanel.vue";
+import SpaMagicSearch from "./components/SpaMagicSearch.vue";
 import PanelFindActionBar from "./components/PanelFindActionBar.vue";
 import PanelFindRow from "./components/PanelFindRow.vue";
 import { useFindPanel } from "./composables/useFindPanel.js";
@@ -1241,6 +1243,8 @@ async function onSheets(panelPayload) {
 }
 
 .ppv2-top-row {
+	display: flex;
+	align-items: center;
 	flex-shrink: 0;
 	height: 71px;
 }
@@ -1275,6 +1279,8 @@ async function onSheets(panelPayload) {
 }
 
 .ppv2-zone-title {
+	flex: 1;
+	min-width: 0;
 	padding: 12px 16px;
 	box-sizing: border-box;
 	display: flex;

@@ -7,7 +7,7 @@ code-index:begin
  "gotchas": [
   "Other apps register after_events_publish_to_woocommerce in their hooks.py; each callable receives doctype and name."
  ],
- "keywords": ["app_include_js", "app_include_css", "doctype_js", "add_to_apps_screen", "after_events_publish_to_woocommerce", "required_apps", "nce_sync", "page-view"],
+ "keywords": ["app_include_js", "app_include_css", "doctype_js", "add_to_apps_screen", "after_events_publish_to_woocommerce", "required_apps", "nce_sync", "panel-page-mirrored"],
  "format": 1
 }
 code-index:end
@@ -46,7 +46,7 @@ add_to_apps_screen = [
 		"name": "nce_events",
 		"logo": "/assets/nce_events/images/logo.png",
 		"title": "NCE Events",
-		"route": "/app/page-view",
+		"route": "/app/panel-page-mirrored",
 	}
 ]
 
