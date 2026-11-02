@@ -13,11 +13,11 @@ code-index:end
 -->
 
 <template>
-	<div class="card-form" :style="cardStyles">
-		<div class="card-form-header">
+	<div class="card-form theme-bg-surface" :style="cardStyles">
+		<div class="card-form-header theme-bg-primary">
 			<span class="card-title">{{ cardDef?.title || doctype }}</span>
 			<span class="card-record-name">{{ recordName }}</span>
-			<button class="card-close-btn" @click="$emit('close')">&times;</button>
+			<button class="card-close-btn theme-text-primary-fg" @click="$emit('close')">&times;</button>
 		</div>
 		<div v-if="loading" class="card-loading">Loading…</div>
 		<div v-else-if="error" class="card-error">{{ error }}</div>

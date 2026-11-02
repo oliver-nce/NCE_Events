@@ -26,7 +26,7 @@ code-index:end
 				aria-labelledby="ppv2-find-help-title"
 				@click.stop
 			>
-				<div class="ppv2-find-help-header">
+				<div class="ppv2-find-help-header theme-bg-surface">
 					<h2 id="ppv2-find-help-title" class="ppv2-find-help-title">
 						<span class="ppv2-find-help-title-icon" aria-hidden="true">🔍</span>
 						{{ titleText }}

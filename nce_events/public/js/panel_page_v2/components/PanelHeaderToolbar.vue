@@ -15,7 +15,7 @@ code-index:end
 <template>
 	<div
 		class="ppv2-header-right"
-		:class="[toolbarClasses, { 'ppv2-header-right--back': !props.isFront }]"
+		:class="[toolbarBgClasses, { 'ppv2-header-right--back': !props.isFront }]"
 		@mousedown.capture="onToolbarMouseDown"
 	>
 		<span v-if="props.showClickHint" class="ppv2-click-hint" :class="hintFgTextClass"
@@ -158,7 +158,7 @@ const emit = defineEmits([
 	"activate-panel",
 ]);
 
-const toolbarClasses = computed(() => {
+const toolbarBgClasses = computed(() => {
 	const bg = panelChromeBg(props.chromeConfig, "header_toolbar_bg_class");
 	return bg ? [bg] : [];
 });

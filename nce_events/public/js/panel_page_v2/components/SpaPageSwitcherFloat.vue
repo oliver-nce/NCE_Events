@@ -20,8 +20,8 @@ code-index:end
 		:init-w="anchor.w"
 		:init-h="anchor.h"
 	>
-		<template #header="{ titleClasses }">
-			<span class="ppv2-title" :class="titleClasses">{{ headerLabel }}</span>
+		<template #header="{ titleBgClasses }">
+			<span class="ppv2-title" :class="titleBgClasses">{{ headerLabel }}</span>
 		</template>
 		<SpaPageNavBar
 			:pages="pages"

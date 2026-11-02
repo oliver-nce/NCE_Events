@@ -51,7 +51,7 @@ code-index:end
 		</div>
 		<div
 			ref="dialogEl"
-			class="ppv2-form-dialog ppv2-fd-dialog-root"
+			class="ppv2-form-dialog ppv2-fd-dialog-root theme-bg-surface"
 			:class="'ppv2-fd-size-' + form.dialogSize.value"
 			:data-nce-theme="themeSlug || undefined"
 			:style="dialogStyle"

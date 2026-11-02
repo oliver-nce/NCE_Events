@@ -22,7 +22,7 @@ code-index:end
   </div>
 
   <!-- Heading -->
-  <h4 v-else-if="config?.layout === 'heading'" class="ppv2-fd-heading">
+  <h4 v-else-if="config?.layout === 'heading'" class="ppv2-fd-heading theme-text-heading">
     {{ field.label }}
   </h4>
 

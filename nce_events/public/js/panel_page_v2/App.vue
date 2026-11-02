@@ -37,8 +37,8 @@ code-index:end
 			:chrome-config="config || null"
 			@brought-to-front="onTablePanelBroughtToFront"
 		>
-			<template #header="{ titleClasses }">
-				<span class="ppv2-title" :class="titleClasses">{{
+			<template #header="{ titleBgClasses }">
+				<span class="ppv2-title" :class="titleBgClasses">{{
 					config?.header_text || panelLabel
 				}}</span>
 				<PanelHeaderToolbar
@@ -94,8 +94,8 @@ code-index:end
 			:chrome-config="p.config || null"
 			@brought-to-front="onTablePanelBroughtToFront"
 		>
-			<template #header="{ titleClasses }">
-				<span class="ppv2-title" :class="titleClasses">{{ floatedPanelTitle(p) }}</span>
+			<template #header="{ titleBgClasses }">
+				<span class="ppv2-title" :class="titleBgClasses">{{ floatedPanelTitle(p) }}</span>
 				<PanelHeaderToolbar
 					:chrome-config="p.config || null"
 					:loading="!!p.loading"

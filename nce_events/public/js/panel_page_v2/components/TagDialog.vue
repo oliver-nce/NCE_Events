@@ -22,7 +22,7 @@ code-index:end
 	>
 		<div class="tf-tag-header theme-bg-primary" @mousedown.prevent="startDrag">
 			<span>{{ field.label }}</span>
-			<button class="tf-close" @click="$emit('close')">&times;</button>
+			<button class="tf-close theme-text-primary-fg" @click="$emit('close')">&times;</button>
 		</div>
 		<div class="tf-tag-body">
 			<div class="tf-lbl theme-text-xs theme-text-muted">Fallback Value</div>

@@ -342,7 +342,7 @@ code-index:end
 			class="ppv2-fd-action-modal-backdrop"
 			@click.self="closeActionModal"
 		>
-			<div class="ppv2-fd-action-modal" role="dialog" aria-modal="true">
+			<div class="ppv2-fd-action-modal theme-bg-surface" role="dialog" aria-modal="true">
 				<h4 class="ppv2-fd-action-modal-title">{{ actionModal.title }}</h4>
 				<p v-if="actionModal.confirm" class="ppv2-fd-action-modal-confirm theme-text-muted">
 					{{ actionModal.confirm }}

@@ -14,13 +14,13 @@ code-index:end
 
 <template>
 	<div
-		class="tf-float"
+		class="tf-float theme-bg-surface"
 		:style="floatStyle"
 		@mousedown="bringToFront"
 	>
-		<div class="tf-header" @mousedown.prevent="startDrag">
+		<div class="tf-header theme-bg-primary" @mousedown.prevent="startDrag">
 			<span>Tag Finder: {{ rootDoctype }}</span>
-			<button class="tf-close" @click="$emit('close')">&times;</button>
+			<button class="tf-close theme-text-primary-fg" @click="$emit('close')">&times;</button>
 		</div>
 
 		<div ref="bodyEl" class="tf-body">

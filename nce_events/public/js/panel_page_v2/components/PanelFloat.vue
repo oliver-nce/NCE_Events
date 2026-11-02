@@ -26,8 +26,8 @@ code-index:end
 		<div class="ppv2-float-header" @mousedown="startDrag">
 			<slot
 				name="header"
-				:title-classes="headerTitleClasses"
-				:toolbar-classes="headerToolbarClasses"
+				:title-bg-classes="headerTitleBgClasses"
+				:toolbar-bg-classes="headerToolbarBgClasses"
 			/>
 		</div>
 
@@ -38,10 +38,10 @@ code-index:end
 		<div
 			v-if="$slots.footer"
 			class="ppv2-float-footer"
-			:class="[footerBgClass, footerFgTextClass]"
+			:class="[footerBgClass, footerFgTextClass, footerFgExplicitClass]"
 			@mousedown.prevent="startDrag"
 		>
-			<span :class="footerFgExplicitClass"><slot name="footer" /></span>
+			<span><slot name="footer" /></span>
 		</div>
 
 		<div class="ppv2-resize-handle" @mousedown.prevent="startResize" />
@@ -85,14 +85,14 @@ const frameBgClass = computed(() =>
 const frameBorderClasses = computed(() =>
 	panelChromeFrameBorderClasses(props.chromeConfig)
 );
-const headerTitleClasses = computed(() => {
+const headerTitleBgClasses = computed(() => {
 	const bg = panelChromeBg(props.chromeConfig, "header_bg_class");
 	const fg =
 		panelChromeFgTextClass(props.chromeConfig, "header_bg_class") ||
 		panelChromeExplicitFgClass(props.chromeConfig, "header_bg_class");
 	return [bg, fg].filter(Boolean);
 });
-const headerToolbarClasses = computed(() => {
+const headerToolbarBgClasses = computed(() => {
 	const bg = panelChromeBg(props.chromeConfig, "header_toolbar_bg_class");
 	const fg = panelChromeFgTextClass(props.chromeConfig, "header_toolbar_bg_class");
 	return [bg, fg].filter(Boolean);

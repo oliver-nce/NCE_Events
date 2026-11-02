@@ -23,7 +23,7 @@ code-index:end
 	>
 		<div
 			ref="panelRef"
-			class="ppv2-people-map-panel"
+			class="ppv2-people-map-panel theme-bg-surface"
 			:style="panelStyle"
 			@click.stop
 		>
