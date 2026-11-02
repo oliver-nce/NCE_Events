@@ -187,22 +187,313 @@
     "read_when": "When fetching event enrollment data for evaluations UI or rating workflows."
    }
   },
-  "nce_events/api/events_publish.py": {
-   "body_hash": "3094c180f63bf647735bbe1710c718c845ec75f9f50fe1a3fdf9c9c0f10f3b36",
+  "nce_events/api/event_people_map.py": {
+   "body_hash": "6d255a14db46dc9c0c928827e55ea8437450ff95109c8c7fe7a44cf05ca70de3",
    "header": {
     "format": 1,
     "gotchas": [
-     "Uses WooCommerce client and WP Tables mapping; validate slug and category payloads before bulk publish."
+     "Pins use Family GPS latitude/longitude first; Google is called only when both coordinates are missing or zero.",
+     "A successful Google lookup is saved onto Family GPS without overwriting a usable coordinate pair.",
+     "Geocode failures skip individual pins, write error_message on Family GPS, and the request still succeeds.",
+     "People without a usable family address are counted in skipped_no_address."
     ],
     "keywords": [
-     "events publish",
-     "WooCommerce",
-     "product slug",
-     "Events",
-     "REST"
+     "get_event_people_map",
+     "Family GPS",
+     "Google Maps",
+     "geocode",
+     "Enrollments",
+     "api_key",
+     "skipped_no_address",
+     "pins",
+     "ThreadPoolExecutor",
+     "API Connector"
     ],
-    "purpose": "Publish and update Frappe Events records on WooCommerce via REST using mapped product fields.",
-    "read_when": "When syncing Events DocType rows to WooCommerce products or debugging publish payloads."
+    "purpose": "Whitelisted API returning Google Maps pins for people enrolled on an event, geocoded via family address.",
+    "read_when": "When loading the event people map or geocoding enrollment addresses for map pins."
+   },
+   "labels": {
+    "nce_events/api/event_people_map.py::_as_float": {
+     "body_hash": "54de798d22",
+     "label": "Coerces coordinate values to float, using zero for missing input."
+    },
+    "nce_events/api/event_people_map.py::_both_coords_empty": {
+     "body_hash": "b03bc64099",
+     "label": "True when latitude and longitude are missing, blank, or zero."
+    },
+    "nce_events/api/event_people_map.py::_both_coords_empty._empty": {
+     "body_hash": "14fc5087f5",
+     "label": "Nested helper treating None, blank, or non-numeric coords as empty for map pins."
+    },
+    "nce_events/api/event_people_map.py::_family_address": {
+     "body_hash": "7357fe6155",
+     "label": "Joins Families address fields into one comma-separated geocoding string."
+    },
+    "nce_events/api/event_people_map.py::_geocode_address": {
+     "body_hash": "d921f11e3b",
+     "label": "Calls Google Geocode API for one address; returns lat/lng tuple or error string."
+    },
+    "nce_events/api/event_people_map.py::_geocode_addresses": {
+     "body_hash": "dec16c6833",
+     "label": "Geocodes distinct addresses in parallel via ThreadPoolExecutor for map load."
+    },
+    "nce_events/api/event_people_map.py::_google_maps_api_key": {
+     "body_hash": "80c06ee463",
+     "label": "Reads Google Maps api_key from the Google Maps API Connector document, not the API secret."
+    },
+    "nce_events/api/event_people_map.py::_person_display_name": {
+     "body_hash": "0effe7628f",
+     "label": "Builds display name from first and last name, falling back to People name."
+    },
+    "nce_events/api/event_people_map.py::_save_family_gps": {
+     "body_hash": "26d04ffdc0",
+     "label": "Updates or inserts Family GPS latitude, longitude, and clears error after successful geocode."
+    },
+    "nce_events/api/event_people_map.py::_save_family_gps_error": {
+     "body_hash": "cad291833f",
+     "label": "Updates or inserts Family GPS error_message when geocoding fails for a family."
+    },
+    "nce_events/api/event_people_map.py::get_event_people_map": {
+     "body_hash": "c0614e53c5",
+     "label": "Whitelisted map pins for event enrollments; geocodes missing coords, persists GPS, rejects Guest."
+    }
+   }
+  },
+  "nce_events/api/events_publish.py": {
+   "body_hash": "2d61067e2e07426778ad74a2774126c907a3e687e7722699ed7e700406bf9151",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "update_events_to_website builds payload from a fresh DB read after save, never from the caller doc.",
+     "Every update_events_to_website call pushes unconditionally; there is no change-detection.",
+     "Events row name must be a numeric WooCommerce product id matching an existing Events record.",
+     "wc_product_type in the payload echoes the live product type so publish does not overwrite structure.",
+     "clear_new_woo_commerce_product uses set_single_value only so mandatory validation and hooks do not run."
+    ],
+    "keywords": [
+     "update_events_to_website",
+     "build_woocommerce_product_payload",
+     "WooCommerce",
+     "slugify_product_slug",
+     "duplicate_event_start",
+     "delete_event",
+     "wc_request",
+     "Events",
+     "product_categories",
+     "after_events_publish_to_woocommerce"
+    ],
+    "purpose": "Publish and update Frappe Events on WooCommerce via REST, plus duplicate, new product, and delete flows.",
+    "read_when": "When syncing Events to WooCommerce products or debugging publish payloads and delete confirmations."
+   },
+   "labels": {
+    "nce_events/api/events_publish.py::_build_woo_update_confirmation": {
+     "body_hash": "1d0d0786c0",
+     "label": "Builds sent-vs-saved confirmation rows after update_events_to_website PUT."
+    },
+    "nce_events/api/events_publish.py::_categories_confirmation_matches": {
+     "body_hash": "798955afa5",
+     "label": "Compares sent category names to saved Woo response names for publish confirmation."
+    },
+    "nce_events/api/events_publish.py::_categories_payload": {
+     "body_hash": "af34b92fdd",
+     "label": "Builds Woo categories list from numeric id or category name string."
+    },
+    "nce_events/api/events_publish.py::_category_names_from_wc_response": {
+     "body_hash": "46549773a0",
+     "label": "Collects category name strings from WooCommerce categories array."
+    },
+    "nce_events/api/events_publish.py::_confirmation_values_match": {
+     "body_hash": "74ff300dae",
+     "label": "Compares sent and saved field values including numeric regular_price equality."
+    },
+    "nce_events/api/events_publish.py::_copy_event_sessions": {
+     "body_hash": "d46b4d08be",
+     "label": "Copies Event Sessions rows from source product_id to new product id."
+    },
+    "nce_events/api/events_publish.py::_count_enrollments_for_event": {
+     "body_hash": "f2ef6d5cac",
+     "label": "Counts Enrollments rows linked to event product_id when DocType and field exist."
+    },
+    "nce_events/api/events_publish.py::_delete_local_enrollments_for_event": {
+     "body_hash": "cd2f4a0035",
+     "label": "Deletes local Enrollments rows for product_id with delete permission checks."
+    },
+    "nce_events/api/events_publish.py::_delete_wc_product_soft": {
+     "body_hash": "e7ad3d962b",
+     "label": "Moves WooCommerce product to trash via DELETE without force."
+    },
+    "nce_events/api/events_publish.py::_display_confirmation_value": {
+     "body_hash": "e053870225",
+     "label": "Stringifies confirmation field values for the publish diff table."
+    },
+    "nce_events/api/events_publish.py::_do_woo_product_put": {
+     "body_hash": "67af069816",
+     "label": "Resolves category term ids then PUTs product body to WooCommerce products endpoint."
+    },
+    "nce_events/api/events_publish.py::_event_has_payment_plan": {
+     "body_hash": "1d9036894d",
+     "label": "True when Events payment_plan field is set for delete messaging."
+    },
+    "nce_events/api/events_publish.py::_event_types_meta_field": {
+     "body_hash": "6e98782ec8",
+     "label": "Picks the first present Event Types meta fieldname from candidate names."
+    },
+    "nce_events/api/events_publish.py::_events_stub_dict_from_source": {
+     "body_hash": "e63a682181",
+     "label": "Extracts four stub fields from a source Events row for duplicate Woo POST."
+    },
+    "nce_events/api/events_publish.py::_events_wp_id_fieldnames": {
+     "body_hash": "1e8ba9bc1e",
+     "label": "Lists Events meta fieldnames that may store the WooCommerce product id."
+    },
+    "nce_events/api/events_publish.py::_format_sent_categories_for_display": {
+     "body_hash": "49740a52d0",
+     "label": "Formats sent category dicts as comma-separated names or ids for confirmation UI."
+    },
+    "nce_events/api/events_publish.py::_insert_duplicated_events_row": {
+     "body_hash": "633489bc6f",
+     "label": "Inserts copied Events document named new_wp_id with copy suffix on event_name."
+    },
+    "nce_events/api/events_publish.py::_is_existing_events_row": {
+     "body_hash": "cab50ca4bd",
+     "label": "Returns int Woo product id when name is numeric and Events row exists."
+    },
+    "nce_events/api/events_publish.py::_list_enrollment_names_for_event": {
+     "body_hash": "14a376cde9",
+     "label": "Lists Enrollments names for an event product_id for delete preview and cleanup."
+    },
+    "nce_events/api/events_publish.py::_meta_value_from_wc_meta": {
+     "body_hash": "a9e3570a1b",
+     "label": "Reads one meta_data key value from a WooCommerce product response list."
+    },
+    "nce_events/api/events_publish.py::_mysql_date": {
+     "body_hash": "3dd741868a",
+     "label": "Formats a parsed Events date as MySQL Y-m-d or empty string."
+    },
+    "nce_events/api/events_publish.py::_normalize_wp_product_id": {
+     "body_hash": "e4f73cf8f0",
+     "label": "Returns canonical positive integer WooCommerce id string or None for invalid input."
+    },
+    "nce_events/api/events_publish.py::_parse_events_date": {
+     "body_hash": "6469f4f527",
+     "label": "Parses Events date values including ISO and US MM-DD-YYYY into a date or None."
+    },
+    "nce_events/api/events_publish.py::_patch_new_woo_body": {
+     "body_hash": "4d754f1589",
+     "label": "Forces private status and product post_type on new WooCommerce product POST bodies."
+    },
+    "nce_events/api/events_publish.py::_post_wc_private_product_from_events_stub": {
+     "body_hash": "f2e20326df",
+     "label": "POSTs private Woo product from validated stub and returns new product id."
+    },
+    "nce_events/api/events_publish.py::_product_categories_meta_value": {
+     "body_hash": "632294203a",
+     "label": "Derives product_categories meta string from the first sent category name or id."
+    },
+    "nce_events/api/events_publish.py::_product_id_from_events_doc": {
+     "body_hash": "a39d34409c",
+     "label": "Resolves WooCommerce product id from wp_id fields or normalized Events name."
+    },
+    "nce_events/api/events_publish.py::_push_events_row_to_wp": {
+     "body_hash": "f4e14dfbdf",
+     "label": "Pushes duplicated Events row to WordPress via nce_sync when listen map exists."
+    },
+    "nce_events/api/events_publish.py::_resolve_and_patch_categories": {
+     "body_hash": "ba6e4ebae1",
+     "label": "Replaces name-based categories in payload with resolved term id or throws."
+    },
+    "nce_events/api/events_publish.py::_resolve_source_events_for_duplicate": {
+     "body_hash": "06d08fbc57",
+     "label": "Loads source Events for duplicate or delete flows with read permission checks."
+    },
+    "nce_events/api/events_publish.py::_resolve_wc_category_term_id": {
+     "body_hash": "0af0aa1d48",
+     "label": "Looks up WooCommerce category term id by slug then exact name search."
+    },
+    "nce_events/api/events_publish.py::_run_after_publish_hooks": {
+     "body_hash": "ef1371adb3",
+     "label": "Runs after_events_publish_to_woocommerce hooks after a successful website publish."
+    },
+    "nce_events/api/events_publish.py::_sent_categories_include_names": {
+     "body_hash": "6d6788277d",
+     "label": "True when sent categories use name keys rather than id-only payloads."
+    },
+    "nce_events/api/events_publish.py::_set_duplicate_edit_ok_flags": {
+     "body_hash": "a82743b524",
+     "label": "Enables session edit ok flags on duplicated Events when fields exist."
+    },
+    "nce_events/api/events_publish.py::_validate_events_stub_fields": {
+     "body_hash": "a70338c97e",
+     "label": "Throws when required duplicate stub fields on Events are empty."
+    },
+    "nce_events/api/events_publish.py::_wc_categories_payload_from_doc": {
+     "body_hash": "c8dc290a63",
+     "label": "Chooses Woo categories from event_type_id, Events type, or product_type on the doc."
+    },
+    "nce_events/api/events_publish.py::_wc_events_end_date_mysql_from_doc": {
+     "body_hash": "ae7b883abb",
+     "label": "Computes Woo end meta as first session date plus seven days per session count."
+    },
+    "nce_events/api/events_publish.py::_wc_slug": {
+     "body_hash": "ed6bc63130",
+     "label": "Derives lowercase hyphen slug from a WooCommerce category label for API lookup."
+    },
+    "nce_events/api/events_publish.py::_wc_status_from_events": {
+     "body_hash": "7603847a9c",
+     "label": "Maps Events status strings to WooCommerce product status publish, private, pending, or draft."
+    },
+    "nce_events/api/events_publish.py::_woo_category_label_from_event_type_row": {
+     "body_hash": "4ae65b814d",
+     "label": "Builds Woo category label from Event Types parent category and type fields."
+    },
+    "nce_events/api/events_publish.py::_woocommerce_response_summary": {
+     "body_hash": "21e5b0e269",
+     "label": "Summarizes key Woo response fields and event date meta for the client."
+    },
+    "nce_events/api/events_publish.py::build_woocommerce_product_payload": {
+     "body_hash": "93e116eb1b",
+     "label": "Maps Events fields to WooCommerce REST product body with meta dates and categories."
+    },
+    "nce_events/api/events_publish.py::clear_new_woo_commerce_product": {
+     "body_hash": "5d64389314",
+     "label": "Whitelisted blanks New Woo Commerce Product fields via set_single_value without Document.save."
+    },
+    "nce_events/api/events_publish.py::delete_event": {
+     "body_hash": "2b5be86c81",
+     "label": "Whitelisted trashes Woo product, bulk-refunds enrollments if confirmed, deletes sessions and Events."
+    },
+    "nce_events/api/events_publish.py::duplicate_event_finalize": {
+     "body_hash": "b94cc8ecec",
+     "label": "Whitelisted phase two: insert Events row after session WP jobs finish."
+    },
+    "nce_events/api/events_publish.py::duplicate_event_start": {
+     "body_hash": "ff9bfd26ae",
+     "label": "Whitelisted phase one: POST WC product, copy sessions, return job ids before Events insert."
+    },
+    "nce_events/api/events_publish.py::get_delete_event_preview": {
+     "body_hash": "274f08bf03",
+     "label": "Whitelisted delete guardrails: enrollment count, payment plan, and confirm message."
+    },
+    "nce_events/api/events_publish.py::publish_new_woo_commerce_product": {
+     "body_hash": "51f8103e30",
+     "label": "Whitelisted POST of New Woo Commerce Product singleton values as a private Woo product."
+    },
+    "nce_events/api/events_publish.py::slugify_product_slug": {
+     "body_hash": "50ce25b20d",
+     "label": "Lowercases SKU or name into a URL-safe WooCommerce slug capped at 200 characters."
+    },
+    "nce_events/api/events_publish.py::submit_new_woo_commerce_product": {
+     "body_hash": "27c242a5c5",
+     "label": "Whitelisted publish then clear singleton; wired as V2 Panel Action on_submit_method."
+    },
+    "nce_events/api/events_publish.py::update_events_to_website": {
+     "body_hash": "5029be3ddb",
+     "label": "Whitelisted unconditional Events push to WooCommerce from fresh DB row with confirmation."
+    },
+    "nce_events/api/events_publish.py::update_woo_commerce_product": {
+     "body_hash": "b7661974ab",
+     "label": "Whitelisted Woo PUT from caller Events doc without saving Frappe or running publish hooks."
+    }
    }
   },
   "nce_events/api/exchange.py": {
@@ -384,19 +675,66 @@
    }
   },
   "nce_events/api/form_dialog/capture.py": {
-   "body_hash": "3236d3c21b67e166b9a4b5ebf185360c3b4f37c0e67e580ffb72cbe949a21a4c",
+   "body_hash": "d80f45215f2ccbb173a202baae4fd12aac04eba12101cb605803bb10fd476efb",
    "header": {
     "format": 1,
-    "gotchas": [],
-    "keywords": [
-     "capture",
-     "rebuild_form_dialog",
-     "frozen meta",
-     "get_form_dialog_definition",
-     "Form Dialog"
+    "gotchas": [
+     "set_form_dialog_active must not get_doc the same row before UPDATE or MariaDB ER_CHECKREAD shows as deadlock.",
+     "rebuild_form_dialog overwrites frozen schema destructively; UI should confirm first.",
+     "get_form_dialog_definition rejects inactive dialogs and Guest users."
     ],
-    "purpose": "Form Dialog schema capture endpoints: Desk to frozen meta JSON, rebuild, and list by DocType.",
-    "read_when": "When capturing, rebuilding, or loading Form Dialog definitions from Desk or Vue panel."
+    "keywords": [
+     "capture_form_dialog_from_desk",
+     "rebuild_form_dialog",
+     "get_form_dialog_definition",
+     "frozen_meta_json",
+     "Form Dialog",
+     "list_form_dialogs_for_doctype",
+     "set_form_dialog_active",
+     "is_active",
+     "WP Tables",
+     "System Manager"
+    ],
+    "purpose": "Form Dialog schema capture endpoints: Desk live meta to frozen JSON, rebuild, active flag, and Vue definition.",
+    "read_when": "When capturing, rebuilding, activating, or loading Form Dialog definitions from Desk or V2 panel."
+   },
+   "labels": {
+    "nce_events/api/form_dialog/capture.py::_copy_form_dialog_settings_from": {
+     "body_hash": "3d94e9e3f3",
+     "label": "Copies desk settings, buttons, and submit rules from another Form Dialog onto a new capture."
+    },
+    "nce_events/api/form_dialog/capture.py::_next_available_form_dialog_title": {
+     "body_hash": "100c250d03",
+     "label": "Picks unused Form Dialog title or appends (2), (3) for autoname collisions."
+    },
+    "nce_events/api/form_dialog/capture.py::capture_form_dialog_from_desk": {
+     "body_hash": "516f9fd86a",
+     "label": "Whitelisted System Manager capture of live DocType into frozen Form Dialog meta JSON."
+    },
+    "nce_events/api/form_dialog/capture.py::get_capture_wizard_options": {
+     "body_hash": "530ef37a7a",
+     "label": "Whitelisted inline Table field list for Page Panel Form Dialog capture wizard."
+    },
+    "nce_events/api/form_dialog/capture.py::get_form_dialog_definition": {
+     "body_hash": "ca311754e8",
+     "label": "Whitelisted frozen schema and buttons for V2 panel renderer when dialog is active."
+    },
+    "nce_events/api/form_dialog/capture.py::list_form_dialogs_for_doctype": {
+     "body_hash": "3fd058e327",
+     "label": "Whitelisted Page Panel Dialogs tab listing with related and inline child metadata."
+    },
+    "nce_events/api/form_dialog/capture.py::preview_capture_client_scripts": {
+     "body_hash": "ac30a639fd",
+     "label": "Whitelisted Desk preview of client scripts collected before capture completes."
+    },
+    "nce_events/api/form_dialog/capture.py::rebuild_form_dialog": {
+     "body_hash": "1b216cee0e",
+     "label": "Whitelisted System Manager re-capture overwriting frozen schema and related child rows."
+    },
+    "nce_events/api/form_dialog/capture.py::set_form_dialog_active": {
+     "body_hash": "2ea2d5f075",
+     "label": "Whitelisted exclusive active flag per target_doctype and optional Page Panel form_dialog link."
+    }
    }
   },
   "nce_events/api/form_dialog/edit_condition.py": {
@@ -567,22 +905,79 @@
    }
   },
   "nce_events/api/messaging.py": {
-   "body_hash": "2ad375b1ec98212118a3e41c0815b807ded1ab03b2064b81062fe2c8ba18127a",
+   "body_hash": "8463eca896d42eb8fdbe40198e3defb97dfd5801ff8a129df549bc39527b413d",
    "header": {
     "format": 1,
     "gotchas": [
-     "Gender and Link fields are enriched into row context before Jinja render."
+     "send_panel_message uses row_names from the frontend without re-querying the panel.",
+     "Bulk email queues with send_after_seconds delay and creates a Communication record before sendmail.",
+     "Template render errors log and fall back to the raw body string."
     ],
     "keywords": [
-     "messaging",
+     "send_panel_message",
+     "preview_panel_message",
      "Twilio",
      "SendGrid",
-     "SMS",
-     "email",
-     "Jinja"
+     "get_panel_data",
+     "Jinja",
+     "_enrich_row_context",
+     "Communication",
+     "send_test_email",
+     "get_recipients",
+     "credential_config"
     ],
-    "purpose": "SMS via Twilio and email via SendGrid with Jinja body render and row context enrichment.",
-    "read_when": "When sending bulk SMS/email from panels or extending template context for messaging."
+    "purpose": "Panel bulk and test SMS via Twilio and email via SendGrid with Jinja templates and full row context.",
+    "read_when": "When sending or previewing panel SMS/email or extending messaging template context."
+   },
+   "labels": {
+    "nce_events/api/messaging.py::_enrich_row_context": {
+     "body_hash": "f19610bce0",
+     "label": "Loads full DocType row by name into Jinja context including doc alias for templates."
+    },
+    "nce_events/api/messaging.py::_render_body": {
+     "body_hash": "a4d0f3a874",
+     "label": "Renders Jinja body and converts plain newlines to br for HTML email output."
+    },
+    "nce_events/api/messaging.py::_send_email": {
+     "body_hash": "0dce16b23f",
+     "label": "Creates Communication then sendmail for auditable outbound email with optional delay."
+    },
+    "nce_events/api/messaging.py::_send_sms": {
+     "body_hash": "2a937e5389",
+     "label": "Posts SMS to Twilio Messages API using API Connector credential_config from_number."
+    },
+    "nce_events/api/messaging.py::get_email_accounts": {
+     "body_hash": "97dc0c4037",
+     "label": "Whitelisted outgoing Email Account names and addresses for panel from picker."
+    },
+    "nce_events/api/messaging.py::get_recipients": {
+     "body_hash": "b4f3c7842f",
+     "label": "Whitelisted resolves name and address pairs for selected panel rows without sending."
+    },
+    "nce_events/api/messaging.py::preview_one_email": {
+     "body_hash": "3bea939a83",
+     "label": "Whitelisted single-row email preview for step-through send reviewer without sending."
+    },
+    "nce_events/api/messaging.py::preview_panel_message": {
+     "body_hash": "8ee6ac7298",
+     "label": "Whitelisted preview of subject and body rendered against first selected or filtered row."
+    },
+    "nce_events/api/messaging.py::send_one_email": {
+     "body_hash": "b77b566d01",
+     "label": "Whitelisted queues one rendered email for a row via Communication and delayed sendmail."
+    },
+    "nce_events/api/messaging.py::send_panel_message": {
+     "body_hash": "6bcda6222d",
+     "label": "Whitelisted bulk SMS or email to panel row_names with optional SMS email copy."
+    },
+    "nce_events/api/messaging.py::send_test_email": {
+     "body_hash": "c6f858befa",
+     "label": "Whitelisted test send rendering template against first panel row to a test address."
+    },
+    "nce_events/api/messaging.py::send_test_sms": {
+     "body_hash": "62e470e713",
+     "label": "Whitelisted test SMS rendering template against first get_panel_data row."
+    }
    }
   },
   "nce_events/api/panel_actions.py": {
@@ -735,21 +1130,90 @@
    }
   },
   "nce_events/api/panel_api_pkg/panel_data.py": {
-   "body_hash": "1ad28bcb0a35375c788d22c33b43be5a749ea1418816fc9591f436625dc47ebc",
+   "body_hash": "e2b6dfcfecd72807778edb769e5102f3e438d317b0c0a02f40fb9ef6d6ca013d",
    "header": {
     "format": 1,
     "gotchas": [
-     "Requires root DocType read permission; WP Tables catalog rows may be filtered from results."
+     "Requires root DocType read permission; WP Tables catalog rows may be filtered from results.",
+     "user_filters, limit, and start are accepted but ignored; client-side filtering handles V2 pagination.",
+     "WP Tables skips the read gate; _filter_wp_tables_catalog_rows hides DocTypes the user cannot read.",
+     "get_panel_data reads panel_sql from Page Panel but never writes it; drill-down filters rebuild SQL."
     ],
     "keywords": [
-     "panel data",
      "get_panel_data",
+     "get_panel_config",
      "WP Tables",
-     "sync status",
-     "Page Panel"
+     "last_sync_status",
+     "panel_sql",
+     "Page Panel",
+     "sync_error_drill",
+     "export_panel_data",
+     "format_rules",
+     "last_sync_duration",
+     "has_explicit_doctype_read",
+     "conditional formatting",
+     "computed_columns"
     ],
-    "purpose": "Fetch Page Panel row data with WP Tables catalog filtering, sync status flags, and permissions.",
-    "read_when": "When implementing get_panel_data or debugging panel row queries and sync status columns."
+    "purpose": "Whitelisted Page Panel API for row data, display config, WP Tables sync columns, theme helpers, and CSV export.",
+    "read_when": "When debugging get_panel_data, panel_sql, WP Tables sync status, or panel whitelisted endpoints."
+   },
+   "labels": {
+    "nce_events/api/panel_api_pkg/panel_data.py::_attach_wp_tables_sync_details": {
+     "body_hash": "ab04465516",
+     "label": "Loads WP Tables last_sync_log and latest Sync Log per table name onto catalog rows."
+    },
+    "nce_events/api/panel_api_pkg/panel_data.py::_filter_wp_tables_catalog_rows": {
+     "body_hash": "8906d4b0c4",
+     "label": "Removes WP Tables catalog rows whose underlying DocType the user lacks explicit read on."
+    },
+    "nce_events/api/panel_api_pkg/panel_data.py::_flag_last_sync_status_column": {
+     "body_hash": "0d66feb5a9",
+     "label": "Sets sync_error_drill on last_sync_status so the SPA opens error detail when not Success."
+    },
+    "nce_events/api/panel_api_pkg/panel_data.py::_format_sync_duration": {
+     "body_hash": "cbe2096e5c",
+     "label": "Formats Sync Log duration_seconds into a compact elapsed label for the catalog."
+    },
+    "nce_events/api/panel_api_pkg/panel_data.py::_insert_elapsed_column": {
+     "body_hash": "6ead070cc9",
+     "label": "Inserts last_sync_duration Elapsed column after last_synced on the WP Tables panel."
+    },
+    "nce_events/api/panel_api_pkg/panel_data.py::_merge_latest_sync_log": {
+     "body_hash": "28a61f5639",
+     "label": "Fills row last_sync_log, error, log name, and formatted duration from WP Tables and Sync Log."
+    },
+    "nce_events/api/panel_api_pkg/panel_data.py::_require_root_doctype_read": {
+     "body_hash": "0279c5bd30",
+     "label": "Throws PermissionError unless the user can read the panel root DocType; skips WP Tables."
+    },
+    "nce_events/api/panel_api_pkg/panel_data.py::copy_panel_colours": {
+     "body_hash": "8c9aeaa189",
+     "label": "Whitelisted copy of theme and colour class fields from one Page Panel to many targets with per-target savepoints."
+    },
+    "nce_events/api/panel_api_pkg/panel_data.py::export_panel_data": {
+     "body_hash": "8e1ffb92c7",
+     "label": "Whitelisted CSV export of panel rows to a public download URL via panel_export."
+    },
+    "nce_events/api/panel_api_pkg/panel_data.py::get_other_page_panels": {
+     "body_hash": "5cf2c8ee9c",
+     "label": "Whitelisted list of other Page Panel names and themes for panel switcher UI."
+    },
+    "nce_events/api/panel_api_pkg/panel_data.py::get_panel_config": {
+     "body_hash": "efcc05eca4",
+     "label": "Whitelisted Page Panel chrome and columns for a root DocType, or defaults when no panel exists."
+    },
+    "nce_events/api/panel_api_pkg/panel_data.py::get_panel_data": {
+     "body_hash": "4000f5aabc",
+     "label": "Whitelisted full dataset with columns, format-rule flags, child counts; filters WP Tables and enriches sync."
+    },
+    "nce_events/api/panel_api_pkg/panel_data.py::get_theme_slug_for_link": {
+     "body_hash": "c26876b350",
+     "label": "Whitelisted active NCE Theme slug for a Page Panel theme link at runtime or Desk preview."
+    },
+    "nce_events/api/panel_api_pkg/panel_data.py::get_theme_table_tokens": {
+     "body_hash": "8396c1afc4",
+     "label": "Whitelisted NCE Theme table styling tokens for Page Panel Colours tab previews."
+    }
    }
   },
   "nce_events/api/panel_api_pkg/panel_export.py": {
@@ -1366,11 +1830,12 @@
    }
   },
   "nce_events/hooks.py": {
-   "body_hash": "710df8ee4bf7d2151062584a5c2fdde3bfb16aa37f7b9910aa1ae1938f6639cd",
+   "body_hash": "8e6e5284f66dc5238a88ff8ce2161973365c071d38279a3cf75878af143e44dd",
    "header": {
     "format": 1,
     "gotchas": [
-     "Other apps register after_events_publish_to_woocommerce in their hooks.py; each callable receives doctype and name."
+     "Frappe v16 desk no longer bundles Font Awesome; panel buttons need the included font-awesome.min.css.",
+     "Other apps register after_events_publish_to_woocommerce in their hooks.py; callables get doctype Events and the new document name."
     ],
     "keywords": [
      "app_include_js",
@@ -1380,10 +1845,13 @@
      "after_events_publish_to_woocommerce",
      "required_apps",
      "nce_sync",
-     "page-view"
+     "page-view",
+     "schema_explorer",
+     "enrollments_exchange",
+     "WooCommerce publish"
     ],
-    "purpose": "Frappe app hooks for NCE Events: assets, desk routes, and WooCommerce publish extension points.",
-    "read_when": "Adding JS/CSS bundles, desk app screen entry, or after_events_publish_to_woocommerce handlers."
+    "purpose": "Frappe hooks for NCE Events: global desk JS/CSS, doctype scripts, apps screen route, and WooCommerce publish extension points.",
+    "read_when": "Adding bundles, /app/page-view desk entry, Email Template or API Connector JS, or documenting after_events_publish_to_woocommerce for other apps."
    }
   },
   "nce_events/nce_events/doctype/card_action/card_action.py": {
@@ -1630,6 +2098,21 @@
     "read_when": "Adding server-side hooks or validation to Display Settings records."
    }
   },
+  "nce_events/nce_events/doctype/form_dialog/__init__.py": {
+   "body_hash": "9617834fc4f762236072c57380ba7b23bc12c657f90fa13fb41a6ccc90287045",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "Form Dialog",
+     "DocType package",
+     "form_dialog",
+     "doctype module"
+    ],
+    "purpose": "Marks the Form Dialog DocType Python package for Frappe module loading.",
+    "read_when": "Tracing imports or package layout for the Form Dialog doctype."
+   }
+  },
   "nce_events/nce_events/doctype/form_dialog/form_dialog.js": {
    "body_hash": "799271b4027009db410d4e91564f9e901f255952b9cf6d952aac6b704c0da4c9",
    "header": {
@@ -1665,6 +2148,21 @@
     "read_when": "Adding Form Dialog server validation or WP Tables membership checks."
    }
   },
+  "nce_events/nce_events/doctype/form_dialog_button/__init__.py": {
+   "body_hash": "af321fd47431a33447627e2092b18721ac46e1113e783dfd915dda65c7c8f292",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "Form Dialog Button",
+     "DocType package",
+     "form_dialog_button",
+     "doctype module"
+    ],
+    "purpose": "Marks the Form Dialog Button DocType Python package for Frappe module loading.",
+    "read_when": "Tracing imports or package layout for the Form Dialog Button doctype."
+   }
+  },
   "nce_events/nce_events/doctype/form_dialog_button/form_dialog_button.py": {
    "body_hash": "25751f2a339223bc873babb380db7bfde9043c844b348214c0d1464f93a40b45",
    "header": {
@@ -1693,6 +2191,21 @@
     ],
     "purpose": "Frappe Document subclass for Form Dialog Inline Child Table rows.",
     "read_when": "Adding server-side hooks for inline child table config on Form Dialog."
+   }
+  },
+  "nce_events/nce_events/doctype/form_dialog_related_doctype/__init__.py": {
+   "body_hash": "22b89a86ac10976c7342bb37a73ad11e8ef559063a358fb271ab8879ba0e41e2",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "Form Dialog Related DocType",
+     "DocType package",
+     "form_dialog_related_doctype",
+     "related doctype"
+    ],
+    "purpose": "Marks the Form Dialog Related DocType Python package for Frappe module loading.",
+    "read_when": "Tracing imports or package layout for the Form Dialog Related DocType child table."
    }
   },
   "nce_events/nce_events/doctype/form_dialog_related_doctype/form_dialog_related_doctype.py": {
@@ -1741,28 +2254,711 @@
    }
   },
   "nce_events/nce_events/doctype/page_panel/page_panel.js": {
-   "body_hash": "38d950ea6a409f2f900bea8f827d0830d1e0792d85e8fddaf145418ea5a6e277",
+   "body_hash": "0a32cae5d93fe03d22ca8fff9aa4fa489b6fc11f724797d48e79ae1dc23ab488",
    "header": {
     "format": 1,
     "gotchas": [
      "Prune stale display keys whenever Display is built from current meta.",
-     "frappe.confirm closes fails in many Desk builds (related picker never appears).",
-     "Preview tile always uses a theme-bg-* class (same visual language as the picker strip)."
+     "Opening frappe.ui.Dialog in the same turn as frappe.confirm closes fails in many Desk builds.",
+     "Preview swatch tiles always use a theme-bg-* class like the ThemeSwatchPicker strip.",
+     "Rebind Dialogs tab click and change handlers on every render or the wrong panel document updates and MariaDB can deadlock.",
+     "After set_form_dialog_active succeeds, do not frm.save(); it deadlocks with the server dialog update."
     ],
     "keywords": [
+     "Page Panel",
      "TAB_ORDER",
      "_render_display",
      "_build_field_matrix",
-     "_render_colours_tab",
-     "_render_dialogs_tab",
-     "format_rules",
      "column_order",
+     "format_rules",
+     "capture wizard",
+     "pp-matrix-wrap",
      "COLOUR_FIELDS",
-     "capture_wizard",
-     "page_panel"
+     "form_dialog",
+     "panel_sql",
+     "default_filters",
+     "ThemeSwatchPicker"
     ],
-    "purpose": "Desk form script for Page Panel: Display/Order/Query/Dialogs/Colours tabs and field matrices.",
-    "read_when": "Changing Page Panel tab UI, display matrices, format rules, colours theme pickers, or capture wizard."
+    "purpose": "Desk form script for Page Panel: Config, Display, Colours, Query, and Dialogs tabs with field matrices and Form Dialog capture.",
+    "read_when": "Changing Page Panel tab UI, display matrices, default filters, NCE theme colours, panel SQL refresh, or Form Dialog capture wizard."
+   },
+   "labels": {
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::BACKGROUND_COLOUR_SLOTS": {
+     "body_hash": "dfe0a46148",
+     "label": "Non-table background swatch slots with fg_type pairs and theme fallbacks."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::BORDER_WIDTH_OPTIONS": {
+     "body_hash": "749e4e2507",
+     "label": "Select options for theme-border-thin, theme-border, and theme-border-strong line widths."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::BREAK_FIELDS": {
+     "body_hash": "db29b45906",
+     "label": "Section and column breaks excluded when showing Config tab field rows."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::COLOUR_FIELDS": {
+     "body_hash": "be45eecd73",
+     "label": "All DocType colour and border fieldnames hidden on Config and edited on Colours tab."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::COLOUR_OVERRIDE_FIELDS": {
+     "body_hash": "65428faef2",
+     "label": "Colour fields cleared by Revert to Theme Defaults while keeping the theme link."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::DATE_FIELDTYPES": {
+     "body_hash": "5347a29c6c",
+     "label": "Fieldtypes treated as dates in the default filters widget operator list."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::FRAME_BORDER_LINE_SLOTS": {
+     "body_hash": "14fed58ee8",
+     "label": "Frame chrome border width and color slot definitions for the Colours tab tables."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::MATRIX_FIELDS": {
+     "body_hash": "182a4901c8",
+     "label": "DocType CSV fields toggled only on Display tab alongside the matrix wrapper."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::OPS_DATE": {
+     "body_hash": "e1bbe1e1df",
+     "label": "Reduced operator set for date fields in the default filters widget."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::OPS_DEFAULT": {
+     "body_hash": "110eb2e519",
+     "label": "Default filter comparison operators for non-date fields in pp-df-widget."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::PP_BORDER_WIDTH_PX": {
+     "body_hash": "d7cc9a5ea1",
+     "label": "Literal border widths for line preview when not using theme CSS variables."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::PP_COLOUR_CLASS_RE": {
+     "body_hash": "a6a150f1e8",
+     "label": "Regex validating ThemeSwatchPicker theme-bg/text/border class token shape."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::PP_DISPLAY_COL_DEFAULTS": {
+     "body_hash": "719c21963c",
+     "label": "Default pixel widths for resizable Field and Label columns in display matrices."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::TABLE_BORDER_LINE_SLOTS": {
+     "body_hash": "6bd005b665",
+     "label": "Table divider line slots that fall back to NCE Theme table tokens when empty."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::TABLE_COLOUR_SLOTS": {
+     "body_hash": "7de60c2d9b",
+     "label": "Table row and header background slots using theme-table CSS variables when unset."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::TAB_GROUPS": {
+     "body_hash": "2d0a2d7e40",
+     "label": "Maps each custom tab id to DocType fieldnames shown on Config, Query, or empty custom panes."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::TAB_LABELS": {
+     "body_hash": "db18c4a825",
+     "label": "Human labels for the pp-tab-bar buttons on the Page Panel form."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::TAB_ORDER": {
+     "body_hash": "9a4a403ae4",
+     "label": "Fixed order of Page Panel custom tabs: config, display, colours, query, dialogs."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_allDiscoveryRelationshipRows": {
+     "body_hash": "0ac8b0ba5b",
+     "label": "Flattens relationship arrays from all hop buckets for wizard indexing."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_colours_tab_pickers": {
+     "body_hash": "f06e39b666",
+     "label": "Wires border width selects and ThemeSwatchPicker open on Pick and Color buttons."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_colours_theme_dropdown": {
+     "body_hash": "80257605f0",
+     "label": "Sets frm.doc.theme on Colours tab theme select change."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_copy_arrows": {
+     "body_hash": "420990d85b",
+     "label": "Confirms and runs copy colour settings from or to selected panels."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_copy_arrows.run_copy": {
+     "body_hash": "c2ab75ec86",
+     "label": "Calls copy_panel_colours API after optional save of dirty form."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_dialogs_click_handlers": {
+     "body_hash": "173ad5d59c",
+     "label": "Event delegation on form wrapper for dialog create, rebuild, active, portal, delete."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_dialogs_click_handlers.doDelete": {
+     "body_hash": "014a6283a1",
+     "label": "Deletes Form Dialog doc via frappe.client.delete after optional unlink save."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_dialogs_click_handlers.openCaptureWizard": {
+     "body_hash": "1999e65860",
+     "label": "Opens capture wizard after create prompt with optional copy-from prefill."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_border_effective_width_class": {
+     "body_hash": "344356c2c3",
+     "label": "Resolves border width class from field, fallback, or theme table token."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_border_line_preview_html": {
+     "body_hash": "4d45be22f5",
+     "label": "Small horizontal rule HTML previewing width and colour for a slot."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_border_preview_color_css": {
+     "body_hash": "351fe413f8",
+     "label": "CSS color for border preview from class, var, or theme hex."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_border_width_select_html": {
+     "body_hash": "4689281929",
+     "label": "Select control for a frame or table border width field."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_colours_border_table_html": {
+     "body_hash": "f2c6d5b2e3",
+     "label": "Border lines table with preview, width select, and Color picker."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_colours_preview_table_html": {
+     "body_hash": "683bf69e00",
+     "label": "Background surfaces table with swatches and Pick buttons for a slot list."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_colours_table_live_preview_html": {
+     "body_hash": "b5465d6abd",
+     "label": "Sample theme-table HTML reflecting current table colour fields."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_colours_tables_section_html": {
+     "body_hash": "17294afad0",
+     "label": "Tables section copy plus table colours, preview, and table border slots."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_dialogs_tab_html": {
+     "body_hash": "035e159f2c",
+     "label": "Renders dialog table, active checkbox, related and inline tab preview buttons."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_display_tabs": {
+     "body_hash": "1b6e4563e2",
+     "label": "Orchestrates Display sub-tabs, matrices, Order tab, sync, and format rule dialogs."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_display_tabs._enforceShowSearchExclusivity": {
+     "body_hash": "e48ef1b0e0",
+     "label": "Unchecks Show or Search Only on the same row when the other is turned on."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_display_tabs._registerMetaReadOnly": {
+     "body_hash": "5a2b606e46",
+     "label": "Records meta and computed read-only keys forced on in the matrix."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_display_tabs._registerMetaReqd": {
+     "body_hash": "5249a82e6a",
+     "label": "Records meta-mandatory field keys for Required column tooltips under a prefix."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_display_tabs._show_sub": {
+     "body_hash": "d2e5054d48",
+     "label": "Shows root, link, or Order sub-tab content including select-all toolbar."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_display_tabs._sync_all": {
+     "body_hash": "0101e08e18",
+     "label": "Writes column_order CSV fields and format_rules child table from all matrix UI state."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_field_matrix": {
+     "body_hash": "39e651d95d",
+     "label": "Renders checkbox matrix for show, search, bold, required, gender, tint, title, and formatting."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_cint": {
+     "body_hash": "406460b861",
+     "label": "Coerces values to integer using Desk cint or frappe.utils.cint fallback."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_classifyRelatedRowBucket": {
+     "body_hash": "bb7ce80902",
+     "label": "Assigns configured related row to self, 1_hop, 2_hop, or 3_hop bucket."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_clear_doctype_field_cache": {
+     "body_hash": "f2b5dfa3a1",
+     "label": "Clears in-memory get_doctype_fields cache so Reload fields sees fresh meta."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_close_related_portal_float": {
+     "body_hash": "7a51a41168",
+     "label": "Runs portal float cleanup and clears global backdrop handler."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_collect_valid_display_keys": {
+     "body_hash": "06d96c07e6",
+     "label": "Builds set of matrix keys from root, link, computed, and related column tokens."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_colour_effective_class": {
+     "body_hash": "bab23d6f99",
+     "label": "Uses saved class or slot fallback for colour preview rendering."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_colour_fg_type_field": {
+     "body_hash": "9bdd989719",
+     "label": "Derives paired _fg_type fieldname from a _bg_class colour field."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_colour_fg_type_value": {
+     "body_hash": "d4028d809e",
+     "label": "Reads mono or tonal foreground mode from the form for a background slot."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_colour_overlay_fg_class": {
+     "body_hash": "5711eb4683",
+     "label": "Builds mono or tonal theme-text overlay class on background swatch."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_colour_preview_bg_class": {
+     "body_hash": "a065895459",
+     "label": "Maps saved class to theme-bg-* for swatch preview tiles."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_colour_preview_swatch_html": {
+     "body_hash": "b6fbd9a831",
+     "label": "Swatch span for background slot using class, token var, or theme hex."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_other_selected_names": {
+     "body_hash": "98b2e60234",
+     "label": "Panel names selected in Other panels table for copy arrows."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_tab_styles_html": {
+     "body_hash": "cf4530006c",
+     "label": "Inline CSS for Colours tab tables, arrows, and other panels layout."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_table_preview_th_class": {
+     "body_hash": "3324ade80f",
+     "label": "Escaped col_header_bg_class for live table preview header."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_table_preview_tr_class": {
+     "body_hash": "3eea138ff5",
+     "label": "Escaped row or alt row class for striped table preview body."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_update_arrow_buttons": {
+     "body_hash": "224a43f6d4",
+     "label": "Enables Copy From or Copy To based on other panel selection count."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_desk_discover_script_tool_groups": {
+     "body_hash": "94d03bbb8b",
+     "label": "Executes client scripts in shim form to discover add_custom_button tool groups."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_desk_discover_script_tool_groups.absorbProxy": {
+     "body_hash": "2adf246790",
+     "label": "No-op proxy returning itself for unused form.page paths in script shim."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_desk_discover_script_tool_groups.assembleShim": {
+     "body_hash": "2c8d2467b7",
+     "label": "Minimal frappe.ui.form refresh target capturing custom buttons by group."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_desk_discover_script_tool_groups.makeFieldsDictProxy": {
+     "body_hash": "0497354cf8",
+     "label": "Proxy fields_dict entries for script discovery refresh handlers."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_display_has_orphan_keys": {
+     "body_hash": "c645eab5be",
+     "label": "Detects saved Display or Order keys that no longer match any matrix row."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_display_has_orphan_keys.listHasOrphan": {
+     "body_hash": "89d556c041",
+     "label": "Returns true if any token in a CSV is outside the valid key set."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_ensure_colours_tab_shell": {
+     "body_hash": "e153c9c0aa",
+     "label": "Creates pp-colours-shell layout with theme field and copy arrows once."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_ensure_format_rule_mount": {
+     "body_hash": "d697328c30",
+     "label": "Loads panel_page_v2 mount_format_rule_editor assets or shows load failure message."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_ensure_format_rule_mount.finish": {
+     "body_hash": "77bd12c681",
+     "label": "Resolves nceMountFormatRuleEditor module or msgprints missing asset error."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_ensure_panel_id_controls": {
+     "body_hash": "58817a3932",
+     "label": "Shows prominent Panel ID input or rename control above the custom tab bar."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_ensure_query_refresh_button": {
+     "body_hash": "52425109a7",
+     "label": "Prepends Refresh SQL button on Query tab when panel_sql field is shown."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_ensure_tab_bar": {
+     "body_hash": "f1615bd190",
+     "label": "Inserts pp-tab-bar and custom wrap divs once; wires tab clicks to render panes."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_fetch_active_nce_themes_for_colours": {
+     "body_hash": "b82324cfa8",
+     "label": "Lists Active NCE Theme docs for Colours tab theme dropdown."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_fill_colours_tab_previews": {
+     "body_hash": "4bb80ac2c5",
+     "label": "Injects scoped preview HTML and binds colour pickers on Colours tab."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_filter_fields_from_columns": {
+     "body_hash": "7fe2f2da28",
+     "label": "Field pick list for default filters from column_order plus computed and related columns."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_format_rules_signature": {
+     "body_hash": "8401a98856",
+     "label": "Stable signature of format rule rows to avoid dirtying form on unchanged sync."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_get_computed_fields": {
+     "body_hash": "1618ec9a7c",
+     "label": "Maps unstored_calculation_fields child rows into synthetic matrix field descriptors."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_get_doctype_fields": {
+     "body_hash": "33061524a0",
+     "label": "Fetches and caches DocType field meta via discovery.get_doctype_fields for matrices and filters."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_get_related_fields": {
+     "body_hash": "2abc5fd097",
+     "label": "Builds _related_* pseudo-fields from column_order for related DocType columns."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_hide_colour_schema_fields": {
+     "body_hash": "a0d6d284de",
+     "label": "Hides raw COLOUR_FIELDS on form layout in favour of Colours tab UI."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_hide_format_rules_grid": {
+     "body_hash": "35e871e36f",
+     "label": "Hides native format_rules child table grid in favour of matrix-driven editing."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_htmlEscAttr": {
+     "body_hash": "af62078d12",
+     "label": "Escapes text for HTML attribute values in capture wizard markup."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_isDocfieldMetaReadOnly": {
+     "body_hash": "8701128ab9",
+     "label": "True when DocType meta marks a field read_only for locked matrix checkboxes."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_isDocfieldMetaReqd": {
+     "body_hash": "639eafe31d",
+     "label": "True when DocType meta marks a field mandatory for Required column tooltips."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_load_capture_wizard_sources": {
+     "body_hash": "da4a0458ae",
+     "label": "Parallel fetch of multi-hop children, inline tables, and script preview for wizard."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_load_capture_wizard_sources.finishFail": {
+     "body_hash": "4056ea9500",
+     "label": "Calls wizard onFail once when any capture source request errors."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_load_capture_wizard_sources.tick": {
+     "body_hash": "8ed944a70b",
+     "label": "Decrements pending fetches and invokes onReady when all three complete."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_load_display_col_widths": {
+     "body_hash": "c7a5dbf5af",
+     "label": "Loads saved Field and Label column widths from localStorage with minimums."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_mergeConfiguredQbtlIntoBuckets": {
+     "body_hash": "7e24f4fd97",
+     "label": "Adds configured QBTL tabs missing from discovery into Self bucket."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_mergeConfiguredRelatedIntoBuckets": {
+     "body_hash": "a30ebdace5",
+     "label": "Merges saved related rows not in discovery into appropriate hop buckets."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_merge_column_order": {
+     "body_hash": "61b1e15144",
+     "label": "Keeps prior column_order for still-selected keys and appends new keys at the end."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_mount_colours_theme_revert_btn": {
+     "body_hash": "d8bbd0ddf5",
+     "label": "Appends Revert to Theme Defaults button on theme row once."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_mount_theme_field_on_colours_tab": {
+     "body_hash": "7a69196175",
+     "label": "Builds theme select, Refresh, Edit, and revert row in Colours shell."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_mount_theme_field_on_colours_tab.sync_existing_row": {
+     "body_hash": "3907733854",
+     "label": "Syncs select value and edit button when theme row already mounted."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_move_root_field_first": {
+     "body_hash": "d1a2601f65",
+     "label": "Moves DocType title field row to top of root matrix field list."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_normalizeCaptureHopBuckets": {
+     "body_hash": "d5d3706f68",
+     "label": "Normalizes get_multi_hop_children message into self and hop bucket shape."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_normalizeHopChainForPickerKey": {
+     "body_hash": "f9f5c68255",
+     "label": "Normalizes hop_chain objects for stable related-picker fingerprints."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_format_rule_dialog": {
+     "body_hash": "6f604de5c1",
+     "label": "Opens Dialog hosting Vue format rule editor for one matrix field key."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_format_rule_dialog._teardown": {
+     "body_hash": "b6a937608c",
+     "label": "Unmounts format rule Vue app when dialog closes."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_related_portal_float": {
+     "body_hash": "36615119df",
+     "label": "Modal float editor for related or inline portal columns and actions from Dialogs tab."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_related_portal_float.onKey": {
+     "body_hash": "75457f3866",
+     "label": "Closes portal float on Escape key."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_related_portal_float.ppApplySortUI": {
+     "body_hash": "3808310c58",
+     "label": "Updates sort rank label and arrow buttons for one portal row."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_related_portal_float.ppMaxSortRank": {
+     "body_hash": "a0d205e5b9",
+     "label": "Highest sort_rank among visible portal column rows."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_related_portal_float.ppMountPortalEditor": {
+     "body_hash": "4f7fa35262",
+     "label": "Builds Columns and Buttons tabs inside loaded portal float panel."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_related_portal_float.ppRefreshAllSortUI": {
+     "body_hash": "c22182f7b2",
+     "label": "Refreshes sort UI on every row in portal field table."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_related_portal_float.ppRenumberSortRanks": {
+     "body_hash": "8a4ff8d6df",
+     "label": "Renumbers contiguous sort ranks for shown portal columns after changes."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_parse_csv": {
+     "body_hash": "f350c54b4b",
+     "label": "Splits comma-separated panel field lists into trimmed non-empty tokens."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_display_col_storage_key": {
+     "body_hash": "d4bf19dec4",
+     "label": "Builds localStorage key for per-panel display matrix column widths."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_fmt_button_html": {
+     "body_hash": "55bc715773",
+     "label": "HTML for matrix conditional formatting Add or Edit button with configured dot."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_fmt_has_rule": {
+     "body_hash": "adff5af93d",
+     "label": "True when saved format_rules entry for a field has non-empty condition_sql."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_portal_fieldnames_from_rows": {
+     "body_hash": "16edbb21cb",
+     "label": "Collects fieldname list including name for portal action parameter sources."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_portal_hide_if_options_html": {
+     "body_hash": "e489dc7b83",
+     "label": "Option HTML for portal button Hide if select in actions editor."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_render_portal_actions_tab": {
+     "body_hash": "1a2999838a",
+     "label": "Renders portal Buttons tab list, forms, and save to form_dialog API."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_render_portal_actions_tab.collectFormAction": {
+     "body_hash": "a92e03cb30",
+     "label": "Reads portal action form into action object for list save."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_render_portal_actions_tab.methodSpecByKey": {
+     "body_hash": "82d5011749",
+     "label": "Looks up portal action method spec by registry key."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_render_portal_actions_tab.openForm": {
+     "body_hash": "a2d86c2e86",
+     "label": "Shows inline form to add or edit one portal button definition."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_render_portal_actions_tab.renderList": {
+     "body_hash": "e612a3d020",
+     "label": "HTML for configured portal buttons table and add button control."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_render_portal_actions_tab.renderParamGrid": {
+     "body_hash": "ff45870804",
+     "label": "Parameter source grid for a portal method spec."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_prune_empty_format_rules": {
+     "body_hash": "ceab90591f",
+     "label": "Removes blank format_rules child rows before validate to pass reqd checks."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_prune_stale_display_keys": {
+     "body_hash": "745001f31d",
+     "label": "Removes orphan keys from column_order and related CSV fields against valid keys."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_prune_stale_display_keys.keep": {
+     "body_hash": "e221af79c3",
+     "label": "Filters one CSV string to keys still present in the valid display set."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_qbtlPickerFingerprint": {
+     "body_hash": "697b9d5410",
+     "label": "Unique string key for query-based table link rows in capture wizard."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_refresh_colours_theme_css": {
+     "body_hash": "c9693deefd",
+     "label": "Calls themes.api.regenerate_theme_css then reloads stylesheet and previews."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_refresh_colours_theme_css.finish": {
+     "body_hash": "7076fe0345",
+     "label": "Completes theme refresh UI after css_hash returned from regenerate API."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_refresh_fmt_buttons": {
+     "body_hash": "87904b1d0d",
+     "label": "Updates every pp-fmt-edit button label after format_rules sync."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_refresh_query_tab": {
+     "body_hash": "008fd852ef",
+     "label": "Calls build_panel_sql and writes panel_sql from current Display column settings."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_relatedPickerFingerprint": {
+     "body_hash": "68ea50aeff",
+     "label": "Unique string key for a related table row in capture wizard buckets."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_reload_nce_theme_stylesheet": {
+     "body_hash": "ea57cfceca",
+     "label": "Cache-busts nce_theme.css link tags after theme regeneration."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_colours_tab": {
+     "body_hash": "45d2ae94b2",
+     "label": "Ensures Colours shell, previews, and other panels table on tab show."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_colours_tab_previews": {
+     "body_hash": "a30b785339",
+     "label": "Loads theme table tokens then fills left preview column."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters": {
+     "body_hash": "37df169bda",
+     "label": "Deferred entry that builds custom default_filters widget after form layout renders."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now": {
+     "body_hash": "7f6c89d29e",
+     "label": "Replaces default_filters grid with pp-df-widget bound to root DocType meta."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build": {
+     "body_hash": "ddf7e41190",
+     "label": "Constructs filter rows UI after loading fields from column_order scope."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build._bind_events": {
+     "body_hash": "e49543c95c",
+     "label": "Wires add, remove, op, and value changes on the default filters widget."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build._esc": {
+     "body_hash": "645cb00154",
+     "label": "Escapes attribute text for filter widget value inputs."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build._field_options_html": {
+     "body_hash": "2d2e00537f",
+     "label": "Select options HTML for filter row field dropdown."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build._is_date_field": {
+     "body_hash": "75c48b7a17",
+     "label": "Detects date-like fields for dual SQL date and days-ago inputs."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build._ops_for_field": {
+     "body_hash": "f5b897c59e",
+     "label": "Picks OPS_DATE or OPS_DEFAULT for a chosen filter field."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build._render_rows": {
+     "body_hash": "185b953ade",
+     "label": "Redraws all default filter rows from frm.doc.default_filters."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build._save_rows": {
+     "body_hash": "4bcaefaaea",
+     "label": "Reads widget DOM back into frm.doc.default_filters and marks form dirty."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_dialogs_tab": {
+     "body_hash": "5ff9f34693",
+     "label": "Loads Form Dialog list for root DocType into Dialogs tab wrapper."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_display": {
+     "body_hash": "7f7eedab1d",
+     "label": "Loads root and linked DocType meta then builds Display sub-tabs and field matrices."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_display._build_once_ready": {
+     "body_hash": "f598fd1d6b",
+     "label": "Empties matrix wrap and calls _build_display_tabs when link fetches finish."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_order_tab": {
+     "body_hash": "86db892186",
+     "label": "Builds drag-reorder table of all shown fields and wires sync on drop."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_other_panels_table": {
+     "body_hash": "9942a83f1f",
+     "label": "Lists other Page Panels with theme for colour copy source or targets."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_resolve_nce_theme_slug_for_colours": {
+     "body_hash": "8118981841",
+     "label": "Fetches CSS slug for linked NCE Theme for preview data-nce-theme scope."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_revert_panel_colours_to_theme_defaults": {
+     "body_hash": "1f8e975fc3",
+     "label": "Confirms then clears COLOUR_OVERRIDE_FIELDS and refreshes Colours tab."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_save_display_col_widths": {
+     "body_hash": "4d406272f3",
+     "label": "Persists display matrix column widths to localStorage for a panel name."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_show_capture_wizard_dialog": {
+     "body_hash": "7bd3b65997",
+     "label": "Extra-large dialog to pick related tables, inline tables, and script tool tabs."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_show_capture_wizard_dialog._checkboxRows": {
+     "body_hash": "0983bf0561",
+     "label": "Checkbox HTML for one related or QBTL list column in capture wizard."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_show_capture_wizard_dialog.colHtml": {
+     "body_hash": "ee2fc5c1f3",
+     "label": "One hop column HTML with Relationships and Query based links sections."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_show_tab": {
+     "body_hash": "4a9f6fb57c",
+     "label": "Hides all tab field groups and toggles matrix, colours, or dialogs wrappers for tab_id."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_table_theme_border_width_var": {
+     "body_hash": "8eac3d7062",
+     "label": "CSS variable name for table row or column border width preview."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_theme_editor_url": {
+     "body_hash": "7653f05004",
+     "label": "Full URL to theme settings page for Edit theme button."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_theme_select_options_html": {
+     "body_hash": "040a469912",
+     "label": "Builds theme select including site default and current inactive link."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_theme_table_hex": {
+     "body_hash": "4ded8159b8",
+     "label": "Reads hex colour from theme table tokens object by key."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_theme_table_width_class": {
+     "body_hash": "c05bd0ec9c",
+     "label": "Theme default width class for a table border slot."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_title_case": {
+     "body_hash": "f38a73ff30",
+     "label": "Turns fieldname underscores into title-case labels for matrix rows."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_unpack_doctype_fields_message": {
+     "body_hash": "5edff97879",
+     "label": "Normalizes get_doctype_fields API message into fields list and doctype_title_field."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_update_colours_theme_edit_btn": {
+     "body_hash": "cad9dc59c1",
+     "label": "Enables Edit theme button label from NCE Theme theme_name."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_wire_display_matrix_col_resize": {
+     "body_hash": "97dfda0413",
+     "label": "Adds colgroup and drag handles to resize Field and Label matrix columns."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_wire_display_matrix_col_resize._attachHandle": {
+     "body_hash": "ac12de0c05",
+     "label": "Mounts mousedown resize handle on a matrix header column."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_wire_display_matrix_col_resize._attachHandle.onMove": {
+     "body_hash": "9f7de5211e",
+     "label": "Updates column width while dragging during matrix column resize."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::_wire_display_matrix_col_resize._attachHandle.onUp": {
+     "body_hash": "61b0b36a5d",
+     "label": "Ends drag, saves widths, and removes body resizing class."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::form.on Page Panel.after_save": {
+     "body_hash": "03418fb7bd",
+     "label": "Refreshes panel_sql field display after save when root_doctype is set."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::form.on Page Panel.before_save": {
+     "body_hash": "2ef0430a60",
+     "label": "Syncs display matrices to doc fields and prunes format rules before save."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::form.on Page Panel.column_order": {
+     "body_hash": "1226f3885f",
+     "label": "Re-renders default filters widget when visible columns change."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::form.on Page Panel.refresh": {
+     "body_hash": "ab8fa96ac2",
+     "label": "Page Panel refresh handler: tab bar, panel ID, filters, hides native tabs, dialog queries."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::form.on Page Panel.root_doctype": {
+     "body_hash": "f99519c664",
+     "label": "Clears display CSV fields, sets title from meta, refreshes Display and filters."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::form.on Page Panel.theme": {
+     "body_hash": "92a4ced4e7",
+     "label": "Refreshes Colours tab when theme field changes while Colours tab is active."
+    },
+    "nce_events/nce_events/doctype/page_panel/page_panel.js::form.on Page Panel.validate": {
+     "body_hash": "8ec8a8aecd",
+     "label": "Syncs new Panel ID input to __newname and prunes empty format_rules rows."
+    }
    }
   },
   "nce_events/nce_events/doctype/page_panel/page_panel.py": {
@@ -1893,6 +3089,23 @@
     "read_when": "Adding server-side hooks for panel action role assignments."
    }
   },
+  "nce_events/nce_events/doctype/query_based_table_link/__init__.py": {
+   "body_hash": "2f91d6d1523671f64d8ef7aed1574125695b894302f99795f76af3ae106cb32a",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "Query Based Table Link",
+     "DocType",
+     "package",
+     "query based table link",
+     "doctype module",
+     "nce_events"
+    ],
+    "purpose": "Marks the Python package for the Query Based Table Link Frappe DocType under nce_events.",
+    "read_when": "Tracing DocType module imports or folder layout for query_based_table_link."
+   }
+  },
   "nce_events/nce_events/doctype/query_based_table_link/query_based_table_link.js": {
    "body_hash": "b174101ee02401bda3f851e15f5caf7d7b1fd088f6ae40b86811287750c1a0bb",
    "header": {
@@ -1978,8 +3191,25 @@
     "read_when": "Adding SPA page validation or duplicate doctype_source_mode checks."
    }
   },
+  "nce_events/nce_events/page/evaluations/__init__.py": {
+   "body_hash": "3a8679e6b2b1d034cb7d4364922c195e38015a209973c1458f79bf05f55666a0",
+   "header": {
+    "format": 1,
+    "gotchas": [],
+    "keywords": [
+     "Evaluations",
+     "rating Kanban SPA",
+     "Frappe Page",
+     "evaluations page",
+     "Kanban",
+     "rating"
+    ],
+    "purpose": "Documents the Evaluations Frappe Page package: a rating Kanban single-page app.",
+    "read_when": "Confirming what the evaluations page directory is before opening boot JS or Vue build."
+   }
+  },
   "nce_events/nce_events/page/evaluations/evaluations.js": {
-   "body_hash": "2322db296ba49367e171f9f5e9410bd2e988c0b6b01fe5de9bea0357d52a4fc9",
+   "body_hash": "fcd8ecb56a485d758eefa8bf15e1c864e40eef5630db3be4af83df0ae90143f7",
    "header": {
     "format": 1,
     "gotchas": [],
@@ -1989,10 +3219,13 @@
      "on_page_show",
      "evaluations_dist",
      "eventId",
-     "frappe.pages"
+     "frappe.pages",
+     "nce-evaluations-app",
+     "make_app_page",
+     "frappe.require"
     ],
-    "purpose": "Frappe Page boot script for Evaluations: mounts the NCEEvaluations Vue Kanban SPA.",
-    "read_when": "Changing Evaluations desk page load, asset bundle, or eventId route parsing."
+    "purpose": "Frappe Page boot for evaluations: loads evaluations_dist assets and mounts NCEEvaluations Kanban with eventId from route.",
+    "read_when": "Changing Evaluations desk page load, evaluations_dist bundle, or eventId route segment parsing."
    }
   },
   "nce_events/nce_events/page/hierarchy_explorer/hierarchy_explorer.js": {
@@ -2027,7 +3260,7 @@
    }
   },
   "nce_events/nce_events/page/page_view/page_view.js": {
-   "body_hash": "b9ec4be367172590babac97a43756398640d9130ee2f5dd350e8748ba1397119",
+   "body_hash": "0d748fbc56f29ba5b6ab420e4739e91bea372ee70abf3c1dfb4e761f35aa0cab",
    "header": {
     "format": 1,
     "gotchas": [],
@@ -2036,10 +3269,13 @@
      "NCEPanelPageV2",
      "panel_page_v2_dist",
      "on_page_show",
-     "page-view-v2-app"
+     "page-view-v2-app",
+     "frappe.pages",
+     "make_app_page",
+     "frappe.require"
     ],
-    "purpose": "Frappe Page boot script for page-view: mounts the NCEPanelPageV2 multi-panel SPA.",
-    "read_when": "Changing page-view desk route, panel_page_v2_dist assets, or Vue mount target."
+    "purpose": "Frappe Page boot for page-view: loads panel_page_v2_dist and mounts NCEPanelPageV2 multi-panel SPA.",
+    "read_when": "Changing page-view desk route, panel_page_v2_dist assets, or Vue mount target id."
    }
   },
   "nce_events/nce_events/page/panel_page_mirrored/panel_page_mirrored.js": {
@@ -2421,7 +3657,7 @@
    }
   },
   "nce_events/public/css/panel_page.css": {
-   "body_hash": "08346ed8bd6fdf17ae30ee2fc0014dca61d3b37733c694ce88b2a362d5b526c9",
+   "body_hash": "1ad2cdd8bb6ad8ff7aa4693a5908294acc3fbc4addc2ff59080fd9a151c53df7",
    "header": {
     "format": 1,
     "gotchas": [],
@@ -2430,10 +3666,15 @@
      "Source Sans 3",
      "panel-float",
      "send-panel",
-     "V1"
+     "panel-table",
+     "col-resize-handle",
+     "send-review-panel",
+     "pane-filter-widget",
+     "panel explorer",
+     "email preview"
     ],
-    "purpose": "Legacy V1 panel page styles including Source Sans 3, floats, tables, and send dialogs.",
-    "read_when": "Changing V1 panel float, table, or send-dialog styling before V2 migration."
+    "purpose": "Legacy V1 panel page styles: bundled Source Sans 3, explorer panes, tables, floats, filters, and send or review dialogs.",
+    "read_when": "Changing V1 panel float, table, filter, landing, or send-dialog styling before V2 migration."
    }
   },
   "nce_events/public/css/schema_explorer.css": {
@@ -2453,7 +3694,7 @@
    }
   },
   "nce_events/public/css/theme_defaults.css": {
-   "body_hash": "c73b12baedb57618e53d4378b3eb9e4403e42a29e619ed39e22a576c2f7d1658",
+   "body_hash": "eeb5f0efc21478ff110cb1d8fa4d6b6d09f8faae25e97fa5f3d0413a471f5f4c",
    "header": {
     "format": 1,
     "gotchas": [
@@ -2464,11 +3705,15 @@
      "theme_defaults",
      "--nce-color",
      "ppv2-root",
+     "panel-float",
+     "send-panel",
      "alias bridge",
+     "--primary",
+     "--column-header-bg",
      "legacy vars"
     ],
-    "purpose": "Maps legacy --primary and panel CSS aliases to --nce-color-* theme contract tokens.",
-    "read_when": "Bridging legacy panel/dialog CSS to Themes contract vars or adding alias scopes."
+    "purpose": "Maps legacy --primary and scoped CSS aliases to --nce-color-* theme contract tokens for V1 panels and send UI.",
+    "read_when": "Bridging legacy panel or send-dialog CSS to Themes contract vars or adding new alias scope selectors."
    }
   },
   "nce_events/public/js/api_connector_tags.js": {
@@ -2718,24 +3963,165 @@
    }
   },
   "nce_events/public/js/js_dialogs/email_dialog.js": {
-   "body_hash": "57ccd672335701aa4b7b5f001e027c1a0099a869045b0aa97904c801aad2d0ad",
+   "body_hash": "beac0bf53230b73812c6c213b9120c154fc35a757d9186b8a9f0738277fa4ad5",
    "header": {
     "format": 1,
     "gotchas": [],
     "keywords": [
      "EmailDialog",
      "send-panel",
-     "template",
-     "preview",
-     "recipients",
-     "draggable"
+     "preview_panel_message",
+     "send_one_email",
+     "send-review-panel",
+     "template_picker",
+     "get_recipients",
+     "Text Editor",
+     "Tag Finder"
     ],
-    "purpose": "Draggable resizable email send dialog with template, preview, and recipient selection.",
-    "read_when": "Changing bulk email send UX, preview, or template loading in panel pages."
+    "purpose": "Draggable resizable bulk email send dialog with templates, rendered preview, recipients list, and step-through review send.",
+    "read_when": "Changing panel bulk email compose, preview, template save, review send, or test email behavior."
+   },
+   "labels": {
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog": {
+     "body_hash": "16432c62dc",
+     "label": "Panel bulk email compose dialog with preview, templates, recipients check, and per-row review send."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._bind": {
+     "body_hash": "e44efd6f8c",
+     "label": "Attaches handlers for source mode, template input, preview, send, recipients, save, tags, and test."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._build": {
+     "body_hash": "14f2a54d18",
+     "label": "Creates send-panel and separate preview DOM, Quill message control, drag, resize, and AI bar."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._build_review_panel": {
+     "body_hash": "1c518c0f10",
+     "label": "Appends draggable send-review-panel with skip, send all remaining, and send actions."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._close_tags": {
+     "body_hash": "722dad3b30",
+     "label": "Closes Tag Finder via global helper when the dialog is destroyed."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._do_preview": {
+     "body_hash": "5428466c25",
+     "label": "Renders subject and body via preview_panel_message and shows positioned preview pane."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._do_save_template": {
+     "body_hash": "b73ff3a105",
+     "label": "Opens dialog to save current subject and plain-text body as Email Template for panel doctype."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._do_save_template.done": {
+     "body_hash": "d3e3767d2f",
+     "label": "Hides save dialog and shows success alert after template write succeeds."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._do_save_template.save": {
+     "body_hash": "990d86662d",
+     "label": "Inserts new Email Template or overwrites existing via frappe.client insert or set_value."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._do_send": {
+     "body_hash": "25c858947d",
+     "label": "Validates body and row_names then opens step-through review instead of immediate bulk send."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._do_send_test": {
+     "body_hash": "5354603091",
+     "label": "Sends preview pane test message to entered address via send_test_email."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._do_show_recipients": {
+     "body_hash": "a0d088772b",
+     "label": "Loads resolved and skipped addresses via get_recipients for selected row_names."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._load_from_accounts": {
+     "body_hash": "07d9fba2ff",
+     "label": "Populates From dropdown from nce_events.api.messaging.get_email_accounts."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._load_template_into_editor": {
+     "body_hash": "98d2c7bfdb",
+     "label": "Fetches Email Template by name, validates reference_doctype, fills subject and editor body."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._make_draggable": {
+     "body_hash": "227cc37bcf",
+     "label": "Drags main send panel using drag-ghost and panel-float-dragging during move."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._make_draggable.start_drag": {
+     "body_hash": "ab702625a8",
+     "label": "Starts header drag when target is not an interactive control or editor chrome."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._make_draggable_preview": {
+     "body_hash": "a10d362736",
+     "label": "Enables dragging preview window by header bar excluding control buttons."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._make_popup_draggable": {
+     "body_hash": "5d7e6d1d0d",
+     "label": "Header-drag helper for recipients popup and review panel positioning."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._make_resizable": {
+     "body_hash": "27c70c35e8",
+     "label": "Adds corner resize handle with ghost outline for main send panel dimensions."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._make_resizable_preview": {
+     "body_hash": "9bcbe995f1",
+     "label": "Resizes preview from corner handle with minimum width and height."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._open_tags": {
+     "body_hash": "199f0d287d",
+     "label": "Opens Tag Finder to the right of the panel for inserting tags into the message."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._open_template_picker": {
+     "body_hash": "66e915941a",
+     "label": "Loads template_picker.js and opens doctype-scoped picker; loads choice into editor."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._resolve_body": {
+     "body_hash": "cec33960a1",
+     "label": "Requires non-empty message from stored HTML template or editor before continuing."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._review_do_send": {
+     "body_hash": "b686f961c2",
+     "label": "Queues one email via send_one_email for current row then shifts queue and continues."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._review_finish": {
+     "body_hash": "6f31fb3fac",
+     "label": "Removes review UI, shows sent or skipped summary, closes compose when appropriate."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._review_next": {
+     "body_hash": "3b016bac60",
+     "label": "Previews next queued row with preview_one_email and updates progress and body HTML."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._review_send_all": {
+     "body_hash": "cc0c08ee2d",
+     "label": "Closes compose and sequentially queues send_one_email for all remaining rows with alerts."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._review_send_all.sendNext": {
+     "body_hash": "32913a61dc",
+     "label": "Sends one background email then recurses; periodic alerts every hundred messages."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._setup_preview_zoom": {
+     "body_hash": "c88e40c57b",
+     "label": "Wires zoom in, out, and reset buttons on preview body scale."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._setup_preview_zoom.apply": {
+     "body_hash": "e604e726c2",
+     "label": "Sets CSS transform scale on preview body and updates percentage label."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._show_recipients_popup": {
+     "body_hash": "c05c280862",
+     "label": "Shows draggable popup listing who receives email and rows missing addresses."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog._start_review": {
+     "body_hash": "ac19a68684",
+     "label": "Copies row queue and review fields then builds review panel and loads first preview."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog.close": {
+     "body_hash": "06a4eaced8",
+     "label": "Removes compose, preview, recipients, review, template backdrop, closes tags, fires on_close."
+    },
+    "nce_events/public/js/js_dialogs/email_dialog.js::EmailDialog.constructor": {
+     "body_hash": "e7a196bdfe",
+     "label": "Stores doctype, config, filters, row selection, z-index, and callbacks then builds and binds UI."
+    }
    }
   },
   "nce_events/public/js/js_dialogs/sms_dialog.js": {
-   "body_hash": "6ed8d8b0265149c9cfd13b498b84f5f5fccba08fcf12781c78ccbf4560374d30",
+   "body_hash": "21bb26c3cb41c0f30d20b9ecad5dcffb07894c9c3542a29a264766892cfeed84",
    "header": {
     "format": 1,
     "gotchas": [
@@ -2744,13 +4130,123 @@
     "keywords": [
      "SmsDialog",
      "send-panel",
-     "SMS",
-     "template",
-     "preview",
-     "Jinja2"
+     "send_panel_message",
+     "preview_panel_message",
+     "send_test_sms",
+     "Jinja2",
+     "Email Template",
+     "send-message-input"
     ],
-    "purpose": "Draggable SMS send dialog with template load, preview, and test-send support.",
-    "read_when": "Changing bulk SMS send UX or message body resolution from templates."
+    "purpose": "Draggable SMS send dialog with Email Template load, Jinja preview, bulk send, and test SMS from preview.",
+    "read_when": "Changing bulk SMS compose, template source toggle, preview, or send_panel_message integration."
+   },
+   "labels": {
+    "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog": {
+     "body_hash": "5da27c6433",
+     "label": "Panel bulk SMS compose dialog with template picker, preview, AI tools, and one-shot send."
+    },
+    "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._bind": {
+     "body_hash": "d959facdc3",
+     "label": "Wires source select, template picker, preview, send, test, tags, and close actions."
+    },
+    "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._build": {
+     "body_hash": "ce233a0bbc",
+     "label": "Appends send-panel with textarea message, inline preview, AI bar, drag and resize handles."
+    },
+    "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._close_tags": {
+     "body_hash": "722dad3b30",
+     "label": "Closes Tag Finder when SMS dialog closes."
+    },
+    "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._do_preview": {
+     "body_hash": "3702444717",
+     "label": "Calls preview_panel_message with empty subject and shows inline preview HTML."
+    },
+    "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._do_send": {
+     "body_hash": "f2dd39863c",
+     "label": "Queues SMS for all row_names via send_panel_message mode sms then closes on success."
+    },
+    "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._do_send_test": {
+     "body_hash": "3a7ada3f38",
+     "label": "Sends test SMS to preview phone field via send_test_sms with current body."
+    },
+    "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._load_template_into_editor": {
+     "body_hash": "3b782ca16d",
+     "label": "Loads Email Template response text into message textarea after reference_doctype check."
+    },
+    "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._make_draggable": {
+     "body_hash": "1a082712ac",
+     "label": "Drags SMS panel from header with drag-ghost excluding footer and inputs."
+    },
+    "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._make_draggable.start_drag": {
+     "body_hash": "02a8362cf2",
+     "label": "Begins header drag when click is not on buttons, inputs, or template backdrop."
+    },
+    "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._make_resizable": {
+     "body_hash": "27c70c35e8",
+     "label": "Resizes SMS panel via corner ghost handle with minimum width and height."
+    },
+    "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._open_tags": {
+     "body_hash": "a91cae48b0",
+     "label": "Opens Tag Finder beside panel for doctype tag insertion into SMS body."
+    },
+    "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._open_template_picker": {
+     "body_hash": "66e915941a",
+     "label": "Lazy-opens template_picker for doctype and loads picked template into textarea."
+    },
+    "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog._resolve_body": {
+     "body_hash": "75e4ef6676",
+     "label": "Requires non-empty textarea value; always uses message area not separate HTML store."
+    },
+    "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog.close": {
+     "body_hash": "3c36d451ac",
+     "label": "Removes template picker backdrop and panel DOM, closes tags, runs on_close."
+    },
+    "nce_events/public/js/js_dialogs/sms_dialog.js::SmsDialog.constructor": {
+     "body_hash": "11e83aa4be",
+     "label": "Stores doctype, config, filters, rows, position, z-index, on_close; builds and binds."
+    }
+   }
+  },
+  "nce_events/public/js/js_dialogs/template_picker.js": {
+   "body_hash": "e319972deff4f83861231de1c327cf5f6d51f5be39846e30c95740c1d1b0599f",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Only templates with reference_doctype equal to the panel DocType are listed; untagged templates are hidden."
+    ],
+    "keywords": [
+     "template_picker",
+     "Email Template",
+     "reference_doctype",
+     "send-template-picker",
+     "get_list",
+     "Filter by name",
+     "on_pick"
+    ],
+    "purpose": "Modal filterable Email Template picker listing only templates whose Reference DocType matches the panel DocType.",
+    "read_when": "Changing send-dialog template selection, search keyboard UX, or reference_doctype filter rules."
+   },
+   "labels": {
+    "nce_events/public/js/js_dialogs/template_picker.js::close": {
+     "body_hash": "05b69beca1",
+     "label": "Removes picker backdrop and unbinds document and search namespace handlers."
+    },
+    "nce_events/public/js/js_dialogs/template_picker.js::pick": {
+     "body_hash": "98c81c1b3a",
+     "label": "Tears down picker and calls open() on_pick callback with chosen template name."
+    },
+    "nce_events/public/js/js_dialogs/template_picker.js::render": {
+     "body_hash": "40469148b9",
+     "label": "Rebuilds clickable template list, empty hints, or no-match message from visible_rows."
+    },
+    "nce_events/public/js/js_dialogs/template_picker.js::sync_active": {
+     "body_hash": "9320d214fb",
+     "label": "Marks keyboard-highlighted row is-active and scrolls it into view in the list."
+    },
+    "nce_events/public/js/js_dialogs/template_picker.js::visible_rows": {
+     "body_hash": "cefb53d2d8",
+     "label": "Returns all loaded templates or subset matching search on name or subject."
+    }
    }
   },
   "nce_events/public/js/new_woo_commerce_product.js": {
@@ -3056,7 +4552,7 @@
    }
   },
   "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue": {
-   "body_hash": "4ecb80e634a7f5e7c99ea06239658e6c1d3899c87b750c2c9f279e72a8a953b0",
+   "body_hash": "89554591af3c67f67b7c583a4d912480bf8d7d9be41cebfa4d03ba06407178f3",
    "header": {
     "format": 1,
     "gotchas": [
@@ -3065,46 +4561,369 @@
     ],
     "keywords": [
      "PanelFormDialog",
-     "form dialog",
-     "find",
-     "submit",
-     "WP readback",
-     "related tab"
+     "runSyncReadbackAfterSave",
+     "findCriteriaActive",
+     "onSubmit",
+     "begin_dialog_edit",
+     "fitDialogWidthToFooter",
+     "useNativeForm",
+     "go-to-panel",
+     "duplicate_event"
     ],
-    "purpose": "Main form dialog shell with find, native form, related tabs, submit, and WP readback.",
-    "read_when": "Changing form dialog save/submit flow, find layout, or dialog drag/resize."
+    "purpose": "Panel page v2 modal shell: load/save form dialog, FileMaker find, related tabs, submit, WP sync readback, and event actions.",
+    "read_when": "Changing form dialog save/submit, find layout, drag/resize width, native form bootstrap, or WP readback."
+   },
+   "labels": {
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::PanelFormDialog": {
+     "body_hash": "90f4bae5f9",
+     "label": "Root floating form dialog from App.vue composing header, body, footer, find, save, and PeopleMapDialog."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::_addDragResizeOverlay": {
+     "body_hash": "e28c8b9973",
+     "label": "Full-screen overlay during dialog drag or corner resize."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::_cellLineCount": {
+     "body_hash": "af116bd348",
+     "label": "Counts wrapped lines in a related grid cell via getClientRects length."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::_maxRelatedCellLines": {
+     "body_hash": "83d000c6d5",
+     "label": "Maximum wrap line count across measured related or inline table cells."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::bootstrapNativeForm": {
+     "body_hash": "6d384232da",
+     "label": "Mounts frappe.ui.form.Form for Details when inline child tables need native grid."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::clearFindCriteriaBag": {
+     "body_hash": "18e0f41373",
+     "label": "Empties reactive findCriteria when leaving find criteria phase."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::confirmDeleteEvent": {
+     "body_hash": "fa5b77a14a",
+     "label": "Promise wrapper around frappe.confirm for delete_event confirmation message."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::escapeForPreHtml": {
+     "body_hash": "09ad957c90",
+     "label": "Escapes text for safe inclusion inside HTML pre blocks in msgprint dialogs."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::escapeHtmlForMsgprint": {
+     "body_hash": "60b162a7e2",
+     "label": "Escapes strings for Frappe msgprint using frappe.utils.escape_html when present."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::fitDialogWidthToFooter": {
+     "body_hash": "78d9bd5aad",
+     "label": "Grow-only widens dialog to fit footer button row without shrinking."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::fitDialogWidthToRelatedTables": {
+     "body_hash": "9318d273b8",
+     "label": "Binary-searches dialog width so related cell text wraps at most two lines."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::fitDialogWidthToRelatedTables.applyWidth": {
+     "body_hash": "983935ae22",
+     "label": "Sets dlgW and forces reflow during related-table width search."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::getFooterRootEl": {
+     "body_hash": "60025df3a8",
+     "label": "Resolves PanelFormDialogFooter DOM root for width measurement."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::isFieldDisplayDirty": {
+     "body_hash": "ee50483c12",
+     "label": "Passes display-only dirty fieldnames from useFormDialogDisplayDirty to body fields."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::onCancel": {
+     "body_hash": "d846ea4474",
+     "label": "Find cancel emits to host; otherwise confirmDiscardIfDirty then close and revert related."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::onFieldChange": {
+     "body_hash": "4b2e0cfa10",
+     "label": "Writes formData, runs form.onFieldChange, recomputes display dirty."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::onGoToPanel": {
+     "body_hash": "9b992abfa1",
+     "label": "Saves pending edits, polls sync, builds panel filter, navigates via onGoToNavigate or go-to-panel."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::onLinkChange": {
+     "body_hash": "46ef7e8cc4",
+     "label": "Updates link field and runs handleFetchFrom with display dirty recompute."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::onNavNextClick": {
+     "body_hash": "3893f2559e",
+     "label": "confirmDiscardIfDirty then emit nav-next when row navigation allowed."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::onNavPrevClick": {
+     "body_hash": "4625615f7a",
+     "label": "confirmDiscardIfDirty then emit nav-prev when row navigation allowed."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::onPlaceholderButton": {
+     "body_hash": "d63d3f92c4",
+     "label": "Dispatches form dialog custom button_script: refund, duplicate, delete, freeze, Woo publish, placeholders."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::onRelatedDirty": {
+     "body_hash": "7ab035e38c",
+     "label": "Tracks related grid edits for footerIsDirty and save paths."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::onRevert": {
+     "body_hash": "aac39cddf4",
+     "label": "Confirms discard, reverts form and related baselines, refreshes display dirty baseline."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::onRevert.proceed": {
+     "body_hash": "c842e2b349",
+     "label": "Applies revert, clears validation, resets related tabs, and rebootstrap native form."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::onSubmit": {
+     "body_hash": "60a7ab917a",
+     "label": "Main save: custom on_submit_method, edit lock, Frappe save, Woo hook, related rows, readback, saved emit."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::onSubmit.pollLog": {
+     "body_hash": "cac356fa53",
+     "label": "Feeds createSubmitPerfTrace categories during submit for shift-click debug copy."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::onSubmitClose": {
+     "body_hash": "e9fd0a6ea1",
+     "label": "Runs onSubmit with afterSave close for Submit and Close footer button."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::onSubmitRefresh": {
+     "body_hash": "3ef231b055",
+     "label": "Runs onSubmit with afterSave refresh for Submit and Refresh footer button."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::patchFindCriterion": {
+     "body_hash": "11152aeafd",
+     "label": "Sets one findCriteria entry from body find-criteria-patch events."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::performConstrainFindLayout": {
+     "body_hash": "eb5617d498",
+     "label": "Emits find-criteria-constrain to narrow within the active found set."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::performFindLayout": {
+     "body_hash": "f18007efbd",
+     "label": "Emits find-criteria with non-empty criterion values when user clicks Perform Find."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::refreshFormAfterSave": {
+     "body_hash": "8849bce165",
+     "label": "Reloads form, native form, bumps reloadTick, and reloads related tabs after save."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::resetDialogPositionAndSize": {
+     "body_hash": "162fb56a41",
+     "label": "Clears drag offset and explicit dlgW/dlgH when dialog opens."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::runEnrollmentProductRefund": {
+     "body_hash": "599948e98f",
+     "label": "Enrollments footer action: prompt fee, runProductRefund, showRefundActionResult."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::runForcedSubmitRefreshReadback": {
+     "body_hash": "64080e7daa",
+     "label": "Full submit-and-refresh pipeline with optional presubmit, save, related, and readback reload."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::runSyncReadbackAfterSave": {
+     "body_hash": "9932d84912",
+     "label": "Polls WP sync jobs, triggers linked readback sync, fetchFreshDocAfterSync, emit readback-merged."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::savePendingEditsBeforeNavigate": {
+     "body_hash": "0a31996e9c",
+     "label": "Validates and saves root and related rows before Go to panel, polling sync jobs."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::scheduleFitDialogWidthToFooter": {
+     "body_hash": "eeb3a7d5cb",
+     "label": "nextTick plus rAF wrapper to run fitDialogWidthToFooter after layout."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::showWooCommerceUpdateConfirmation": {
+     "body_hash": "f684111c79",
+     "label": "After presubmit hook, msgprints sent vs saved Woo field table or green alert."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::startDrag": {
+     "body_hash": "2aecde2940",
+     "label": "Moves dialog from header mousedown, ignoring clicks on interactive controls."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::startDrag.onMove": {
+     "body_hash": "caa4fa619a",
+     "label": "Updates dialog transform during header drag."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::startDrag.onUp": {
+     "body_hash": "7feeee51f9",
+     "label": "Commits drag offset and removes move overlay on mouseup."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::startResize": {
+     "body_hash": "402c4ac17f",
+     "label": "Corner resize with outline preview within viewport min and max bounds."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::startResize.onMove": {
+     "body_hash": "a4c007df86",
+     "label": "Resizes preview outline during corner drag."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::startResize.onUp": {
+     "body_hash": "a7daffd936",
+     "label": "Applies final dlgW and dlgH after resize completes."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::syncFindCriteriaFromSeed": {
+     "body_hash": "3a4126a7c6",
+     "label": "Seeds findCriteria from findSeedCriteria and switches off related tab in criteria phase."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::syncNativeFormToFormData": {
+     "body_hash": "5cc3b1d2da",
+     "label": "Copies native form doc fields into Vue formData before save."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::teardownNativeForm": {
+     "body_hash": "95d3b3b305",
+     "label": "Destroys native Frappe form host and clears native form UI flags."
+    }
    }
   },
   "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue": {
-   "body_hash": "20ab1fd62a7c3a0afc563c952a2bdc3f31537cb453e54fd5bf9a2a5334e26fde",
+   "body_hash": "32f45b22b2da3f6fb29a5cb068d3185a6de3d5a2e16c5f49917aa06127a0a678",
    "header": {
     "format": 1,
-    "gotchas": [],
+    "gotchas": [
+     "Hidden tab panels stay mounted with display:none; only the active tab affects layout."
+    ],
     "keywords": [
      "PanelFormDialogBody",
-     "sections",
+     "findLayoutMode",
+     "findCriteria",
+     "find-criteria-patch",
+     "relatedTabRefs",
+     "sectionGridRows",
      "collapsible",
-     "RelatedTab",
-     "find mode"
+     "PanelFormField",
+     "findHelpOpen",
+     "activeTab"
     ],
-    "purpose": "Form dialog body rendering sections, fields, and tab content for all dialog modes.",
-    "read_when": "Changing form section collapse, field layout, or tab switching in form dialog."
+    "purpose": "Vue form dialog body: tab bar, related/native/inline tabs, collapsible sections, find criteria fields, and related-tab save hooks.",
+    "read_when": "Changing form dialog tabs, section collapse, find criteria fields, dirty state, or related-tab methods exposed to PanelFormDialog."
+   },
+   "labels": {
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue::COLLAPSIBLE_SECTION_FALLBACK_LABEL": {
+     "body_hash": "be0a78c5fb",
+     "label": "Fallback heading when a collapsible Section Break has no Desk label."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue::PanelFormDialogBody": {
+     "body_hash": "e45dd5c130",
+     "label": "Renders PanelFormDialog scrollable middle: loading/error states, tabs, find help, and validation banner."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue::fieldModelValue": {
+     "body_hash": "707db058db",
+     "label": "Binds findCriteria strings for enterable find fields; otherwise formData values."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue::fieldReadOnlyEffective": {
+     "body_hash": "5525179d3b",
+     "label": "Locks non-enterable fields in find mode; else uses host read-only rules."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue::getRelatedRowsForTab": {
+     "body_hash": "3d07d69abb",
+     "label": "defineExpose helper: supplies related tab display rows for Go to panel filter building."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue::isFindEnterable": {
+     "body_hash": "fd470b6561",
+     "label": "Allows find input only on searchable root fields allowed by findableFieldnames."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue::isRootFieldDirty": {
+     "body_hash": "968deec780",
+     "label": "Highlights dirty root fields by diffing formData against originalFormData."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue::isSectionCollapsed": {
+     "body_hash": "c8abb433f3",
+     "label": "Reports section collapsed; unset keys default collapsed so bodies start hidden."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue::onFieldOrCriterionChange": {
+     "body_hash": "1ccf58e8a2",
+     "label": "Routes PanelFormField changes to find-criteria-patch or field-change for the shell."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue::reloadRelatedFromServer": {
+     "body_hash": "6f1ea14fa7",
+     "label": "defineExpose helper: refetches related grids after save via child reload methods."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue::resetRelatedToBaseline": {
+     "body_hash": "ec77b47a9f",
+     "label": "defineExpose helper: reverts all related tabs via resetRelatedToBaseline on refs."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue::saveAllRelatedRows": {
+     "body_hash": "3074d6f3dd",
+     "label": "defineExpose helper: awaits save on each PanelFormDialogRelatedTab ref and merges job ids."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue::sectionCollapseKey": {
+     "body_hash": "8d9a5b0e90",
+     "label": "Forms reactive key tabIdx-sectionIdx for per-section collapse memory."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue::sectionDisplayLabel": {
+     "body_hash": "e0911551ae",
+     "label": "Shows trimmed section label or the un-named section fallback."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue::toggleSection": {
+     "body_hash": "2f1fae1353",
+     "label": "Inverts collapse when user clicks a collapsible section toggle."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue::valuesEqual": {
+     "body_hash": "2e1c9d6564",
+     "label": "Equality for dirty checks, normalizing nulls and common Frappe boolean/zero forms."
+    }
    }
   },
   "nce_events/public/js/panel_page_v2/components/PanelFormDialogFooter.vue": {
-   "body_hash": "bf68bdf274ebb201b09b00b856099101c5a347cb5970cb23b79b724833429e48",
+   "body_hash": "ee752523ef7878c8ffcebd54f600b6a185647b65782fe7ab5fcc33e9129366bc",
    "header": {
     "format": 1,
     "gotchas": [],
     "keywords": [
      "PanelFormDialogFooter",
-     "find",
+     "findChromePhase",
      "submit_hide_if",
      "HIDE_NEVER",
-     "footer buttons"
+     "refreshFooterVisibility",
+     "Perform Find",
+     "submitVisible",
+     "get_form_dialog_footer_visibility"
     ],
-    "purpose": "Form dialog footer with FileMaker-style find buttons and conditional submit visibility.",
-    "read_when": "Changing find footer buttons or submit_hide_if visibility rules."
+    "purpose": "Form dialog footer: FileMaker find actions, custom buttons, cancel/revert/submit, and submit_hide_if visibility.",
+    "read_when": "Changing find footer phases, custom dialog buttons, or submit and SQL hide_if visibility."
+   },
+   "labels": {
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogFooter.vue::HIDE_NEVER": {
+     "body_hash": "2849d6bd64",
+     "label": "hide_if token meaning always show the button or submit regardless of docname."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogFooter.vue::HIDE_NOT_SAVED": {
+     "body_hash": "4b3d83cf53",
+     "label": "hide_if token hiding controls until the record has a saved docname."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogFooter.vue::HIDE_SAVED": {
+     "body_hash": "01230854bb",
+     "label": "hide_if token hiding controls when a docname exists on the open record."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogFooter.vue::HIDE_SQL": {
+     "body_hash": "97a75d8b01",
+     "label": "hide_if token requiring server SQL via get_form_dialog_footer_visibility."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogFooter.vue::PanelFormDialogFooter": {
+     "body_hash": "2d49d2b305",
+     "label": "Footer band inside PanelFormDialog switching find chrome versus browse actions and submit row."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogFooter.vue::__": {
+     "body_hash": "fc669f79ec",
+     "label": "Translates footer strings through Frappe __ when available."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogFooter.vue::isDangerButton": {
+     "body_hash": "116f73638c",
+     "label": "Styles custom buttons red when script token is execute_product_refund."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogFooter.vue::localHidden": {
+     "body_hash": "ba69b95f39",
+     "label": "Evaluates hide_if locally from docname for Never, not saved, saved, or SQL sentinel."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogFooter.vue::needsSqlServer": {
+     "body_hash": "581b5d02a7",
+     "label": "True when a custom button hide_if needs SQL expression server evaluation."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogFooter.vue::refreshFooterVisibility": {
+     "body_hash": "c10aa0f331",
+     "label": "Filters custom buttons and submitVisible from local rules and get_form_dialog_footer_visibility; emits layout-updated."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogFooter.vue::submitHideLocal": {
+     "body_hash": "1ef14ad03e",
+     "label": "Applies submit_hide_if to the docname using the same local hide_if rules."
+    },
+    "nce_events/public/js/panel_page_v2/components/PanelFormDialogFooter.vue::submitNeedsSqlServer": {
+     "body_hash": "ebd292fbda",
+     "label": "True when submit_hide_if requires SQL footer visibility from the server."
+    }
    }
   },
   "nce_events/public/js/panel_page_v2/components/PanelFormDialogHeader.vue": {
@@ -3308,6 +5127,110 @@
     "read_when": "Changing panel table filter rows, ops buttons, or defaultFilters wiring."
    }
   },
+  "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue": {
+   "body_hash": "5acea7386e142ee2a01849f5d2f83ee64a5594f7a1efcdbf730265cf46290459",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "Google Maps script is loaded once per page via data-nce-google-maps marker.",
+     "api_key is used only in the script URL, never shown in dialog text."
+    ],
+    "keywords": [
+     "PeopleMapDialog",
+     "get_event_people_map",
+     "loadGoogleMapsScript",
+     "data-nce-google-maps",
+     "pinInfoHtml",
+     "skipped_no_address",
+     "geocode_failed",
+     "eventId"
+    ],
+    "purpose": "Draggable modal Google map of event enrollments by geocoded family address pins from get_event_people_map.",
+    "read_when": "Changing Events map dialog, pin info windows, Google Maps script load, or geocode empty states."
+   },
+   "labels": {
+    "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::PIN_PATH": {
+     "body_hash": "1e5eaa8631",
+     "label": "SVG path for custom red map marker icons on each family address pin."
+    },
+    "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::PeopleMapDialog": {
+     "body_hash": "c92ce3421a",
+     "label": "Teleport modal from PanelFormDialog MAP showing enrolled people pins for the open Events record."
+    },
+    "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::addDragOverlay": {
+     "body_hash": "242de371c2",
+     "label": "Adds full-screen overlay during drag or resize for smooth pointer capture."
+    },
+    "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::escapeHtml": {
+     "body_hash": "909a118172",
+     "label": "Escapes pin tooltip text before embedding in Google Maps InfoWindow HTML."
+    },
+    "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::fitPins": {
+     "body_hash": "a5f6cd9607",
+     "label": "Resizes map and fits bounds or centers single-pin views after layout changes."
+    },
+    "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::initMap": {
+     "body_hash": "86227a0ab0",
+     "label": "Creates Map, markers, bounds, and hover InfoWindows for returned pin list."
+    },
+    "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::loadGoogleMapsScript": {
+     "body_hash": "552f7d34e3",
+     "label": "Injects or reuses one Maps API script tagged data-nce-google-maps with server api_key."
+    },
+    "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::loadMapData": {
+     "body_hash": "102755185b",
+     "label": "Calls get_event_people_map for eventId, loads Maps if configured, then initMap."
+    },
+    "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::pinInfoHtml": {
+     "body_hash": "77f6b07874",
+     "label": "Builds InfoWindow HTML with person name, position, and rating for hover."
+    },
+    "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::resetState": {
+     "body_hash": "7e12fb70cb",
+     "label": "Clears loading, errors, counts, and map artifacts before a new fetch."
+    },
+    "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::smallPinIcon": {
+     "body_hash": "e2aa22def7",
+     "label": "Returns scaled Google Maps symbol icon using PIN_PATH and red fill colors."
+    },
+    "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::startDrag": {
+     "body_hash": "727adb175a",
+     "label": "Moves the map panel by header mousedown using translate3d offsets."
+    },
+    "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::startDrag.onMove": {
+     "body_hash": "41d96f9836",
+     "label": "Updates panel transform while dragging before committing dx and dy."
+    },
+    "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::startDrag.onUp": {
+     "body_hash": "937ee646ea",
+     "label": "Removes drag overlay and stores final panel offset on mouseup."
+    },
+    "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::startResize": {
+     "body_hash": "e66886661a",
+     "label": "Resizes panel from corner handle within min/max viewport limits."
+    },
+    "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::startResize.onMove": {
+     "body_hash": "c731da9cb7",
+     "label": "Adjusts dlgW and dlgH during corner resize drag."
+    },
+    "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::startResize.onUp": {
+     "body_hash": "bf7b358dc2",
+     "label": "Ends resize drag, removes overlay, and refits map pins on next frame."
+    },
+    "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::teardownMap": {
+     "body_hash": "5059c5b9ab",
+     "label": "Clears markers, info window, and map instance when dialog closes or reloads."
+    },
+    "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::waitForGoogleMaps": {
+     "body_hash": "e8e4637fe1",
+     "label": "Polls until google.maps.Map exists or times out waiting for script load."
+    },
+    "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::waitForGoogleMaps.tick": {
+     "body_hash": "f0101e8240",
+     "label": "Scheduled poll step checking window.google.maps readiness."
+    }
+   }
+  },
   "nce_events/public/js/panel_page_v2/components/SpaPageNavBar.vue": {
    "body_hash": "010d00a0aabeb5f7395db574e68b4d236b78ca546e4f184be3afb5329f2ecba2",
    "header": {
@@ -3375,7 +5298,7 @@
    }
   },
   "nce_events/public/js/panel_page_v2/components/TagColumn.vue": {
-   "body_hash": "50fbb6a034d1a94e2dcbdf12e7a63d49477e82bb4bc9056e3a84c4b4ed9ff34f",
+   "body_hash": "e3ff5572e787daf9bfa2564e4264eebcfebe04aa8e54e9a30db3fe1c66e686c9",
    "header": {
     "format": 1,
     "gotchas": [
@@ -3383,17 +5306,39 @@
     ],
     "keywords": [
      "TagColumn",
-     "tag finder",
-     "field tile",
-     "circular link",
+     "tf-tile",
+     "isCircular",
+     "select-field",
+     "navigate",
      "is_link",
      "is_table",
-     "navigate",
-     "select-field",
-     "tf-tile"
+     "tf-tile-circular",
+     "col.doctype"
     ],
-    "purpose": "Tag Finder column listing doctype field tiles with link/table navigation and circular reference detection.",
-    "read_when": "When editing tag finder field tiles, badges, or circular link navigation blocking."
+    "purpose": "Tag Finder column UI listing one DocType's fields as tiles with link/table drill-down and circular blocking.",
+    "read_when": "Editing Tag Finder field tiles, badges, active selection styling, or circular link navigation."
+   },
+   "labels": {
+    "nce_events/public/js/panel_page_v2/components/TagColumn.vue::TagColumn": {
+     "body_hash": "e0dadeeb3b",
+     "label": "One TagFinder column header plus scrollable field tiles for a DocType in the stack."
+    },
+    "nce_events/public/js/panel_page_v2/components/TagColumn.vue::badgeText": {
+     "body_hash": "ad2447566b",
+     "label": "Shows fieldtype badge, appending arrow and linked DocType for link and table fields."
+    },
+    "nce_events/public/js/panel_page_v2/components/TagColumn.vue::isCircular": {
+     "body_hash": "6f22097602",
+     "label": "Blocks link or table drill when options DocType already appears in earlier columns."
+    },
+    "nce_events/public/js/panel_page_v2/components/TagColumn.vue::onTileClick": {
+     "body_hash": "8e03435565",
+     "label": "Emits navigate for drillable link or table tiles; otherwise select-field for copy tags."
+    },
+    "nce_events/public/js/panel_page_v2/components/TagColumn.vue::tileClass": {
+     "body_hash": "5c445362fc",
+     "label": "Chooses tile CSS for pronoun, link, table, circular, and active field highlight."
+    }
    }
   },
   "nce_events/public/js/panel_page_v2/components/TagDialog.vue": {
@@ -4549,22 +6494,41 @@
    }
   },
   "nce_events/public/js/spa_panel_page_boot.js": {
-   "body_hash": "a3649659ff062981daf61671ee0d4f9610443c5f554220e9af8b7b268ef60af9",
+   "body_hash": "54dc8af644a99499eb7ab5981c584f0021796590f626556bf75eb090d6af644b",
    "header": {
     "format": 1,
     "gotchas": [
-     "Frappe Page routes have no .page wrapper so page-head is direct child of wrapper."
+     "Frappe Page routes have no .page wrapper so page-head is a direct child of wrapper."
     ],
     "keywords": [
-     "spa_panel_page.boot",
+     "spa_panel_page",
      "get_spa_page_config",
      "_VUE_ASSETS",
+     "panel_page_v2_dist",
      "spa-panel-page",
      "clearLayoutScope",
-     "panel_page_v2_dist"
+     "NCEPanelPageV2",
+     "page-head",
+     "frappe.require",
+     "SPA Page Definition",
+     "mount"
     ],
-    "purpose": "Boots panel page V2 SPA from SPA Page Definition loading Vue assets and layout scope styles.",
-    "read_when": "When changing SPA page boot, get_spa_page_config, or spa-panel-page layout CSS hiding page-head."
+    "purpose": "Boots panel page V2 SPA from SPA Page Definition via get_spa_page_config, Vue dist assets, and desk layout scope CSS.",
+    "read_when": "When changing spa_panel_page.boot, clearLayoutScope, get_spa_page_config, or spa-panel-page layout hiding page-head."
+   },
+   "labels": {
+    "nce_events/public/js/spa_panel_page_boot.js::_VUE_ASSETS": {
+     "body_hash": "7d398e44a6",
+     "label": "Lists panel_page_v2.js and style.css paths frappe.require loads before NCEPanelPageV2.mount during boot."
+    },
+    "nce_events/public/js/spa_panel_page_boot.js::_ensureSpaLayoutStyles": {
+     "body_hash": "af3d8aba4c",
+     "label": "Injects spa-panel-page style once to hide page-head and strip top padding on layout sections for SPA pages only."
+    },
+    "nce_events/public/js/spa_panel_page_boot.js::_findSpaScope": {
+     "body_hash": "148d2fafca",
+     "label": "Walks wrapper ancestors to find the desk scope whose direct child is page-head on Frappe Page routes."
+    }
    }
   },
   "nce_events/public/js/spa_panel_page_register.js": {

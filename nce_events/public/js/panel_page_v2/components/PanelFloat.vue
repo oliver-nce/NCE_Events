@@ -26,8 +26,8 @@ code-index:end
 		<div class="ppv2-float-header" @mousedown="startDrag">
 			<slot
 				name="header"
-				:title-classes="headerTitleClasses"
-				:toolbar-classes="headerToolbarClasses"
+				:title-bg-classes="headerTitleBgClasses"
+				:toolbar-bg-classes="headerToolbarBgClasses"
 			/>
 		</div>
 
@@ -82,14 +82,14 @@ const frameBgClass = computed(() =>
 const frameBorderClasses = computed(() =>
 	panelChromeFrameBorderClasses(props.chromeConfig)
 );
-const headerTitleClasses = computed(() => {
+const headerTitleBgClasses = computed(() => {
 	const bg = panelChromeBg(props.chromeConfig, "header_bg_class");
 	const fg =
 		panelChromeFgTextClass(props.chromeConfig, "header_bg_class") ||
 		panelChromeExplicitFgClass(props.chromeConfig, "header_bg_class");
 	return [bg, fg].filter(Boolean);
 });
-const headerToolbarClasses = computed(() => {
+const headerToolbarBgClasses = computed(() => {
 	const bg = panelChromeBg(props.chromeConfig, "header_toolbar_bg_class");
 	const fg = panelChromeFgTextClass(props.chromeConfig, "header_toolbar_bg_class");
 	return [bg, fg].filter(Boolean);
