@@ -39,7 +39,7 @@ code-index:end
 						toolbarBtnFgClass,
 						{
 							'ppv2-hdr-btn--refreshing': props.loading,
-							'theme-text-secondary': props.loading,
+							'ppv2-hdr-btn--loading-dim': props.loading,
 						},
 					]"
 					title="Refresh"
@@ -101,7 +101,7 @@ code-index:end
 					<i class="fa fa-comment"></i>
 				</button>
 			</template>
-			<span class="ppv2-count theme-text-sm"
+			<span class="ppv2-count"
 				>{{ displayRowCount }} / {{ props.total }} records</span
 			>
 			<button
@@ -197,5 +197,19 @@ function onToolbarMouseDown(e) {
 .ppv2-header-controls--inactive {
 	pointer-events: none;
 	opacity: 0.82;
+}
+
+.ppv2-chrome-header-toolbar {
+	background: var(--blue-600);
+	color: #fff;
+}
+.ppv2-chrome-fg-on-primary {
+	color: #fff;
+}
+.ppv2-hdr-btn--loading-dim {
+	color: var(--gray-500);
+}
+.ppv2-count {
+	font-size: var(--font-size-sm);
 }
 </style>

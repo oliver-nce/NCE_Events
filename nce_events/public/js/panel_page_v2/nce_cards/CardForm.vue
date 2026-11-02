@@ -13,11 +13,11 @@ code-index:end
 -->
 
 <template>
-	<div class="card-form theme-bg-surface" :style="cardStyles">
-		<div class="card-form-header theme-bg-primary">
+	<div class="card-form" :style="cardStyles">
+		<div class="card-form-header">
 			<span class="card-title">{{ cardDef?.title || doctype }}</span>
 			<span class="card-record-name">{{ recordName }}</span>
-			<button class="card-close-btn theme-text-primary-fg" @click="$emit('close')">&times;</button>
+			<button class="card-close-btn" @click="$emit('close')">&times;</button>
 		</div>
 		<div v-if="loading" class="card-loading">Loading…</div>
 		<div v-else-if="error" class="card-error">{{ error }}</div>
@@ -169,15 +169,15 @@ onMounted(async () => {
 	display: flex;
 	flex-direction: column;
 	height: 100%;
-	background: var(--nce-color-surface);
+	background: var(--fg-color, #fff);
 	font-family: var(--font-family);
 }
 .card-form-header {
 	display: flex;
 	align-items: center;
 	padding: var(--spacing-sm) var(--spacing-md);
-	background: var(--nce-color-primary);
-	color: var(--nce-color-primary-fg);
+	background: var(--blue-500);
+	color: #fff;
 	border-radius: var(--border-radius) var(--border-radius) 0 0;
 }
 .card-title {
@@ -193,7 +193,7 @@ onMounted(async () => {
 .card-close-btn {
 	background: none;
 	border: none;
-	color: var(--nce-color-primary-fg);
+	color: #fff;
 	font-size: calc(var(--font-size-base) * 1.5);
 	cursor: pointer;
 	opacity: 0.8;
@@ -217,6 +217,6 @@ onMounted(async () => {
 	text-align: center;
 }
 .card-error {
-	color: var(--nce-color-danger, #dd0000);
+	color: var(--red-600);
 }
 </style>

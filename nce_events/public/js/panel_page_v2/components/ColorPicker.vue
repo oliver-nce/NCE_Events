@@ -1,12 +1,12 @@
 <!--
-Theme-exempt HSV color picker with swatches, hex input, and eye-dropper for format rules.
+HSV color picker with swatches, hex input, and eye-dropper for format rules.
 
 code-index:begin
 {
- "purpose": "Theme-exempt HSV color picker with swatches, hex input, and eye-dropper for format rules.",
+ "purpose": "HSV color picker with swatches, hex input, and eye-dropper for format rules.",
  "read_when": "Changing panel format-rule color selection or picker grid behavior.",
  "gotchas": [
-  "Uses literal hex swatches; theme-exempt per format rule editor."
+  "Uses literal hex swatches for format rule colours."
  ],
  "keywords": ["ColorPicker", "HSV", "hex", "swatches", "format rule", "eye-dropper"],
  "format": 1
@@ -359,7 +359,7 @@ function apply() {
 	z-index: 50;
 	margin-top: 4px;
 	left: 0;
-	background: var(--nce-color-surface, #ffffff);
+	background: var(--fg-color, #ffffff);
 	border: 1px solid rgba(0, 0, 0, 0.12);
 	border-radius: 12px;
 	padding: 16px;
@@ -416,7 +416,7 @@ function apply() {
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 .grid-cell.selected {
-	outline: 2px solid var(--nce-color-text, #333333);
+	outline: 2px solid var(--text-color, #333333);
 	outline-offset: 1px;
 }
 .grid-spacer {
@@ -448,9 +448,9 @@ function apply() {
 }
 .hsv-row label {
 	width: 14px;
-	font-size: calc(var(--nce-font-size, 13px) * 0.85);
+	font-size: calc(var(--font-size-sm, 13px) * 0.85);
 	font-weight: 600;
-	color: var(--nce-color-muted, #666666);
+	color: var(--gray-600, #666666);
 }
 .hsv-row input[type="range"] {
 	flex: 1;
@@ -464,17 +464,17 @@ function apply() {
 	width: 16px;
 	height: 16px;
 	border-radius: 50%;
-	background: var(--nce-color-surface, #ffffff);
-	border: 2px solid var(--nce-color-muted, #666666);
+	background: var(--fg-color, #ffffff);
+	border: 2px solid var(--gray-600, #666666);
 	cursor: pointer;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
 }
 .hsv-row input[type="number"] {
 	width: 48px;
 	padding: 3px 4px;
-	border: 1px solid var(--nce-color-border, #cccccc);
+	border: 1px solid var(--border-color, #cccccc);
 	border-radius: 4px;
-	font-size: calc(var(--nce-font-size, 13px) * 0.85);
+	font-size: calc(var(--font-size-sm, 13px) * 0.85);
 	text-align: center;
 }
 .hue-slider {
@@ -499,10 +499,10 @@ function apply() {
 .hex-input {
 	flex: 1;
 	padding: 5px 7px;
-	border: 1px solid var(--nce-color-border, #cccccc);
+	border: 1px solid var(--border-color, #cccccc);
 	border-radius: 4px;
 	font-family: monospace;
-	font-size: calc(var(--nce-font-size, 13px) * 0.92);
+	font-size: calc(var(--font-size-sm, 13px) * 0.92);
 }
 .hex-btn {
 	width: 28px;
@@ -515,15 +515,15 @@ function apply() {
 	display: flex;
 	align-items: center;
 	justify-content: center;
-	color: var(--nce-color-muted, #666666);
+	color: var(--gray-600, #666666);
 }
 .hex-btn:hover {
-	background: var(--nce-color-row-alt, #e5e5e5);
-	color: var(--nce-color-text, #333333);
+	background: var(--gray-50, #e5e5e5);
+	color: var(--text-color, #333333);
 }
 .copied-text {
-	font-size: calc(var(--nce-font-size, 13px) * 0.77);
-	color: var(--nce-color-success, #10b981);
+	font-size: calc(var(--font-size-sm, 13px) * 0.77);
+	color: var(--green-500, #10b981);
 	white-space: nowrap;
 }
 
@@ -534,7 +534,7 @@ function apply() {
 	color: white; /* theme-exempt: deliberate black apply button */
 	border: none;
 	border-radius: 6px;
-	font-size: calc(var(--nce-font-size, 13px) * 0.92);
+	font-size: calc(var(--font-size-sm, 13px) * 0.92);
 	font-weight: 600;
 	cursor: pointer;
 	transition: background 0.15s;

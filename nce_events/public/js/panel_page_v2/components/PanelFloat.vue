@@ -18,9 +18,8 @@ code-index:end
 <template>
 	<div
 		ref="floatEl"
-		class="ppv2-float theme-rounded theme-shadow-theme"
+		class="ppv2-float ppv2-chrome-rounded ppv2-chrome-shadow"
 		:class="[frameBgClass, ...frameBorderClasses]"
-		:data-nce-theme="themeSlug || undefined"
 		:style="floatStyle"
 	>
 		<div class="ppv2-float-header" @mousedown="startDrag">
@@ -70,9 +69,7 @@ const props = defineProps({
 	initH: { type: Number, default: 550 },
 	/** Minimum Y (px); use negative values to allow dragging above .ppv2-root top. */
 	minY: { type: Number, default: 0 },
-	/** Active NCE Theme slug; omit for site base palette (:root). */
-	themeSlug: { type: String, default: "" },
-	/** Page Panel chrome config (subset of get_panel_config). */
+	/** @deprecated Config chrome fields removed; helpers use fixed defaults. */
 	chromeConfig: { type: Object, default: null },
 	/** Fixed width; height sizes to content, capped so the float keeps `inset` px from the right/bottom edges. */
 	autoSize: { type: Boolean, default: false },
@@ -243,7 +240,7 @@ function startResize(e) {
 	// Create outline div that shows target size during resize
 	const rect = el.getBoundingClientRect();
 	const outline = document.createElement("div");
-	outline.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.top}px;width:${ow}px;height:${oh}px;border:1px solid var(--nce-color-primary, #4a5568);z-index:999998;pointer-events:none;box-sizing:border-box;`;
+	outline.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.top}px;width:${ow}px;height:${oh}px;border:1px solid var(--blue-500, #4a5568);z-index:999998;pointer-events:none;box-sizing:border-box;`;
 	document.body.appendChild(outline);
 
 	function onMove(ev) {
@@ -389,7 +386,36 @@ function startResize(e) {
 	width: 16px;
 	height: 16px;
 	cursor: nwse-resize;
-	background: linear-gradient(135deg, transparent 50%, var(--nce-color-border) 50%);
+	background: linear-gradient(135deg, transparent 50%, var(--border-color) 50%);
 	border-radius: 0 0 var(--border-radius) 0;
+}
+
+.ppv2-chrome-surface {
+	background: var(--fg-color, #fff);
+	color: var(--text-color);
+}
+.ppv2-chrome-header,
+.ppv2-chrome-header-toolbar,
+.ppv2-float-header :deep(.ppv2-chrome-header),
+.ppv2-float-header :deep(.ppv2-chrome-header-toolbar) {
+	background: var(--blue-600);
+	color: #fff;
+}
+.ppv2-chrome-footer {
+	background: var(--blue-500);
+	color: #fff;
+}
+.ppv2-chrome-fg-on-primary,
+.ppv2-float-header :deep(.ppv2-chrome-fg-on-primary) {
+	color: #fff;
+}
+.ppv2-chrome-border {
+	border: 1px solid var(--border-color);
+}
+.ppv2-chrome-rounded {
+	border-radius: var(--border-radius, 6px);
+}
+.ppv2-chrome-shadow {
+	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
 }
 </style>

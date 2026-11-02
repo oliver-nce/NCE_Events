@@ -90,14 +90,14 @@ export function useRelatedActions(props, { fetchRelatedForTab }) {
 			.filter(Boolean)
 			.map(
 				([label, val]) =>
-					`<tr><td class="theme-text-muted" style="padding:3px 12px 3px 0">${e(label)}</td><td style="padding:3px 0"><strong>${e(val)}</strong></td></tr>`,
+					`<tr><td class="text-muted" style="padding:3px 12px 3px 0">${e(label)}</td><td style="padding:3px 0"><strong>${e(val)}</strong></td></tr>`,
 			)
 			.join("");
 
 		const footer =
 			o.status === "payment_required"
-				? `<p class="theme-text-muted" style="margin-top:12px">The new enrollment will appear here when ${money(o.amount_still_due)} has been paid by the customer.</p>`
-				: `<p class="theme-text-muted" style="margin-top:12px">The new enrollment will appear here within ~10 minutes.</p>`;
+				? `<p class="text-muted" style="margin-top:12px">The new enrollment will appear here when ${money(o.amount_still_due)} has been paid by the customer.</p>`
+				: `<p class="text-muted" style="margin-top:12px">The new enrollment will appear here within ~10 minutes.</p>`;
 
 		const summary = result.summary ? `<p style="margin-bottom:10px">${e(result.summary)}</p>` : "";
 
@@ -109,9 +109,9 @@ export function useRelatedActions(props, { fetchRelatedForTab }) {
 		}
 		const elapsedText =
 			typeof elapsedMs === "number" && isFinite(elapsedMs)
-				? `<p class="theme-text-muted theme-text-sm" style="margin-top:8px">API round-trip: ${(elapsedMs / 1000).toFixed(2)}s (${Math.round(elapsedMs)} ms)</p>`
+				? `<p class="text-muted small" style="margin-top:8px">API round-trip: ${(elapsedMs / 1000).toFixed(2)}s (${Math.round(elapsedMs)} ms)</p>`
 				: "";
-		const rawSection = `<details style="margin-top:12px"><summary class="theme-text-muted" style="cursor:pointer">Full API response</summary><pre class="theme-bg-surface theme-border theme-rounded-sm theme-text-sm" style="margin-top:8px;max-height:300px;overflow:auto;padding:8px;white-space:pre-wrap;word-break:break-word">${e(rawJson)}</pre></details>`;
+		const rawSection = `<details style="margin-top:12px"><summary class="text-muted" style="cursor:pointer">Full API response</summary><pre class="small" style="margin-top:8px;max-height:300px;overflow:auto;padding:8px;white-space:pre-wrap;word-break:break-word;border:1px solid var(--border-color);border-radius:var(--border-radius-sm);background:var(--fg-color)">${e(rawJson)}</pre></details>`;
 
 		if (typeof frappe !== "undefined" && frappe.msgprint) {
 			frappe.msgprint({

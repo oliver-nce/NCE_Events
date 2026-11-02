@@ -6,7 +6,7 @@ code-index:begin
  "purpose": "Panel page v2 tab bar sorting tabs by sort_order and hiding when only one tab with hide_bar.",
  "read_when": "When changing panel tab navigation UI or single-tab hide_bar visibility.",
  "gotchas": [],
- "keywords": ["TabBar", "tab bar", "panel page v2", "sort_order", "hide_bar", "activeTab", "theme-text-heading"],
+ "keywords": ["TabBar", "tab bar", "panel page v2", "sort_order", "hide_bar", "activeTab"],
  "format": 1
 }
 code-index:end
@@ -20,8 +20,8 @@ code-index:end
 			:class="[
 				'tab-btn',
 				activeTab === tab.label
-					? 'tab-btn--active tab-btn--active-border theme-text-heading theme-border-primary'
-					: 'theme-text-muted',
+					? 'tab-btn--active tab-btn--active-border'
+					: 'tab-btn--inactive',
 			]"
 			@click="$emit('update:activeTab', tab.label)"
 		>
@@ -55,7 +55,7 @@ const showBar = computed(() => {
 .tab-bar {
 	display: flex;
 	gap: 0;
-	border-bottom: var(--nce-border-width) solid var(--nce-color-border);
+	border-bottom: 1px solid var(--border-color);
 	margin-bottom: var(--spacing-md);
 }
 .tab-btn {
@@ -64,15 +64,19 @@ const showBar = computed(() => {
 	background: none;
 	cursor: pointer;
 	font-size: var(--font-size-base);
-	border-bottom: var(--nce-border-width-strong) solid transparent;
+	border-bottom: 2px solid transparent;
+}
+.tab-btn--inactive {
+	color: var(--gray-500);
+}
+.tab-btn--active {
+	color: var(--text-color);
+	font-weight: 700;
 }
 .tab-btn--active-border {
-	border-bottom: var(--nce-border-width-strong) solid var(--nce-color-primary);
+	border-bottom: 2px solid var(--blue-500);
 }
 .tab-btn:hover {
 	color: inherit;
-}
-.tab-btn--active {
-	font-weight: 700;
 }
 </style>

@@ -24,7 +24,7 @@ code-index:end
 		<div v-for="(cond, i) in filters" :key="i" class="ppv2-filter-row">
 			<select
 				v-model="cond.field"
-				class="ppv2-filter-col theme-border theme-rounded-sm"
+				class="ppv2-filter-col ppv2-filter-control"
 				@change="
 					onFilterFieldChange(cond);
 					emitFilterChange();
@@ -49,8 +49,8 @@ code-index:end
 					v-for="op in opsForCond(cond)"
 					:key="op"
 					:class="[
-						'ppv2-op-btn theme-border theme-rounded-sm',
-						cond.op === op ? 'theme-bg-primary theme-border-primary' : 'theme-bg-card',
+						'ppv2-op-btn ppv2-filter-control',
+						cond.op === op ? 'ppv2-op-btn--active' : 'ppv2-op-btn--idle',
 					]"
 					@click="
 						cond.op = op;
@@ -64,7 +64,7 @@ code-index:end
 			<template v-if="cond.field && isDateField(cond.field)">
 				<input
 					:value="cond._sqlDate || ''"
-					class="ppv2-filter-val theme-border theme-rounded-sm"
+					class="ppv2-filter-val ppv2-filter-control"
 					placeholder="Enter a SQL date e.g. 1950-06-08"
 					@input="
 						onDateSqlInput(cond, $event.target.value);
@@ -73,7 +73,7 @@ code-index:end
 				/>
 				<input
 					:value="cond._daysAgo || ''"
-					class="ppv2-filter-val theme-border theme-rounded-sm"
+					class="ppv2-filter-val ppv2-filter-control"
 					placeholder="OR enter days ago e.g. 30"
 					@input="
 						onDaysAgoInput(cond, $event.target.value);
@@ -84,13 +84,13 @@ code-index:end
 			<input
 				v-else-if="cond.field"
 				v-model="cond.value"
-				class="ppv2-filter-val theme-border theme-rounded-sm"
+				class="ppv2-filter-val ppv2-filter-control"
 				placeholder="value"
 				@input="emitFilterDebounced"
 			/>
 			<button
 				v-if="cond.field"
-				class="ppv2-filter-rm theme-text-danger"
+				class="ppv2-filter-rm"
 				@click="
 					filters.splice(i, 1);
 					emitFilterChange();
@@ -100,7 +100,7 @@ code-index:end
 			</button>
 		</div>
 		<button
-			class="ppv2-filter-add theme-bg-card theme-border theme-rounded-sm theme-text-primary"
+			class="ppv2-filter-add ppv2-filter-control"
 			@click="filters.push({ field: '', op: '>', value: '' })"
 		>
 			Add Filter &#9660;
@@ -112,7 +112,6 @@ code-index:end
 import { reactive, watch, computed } from "vue";
 import {
 	panelChromeBg,
-	panelChromeFgTextClass,
 	panelChromeFilterDividerStyleVars,
 } from "../utils/panelChromeClasses.js";
 
@@ -127,9 +126,7 @@ const props = defineProps({
 const filterBarBgClass = computed(() =>
 	panelChromeBg(props.config, "filter_bar_bg_class")
 );
-const filterBarFgTextClass = computed(() =>
-	panelChromeFgTextClass(props.config, "filter_bar_bg_class")
-);
+const filterBarFgTextClass = computed(() => "");
 const filterDividerStyleVars = computed(() =>
 	panelChromeFilterDividerStyleVars(props.config)
 );
@@ -293,5 +290,30 @@ function emitFilterDebounced() {
 	font-size: var(--font-size-sm);
 	padding: 2px 8px;
 	cursor: pointer;
+	color: var(--blue-500);
+}
+
+.ppv2-chrome-filter-bar {
+	background: var(--blue-100);
+	color: var(--text-color);
+}
+
+.ppv2-filter-control {
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-sm, 4px);
+	background: var(--fg-color, #fff);
+}
+
+.ppv2-op-btn--active {
+	background: var(--blue-500);
+	border-color: var(--blue-500);
+	color: #fff;
+}
+.ppv2-op-btn--idle {
+	background: var(--fg-color, #fff);
+}
+
+.ppv2-filter-rm {
+	color: var(--red-500);
 }
 </style>

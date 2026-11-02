@@ -14,16 +14,16 @@ code-index:end
 
 <template>
 	<div class="field-widget">
-		<label class="field-label theme-text-muted">
+		<label class="field-label">
 			{{ fieldMeta?.label || config.path
-			}}<span v-if="fieldMeta?.reqd" class="theme-text-danger" aria-hidden="true"> *</span>
+			}}<span v-if="fieldMeta?.reqd" class="field-required" aria-hidden="true"> *</span>
 		</label>
 		<input
 			v-if="inputType === 'text'"
 			type="text"
 			v-model="localValue"
 			:readonly="!config.editable"
-			class="field-input theme-border theme-rounded-sm"
+			class="field-input"
 			@blur="onSave"
 			@keydown.enter="onSave"
 		/>
@@ -33,7 +33,7 @@ code-index:end
 			:step="numberStep"
 			v-model="localValue"
 			:readonly="!config.editable"
-			class="field-input theme-border theme-rounded-sm"
+			class="field-input"
 			@blur="onSave"
 			@keydown.enter="onSave"
 		/>
@@ -42,7 +42,7 @@ code-index:end
 			type="date"
 			v-model="localValue"
 			:readonly="!config.editable"
-			class="field-input theme-border theme-rounded-sm"
+			class="field-input"
 			@blur="onSave"
 			@keydown.enter="onSave"
 		/>
@@ -51,14 +51,14 @@ code-index:end
 			type="checkbox"
 			:checked="localValue"
 			:disabled="!config.editable"
-			class="field-input theme-border theme-rounded-sm"
+			class="field-input"
 			@change="onCheckChange"
 		/>
 		<select
 			v-else-if="inputType === 'select'"
 			v-model="localValue"
 			:disabled="!config.editable"
-			class="field-input theme-border theme-rounded-sm"
+			class="field-input"
 			@change="onSave"
 		>
 			<option value=""></option>
@@ -68,7 +68,7 @@ code-index:end
 			v-else-if="inputType === 'textarea'"
 			v-model="localValue"
 			:readonly="!config.editable"
-			class="field-input theme-border theme-rounded-sm"
+			class="field-input"
 			rows="3"
 			@blur="onSave"
 		/>
@@ -77,7 +77,7 @@ code-index:end
 			type="text"
 			v-model="localValue"
 			:readonly="!config.editable"
-			class="field-input theme-border theme-rounded-sm"
+			class="field-input"
 			@blur="onSave"
 			@keydown.enter="onSave"
 		/>
@@ -174,20 +174,26 @@ function onCheckChange(e) {
 .field-label {
 	font-size: var(--font-size-sm);
 	margin-bottom: 2px;
+	color: var(--gray-600);
+}
+.field-required {
+	color: var(--red-500);
 }
 .field-input {
 	flex: 1;
 	padding: 4px 8px;
 	font-size: var(--font-size-base);
 	min-height: 28px;
+	border: 1px solid var(--border-color, #d1d8dd);
+	border-radius: var(--border-radius-sm, 4px);
 }
 .field-input:focus {
-	border-color: var(--nce-color-focus);
+	border-color: var(--blue-500);
 	outline: none;
 }
 .field-input[readonly],
 .field-input:disabled {
-	background: var(--nce-color-surface);
+	background: var(--fg-color, #fff);
 	cursor: default;
 }
 .field-input[type="checkbox"] {

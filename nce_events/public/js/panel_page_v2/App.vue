@@ -33,7 +33,6 @@ code-index:end
 			:init-h="550"
 			auto-size
 			:inset="ROOT_INSET"
-			:theme-slug="config?.theme_slug || ''"
 			:chrome-config="config || null"
 			@brought-to-front="onTablePanelBroughtToFront"
 		>
@@ -90,7 +89,6 @@ code-index:end
 			:init-y="p.y"
 			:init-w="panelFloatInitW(p)"
 			:init-h="600"
-			:theme-slug="p.config?.theme_slug || ''"
 			:chrome-config="p.config || null"
 			@brought-to-front="onTablePanelBroughtToFront"
 		>
@@ -260,7 +258,6 @@ code-index:end
 		<PanelFormDialog
 			v-if="formDialogSlot === 0 && formDialogDefinition"
 			:open="true"
-			:theme-slug="formDialogThemeSlug"
 			:dialog-header-bg-class="formDialogHeaderBgClass"
 			:dialog-header-fg-text-class="formDialogHeaderFgTextClass"
 			:definition-name="formDialogDefinition"
@@ -299,7 +296,6 @@ code-index:end
 		<PanelFormDialog
 			v-if="formDialogSlot === 0 && formDialogPendingDefinition"
 			:open="true"
-			:theme-slug="formDialogThemeSlug"
 			:dialog-header-bg-class="formDialogHeaderBgClass"
 			:dialog-header-fg-text-class="formDialogHeaderFgTextClass"
 			:definition-name="formDialogPendingDefinition"
@@ -332,7 +328,6 @@ code-index:end
 		<PanelFormDialog
 			v-if="formDialogSlot === 1 && formDialogDefinition"
 			:open="true"
-			:theme-slug="formDialogThemeSlug"
 			:dialog-header-bg-class="formDialogHeaderBgClass"
 			:dialog-header-fg-text-class="formDialogHeaderFgTextClass"
 			:definition-name="formDialogDefinition"
@@ -371,7 +366,6 @@ code-index:end
 		<PanelFormDialog
 			v-if="formDialogSlot === 1 && formDialogPendingDefinition"
 			:open="true"
-			:theme-slug="formDialogThemeSlug"
 			:dialog-header-bg-class="formDialogHeaderBgClass"
 			:dialog-header-fg-text-class="formDialogHeaderFgTextClass"
 			:definition-name="formDialogPendingDefinition"
@@ -418,7 +412,7 @@ import TagFinder from "./components/TagFinder.vue";
 import CardModal from "./nce_cards/CardModal.vue";
 import PanelFormDialog from "./components/PanelFormDialog.vue";
 import SyncErrorDialog from "./components/SyncErrorDialog.vue";
-import { panelChromeFgTextClass } from "./utils/panelChromeClasses.js";
+import { panelChromeBg } from "./utils/panelChromeClasses.js";
 import ActionsPanel from "./components/ActionsPanel.vue";
 import SpaMagicSearch from "./components/SpaMagicSearch.vue";
 import PanelFindActionBar from "./components/PanelFindActionBar.vue";
@@ -520,15 +514,10 @@ const formDialogChromeConfig = computed(() => {
 	return openPanels.find((p) => p.id === id)?.config || null;
 });
 
-const formDialogThemeSlug = computed(
-	() => formDialogChromeConfig.value?.theme_slug || ""
+const formDialogHeaderBgClass = computed(() =>
+	panelChromeBg(formDialogChromeConfig.value, "dialog_header_bg_class")
 );
-const formDialogHeaderBgClass = computed(
-	() => formDialogChromeConfig.value?.dialog_header_bg_class || ""
-);
-const formDialogHeaderFgTextClass = computed(() =>
-	panelChromeFgTextClass(formDialogChromeConfig.value, "dialog_header_bg_class")
-);
+const formDialogHeaderFgTextClass = computed(() => "");
 
 function refreshPanelByDoctype(doctype) {
 	const panel = openPanels.find((p) => p.doctype === doctype);
@@ -1291,5 +1280,10 @@ async function onSheets(panelPayload) {
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
+}
+
+.ppv2-chrome-header {
+	background: var(--blue-600);
+	color: #fff;
 }
 </style>

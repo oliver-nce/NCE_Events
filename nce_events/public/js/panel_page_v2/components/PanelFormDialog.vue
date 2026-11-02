@@ -51,9 +51,8 @@ code-index:end
 		</div>
 		<div
 			ref="dialogEl"
-			class="ppv2-form-dialog ppv2-fd-dialog-root theme-bg-surface"
+			class="ppv2-form-dialog ppv2-fd-dialog-root"
 			:class="'ppv2-fd-size-' + form.dialogSize.value"
-			:data-nce-theme="themeSlug || undefined"
 			:style="dialogStyle"
 		>
 			<div
@@ -61,19 +60,17 @@ code-index:end
 				class="ppv2-fd-readback-overlay"
 				@click.stop
 			>
-				<div class="ppv2-fd-readback-spinner theme-border theme-rounded-sm">{{ syncWaitingText }}</div>
+				<div class="ppv2-fd-readback-spinner">{{ syncWaitingText }}</div>
 			</div>
 			<div
 				v-if="deleteSuccessFlash"
 				class="ppv2-fd-readback-overlay"
 				@click.stop
 			>
-				<div class="ppv2-fd-readback-spinner theme-border theme-rounded-sm">{{ deleteSuccessFlash }}</div>
+				<div class="ppv2-fd-readback-spinner">{{ deleteSuccessFlash }}</div>
 			</div>
 			<div class="ppv2-fd-drag-handle" @mousedown="startDrag">
 				<PanelFormDialogHeader
-					:header-bg-class="dialogHeaderBgClass"
-					:header-fg-text-class="dialogHeaderFgTextClass"
 					:row-nav-enabled="rowNavEnabledEffective"
 					:freeze-nav="findCriteriaActive"
 					:can-navigate-prev="canNavigatePrev"
@@ -286,11 +283,6 @@ const props = defineProps({
 	findMatchActive: { type: Boolean, default: false },
 	/** Host opens the related DocType panel (after save + sync poll). */
 	onGoToNavigate: { type: Function, default: null },
-	/** Opening panel theme slug — scopes dialog palette when set. */
-	themeSlug: { type: String, default: "" },
-	/** Opening panel dialog_header_bg_class (empty = default theme-bg-primary). */
-	dialogHeaderBgClass: { type: String, default: "" },
-	dialogHeaderFgTextClass: { type: String, default: "" },
 });
 
 const emit = defineEmits([
@@ -499,7 +491,7 @@ function startResize(e) {
 	const overlay = _addDragResizeOverlay("nwse-resize");
 
 	const outline = document.createElement("div");
-	outline.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.top}px;width:${ow}px;height:${oh}px;border:1px solid var(--nce-color-primary, #4a5568);z-index:999998;pointer-events:none;box-sizing:border-box;`;
+	outline.style.cssText = `position:fixed;left:${rect.left}px;top:${rect.top}px;width:${ow}px;height:${oh}px;border:1px solid var(--blue-600);z-index:999998;pointer-events:none;box-sizing:border-box;`;
 	document.body.appendChild(outline);
 
 	const maxW = Math.floor(window.innerWidth * 0.95);
@@ -1925,9 +1917,9 @@ async function onPlaceholderButton(btn) {
 	transition: opacity 0.3s ease;
 }
 .ppv2-form-dialog {
-	background: var(--nce-color-surface);
+	background: var(--fg-color, #fff);
 	border-radius: var(--border-radius);
-	box-shadow: var(--nce-shadow);
+	box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
 	display: flex;
 	flex-direction: column;
 	max-height: 90vh;
@@ -1950,7 +1942,7 @@ async function onPlaceholderButton(btn) {
 	width: 16px;
 	height: 16px;
 	cursor: nwse-resize;
-	background: linear-gradient(135deg, transparent 50%, var(--nce-color-border) 50%);
+	background: linear-gradient(135deg, transparent 50%, var(--border-color) 50%);
 	border-radius: 0 0 var(--border-radius) 0;
 	z-index: 5;
 }
@@ -1958,7 +1950,7 @@ async function onPlaceholderButton(btn) {
 	position: absolute;
 	inset: 0;
 	z-index: 20;
-	background: color-mix(in srgb, var(--nce-color-surface) 88%, transparent);
+	background: color-mix(in srgb, var(--fg-color, #fff) 88%, transparent);
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -1969,8 +1961,9 @@ async function onPlaceholderButton(btn) {
 	font-weight: var(--font-weight-bold);
 	padding: 16px 24px;
 	border-radius: var(--border-radius-sm, 6px);
-	background: var(--nce-color-surface);
-	box-shadow: var(--nce-shadow);
+	background: var(--fg-color, #fff);
+	border: 1px solid var(--border-color);
+	box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
 }
 .ppv2-fd-size-sm {
 	width: 400px;

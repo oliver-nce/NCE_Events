@@ -14,7 +14,7 @@ code-index:end
 
 <template>
 	<div class="display-widget">
-		<label class="display-label theme-text-muted">{{ displayLabel }}</label>
+		<label class="display-label">{{ displayLabel }}</label>
 		<span class="display-value">{{ displayValue }}</span>
 	</div>
 </template>
@@ -52,9 +52,10 @@ const displayLabel = computed(() => {
 .display-label {
 	font-size: var(--font-size-sm);
 	margin-bottom: 2px;
+	color: var(--gray-600);
 }
 .display-value {
-	background: var(--nce-color-surface);
+	background: var(--fg-color, #fff);
 	padding: 4px 8px;
 	border-radius: var(--border-radius-sm);
 	flex: 1;

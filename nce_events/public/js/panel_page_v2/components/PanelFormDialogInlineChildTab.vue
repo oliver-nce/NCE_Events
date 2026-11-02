@@ -22,8 +22,8 @@ code-index:end
 			Schema note: {{ tab._inlineChild.captureError }}
 		</p>
 
-		<div v-if="columns.length" class="ppv2-fd-related-table-wrap ppv2-fd-inline-table-wrap theme-border theme-rounded-sm">
-			<table class="ppv2-fd-related-table ppv2-fd-inline-table theme-table">
+		<div v-if="columns.length" class="ppv2-fd-related-table-wrap ppv2-fd-inline-table-wrap">
+			<table class="ppv2-fd-related-table ppv2-fd-inline-table">
 				<colgroup>
 					<col v-if="showDeleteColumn" class="ppv2-fd-inline-col-del" />
 					<col class="ppv2-fd-inline-col-no" />
@@ -45,7 +45,7 @@ code-index:end
 							:class="columnLayouts[ci].headerClass"
 						>
 							{{ col.label || col.fieldname
-							}}<span v-if="columnMandatory(col)" class="ppv2-fd-reqd theme-text-danger" aria-hidden="true"> *</span>
+							}}<span v-if="columnMandatory(col)" class="ppv2-fd-reqd" aria-hidden="true"> *</span>
 						</th>
 					</tr>
 				</thead>
@@ -54,7 +54,7 @@ code-index:end
 						<td v-if="showDeleteColumn" class="ppv2-fd-related-td ppv2-fd-inline-del-cell">
 							<button
 								type="button"
-								class="ppv2-fd-inline-del-btn theme-text-danger"
+								class="ppv2-fd-inline-del-btn"
 								:disabled="readOnlyHost"
 								@click="removeRow(ri)"
 							>
@@ -66,12 +66,7 @@ code-index:end
 							v-for="(col, ci) in columns"
 							:key="col.fieldname"
 							class="ppv2-fd-related-td"
-							:class="[
-								columnLayouts[ci].cellClass,
-								{
-									'ppv2-fd-related-td--editable': isColEditableForRow(rw, col),
-								},
-							]"
+							:class="[ columnLayouts[ci].cellClass, { 'ppv2-fd-related-td--editable': isColEditableForRow(rw, col), }, ]"
 						>
 							<button
 								v-if="isInlineActionButtonColumn(col)"
@@ -436,6 +431,8 @@ function removeRow(index) {
 	max-height: min(52vh, 520px);
 	overflow: auto;
 	margin: 0 0 12px;
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-sm, 4px);
 }
 .ppv2-fd-inline-table {
 	table-layout: fixed;
@@ -446,6 +443,9 @@ function removeRow(index) {
 .ppv2-fd-inline-table .ppv2-fd-related-th {
 	text-align: left;
 	padding: 8px 10px;
+	background: var(--gray-100);
+	color: var(--text-color);
+	border-bottom: 1px solid var(--border-color);
 	font-size: var(--font-size-base);
 	font-weight: var(--font-weight-bold, 600);
 	position: sticky;
@@ -457,7 +457,7 @@ function removeRow(index) {
 }
 .ppv2-fd-inline-table .ppv2-fd-related-td {
 	padding: 6px 10px;
-	border-bottom: var(--nce-border-width) solid var(--nce-color-border);
+	border-bottom: 1px solid var(--border-color);
 	vertical-align: middle;
 }
 .ppv2-fd-inline-col-del {
@@ -523,6 +523,7 @@ function removeRow(index) {
 .ppv2-fd-inline-del-btn {
 	border: none;
 	background: transparent;
+	color: var(--red-600);
 	font-size: calc(var(--font-size-base) * 1.35);
 	line-height: 1;
 	cursor: pointer;

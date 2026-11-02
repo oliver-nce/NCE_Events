@@ -16,13 +16,13 @@ code-index:end
 
 <template>
   <!-- Table fields: placeholder -->
-  <div v-if="config?.layout === 'table'" class="ppv2-fd-table-placeholder theme-text-muted">
+  <div v-if="config?.layout === 'table'" class="ppv2-fd-table-placeholder">
     <span>Child table: {{ field.label }} ({{ field.options }})</span>
-    <span class="ppv2-fd-muted theme-text-muted">— not yet supported in dialog view</span>
+    <span class="ppv2-fd-muted">— not yet supported in dialog view</span>
   </div>
 
   <!-- Heading -->
-  <h4 v-else-if="config?.layout === 'heading'" class="ppv2-fd-heading theme-text-heading">
+  <h4 v-else-if="config?.layout === 'heading'" class="ppv2-fd-heading">
     {{ field.label }}
   </h4>
 
@@ -51,7 +51,7 @@ code-index:end
     <!-- Select / static-Autocomplete: native dropdown; exact-match criterion. -->
     <select
       v-else-if="useNativeSelectUi"
-      class="ppv2-fd-input ppv2-fd-select theme-border theme-rounded-sm"
+      class="ppv2-fd-input ppv2-fd-select"
       :value="criteriaExactValue"
       @change="onExactCriteriaChange($event.target.value)"
     >
@@ -62,14 +62,14 @@ code-index:end
     <input
       v-else
       type="text"
-      class="ppv2-fd-input theme-border theme-rounded-sm"
+      class="ppv2-fd-input"
       :value="criteriaInputValue"
       spellcheck="false"
       autocomplete="off"
       placeholder=""
       @input="onChange($event.target.value)"
     />
-    <p v-if="field.description" class="ppv2-fd-desc theme-text-muted">{{ field.description }}</p>
+    <p v-if="field.description" class="ppv2-fd-desc">{{ field.description }}</p>
   </div>
 
   <!-- Data entry fields -->
@@ -78,15 +78,10 @@ code-index:end
     v-show="visible"
     class="ppv2-fd-field"
     :data-fd-fieldname="field.fieldname"
-    :class="{
-      'ppv2-fd-field-bold': field.bold,
-      'ppv2-fd-field-editable': !readOnly,
-      'ppv2-fd-field-dirty': fieldDirty && !readOnly,
-      'theme-text-danger': fieldDirty && !readOnly,
-    }"
+    :class="{ 'ppv2-fd-field-bold': field.bold, 'ppv2-fd-field-editable': !readOnly, 'ppv2-fd-field-dirty': fieldDirty && !readOnly }"
   >
     <label class="ppv2-fd-label">
-      {{ field.label }}<span v-if="mandatory" class="ppv2-fd-reqd theme-text-danger" aria-hidden="true"> *</span>
+      {{ field.label }}<span v-if="mandatory" class="ppv2-fd-reqd" aria-hidden="true"> *</span>
     </label>
 
     <!-- Select + Autocomplete with newline options (same static list format as Desk Select) -->
@@ -95,8 +90,7 @@ code-index:end
       :value="modelValue ?? ''"
       :required="mandatory"
       :disabled="readOnly"
-      class="ppv2-fd-input ppv2-fd-select theme-border theme-rounded-sm"
-      :class="{ 'theme-text-muted': readOnly }"
+      class="ppv2-fd-input ppv2-fd-select"
       @change="onChange($event.target.value)"
     >
       <option value="">— Select —</option>
@@ -139,14 +133,14 @@ code-index:end
     <!-- HTML-label fields: always render value as HTML, never editable -->
     <div
       v-else-if="labelHasHtml"
-      class="ppv2-fd-input ppv2-fd-readonly-plain ppv2-fd-html-display theme-border theme-rounded-sm"
+      class="ppv2-fd-input ppv2-fd-readonly-plain ppv2-fd-html-display"
       v-html="modelValue ?? ''"
     />
 
     <!-- Textarea types — virtual / read-only: static text (no focus, resize, or edits) -->
     <div
       v-else-if="isTextarea && readOnly"
-      class="ppv2-fd-input ppv2-fd-textarea ppv2-fd-readonly-plain theme-border theme-rounded-sm"
+      class="ppv2-fd-input ppv2-fd-textarea ppv2-fd-readonly-plain"
       tabindex="-1"
       @keydown.prevent
     >{{ modelValue || "" }}</div>
@@ -157,8 +151,7 @@ code-index:end
       :disabled="readOnly"
       :rows="config.props?.rows || 3"
       :placeholder="field.placeholder || ''"
-      class="ppv2-fd-input ppv2-fd-textarea theme-border theme-rounded-sm"
-      :class="{ 'theme-text-muted': readOnly }"
+      class="ppv2-fd-input ppv2-fd-textarea"
       @input="onChange($event.target.value)"
     />
 
@@ -166,20 +159,20 @@ code-index:end
     <a
       v-else-if="isDataUrlField && readOnly && urlFieldHref"
       :href="urlFieldHref"
-      class="ppv2-fd-input ppv2-fd-url-link theme-border theme-rounded-sm theme-text-link"
+      class="ppv2-fd-input ppv2-fd-url-link"
       target="_blank"
       rel="noopener noreferrer"
     >{{ urlFieldDisplayText }}</a>
     <div
       v-else-if="isDataUrlField && readOnly"
-      class="ppv2-fd-input ppv2-fd-readonly-plain theme-border theme-rounded-sm"
+      class="ppv2-fd-input ppv2-fd-readonly-plain"
       tabindex="-1"
       @keydown.prevent
     >{{ urlFieldDisplayText }}</div>
     <div v-else-if="isDataUrlField && !readOnly" class="ppv2-fd-url-row">
       <input
         type="text"
-        class="ppv2-fd-input ppv2-fd-url-input theme-border theme-rounded-sm"
+        class="ppv2-fd-input ppv2-fd-url-input"
         :value="inputDisplayValue"
         :required="mandatory"
         :placeholder="field.placeholder || ''"
@@ -189,7 +182,7 @@ code-index:end
       <a
         v-if="urlFieldHref"
         :href="urlFieldHref"
-        class="ppv2-fd-url-open theme-text-link theme-border theme-rounded-sm"
+        class="ppv2-fd-url-open"
         target="_blank"
         rel="noopener noreferrer"
         :title="__('Open link')"
@@ -202,7 +195,7 @@ code-index:end
     <!-- All other fields: text/number/date/time/etc -->
     <div
       v-else-if="readOnly"
-      class="ppv2-fd-input ppv2-fd-readonly-plain theme-border theme-rounded-sm"
+      class="ppv2-fd-input ppv2-fd-readonly-plain"
       tabindex="-1"
       @keydown.prevent
     >{{ inputDisplayValue }}</div>
@@ -216,14 +209,13 @@ code-index:end
       :step="config.props?.step"
       :min="config.props?.min"
       :max="config.props?.max"
-      class="ppv2-fd-input theme-border theme-rounded-sm"
-      :class="{ 'theme-text-muted': readOnly }"
+      class="ppv2-fd-input"
       @input="onChange($event.target.value)"
       @change="onChange($event.target.value)"
     />
 
     <!-- Description -->
-    <p v-if="field.description" class="ppv2-fd-desc theme-text-muted">{{ field.description }}</p>
+    <p v-if="field.description" class="ppv2-fd-desc">{{ field.description }}</p>
   </div>
 </template>
 
@@ -375,27 +367,31 @@ function onLinkChangePayload(payload) {
   display: block;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-bold);
-  color: var(--nce-color-text);
+  color: var(--text-color);
   margin-bottom: 3px;
 }
 .ppv2-fd-reqd {
   font-weight: 700;
+  color: var(--red-600);
 }
 .ppv2-fd-input {
   width: 100%;
   padding: 5px 8px;
   font-size: var(--font-size-base);
   font-family: var(--font-family);
-  background: var(--nce-color-surface);
+  background: var(--fg-color, #fff);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-sm, 4px);
   box-sizing: border-box;
+  color: var(--text-color);
 }
 .ppv2-fd-input:focus {
   outline: none;
-  border-color: var(--nce-color-primary);
-  box-shadow: 0 0 0 1px var(--nce-color-focus);
+  border-color: var(--blue-500);
+  box-shadow: 0 0 0 1px var(--blue-200);
 }
 .ppv2-fd-input:disabled {
-  background: var(--nce-color-surface);
+  background: var(--fg-color, #fff);
   cursor: not-allowed;
 }
 .ppv2-fd-textarea {
@@ -407,7 +403,7 @@ function onLinkChangePayload(payload) {
   min-height: 2.5em;
   cursor: default;
   user-select: text;
-  background: var(--nce-color-surface);
+  background: var(--fg-color, #fff);
 }
 .ppv2-fd-readonly-plain:focus {
   outline: none;
@@ -428,23 +424,26 @@ function onLinkChangePayload(payload) {
 .ppv2-fd-desc {
   font-size: var(--font-size-sm);
   margin: 2px 0 0;
+  color: var(--gray-600);
 }
 .ppv2-fd-heading {
   font-size: var(--font-size-lg, 16px);
   font-weight: var(--font-weight-bold);
-  color: var(--nce-color-heading);
+  color: var(--text-color);
   margin: 8px 0 4px;
 }
 .ppv2-fd-table-placeholder {
   padding: 8px 12px;
-  background: var(--nce-color-surface);
-  border: var(--nce-border-width) dashed var(--nce-color-border);
+  background: var(--fg-color, #fff);
+  border: 1px dashed var(--border-color);
   border-radius: var(--border-radius-sm, 4px);
   font-size: var(--font-size-sm);
   margin-bottom: 10px;
+  color: var(--gray-600);
 }
 .ppv2-fd-muted {
   font-style: italic;
+  color: var(--gray-600);
 }
 .ppv2-fd-html-display {
   white-space: normal;
@@ -462,16 +461,16 @@ function onLinkChangePayload(payload) {
 }
 .ppv2-fd-field-dirty .ppv2-fd-link-frappe :deep(.form-control),
 .ppv2-fd-field-dirty .ppv2-fd-link-frappe :deep(input) {
-  color: var(--nce-color-danger) !important;
+  color: var(--red-600) !important;
   font-weight: var(--font-weight-bold, 600);
 }
 .ppv2-fd-field-dirty .ppv2-fd-datetime-frappe :deep(.form-control),
 .ppv2-fd-field-dirty .ppv2-fd-datetime-frappe :deep(input) {
-  color: var(--nce-color-danger) !important;
+  color: var(--red-600) !important;
   font-weight: var(--font-weight-bold, 600);
 }
 .ppv2-fd-field-dirty .ppv2-fd-check-row input {
-  accent-color: var(--nce-color-danger);
+  accent-color: var(--red-600);
 }
 .ppv2-fd-field-find-criteria .ppv2-fd-input {
 	font-family: ui-monospace, monospace;
@@ -492,7 +491,10 @@ function onLinkChangePayload(payload) {
 	align-items: center;
 	justify-content: center;
 	padding: 0 10px;
-	background: var(--nce-color-surface);
+	background: var(--fg-color, #fff);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-sm, 4px);
+	color: var(--blue-600);
 	text-decoration: none;
 }
 .ppv2-fd-url-open:hover {
@@ -506,10 +508,11 @@ function onLinkChangePayload(payload) {
 	min-height: 2.5em;
 	cursor: pointer;
 	user-select: text;
+	color: var(--blue-600);
 }
 .ppv2-fd-field-dirty .ppv2-fd-url-link,
 .ppv2-fd-field-dirty .ppv2-fd-url-input {
-	color: var(--nce-color-danger) !important;
+	color: var(--red-600) !important;
 	font-weight: var(--font-weight-bold, 600);
 }
 </style>

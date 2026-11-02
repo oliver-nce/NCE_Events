@@ -1,32 +1,32 @@
-/** Per-panel surface bg defaults — match runtime fallbacks when Page Panel fields are empty.
+/** Fixed panel chrome class names (Frappe UI bridge colours via scoped CSS in consumers).
  *
  * code-index:begin
  * {
- *  "purpose": "Resolves per-panel chrome bg, border, shadow CSS classes from Page Panel colour config defaults.",
- *  "read_when": "When changing panel float surface colours, border width vars, or PANEL_CHROME_DEFAULTS.",
+ *  "purpose": "Fixed panel chrome bg/border class names and CSS var helpers for panel floats and tables.",
+ *  "read_when": "When changing default panel float surface colours or table divider CSS variables.",
  *  "gotchas": [],
- *  "keywords": ["panelChromeClasses", "PANEL_CHROME_DEFAULTS", "panelChromeBg", "panelChromeBorder", "PANEL_BORDER_DEFAULTS", "Colours tab"],
+ *  "keywords": ["panelChromeClasses", "PANEL_CHROME_DEFAULTS", "panelChromeBg", "panelChromeBorder", "PANEL_BORDER_DEFAULTS"],
  *  "format": 1
  * }
  * code-index:end
  */
 export const PANEL_CHROME_DEFAULTS = {
-	frame_bg_class: "theme-bg-surface",
-	header_bg_class: "theme-bg-primary-600",
-	header_toolbar_bg_class: "theme-bg-primary-600",
-	footer_bg_class: "theme-bg-primary",
-	col_header_bg_class: "",
-	filter_bar_bg_class: "theme-bg-primary-100",
-	row_bg_class: "theme-bg-row",
-	row_alt_bg_class: "theme-bg-row-alt",
-	dialog_header_bg_class: "theme-bg-primary",
+	frame_bg_class: "ppv2-chrome-surface",
+	header_bg_class: "ppv2-chrome-header",
+	header_toolbar_bg_class: "ppv2-chrome-header-toolbar",
+	footer_bg_class: "ppv2-chrome-footer",
+	col_header_bg_class: "ppv2-chrome-col-header",
+	filter_bar_bg_class: "ppv2-chrome-filter-bar",
+	row_bg_class: "ppv2-chrome-row",
+	row_alt_bg_class: "ppv2-chrome-row-alt",
+	dialog_header_bg_class: "ppv2-chrome-dialog-header",
 };
 
-/** Per-panel line/border width + color defaults (Colours tab → Lines & borders). */
+/** Legacy border slot keys — frame uses ppv2-chrome-border; dividers use CSS vars below. */
 export const PANEL_BORDER_DEFAULTS = {
-	frame_border_class: "theme-border",
+	frame_border_class: "ppv2-chrome-border",
 	frame_border_color_class: "",
-	filter_divider_class: "theme-border-thin",
+	filter_divider_class: "",
 	filter_divider_color_class: "",
 	col_header_line_class: "",
 	col_header_line_color_class: "",
@@ -36,148 +36,96 @@ export const PANEL_BORDER_DEFAULTS = {
 	col_divider_color_class: "",
 };
 
-const BORDER_WIDTH_CSS_VARS = {
-	"theme-border-thin": "--nce-border-width-thin",
-	"theme-border": "--nce-border-width",
-	"theme-border-strong": "--nce-border-width-strong",
+const BORDER_WIDTH_PX = {
+	filter_divider_class: "1px",
+	col_header_line_class: "1px",
+	row_divider_class: "1px",
+	col_divider_class: "1px",
+	frame_border_class: "1px",
 };
 
-const PALETTE_ROLES = new Set([
-	"primary",
-	"secondary",
-	"accent",
-	"success",
-	"info",
-	"warning",
-	"danger",
-]);
-
-/** Resolved shipping bg class for one chrome slot (configured value or default). */
-export function panelChromeBg(config, field) {
+/** Resolved bg class for one chrome slot (config ignored; fixed defaults). */
+export function panelChromeBg(_config, field) {
 	const key = String(field || "");
-	const v = (config?.[key] || "").trim();
-	return v || PANEL_CHROME_DEFAULTS[key] || "";
+	return PANEL_CHROME_DEFAULTS[key] || "";
 }
 
-/** Resolved border width or color class for one chrome slot (configured value or default). */
-export function panelChromeBorder(config, field) {
+/** Resolved border class for one chrome slot (config ignored). */
+export function panelChromeBorder(_config, field) {
 	const key = String(field || "");
-	const v = (config?.[key] || "").trim();
-	if (v) return v;
 	if (Object.prototype.hasOwnProperty.call(PANEL_BORDER_DEFAULTS, key)) {
 		return PANEL_BORDER_DEFAULTS[key] || "";
 	}
 	return "";
 }
 
-/** CSS color when a border colour class slot is empty. */
-const BORDER_COLOR_FIELD_DEFAULTS = {
-	frame_border_color_class: "var(--nce-color-border)",
-	filter_divider_color_class: "var(--nce-color-border)",
-	col_header_line_color_class: "var(--nce-color-table-row-divider)",
-	row_divider_color_class: "var(--nce-color-table-row-divider)",
-	col_divider_color_class: "var(--nce-color-table-col-divider)",
-};
-
-/** CSS var name for a theme-border* width class (directional lines in scoped CSS). */
-export function panelChromeBorderWidthVar(config, field) {
-	const cls = panelChromeBorder(config, field);
-	if (BORDER_WIDTH_CSS_VARS[cls]) return BORDER_WIDTH_CSS_VARS[cls];
-	if (field === "row_divider_class") return "--nce-border-width-table-row";
-	if (field === "col_divider_class") return "--nce-border-width-table-col";
-	if (field === "col_header_line_class") return "--nce-border-width-table-row";
-	return BORDER_WIDTH_CSS_VARS["theme-border"];
+/** @deprecated Config ignored — returns 1px (2px for strong). */
+export function panelChromeBorderWidthVar(_config, field) {
+	const key = String(field || "");
+	return BORDER_WIDTH_PX[key] || "1px";
 }
 
-/** CSS color value for a theme-{bg|text|border}-{role}-{shade} class, or theme token when empty. */
-export function panelChromeBorderColorCss(config, colorField) {
-	const raw = (config?.[colorField] || "").trim();
-	if (!raw) {
-		return BORDER_COLOR_FIELD_DEFAULTS[colorField] || "var(--nce-color-border)";
-	}
-	const m = raw.match(/^theme-(?:bg|text|border)-([a-z]+)-(\d+)$/);
-	if (!m || !PALETTE_ROLES.has(m[1])) return "var(--nce-color-border)";
-	return `var(--nce-color-${m[1]}-${m[2]})`;
+/** @deprecated Config ignored — returns var(--border-color). */
+export function panelChromeBorderColorCss(_config, _colorField) {
+	return "var(--border-color)";
 }
 
-/** Full-box frame border classes (width + optional color) for PanelFloat. */
-export function panelChromeFrameBorderClasses(config) {
-	const width = panelChromeBorder(config, "frame_border_class");
-	const color = panelChromeBorder(config, "frame_border_color_class");
-	return [width, color].filter(Boolean);
+/** Full-box frame border classes for PanelFloat. */
+export function panelChromeFrameBorderClasses(_config) {
+	const width = panelChromeBorder(null, "frame_border_class");
+	return width ? [width] : [];
 }
 
 /** CSS custom properties for PanelTable directional dividers. */
-export function panelChromeTableBorderStyleVars(config) {
+export function panelChromeTableBorderStyleVars(_config) {
 	return {
-		"--ppv2-col-header-line-w": `var(${panelChromeBorderWidthVar(config, "col_header_line_class")})`,
-		"--ppv2-col-header-line-c": panelChromeBorderColorCss(
-			config,
-			"col_header_line_color_class"
-		),
-		"--ppv2-row-divider-w": `var(${panelChromeBorderWidthVar(config, "row_divider_class")})`,
-		"--ppv2-row-divider-c": panelChromeBorderColorCss(config, "row_divider_color_class"),
-		"--ppv2-col-divider-w": `var(${panelChromeBorderWidthVar(config, "col_divider_class")})`,
-		"--ppv2-col-divider-c": panelChromeBorderColorCss(config, "col_divider_color_class"),
+		"--ppv2-col-header-line-w": "1px",
+		"--ppv2-col-header-line-c": "var(--border-color)",
+		"--ppv2-row-divider-w": "1px",
+		"--ppv2-row-divider-c": "var(--border-color)",
+		"--ppv2-col-divider-w": "1px",
+		"--ppv2-col-divider-c": "var(--border-color)",
 	};
 }
 
 /** CSS custom properties for filter bar bottom divider. */
-export function panelChromeFilterDividerStyleVars(config) {
+export function panelChromeFilterDividerStyleVars(_config) {
 	return {
-		"--ppv2-filter-divider-w": `var(${panelChromeBorderWidthVar(config, "filter_divider_class")})`,
-		"--ppv2-filter-divider-c": panelChromeBorderColorCss(
-			config,
-			"filter_divider_color_class"
-		),
+		"--ppv2-filter-divider-w": "1px",
+		"--ppv2-filter-divider-c": "var(--border-color)",
 	};
 }
 
-/** Saved foreground pairing mode for a bg slot: mono (default) or tonal. */
-export function panelChromeFgType(config, bgField) {
-	const fgField = String(bgField || "").replace(/_bg_class$/, "_fg_type");
-	const v = (config?.[fgField] || "").trim().toLowerCase();
-	return v === "tonal" ? "tonal" : "mono";
+/** @deprecated Always mono; config ignored. */
+export function panelChromeFgType(_config, _bgField) {
+	return "mono";
 }
 
-function _fgClassFromBg(bgClass, variant) {
-	const s = String(bgClass || "").trim();
-	const m = s.match(/^theme-bg-([a-z]+)(?:-(\d+))?$/);
-	if (!m || !PALETTE_ROLES.has(m[1])) return "";
-	const role = m[1];
-	const suffix = variant === "tonal" ? "-fg-tonal" : "-fg";
-	return `theme-text-${role}${suffix}`;
-}
-
-/** Mono paired fg class from a theme-bg-* class (for children that do not inherit). */
+/** @deprecated Config ignored — buttons on primary chrome use ppv2-chrome-fg-on-primary. */
 export function themeBgToFgMonoClass(bgClass) {
-	return _fgClassFromBg(bgClass, "mono");
+	if (String(bgClass || "").includes("chrome-header") || String(bgClass || "").includes("chrome-footer") || String(bgClass || "").includes("chrome-dialog")) {
+		return "ppv2-chrome-fg-on-primary";
+	}
+	return "";
 }
 
-/** Derive explicit theme-text-* fg class from a theme-bg-* class. Empty for mono (bg auto-pairs). */
-export function themeBgToFgTextClass(bgClass, fgType = "mono") {
-	if ((fgType || "mono").toLowerCase() !== "tonal") return "";
-	return _fgClassFromBg(bgClass, "tonal");
+/** @deprecated Tonal fg removed; always empty. */
+export function themeBgToFgTextClass(_bgClass, _fgType = "mono") {
+	return "";
 }
 
-/**
- * Explicit fg for chrome children (e.g. Desk <button>) that ignore parent theme-bg color.
- * Mono → theme-text-{role}-fg; tonal → theme-text-{role}-fg-tonal.
- */
-export function panelChromeExplicitFgClass(config, bgField) {
-	const bg = panelChromeBg(config, bgField);
-	const fgType = panelChromeFgType(config, bgField);
-	return themeBgToFgTextClass(bg, fgType) || themeBgToFgMonoClass(bg);
+/** Explicit fg for chrome children (e.g. Desk buttons) on primary backgrounds. */
+export function panelChromeExplicitFgClass(_config, bgField) {
+	const bg = panelChromeBg(null, bgField);
+	return themeBgToFgMonoClass(bg);
 }
 
-/** Runtime text class for one chrome slot from saved bg + fg type. */
-export function panelChromeFgTextClass(config, bgField) {
-	const bg = panelChromeBg(config, bgField);
-	const fgType = panelChromeFgType(config, bgField);
-	return themeBgToFgTextClass(bg, fgType);
+/** Runtime text class for one chrome slot — empty (colour set on bg class). */
+export function panelChromeFgTextClass(_config, _bgField) {
+	return "";
 }
 
-/** @deprecated Use panelChromeFgTextClass — kept for callers not yet migrated. */
-export function themeBgToFgTonal(bgClass) {
-	return themeBgToFgTextClass(bgClass, "tonal");
+/** @deprecated Use panelChromeFgTextClass. */
+export function themeBgToFgTonal(_bgClass) {
+	return "";
 }

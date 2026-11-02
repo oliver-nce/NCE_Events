@@ -1,12 +1,10 @@
-"""Page Panel config dict construction and chrome/theme helpers.
+"""Page Panel config dict construction for the panel SPA.
 
 code-index:begin
 {
- "purpose": "Build Page Panel config dict with column order, chrome classes, theme helpers, and derived sort.",
- "read_when": "When constructing panel chrome/theme CSS classes or config payload for Vue panel load.",
- "gotchas": [
-  "Panel chrome class and fg_type derive from theme link; missing theme falls back to defaults."
- ],
+ "purpose": "Build Page Panel config dict with column order, display flags, and derived sort.",
+ "read_when": "When building the config payload for Vue panel load.",
+ "gotchas": [],
  "keywords": ["panel config", "chrome", "theme", "column order", "Page Panel"],
  "format": 1
 }
@@ -28,7 +26,6 @@ from nce_events.api.panel_api_pkg._helpers import (
 	_title_case,
 )
 from nce_events.api.panel_api_pkg.computed_columns import _get_computed_columns
-from nce_events.api.panel_api_pkg.theme_slug import resolve_theme_slug as _resolve_theme_slug
 
 MALE_HEX: str = "#0000FF"
 FEMALE_HEX: str = "#c700e6"
@@ -63,18 +60,6 @@ def _derived_order_clause(config: dict, display_fields: list[str]) -> str:
 	if col.lower() not in known:
 		return ""
 	return f" ORDER BY `{col}` {direction}"
-
-
-def _panel_chrome_class(doc: Any, field: str) -> str:
-	"""Trimmed per-panel theme bg class from Page Panel, or empty for runtime default."""
-	return (getattr(doc, field, None) or "").strip()
-
-
-def _panel_chrome_fg_type(doc: Any, bg_field: str) -> str:
-	"""Foreground pairing mode for a chrome bg slot: mono (default) or tonal."""
-	fg_field = bg_field.replace("_bg_class", "_fg_type")
-	raw = (getattr(doc, fg_field, None) or "").strip().lower()
-	return "tonal" if raw == "tonal" else "mono"
 
 
 def _panel_config_from_doc(doc: Any) -> dict[str, Any]:
@@ -219,35 +204,6 @@ def _panel_config_from_doc(doc: Any) -> dict[str, Any]:
 		"open_card_on_click": cint(doc.get("open_card_on_click")),
 		"allow_new_record_creation": cint(doc.get("allow_new_record_creation")),
 		"form_dialog": (doc.form_dialog or "").strip() or None,
-		"theme_slug": _resolve_theme_slug(getattr(doc, "theme", None)),
-		"frame_bg_class": _panel_chrome_class(doc, "frame_bg_class"),
-		"frame_fg_type": _panel_chrome_fg_type(doc, "frame_bg_class"),
-		"header_bg_class": _panel_chrome_class(doc, "header_bg_class"),
-		"header_fg_type": _panel_chrome_fg_type(doc, "header_bg_class"),
-		"header_toolbar_bg_class": _panel_chrome_class(doc, "header_toolbar_bg_class"),
-		"header_toolbar_fg_type": _panel_chrome_fg_type(doc, "header_toolbar_bg_class"),
-		"footer_bg_class": _panel_chrome_class(doc, "footer_bg_class"),
-		"footer_fg_type": _panel_chrome_fg_type(doc, "footer_bg_class"),
-		"col_header_bg_class": _panel_chrome_class(doc, "col_header_bg_class"),
-		"col_header_fg_type": _panel_chrome_fg_type(doc, "col_header_bg_class"),
-		"filter_bar_bg_class": _panel_chrome_class(doc, "filter_bar_bg_class"),
-		"filter_bar_fg_type": _panel_chrome_fg_type(doc, "filter_bar_bg_class"),
-		"row_bg_class": _panel_chrome_class(doc, "row_bg_class"),
-		"row_fg_type": _panel_chrome_fg_type(doc, "row_bg_class"),
-		"row_alt_bg_class": _panel_chrome_class(doc, "row_alt_bg_class"),
-		"row_alt_fg_type": _panel_chrome_fg_type(doc, "row_alt_bg_class"),
-		"dialog_header_bg_class": _panel_chrome_class(doc, "dialog_header_bg_class"),
-		"dialog_header_fg_type": _panel_chrome_fg_type(doc, "dialog_header_bg_class"),
-		"frame_border_class": _panel_chrome_class(doc, "frame_border_class"),
-		"frame_border_color_class": _panel_chrome_class(doc, "frame_border_color_class"),
-		"filter_divider_class": _panel_chrome_class(doc, "filter_divider_class"),
-		"filter_divider_color_class": _panel_chrome_class(doc, "filter_divider_color_class"),
-		"col_header_line_class": _panel_chrome_class(doc, "col_header_line_class"),
-		"col_header_line_color_class": _panel_chrome_class(doc, "col_header_line_color_class"),
-		"row_divider_class": _panel_chrome_class(doc, "row_divider_class"),
-		"row_divider_color_class": _panel_chrome_class(doc, "row_divider_color_class"),
-		"col_divider_class": _panel_chrome_class(doc, "col_divider_class"),
-		"col_divider_color_class": _panel_chrome_class(doc, "col_divider_color_class"),
 		"male_hex": MALE_HEX,
 		"female_hex": FEMALE_HEX,
 	}

@@ -23,7 +23,7 @@ code-index:end
 			<label class="pp-fmt-label">Condition (SQL):</label>
 			<textarea
 				v-model="localRule.condition_sql"
-				class="pp-fmt-textarea theme-border theme-rounded-sm"
+				class="pp-fmt-textarea"
 				rows="4"
 				placeholder="status = 'Cancelled' AND price > 0"
 				@input="onRuleChange"
@@ -69,7 +69,7 @@ code-index:end
 				<select
 					v-if="useWeight"
 					v-model="localRule.font_weight"
-					class="pp-fmt-select theme-border theme-rounded-sm"
+					class="pp-fmt-select"
 					@change="onRuleChange"
 				>
 					<option value="200">200</option>
@@ -245,8 +245,8 @@ async function validate() {
 
 <style scoped>
 .pp-fmt-editor {
-	font-size: var(--nce-font-size, 13px);
-	color: var(--nce-color-text, #36414c);
+	font-size: var(--font-size-sm, 13px);
+	color: var(--text-color, #36414c);
 }
 
 .pp-fmt-header {
@@ -259,7 +259,7 @@ async function validate() {
 .pp-fmt-section {
 	margin-bottom: 14px;
 	padding-top: 8px;
-	border-top: var(--nce-border-width) solid var(--nce-color-border, #d1d8dd);
+	border-top: 1px solid var(--border-color, #d1d8dd);
 }
 
 .pp-fmt-label {
@@ -272,15 +272,17 @@ async function validate() {
 	width: 100%;
 	box-sizing: border-box;
 	font-family: monospace;
-	font-size: calc(var(--nce-font-size, 13px) * 0.92);
+	font-size: calc(var(--font-size-sm, 13px) * 0.92);
 	padding: 8px;
 	resize: vertical;
+	border: 1px solid var(--border-color, #d1d8dd);
+	border-radius: var(--border-radius-sm, 4px);
 }
 
 .pp-fmt-hint {
 	margin: 4px 0 8px;
-	font-size: calc(var(--nce-font-size, 13px) * 0.85);
-	color: var(--nce-color-muted, #8d949a);
+	font-size: calc(var(--font-size-sm, 13px) * 0.85);
+	color: var(--gray-600);
 }
 
 .pp-fmt-validate-row {
@@ -290,13 +292,13 @@ async function validate() {
 }
 
 .pp-fmt-ok {
-	color: var(--nce-color-success, #28a745);
-	font-size: calc(var(--nce-font-size, 13px) * 0.92);
+	color: var(--green-500);
+	font-size: calc(var(--font-size-sm, 13px) * 0.92);
 }
 
 .pp-fmt-err {
-	color: var(--nce-color-danger, #e74c3c);
-	font-size: calc(var(--nce-font-size, 13px) * 0.92);
+	color: var(--red-500);
+	font-size: calc(var(--font-size-sm, 13px) * 0.92);
 }
 
 .pp-fmt-style-row {
@@ -316,6 +318,8 @@ async function validate() {
 .pp-fmt-select {
 	min-width: 90px;
 	padding: 4px 6px;
+	border: 1px solid var(--border-color, #d1d8dd);
+	border-radius: var(--border-radius-sm, 4px);
 }
 
 .pp-fmt-footer {
@@ -323,6 +327,6 @@ async function validate() {
 	justify-content: flex-end;
 	gap: 8px;
 	padding-top: 8px;
-	border-top: var(--nce-border-width) solid var(--nce-color-border, #d1d8dd);
+	border-top: 1px solid var(--border-color, #d1d8dd);
 }
 </style>

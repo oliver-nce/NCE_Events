@@ -7,29 +7,17 @@ code-index:begin
  "gotchas": [
   "Runs once via patches.txt; re-picking a header colour on the Colours tab afterwards is kept."
  ],
- "keywords": ["execute", "Page Panel", "header_bg_class", "header_toolbar_bg_class", "theme", "patch"],
+ "keywords": ["execute", "Page Panel", "patch", "no-op"],
  "format": 1
 }
 code-index:end
+
+Fields removed; patch already applied historically. execute() is intentionally a no-op.
 """
 
 from __future__ import annotations
 
-import frappe
-
-HEADER_FIELDS = (
-	"header_bg_class",
-	"header_fg_type",
-	"header_toolbar_bg_class",
-	"header_toolbar_fg_type",
-)
-
 
 def execute() -> None:
-	"""Set the header colour fields to empty on every Page Panel."""
-	columns = [f for f in HEADER_FIELDS if frappe.db.has_column("Page Panel", f)]
-	if not columns:
-		return
-	assignments = ", ".join(f"`{c}` = ''" for c in columns)
-	frappe.db.sql(f"UPDATE `tabPage Panel` SET {assignments}")
-	frappe.db.commit()
+	"""No-op: chrome override fields were removed from Page Panel."""
+	return None

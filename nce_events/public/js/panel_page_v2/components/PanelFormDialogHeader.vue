@@ -1,19 +1,19 @@
 <!--
-Form dialog header with title, navigation, and chrome styling for panel dialogs.
+Form dialog header with title, navigation, and fixed primary chrome styling.
 
 code-index:begin
 {
- "purpose": "Form dialog header with title, navigation, and chrome styling for panel dialogs.",
- "read_when": "Changing form dialog header layout or panel chrome classes on dialogs.",
+ "purpose": "Form dialog header with title, navigation, and fixed primary chrome styling.",
+ "read_when": "Changing form dialog header layout or header colors on dialogs.",
  "gotchas": [],
- "keywords": ["PanelFormDialogHeader", "form dialog", "header", "panelChromeClasses", "Vue"],
+ "keywords": ["PanelFormDialogHeader", "form dialog", "header", "Vue"],
  "format": 1
 }
 code-index:end
 -->
 
 <template>
-	<div class="ppv2-fd-header" :class="[resolvedHeaderBgClass, headerFgTextClass]">
+	<div class="ppv2-fd-header">
 		<div class="ppv2-fd-header-main">
 			<div v-if="rowNavEnabled" class="ppv2-fd-nav" @mousedown.stop>
 				<button
@@ -59,12 +59,7 @@ code-index:end
 </template>
 
 <script setup>
-import { computed } from "vue";
-import { panelChromeBg } from "../utils/panelChromeClasses.js";
-
-const props = defineProps({
-	headerBgClass: { type: String, default: "" },
-	headerFgTextClass: { type: String, default: "" },
+defineProps({
 	rowNavEnabled: { type: Boolean, default: false },
 	canNavigatePrev: { type: Boolean, default: false },
 	canNavigateNext: { type: Boolean, default: false },
@@ -75,11 +70,6 @@ const props = defineProps({
 	showFitWidth: { type: Boolean, default: false },
 	/** Disable prev/next while typing find criteria (footer owns Perform/Cancel). */
 	freezeNav: { type: Boolean, default: false },
-});
-
-const resolvedHeaderBgClass = computed(() => {
-	const v = (props.headerBgClass || "").trim();
-	return v || panelChromeBg(null, "dialog_header_bg_class");
 });
 
 defineEmits(["close", "nav-prev", "nav-next", "fit-width"]);
@@ -93,6 +83,8 @@ defineEmits(["close", "nav-prev", "nav-next", "fit-width"]);
 	justify-content: space-between;
 	gap: 12px;
 	flex-shrink: 0;
+	background: var(--blue-600);
+	color: #fff;
 }
 .ppv2-fd-header-main {
 	display: flex;
@@ -116,7 +108,7 @@ defineEmits(["close", "nav-prev", "nav-next", "fit-width"]);
 	height: 28px;
 	padding: 0;
 	color: inherit;
-	border: var(--nce-border-width) solid color-mix(in srgb, currentColor 28%, transparent);
+	border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
 	border-radius: var(--border-radius-sm, 4px);
 	background: color-mix(in srgb, currentColor 10%, transparent);
 	cursor: pointer;
@@ -157,7 +149,7 @@ defineEmits(["close", "nav-prev", "nav-next", "fit-width"]);
 	height: 26px;
 	padding: 0 8px;
 	color: inherit;
-	border: var(--nce-border-width) solid color-mix(in srgb, currentColor 28%, transparent);
+	border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
 	border-radius: var(--border-radius-sm, 4px);
 	background: color-mix(in srgb, currentColor 10%, transparent);
 	cursor: pointer;

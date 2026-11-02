@@ -163,22 +163,22 @@ function label(msg) {
 .ppv2-find-tab-btn {
 	font-size: var(--font-size-sm);
 	padding: 4px 10px;
-	border: var(--nce-border-width) solid color-mix(in srgb, var(--nce-color-primary-fg, #ffffff) 35%, transparent);
+	border: 1px solid color-mix(in srgb, #ffffff 35%, transparent);
 	border-radius: var(--border-radius-sm);
-	background: color-mix(in srgb, var(--nce-color-primary-fg, #ffffff) 12%, transparent);
+	background: color-mix(in srgb, #ffffff 12%, transparent);
 	cursor: pointer;
 	font-family: inherit;
 	white-space: nowrap;
 }
 
 .ppv2-find-tab-btn:hover {
-	background: color-mix(in srgb, var(--nce-color-primary-fg, #ffffff) 22%, transparent);
+	background: color-mix(in srgb, #ffffff 22%, transparent);
 }
 
 .ppv2-find-tab-btn--active {
-	background: var(--nce-color-surface, #ffffff);
-	color: var(--nce-color-primary, #126bc4);
-	border-color: var(--nce-color-surface, #ffffff);
+	background: var(--fg-color, #ffffff);
+	color: var(--blue-500);
+	border-color: var(--fg-color, #ffffff);
 	font-weight: var(--font-weight-bold);
 }
 </style>

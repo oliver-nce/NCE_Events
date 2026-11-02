@@ -228,7 +228,6 @@ The frozen-schema tabs (Config, Query, Dialogs desk fields) and the Tools tab ar
 5. **`syncingFromLoad` ref** — True while `load()` is pushing values into `formData`. Mutes Frappe control `change()` echo during load.
 6. **WP Tables gating** — `_assert_doctype_in_wp_tables(doctype)` runs before every capture. Only WP-Tables-registered DocTypes can have Form Dialogs.
 7. **Dialog size** — Stored on the Form Dialog record (`dialog_size` field). Defaults to `xl`.
-8. **Per-panel theme** — `Page Panel.theme` (Link → NCE Theme doc name, not slug). `_panel_config_from_doc` in `panel_data.py` resolves it via `_resolve_theme_slug()` to `theme_slug` (only Active themes with a slug; empty/Inactive/deleted/missing-DocType → `None`). `App.vue` passes `config.theme_slug` to `PanelFloat`, which sets `data-nce-theme` on the float. **ThemeSwatchPicker (Desk):** pass `themeField: "theme"` — the Themes app Desk adapter performs the same Link → slug lookup via `frappe.db.get_value` before scoping the picker modal. Empty = site base (`:root`). Only `PanelFloat` is scoped — Actions sidebar, page switcher, TagFinder, and Form Dialog stay on base.
 
 ---
 

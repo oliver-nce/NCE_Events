@@ -19,7 +19,7 @@ code-index:end
 			<div class="ppv2-fd-find-footer-only">
 				<button
 					type="button"
-					class="ppv2-fd-tab-btn ppv2-fd-tab-active theme-bg-primary theme-border-primary"
+					class="ppv2-fd-tab-btn ppv2-fd-tab-active"
 					@click="$emit('find-perform')"
 				>
 					{{ __("Perform Find") }}
@@ -28,14 +28,14 @@ code-index:end
 				<button
 					v-if="findMatchActive"
 					type="button"
-					class="ppv2-fd-tab-btn theme-bg-primary-100 theme-border"
+					class="ppv2-fd-tab-btn"
 					@click="$emit('find-perform-constrain')"
 				>
 					{{ __("Constrain Found Set") }}
 				</button>
 				<button
 					type="button"
-					class="ppv2-fd-tab-btn theme-bg-primary-100 theme-border"
+					class="ppv2-fd-tab-btn"
 					@click="$emit('find-cancel')"
 				>
 					{{ __("Cancel Find") }}
@@ -47,21 +47,21 @@ code-index:end
 			<div v-if="findChromePhase === 'post-find'" class="ppv2-fd-find-followup">
 				<button
 					type="button"
-					class="ppv2-fd-tab-btn theme-bg-primary-100 theme-border"
+					class="ppv2-fd-tab-btn"
 					@click="$emit('find-modify')"
 				>
 					{{ __("Modify Find") }}
 				</button>
 				<button
 					type="button"
-					class="ppv2-fd-tab-btn theme-bg-primary-100 theme-border"
+					class="ppv2-fd-tab-btn"
 					@click="$emit('find-constrain')"
 				>
 					{{ __("Constrain Found Set") }}
 				</button>
 				<button
 					type="button"
-					class="ppv2-fd-tab-btn theme-bg-primary-100 theme-border"
+					class="ppv2-fd-tab-btn"
 					@click="$emit('find-show-all')"
 				>
 					{{ __("Show All") }}
@@ -72,7 +72,7 @@ code-index:end
 				<button
 					v-if="showMapButton"
 					type="button"
-					class="ppv2-fd-tab-btn theme-bg-primary-100 theme-border"
+					class="ppv2-fd-tab-btn"
 					:disabled="browseActionsLocked || submitBusy || customActionBusy"
 					@click="$emit('map')"
 				>
@@ -82,8 +82,8 @@ code-index:end
 					v-for="(btn, bi) in visibleButtons"
 					:key="'fd-btn-' + bi + '-' + (btn.label || bi) + '-' + (btn.name || '')"
 					type="button"
-					class="ppv2-fd-tab-btn theme-bg-primary-100 theme-border"
-					:class="{ 'theme-text-danger': isDangerButton(btn) }"
+					class="ppv2-fd-tab-btn"
+					:class="{ 'ppv2-fd-text-danger': isDangerButton(btn) }"
 					:disabled="browseActionsLocked || submitBusy || customActionBusy"
 					@click="$emit('custom-button', btn)"
 				>
@@ -94,7 +94,7 @@ code-index:end
 			<div class="ppv2-fd-action-buttons">
 				<button
 					type="button"
-					class="ppv2-fd-tab-btn theme-bg-primary-100 theme-border"
+					class="ppv2-fd-tab-btn"
 					:disabled="browseActionsLocked || submitBusy"
 					@click="$emit('cancel')"
 				>
@@ -102,7 +102,7 @@ code-index:end
 				</button>
 				<button
 					type="button"
-					class="ppv2-fd-tab-btn theme-bg-primary-100 theme-border"
+					class="ppv2-fd-tab-btn"
 					:disabled="submitBusy || browseActionsLocked || !isDirty"
 					@click="$emit('revert')"
 				>
@@ -111,7 +111,7 @@ code-index:end
 				<button
 					v-if="submitVisible"
 					type="button"
-					class="ppv2-fd-tab-btn theme-bg-primary-100 theme-border"
+					class="ppv2-fd-tab-btn"
 					:disabled="submitBusy || browseActionsLocked || !isDirty"
 					@click="$emit('submit-close', { shift: $event.shiftKey })"
 				>
@@ -120,7 +120,7 @@ code-index:end
 				<button
 					v-if="submitVisible"
 					type="button"
-					class="ppv2-fd-tab-btn ppv2-fd-tab-active theme-bg-primary theme-border-primary"
+					class="ppv2-fd-tab-btn ppv2-fd-tab-active"
 					:disabled="submitBusy || browseActionsLocked"
 					@click="$emit('submit-refresh', { shift: $event.shiftKey })"
 				>
@@ -309,7 +309,7 @@ watch(
 .ppv2-fd-footer {
 	flex-shrink: 0;
 	padding: 10px 16px;
-	border-top: var(--nce-border-width) solid var(--nce-color-border);
+	border-top: 1px solid var(--border-color);
 	display: flex;
 	flex-wrap: nowrap;
 	align-items: center;
@@ -330,7 +330,7 @@ watch(
 	flex-wrap: wrap;
 	gap: 6px;
 	padding-bottom: 4px;
-	border-bottom: var(--nce-border-width) dashed var(--nce-color-border);
+	border-bottom: 1px dashed var(--border-color);
 	margin-bottom: 2px;
 }
 .ppv2-fd-custom-buttons {
@@ -350,6 +350,17 @@ watch(
 	font-size: var(--font-size-base, 14px);
 	font-weight: var(--font-weight-bold, 600);
 	cursor: pointer;
+	background: var(--blue-100);
+	border: 1px solid var(--border-color);
+	color: var(--text-color);
+}
+.ppv2-fd-tab-btn.ppv2-fd-tab-active {
+	background: var(--blue-500);
+	border-color: var(--blue-500);
+	color: #fff;
+}
+.ppv2-fd-tab-btn.ppv2-fd-text-danger {
+	color: var(--red-600);
 }
 .ppv2-fd-action-buttons .ppv2-fd-tab-btn:disabled {
 	opacity: 0.6;

@@ -14,8 +14,8 @@ code-index:end
 
 <template>
 	<div class="ppv2-fd-body">
-		<div v-if="loading" class="ppv2-fd-loading theme-text-muted">Loading…</div>
-		<div v-else-if="error" class="ppv2-fd-error theme-text-danger">{{ error }}</div>
+		<div v-if="loading" class="ppv2-fd-loading">Loading…</div>
+		<div v-else-if="error" class="ppv2-fd-error">{{ error }}</div>
 		<template v-else-if="tabs.length">
 			<PanelFormDialogTabBar
 				:tabs="tabs"
@@ -97,9 +97,7 @@ code-index:end
 							>
 								<i
 									class="fa fa-chevron-right ppv2-fd-section-chevron"
-									:class="{
-										'ppv2-fd-section-chevron-open': !isSectionCollapsed(ti, si),
-									}"
+									:class="{ 'ppv2-fd-section-chevron-open': !isSectionCollapsed(ti, si), }"
 									aria-hidden="true"
 								/>
 								<span class="ppv2-fd-section-label">{{ sectionDisplayLabel(section) }}</span>
@@ -114,7 +112,7 @@ code-index:end
 							>
 								<p
 									v-if="section.description"
-									class="ppv2-fd-section-desc theme-text-muted"
+									class="ppv2-fd-section-desc"
 								>
 									{{ section.description }}
 								</p>
@@ -159,7 +157,7 @@ code-index:end
 						</div>
 						<div
 							v-if="tab.tabGuidance && String(tab.tabGuidance).trim()"
-							class="ppv2-fd-tab-guidance theme-border theme-rounded-sm"
+							class="ppv2-fd-tab-guidance"
 						>
 							<strong class="ppv2-fd-tab-guidance-label">Note:</strong>
 							<span class="ppv2-fd-tab-guidance-text">{{ tab.tabGuidance }}</span>
@@ -170,7 +168,7 @@ code-index:end
 
 			<div
 				v-if="validationError"
-				class="ppv2-fd-validation-error theme-text-danger theme-bg-danger-100 theme-border theme-rounded-sm"
+				class="ppv2-fd-validation-error"
 			>
 				{{ validationError }}
 			</div>
@@ -398,11 +396,13 @@ defineExpose({
 	text-align: center;
 	padding: 32px;
 	font-size: var(--font-size-base);
+	color: var(--gray-600);
 }
 .ppv2-fd-error {
 	text-align: center;
 	padding: 32px;
 	font-size: var(--font-size-base);
+	color: var(--red-600);
 }
 /* Only the active tab participates in layout (hidden tabs stay mounted, display:none). */
 .ppv2-fd-tab-panels {
@@ -438,7 +438,7 @@ defineExpose({
 	color: inherit;
 }
 .ppv2-fd-section-toggle:focus-visible {
-	outline: 2px solid var(--nce-color-primary, #2563eb);
+	outline: 2px solid var(--blue-600);
 	outline-offset: 2px;
 }
 .ppv2-fd-section-chevron {
@@ -468,6 +468,7 @@ defineExpose({
 .ppv2-fd-section-desc {
 	font-size: var(--font-size-sm);
 	margin: 0 0 8px;
+	color: var(--gray-600);
 }
 .ppv2-fd-row {
 	display: grid;
@@ -491,7 +492,9 @@ defineExpose({
 	padding: 10px 12px;
 	font-size: var(--font-size-base);
 	font-family: var(--font-family);
-	background: var(--nce-color-surface, #f7fafc);
+	background: var(--fg-color, #fff);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-sm, 4px);
 	line-height: 1.45;
 }
 .ppv2-fd-tab-guidance-label {
@@ -505,5 +508,9 @@ defineExpose({
 	margin-top: 8px;
 	padding: 8px 12px;
 	font-size: var(--font-size-sm);
+	color: var(--red-600);
+	background: var(--red-100);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-sm, 4px);
 }
 </style>

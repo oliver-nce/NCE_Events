@@ -17,11 +17,11 @@ code-index:end
 		@mousedown="onRowActivate"
 	>
 		<td v-for="(col, ci) in columns" :key="col.fieldname">
-			<span v-if="ci === 0 && showOrLabel" class="ppv2-find-or-label theme-text-muted">OR</span>
+			<span v-if="ci === 0 && showOrLabel" class="ppv2-find-or-label">OR</span>
 			<input
 				:value="criteria[col.fieldname] ?? ''"
 				type="text"
-				class="ppv2-find-input theme-border theme-rounded-sm"
+				class="ppv2-find-input"
 				:placeholder="col.label"
 				@input="onInput(col.fieldname, $event)"
 				@focus="onRowActivate"
@@ -53,12 +53,12 @@ function onInput(fieldname, event) {
 
 <style scoped>
 .ppv2-find-row--active {
-	background-color: var(--nce-color-primary-100, #e3f0fc);
+	background-color: var(--blue-100);
 }
 
 .ppv2-find-row td {
 	padding: 2px 4px;
-	border-bottom: var(--nce-border-width) solid var(--nce-color-border);
+	border-bottom: 1px solid var(--border-color);
 }
 
 .ppv2-find-or-label {
@@ -67,6 +67,7 @@ function onInput(fieldname, event) {
 	font-size: var(--font-size-sm);
 	font-weight: var(--font-weight-bold);
 	vertical-align: middle;
+	color: var(--gray-500);
 }
 
 .ppv2-find-input {
@@ -74,7 +75,9 @@ function onInput(fieldname, event) {
 	box-sizing: border-box;
 	padding: 2px 4px;
 	font-size: calc(var(--font-size-base) + 1px);
-	background-color: var(--nce-color-surface, #ffffff);
+	background-color: var(--fg-color, #ffffff);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-sm, 4px);
 }
 
 .ppv2-find-or-label + .ppv2-find-input {

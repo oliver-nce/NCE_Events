@@ -46,7 +46,6 @@ from nce_events.api.panel_api_pkg.panel_config import (
 )
 from nce_events.api.panel_api_pkg.panel_export import export_panel_data_impl
 from nce_events.api.panel_api_pkg.sql import _build_panel_sql
-from nce_events.api.panel_api_pkg.theme_slug import resolve_theme_slug
 
 _SKIP_FIELDTYPES: frozenset[str] = frozenset(
 	{
@@ -74,38 +73,6 @@ _SKIP_FIELDNAMES: frozenset[str] = frozenset(
 		"parentfield",
 		"parenttype",
 	}
-)
-
-_COLOUR_COPY_FIELDS: tuple[str, ...] = (
-	"theme",
-	"frame_bg_class",
-	"frame_fg_type",
-	"header_bg_class",
-	"header_fg_type",
-	"header_toolbar_bg_class",
-	"header_toolbar_fg_type",
-	"footer_bg_class",
-	"footer_fg_type",
-	"col_header_bg_class",
-	"col_header_fg_type",
-	"filter_bar_bg_class",
-	"filter_bar_fg_type",
-	"row_bg_class",
-	"row_fg_type",
-	"row_alt_bg_class",
-	"row_alt_fg_type",
-	"dialog_header_bg_class",
-	"dialog_header_fg_type",
-	"frame_border_class",
-	"frame_border_color_class",
-	"filter_divider_class",
-	"filter_divider_color_class",
-	"col_header_line_class",
-	"col_header_line_color_class",
-	"row_divider_class",
-	"row_divider_color_class",
-	"col_divider_class",
-	"col_divider_color_class",
 )
 
 
@@ -283,25 +250,6 @@ def get_panel_config(root_doctype: str) -> dict[str, Any]:
 			"open_card_on_click": 0,
 			"allow_new_record_creation": 0,
 			"form_dialog": None,
-			"theme_slug": resolve_theme_slug(None),
-			"frame_bg_class": "",
-			"frame_fg_type": "mono",
-			"header_bg_class": "",
-			"header_fg_type": "mono",
-			"header_toolbar_bg_class": "",
-			"header_toolbar_fg_type": "mono",
-			"footer_bg_class": "",
-			"footer_fg_type": "mono",
-			"col_header_bg_class": "",
-			"col_header_fg_type": "mono",
-			"filter_bar_bg_class": "",
-			"filter_bar_fg_type": "mono",
-			"row_bg_class": "",
-			"row_fg_type": "mono",
-			"row_alt_bg_class": "",
-			"row_alt_fg_type": "mono",
-			"dialog_header_bg_class": "",
-			"dialog_header_fg_type": "mono",
 			"male_hex": MALE_HEX,
 			"female_hex": FEMALE_HEX,
 		}
@@ -538,63 +486,14 @@ def get_panel_data(
 
 @frappe.whitelist()
 def get_other_page_panels(current_panel: str) -> list[dict[str, str]]:
-	"""Return all Page Panels except the current one, with name and theme."""
+	"""Return all Page Panels except the current one."""
 	rows = frappe.get_all(
 		"Page Panel",
-		fields=["name", "theme"],
+		fields=["name"],
 		filters=[["name", "!=", current_panel]],
 		order_by="name asc",
 	)
-	return [{"name": r["name"], "theme": (r.get("theme") or "").strip()} for r in rows]
-
-
-@frappe.whitelist()
-def get_theme_slug_for_link(theme_link: str | None = None) -> str | None:
-	"""Resolve Page Panel theme Link (or empty) to Active slug — shared by runtime and Desk previews."""
-	return resolve_theme_slug(theme_link)
-
-
-@frappe.whitelist()
-def get_theme_table_tokens(theme_link: str | None = None) -> dict[str, str]:
-	"""Table token defaults from linked NCE Theme — Page Panel Colours tab previews."""
-	from nce_events.api.panel_api_pkg.theme_table_tokens import get_theme_table_tokens as _tokens
-
-	return _tokens(theme_link)
-
-
-@frappe.whitelist()
-def copy_panel_colours(source_name: str, target_names: str | list) -> dict[str, Any]:
-	"""Copy colour fields from source Page Panel to target panels.
-
-	Requires the source to have a theme Link that resolves to an Active NCE Theme slug.
-	Each target is saved in its own database savepoint so one failure does not undo others.
-	"""
-	if isinstance(target_names, str):
-		import json as _json
-		target_names = _json.loads(target_names) if target_names.startswith("[") else [target_names]
-
-	source = frappe.get_doc("Page Panel", source_name)
-	if not (source.theme or "").strip():
-		frappe.throw(_("Source panel has no theme. Assign an Active theme before copying colours."))
-	if not resolve_theme_slug(source.theme):
-		frappe.throw(_("The source panel's theme is not Active. Copy cancelled."))
-
-	updated: list[str] = []
-	failed: list[dict[str, str]] = []
-	for name in target_names:
-		frappe.db.savepoint("copy_colours")
-		try:
-			target = frappe.get_doc("Page Panel", name)
-			for field in _COLOUR_COPY_FIELDS:
-				target.set(field, getattr(source, field, None) or "")
-			target.flags.ignore_links = True
-			target.save(ignore_permissions=False)
-			updated.append(name)
-		except Exception as e:
-			frappe.db.rollback(save_point="copy_colours")
-			failed.append({"panel": name, "reason": str(e)})
-			frappe.clear_messages()
-	return {"updated": updated, "failed": failed}
+	return [{"name": r["name"]} for r in rows]
 
 
 @frappe.whitelist()

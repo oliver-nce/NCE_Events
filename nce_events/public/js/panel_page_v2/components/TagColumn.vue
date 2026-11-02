@@ -6,7 +6,7 @@ code-index:begin
  "purpose": "Tag Finder column listing doctype field tiles with link/table navigation and circular reference detection.",
  "read_when": "When editing tag finder field tiles, badges, or circular link navigation blocking.",
  "gotchas": [
-  "Table and pronoun tile border colors are theme-exempt categorical type indicators."
+  "Table and pronoun tile border colors are categorical type indicators (not panel chrome)."
  ],
  "keywords": ["TagColumn", "tag finder", "field tile", "circular link", "is_link", "is_table", "navigate", "select-field", "tf-tile"],
  "format": 1
@@ -16,7 +16,7 @@ code-index:end
 
 <template>
 	<div class="tf-column">
-		<div class="tf-col-header theme-bg-primary-100">
+		<div class="tf-col-header">
 			{{ col.doctype }}
 			<span class="tf-col-count">{{ col.fields.length }} fields</span>
 		</div>
@@ -32,12 +32,12 @@ code-index:end
 					<span class="tf-tile-label">{{ f.label }}</span>
 					<span
 						v-if="(f.is_link || f.is_table) && !isCircular(f)"
-						class="tf-tile-arrow theme-text-link"
+						class="tf-tile-arrow"
 					>&#9654;</span>
 				</div>
 				<div class="tf-tile-meta">
-					<span class="tf-tile-fieldname theme-text-muted">{{ f.fieldname }}</span>
-					<span class="tf-tile-badge theme-text-muted theme-bg-row-alt">{{ badgeText(f) }}</span>
+					<span class="tf-tile-fieldname">{{ f.fieldname }}</span>
+					<span class="tf-tile-badge">{{ badgeText(f) }}</span>
 				</div>
 			</div>
 		</div>
@@ -68,7 +68,7 @@ function tileClass(f) {
 	else if (f.is_link) cls.push("tf-tile-link");
 	else if (f.is_table) cls.push("tf-tile-table");
 	if (props.col.activeField === f.fieldname) {
-		cls.push("theme-bg-primary-200", "theme-border-primary");
+		cls.push("tf-tile-active");
 	}
 	return cls.join(" ");
 }
@@ -95,7 +95,7 @@ function onTileClick(f) {
 	min-width: 220px;
 	max-width: 260px;
 	flex-shrink: 0;
-	border-right: 1px solid var(--nce-color-border, #d1d8dd);
+	border-right: 1px solid var(--border-color, #d1d8dd);
 	display: flex;
 	flex-direction: column;
 }
@@ -104,7 +104,8 @@ function onTileClick(f) {
 	padding: 8px 10px;
 	font-weight: 600;
 	font-size: var(--font-size-sm);
-	border-bottom: 2px solid var(--nce-color-primary-300);
+	background: var(--blue-100);
+	border-bottom: 2px solid var(--blue-300);
 	display: flex;
 	justify-content: space-between;
 	align-items: center;
@@ -131,7 +132,12 @@ function onTileClick(f) {
 	transition: background 0.1s;
 }
 .tf-tile:hover {
-	background: var(--nce-color-primary-100);
+	background: var(--blue-100);
+}
+
+.tf-tile-active {
+	background: var(--blue-200);
+	border-color: var(--blue-500);
 }
 
 .tf-tile-top {
@@ -145,6 +151,7 @@ function onTileClick(f) {
 }
 .tf-tile-arrow {
 	font-size: calc(var(--font-size-sm) * 0.9);
+	color: var(--blue-600);
 }
 
 .tf-tile-meta {
@@ -154,26 +161,29 @@ function onTileClick(f) {
 }
 .tf-tile-fieldname {
 	font-size: calc(var(--font-size-sm) * 0.9);
+	color: var(--gray-600);
 }
 .tf-tile-badge {
 	font-size: calc(var(--font-size-sm) * 0.82);
 	padding: 1px 4px;
 	border-radius: 3px;
+	color: var(--gray-600);
+	background: var(--gray-50);
 }
 
 .tf-tile-link,
 .tf-tile-link:hover {
-	background: #fff;
-	color: #1c1c1c;
-	border-left: 3px solid var(--nce-color-primary);
+	background: var(--fg-color, #fff);
+	color: var(--text-color, #1c1c1c);
+	border-left: 3px solid var(--blue-500);
 }
-/* categorical color — type indicator, not brand-themed */
+/* categorical color — type indicator, not panel chrome */
 .tf-tile-table {
-	border-left: 3px solid #e67e22; /* theme-exempt: categorical type indicator */
+	border-left: 3px solid #e67e22;
 }
-/* categorical color — type indicator, not brand-themed */
+/* categorical color — type indicator, not panel chrome */
 .tf-tile-pronoun {
-	border-left: 3px solid #9b59b6; /* theme-exempt: categorical type indicator */
+	border-left: 3px solid #9b59b6;
 }
 .tf-tile-circular {
 	opacity: 0.4;

@@ -97,7 +97,7 @@ export function buildRefundOutcomeHtml(result) {
 		.filter(Boolean)
 		.map(
 			([label, val]) =>
-				`<tr><td class="theme-text-muted" style="padding:3px 12px 3px 0">${escapeHtml(label)}</td><td style="padding:3px 0"><strong>${escapeHtml(val)}</strong></td></tr>`,
+				`<tr><td class="text-muted" style="padding:3px 12px 3px 0">${escapeHtml(label)}</td><td style="padding:3px 0"><strong>${escapeHtml(val)}</strong></td></tr>`,
 		)
 		.join("");
 
@@ -113,19 +113,19 @@ export function buildRefundOutcomeHtml(result) {
 			.filter(Boolean)
 			.map(
 				([label, val]) =>
-					`<tr><td class="theme-text-muted" style="padding:3px 12px 3px 0">${escapeHtml(label)}</td><td style="padding:3px 0"><strong>${escapeHtml(val)}</strong></td></tr>`,
+					`<tr><td class="text-muted" style="padding:3px 12px 3px 0">${escapeHtml(label)}</td><td style="padding:3px 0"><strong>${escapeHtml(val)}</strong></td></tr>`,
 			)
 			.join("");
 		feeSection = `<hr><p style="margin:10px 0 6px"><strong>${__("Cancellation fee order")}</strong></p><table style="width:100%">${feeRows}</table>`;
 		if (fee.pay_now_url) {
-			feeSection += `<p class="theme-text-muted theme-text-sm" style="margin-top:8px">${__("Payment link")}: ${escapeHtml(fee.pay_now_url)}</p>`;
+			feeSection += `<p class="text-muted small" style="margin-top:8px">${__("Payment link")}: ${escapeHtml(fee.pay_now_url)}</p>`;
 		}
 	}
 
 	const summary = result?.summary
 		? `<p style="margin-bottom:10px">${escapeHtml(result.summary)}</p>`
 		: "";
-	const footer = `<p class="theme-text-muted" style="margin-top:12px">${__(
+	const footer = `<p class="text-muted" style="margin-top:12px">${__(
 		"The dialog will close and this enrollment has been removed from the panel and Frappe.",
 	)}</p>`;
 
@@ -136,7 +136,7 @@ export function showRefundActionResult(result, enrollmentId, { elapsedMs } = {})
 	const message = buildRefundOutcomeHtml(result);
 	let elapsedText = "";
 	if (typeof elapsedMs === "number" && isFinite(elapsedMs)) {
-		elapsedText = `<p class="theme-text-muted theme-text-sm" style="margin-top:8px">API round-trip: ${(elapsedMs / 1000).toFixed(2)}s (${Math.round(elapsedMs)} ms)</p>`;
+		elapsedText = `<p class="text-muted small" style="margin-top:8px">API round-trip: ${(elapsedMs / 1000).toFixed(2)}s (${Math.round(elapsedMs)} ms)</p>`;
 	}
 	if (typeof frappe !== "undefined" && frappe.msgprint) {
 		frappe.msgprint({

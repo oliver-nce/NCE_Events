@@ -20,11 +20,7 @@ code-index:end
 				:key="ti"
 				type="button"
 				class="ppv2-fd-tab-btn"
-				:class="
-					activeTab === ti
-						? 'ppv2-fd-tab-active theme-bg-primary theme-border-primary'
-						: 'theme-bg-primary-100 theme-border'
-				"
+				:class="activeTab === ti ? 'ppv2-fd-tab-active' : ''"
 				:disabled="blockRelatedTabs && (tab._related || tab._inlineChild || tab._scriptTool)"
 				@click="$emit('update:activeTab', ti)"
 			>
@@ -34,7 +30,7 @@ code-index:end
 		<button
 			v-if="showFindHelpButton"
 			type="button"
-			class="ppv2-fd-find-help-btn theme-bg-primary-100 theme-border"
+			class="ppv2-fd-find-help-btn"
 			@click="$emit('find-help')"
 		>
 			{{ helpLabelEffective }}
@@ -73,7 +69,7 @@ const helpLabelEffective = computed(() => {
 	gap: 8px;
 	margin-bottom: 12px;
 	padding-bottom: 8px;
-	border-bottom: var(--nce-border-width) solid var(--nce-color-border);
+	border-bottom: 1px solid var(--border-color);
 }
 .ppv2-fd-tab-buttons {
 	display: flex;
@@ -90,6 +86,9 @@ const helpLabelEffective = computed(() => {
 	font-size: var(--font-size-base, 14px);
 	font-weight: var(--font-weight-bold, 600);
 	cursor: pointer;
+	background: var(--blue-100);
+	border: 1px solid var(--border-color);
+	color: var(--text-color);
 }
 .ppv2-fd-tab-btn {
 	padding: 6px 14px;
@@ -97,6 +96,14 @@ const helpLabelEffective = computed(() => {
 	font-size: var(--font-size-base, 14px);
 	font-weight: var(--font-weight-bold, 600);
 	cursor: pointer;
+	background: var(--blue-100);
+	border: 1px solid var(--border-color);
+	color: var(--text-color);
+}
+.ppv2-fd-tab-btn.ppv2-fd-tab-active {
+	background: var(--blue-500);
+	border-color: var(--blue-500);
+	color: #fff;
 }
 .ppv2-fd-tab-btn:disabled {
 	opacity: 0.45;

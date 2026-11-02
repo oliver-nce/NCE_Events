@@ -20,20 +20,20 @@ code-index:end
 			@mousedown.self="$emit('close')"
 		>
 			<div
-				class="ppv2-find-help-dialog theme-border theme-rounded"
+				class="ppv2-find-help-dialog"
 				role="dialog"
 				aria-modal="true"
 				aria-labelledby="ppv2-find-help-title"
 				@click.stop
 			>
-				<div class="ppv2-find-help-header theme-bg-surface">
+				<div class="ppv2-find-help-header">
 					<h2 id="ppv2-find-help-title" class="ppv2-find-help-title">
 						<span class="ppv2-find-help-title-icon" aria-hidden="true">🔍</span>
 						{{ titleText }}
 					</h2>
 					<button
 						type="button"
-						class="ppv2-find-help-close theme-text-muted"
+						class="ppv2-find-help-close"
 						:aria-label="closeAria"
 						@click="$emit('close')"
 					>
@@ -59,7 +59,7 @@ code-index:end
 							</tr>
 						</tbody>
 					</table>
-					<p class="ppv2-find-help-footnote theme-text-muted">{{ footnote }}</p>
+					<p class="ppv2-find-help-footnote">{{ footnote }}</p>
 				</div>
 			</div>
 		</div>
@@ -183,10 +183,11 @@ const rows = computed(() => [
 	max-height: min(90vh, 640px);
 	display: flex;
 	flex-direction: column;
-	background: var(--nce-color-surface, #fff);
-	color: var(--nce-color-text, #333);
+	background: var(--fg-color, #fff);
+	color: var(--text-color);
+	border: 1px solid var(--border-color);
 	border-radius: var(--border-radius, 8px);
-	box-shadow: var(--nce-shadow, 0 12px 40px rgba(0, 0, 0, 0.2));
+	box-shadow: 0 12px 40px rgba(15, 23, 42, 0.18);
 	font-family: var(--font-family, system-ui, sans-serif);
 	font-size: var(--font-size-base, 13px);
 }
@@ -197,8 +198,8 @@ const rows = computed(() => [
 	justify-content: space-between;
 	gap: 12px;
 	padding: 12px 14px;
-	border-bottom: var(--nce-border-width) solid var(--nce-color-border, #e2e8f0);
-	background: var(--nce-color-surface, #f8fafc);
+	border-bottom: 1px solid var(--border-color);
+	background: var(--fg-color, #fff);
 	border-radius: var(--border-radius, 8px) var(--border-radius, 8px) 0 0;
 }
 
@@ -219,6 +220,7 @@ const rows = computed(() => [
 .ppv2-find-help-close {
 	border: none;
 	background: transparent;
+	color: var(--gray-600);
 	font-size: calc(var(--font-size-base) * 1.75);
 	line-height: 1;
 	cursor: pointer;
@@ -226,8 +228,8 @@ const rows = computed(() => [
 	border-radius: var(--border-radius-sm, 4px);
 }
 .ppv2-find-help-close:hover {
-	background: var(--nce-color-primary-100, #e8f0fe);
-	color: var(--nce-color-text, #333);
+	background: var(--blue-100);
+	color: var(--text-color);
 }
 
 .ppv2-find-help-scroll {
@@ -244,15 +246,15 @@ const rows = computed(() => [
 .ppv2-find-help-table th {
 	text-align: left;
 	padding: 8px 10px;
-	background: var(--nce-color-surface, #f1f5f9);
-	border-bottom: var(--nce-border-width-strong) solid var(--nce-color-border, #e2e8f0);
+	background: var(--gray-100);
+	border-bottom: 2px solid var(--border-color);
 	font-weight: var(--font-weight-bold, 600);
 	white-space: nowrap;
 }
 
 .ppv2-find-help-table td {
 	padding: 8px 10px;
-	border-bottom: var(--nce-border-width) solid var(--nce-color-border, #e8eef4);
+	border-bottom: 1px solid var(--border-color);
 	vertical-align: top;
 }
 
@@ -263,15 +265,16 @@ const rows = computed(() => [
 .ppv2-find-help-table code {
 	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 	font-size: 0.95em;
-	background: var(--nce-color-surface, #f1f5f9);
+	background: var(--gray-100);
 	padding: 2px 6px;
 	border-radius: 4px;
-	border: var(--nce-border-width) solid var(--nce-color-border, #e2e8f0);
+	border: 1px solid var(--border-color);
 }
 
 .ppv2-find-help-footnote {
 	margin: 14px 0 0;
 	font-size: var(--font-size-sm, 11px);
 	line-height: 1.45;
+	color: var(--gray-600);
 }
 </style>

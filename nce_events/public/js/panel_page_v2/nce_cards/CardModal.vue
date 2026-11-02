@@ -69,6 +69,6 @@ onUnmounted(() => document.removeEventListener("keydown", onKeyDown));
 	max-height: calc(100vh - 120px);
 	overflow: hidden;
 	border-radius: var(--border-radius);
-	box-shadow: var(--nce-shadow);
+	box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
 }
 </style>

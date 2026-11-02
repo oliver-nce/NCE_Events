@@ -13,11 +13,11 @@ code-index:end
 -->
 
 <template>
-	<div class="ppv2-actions-bar-inner theme-bg-card">
+	<div class="ppv2-actions-bar-inner">
 		<button
 			v-if="canGoWorkspace"
 			type="button"
-			class="ppv2-action-btn ppv2-workspace-btn theme-bg-card theme-border theme-rounded-sm theme-text-primary"
+			class="ppv2-action-btn ppv2-workspace-btn"
 			title="Back to workspace"
 			@click="goWorkspace"
 		>
@@ -36,13 +36,13 @@ code-index:end
 				v-for="a in actions"
 				:key="a.action_id || a.name"
 				type="button"
-				class="ppv2-action-btn theme-bg-card theme-border theme-rounded-sm theme-text-primary"
+				class="ppv2-action-btn"
 				:title="a.action_id || a.name"
 				@click="$emit('select', a)"
 			>
 				{{ a.label }}
 			</button>
-			<div v-if="!actions.length && !pages.length" class="ppv2-actions-empty theme-text-muted">
+			<div v-if="!actions.length && !pages.length" class="ppv2-actions-empty">
 				No actions
 			</div>
 		</div>
@@ -85,7 +85,8 @@ onMounted(() => {
 	padding: 8px 12px;
 	box-sizing: border-box;
 	min-height: 48px;
-	border-bottom: 1px solid var(--nce-color-border, #d1d5db);
+	border-bottom: 1px solid var(--border-color);
+	background: var(--fg-color, #fff);
 }
 
 .ppv2-actions-pages {
@@ -103,7 +104,7 @@ onMounted(() => {
 	width: 1px;
 	align-self: stretch;
 	min-height: 28px;
-	background: var(--nce-color-border, #d1d5db);
+	background: var(--border-color);
 	flex-shrink: 0;
 }
 
@@ -126,11 +127,15 @@ onMounted(() => {
 	line-height: 1.3;
 	white-space: nowrap;
 	transition: background-color 0.15s ease, border-color 0.15s ease;
+	background: var(--fg-color, #fff);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-sm, 4px);
+	color: var(--blue-500);
 }
 
 .ppv2-action-btn:hover {
-	background-color: var(--nce-color-primary-100, #e3f0fc);
-	border-color: var(--nce-color-primary, #126bc4);
+	background-color: var(--blue-100);
+	border-color: var(--blue-500);
 }
 
 .ppv2-action-btn:active {
@@ -141,5 +146,6 @@ onMounted(() => {
 	font-size: var(--font-size-sm);
 	font-style: italic;
 	padding: 4px 0;
+	color: var(--gray-500);
 }
 </style>

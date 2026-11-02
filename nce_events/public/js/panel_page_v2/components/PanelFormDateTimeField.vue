@@ -136,9 +136,9 @@ onBeforeUnmount(() => {
 	min-height: 2.25em;
 	padding: 5px 8px;
 	box-sizing: border-box;
-	border: var(--nce-border-width, 1px) solid var(--nce-color-border);
+	border: 1px solid var(--border-color);
 	border-radius: var(--border-radius-sm, 4px);
-	background: var(--nce-color-surface);
+	background: var(--fg-color, #fff);
 	font-size: var(--font-size-base);
 	font-family: var(--font-family);
 	line-height: 1.4;

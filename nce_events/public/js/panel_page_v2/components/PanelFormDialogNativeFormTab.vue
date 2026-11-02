@@ -14,10 +14,10 @@ code-index:end
 
 <template>
 	<div class="ppv2-native-form-tab">
-		<div v-if="bootstrapping" class="ppv2-native-form-tab-status theme-text-muted">
+		<div v-if="bootstrapping" class="ppv2-native-form-tab-status ppv2-native-form-tab-status-muted">
 			Loading Frappe form…
 		</div>
-		<div v-else-if="error" class="ppv2-native-form-tab-status theme-text-danger">
+		<div v-else-if="error" class="ppv2-native-form-tab-status ppv2-native-form-tab-status-error">
 			{{ error }}
 		</div>
 		<div ref="containerRef" class="ppv2-native-form-tab-mount"></div>
@@ -101,6 +101,12 @@ onUnmounted(() => {
 .ppv2-native-form-tab-status {
 	padding: 12px 4px;
 	font-size: var(--font-size-sm);
+}
+.ppv2-native-form-tab-status-muted {
+	color: var(--gray-600);
+}
+.ppv2-native-form-tab-status-error {
+	color: var(--red-600);
 }
 .ppv2-native-form-tab-mount {
 	min-height: 160px;

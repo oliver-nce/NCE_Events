@@ -20,7 +20,7 @@ code-index:end
 		<input
 			ref="inputRef"
 			type="text"
-			class="ppv2-spa-magic-search-input theme-bg-card theme-border theme-rounded-sm theme-text-primary"
+			class="ppv2-spa-magic-search-input"
 			autocomplete="off"
 			:placeholder="placeholder"
 		/>
@@ -271,5 +271,9 @@ onUnmounted(() => {
 	padding: 8px 12px;
 	font-size: var(--font-size-sm, 13px);
 	font-family: var(--font-family);
+	background: var(--fg-color, #fff);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-sm, 4px);
+	color: var(--text-color);
 }
 </style>

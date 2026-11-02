@@ -39,7 +39,7 @@ export function activeFormatRule(row, col, formatRules) {
 }
 
 /**
- * Inline style for a conditional-format rule — local override on dialog theme tokens.
+ * Inline style for a conditional-format rule — local colour/weight override on cells.
  * Only sets properties the rule defines (color, weight, italic, underline).
  */
 export function formatRuleInlineStyle(row, col, formatRules) {

@@ -6,7 +6,7 @@ code-index:begin
  "purpose": "Draggable Tag Finder dialog to copy merge tags with optional fallback value and HTML filter.",
  "read_when": "When changing tag clipboard copy, fallback filters, or dialog drag and toast behavior.",
  "gotchas": [
-  "theme-bg-primary toast must not set inline background or color."
+  "Toast uses tf-toast class; do not set inline background or color on the toast element."
  ],
  "keywords": ["TagDialog", "copy tag", "clipboard", "fallback", "applyFilters", "isHtml", "baseTag", "drag panel"],
  "format": 1
@@ -16,20 +16,20 @@ code-index:end
 
 <template>
 	<div
-		class="tf-tag-panel theme-bg-surface theme-border theme-rounded theme-shadow-theme"
+		class="tf-tag-panel"
 		:style="panelStyle"
 		@mousedown="bringToFront"
 	>
-		<div class="tf-tag-header theme-bg-primary" @mousedown.prevent="startDrag">
+		<div class="tf-tag-header" @mousedown.prevent="startDrag">
 			<span>{{ field.label }}</span>
-			<button class="tf-close theme-text-primary-fg" @click="$emit('close')">&times;</button>
+			<button class="tf-close" @click="$emit('close')">&times;</button>
 		</div>
 		<div class="tf-tag-body">
-			<div class="tf-lbl theme-text-xs theme-text-muted">Fallback Value</div>
+			<div class="tf-lbl">Fallback Value</div>
 			<input
 				v-model="fallback"
 				type="text"
-				class="tf-input theme-border-input-border theme-rounded-sm"
+				class="tf-input"
 				placeholder="e.g. Student (leave empty for none)"
 			>
 
@@ -79,8 +79,7 @@ function bringToFront() { zIndex.value = zIndex.value + 1; }
 function showToast(t, l) {
 	const el = document.createElement("div");
 	el.textContent = "Tag is on the clipboard";
-	// Theme contract: theme-bg-primary sets background + paired fg — do not set inline background/color.
-	el.className = "theme-bg-primary";
+	el.className = "tf-toast";
 	Object.assign(el.style, {
 		position: "fixed",
 		top: t + "px",
@@ -146,6 +145,10 @@ function startDrag(e) {
 	width: 320px;
 	z-index: 100050;
 	overflow: hidden;
+	background: var(--fg-color, #fff);
+	border: 1px solid var(--border-color, #d1d8dd);
+	border-radius: var(--border-radius, 6px);
+	box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
 }
 
 .tf-tag-header {
@@ -155,6 +158,8 @@ function startDrag(e) {
 	padding: 8px 12px;
 	font-weight: 600;
 	font-size: var(--font-size-base);
+	background: var(--blue-500);
+	color: #fff;
 	border-radius: 6px 6px 0 0;
 	cursor: move;
 	user-select: none;
@@ -163,7 +168,7 @@ function startDrag(e) {
 .tf-close {
 	background: none;
 	border: none;
-	color: var(--nce-color-primary-fg);
+	color: #fff;
 	font-size: calc(var(--font-size-base) * 1.35);
 	cursor: pointer;
 	opacity: 0.9;
@@ -175,6 +180,8 @@ function startDrag(e) {
 .tf-lbl {
 	font-weight: 600;
 	text-transform: uppercase;
+	font-size: var(--font-size-xs, 11px);
+	color: var(--gray-600);
 }
 
 .tf-input {
@@ -183,9 +190,11 @@ function startDrag(e) {
 	font-size: var(--font-size-base);
 	margin-top: 4px;
 	box-sizing: border-box;
+	border: 1px solid var(--border-color, #d1d8dd);
+	border-radius: var(--border-radius-sm, 4px);
 }
 .tf-input:focus {
-	border-color: var(--nce-color-focus);
+	border-color: var(--blue-500);
 	outline: none;
 }
 
@@ -201,5 +210,12 @@ function startDrag(e) {
 	display: flex;
 	justify-content: flex-end;
 	gap: 8px;
+}
+</style>
+
+<style>
+.tf-toast {
+	background: var(--blue-500);
+	color: #fff;
 }
 </style>

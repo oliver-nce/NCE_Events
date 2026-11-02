@@ -20,14 +20,14 @@ code-index:end
 		<div class="ppv2-fd-related-meta-row">
 			<button
 				type="button"
-				class="ppv2-fd-related-go-to theme-bg-primary theme-border-primary"
+				class="ppv2-fd-related-go-to"
 				:disabled="!goToEnabled || goToBusy"
 				title="Open panel for this related list"
 				@click="onGoToPanel"
 			>
 				Go to
 			</button>
-			<p class="ppv2-fd-related-meta theme-text-muted">
+			<p class="ppv2-fd-related-meta">
 				{{ tab._related.doctype }}
 				<span v-if="tab._related.query_based_table_link" class="ppv2-fd-related-meta-link">
 					· QBTL {{ tab._related.query_based_table_link }}
@@ -47,31 +47,31 @@ code-index:end
 			Schema note: {{ tab._related.captureError }}
 		</p>
 
-		<p v-if="!tab._related.child_row_name" class="ppv2-fd-related-hint theme-text-muted">
+		<p v-if="!tab._related.child_row_name" class="ppv2-fd-related-hint">
 			Related tab is missing a server row id. Re-save the Form Dialog from Desk.
 		</p>
-		<p v-else-if="!rootDocName" class="ppv2-fd-related-hint theme-text-muted">
+		<p v-else-if="!rootDocName" class="ppv2-fd-related-hint">
 			Save the document to load related rows.
 		</p>
 		<template v-else>
 			<p
 				v-if="relatedState[ti] && relatedState[ti].edit_allowed === false"
-				class="ppv2-fd-related-hint theme-text-muted"
+				class="ppv2-fd-related-hint"
 			>
 				Editing disabled for this record.
 			</p>
-			<div v-if="relatedState[ti]?.loading" class="ppv2-fd-related-rows-loading theme-text-muted">
+			<div v-if="relatedState[ti]?.loading" class="ppv2-fd-related-rows-loading">
 				Loading related rows…
 			</div>
-			<div v-else-if="relatedState[ti]?.error" class="ppv2-fd-related-rows-err theme-text-danger">
+			<div v-else-if="relatedState[ti]?.error" class="ppv2-fd-related-rows-err">
 				{{ relatedState[ti].error }}
 			</div>
 			<div
 				v-else-if="(relatedState[ti]?.columns || []).length"
-				class="ppv2-fd-related-table-wrap theme-border theme-rounded-sm"
+				class="ppv2-fd-related-table-wrap"
 				:class="{ 'ppv2-fd-related-table-wrap--locked': editLocked }"
 			>
-				<table class="ppv2-fd-related-table theme-table">
+				<table class="ppv2-fd-related-table">
 					<thead>
 						<tr>
 							<th
@@ -82,7 +82,7 @@ code-index:end
 								{{ col.label || col.fieldname
 								}}<span
 									v-if="relatedColumnMandatory(col)"
-									class="ppv2-fd-reqd theme-text-danger"
+									class="ppv2-fd-reqd"
 									aria-hidden="true"
 								>
 									*
@@ -111,19 +111,12 @@ code-index:end
 								v-for="col in relatedState[ti].columns"
 								:key="col.fieldname"
 								class="ppv2-fd-related-td"
-								:class="{
-									'ppv2-fd-related-td--editable': isRelatedCellEditable(col),
-									'ppv2-fd-related-td--locked': isRelatedColEditable(col) && editLocked,
-									'ppv2-fd-related-td--dirty': isRelatedCellDirty(ti, rw, col),
-									'theme-text-danger':
-										isRelatedCellDirty(ti, rw, col) &&
-										!isRelatedFormatActive(rw, col),
-								}"
+								:class="{ 'ppv2-fd-related-td--editable': isRelatedCellEditable(col), 'ppv2-fd-related-td--locked': isRelatedColEditable(col) && editLocked, 'ppv2-fd-related-td--dirty': isRelatedCellDirty(ti, rw, col), 'ppv2-fd-text-danger': isRelatedCellDirty(ti, rw, col) && !isRelatedFormatActive(rw, col), }"
 								:style="relatedCellFormatStyle(rw, col)"
 							>
 								<select
 									v-if="isSelectColumn(col) && isRelatedCellEditable(col)"
-									class="ppv2-fd-related-select theme-border theme-rounded-sm"
+									class="ppv2-fd-related-select"
 									:value="String(relatedCellRaw(rw, col) ?? '')"
 									:aria-label="col.label || col.fieldname"
 									@change="onRelatedSelectChange(rw, col, $event)"
@@ -149,7 +142,7 @@ code-index:end
 										isRelatedCellEditable(col) && isRelatedNumberField(col)
 									"
 									type="number"
-									class="ppv2-fd-related-inp theme-border theme-rounded-sm"
+									class="ppv2-fd-related-inp"
 									:value="relatedNumberInputValue(rw, col)"
 									@input="onRelatedNumberInput(rw, col, $event)"
 								/>
@@ -158,7 +151,7 @@ code-index:end
 										isRelatedCellEditable(col) && col.fieldtype === 'Date'
 									"
 									type="date"
-									class="ppv2-fd-related-inp theme-border theme-rounded-sm"
+									class="ppv2-fd-related-inp"
 									:value="relatedDateInputValue(rw, col)"
 									@input="onRelatedDateInput(rw, col, $event)"
 								/>
@@ -166,7 +159,7 @@ code-index:end
 									v-else-if="isRelatedCellEditable(col) && col.fieldtype === 'Time'"
 									type="time"
 									step="1"
-									class="ppv2-fd-related-inp theme-border theme-rounded-sm"
+									class="ppv2-fd-related-inp"
 									:value="relatedTimeInputValue(rw, col)"
 									@input="onRelatedTimeInput(rw, col, $event)"
 								/>
@@ -174,13 +167,13 @@ code-index:end
 									v-else-if="isRelatedCellEditable(col) && col.fieldtype === 'Datetime'"
 									type="datetime-local"
 									step="1"
-									class="ppv2-fd-related-inp theme-border theme-rounded-sm"
+									class="ppv2-fd-related-inp"
 									:value="relatedDatetimeInputValue(rw, col)"
 									@input="onRelatedDatetimeInput(rw, col, $event)"
 								/>
 								<textarea
 									v-else-if="isRelatedCellEditable(col) && isRelatedLongText(col)"
-									class="ppv2-fd-related-textarea theme-border theme-rounded-sm"
+									class="ppv2-fd-related-textarea"
 									rows="2"
 									:value="String(relatedCellRaw(rw, col) ?? '')"
 									@input="onRelatedTextInput(rw, col, $event)"
@@ -188,7 +181,7 @@ code-index:end
 								<input
 									v-else-if="isRelatedCellEditable(col)"
 									type="text"
-									class="ppv2-fd-related-inp theme-border theme-rounded-sm"
+									class="ppv2-fd-related-inp"
 									:value="String(relatedCellRaw(rw, col) ?? '')"
 									@input="onRelatedTextInput(rw, col, $event)"
 								/>
@@ -203,7 +196,7 @@ code-index:end
 							>
 								<button
 									type="button"
-									class="ppv2-fd-related-del-btn theme-text-danger"
+									class="ppv2-fd-related-del-btn"
 									:disabled="!canMutateRows || rowMutating"
 									title="Delete row"
 									@click="onDeleteRelatedRow(rw)"
@@ -235,7 +228,7 @@ code-index:end
 							>
 								<select
 									v-if="isSelectColumn(col) && isRelatedCellEditable(col)"
-									class="ppv2-fd-related-select theme-border theme-rounded-sm"
+									class="ppv2-fd-related-select"
 									v-model="addDraftValues[col.fieldname]"
 								>
 									<option value="">—</option>
@@ -253,20 +246,20 @@ code-index:end
 								<input
 									v-else-if="isRelatedCellEditable(col) && isRelatedNumberField(col)"
 									type="number"
-									class="ppv2-fd-related-inp theme-border theme-rounded-sm"
+									class="ppv2-fd-related-inp"
 									v-model="addDraftValues[col.fieldname]"
 								/>
 								<input
 									v-else-if="isRelatedCellEditable(col) && col.fieldtype === 'Date'"
 									type="date"
-									class="ppv2-fd-related-inp theme-border theme-rounded-sm"
+									class="ppv2-fd-related-inp"
 									v-model="addDraftValues[col.fieldname]"
 								/>
 								<input
 									v-else-if="isRelatedCellEditable(col) && col.fieldtype === 'Time'"
 									type="time"
 									step="1"
-									class="ppv2-fd-related-inp theme-border theme-rounded-sm"
+									class="ppv2-fd-related-inp"
 									:value="draftTimeValue(col)"
 									@input="onDraftTimeInput(col, $event)"
 								/>
@@ -274,23 +267,23 @@ code-index:end
 									v-else-if="isRelatedCellEditable(col) && col.fieldtype === 'Datetime'"
 									type="datetime-local"
 									step="1"
-									class="ppv2-fd-related-inp theme-border theme-rounded-sm"
+									class="ppv2-fd-related-inp"
 									:value="draftDatetimeValue(col)"
 									@input="onDraftDatetimeInput(col, $event)"
 								/>
 								<textarea
 									v-else-if="isRelatedCellEditable(col) && isRelatedLongText(col)"
-									class="ppv2-fd-related-textarea theme-border theme-rounded-sm"
+									class="ppv2-fd-related-textarea"
 									rows="2"
 									v-model="addDraftValues[col.fieldname]"
 								/>
 								<input
 									v-else-if="isRelatedCellEditable(col)"
 									type="text"
-									class="ppv2-fd-related-inp theme-border theme-rounded-sm"
+									class="ppv2-fd-related-inp"
 									v-model="addDraftValues[col.fieldname]"
 								/>
-								<span v-else class="ppv2-fd-related-cell-text theme-text-muted">—</span>
+								<span v-else class="ppv2-fd-related-cell-text">—</span>
 							</td>
 							<td v-if="showRowMutateTools" class="ppv2-fd-related-td ppv2-fd-related-td-del">
 								<button
@@ -317,7 +310,7 @@ code-index:end
 						</tr>
 					</tbody>
 				</table>
-				<p v-if="!(relatedState[ti].rows || []).length && !addDraftActive" class="ppv2-fd-related-empty theme-text-muted">
+				<p v-if="!(relatedState[ti].rows || []).length && !addDraftActive" class="ppv2-fd-related-empty">
 					No related records.
 				</p>
 				<div
@@ -342,9 +335,9 @@ code-index:end
 			class="ppv2-fd-action-modal-backdrop"
 			@click.self="closeActionModal"
 		>
-			<div class="ppv2-fd-action-modal theme-bg-surface" role="dialog" aria-modal="true">
+			<div class="ppv2-fd-action-modal" role="dialog" aria-modal="true">
 				<h4 class="ppv2-fd-action-modal-title">{{ actionModal.title }}</h4>
-				<p v-if="actionModal.confirm" class="ppv2-fd-action-modal-confirm theme-text-muted">
+				<p v-if="actionModal.confirm" class="ppv2-fd-action-modal-confirm">
 					{{ actionModal.confirm }}
 				</p>
 				<div
@@ -354,9 +347,9 @@ code-index:end
 				>
 					<label class="ppv2-fd-action-modal-label">
 						{{ pa.label || pa.arg
-						}}<span v-if="pa.reqd" class="ppv2-fd-reqd theme-text-danger" aria-hidden="true"> *</span>
+						}}<span v-if="pa.reqd" class="ppv2-fd-reqd" aria-hidden="true"> *</span>
 					</label>
-					<p v-if="pa.description" class="ppv2-fd-action-modal-desc theme-text-muted theme-text-sm">
+					<p v-if="pa.description" class="ppv2-fd-action-modal-desc">
 						{{ pa.description }}
 					</p>
 					<input
@@ -364,7 +357,7 @@ code-index:end
 						type="number"
 						min="0"
 						step="any"
-						class="ppv2-fd-related-inp theme-border theme-rounded-sm"
+						class="ppv2-fd-related-inp"
 						:placeholder="pa.reqd ? '' : '0'"
 						:value="String(actionModal.values[pa.arg] ?? '')"
 						@input="actionModal.values[pa.arg] = $event.target.value"
@@ -372,12 +365,12 @@ code-index:end
 					<input
 						v-else
 						type="text"
-						class="ppv2-fd-related-inp theme-border theme-rounded-sm"
+						class="ppv2-fd-related-inp"
 						:value="String(actionModal.values[pa.arg] ?? '')"
 						@input="actionModal.values[pa.arg] = $event.target.value"
 					/>
 				</div>
-				<p v-if="actionModal.error" class="ppv2-fd-action-modal-error theme-text-danger">{{ actionModal.error }}</p>
+				<p v-if="actionModal.error" class="ppv2-fd-action-modal-error">{{ actionModal.error }}</p>
 				<div class="ppv2-fd-action-modal-actions">
 					<button type="button" class="btn btn-default btn-sm" @click="closeActionModal">
 						Cancel
@@ -395,7 +388,7 @@ code-index:end
 		</div>
 
 		<details v-if="tab.sections && tab.sections.length" class="ppv2-fd-related-schema">
-			<summary class="ppv2-fd-related-schema-sum theme-text-muted">Field metadata</summary>
+			<summary class="ppv2-fd-related-schema-sum">Field metadata</summary>
 			<div
 				class="ppv2-fd-related-preview"
 				:style="{ '--ppv2-fd-rel-lbl': relatedLabelColPx(ti) + 'px' }"
@@ -429,30 +422,30 @@ code-index:end
 							<div
 								v-for="field in col.fields"
 								:key="field.fieldname"
-								class="ppv2-fd-related-field-row theme-border theme-rounded-sm"
+								class="ppv2-fd-related-field-row"
 							>
 								<span class="ppv2-fd-related-fn">
 									{{ field.label || field.fieldname
 									}}<span
 										v-if="relatedColumnMandatory(field)"
-										class="ppv2-fd-reqd theme-text-danger"
+										class="ppv2-fd-reqd"
 										aria-hidden="true"
 									>
 										*
 									</span>
 								</span>
-								<span class="ppv2-fd-related-ft theme-text-muted">{{ field.fieldtype }}</span>
+								<span class="ppv2-fd-related-ft">{{ field.fieldtype }}</span>
 							</div>
 						</div>
 					</div>
 				</div>
 			</div>
 		</details>
-		<div v-else class="ppv2-fd-related-placeholder ppv2-fd-related-placeholder-compact theme-text-muted">
+		<div v-else class="ppv2-fd-related-placeholder ppv2-fd-related-placeholder-compact">
 			<p class="ppv2-fd-related-placeholder-text">
 				{{ tab._related.label || tab._related.doctype }}
 			</p>
-			<p v-if="!tab._related.captureError" class="ppv2-fd-related-placeholder-sub theme-text-muted">
+			<p v-if="!tab._related.captureError" class="ppv2-fd-related-placeholder-sub">
 				No field layout stored for this tab.
 			</p>
 		</div>
@@ -1264,6 +1257,7 @@ defineExpose({
 	align-items: center;
 	justify-content: center;
 	min-height: 120px;
+	color: var(--gray-600);
 }
 .ppv2-fd-related-placeholder-text {
 	font-size: var(--font-size-base);
@@ -1306,7 +1300,7 @@ defineExpose({
 }
 .ppv2-fd-related-warn {
 	font-size: var(--font-size-sm);
-	color: var(--nce-color-warning, #a67c00);
+	color: var(--orange-600);
 	margin: 0 0 12px;
 }
 .ppv2-fd-related-sizer-row {
@@ -1333,7 +1327,7 @@ defineExpose({
 }
 .ppv2-fd-related-sizer-grip:hover,
 .ppv2-fd-related-sizer-grip:focus-visible {
-	background: var(--nce-color-border, #dfe2e5);
+	background: var(--border-color);
 	outline: none;
 }
 .ppv2-fd-related-field-row {
@@ -1344,6 +1338,8 @@ defineExpose({
 	padding: 6px 8px;
 	margin-bottom: 4px;
 	font-size: var(--font-size-sm);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-sm, 4px);
 }
 .ppv2-fd-related-fn {
 	min-width: 0;
@@ -1352,12 +1348,14 @@ defineExpose({
 }
 .ppv2-fd-related-fn .ppv2-fd-reqd {
 	font-weight: 700;
+	color: var(--red-600);
 }
 .ppv2-fd-related-ft {
 	min-width: 0;
 	overflow-wrap: anywhere;
 	word-break: break-word;
 	text-align: right;
+	color: var(--gray-600);
 }
 .ppv2-fd-related-placeholder-meta {
 	margin: 0 0 8px;
@@ -1369,6 +1367,7 @@ defineExpose({
 .ppv2-fd-related-hint {
 	font-size: var(--font-size-sm);
 	margin: 0 0 12px;
+	color: var(--gray-600);
 }
 .ppv2-fd-related-rows-loading,
 .ppv2-fd-related-rows-err {
@@ -1379,6 +1378,8 @@ defineExpose({
 	max-height: min(52vh, 520px);
 	overflow: auto;
 	margin: 0 0 12px;
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-sm, 4px);
 }
 .ppv2-fd-related-table {
 	width: 100%;
@@ -1388,7 +1389,9 @@ defineExpose({
 .ppv2-fd-related-th {
 	text-align: left;
 	padding: 6px 8px;
-	/* Background + text: theme-table thead th — do not set color or background here. */
+	background: var(--gray-100);
+	color: var(--text-color);
+	border-bottom: 1px solid var(--border-color);
 	font-size: var(--font-size-base);
 	font-weight: var(--font-weight-bold, 600);
 	position: sticky;
@@ -1397,10 +1400,11 @@ defineExpose({
 }
 .ppv2-fd-related-th .ppv2-fd-reqd {
 	font-weight: 700;
+	color: var(--red-600);
 }
 .ppv2-fd-related-td {
 	padding: 4px 8px;
-	border-bottom: var(--nce-border-width) solid var(--nce-color-border);
+	border-bottom: 1px solid var(--border-color);
 	vertical-align: middle;
 	min-width: 4rem;
 }
@@ -1414,7 +1418,7 @@ defineExpose({
 	font-weight: var(--font-weight-bold, 600);
 }
 .ppv2-fd-related-td--dirty .ppv2-fd-related-check {
-	accent-color: var(--nce-color-danger);
+	accent-color: var(--red-600);
 }
 .ppv2-fd-related-cell-text {
 	font-size: var(--font-size-base);
@@ -1425,7 +1429,7 @@ defineExpose({
 	min-width: 6rem;
 	min-height: 2.25em;
 	padding: 5px 8px;
-	background: var(--nce-color-surface);
+	background: var(--fg-color, #fff);
 	font-size: var(--font-size-base);
 	font-family: var(--font-family, inherit);
 	box-sizing: border-box;
@@ -1436,7 +1440,7 @@ defineExpose({
 	width: 100%;
 	box-sizing: border-box;
 	padding: 5px 8px;
-	background: var(--nce-color-surface);
+	background: var(--fg-color, #fff);
 	font-size: var(--font-size-base);
 	font-family: var(--font-family, inherit);
 }
@@ -1447,7 +1451,7 @@ defineExpose({
 .ppv2-fd-related-check {
 	width: 1.1rem;
 	height: 1.1rem;
-	accent-color: var(--nce-color-primary, #126bc4);
+	accent-color: var(--blue-500);
 }
 .ppv2-fd-related-empty {
 	margin: 10px 12px 12px;
@@ -1460,6 +1464,7 @@ defineExpose({
 .ppv2-fd-related-schema-sum {
 	cursor: pointer;
 	font-weight: var(--font-weight-bold, 600);
+	color: var(--gray-600);
 }
 .ppv2-fd-related-placeholder-compact {
 	min-height: 0;
@@ -1472,23 +1477,23 @@ defineExpose({
 	min-width: 6rem;
 }
 .ppv2-fd-related-table-wrap--locked {
-	background: var(--nce-color-secondary-50, #f4f8fb);
+	background: var(--gray-50);
 }
 .ppv2-fd-related-table-wrap--locked .ppv2-fd-related-th:not(.ppv2-fd-related-th-actions) {
 	opacity: 0.92;
 }
 .ppv2-fd-related-td--locked {
-	background: var(--nce-color-secondary-50, #f4f8fb);
+	background: var(--gray-50);
 }
 .ppv2-fd-related-td--locked .ppv2-fd-related-cell-text {
-	color: var(--nce-color-text, #36414c);
+	color: var(--text-color);
 	font-weight: var(--font-weight-normal, 400);
 }
 .ppv2-fd-related-table-wrap--locked .ppv2-fd-related-td:not(.ppv2-fd-related-td--locked):not(.ppv2-fd-related-td-actions):not(.ppv2-fd-related-td-del) {
-	color: var(--nce-color-text, #36414c);
+	color: var(--text-color);
 }
 .ppv2-fd-related-table-wrap--locked .ppv2-fd-related-cell-text {
-	color: var(--nce-color-text, #36414c);
+	color: var(--text-color);
 	font-weight: var(--font-weight-normal, 400);
 }
 .ppv2-fd-related-tools-muted {
@@ -1537,7 +1542,7 @@ defineExpose({
 	padding: 16px;
 }
 .ppv2-fd-action-modal {
-	background: var(--nce-color-surface, #fff);
+	background: var(--fg-color, #fff);
 	border-radius: var(--border-radius-sm, 6px);
 	box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
 	padding: 16px 18px;
@@ -1548,6 +1553,11 @@ defineExpose({
 	margin: 0 0 10px;
 	font-size: var(--font-size-base);
 	font-weight: var(--font-weight-bold, 600);
+}
+.ppv2-fd-action-modal-desc {
+	margin: 0 0 10px;
+	font-size: var(--font-size-sm);
+	color: var(--gray-600);
 }
 .ppv2-fd-action-modal-confirm {
 	margin: 0 0 12px;

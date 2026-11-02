@@ -2,9 +2,9 @@
 "_meta": {
 "description": "The single authoritative code index of this project: every function, class, method, route, test, Vue component, CSS section and doc section with a label, plus each file's purpose. Query it with the shared code-index tool (find / show / callers); do not read this file whole. Generated: never edit by hand; hand-written notes live in code_index/project.json.",
 "generator": "_Project support files/code-index/codeindex.py",
-"count": 1976,
+"count": 1898,
 "project_sha256": "4149da0557eced977397fd926c9ce2ebca6a2b3cea453cc77dde71de6d1839c7",
-"headers_sha256": "4c38ae8abde1e5f1bce481fe09a878201162f62c2de4a02b5b0fc1ee5377088b"
+"headers_sha256": "87ba3cb60975b4233110c3467564d509662b737faa18157c231983eac0223b73"
 },
 "files": {
 ".github/workflows/style-audit.yml": {
@@ -69,24 +69,33 @@
 ]
 },
 "CLAUDE.md": {
-"purpose": "AI agent codebase reference for NCE Events architecture, DocTypes, API, and Form Dialog capture flow.",
+"purpose": "AI agent codebase reference for NCE Events architecture, DocTypes, API, and Form Dialog flow.",
 "read_when": "When onboarding to NCE Events or tracing Form Dialog capture, panel V2, and API modules.",
 "gotchas": [
 "Never run bench commands or git reset --hard; deployment is separate.",
-"Script capture temporarily replaces frappe.ui.form.on; always restored in finally."
+"_captureHandlers intercept replaces frappe.ui.form.on during script capture; always restored in finally."
 ],
 "keywords": [
+"codebase reference",
 "Form Dialog",
 "Page Panel",
 "panel_page_v2",
-"frozen_meta_json",
-"useFormClientScript",
-"capture_form_dialog_from_desk",
-"PanelFloat",
-"theme_slug",
-"nce_sync",
-"codeindex.py",
-"activateScripts"
+"DocType",
+"capture"
+]
+},
+"Docs/archive/theme-system/style-audit.py": {
+"purpose": "Theme contract guard scanning panel Vue UI for bare hex, unknown CSS vars, and typography violations.",
+"read_when": "When running style-audit.sh or adding theme bridge alias checks for panel_page_v2.",
+"gotchas": [],
+"keywords": [
+"style-audit",
+"theme_defaults.css",
+"check_bare_hex",
+"check_unknown_aliases",
+"SCOPE_DIRS",
+"panel_page_v2",
+"theme contract"
 ]
 },
 "README.md": {
@@ -970,50 +979,33 @@
 ]
 },
 "nce_events/api/panel_api_pkg/panel_config.py": {
-"purpose": "Build Page Panel runtime config dict with columns, chrome classes, theme slug, format rules, and derived sort.",
-"read_when": "When assembling panel payload for Vue load, CSV export, panel SQL, or related-rows ORDER BY.",
-"gotchas": [
-"Outer ORDER BY is omitted when the configured column is not in display or search fields, avoiding query errors.",
-"Linked-table gender fields are not auto-joined unless explicitly configured in column or search fields."
-],
+"purpose": "Build Page Panel config dict with column order, display flags, and derived sort.",
+"read_when": "When building the config payload for Vue panel load.",
+"gotchas": [],
 "keywords": [
-"_panel_config_from_doc",
-"column_order",
-"theme_slug",
-"frame_bg_class",
-"format_rules",
-"computed_columns",
-"fetch_only_fields",
-"Page Panel",
-"ORDER BY",
-"gender_column"
+"panel config",
+"chrome",
+"theme",
+"column order",
+"Page Panel"
 ],
 "depends_on": [
 "nce_events/api/panel_api_pkg/_helpers.py",
-"nce_events/api/panel_api_pkg/computed_columns.py",
-"nce_events/api/panel_api_pkg/theme_slug.py"
+"nce_events/api/panel_api_pkg/computed_columns.py"
 ]
 },
 "nce_events/api/panel_api_pkg/panel_data.py": {
-"purpose": "Whitelisted Page Panel config and row fetch with permissions, WP Tables catalog filtering, sync columns, and export hooks.",
-"read_when": "When implementing panel SPA data loads, WP Tables sync UI columns, or messaging preview row context.",
+"purpose": "Fetch Page Panel row data with WP Tables catalog filtering, sync status flags, and permissions.",
+"read_when": "When implementing get_panel_data or debugging panel row queries and sync status columns.",
 "gotchas": [
-"WP Tables skips root read gate; unreadable catalog rows are filtered per row instead.",
-"user_filters, limit, and start are ignored; V2 filters and paginates client-side on the full dataset.",
-"panel_sql is read from Page Panel when no drill-down filters; drill-down rebuilds SQL with WHERE."
+"Requires root DocType read permission; WP Tables catalog rows may be filtered from results."
 ],
 "keywords": [
+"panel data",
 "get_panel_data",
-"get_panel_config",
 "WP Tables",
-"panel_sql",
-"_build_panel_sql",
-"format_rules",
-"sync_error_drill",
-"last_sync_duration",
-"export_panel_data",
-"whitelist",
-"default_filters"
+"sync status",
+"Page Panel"
 ],
 "depends_on": [
 "nce_events/api/panel_api_pkg/_helpers.py",
@@ -1024,8 +1016,6 @@
 "nce_events/api/panel_api_pkg/panel_config.py",
 "nce_events/api/panel_api_pkg/panel_export.py",
 "nce_events/api/panel_api_pkg/sql.py",
-"nce_events/api/panel_api_pkg/theme_slug.py",
-"nce_events/api/panel_api_pkg/theme_table_tokens.py",
 "nce_events/api/permissions.py"
 ]
 },
@@ -1075,45 +1065,6 @@
 "depends_on": [
 "nce_events/api/panel_api_pkg/page_panel_lookup.py",
 "nce_events/api/panel_api_pkg/panel_data.py"
-]
-},
-"nce_events/api/panel_api_pkg/theme_slug.py": {
-"purpose": "Resolve Page Panel NCE Theme links to active theme slug strings for panel chrome and data-nce-theme.",
-"read_when": "When panel or preview code needs the active slug from a Page Panel theme Link or site default NCE Theme.",
-"gotchas": [
-"Empty theme link uses site default NCE Theme (is_default=1) only if that doc is Active.",
-"Explicit theme link never redirects; missing or inactive theme returns None so callers may omit data-nce-theme."
-],
-"keywords": [
-"resolve_theme_slug",
-"NCE Theme",
-"is_default",
-"Active",
-"slug",
-"theme_link",
-"Page Panel",
-"_site_default_theme_name",
-"_active_theme_slug",
-"panel chrome"
-]
-},
-"nce_events/api/panel_api_pkg/theme_table_tokens.py": {
-"purpose": "Resolve NCE Theme table divider tiers and colour hex tokens for Page Panel Desk previews and Colours tab.",
-"read_when": "When Colours tab or panel_data needs table chrome defaults from linked theme JSON or site default.",
-"gotchas": [],
-"keywords": [
-"get_theme_table_tokens",
-"theme_json",
-"TIER_TO_BORDER_CLASS",
-"table_row_divider_width",
-"Colours tab",
-"NCE Theme",
-"LEGACY_PX_TIER",
-"normalize_table_width_tier",
-"_default_payload"
-],
-"depends_on": [
-"nce_events/api/panel_api_pkg/theme_slug.py"
 ]
 },
 "nce_events/api/permissions.py": {
@@ -1379,34 +1330,6 @@
 ],
 "depends_on": [
 "nce_events/api/panel_api_pkg/panel_export.py"
-]
-},
-"nce_events/api/tests/api/panel_api_pkg/test_theme_slug.py": {
-"purpose": "Tests for Page Panel theme slug resolution from linked NCE Theme active records.",
-"read_when": "When changing theme_slug.py fallback or active slug lookup for panel theming.",
-"gotchas": [],
-"keywords": [
-"test theme slug",
-"NCE Theme",
-"active slug",
-"unittest"
-],
-"depends_on": [
-"nce_events/api/panel_api_pkg/theme_slug.py"
-]
-},
-"nce_events/api/tests/api/panel_api_pkg/test_theme_table_tokens.py": {
-"purpose": "Tests for theme table token resolution and table width tier normalization.",
-"read_when": "When changing theme_table_tokens.py Desk preview token parsing or width tiers.",
-"gotchas": [],
-"keywords": [
-"test theme table tokens",
-"table width tier",
-"NCE Theme",
-"unittest"
-],
-"depends_on": [
-"nce_events/api/panel_api_pkg/theme_table_tokens.py"
 ]
 },
 "nce_events/api/tests/api/panel_api_pkg/test_wp_tables_sync_details.py": {
@@ -1696,25 +1619,20 @@
 "purpose": ""
 },
 "nce_events/hooks.py": {
-"purpose": "Registers NCE Events Frappe app hooks for global assets, desk app entry, doctype JS, and WooCommerce publish extension points.",
-"read_when": "Adding JS/CSS bundles, Apps screen route, doctype_js, or documenting after_events_publish_to_woocommerce for companion apps.",
+"purpose": "Frappe app hooks for NCE Events: assets, desk routes, and WooCommerce publish extension points.",
+"read_when": "Adding JS/CSS bundles, desk app screen entry, or after_events_publish_to_woocommerce handlers.",
 "gotchas": [
-"Other apps register after_events_publish_to_woocommerce in their hooks.py; each callable receives doctype and name.",
-"theme_defaults.css is temporarily commented out in app_include_css; uncomment and bench clear-cache to re-enable."
+"Other apps register after_events_publish_to_woocommerce in their hooks.py; each callable receives doctype and name."
 ],
 "keywords": [
 "app_include_js",
 "app_include_css",
 "doctype_js",
 "add_to_apps_screen",
-"panel-page-mirrored",
+"after_events_publish_to_woocommerce",
 "required_apps",
 "nce_sync",
-"schema_explorer",
-"spa_panel_page_register",
-"after_events_publish_to_woocommerce",
-"publish_events_to_website",
-"font-awesome"
+"panel-page-mirrored"
 ]
 },
 "nce_events/nce_events/__init__.py": {
@@ -2162,31 +2080,21 @@
 "purpose": ""
 },
 "nce_events/nce_events/doctype/page_panel/page_panel.js": {
-"purpose": "Frappe Desk form script for Page Panel: Config, Display, Query, Dialogs tabs, colours, matrices, and Form Dialog capture.",
-"read_when": "Changing Page Panel tab UI, display matrices, format rules, theme colours, default filters, panel SQL, or capture wizard.",
+"purpose": "Desk form script for Page Panel: Config, Display, Query, and Dialogs tabs plus matrices and capture wizard.",
+"read_when": "Changing Page Panel tab UI, display matrices, format rules, or capture wizard.",
 "gotchas": [
-"Prune stale display keys whenever Display is built from current DocType meta.",
-"Defer follow-up modals after frappe.confirm; same-turn Dialog open fails on many Desk builds.",
-"Preview colour tiles always use a theme-bg-* class matching the picker strip.",
-"Sync format_rules via frm.add_child; hand-built child rows crash grid_row.refresh.",
-"Do not frm.save() when toggling active Form Dialog; server updates form_dialog and saving deadlocks.",
-"Rebind .ppFormDialogs each Dialogs render; a once-only bind keeps the wrong frm."
+"Prune stale display keys whenever Display is built from current meta.",
+"frappe.confirm closes fails in many Desk builds (related picker never appears)."
 ],
 "keywords": [
-"Page Panel",
 "TAB_ORDER",
 "_render_display",
-"column_order",
-"COLOUR_FIELDS",
+"_build_field_matrix",
+"_render_dialogs_tab",
 "format_rules",
-"panel_sql",
-"capture wizard",
-"pp-matrix-wrap",
-"ThemeSwatchPicker",
-"form_dialog",
-"get_doctype_fields",
-"default_filters",
-"display matrix"
+"column_order",
+"capture_wizard",
+"page_panel"
 ]
 },
 "nce_events/nce_events/doctype/page_panel/page_panel.py": {
@@ -2636,10 +2544,8 @@
 "keywords": [
 "execute",
 "Page Panel",
-"header_bg_class",
-"header_toolbar_bg_class",
-"theme",
-"patch"
+"patch",
+"no-op"
 ]
 },
 "nce_events/patches/v0_0_2/create_event_explorer_page.py": {
@@ -2898,27 +2804,7 @@
 ]
 },
 "nce_events/public/css/hierarchy_explorer.css": {
-"purpose": "Styles the two-pane Hierarchy Explorer drill-down desk page loaded from the hierarchy explorer page bundle.",
-"read_when": "Changing hierarchy explorer pane layout, dividers, tables, loading states, or theme token fallbacks.",
-"gotchas": [
-"Loaded by hierarchy_explorer.js page asset bundle, not hooks.py app_include_css.",
-"Uses hex fallbacks when Themes CSS variables are not loaded."
-],
-"keywords": [
-"hierarchy-explorer",
-"hierarchy-pane",
-"hierarchy-divider",
-"hierarchy-table",
-"hierarchy-row",
-"two-pane",
-"drill-down",
-"--nce-color-surface",
-"load-more-btn",
-"col-resize",
-"hierarchy-resizing",
-"pane-actions",
-"sticky"
-]
+"purpose": "Frappe UI colour tokens (--blue-*, --gray-*, --border-color, --fg-color, --text-color)."
 },
 "nce_events/public/css/nce_spa_desk_nav.css": {
 "purpose": "Styles the SPA switch bar in the Frappe desk page head next to the page title.",
@@ -2937,60 +2823,19 @@
 ]
 },
 "nce_events/public/css/panel_page.css": {
-"purpose": "Legacy V1 panel page CSS: Source Sans 3, panes, tables, floats, filters, and send or preview dialogs.",
-"read_when": "Adjusting V1 panel tables, floating panels, send-panel compose, preview, or landing styling before V2 migration.",
+"purpose": "Legacy V1 panel page styles including Source Sans 3, floats, tables, and send dialogs.",
+"read_when": "Changing V1 panel float, table, or send-dialog styling before V2 migration.",
 "gotchas": [],
 "keywords": [
 "panel_page.css",
 "Source Sans 3",
 "panel-float",
 "send-panel",
-"panel-table",
-"col-resize-handle",
-"pane-filter-widget",
-"send-panel-preview",
-"send-review-panel",
-"panel-landing",
-"nce-color-primary"
+"V1"
 ]
 },
 "nce_events/public/css/schema_explorer.css": {
-"purpose": "CSS for Tag Finder (Schema Explorer) floating window, column tiles, tag panel, and type color indicators.",
-"read_when": "Changing Tag Finder float layout, se-tile types, tag panel fields, or drag styling.",
-"gotchas": [
-"Table and pronoun tile colors are theme-exempt categorical indicators, not brand theme tokens."
-],
-"keywords": [
-"Tag Finder",
-"schema_explorer",
-"se-float",
-"se-tile-table",
-"se-tile-pronoun",
-"se-tag-panel",
-"theme-exempt",
-"nce-color-primary",
-"Schema Explorer"
-]
-},
-"nce_events/public/css/theme_defaults.css": {
-"purpose": "Maps legacy panel and dialog CSS variables to --nce-color-* theme contract tokens on scoped roots.",
-"read_when": "Bridging legacy --primary aliases to Themes or adding a root scope for panel, send, or Tag Finder UI.",
-"gotchas": [
-"Each var() keeps a hex fallback when Themes is not loaded.",
-"Static categorical palette is NOT brand-themed (reserved for gender / type UI).",
-"Send panels (.send-panel*) are excluded from Display Settings typography; they keep legacy sizing."
-],
-"keywords": [
-"theme_defaults",
-"--nce-color",
-"ppv2-root",
-"panel-float",
-"alias bridge",
-"legacy vars",
-"tf-float",
-"column-header-bg",
-"--male-hex"
-]
+"purpose": "Frappe UI colour tokens (--blue-*, --gray-*, --border-color, --fg-color, --text-color)."
 },
 "nce_events/public/js/api_connector_tags.js": {
 "purpose": "API Connector desk form script that uses LLM to generate credential_config JSON from auth fields.",
@@ -3047,17 +2892,10 @@
 "gotchas": [],
 "keywords": [
 "Evaluations",
+"App.vue",
 "rating_kanban",
-"activeView",
-"useNceEvalShellStore",
-"currentView",
-"RatingKanbanView",
-"VIEWS",
 "shell store",
-"nce-eval-root",
-"nce-eval-header",
-"view switching",
-"desk SPA"
+"activeView"
 ],
 "depends_on": [
 "nce_events/public/js/evaluations/components/RatingKanbanView.vue",
@@ -3065,7 +2903,7 @@
 ]
 },
 "nce_events/public/js/evaluations/components/RatingKanbanPlaceholder.vue": {
-"purpose": "Placeholder kanban view when the evaluations shell has no event or shows debug shell state.",
+"purpose": "Placeholder kanban view shown when no event is selected in the evaluations shell.",
 "read_when": "Changing empty-state messaging for the evaluations rating kanban.",
 "gotchas": [],
 "keywords": [
@@ -3073,35 +2911,25 @@
 "evaluations",
 "kanban",
 "placeholder",
-"useNceEvalShellStore",
-"activeView",
-"eventId",
-"evaluations",
-"nce-eval-placeholder",
-"No event in URL"
+"shell"
 ],
 "depends_on": [
 "nce_events/public/js/evaluations/stores/shell.js"
 ]
 },
 "nce_events/public/js/evaluations/components/RatingKanbanView.vue": {
-"purpose": "Gender-colored rating kanban grid for event enrollments in the evaluations desk SPA.",
-"read_when": "Changing kanban lanes, player name display, gender colors, or enrollment loading UI in evaluations.",
+"purpose": "Gender-lane rating kanban board for event enrollments in the evaluations SPA.",
+"read_when": "Changing kanban lanes, gender colors, or enrollment display in evaluations.",
 "gotchas": [
-"Gender lane colors are theme-exempt per evaluations spec."
+"Gender lane colors are fixed per evaluations spec (not panel chrome)."
 ],
 "keywords": [
 "RatingKanbanView",
-"LANES",
-"genderColor",
-"displayName",
-"useEnrollments",
-"COLOR_MALE",
-"COLOR_FEMALE",
 "kanban",
-"rating",
-"evaluations",
-"rk-grid"
+"gender",
+"LANES",
+"useEnrollments",
+"evaluations"
 ],
 "depends_on": [
 "nce_events/public/js/evaluations/composables/useEnrollments.js",
@@ -3357,19 +3185,12 @@
 "Vue auto-unwraps reactive panel.rows ref when accessed on the panel object."
 ],
 "keywords": [
-"openPanels",
+"App.vue",
+"panel_page_v2",
 "PanelFloat",
-"openPanel",
-"TagFinder",
-"cascadeOpenPanels",
-"useFindPanel",
-"PanelFormDialog",
-"closeAllPanels",
-"WP Tables",
-"window._nce_open_tag_finder",
-"panelLiveRows",
-"export_panel_data",
-"dropStack"
+"find",
+"cascade",
+"form dialog"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/components/ActionsPanel.vue",
@@ -3493,19 +3314,15 @@
 ]
 },
 "nce_events/public/js/panel_page_v2/components/ActionsPanel.vue": {
-"purpose": "Panel actions bar with optional Workspace link, SPA page tabs, and Card Definition action buttons.",
+"purpose": "Vue actions bar combining SpaPageNavBar page switcher and Panel Action buttons.",
 "read_when": "Changing actions bar layout, SPA nav integration, or action button clicks.",
 "gotchas": [],
 "keywords": [
-"ActionsPanel",
-"ppv2-actions-bar-inner",
+"ppv2-actions",
 "SpaPageNavBar",
 "useSpaPageNav",
-"canSeeWorkspace",
-"goWorkspace",
 "action_id",
-"loadPages",
-"pageSlug"
+"loadPages"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/components/SpaPageNavBar.vue",
@@ -3514,70 +3331,56 @@
 ]
 },
 "nce_events/public/js/panel_page_v2/components/ColorPicker.vue": {
-"purpose": "Theme-exempt HSV color picker with swatch grid, hex field, eye-dropper, and Apply for format rules.",
-"read_when": "Changing format-rule color UI, swatch grid, HSV sliders, or eye-dropper behavior.",
+"purpose": "HSV color picker with swatches, hex input, and eye-dropper for format rules.",
+"read_when": "Changing panel format-rule color selection or picker grid behavior.",
 "gotchas": [
-"Uses literal hex swatches; theme-exempt per format rule editor."
+"Uses literal hex swatches for format rule colours."
 ],
 "keywords": [
 "ColorPicker",
-"hsvToHex",
-"hexToHSV",
-"EyeDropper",
-"theme-exempt",
-"gridRows",
-"update:modelValue",
-"currentHex",
-"selectFromGrid",
-"format rule"
+"HSV",
+"hex",
+"swatches",
+"format rule",
+"eye-dropper"
 ]
 },
 "nce_events/public/js/panel_page_v2/components/DisplayWidget.vue": {
-"purpose": "Read-only display widget showing label and value from record field or resolvedHops dot path.",
-"read_when": "When changing display-only field rendering using config.path and resolvedHops in WidgetGrid.",
+"purpose": "Read-only display-widget showing a label and resolved field value from record hops.",
+"read_when": "Changing display-only field rendering using config.path and resolvedHops.",
 "gotchas": [],
 "keywords": [
-"DisplayWidget",
+"display-widget",
 "displayValue",
 "displayLabel",
-"resolvedHops",
-"config.path",
-"display-widget",
-"record hops",
-"WidgetGrid"
+"config",
+"resolvedHops"
 ]
 },
 "nce_events/public/js/panel_page_v2/components/FieldWidget.vue": {
-"purpose": "Editable field widget by Frappe fieldtype with blur save emitting save-field for panel form dialogs.",
-"read_when": "When changing editable field inputs, meta-driven types, or save-field emit in WidgetGrid.",
+"purpose": "Editable field widget wrapper for panel form dialog custom field rendering.",
+"read_when": "Changing editable field widget save/check behavior in form dialogs.",
 "gotchas": [],
 "keywords": [
 "FieldWidget",
+"editable",
 "onSave",
-"save-field",
-"fieldMeta",
-"inputType",
-"config.editable",
-"onCheckChange",
-"localValue",
-"WidgetGrid"
+"panel form",
+"Vue"
 ]
 },
 "nce_events/public/js/panel_page_v2/components/FindPanel.vue": {
-"purpose": "Archived separate Find float; live find runs in-place on App.vue PanelFloat and PanelFindActionBar.",
-"read_when": "Tracing legacy find float before changing current in-place panel find UX.",
+"purpose": "Archived separate Find float; replaced by in-place find on PanelFloat and action bar.",
+"read_when": "Understanding legacy find float code before editing current find UX.",
 "gotchas": [
 "ARCHIVED: separate Find float replaced by in-place find on PanelFloat (App.vue + PanelFindActionBar.vue)."
 ],
 "keywords": [
 "FindPanel",
 "ARCHIVED",
-"PanelFloat",
-"useFindPanel",
-"Perform Find",
+"find float",
 "PanelFindActionBar",
-"ppv2-find-actions",
-"legacy find"
+"legacy"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/components/PanelFloat.vue",
@@ -3586,18 +3389,14 @@
 ]
 },
 "nce_events/public/js/panel_page_v2/components/FormatRuleEditor.vue": {
-"purpose": "Edit panel table format rules: SQL condition, validate API, color picker, weight, italic, underline.",
-"read_when": "Changing format rule validation, Apply gating, or style toggles in panel settings.",
+"purpose": "Vue editor for panel table cell format rules with color and weight toggles.",
+"read_when": "Changing format rule validation or color/weight editing in panel settings.",
 "gotchas": [],
 "keywords": [
 "FormatRuleEditor",
-"condition_sql",
-"validate_format_rule",
+"format rule",
 "ColorPicker",
-"canApply",
-"last_validated_sql",
-"font_weight",
-"nceMountFormatRuleEditor",
+"validate",
 "panel table"
 ],
 "depends_on": [
@@ -3606,73 +3405,57 @@
 ]
 },
 "nce_events/public/js/panel_page_v2/components/PanelFindActionBar.vue": {
-"purpose": "FileMaker-style find toolbar under the panel header for perform, constrain, extend, OR, and browse modes.",
-"read_when": "Changing find toolbar buttons, browse vs find mode, or find-* event wiring in App.vue.",
+"purpose": "In-panel find action bar with perform, constrain, extend, and exit find controls.",
+"read_when": "Changing FileMaker-style find toolbar buttons below the panel header.",
 "gotchas": [],
 "keywords": [
 "PanelFindActionBar",
-"ppv2-find-actions",
-"find-perform",
-"find-constrain",
-"find-extend",
-"findMatchActive",
-"findOrEnabled",
-"Perform Find",
-"New Find"
+"find",
+"perform find",
+"constrain",
+"panel header"
 ]
 },
 "nce_events/public/js/panel_page_v2/components/PanelFindRow.vue": {
-"purpose": "One find criteria table row with column inputs, optional OR label, and Enter to perform find.",
-"read_when": "Changing find criterion row inputs, activate-row highlighting, or OR label display.",
+"purpose": "Single ppv2-find-row criterion inputs with OR label and find-perform on Enter.",
+"read_when": "Changing find criterion row inputs, activate-row, or OR label display.",
 "gotchas": [],
 "keywords": [
-"PanelFindRow",
 "ppv2-find-row",
-"update-criterion",
-"activate-row",
-"find-perform",
-"showOrLabel",
 "criteria",
 "columns",
-"fieldname"
+"find-perform",
+"activate-row"
 ]
 },
 "nce_events/public/js/panel_page_v2/components/PanelFindToolbar.vue": {
-"purpose": "Archived header find toolbar; find actions now live on PanelFindActionBar under the panel header.",
-"read_when": "Comparing old header find buttons to PanelFindActionBar in App.vue.",
+"purpose": "Archived find toolbar; actions moved to PanelFindActionBar below the header.",
+"read_when": "Understanding legacy find toolbar before editing current find action bar.",
 "gotchas": [
 "ARCHIVED: find actions moved to PanelFindActionBar.vue (bar below header)."
 ],
 "keywords": [
 "PanelFindToolbar",
 "ARCHIVED",
+"find actions",
 "PanelFindActionBar",
-"find-perform",
-"ppv2-find-toolbar",
-"find-constrain",
-"legacy",
-"header find"
+"legacy"
 ]
 },
 "nce_events/public/js/panel_page_v2/components/PanelFloat.vue": {
-"purpose": "Draggable, resizable floating panel shell with themed chrome, header/body slots, and GPU-friendly positioning for panel page v2.",
-"read_when": "Changing float drag, resize, z-order, autoSize width, or overlay behavior during interaction.",
+"purpose": "Draggable resizable floating panel shell hosting header, find bar, and table content.",
+"read_when": "Changing panel float drag/resize, z-order, or overlay performance during drag.",
 "gotchas": [
 "Grow when parent recomputes table min-width; never shrink (user may have resized wider).",
 "Full-screen overlay prevents expensive hit-testing on table DOM during drag/resize."
 ],
 "keywords": [
 "PanelFloat",
-"ppv2-float",
+"drag",
+"resize",
 "bringToFront",
-"startDrag",
-"startResize",
-"translate3d",
-"getNextZ",
-"chromeConfig",
-"autoSize",
-"panelChromeClasses",
-"brought-to-front"
+"ppv2-float",
+"overlay"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js",
@@ -3680,46 +3463,34 @@
 ]
 },
 "nce_events/public/js/panel_page_v2/components/PanelFormDateTimeField.vue": {
-"purpose": "Mounts Frappe Date and Datetime controls in the panel form dialog with two-way Vue modelValue sync.",
-"read_when": "When Date or Datetime fields mis-sync with formData, load seeding, or Frappe control mount/teardown.",
-"gotchas": [
-"Mandatory asterisk stays on PanelFormField label only; df.reqd would duplicate Frappe control UI.",
-"While fdSyncingFromLoad is true the model watcher skips set_input; re-applies when syncing ends."
-],
+"purpose": "Mounts Frappe date/time controls for panel form dialog datetime field types.",
+"read_when": "Fixing date or datetime field syncing between Vue and Frappe controls.",
+"gotchas": [],
 "keywords": [
 "PanelFormDateTimeField",
+"frappe control",
+"datetime",
 "mountFrappeControl",
-"buildDf",
-"make_control",
-"fdSyncingFromLoad",
-"applyVueValueToDateControl",
-"Date",
-"Datetime",
-"modelValue",
-"ppv2-fd-datetime-frappe",
-"form dialog"
+"form"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/utils/frappeDateControlSync.js"
 ]
 },
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue": {
-"purpose": "Main panel form dialog shell: load, find criteria, native form, related tabs, submit, and WP readback.",
-"read_when": "Changing save or submit, find layout, drag or resize, Woo hooks, or Events map and custom buttons.",
+"purpose": "Main form dialog shell with find, native form, related tabs, submit, and WP readback.",
+"read_when": "Changing form dialog save/submit flow, find layout, or dialog drag/resize.",
 "gotchas": [
 "Widen dialog (never shrink) so footer buttons stay on one row.",
 "Do not emit saved when no Frappe form save; host must not run onFormDialogSaved refresh."
 ],
 "keywords": [
 "PanelFormDialog",
-"runSyncReadbackAfterSave",
-"findCriteria",
-"performFindLayout",
-"begin_dialog_edit",
-"PeopleMapDialog",
-"onSubmit",
-"wp readback",
-"usePanelFormDialog"
+"form dialog",
+"find",
+"submit",
+"WP readback",
+"related tab"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue",
@@ -3744,19 +3515,15 @@
 ]
 },
 "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue": {
-"purpose": "Form dialog body: tab bar, related, inline, script, native, and frozen-schema fields plus find mode.",
-"read_when": "When changing section collapse, find criteria fields, tab switching, or related tab save from the dialog shell.",
+"purpose": "Form dialog body rendering sections, fields, and tab content for all dialog modes.",
+"read_when": "Changing form section collapse, field layout, or tab switching in form dialog.",
 "gotchas": [],
 "keywords": [
 "PanelFormDialogBody",
-"findLayoutMode",
-"visibleFormDialogSections",
-"sectionGridRows",
-"relatedTabRefs",
-"find-criteria-patch",
-"PanelFormField",
+"sections",
 "collapsible",
-"activeTab"
+"RelatedTab",
+"find mode"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialogInlineChildTab.vue",
@@ -3771,23 +3538,15 @@
 ]
 },
 "nce_events/public/js/panel_page_v2/components/PanelFormDialogFooter.vue": {
-"purpose": "Panel form dialog footer with FileMaker-style find actions, custom buttons, and submit visibility from hide_if rules.",
-"read_when": "Changing find footer bands, MAP/custom buttons, or submit and button visibility including SQL hide_if.",
+"purpose": "Form dialog footer with FileMaker-style find buttons and conditional submit visibility.",
+"read_when": "Changing find footer buttons or submit_hide_if visibility rules.",
 "gotchas": [],
 "keywords": [
 "PanelFormDialogFooter",
-"findChromePhase",
-"submitHideIf",
+"find",
+"submit_hide_if",
 "HIDE_NEVER",
-"get_form_dialog_footer_visibility",
-"visibleButtons",
-"browseActionsLocked",
-"layout-updated",
-"execute_product_refund",
-"Perform Find",
-"custom-button",
-"frappeCall",
-"form dialog footer"
+"footer buttons"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/utils/frappeCall.js",
@@ -3795,41 +3554,26 @@
 ]
 },
 "nce_events/public/js/panel_page_v2/components/PanelFormDialogHeader.vue": {
-"purpose": "Form dialog header with title, panel list navigation, fit-width control, and themed chrome for panel dialogs.",
-"read_when": "Changing dialog header layout, row navigation, fit-width button, or dialog header theme classes.",
+"purpose": "Form dialog header with title, navigation, and fixed primary chrome styling.",
+"read_when": "Changing form dialog header layout or header colors on dialogs.",
 "gotchas": [],
 "keywords": [
 "PanelFormDialogHeader",
-"ppv2-fd-header",
-"panelChromeBg",
-"dialog_header_bg_class",
-"rowNavEnabled",
-"freezeNav",
-"nav-prev",
-"fit-width",
-"rowNavLabel",
-"closable"
-],
-"depends_on": [
-"nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js"
+"form dialog",
+"header",
+"Vue"
 ]
 },
 "nce_events/public/js/panel_page_v2/components/PanelFormDialogInlineChildTab.vue": {
-"purpose": "Render and edit inline child table rows on a panel form dialog tab via portal or list-view columns.",
-"read_when": "When inline child row editors, add/remove, or manage_fields action buttons behave wrong.",
+"purpose": "Inline child table tab editing portal columns inside a panel form dialog.",
+"read_when": "Changing inline child row add/remove or cell editors in form dialog tabs.",
 "gotchas": [],
 "keywords": [
-"PanelFormDialogInlineChildTab",
-"_inlineChild",
-"portal_field_config",
+"InlineChildTab",
+"inline child",
+"portal columns",
 "addRow",
-"removeRow",
-"readOnlyHost",
-"parent_fieldname",
-"listViewColumnsForGrid",
-"isColEditableForRow",
-"manage_fields",
-"formData"
+"form dialog"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/components/PanelFormLinkField.vue",
@@ -3840,46 +3584,32 @@
 ]
 },
 "nce_events/public/js/panel_page_v2/components/PanelFormDialogNativeFormTab.vue": {
-"purpose": "Vue tab that mounts the shared native Frappe form inside a panel form dialog for details or inline_child editing.",
-"read_when": "When fixing native form reparenting, tab activation, or hidden toolbar fields in the dialog tab.",
-"gotchas": [
-"Scoped CSS hides .page-actions and .standard-actions on the embedded native form.",
-"remount skips until bootstrapping and error clear, tab is active, and nativeFormReady is true."
-],
+"purpose": "Embeds a native Frappe form in a form dialog tab for full DocType editing.",
+"read_when": "Changing native Frappe form mount/remount inside panel form dialog tabs.",
+"gotchas": [],
 "keywords": [
-"ppv2-native-form-tab",
+"NativeFormTab",
+"native form",
 "remount",
-"nativeFormHost",
-"mountTo",
-"nativeFormReady",
-"focusFieldname",
-"hideFieldnames",
-"inline_child",
-"details",
-"Loading Frappe form",
-"NativeFormTab"
+"Frappe form",
+"form dialog"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/utils/ppv2Debug.js"
 ]
 },
 "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue": {
-"purpose": "Form dialog related DocType tab: editable portal grid, format rules, row add/delete, save sync, and Go to panel.",
-"read_when": "Changing related row fetch, edit_condition locking, dirty tracking, staged adds, or related-tab save APIs.",
+"purpose": "Related DocType tab with editable grid, format rules, and Go to panel navigation.",
+"read_when": "Changing related table editing, staged new rows, or related fetch/reload logic.",
 "gotchas": [
 "Refetch this grid whenever the host bumps reloadTick (e.g. after WP read-back)."
 ],
 "keywords": [
-"relatedState",
-"fetchRelatedForTab",
-"edit_allowed",
+"RelatedTab",
+"related grid",
+"edit_condition",
 "reloadTick",
-"go-to-panel",
-"STAGED_NEW_ROW_PREFIX",
-"saveAllRelatedRows",
-"get_form_dialog_related_rows",
-"ppv2-fd-related",
-"buildRelatedUpdates"
+"Go to panel"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/composables/useRelatedActions.js",
@@ -3891,36 +3621,29 @@
 ]
 },
 "nce_events/public/js/panel_page_v2/components/PanelFormDialogTabBar.vue": {
-"purpose": "Tab bar for switching Form Dialog tabs plus optional Find mode Help button.",
-"read_when": "Adding form dialog tabs, changing tab labels, blocking related tabs, or Find Help control.",
+"purpose": "Tab bar switching between form dialog tabs including find help access.",
+"read_when": "Adding form dialog tabs or changing tab bar labels and selection.",
 "gotchas": [],
 "keywords": [
 "PanelFormDialogTabBar",
-"activeTab",
-"blockRelatedTabs",
-"showFindHelpButton",
-"find-help",
-"ppv2-fd-tab-bar",
+"tabs",
 "form dialog",
-"Help"
+"find help",
+"Vue"
 ]
 },
 "nce_events/public/js/panel_page_v2/components/PanelFormField.vue": {
-"purpose": "Renders one panel form dialog field by Frappe fieldtype, including FileMaker-style find criteria inputs.",
-"read_when": "Adding fieldtype UI, find exact-match criteria, URL or Time display, or dirty styling on dialog fields.",
+"purpose": "Renders individual form dialog fields including find-mode criteria controls.",
+"read_when": "Adding fieldtype support or changing find exact-match criteria on form fields.",
 "gotchas": [
 "HTML-label fields: always render value as HTML, never editable."
 ],
 "keywords": [
 "PanelFormField",
-"findCriteriaMode",
-"onExactCriteriaChange",
-"PanelFormLinkField",
-"normalizeTimeForInput",
 "fieldtype",
-"criteriaExactValue",
 "find mode",
-"ppv2-fd-field"
+"Link field",
+"exact criteria"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDateTimeField.vue",
@@ -3929,50 +3652,42 @@
 ]
 },
 "nce_events/public/js/panel_page_v2/components/PanelFormFindSearchHelpModal.vue": {
-"purpose": "Modal help table for FileMaker-style find operators used in panel form dialog find mode.",
-"read_when": "Updating find operator help copy, columns, or layout; keep rows aligned with search._parse_find_term.",
+"purpose": "Help modal explaining FileMaker-style find/search operators in form dialog find.",
+"read_when": "Updating find/search help text or modal layout for form dialog find mode.",
 "gotchas": [],
 "keywords": [
-"PanelFormFindSearchHelpModal",
-"Search Help",
-"ppv2-find-help",
-"_parse_find_term",
-"find operators",
-"Teleport",
-"wildcard",
-"exact match"
+"FindSearchHelpModal",
+"find help",
+"search operators",
+"form dialog",
+"modal"
 ]
 },
 "nce_events/public/js/panel_page_v2/components/PanelFormLinkField.vue": {
-"purpose": "Wraps Frappe Link control with awesomplete for panel form dialog link fields and Vue change sync.",
-"read_when": "When Link Advanced Search or raw input change bypasses df.change and Vue misses updates.",
+"purpose": "Mounts Frappe Link control with autocomplete for panel form dialog link fields.",
+"read_when": "Fixing Link field change events not reaching Vue from Frappe awesomplete control.",
 "gotchas": [
 "Action items (Create new, Advanced Search) always pass through.",
 "df.change fires without Vue seeing it; forward changes here."
 ],
 "keywords": [
 "PanelFormLinkField",
-"mountFrappeControl",
+"Link field",
 "awesomplete",
-"link-change",
-"fdSyncingFromLoad",
-"make_control"
+"frappe control",
+"autocomplete"
 ]
 },
 "nce_events/public/js/panel_page_v2/components/PanelFormScriptToolTab.vue": {
-"purpose": "Form dialog tab that mounts custom client script tool UI into an empty container via mountFn.",
-"read_when": "When script tool tabs fail to mount, leak jQuery handlers, or need ppv2-script-tool-btn styling.",
+"purpose": "Form dialog tab hosting a script tool panel for custom client-side utilities.",
+"read_when": "Adding or mounting script tools inside panel form dialog tabs.",
 "gotchas": [],
 "keywords": [
-"mountFn",
-"_scriptTool",
-"containerRef",
-"ppv2-script-tool-tab",
-"onUnmounted",
+"ScriptToolTab",
 "script tool",
 "form dialog tab",
-"ppv2DebugWarn",
-"useFormClientScript"
+"mount",
+"panel form"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/utils/ppv2Debug.js"
@@ -3984,14 +3699,10 @@
 "gotchas": [],
 "keywords": [
 "PanelHeaderToolbar",
-"ppv2-header-right",
-"findHeaderMinimal",
-"activate-panel",
-"panelChromeClasses",
+"toolbar",
+"panel header",
 "refresh",
-"toggle-filter",
-"displayRowCount",
-"isFront"
+"find"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js"
@@ -4003,14 +3714,10 @@
 "gotchas": [],
 "keywords": [
 "PanelTable",
-"ppv2-table",
-"sync-error-click",
-"displayRows",
-"calcColWidths",
-"format_rules",
-"row-click",
-"switch-one",
-"column resize"
+"panel table",
+"format rules",
+"column resize",
+"sync status"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/components/PanelTableFilterBar.vue",
@@ -4027,36 +3734,29 @@
 "Clear stale value whenever the field changes."
 ],
 "keywords": [
-"ppv2-filter-widget",
+"ppv2-filter",
+"filters",
 "defaultFilters",
 "emitFilterChange",
-"isDateField",
-"_sqlDate",
-"_daysAgo",
-"filter-change",
-"Add Filter",
-"panel table filter"
+"isDateField"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js"
 ]
 },
 "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue": {
-"purpose": "Draggable modal Google Map of event enrollments by geocoded family address from get_event_people_map.",
-"read_when": "Changing event map loading, pins, info windows, or dialog drag and resize on Events records.",
+"purpose": "Modal map of enrolled people by family address for an Event record.",
+"read_when": "Changing event people map dialog, Google Maps load, or pin info windows.",
 "gotchas": [
 "Google Maps script is loaded once per page via data-nce-google-maps marker.",
 "api_key is used only in the script URL, never shown in dialog text."
 ],
 "keywords": [
 "PeopleMapDialog",
+"event map",
+"Google Maps",
 "get_event_people_map",
-"data-nce-google-maps",
-"PIN_PATH",
-"geocode_failed",
-"skipped_no_address",
-"eventId",
-"Google Maps"
+"pins"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/composables/frozenFormSave.js",
@@ -4064,63 +3764,53 @@
 ]
 },
 "nce_events/public/js/panel_page_v2/components/SpaMagicSearch.vue": {
-"purpose": "Inline Awesome Bar search in the SPA title row; opens Desk routes and links in a new browser tab.",
-"read_when": "Changing SPA title-row search, AwesomeBar wiring, Awesomplete handlers, or new-tab navigation from picks.",
+"purpose": "Inline Awesome Bar search for SPA title row; opens Desk routes in a new browser tab.",
+"read_when": "Changing SPA magic search placement, AwesomeBar wiring, or new-tab navigation.",
 "gotchas": [
 "Do not call AwesomeBar.setup or setup_search_modal; those bind the desk modal.",
-"Set frappe.open_in_new_tab before set_route so Desk opens in a new tab.",
-"Clear frappe.route_options after set_route so the SPA does not inherit them."
+"Set frappe.open_in_new_tab before set_route so router opens Desk in a new tab."
 ],
 "keywords": [
 "SpaMagicSearch",
 "AwesomeBar",
 "Awesomplete",
 "canSeeWorkspace",
-"open_in_new_tab",
-"set_route",
-"awesomplete-select",
-"fetch_hook_results",
-"ppv2-spa-magic-search",
-"global_results",
-"route_options",
-"magic search",
-"new tab"
+"awesomebar"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/utils/canSeeWorkspace.js"
 ]
 },
 "nce_events/public/js/panel_page_v2/components/SpaPageNavBar.vue": {
-"purpose": "ppv2-spa-nav button row for switching between SPA pages by page_slug with current page disabled.",
-"read_when": "Changing SPA nav button styling, tooltips, or currentSlug disabled and select emit behavior.",
+"purpose": "ppv2-spa-nav button row for switching between SPA pages by page_slug.",
+"read_when": "Changing SPA nav button styling or currentSlug disabled state.",
 "gotchas": [],
 "keywords": [
 "ppv2-spa-nav",
-"page_slug",
+"pages",
 "currentSlug",
-"page_title",
-"SpaPageNavBar",
-"select",
-"ppv2-spa-nav-btn",
-"ActionsPanel",
-"theme-border-primary"
+"page_slug",
+"page_title"
 ]
 },
 "nce_events/public/js/panel_page_v2/components/SpaPageSwitcherFloat.vue": {
-"purpose": "PanelFloat SPA page switcher anchored via measureDeskTitleAnchor near desk title.",
-"read_when": "Changing floating SPA switcher placement or loadPages on mount.",
+"purpose": "Floating PanelFloat SPA page switcher anchored near the desk title via measureDeskTitleAnchor after loadPages.",
+"read_when": "Changing floating switcher placement, anchor size defaults, or mount-time loadPages and ready gating.",
 "gotchas": [],
 "keywords": [
-"SpaPageSwitcherFloat",
 "PanelFloat",
 "SpaPageNavBar",
 "measureDeskTitleAnchor",
 "loadPages",
 "switchTo",
-"pageSlug",
 "useSpaPageNav",
+"pageSlug",
+"ppv2-title",
 "headerLabel",
-"anchor"
+"SPA page switcher",
+"onMounted",
+"anchor",
+"ready"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/components/PanelFloat.vue",
@@ -4130,20 +3820,15 @@
 ]
 },
 "nce_events/public/js/panel_page_v2/components/SyncErrorDialog.vue": {
-"purpose": "Modal dialog showing ppv2-sync-err status, summary, and detail when a table sync fails.",
-"read_when": "Changing sync error modal layout, Teleport backdrop, or status, summary, and detail props from App.vue.",
+"purpose": "Modal dialog showing ppv2-sync-err status, summary, and detail for sync failures.",
+"read_when": "Changing sync error dialog layout or status/summary/detail display.",
 "gotchas": [],
 "keywords": [
-"SyncErrorDialog",
 "ppv2-sync-err",
+"Sync error",
 "modelValue",
 "status",
-"summary",
-"detail",
-"Sync error",
-"Teleport",
-"update:modelValue",
-"sync failure modal"
+"summary"
 ]
 },
 "nce_events/public/js/panel_page_v2/components/TabBar.vue": {
@@ -4152,55 +3837,46 @@
 "gotchas": [],
 "keywords": [
 "TabBar",
+"tab bar",
+"panel page v2",
 "sort_order",
 "hide_bar",
-"activeTab",
-"sortedTabs",
-"showBar",
-"tab-bar",
-"update:activeTab",
-"theme-text-heading"
+"activeTab"
 ]
 },
 "nce_events/public/js/panel_page_v2/components/TagColumn.vue": {
-"purpose": "Tag Finder column listing doctype field tiles with link or table drill-down and circular reference blocking.",
-"read_when": "Editing Tag Finder field tiles, badges, circular link blocking, or navigate and select-field emits.",
+"purpose": "Tag Finder column listing doctype field tiles with link/table navigation and circular reference detection.",
+"read_when": "When editing tag finder field tiles, badges, or circular link navigation blocking.",
 "gotchas": [
-"Table and pronoun tile border colors are theme-exempt categorical type indicators."
+"Table and pronoun tile border colors are categorical type indicators (not panel chrome)."
 ],
 "keywords": [
 "TagColumn",
-"tf-tile",
-"isCircular",
-"select-field",
-"navigate",
+"tag finder",
+"field tile",
+"circular link",
 "is_link",
 "is_table",
-"tf-col-header",
-"circular link",
-"Tag Finder",
-"field tile"
+"navigate",
+"select-field",
+"tf-tile"
 ]
 },
 "nce_events/public/js/panel_page_v2/components/TagDialog.vue": {
 "purpose": "Draggable Tag Finder dialog to copy merge tags with optional fallback value and HTML filter.",
 "read_when": "When changing tag clipboard copy, fallback filters, or dialog drag and toast behavior.",
 "gotchas": [
-"theme-bg-primary toast must not set inline background or color."
+"Toast uses tf-toast class; do not set inline background or color on the toast element."
 ],
 "keywords": [
 "TagDialog",
-"applyFilters",
-"baseTag",
-"displayTag",
-"fallback",
-"isHtml",
-"Copy Tag to Clipboard",
-"navigator.clipboard",
-"fallbackCopy",
-"theme-bg-primary",
+"copy tag",
 "clipboard",
-"merge tag"
+"fallback",
+"applyFilters",
+"isHtml",
+"baseTag",
+"drag panel"
 ]
 },
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue": {
@@ -4214,11 +3890,7 @@
 "useTagFinder",
 "loadColumn",
 "buildTag",
-"tagDialogs",
-"Teleport",
-"tf-resize-handle",
-"onSelectField",
-"applyFilters",
+"resize handle",
 "float panel"
 ],
 "depends_on": [
@@ -4575,21 +4247,17 @@
 ]
 },
 "nce_events/public/js/panel_page_v2/composables/useRelatedActions.js": {
-"purpose": "Runs related-tab portal row actions via run_portal_action with modal prompts and exchange or refund result dialogs.",
-"read_when": "When wiring related DocType tab action buttons, portal action modal, or post-action grid refresh.",
+"purpose": "Portal-action modal and row-action execution for related-doctype tabs on panel page v2.",
+"read_when": "When changing related tab portal actions, row actions, or fetchRelatedForTab refresh.",
 "gotchas": [],
 "keywords": [
 "useRelatedActions",
-"runPortalAction",
-"onRelatedActionClick",
-"actionModal",
 "fetchRelatedForTab",
-"handleExchangeActionResult",
-"handleRefundActionResult",
-"isRefundOutcome",
-"run_portal_action",
-"actionRunKey",
-"portal action"
+"portal action",
+"related doctype",
+"rootDoctype",
+"definitionName",
+"row action"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/utils/enrollmentWpActions.js",
@@ -4750,11 +4418,8 @@
 "TabBar",
 "ActionsPanel",
 "cardDefName",
-"collectWidgets",
-"activeWidgets",
 "save-field",
-"open-card",
-"styles_json"
+"open-card"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/components/ActionsPanel.vue",
@@ -4772,11 +4437,8 @@
 "CardForm",
 "useBackdropPointerDismiss",
 "card-modal-backdrop",
-"Teleport",
 "Escape",
-"open-card",
-"keydown",
-"backdropRef"
+"Teleport"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/composables/useBackdropPointerDismiss.js",
@@ -4836,21 +4498,16 @@
 ]
 },
 "nce_events/public/js/panel_page_v2/utils/enrollmentWpActions.js": {
-"purpose": "Client helpers for enrollment cancellation fee prompts, refund outcome HTML, and execute_product_refund API calls.",
-"read_when": "When changing enrollment product refund UX, fee validation, or post-refund panel row removal.",
+"purpose": "Enrollment WordPress action helpers for cancellation fee prompt and HTML-safe money formatting.",
+"read_when": "When changing cancellation fee prompt, CANCELLATION_FEE_PROMPT_FIELD, or enrollment WP actions.",
 "gotchas": [],
 "keywords": [
+"enrollmentWpActions",
 "promptCancellationFee",
 "CANCELLATION_FEE_PROMPT_FIELD",
-"cancellation_fee",
 "parseCancellationFeeInput",
-"runProductRefund",
-"execute_product_refund",
-"buildRefundOutcomeHtml",
-"showRefundActionResult",
-"escapeHtml",
 "money",
-"Registration Cancelled"
+"escapeHtml"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/utils/frappeCall.js"
@@ -5192,19 +4849,15 @@
 ]
 },
 "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js": {
-"purpose": "Maps Page Panel colour config to theme bg, border width vars, and foreground text classes for panel chrome.",
-"read_when": "When changing Colours tab defaults, table divider CSS vars, or mono vs tonal fg pairing on panel floats.",
+"purpose": "Fixed panel chrome bg/border class names and CSS var helpers for panel floats and tables.",
+"read_when": "When changing default panel float surface colours or table divider CSS variables.",
 "gotchas": [],
 "keywords": [
-"panelChromeBg",
+"panelChromeClasses",
 "PANEL_CHROME_DEFAULTS",
+"panelChromeBg",
 "panelChromeBorder",
-"PANEL_BORDER_DEFAULTS",
-"panelChromeTableBorderStyleVars",
-"theme-bg",
-"Page Panel",
-"Colours tab",
-"foreground pairing"
+"PANEL_BORDER_DEFAULTS"
 ]
 },
 "nce_events/public/js/panel_page_v2/utils/panelFieldReadOnly.js": {
@@ -5225,20 +4878,15 @@
 ]
 },
 "nce_events/public/js/panel_page_v2/utils/panelFormatRules.js": {
-"purpose": "Matches panel format rules to columns and applies conditional inline cell styles from flag columns.",
-"read_when": "When changing format rule lookup, flag_key checks, or PanelTable and related grid cell styling.",
-"gotchas": [
-"Inline styles are a local override on dialog theme tokens; only rule-defined properties are set."
-],
+"purpose": "Conditional format rule lookup and inline style for panel table and dialog column cells.",
+"read_when": "When changing formatRuleForColumn, isFormatRuleActive, or cell colour/weight overrides.",
+"gotchas": [],
 "keywords": [
+"panelFormatRules",
 "formatRuleForColumn",
 "isFormatRuleActive",
 "activeFormatRule",
-"formatRuleInlineStyle",
 "fieldKeyMatchesColumn",
-"flag_key",
-"panelRowVal",
-"font_weight",
 "conditional format"
 ],
 "depends_on": [
@@ -5355,22 +5003,16 @@
 ]
 },
 "nce_events/public/js/panel_page_v2/utils/submitPerfTrace.js": {
-"purpose": "Records Panel Form Dialog submit step timings to console with optional Shift+click live Desk trace dialog.",
-"read_when": "When debugging save performance, submit trace logging, or nce_fd_submit_trace localStorage popup gate.",
-"gotchas": [
-"Shift+click submit opens a live trace dialog immediately; a regular submit logs to the console only.",
-"Set localStorage nce_fd_submit_trace to 1 to show a copyable msgprint trace after a normal submit."
-],
+"purpose": "Form Dialog submit timing trace to console with optional Shift+click live msgprint stream.",
+"read_when": "When debugging form dialog save performance or nce_fd_submit_trace localStorage gate.",
+"gotchas": [],
 "keywords": [
+"submitPerfTrace",
 "createSubmitPerfTrace",
 "nce_fd_submit_trace",
 "Shift+click",
-"Submit trace",
-"performance.now",
-"msgprint",
-"liveDialog",
-"onSubmit",
-"NCE submit"
+"submit timings",
+"msgprint"
 ]
 },
 "nce_events/public/js/panel_page_v2/utils/syncGateClient.js": {
@@ -5523,6 +5165,12 @@
 "mountElId"
 ]
 },
+"nce_events/public/nce-themes/nce-theme-switcher.js": {
+"purpose": "NCE theme switcher — dependency-free snapshot helper."
+},
+"nce_events/public/nce-themes/nce-themes.css": {
+"purpose": "NCE Themes developer export — 2026-11-02 Themes: NCE Manager Generated by the Themes app — snapshot, re-export to update."
+},
 "nce_events/templates/__init__.py": {
 "purpose": ""
 },
@@ -5608,21 +5256,6 @@
 "module_overrides",
 "--check",
 "pre-commit"
-]
-},
-"scripts/style-audit.py": {
-"purpose": "Theme contract guard scanning panel Vue UI for bare hex, unknown CSS vars, and typography violations.",
-"read_when": "When running style-audit.sh or extending theme bridge and typography checks for panel_page_v2.",
-"gotchas": [],
-"keywords": [
-"style-audit",
-"theme_defaults.css",
-"check_bare_hex",
-"check_unknown_aliases",
-"SCOPE_DIRS",
-"panel_page_v2",
-"theme-exempt",
-"BRIDGE_FILE"
 ]
 }
 },
@@ -5934,7 +5567,7 @@
 "name": "nce-events-codebase-reference-for-ai-agents",
 "qualname": "nce-events-codebase-reference-for-ai-agents",
 "sig": "",
-"hash": "00c674bad4",
+"hash": "58aaf24377",
 "calls": [],
 "label": "NCE Events — Codebase Reference for AI Agents -- **Read this file before making any changes.**",
 "label_source": "title"
@@ -6138,7 +5771,7 @@
 "name": "important-patterns",
 "qualname": "important-patterns",
 "sig": "",
-"hash": "ca0ea3e093",
+"hash": "bfebb6c8b3",
 "calls": [],
 "label": "Important Patterns -- 1.",
 "label_source": "title"
@@ -6154,6 +5787,97 @@
 "calls": [],
 "label": "Docs Folder -- | File | Contents |",
 "label_source": "title"
+},
+{
+"id": "Docs/archive/theme-system/style-audit.py::iter_typography_files",
+"file": "Docs/archive/theme-system/style-audit.py",
+"kind": "function",
+"name": "iter_typography_files",
+"qualname": "iter_typography_files",
+"sig": "() -> list[Path]",
+"hash": "1a322a725a",
+"calls": [],
+"label": "",
+"label_source": "none"
+},
+{
+"id": "Docs/archive/theme-system/style-audit.py::iter_source_files",
+"file": "Docs/archive/theme-system/style-audit.py",
+"kind": "function",
+"name": "iter_source_files",
+"qualname": "iter_source_files",
+"sig": "() -> list[Path]",
+"hash": "7f59e3267e",
+"calls": [],
+"label": "",
+"label_source": "none"
+},
+{
+"id": "Docs/archive/theme-system/style-audit.py::load_bridge_aliases",
+"file": "Docs/archive/theme-system/style-audit.py",
+"kind": "function",
+"name": "load_bridge_aliases",
+"qualname": "load_bridge_aliases",
+"sig": "() -> set[str]",
+"hash": "3489d10e3c",
+"calls": [],
+"label": "",
+"label_source": "none"
+},
+{
+"id": "Docs/archive/theme-system/style-audit.py::check_unknown_aliases",
+"file": "Docs/archive/theme-system/style-audit.py",
+"kind": "function",
+"name": "check_unknown_aliases",
+"qualname": "check_unknown_aliases",
+"sig": "(files: list[Path], bridge: set[str]) -> list[str]",
+"hash": "e231e2fd53",
+"calls": [],
+"label": "",
+"label_source": "none"
+},
+{
+"id": "Docs/archive/theme-system/style-audit.py::check_bare_hex",
+"file": "Docs/archive/theme-system/style-audit.py",
+"kind": "function",
+"name": "check_bare_hex",
+"qualname": "check_bare_hex",
+"sig": "(files: list[Path]) -> list[str]",
+"hash": "482a2fafd0",
+"calls": [],
+"label": "",
+"label_source": "none"
+},
+{
+"id": "Docs/archive/theme-system/style-audit.py::check_pattern",
+"file": "Docs/archive/theme-system/style-audit.py",
+"kind": "function",
+"name": "check_pattern",
+"qualname": "check_pattern",
+"sig": "(files: list[Path], pattern: re.Pattern[str], label: str) -> list[str]",
+"hash": "a12011980c",
+"calls": [],
+"label": "",
+"label_source": "none"
+},
+{
+"id": "Docs/archive/theme-system/style-audit.py::main",
+"file": "Docs/archive/theme-system/style-audit.py",
+"kind": "function",
+"name": "main",
+"qualname": "main",
+"sig": "() -> int",
+"hash": "89062ccb44",
+"calls": [
+"Docs/archive/theme-system/style-audit.py::check_bare_hex",
+"Docs/archive/theme-system/style-audit.py::check_pattern",
+"Docs/archive/theme-system/style-audit.py::check_unknown_aliases",
+"Docs/archive/theme-system/style-audit.py::iter_source_files",
+"Docs/archive/theme-system/style-audit.py::iter_typography_files",
+"Docs/archive/theme-system/style-audit.py::load_bridge_aliases"
+],
+"label": "",
+"label_source": "none"
 },
 {
 "id": "README.md::nce-events",
@@ -10989,50 +10713,23 @@
 "label_source": "header"
 },
 {
-"id": "nce_events/api/panel_api_pkg/panel_config.py::_panel_chrome_class",
-"file": "nce_events/api/panel_api_pkg/panel_config.py",
-"kind": "function",
-"name": "_panel_chrome_class",
-"qualname": "_panel_chrome_class",
-"sig": "(doc: Any, field: str) -> str",
-"hash": "fc3d54f8a9",
-"calls": [],
-"label": "Reads trimmed Page Panel per-slot background class or empty string for theme defaults.",
-"label_source": "header"
-},
-{
-"id": "nce_events/api/panel_api_pkg/panel_config.py::_panel_chrome_fg_type",
-"file": "nce_events/api/panel_api_pkg/panel_config.py",
-"kind": "function",
-"name": "_panel_chrome_fg_type",
-"qualname": "_panel_chrome_fg_type",
-"sig": "(doc: Any, bg_field: str) -> str",
-"hash": "66e76f6814",
-"calls": [],
-"label": "Chooses mono or tonal foreground mode from the paired _fg_type field on the Page Panel.",
-"label_source": "header"
-},
-{
 "id": "nce_events/api/panel_api_pkg/panel_config.py::_panel_config_from_doc",
 "file": "nce_events/api/panel_api_pkg/panel_config.py",
 "kind": "function",
 "name": "_panel_config_from_doc",
 "qualname": "_panel_config_from_doc",
 "sig": "(doc: Any) -> dict[str, Any]",
-"hash": "62308c6283",
+"hash": "390a604f0d",
 "calls": [
 "nce_events/api/panel_api_pkg/_helpers.py::_auto_detect_contact_fields",
 "nce_events/api/panel_api_pkg/_helpers.py::_get_gender_field_key",
 "nce_events/api/panel_api_pkg/_helpers.py::_get_link_fieldnames",
 "nce_events/api/panel_api_pkg/_helpers.py::_parse_csv",
 "nce_events/api/panel_api_pkg/_helpers.py::_title_case",
-"nce_events/api/panel_api_pkg/computed_columns.py::_get_computed_columns",
-"nce_events/api/panel_api_pkg/panel_config.py::_panel_chrome_class",
-"nce_events/api/panel_api_pkg/panel_config.py::_panel_chrome_fg_type",
-"nce_events/api/panel_api_pkg/theme_slug.py::resolve_theme_slug"
+"nce_events/api/panel_api_pkg/computed_columns.py::_get_computed_columns"
 ],
-"label": "Converts Page Panel document fields into runtime config including resolve_theme_slug and chrome slots for get_panel_config and SQL.",
-"label_source": "header"
+"label": "Build panel config dict from a Page Panel document (in-memory or loaded).",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/api/panel_api_pkg/panel_data.py::_require_root_doctype_read",
@@ -11153,17 +10850,16 @@
 "name": "get_panel_config",
 "qualname": "get_panel_config",
 "sig": "(root_doctype: str) -> dict[str, Any]",
-"hash": "efcc05eca4",
+"hash": "1dade18544",
 "calls": [
 "nce_events/api/panel_api_pkg/_helpers.py::_auto_detect_contact_fields",
 "nce_events/api/panel_api_pkg/page_panel_lookup.py::get_page_panel_doc_for_root",
 "nce_events/api/panel_api_pkg/page_panel_lookup.py::page_panel_exists_for_root",
 "nce_events/api/panel_api_pkg/panel_config.py::_panel_config_from_doc",
-"nce_events/api/panel_api_pkg/panel_data.py::_require_root_doctype_read",
-"nce_events/api/panel_api_pkg/theme_slug.py::resolve_theme_slug"
+"nce_events/api/panel_api_pkg/panel_data.py::_require_root_doctype_read"
 ],
-"label": "Whitelisted runtime Page Panel display config from doc or defaults when no panel exists for root_doctype.",
-"label_source": "header"
+"label": "Fetch display configuration for a single Page Panel.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/api/panel_api_pkg/panel_data.py::get_panel_data",
@@ -11199,52 +10895,10 @@
 "name": "get_other_page_panels",
 "qualname": "get_other_page_panels",
 "sig": "(current_panel: str) -> list[dict[str, str]]",
-"hash": "5cf2c8ee9c",
+"hash": "ba5858b089",
 "calls": [],
-"label": "Whitelisted list of other Page Panel names and theme links for Desk panel switching UI.",
-"label_source": "header"
-},
-{
-"id": "nce_events/api/panel_api_pkg/panel_data.py::get_theme_slug_for_link",
-"file": "nce_events/api/panel_api_pkg/panel_data.py",
-"kind": "function",
-"name": "get_theme_slug_for_link",
-"qualname": "get_theme_slug_for_link",
-"sig": "(theme_link: str | None=None) -> str | None",
-"hash": "c26876b350",
-"calls": [
-"nce_events/api/panel_api_pkg/theme_slug.py::resolve_theme_slug"
-],
-"label": "Whitelisted resolves a Page Panel theme Link to the active NCE Theme slug for runtime and previews.",
-"label_source": "header"
-},
-{
-"id": "nce_events/api/panel_api_pkg/panel_data.py::get_theme_table_tokens",
-"file": "nce_events/api/panel_api_pkg/panel_data.py",
-"kind": "function",
-"name": "get_theme_table_tokens",
-"qualname": "get_theme_table_tokens",
-"sig": "(theme_link: str | None=None) -> dict[str, str]",
-"hash": "8396c1afc4",
-"calls": [
-"nce_events/api/panel_api_pkg/theme_table_tokens.py::get_theme_table_tokens"
-],
-"label": "Whitelisted returns NCE Theme table colour and divider tokens for Page Panel Colours tab previews.",
-"label_source": "header"
-},
-{
-"id": "nce_events/api/panel_api_pkg/panel_data.py::copy_panel_colours",
-"file": "nce_events/api/panel_api_pkg/panel_data.py",
-"kind": "function",
-"name": "copy_panel_colours",
-"qualname": "copy_panel_colours",
-"sig": "(source_name: str, target_names: str | list) -> dict[str, Any]",
-"hash": "8c9aeaa189",
-"calls": [
-"nce_events/api/panel_api_pkg/theme_slug.py::resolve_theme_slug"
-],
-"label": "Whitelisted copies chrome colour fields from a themed source Page Panel to targets with per-target savepoints.",
-"label_source": "header"
+"label": "Return all Page Panels except the current one.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/api/panel_api_pkg/panel_data.py::export_panel_data",
@@ -11409,161 +11063,6 @@
 "nce_events/api/panel_api_pkg/page_panel_lookup.py::page_panel_docname_for_root"
 ],
 "label": "Whitelisted API to persist order_by on Page Panel, inserting a new panel row when none exists; core_filter is ignored.",
-"label_source": "header"
-},
-{
-"id": "nce_events/api/panel_api_pkg/theme_slug.py::_site_default_theme_name",
-"file": "nce_events/api/panel_api_pkg/theme_slug.py",
-"kind": "function",
-"name": "_site_default_theme_name",
-"qualname": "_site_default_theme_name",
-"sig": "() -> str | None",
-"hash": "76e2270347",
-"calls": [],
-"label": "Returns the NCE Theme document name marked is_default=1 for unassigned UI fallback.",
-"label_source": "header"
-},
-{
-"id": "nce_events/api/panel_api_pkg/theme_slug.py::_active_theme_slug",
-"file": "nce_events/api/panel_api_pkg/theme_slug.py",
-"kind": "function",
-"name": "_active_theme_slug",
-"qualname": "_active_theme_slug",
-"sig": "(theme_name: str | None) -> str | None",
-"hash": "f209b250dc",
-"calls": [],
-"label": "Returns the slug field when the named NCE Theme exists and status is Active.",
-"label_source": "header"
-},
-{
-"id": "nce_events/api/panel_api_pkg/theme_slug.py::resolve_theme_slug",
-"file": "nce_events/api/panel_api_pkg/theme_slug.py",
-"kind": "function",
-"name": "resolve_theme_slug",
-"qualname": "resolve_theme_slug",
-"sig": "(theme_link: str | None) -> str | None",
-"hash": "8e86ce21c4",
-"calls": [
-"nce_events/api/panel_api_pkg/theme_slug.py::_active_theme_slug",
-"nce_events/api/panel_api_pkg/theme_slug.py::_site_default_theme_name"
-],
-"tested_by": [
-"nce_events/api/tests/api/panel_api_pkg/test_theme_slug.py::TestResolveThemeSlug.test_blank_link_uses_site_default_theme",
-"nce_events/api/tests/api/panel_api_pkg/test_theme_slug.py::TestResolveThemeSlug.test_current_default_doc_resolves_its_slug",
-"nce_events/api/tests/api/panel_api_pkg/test_theme_slug.py::TestResolveThemeSlug.test_explicit_override_uses_linked_theme",
-"nce_events/api/tests/api/panel_api_pkg/test_theme_slug.py::TestResolveThemeSlug.test_linked_doc_uses_its_own_slug_not_site_default"
-],
-"label": "Maps Page Panel theme Link to Active slug; panel_config and panel_data call it for runtime theming.",
-"label_source": "header"
-},
-{
-"id": "nce_events/api/panel_api_pkg/theme_table_tokens.py::_default_payload",
-"file": "nce_events/api/panel_api_pkg/theme_table_tokens.py",
-"kind": "function",
-"name": "_default_payload",
-"qualname": "_default_payload",
-"sig": "() -> dict[str, Any]",
-"hash": "c719fc4bb8",
-"calls": [],
-"label": "Supplies baseline table colour and divider defaults from themes app or built-in fallbacks when theme JSON is absent.",
-"label_source": "header"
-},
-{
-"id": "nce_events/api/panel_api_pkg/theme_table_tokens.py::_theme_doc_name",
-"file": "nce_events/api/panel_api_pkg/theme_table_tokens.py",
-"kind": "function",
-"name": "_theme_doc_name",
-"qualname": "_theme_doc_name",
-"sig": "(theme_link: str | None) -> str | None",
-"hash": "e6906d8278",
-"calls": [
-"nce_events/api/panel_api_pkg/theme_slug.py::_site_default_theme_name"
-],
-"tested_by": [
-"nce_events/api/tests/api/panel_api_pkg/test_theme_table_tokens.py::TestThemeTableTokens.test_get_theme_table_tokens_from_payload"
-],
-"label": "Picks linked NCE Theme name or site default via _site_default_theme_name for token lookup.",
-"label_source": "header"
-},
-{
-"id": "nce_events/api/panel_api_pkg/theme_table_tokens.py::_parse_theme_json",
-"file": "nce_events/api/panel_api_pkg/theme_table_tokens.py",
-"kind": "function",
-"name": "_parse_theme_json",
-"qualname": "_parse_theme_json",
-"sig": "(doc_name: str | None) -> dict[str, Any]",
-"hash": "4174b10743",
-"calls": [],
-"tested_by": [
-"nce_events/api/tests/api/panel_api_pkg/test_theme_table_tokens.py::TestThemeTableTokens.test_get_theme_table_tokens_from_payload"
-],
-"label": "Loads and parses theme_json from an NCE Theme document into a dict for merging with defaults.",
-"label_source": "header"
-},
-{
-"id": "nce_events/api/panel_api_pkg/theme_table_tokens.py::normalize_table_width_tier",
-"file": "nce_events/api/panel_api_pkg/theme_table_tokens.py",
-"kind": "function",
-"name": "normalize_table_width_tier",
-"qualname": "normalize_table_width_tier",
-"sig": "(raw: Any) -> str",
-"hash": "6f3ac990d4",
-"calls": [],
-"tested_by": [
-"nce_events/api/tests/api/panel_api_pkg/test_theme_table_tokens.py::TestThemeTableTokens.test_normalize_table_width_tier"
-],
-"label": "Maps legacy px divider strings and raw values to thin, normal, or strong tier names.",
-"label_source": "header"
-},
-{
-"id": "nce_events/api/panel_api_pkg/theme_table_tokens.py::tier_to_border_class",
-"file": "nce_events/api/panel_api_pkg/theme_table_tokens.py",
-"kind": "function",
-"name": "tier_to_border_class",
-"qualname": "tier_to_border_class",
-"sig": "(tier: str) -> str",
-"hash": "5408890196",
-"calls": [
-"nce_events/api/panel_api_pkg/theme_table_tokens.py::normalize_table_width_tier"
-],
-"tested_by": [
-"nce_events/api/tests/api/panel_api_pkg/test_theme_table_tokens.py::TestThemeTableTokens.test_tier_to_border_class"
-],
-"label": "Maps normalized width tier to theme-border CSS class names for panel preview.",
-"label_source": "header"
-},
-{
-"id": "nce_events/api/panel_api_pkg/theme_table_tokens.py::get_theme_table_tokens",
-"file": "nce_events/api/panel_api_pkg/theme_table_tokens.py",
-"kind": "function",
-"name": "get_theme_table_tokens",
-"qualname": "get_theme_table_tokens",
-"sig": "(theme_link: str | None=None) -> dict[str, str]",
-"hash": "e43c310bc4",
-"calls": [
-"nce_events/api/panel_api_pkg/theme_table_tokens.py::_default_payload",
-"nce_events/api/panel_api_pkg/theme_table_tokens.py::_parse_theme_json",
-"nce_events/api/panel_api_pkg/theme_table_tokens.py::_theme_doc_name",
-"nce_events/api/panel_api_pkg/theme_table_tokens.py::get_theme_table_tokens.colour",
-"nce_events/api/panel_api_pkg/theme_table_tokens.py::normalize_table_width_tier",
-"nce_events/api/panel_api_pkg/theme_table_tokens.py::tier_to_border_class"
-],
-"tested_by": [
-"nce_events/api/tests/api/panel_api_pkg/test_theme_table_tokens.py::TestThemeTableTokens.test_get_theme_table_tokens_from_payload"
-],
-"label": "Returns divider tier, width classes, and header or row hex colours for panel_data colour preview.",
-"label_source": "header"
-},
-{
-"id": "nce_events/api/panel_api_pkg/theme_table_tokens.py::get_theme_table_tokens.colour",
-"file": "nce_events/api/panel_api_pkg/theme_table_tokens.py",
-"kind": "function",
-"name": "colour",
-"qualname": "get_theme_table_tokens.colour",
-"sig": "(key: str, fallback_key: str) -> str",
-"hash": "50fc62652b",
-"calls": [],
-"label": "Picks a hex string from payload keys with fallback chain inside get_theme_table_tokens.",
 "label_source": "header"
 },
 {
@@ -13259,104 +12758,6 @@
 "nce_events/api/panel_api_pkg/panel_export.py::build_panel_csv_text"
 ],
 "label": "header and rows",
-"label_source": "name"
-},
-{
-"id": "nce_events/api/tests/api/panel_api_pkg/test_theme_slug.py::TestResolveThemeSlug.test_blank_link_uses_site_default_theme",
-"file": "nce_events/api/tests/api/panel_api_pkg/test_theme_slug.py",
-"kind": "test",
-"name": "test_blank_link_uses_site_default_theme",
-"qualname": "TestResolveThemeSlug.test_blank_link_uses_site_default_theme",
-"sig": "(self)",
-"hash": "0ee3fbf3ac",
-"calls": [
-"nce_events/api/panel_api_pkg/theme_slug.py::resolve_theme_slug"
-],
-"label": "blank link uses site default theme",
-"label_source": "name"
-},
-{
-"id": "nce_events/api/tests/api/panel_api_pkg/test_theme_slug.py::TestResolveThemeSlug.test_linked_doc_uses_its_own_slug_not_site_default",
-"file": "nce_events/api/tests/api/panel_api_pkg/test_theme_slug.py",
-"kind": "test",
-"name": "test_linked_doc_uses_its_own_slug_not_site_default",
-"qualname": "TestResolveThemeSlug.test_linked_doc_uses_its_own_slug_not_site_default",
-"sig": "(self)",
-"hash": "e785866213",
-"calls": [
-"nce_events/api/panel_api_pkg/theme_slug.py::resolve_theme_slug"
-],
-"label": "linked doc uses its own slug not site default",
-"label_source": "name"
-},
-{
-"id": "nce_events/api/tests/api/panel_api_pkg/test_theme_slug.py::TestResolveThemeSlug.test_explicit_override_uses_linked_theme",
-"file": "nce_events/api/tests/api/panel_api_pkg/test_theme_slug.py",
-"kind": "test",
-"name": "test_explicit_override_uses_linked_theme",
-"qualname": "TestResolveThemeSlug.test_explicit_override_uses_linked_theme",
-"sig": "(self)",
-"hash": "838dab1200",
-"calls": [
-"nce_events/api/panel_api_pkg/theme_slug.py::resolve_theme_slug"
-],
-"label": "explicit override uses linked theme",
-"label_source": "name"
-},
-{
-"id": "nce_events/api/tests/api/panel_api_pkg/test_theme_slug.py::TestResolveThemeSlug.test_current_default_doc_resolves_its_slug",
-"file": "nce_events/api/tests/api/panel_api_pkg/test_theme_slug.py",
-"kind": "test",
-"name": "test_current_default_doc_resolves_its_slug",
-"qualname": "TestResolveThemeSlug.test_current_default_doc_resolves_its_slug",
-"sig": "(self)",
-"hash": "762d334b97",
-"calls": [
-"nce_events/api/panel_api_pkg/theme_slug.py::resolve_theme_slug"
-],
-"label": "current default doc resolves its slug",
-"label_source": "name"
-},
-{
-"id": "nce_events/api/tests/api/panel_api_pkg/test_theme_table_tokens.py::TestThemeTableTokens.test_normalize_table_width_tier",
-"file": "nce_events/api/tests/api/panel_api_pkg/test_theme_table_tokens.py",
-"kind": "test",
-"name": "test_normalize_table_width_tier",
-"qualname": "TestThemeTableTokens.test_normalize_table_width_tier",
-"sig": "(self) -> None",
-"hash": "d9d6686693",
-"calls": [
-"nce_events/api/panel_api_pkg/theme_table_tokens.py::normalize_table_width_tier"
-],
-"label": "normalize table width tier",
-"label_source": "name"
-},
-{
-"id": "nce_events/api/tests/api/panel_api_pkg/test_theme_table_tokens.py::TestThemeTableTokens.test_tier_to_border_class",
-"file": "nce_events/api/tests/api/panel_api_pkg/test_theme_table_tokens.py",
-"kind": "test",
-"name": "test_tier_to_border_class",
-"qualname": "TestThemeTableTokens.test_tier_to_border_class",
-"sig": "(self) -> None",
-"hash": "d0afb24d0a",
-"calls": [
-"nce_events/api/panel_api_pkg/theme_table_tokens.py::tier_to_border_class"
-],
-"label": "tier to border class",
-"label_source": "name"
-},
-{
-"id": "nce_events/api/tests/api/panel_api_pkg/test_theme_table_tokens.py::TestThemeTableTokens.test_get_theme_table_tokens_from_payload",
-"file": "nce_events/api/tests/api/panel_api_pkg/test_theme_table_tokens.py",
-"kind": "test",
-"name": "test_get_theme_table_tokens_from_payload",
-"qualname": "TestThemeTableTokens.test_get_theme_table_tokens_from_payload",
-"sig": "(self, mock_doc_name: MagicMock, mock_parse: MagicMock) -> None",
-"hash": "a00d525ef2",
-"calls": [
-"nce_events/api/panel_api_pkg/theme_table_tokens.py::get_theme_table_tokens"
-],
-"label": "get theme table tokens from payload",
 "label_source": "name"
 },
 {
@@ -16592,11 +15993,11 @@
 "name": "TAB_GROUPS",
 "qualname": "TAB_GROUPS",
 "sig": "",
-"hash": "2d0a2d7e40",
+"hash": "031c431763",
 "exported": false,
 "calls": [],
-"label": "Map each custom tab id to DocType fieldnames shown when that tab is active.",
-"label_source": "header"
+"label": "── Top-level tab definitions ─────────────────────────────────────────────────",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::TAB_ORDER",
@@ -16622,125 +16023,6 @@
 "exported": false,
 "calls": [],
 "label": "Human labels for Config, Display, Query, and Dialogs tab buttons.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::COLOUR_FIELDS",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "const",
-"name": "COLOUR_FIELDS",
-"qualname": "COLOUR_FIELDS",
-"sig": "",
-"hash": "be45eecd73",
-"exported": false,
-"calls": [],
-"label": "All DocType colour and border fieldnames managed on the Colours tab.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::COLOUR_OVERRIDE_FIELDS",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "const",
-"name": "COLOUR_OVERRIDE_FIELDS",
-"qualname": "COLOUR_OVERRIDE_FIELDS",
-"sig": "",
-"hash": "65428faef2",
-"exported": false,
-"calls": [],
-"label": "Colour override fields cleared by Revert to Theme Defaults while keeping theme link.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::FRAME_BORDER_LINE_SLOTS",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "const",
-"name": "FRAME_BORDER_LINE_SLOTS",
-"qualname": "FRAME_BORDER_LINE_SLOTS",
-"sig": "",
-"hash": "14fed58ee8",
-"exported": false,
-"calls": [],
-"label": "Frame chrome border width and color slot definitions for float frame and filter divider.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::TABLE_BORDER_LINE_SLOTS",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "const",
-"name": "TABLE_BORDER_LINE_SLOTS",
-"qualname": "TABLE_BORDER_LINE_SLOTS",
-"sig": "",
-"hash": "6bd005b665",
-"exported": false,
-"calls": [],
-"label": "Table line slots using theme-table tokens when width or color fields are empty.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::BORDER_WIDTH_OPTIONS",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "const",
-"name": "BORDER_WIDTH_OPTIONS",
-"qualname": "BORDER_WIDTH_OPTIONS",
-"sig": "",
-"hash": "749e4e2507",
-"exported": false,
-"calls": [],
-"label": "Thin, normal, and strong theme-border width choices for line preview selects.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::BACKGROUND_COLOUR_SLOTS",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "const",
-"name": "BACKGROUND_COLOUR_SLOTS",
-"qualname": "BACKGROUND_COLOUR_SLOTS",
-"sig": "",
-"hash": "dfe0a46148",
-"exported": false,
-"calls": [],
-"label": "Non-table ThemeSwatchPicker background slots with fg type and fallback classes.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::TABLE_COLOUR_SLOTS",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "const",
-"name": "TABLE_COLOUR_SLOTS",
-"qualname": "TABLE_COLOUR_SLOTS",
-"sig": "",
-"hash": "7de60c2d9b",
-"exported": false,
-"calls": [],
-"label": "Table row and header background slots with theme token vars and hex keys.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_colour_fg_type_field",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_colour_fg_type_field",
-"qualname": "_colour_fg_type_field",
-"sig": "(bgField)",
-"hash": "9bdd989719",
-"exported": false,
-"calls": [],
-"label": "Derive paired foreground type field name from a background class field.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_colour_fg_type_value",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_colour_fg_type_value",
-"qualname": "_colour_fg_type_value",
-"sig": "(frm, bgField)",
-"hash": "d4028d809e",
-"exported": false,
-"calls": [
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_colour_fg_type_field"
-],
-"label": "Read mono or tonal fg type from the form for a background slot.",
 "label_source": "header"
 },
 {
@@ -16776,13 +16058,13 @@
 "name": "_show_tab",
 "qualname": "_show_tab",
 "sig": "(frm, tab_id)",
-"hash": "4a9f6fb57c",
+"hash": "8c7da462d2",
 "exported": false,
 "calls": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_ensure_query_refresh_button"
 ],
-"label": "Hide unrelated fields and toggle matrix, colours, and dialogs wrappers for active tab.",
-"label_source": "header"
+"label": "── Top-level tab show/hide ───────────────────────────────────────────────────",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_ensure_tab_bar",
@@ -16791,7 +16073,7 @@
 "name": "_ensure_tab_bar",
 "qualname": "_ensure_tab_bar",
 "sig": "(frm)",
-"hash": "eb3b106b66",
+"hash": "f6af8e64fa",
 "exported": false,
 "calls": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_dialogs_tab",
@@ -16799,7 +16081,7 @@
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_show_tab"
 ],
 "label": "Inject custom tab bar and wrapper divs once on Page Panel refresh.",
-"label_source": "header"
+"label_source": "header-stale"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_ensure_panel_id_controls",
@@ -18254,700 +17536,25 @@
 "label_source": "header"
 },
 {
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_hide_colour_schema_fields",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_hide_colour_schema_fields",
-"qualname": "_hide_colour_schema_fields",
-"sig": "(frm)",
-"hash": "a0d6d284de",
-"exported": false,
-"calls": [],
-"label": "Hide raw COLOUR_FIELDS from default layout; Colours tab uses custom UI.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::PP_COLOUR_CLASS_RE",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "const",
-"name": "PP_COLOUR_CLASS_RE",
-"qualname": "PP_COLOUR_CLASS_RE",
-"sig": "",
-"hash": "a6a150f1e8",
-"exported": false,
-"calls": [],
-"label": "Regex matching curated ThemeSwatchPicker theme-bg and border class tokens.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_resolve_nce_theme_slug_for_colours",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_resolve_nce_theme_slug_for_colours",
-"qualname": "_resolve_nce_theme_slug_for_colours",
-"sig": "(themeLink, callback)",
-"hash": "8118981841",
-"exported": false,
-"calls": [],
-"label": "Resolve theme link to CSS slug via get_theme_slug_for_link for previews.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_colour_effective_class",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_colour_effective_class",
-"qualname": "_colour_effective_class",
-"sig": "(raw, fallback)",
-"hash": "bab23d6f99",
-"exported": false,
-"calls": [],
-"label": "Use saved class or slot fallback for colour preview display.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_colour_preview_bg_class",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_colour_preview_bg_class",
-"qualname": "_colour_preview_bg_class",
-"sig": "(className)",
-"hash": "a065895459",
-"exported": false,
-"calls": [],
-"label": "Map stored class to theme-bg-* preview class for swatch tiles.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_colour_overlay_fg_class",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_colour_overlay_fg_class",
-"qualname": "_colour_overlay_fg_class",
-"sig": "(bgClass, fgType)",
-"hash": "5711eb4683",
-"exported": false,
-"calls": [],
-"label": "Derive mono or tonal theme-text overlay class on background swatch.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::PP_BORDER_WIDTH_PX",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "const",
-"name": "PP_BORDER_WIDTH_PX",
-"qualname": "PP_BORDER_WIDTH_PX",
-"sig": "",
-"hash": "d7cc9a5ea1",
-"exported": false,
-"calls": [],
-"label": "Literal border widths for line preview when theme CSS vars unavailable.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_border_effective_width_class",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_border_effective_width_class",
-"qualname": "_border_effective_width_class",
-"sig": "(raw, fallback, themeClass)",
-"hash": "344356c2c3",
-"exported": false,
-"calls": [],
-"label": "Resolve width class from field, fallback, or theme table token.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_theme_table_hex",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_theme_table_hex",
-"qualname": "_theme_table_hex",
-"sig": "(themeTableTokens, key)",
-"hash": "4ded8159b8",
-"exported": false,
-"calls": [],
-"label": "Read hex colour from theme table token bundle by key.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_border_preview_color_css",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_border_preview_color_css",
-"qualname": "_border_preview_color_css",
-"sig": "(colorClass, themeColorVar, themeHex)",
-"hash": "351fe413f8",
-"exported": false,
-"calls": [],
-"label": "CSS color for border preview from class, var, or theme hex.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_theme_table_width_class",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_theme_table_width_class",
-"qualname": "_theme_table_width_class",
-"sig": "(themeTableTokens, slot)",
-"hash": "c05bd0ec9c",
-"exported": false,
-"calls": [],
-"label": "Read theme default border width class for a table line slot.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_table_theme_border_width_var",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_table_theme_border_width_var",
-"qualname": "_table_theme_border_width_var",
-"sig": "(slot)",
-"hash": "8eac3d7062",
-"exported": false,
-"calls": [],
-"label": "Pick CSS var name for table row versus column border width preview.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_border_line_preview_html",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_border_line_preview_html",
-"qualname": "_border_line_preview_html",
-"sig": "(frm, slot, themeTableTokens)",
-"hash": "4d45be22f5",
-"exported": false,
-"calls": [
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_border_effective_width_class",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_border_preview_color_css",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_table_theme_border_width_var",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_theme_table_hex",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_theme_table_width_class"
-],
-"label": "Small div preview of border width and color for one line slot.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_border_width_select_html",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_border_width_select_html",
-"qualname": "_border_width_select_html",
-"sig": "(frm, slot, themeTableTokens)",
-"hash": "4689281929",
-"exported": false,
-"calls": [
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_border_effective_width_class",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_theme_table_width_class"
-],
-"label": "Select control HTML for frame or table border width field.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_colour_preview_swatch_html",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_colour_preview_swatch_html",
-"qualname": "_colour_preview_swatch_html",
-"sig": "(className, fgType, isDefault, tokenVar, themeHex)",
-"hash": "b6fbd9a831",
-"exported": false,
-"calls": [
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_colour_overlay_fg_class",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_colour_preview_bg_class"
-],
-"label": "Swatch span for background slot using class, token var, or hex.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_colours_tab_pickers",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_bind_colours_tab_pickers",
-"qualname": "_bind_colours_tab_pickers",
-"sig": "(frm, $container)",
-"hash": "f06e39b666",
-"exported": false,
-"calls": [
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_colour_fg_type_field",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_render_colours_tab_previews"
-],
-"label": "Wire border width selects and ThemeSwatchPicker open buttons on Colours tab.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_reload_nce_theme_stylesheet",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_reload_nce_theme_stylesheet",
-"qualname": "_reload_nce_theme_stylesheet",
-"sig": "(cssHash)",
-"hash": "ea57cfceca",
-"exported": false,
-"calls": [],
-"label": "Cache-bust nce_theme.css link href after theme regenerate.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_revert_panel_colours_to_theme_defaults",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_revert_panel_colours_to_theme_defaults",
-"qualname": "_revert_panel_colours_to_theme_defaults",
-"sig": "(frm)",
-"hash": "1f8e975fc3",
-"exported": false,
-"calls": [
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_render_colours_tab"
-],
-"label": "Confirm and clear COLOUR_OVERRIDE_FIELDS then redraw Colours tab.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_mount_colours_theme_revert_btn",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_mount_colours_theme_revert_btn",
-"qualname": "_mount_colours_theme_revert_btn",
-"sig": "(frm, $row)",
-"hash": "d8bbd0ddf5",
-"exported": false,
-"calls": [
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_revert_panel_colours_to_theme_defaults"
-],
-"label": "Append Revert to Theme Defaults button on theme row once.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_refresh_colours_theme_css",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_refresh_colours_theme_css",
-"qualname": "_refresh_colours_theme_css",
-"sig": "(frm)",
-"hash": "c9693deefd",
-"exported": false,
-"calls": [
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_refresh_colours_theme_css.finish",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_reload_nce_theme_stylesheet",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_render_colours_tab_previews"
-],
-"label": "Call themes regenerate_theme_css then reload CSS and redraw previews.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_refresh_colours_theme_css.finish",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "finish",
-"qualname": "_refresh_colours_theme_css.finish",
-"sig": "(cssHash)",
-"hash": "7076fe0345",
-"exported": false,
-"calls": [
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_reload_nce_theme_stylesheet",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_render_colours_tab_previews"
-],
-"label": "Re-enable refresh button and redraw previews after CSS hash returned.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_fetch_active_nce_themes_for_colours",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_fetch_active_nce_themes_for_colours",
-"qualname": "_fetch_active_nce_themes_for_colours",
-"sig": "(callback)",
-"hash": "b82324cfa8",
-"exported": false,
-"calls": [],
-"label": "List Active NCE Theme docs for Colours tab theme dropdown.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_theme_select_options_html",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_theme_select_options_html",
-"qualname": "_theme_select_options_html",
-"sig": "(frm, themes)",
-"hash": "040a469912",
-"exported": false,
-"calls": [],
-"label": "Build theme select including site default and current inactive link.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_colours_theme_dropdown",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_bind_colours_theme_dropdown",
-"qualname": "_bind_colours_theme_dropdown",
-"sig": "(frm, $container, $editBtn)",
-"hash": "80257605f0",
-"exported": false,
-"calls": [
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_render_colours_tab_previews",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_update_colours_theme_edit_btn"
-],
-"label": "Set frm.theme on custom select change and refresh previews.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_theme_editor_url",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_theme_editor_url",
-"qualname": "_theme_editor_url",
-"sig": "(themeDoc)",
-"hash": "7653f05004",
-"exported": false,
-"calls": [],
-"label": "Build Themes app theme-settings URL for assigned panel theme doc.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_update_colours_theme_edit_btn",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_update_colours_theme_edit_btn",
-"qualname": "_update_colours_theme_edit_btn",
-"sig": "(frm, $btn)",
-"hash": "cad9dc59c1",
-"exported": false,
-"calls": [],
-"label": "Set Edit theme button label and enabled state from theme doc name.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_mount_theme_field_on_colours_tab",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_mount_theme_field_on_colours_tab",
-"qualname": "_mount_theme_field_on_colours_tab",
-"sig": "(frm, $container)",
-"hash": "7a69196175",
-"exported": false,
-"calls": [
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_colours_theme_dropdown",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_fetch_active_nce_themes_for_colours",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_mount_colours_theme_revert_btn",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_mount_theme_field_on_colours_tab.sync_existing_row",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_refresh_colours_theme_css",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_theme_editor_url",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_theme_select_options_html",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_update_colours_theme_edit_btn"
-],
-"label": "Inject theme select, Refresh, Edit, and revert controls into Colours shell.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_mount_theme_field_on_colours_tab.sync_existing_row",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "sync_existing_row",
-"qualname": "_mount_theme_field_on_colours_tab.sync_existing_row",
-"sig": "()",
-"hash": "3907733854",
-"exported": false,
-"calls": [
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_update_colours_theme_edit_btn"
-],
-"label": "Sync select value and edit button when theme row already mounted.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_tab_styles_html",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_colours_tab_styles_html",
-"qualname": "_colours_tab_styles_html",
-"sig": "()",
-"hash": "cf4530006c",
-"exported": false,
-"calls": [],
-"label": "Inject Colours tab layout and chrome table CSS once in shell.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_colours_preview_table_html",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_build_colours_preview_table_html",
-"qualname": "_build_colours_preview_table_html",
-"sig": "(frm, slots, sectionTitle, themeTableTokens)",
-"hash": "683bf69e00",
-"exported": false,
-"calls": [
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_colour_effective_class",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_colour_fg_type_field",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_colour_fg_type_value",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_colour_preview_swatch_html",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_theme_table_hex"
-],
-"label": "Backgrounds table with preview, class column, and Pick buttons.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_colours_border_table_html",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_build_colours_border_table_html",
-"qualname": "_build_colours_border_table_html",
-"sig": "(frm, slots, sectionTitle, themeTableTokens)",
-"hash": "f2c6d5b2e3",
-"exported": false,
-"calls": [
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_border_line_preview_html",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_border_width_select_html",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_theme_table_hex"
-],
-"label": "Lines table with preview, width select, color class, and Color button.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_table_preview_th_class",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_colours_table_preview_th_class",
-"qualname": "_colours_table_preview_th_class",
-"sig": "(frm)",
-"hash": "3324ade80f",
-"exported": false,
-"calls": [],
-"label": "Header row class attr for live table preview from col_header_bg_class.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_table_preview_tr_class",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_colours_table_preview_tr_class",
-"qualname": "_colours_table_preview_tr_class",
-"sig": "(frm, rowIndex)",
-"hash": "3eea138ff5",
-"exported": false,
-"calls": [],
-"label": "Alternating row class for live table preview from row bg fields.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_colours_table_live_preview_html",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_build_colours_table_live_preview_html",
-"qualname": "_build_colours_table_live_preview_html",
-"sig": "(frm)",
-"hash": "b5465d6abd",
-"exported": false,
-"calls": [
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_table_preview_th_class",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_table_preview_tr_class"
-],
-"label": "Sample theme-table HTML illustrating header and striped rows.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_colours_tables_section_html",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_build_colours_tables_section_html",
-"qualname": "_build_colours_tables_section_html",
-"sig": "(frm, themeTableTokens)",
-"hash": "17294afad0",
-"exported": false,
-"calls": [
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_build_colours_border_table_html",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_build_colours_preview_table_html",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_build_colours_table_live_preview_html"
-],
-"label": "Tables section copy plus table colour, live preview, and table borders.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_ensure_colours_tab_shell",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_ensure_colours_tab_shell",
-"qualname": "_ensure_colours_tab_shell",
-"sig": "(frm, $container)",
-"hash": "e153c9c0aa",
-"exported": false,
-"calls": [
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_tab_styles_html",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_mount_theme_field_on_colours_tab"
-],
-"label": "Create Colours shell with theme field, previews, arrows, and other panels.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_colours_tab_previews",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_render_colours_tab_previews",
-"qualname": "_render_colours_tab_previews",
-"sig": "(frm, themeSlug, $container)",
-"hash": "a30b785339",
-"exported": false,
-"calls": [
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_fill_colours_tab_previews",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_resolve_nce_theme_slug_for_colours"
-],
-"label": "Resolve theme slug if needed then load table tokens and fill previews.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_fill_colours_tab_previews",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_fill_colours_tab_previews",
-"qualname": "_fill_colours_tab_previews",
-"sig": "(frm, themeSlug, $container, themeTableTokens)",
-"hash": "4bb80ac2c5",
-"exported": false,
-"calls": [
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_colours_tab_pickers",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_build_colours_border_table_html",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_build_colours_preview_table_html",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_build_colours_tables_section_html"
-],
-"label": "Render scoped preview HTML for backgrounds, tables, and frame lines.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_other_selected_names",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_colours_other_selected_names",
-"qualname": "_colours_other_selected_names",
-"sig": "($container)",
-"hash": "98b2e60234",
-"exported": false,
-"calls": [],
-"label": "List Page Panel names selected in other panels copy table.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_update_arrow_buttons",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_colours_update_arrow_buttons",
-"qualname": "_colours_update_arrow_buttons",
-"sig": "($container)",
-"hash": "224a43f6d4",
-"exported": false,
-"calls": [
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_other_selected_names"
-],
-"label": "Enable Copy From or Copy To arrows based on other panel selection count.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_other_panels_table",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_render_other_panels_table",
-"qualname": "_render_other_panels_table",
-"sig": "(frm, $container)",
-"hash": "9942a83f1f",
-"exported": false,
-"calls": [
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_copy_arrows",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_update_arrow_buttons"
-],
-"label": "Load get_other_page_panels list with select-all for colour copy targets.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_copy_arrows",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_bind_copy_arrows",
-"qualname": "_bind_copy_arrows",
-"sig": "(frm, $container)",
-"hash": "420990d85b",
-"exported": false,
-"calls": [
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_copy_arrows.run_copy",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_other_selected_names",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_render_colours_tab"
-],
-"label": "Wire Copy From and Copy To colour bulk actions with confirm dialogs.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_copy_arrows.run_copy",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "run_copy",
-"qualname": "_bind_copy_arrows.run_copy",
-"sig": "()",
-"hash": "c2ab75ec86",
-"exported": false,
-"calls": [],
-"wired_by": [
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_copy_arrows"
-],
-"label": "Call copy_panel_colours API after optional save when panel dirty.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_colours_tab",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "function",
-"name": "_render_colours_tab",
-"qualname": "_render_colours_tab",
-"sig": "(frm)",
-"hash": "45d2ae94b2",
-"exported": false,
-"calls": [
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_ensure_colours_tab_shell",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_render_colours_tab_previews",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_render_other_panels_table"
-],
-"label": "Ensure shell, redraw previews, and load other panels table on Colours tab.",
-"label_source": "header"
-},
-{
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::form.on Page Panel.refresh",
 "file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
 "kind": "method",
 "name": "refresh",
 "qualname": "form.on Page Panel.refresh",
 "sig": "(frm)",
-"hash": "2510b1d29a",
+"hash": "163e6b9b64",
 "exported": false,
 "calls": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_ensure_panel_id_controls",
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_ensure_query_refresh_button",
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_ensure_tab_bar",
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_hide_colour_schema_fields",
 "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters"
 ],
 "wired_by": [
 "nce_events/nce_events/doctype/page_panel/page_panel.js"
 ],
 "label": "Runs on Page Panel refresh: tab bar, panel id, filters, hide native tabs and grids.",
-"label_source": "header"
-},
-{
-"id": "nce_events/nce_events/doctype/page_panel/page_panel.js::form.on Page Panel.theme",
-"file": "nce_events/nce_events/doctype/page_panel/page_panel.js",
-"kind": "method",
-"name": "theme",
-"qualname": "form.on Page Panel.theme",
-"sig": "(frm)",
-"hash": "92a4ced4e7",
-"exported": false,
-"calls": [
-"nce_events/nce_events/doctype/page_panel/page_panel.js::_render_colours_tab"
-],
-"wired_by": [
-"nce_events/nce_events/doctype/page_panel/page_panel.js"
-],
-"label": "Redraw Colours tab when theme changes while Colours tab active.",
-"label_source": "header"
+"label_source": "header-stale"
 },
 {
 "id": "nce_events/nce_events/doctype/page_panel/page_panel.js::form.on Page Panel.root_doctype",
@@ -20136,9 +18743,9 @@
 "name": "execute",
 "qualname": "execute",
 "sig": "() -> None",
-"hash": "dede500cf5",
+"hash": "546ac6f90f",
 "calls": [],
-"label": "Set the header colour fields to empty on every Page Panel.",
+"label": "No-op: chrome override fields were removed from Page Panel.",
 "label_source": "docstring"
 },
 {
@@ -20364,7 +18971,7 @@
 "name": "all",
 "qualname": "all",
 "sig": "",
-"hash": "73f9d467cf",
+"hash": "30d92ba1c8",
 "calls": [],
 "label": "hierarchy_explorer.css (the whole file)",
 "label_source": "title"
@@ -20388,7 +18995,7 @@
 "name": "all",
 "qualname": "all",
 "sig": "",
-"hash": "0eeb93921c",
+"hash": "6bd16cfdd4",
 "calls": [],
 "label": "panel_page.css (the whole file)",
 "label_source": "title"
@@ -20400,21 +19007,9 @@
 "name": "all",
 "qualname": "all",
 "sig": "",
-"hash": "6a005a832c",
+"hash": "bac450786a",
 "calls": [],
 "label": "schema_explorer.css (the whole file)",
-"label_source": "title"
-},
-{
-"id": "nce_events/public/css/theme_defaults.css::all",
-"file": "nce_events/public/css/theme_defaults.css",
-"kind": "css-section",
-"name": "all",
-"qualname": "all",
-"sig": "",
-"hash": "379e7522a0",
-"calls": [],
-"label": "theme_defaults.css (the whole file)",
 "label_source": "title"
 },
 {
@@ -20604,10 +19199,10 @@
 "name": "App",
 "qualname": "App",
 "sig": "",
-"hash": "cbbbd767e1",
+"hash": "2ed45638ff",
 "calls": [],
-"label": "Renders the Evaluations header and swaps the main pane via shell activeView.",
-"label_source": "header"
+"label": "Root Vue shell for the Evaluations desk SPA with view switching via shell store.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/evaluations/App.vue::VIEWS",
@@ -20629,10 +19224,10 @@
 "name": "RatingKanbanPlaceholder",
 "qualname": "RatingKanbanPlaceholder",
 "sig": "",
-"hash": "fad83e2944",
+"hash": "a9be182e7a",
 "calls": [],
-"label": "Shows active view and event id from shell, or prompts to open /app/evaluations with an event id.",
-"label_source": "header"
+"label": "Placeholder kanban view shown when no event is selected in the evaluations shell.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/evaluations/components/RatingKanbanView.vue::RatingKanbanView",
@@ -20641,10 +19236,10 @@
 "name": "RatingKanbanView",
 "qualname": "RatingKanbanView",
 "sig": "",
-"hash": "49c2a40373",
+"hash": "052dec96c3",
 "calls": [],
-"label": "Shows hint without eventId, else loading/error states or a grid of players by rating lanes 0–7 using useEnrollments data.",
-"label_source": "header"
+"label": "Gender-lane rating kanban board for event enrollments in the evaluations SPA.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/evaluations/components/RatingKanbanView.vue::COLOR_MALE",
@@ -22009,10 +20604,10 @@
 "name": "App",
 "qualname": "App",
 "sig": "",
-"hash": "6eb7b95bb4",
+"hash": "6932d9368b",
 "calls": [],
-"label": "Panel page v2 root mounted from main.js: WP Tables float, drilled panels, find, tags, cards, and form dialogs.",
-"label_source": "header"
+"label": "Root Vue app orchestrating panel floats, find, form dialogs, and SPA navigation.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/App.vue::ROOT_INSET",
@@ -22024,7 +20619,7 @@
 "hash": "8cde29d02f",
 "exported": false,
 "calls": [],
-"label": "Pixel inset for root PanelFloat placement capped from viewport edges.",
+"label": "Pixel inset from viewport edges for root PanelFloat auto-size bounds.",
 "label_source": "header"
 },
 {
@@ -22037,7 +20632,7 @@
 "hash": "dde045c50b",
 "exported": false,
 "calls": [],
-"label": "Initial left coordinate for the root WP Tables PanelFloat.",
+"label": "Initial left position of the root WP Tables PanelFloat.",
 "label_source": "header"
 },
 {
@@ -22050,7 +20645,7 @@
 "hash": "9e39da6c5b",
 "exported": false,
 "calls": [],
-"label": "Initial top coordinate for the root WP Tables PanelFloat.",
+"label": "Initial top position of the root WP Tables PanelFloat.",
 "label_source": "header"
 },
 {
@@ -22063,7 +20658,7 @@
 "hash": "6a927b0c68",
 "exported": false,
 "calls": [],
-"label": "Reloads the open panel whose doctype matches; wired to window._nce_refresh_panel and actions.",
+"label": "Calls reload on the open panel matching a doctype for panel actions and window hooks.",
 "label_source": "header"
 },
 {
@@ -22079,7 +20674,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Executes a page action chosen from the top ActionsPanel bar.",
+"label": "Runs the selected Page Panel action from ActionsPanel via usePanelActions.",
 "label_source": "header"
 },
 {
@@ -22098,7 +20693,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Opens View as website via wp_user_switch using the row family id field from panel config.",
+"label": "Opens View as website in a new tab using wp family id from the row and wp_user_switch API.",
 "label_source": "header"
 },
 {
@@ -22114,7 +20709,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Removes a dropped row from root or panel rows and pushes undo state onto dropStack.",
+"label": "Removes a row from root or drilled panel rows and pushes undo state onto dropStack.",
 "label_source": "header"
 },
 {
@@ -22127,7 +20722,7 @@
 "hash": "aab044701c",
 "exported": false,
 "calls": [],
-"label": "Restores the last row removed by onRowDrop at its previous index.",
+"label": "Restores the last dropped row at its prior index on root or a drilled panel.",
 "label_source": "header"
 },
 {
@@ -22145,7 +20740,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Handles Ctrl or Cmd+Z to undo the most recent row drop when dropStack has entries.",
+"label": "Handles Ctrl/Cmd-Z to undo the last panel row drop when dropStack has entries.",
 "label_source": "header"
 },
 {
@@ -22158,7 +20753,7 @@
 "hash": "7ec547a5d6",
 "exported": false,
 "calls": [],
-"label": "Builds drilled panel header text with parent context and Find or Found suffix.",
+"label": "Builds drilled panel header and footer text including parent context and Find or Found suffix.",
 "label_source": "header"
 },
 {
@@ -22171,7 +20766,7 @@
 "hash": "190243c988",
 "exported": false,
 "calls": [],
-"label": "Supplies find column set during find mode otherwise normal panel columns.",
+"label": "Returns find column set during find mode otherwise the panel configured columns.",
 "label_source": "header"
 },
 {
@@ -22188,7 +20783,7 @@
 "nce_events/public/js/panel_page_v2/App.vue::panelTableColumns",
 "nce_events/public/js/panel_page_v2/utils/panelTableColWidths.js::preparePanelTableLayout"
 ],
-"label": "Precomputes float width and initial column widths via preparePanelTableLayout before table render.",
+"label": "Stores float width and initial column widths from preparePanelTableLayout before table paint.",
 "label_source": "header"
 },
 {
@@ -22204,7 +20799,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Stores PanelTable reported minimum width on the panel object.",
+"label": "Persists measured table minimum width on the panel when PanelTable reports it.",
 "label_source": "header"
 },
 {
@@ -22217,7 +20812,7 @@
 "hash": "9d3b5cbcad",
 "exported": false,
 "calls": [],
-"label": "Returns stored layout float width or PANEL_FLOAT_DEFAULT_W for PanelFloat init-w.",
+"label": "Resolves PanelFloat init width from layout or PANEL_FLOAT_DEFAULT_W fallback.",
 "label_source": "header"
 },
 {
@@ -22230,7 +20825,7 @@
 "hash": "25daf0ea4f",
 "exported": false,
 "calls": [],
-"label": "Returns the live row array from _panelRows ref or rows for table and export.",
+"label": "Returns the current row array from _panelRows ref or rows on a panel or root.",
 "label_source": "header"
 },
 {
@@ -22243,7 +20838,7 @@
 "hash": "1cc1d8e645",
 "exported": false,
 "calls": [],
-"label": "Removes first row matching name from a list; used by window._nce_remove_panel_row.",
+"label": "Removes one row by name from a list; used by _nce_remove_panel_row hook.",
 "label_source": "header"
 },
 {
@@ -22258,7 +20853,7 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/App.vue::panelLiveRows"
 ],
-"label": "Returns empty rows during find criteria editing else live panel rows.",
+"label": "Empty during find criteria mode otherwise live rows for the find-stack table.",
 "label_source": "header"
 },
 {
@@ -22271,7 +20866,7 @@
 "hash": "bae9ffe272",
 "exported": false,
 "calls": [],
-"label": "Applies a found row set through the panel API setFoundSet hook.",
+"label": "Pushes found rows into the panel API found set after a find operation.",
 "label_source": "header"
 },
 {
@@ -22284,7 +20879,7 @@
 "hash": "59f5c26c6d",
 "exported": false,
 "calls": [],
-"label": "Clears found set state and find columns on a panel.",
+"label": "Clears found set and drops cached find columns when exiting browse find.",
 "label_source": "header"
 },
 {
@@ -22297,7 +20892,7 @@
 "hash": "105a76bf54",
 "exported": false,
 "calls": [],
-"label": "Shows Enter at least one search criterion when a find action has no criteria.",
+"label": "Shows frappe msgprint when find actions need at least one criterion.",
 "label_source": "header"
 },
 {
@@ -22316,7 +20911,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Runs performFind on the panel find composable or shows no-criteria message.",
+"label": "Runs performFind and applies found set or shows no-criteria message.",
 "label_source": "header"
 },
 {
@@ -22335,7 +20930,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Runs performFindConstrain and applies results to the found set.",
+"label": "Runs performFindConstrain to narrow the found set or prompts for criteria.",
 "label_source": "header"
 },
 {
@@ -22354,7 +20949,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Runs extendFind and applies extended results to the found set.",
+"label": "Runs extendFind to widen the found set or prompts for criteria.",
 "label_source": "header"
 },
 {
@@ -22373,7 +20968,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Cancels in-progress find criteria and restores browse or clears find.",
+"label": "Cancels criteria editing and restores found set or clears find state.",
 "label_source": "header"
 },
 {
@@ -22391,7 +20986,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Builds find columns and starts a new find session hiding the filter bar.",
+"label": "Rebuilds find columns and starts a new find session hiding the filter bar.",
 "label_source": "header"
 },
 {
@@ -22409,7 +21004,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Exits find mode and clears find state on the panel.",
+"label": "Exits find mode and clears found set via panelClearFind.",
 "label_source": "header"
 },
 {
@@ -22427,7 +21022,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Rebuilds find columns and re-enters modify-find mode.",
+"label": "Rebuilds find columns and reopens criteria for the current find.",
 "label_source": "header"
 },
 {
@@ -22446,7 +21041,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Adds an OR criteria row or shows no-criteria message if none exist.",
+"label": "Adds an OR criteria row after buildFindColumns or shows no-criteria message.",
 "label_source": "header"
 },
 {
@@ -22464,7 +21059,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Duplicates the active OR row or prompts to select a find row first.",
+"label": "Duplicates the active OR row or msgprints to select a find row first.",
 "label_source": "header"
 },
 {
@@ -22482,7 +21077,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Activates in-panel find when a Form Dialog is linked otherwise shows configuration hint.",
+"label": "Activates in-panel find when form_dialog is linked; otherwise explains Dialogs tab setup.",
 "label_source": "header"
 },
 {
@@ -22495,7 +21090,7 @@
 "hash": "f8761e9b4c",
 "exported": false,
 "calls": [],
-"label": "Computes spawn position offset from root or parent panel for a new drill float.",
+"label": "Offsets a new panel from root or parent float position for drill-down openPanel.",
 "label_source": "header"
 },
 {
@@ -22508,7 +21103,7 @@
 "hash": "972dfa0243",
 "exported": false,
 "calls": [],
-"label": "Horizontal pixel offset between cascaded drilled panel slots.",
+"label": "Horizontal stagger step in pixels for cascadeOpenPanels arrangement.",
 "label_source": "header"
 },
 {
@@ -22521,7 +21116,7 @@
 "hash": "f5c33ecf25",
 "exported": false,
 "calls": [],
-"label": "Vertical pixel offset used only by cascade layout not drill spawn nextPos.",
+"label": "Vertical stagger step for cascade action; smaller than drill-down nextPos offset.",
 "label_source": "header"
 },
 {
@@ -22534,7 +21129,7 @@
 "hash": "60476db08f",
 "exported": false,
 "calls": [],
-"label": "Saves PanelFloat component ref on a panel for z-index and position control.",
+"label": "Stores PanelFloat component ref on a drilled panel for z-order and position.",
 "label_source": "header"
 },
 {
@@ -22566,7 +21161,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Updates z tick and silently cascades open panels when a float comes forward.",
+"label": "Bumps z tick and cascades open panels without alert when a float comes forward.",
 "label_source": "header"
 },
 {
@@ -22579,7 +21174,7 @@
 "hash": "9025d6a012",
 "exported": false,
 "calls": [],
-"label": "Returns highest getZ among root and all open panel floats.",
+"label": "Maximum z-index among root and all drilled PanelFloat refs.",
 "label_source": "header"
 },
 {
@@ -22594,7 +21189,7 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/App.vue::maxTablePanelZ"
 ],
-"label": "True when the given panel or root float currently has the top table-zone z-index.",
+"label": "True when the given panel or root float has z at least maxTablePanelZ.",
 "label_source": "header"
 },
 {
@@ -22610,7 +21205,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Brings the specified drilled panel or root float to the front.",
+"label": "Brings root or drilled PanelFloat to front when toolbar clicks a back panel.",
 "label_source": "header"
 },
 {
@@ -22623,7 +21218,7 @@
 "hash": "eb0db2fe3d",
 "exported": false,
 "calls": [],
-"label": "Returns x and y for a cascade slot stepping from root init with CASCADE_STEP constants.",
+"label": "Computes cascaded x/y from ROOT init plus CASCADE_STEP multiples for slot index.",
 "label_source": "header"
 },
 {
@@ -22638,7 +21233,7 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/App.vue::cascadePositionForSlot"
 ],
-"label": "Repositions root and drilled floats by z-order slots with optional success alert.",
+"label": "Resets root position and staggers drilled panels by z-order; optional frappe alert.",
 "label_source": "header"
 },
 {
@@ -22651,7 +21246,7 @@
 "hash": "6cc38483d4",
 "exported": false,
 "calls": [],
-"label": "Brings a newly opened panel float to front after layout is ready.",
+"label": "After openPanel load, brings the new float to front on next tick.",
 "label_source": "header"
 },
 {
@@ -22667,7 +21262,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Shows TagFinder for the panel doctype near the panel position from table tags toolbar.",
+"label": "Sets tag finder doctype and position near the panel for PanelTable tags event.",
 "label_source": "header"
 },
 {
@@ -22689,7 +21284,7 @@
 "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel",
 "nce_events/public/js/panel_page_v2/utils/findColumns.js::buildFindColumns"
 ],
-"label": "Opens or replaces a drilled panel with usePanel load, find state, and layout prep.",
+"label": "Creates reactive drilled panel with usePanel load, find state, layout, and replaces same doctype.",
 "label_source": "header"
 },
 {
@@ -22720,7 +21315,7 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/App.vue::closePanel"
 ],
-"label": "Closes overlays and all drilled panels while leaving the root WP Tables float open.",
+"label": "Closes overlays and all drilled panels; leaves root WP Tables float open.",
 "label_source": "header"
 },
 {
@@ -22738,7 +21333,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Opens a drilled panel for the row frappe_doctype from the root table click.",
+"label": "Opens a drilled panel for the row frappe_doctype from the root WP Tables table.",
 "label_source": "header"
 },
 {
@@ -22754,7 +21349,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Opens SyncErrorDialog populated from the row last sync status fields.",
+"label": "Opens SyncErrorDialog with last sync fields from the clicked WP Tables row.",
 "label_source": "header"
 },
 {
@@ -22772,7 +21367,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Opens default card modal or drills a filtered child panel with optional parent context title.",
+"label": "Opens default Card Definition modal or drills a filtered child panel with parent title context.",
 "label_source": "header"
 },
 {
@@ -22788,7 +21383,7 @@
 "nce_events/public/js/panel_page_v2/App.vue::openPanel",
 "nce_events/public/js/panel_page_v2/App.vue::panelLiveRows"
 ],
-"label": "Opens a related child panel after Form Dialog Go To navigation with parent title context.",
+"label": "Opens related child panel after form dialog Go to and reloads it before dialog closes.",
 "label_source": "header"
 },
 {
@@ -22804,7 +21399,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Opens linked Form Dialog from row click or desk URL when open_card_on_click is set.",
+"label": "Opens form dialog from row, else opens Frappe desk in new tab when open_card_on_click.",
 "label_source": "header"
 },
 {
@@ -22820,7 +21415,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Routes user filters to root panel, found-set browse, or per-panel setFilters.",
+"label": "Applies user filters on root, found-set browse, or normal panel filter API.",
 "label_source": "header"
 },
 {
@@ -22836,7 +21431,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Reloads the root WP Tables panel data.",
+"label": "Reloads the root WP Tables usePanel data.",
 "label_source": "header"
 },
 {
@@ -22852,7 +21447,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Triggers _reload on a drilled panel when available.",
+"label": "Calls drilled panel _reload when the header refresh fires.",
 "label_source": "header"
 },
 {
@@ -22868,7 +21463,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Opens new-record Form Dialog or warns when no Form Dialog is linked on the panel.",
+"label": "Opens new-record form dialog or msgprints to link Form Dialog on the Page Panel.",
 "label_source": "header"
 },
 {
@@ -22883,7 +21478,7 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/App.vue::panelLiveRows"
 ],
-"label": "Returns the same row list the visible panel table shows for export filtering.",
+"label": "Row list for export matching what PanelTable currently displays.",
 "label_source": "header"
 },
 {
@@ -22898,7 +21493,7 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/App.vue::panelDisplayRowsForExport"
 ],
-"label": "Builds export_panel_data arguments with filters and visible row names JSON.",
+"label": "Builds export_panel_data args with doctype, parent filter, and visible row names JSON.",
 "label_source": "header"
 },
 {
@@ -22911,7 +21506,7 @@
 "hash": "7dcaa3a6fc",
 "exported": false,
 "calls": [],
-"label": "Fetches export URL as blob and saves CSV with a frappe success or error alert.",
+"label": "Fetches export URL as blob and triggers browser download with success or failure alert.",
 "label_source": "header"
 },
 {
@@ -22931,7 +21526,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Calls panel export API and downloads CSV for the panel visible rows.",
+"label": "Calls export_panel_data via frappeCall then downloads CSV for filtered panel rows.",
 "label_source": "header"
 },
 {
@@ -22950,7 +21545,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Exports panel data and copies a Google Sheets IMPORTDATA formula to the clipboard.",
+"label": "Exports panel rows via API and copies Google Sheets IMPORTDATA formula to clipboard.",
 "label_source": "header"
 },
 {
@@ -23031,10 +21626,10 @@
 "name": "ActionsPanel",
 "qualname": "ActionsPanel",
 "sig": "",
-"hash": "e4eaf4f925",
+"hash": "7bd60ce27f",
 "calls": [],
-"label": "Renders workspace back button, SpaPageNavBar from useSpaPageNav, and emits select for panel actions.",
-"label_source": "header"
+"label": "Vue actions bar combining SpaPageNavBar page switcher and Panel Action buttons.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/ActionsPanel.vue::goWorkspace",
@@ -23059,10 +21654,10 @@
 "name": "ColorPicker",
 "qualname": "ColorPicker",
 "sig": "",
-"hash": "0270d1332d",
+"hash": "15c8152c82",
 "calls": [],
-"label": "v-model hex picker embedded in FormatRuleEditor for conditional cell colors.",
-"label_source": "header"
+"label": "HSV color picker with swatches, hex input, and eye-dropper for format rules.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/ColorPicker.vue::hsvToHex",
@@ -23214,10 +21809,10 @@
 "name": "DisplayWidget",
 "qualname": "DisplayWidget",
 "sig": "",
-"hash": "57a6e6f0af",
+"hash": "651d5cdc2e",
 "calls": [],
-"label": "Shows themed label and surface value from flat record field or pre-resolved hop path for grid tiles.",
-"label_source": "header"
+"label": "Read-only display-widget showing a label and resolved field value from record hops.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/FieldWidget.vue::FieldWidget",
@@ -23226,10 +21821,10 @@
 "name": "FieldWidget",
 "qualname": "FieldWidget",
 "sig": "",
-"hash": "657572e171",
+"hash": "ad87740b6f",
 "calls": [],
-"label": "Maps meta fieldtype to inputs and honors config.editable for inline panel form field editing in grid.",
-"label_source": "header"
+"label": "Editable field widget wrapper for panel form dialog custom field rendering.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/FieldWidget.vue::onSave",
@@ -23272,10 +21867,10 @@
 "name": "FindPanel",
 "qualname": "FindPanel",
 "sig": "",
-"hash": "a1f428e57f",
+"hash": "7108d344a4",
 "calls": [],
-"label": "Legacy floating find plus browse UI; superseded by App find stack.",
-"label_source": "header"
+"label": "ARCHIVED: separate Find float replaced by in-place find on PanelFloat (App.vue + PanelFindActionBar.vue).",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/FindPanel.vue::label",
@@ -23348,10 +21943,10 @@
 "name": "FormatRuleEditor",
 "qualname": "FormatRuleEditor",
 "sig": "",
-"hash": "5c71d2eafa",
+"hash": "bd9d38b5c5",
 "calls": [],
-"label": "Vue widget mounted for Page Panel column format rules with Apply and Clear.",
-"label_source": "header"
+"label": "Vue editor for panel table cell format rules with color and weight toggles.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/FormatRuleEditor.vue::syncFromProps",
@@ -23443,10 +22038,10 @@
 "name": "PanelFindActionBar",
 "qualname": "PanelFindActionBar",
 "sig": "",
-"hash": "3bc8cd2571",
+"hash": "45dbdd2a93",
 "calls": [],
-"label": "Emits find-perform, constrain, extend, OR, and browse controls based on mode and parent props.",
-"label_source": "header"
+"label": "In-panel find action bar with perform, constrain, extend, and exit find controls.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFindActionBar.vue::label",
@@ -23468,10 +22063,10 @@
 "name": "PanelFindRow",
 "qualname": "PanelFindRow",
 "sig": "",
-"hash": "1127039fb2",
+"hash": "a87d9573d5",
 "calls": [],
-"label": "Binds criteria inputs per column and forwards row activation and criterion updates to App find state.",
-"label_source": "header"
+"label": "Single ppv2-find-row criterion inputs with OR label and find-perform on Enter.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFindRow.vue::onRowActivate",
@@ -23512,10 +22107,10 @@
 "name": "PanelFindToolbar",
 "qualname": "PanelFindToolbar",
 "sig": "",
-"hash": "70968fcdbe",
+"hash": "f5d72bc59a",
 "calls": [],
-"label": "Unused header find and browse controls emitting find-* and export events.",
-"label_source": "header"
+"label": "ARCHIVED: find actions moved to PanelFindActionBar.vue (bar below header).",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFindToolbar.vue::label",
@@ -23537,10 +22132,10 @@
 "name": "PanelFloat",
 "qualname": "PanelFloat",
 "sig": "",
-"hash": "5305841089",
+"hash": "b5205d3fa3",
 "calls": [],
-"label": "Hosts panel page v2 content in a themed float with header, body, optional footer, and corner resize handle.",
-"label_source": "header"
+"label": "Draggable resizable floating panel shell hosting header, find bar, and table content.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::getNextZ",
@@ -23656,7 +22251,7 @@
 "name": "startResize",
 "qualname": "startResize",
 "sig": "(e)",
-"hash": "d79d6fb096",
+"hash": "f8dc185bee",
 "exported": false,
 "calls": [
 "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::_addOverlay",
@@ -23666,7 +22261,7 @@
 "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::PanelFloat"
 ],
 "label": "Starts corner resize with outline preview, optionally fixing height when leaving autoSize mode.",
-"label_source": "header"
+"label_source": "header-stale"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::startResize.onMove",
@@ -23708,10 +22303,10 @@
 "name": "PanelFormDateTimeField",
 "qualname": "PanelFormDateTimeField",
 "sig": "",
-"hash": "14e42032ff",
+"hash": "529a27d9f8",
 "calls": [],
-"label": "Hosts a Frappe Date or Datetime control for one panel form dialog field, wired from PanelFormField.",
-"label_source": "header"
+"label": "Mounts Frappe date/time controls for panel form dialog datetime field types.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDateTimeField.vue::buildDf",
@@ -23750,10 +22345,10 @@
 "name": "PanelFormDialog",
 "qualname": "PanelFormDialog",
 "sig": "",
-"hash": "3405aec9fa",
+"hash": "19d6c26974",
 "calls": [],
-"label": "Root form dialog from App.vue: header, body, footer, find chrome, submit, and nested PeopleMapDialog.",
-"label_source": "header"
+"label": "Main form dialog shell with find, native form, related tabs, submit, and WP readback.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::escapeForPreHtml",
@@ -23986,7 +22581,7 @@
 "name": "startResize",
 "qualname": "startResize",
 "sig": "(e)",
-"hash": "402c4ac17f",
+"hash": "54e9aab2e3",
 "exported": false,
 "calls": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::_addDragResizeOverlay"
@@ -23995,7 +22590,7 @@
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::PanelFormDialog"
 ],
 "label": "Corner-resize with outline preview, clamped between min size and ninety-five viewport percent.",
-"label_source": "header"
+"label_source": "header-stale"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::startResize.onMove",
@@ -24525,10 +23120,10 @@
 "name": "PanelFormDialogBody",
 "qualname": "PanelFormDialogBody",
 "sig": "",
-"hash": "e45dd5c130",
+"hash": "d2fdc8c37e",
 "calls": [],
-"label": "Renders all form dialog tab modes and exposes related-row save, reset, reload, and row getters to PanelFormDialog.",
-"label_source": "header"
+"label": "Form dialog body rendering sections, fields, and tab content for all dialog modes.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue::COLLAPSIBLE_SECTION_FALLBACK_LABEL",
@@ -24753,10 +23348,10 @@
 "name": "PanelFormDialogFooter",
 "qualname": "PanelFormDialogFooter",
 "sig": "",
-"hash": "2d49d2b305",
+"hash": "4b3c7f117a",
 "calls": [],
-"label": "Renders find, custom, and save footer bands for PanelFormDialog and emits their actions.",
-"label_source": "header"
+"label": "Form dialog footer with FileMaker-style find buttons and conditional submit visibility.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialogFooter.vue::HIDE_NEVER",
@@ -24917,10 +23512,10 @@
 "name": "PanelFormDialogHeader",
 "qualname": "PanelFormDialogHeader",
 "sig": "",
-"hash": "54b533a7af",
+"hash": "6ff057c35c",
 "calls": [],
-"label": "Shows title, optional prev/next with position label, fit-width, and close; emits nav and chrome events to PanelFormDialog.",
-"label_source": "header"
+"label": "Form dialog header with title, navigation, and fixed primary chrome styling.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialogInlineChildTab.vue::PanelFormDialogInlineChildTab",
@@ -24929,10 +23524,10 @@
 "name": "PanelFormDialogInlineChildTab",
 "qualname": "PanelFormDialogInlineChildTab",
 "sig": "",
-"hash": "f417fc9fe2",
+"hash": "d41b6da126",
 "calls": [],
-"label": "Panel form dialog tab body for inline child tables; loaded from PanelFormDialogBody for _inlineChild tabs.",
-"label_source": "header"
+"label": "Inline child table tab editing portal columns inside a panel form dialog.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialogInlineChildTab.vue::rowKey",
@@ -25301,10 +23896,10 @@
 "name": "PanelFormDialogNativeFormTab",
 "qualname": "PanelFormDialogNativeFormTab",
 "sig": "",
-"hash": "195d9b7312",
+"hash": "3e90a65d03",
 "calls": [],
-"label": "Renders loading or error states then a mount point for the injected native Frappe form host.",
-"label_source": "header"
+"label": "Embeds a native Frappe form in a form dialog tab for full DocType editing.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialogNativeFormTab.vue::remount",
@@ -25328,10 +23923,10 @@
 "name": "PanelFormDialogRelatedTab",
 "qualname": "PanelFormDialogRelatedTab",
 "sig": "",
-"hash": "4ffbedfdf4",
+"hash": "0c83fad78e",
 "calls": [],
-"label": "Renders Form Dialog related tab grid, actions, Go to panel, and field metadata used by PanelFormDialogBody.",
-"label_source": "header"
+"label": "Related DocType tab with editable grid, format rules, and Go to panel navigation.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::STAGED_NEW_ROW_PREFIX",
@@ -26092,10 +24687,10 @@
 "name": "PanelFormDialogTabBar",
 "qualname": "PanelFormDialogTabBar",
 "sig": "",
-"hash": "c8e5ef777a",
+"hash": "16efacf972",
 "calls": [],
-"label": "Shows tab buttons when multiple tabs exist and optional Help; disables related tabs when blockRelatedTabs.",
-"label_source": "header"
+"label": "Tab bar switching between form dialog tabs including find help access.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormField.vue::PanelFormField",
@@ -26104,10 +24699,10 @@
 "name": "PanelFormField",
 "qualname": "PanelFormField",
 "sig": "",
-"hash": "c585aa990c",
+"hash": "6306679dff",
 "calls": [],
-"label": "Single field row in PanelFormDialogBody for data entry, layout markers, or find-mode criteria.",
-"label_source": "header"
+"label": "Renders individual form dialog fields including find-mode criteria controls.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormField.vue::normFieldtype",
@@ -26216,10 +24811,10 @@
 "name": "PanelFormFindSearchHelpModal",
 "qualname": "PanelFormFindSearchHelpModal",
 "sig": "",
-"hash": "89380885d4",
+"hash": "7b3614e04d",
 "calls": [],
-"label": "Body-teleported search help opened from PanelFormDialogBody during find criteria entry.",
-"label_source": "header"
+"label": "Help modal explaining FileMaker-style find/search operators in form dialog find.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormFindSearchHelpModal.vue::tr",
@@ -26241,10 +24836,10 @@
 "name": "PanelFormLinkField",
 "qualname": "PanelFormLinkField",
 "sig": "",
-"hash": "e886f89e9b",
+"hash": "6d934323cf",
 "calls": [],
-"label": "Link field host used by PanelFormField and inline child tabs with Frappe autocomplete styling.",
-"label_source": "header"
+"label": "Mounts Frappe Link control with autocomplete for panel form dialog link fields.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormLinkField.vue::makeDoc",
@@ -26295,10 +24890,10 @@
 "name": "PanelFormScriptToolTab",
 "qualname": "PanelFormScriptToolTab",
 "sig": "",
-"hash": "8e37135591",
+"hash": "1085117294",
 "calls": [],
-"label": "Mounts tab._scriptTool mountFn into the tab div and calls its disposer on unmount from PanelFormDialogBody.",
-"label_source": "header"
+"label": "Form dialog tab hosting a script tool panel for custom client-side utilities.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelHeaderToolbar.vue::PanelHeaderToolbar",
@@ -26307,10 +24902,10 @@
 "name": "PanelHeaderToolbar",
 "qualname": "PanelHeaderToolbar",
 "sig": "",
-"hash": "1a3a7d180f",
+"hash": "d4e848288f",
 "calls": [],
-"label": "Right header control strip in App panel floats: refresh, find, filter, export, count, close.",
-"label_source": "header"
+"label": "Panel float header toolbar with refresh, find, filter, and action buttons.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelHeaderToolbar.vue::onToolbarMouseDown",
@@ -26325,7 +24920,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelHeaderToolbar.vue::PanelHeaderToolbar"
 ],
-"label": "Emits activate-panel when panel is in back stack; stops mousedown bubbling when front.",
+"label": "Capture mousedown on the toolbar: emits activate-panel when the float is not front, else stops propagation for panel drag.",
 "label_source": "header"
 },
 {
@@ -26335,10 +24930,10 @@
 "name": "PanelTable",
 "qualname": "PanelTable",
 "sig": "",
-"hash": "9e2526c261",
+"hash": "5f71308902",
 "calls": [],
-"label": "Main panel grid in App and FindPanel: filter bar, sorted rows, links, actions, and min-width emit.",
-"label_source": "header"
+"label": "Panel data table with sort, context menu, format rules, links, and column resize.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelTable.vue::headerTitleCase",
@@ -26360,13 +24955,13 @@
 "name": "rowTrClasses",
 "qualname": "rowTrClasses",
 "sig": "(ri, row)",
-"hash": "4c1d70a029",
+"hash": "66fcbbf507",
 "exported": false,
 "calls": [
-"nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::panelChromeFgTextClass"
+"nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::panelChromeBg"
 ],
 "label": "Applies selected, hover, or themed even/odd row background classes from panel chrome config.",
-"label_source": "header"
+"label_source": "header-stale"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelTable.vue::linkKey",
@@ -26725,7 +25320,7 @@
 "name": "cellStyle",
 "qualname": "cellStyle",
 "sig": "(row, col)",
-"hash": "96ce49dc3d",
+"hash": "c5594df765",
 "exported": false,
 "calls": [
 "nce_events/public/js/panel_page_v2/components/PanelTable.vue::activeFormatRuleForRow",
@@ -26733,7 +25328,7 @@
 "nce_events/public/js/panel_page_v2/components/PanelTable.vue::isBoldColumn"
 ],
 "label": "Inline cell color, weight, italic, and underline from gender tint and format rules.",
-"label_source": "header"
+"label_source": "header-stale"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelTable.vue::linkCellStyle",
@@ -26758,14 +25353,14 @@
 "name": "linkCellClasses",
 "qualname": "linkCellClasses",
 "sig": "(row, col, hoverKey)",
-"hash": "c31867e5ba",
+"hash": "8f072ef632",
 "exported": false,
 "calls": [
 "nce_events/public/js/panel_page_v2/components/PanelTable.vue::activeFormatRuleForRow",
 "nce_events/public/js/panel_page_v2/components/PanelTable.vue::genderColor"
 ],
 "label": "Applies theme-text-link hover classes when no gender or rule color override.",
-"label_source": "header"
+"label_source": "header-stale"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelTable.vue::startColResize",
@@ -26823,10 +25418,10 @@
 "name": "PanelTableFilterBar",
 "qualname": "PanelTableFilterBar",
 "sig": "",
-"hash": "ae5d1fc3b4",
+"hash": "63c351a083",
 "calls": [],
-"label": "Filter row UI embedded in PanelTable; emits filter-change and show-filter to parent panel data load.",
-"label_source": "header"
+"label": "ppv2-filter-widget bar for column filters with date SQL and days-ago inputs.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelTableFilterBar.vue::DATE_FIELDTYPES",
@@ -27003,10 +25598,10 @@
 "name": "PeopleMapDialog",
 "qualname": "PeopleMapDialog",
 "sig": "",
-"hash": "b1b90f2eea",
+"hash": "bd78f9be79",
 "calls": [],
-"label": "Map overlay from PanelFormDialog footer for the open Events record eventId.",
-"label_source": "header"
+"label": "Modal map of enrolled people by family address for an Event record.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::PIN_PATH",
@@ -27308,10 +25903,10 @@
 "name": "SpaMagicSearch",
 "qualname": "SpaMagicSearch",
 "sig": "",
-"hash": "6ce934726b",
+"hash": "ececde2c6b",
 "calls": [],
-"label": "Renders workspace-gated inline Awesome Bar input in App.vue SPA title row with Desk-style autocomplete.",
-"label_source": "header"
+"label": "Inline Awesome Bar search for SPA title row (Desk-style, opens results in new tab).",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/SpaMagicSearch.vue::firstRoute",
@@ -27394,10 +25989,10 @@
 "name": "SpaPageNavBar",
 "qualname": "SpaPageNavBar",
 "sig": "",
-"hash": "a5ec20f2e6",
+"hash": "20998cd72f",
 "calls": [],
-"label": "Shows one nav button per SPA page; disables the current slug and emits select for parent switch handlers.",
-"label_source": "header"
+"label": "ppv2-spa-nav button row for switching between SPA pages by page_slug.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/SpaPageNavBar.vue::tr",
@@ -27436,7 +26031,7 @@
 "sig": "",
 "hash": "31192e8e4e",
 "calls": [],
-"label": "Conditional PanelFloat showing SpaPageNavBar after pages load and anchor measurement on mount.",
+"label": "Shows SpaPageNavBar inside PanelFloat at the measured desk title anchor for SPA page picks.",
 "label_source": "header"
 },
 {
@@ -27449,7 +26044,7 @@
 "hash": "6ff4ce8a6b",
 "exported": false,
 "calls": [],
-"label": "Returns Frappe-translated text via window.__ when present otherwise the raw message.",
+"label": "Returns Frappe window.__ translation for the Pages header label when i18n is available.",
 "label_source": "header"
 },
 {
@@ -27459,10 +26054,10 @@
 "name": "SyncErrorDialog",
 "qualname": "SyncErrorDialog",
 "sig": "",
-"hash": "099994926a",
+"hash": "25748e2d98",
 "calls": [],
-"label": "Teleported v-model modal in App.vue showing sync status line plus summary and detail pre blocks or empty message.",
-"label_source": "header"
+"label": "Modal dialog showing ppv2-sync-err status, summary, and detail for sync failures.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/SyncErrorDialog.vue::tr",
@@ -27484,10 +26079,10 @@
 "name": "TabBar",
 "qualname": "TabBar",
 "sig": "",
-"hash": "3ba4657063",
+"hash": "c6adbac2c0",
 "calls": [],
-"label": "Renders sort_order tabs with v-model activeTab; hides bar when lone tab has hide_bar (CardForm).",
-"label_source": "header"
+"label": "Panel page v2 tab bar sorting tabs by sort_order and hiding when only one tab with hide_bar.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/TagColumn.vue::TagColumn",
@@ -27496,10 +26091,10 @@
 "name": "TagColumn",
 "qualname": "TagColumn",
 "sig": "",
-"hash": "e0dadeeb3b",
+"hash": "7fc1c86312",
 "calls": [],
-"label": "Displays one TagFinder browse column header and clickable field tiles for a doctype meta list.",
-"label_source": "header"
+"label": "Tag Finder column listing doctype field tiles with link/table navigation and circular reference detection.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/TagColumn.vue::isCircular",
@@ -27521,13 +26116,13 @@
 "name": "tileClass",
 "qualname": "tileClass",
 "sig": "(f)",
-"hash": "5c445362fc",
+"hash": "8d08319741",
 "exported": false,
 "calls": [
 "nce_events/public/js/panel_page_v2/components/TagColumn.vue::isCircular"
 ],
 "label": "Assigns pronoun, link, table, circular, and active-field theme classes for each tile.",
-"label_source": "header"
+"label_source": "header-stale"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/TagColumn.vue::badgeText",
@@ -27567,10 +26162,10 @@
 "name": "TagDialog",
 "qualname": "TagDialog",
 "sig": "",
-"hash": "78991d5648",
+"hash": "67d6dee69a",
 "calls": [],
-"label": "Small floating panel from TagFinder to copy a filtered Jinja merge tag with fallback and HTML checkbox.",
-"label_source": "header"
+"label": "Draggable Tag Finder dialog to copy merge tags with optional fallback value and HTML filter.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/TagDialog.vue::bringToFront",
@@ -27585,7 +26180,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/TagDialog.vue::TagDialog"
 ],
-"label": "Raises z-index when the dialog is clicked so stacked tag copy panels stay on top.",
+"label": "Raises the dialog z-index when the panel receives mousedown so stacked copies stay on top.",
 "label_source": "header"
 },
 {
@@ -27595,11 +26190,11 @@
 "name": "showToast",
 "qualname": "showToast",
 "sig": "(t, l)",
-"hash": "6ecd4b3c30",
+"hash": "63f2a28ccd",
 "exported": false,
 "calls": [],
-"label": "Shows a fixed Tag is on the clipboard notice at dialog coordinates using theme-bg-primary only.",
-"label_source": "header"
+"label": "Shows a fixed theme-bg-primary confirmation near the dialog after a successful copy.",
+"label_source": "header-stale"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/TagDialog.vue::fallbackCopy",
@@ -27611,7 +26206,7 @@
 "hash": "d75bf93778",
 "exported": false,
 "calls": [],
-"label": "Copies tag text through a hidden textarea when the Clipboard API is unavailable or fails.",
+"label": "Copies tag text via a hidden textarea when the Clipboard API is missing or fails.",
 "label_source": "header"
 },
 {
@@ -27630,7 +26225,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/TagDialog.vue::TagDialog"
 ],
-"label": "Closes the dialog, writes displayTag to the clipboard, then shows the confirmation toast.",
+"label": "Builds the filtered tag, closes, writes clipboard, and shows the confirmation toast.",
 "label_source": "header"
 },
 {
@@ -27646,7 +26241,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/TagDialog.vue::TagDialog"
 ],
-"label": "Starts header drag by listening for document mousemove and mouseup to move the panel.",
+"label": "Starts header drag by tracking pointer delta against panel top and left.",
 "label_source": "header"
 },
 {
@@ -27663,7 +26258,7 @@
 "nce_events/public/js/panel_page_v2/components/TagDialog.vue::startDrag",
 "nce_events/public/js/panel_page_v2/components/TagDialog.vue::startDrag.onUp"
 ],
-"label": "Updates top and left from the drag origin while keeping top at least zero.",
+"label": "Updates dialog position from pointer movement while dragging.",
 "label_source": "header"
 },
 {
@@ -27679,7 +26274,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/TagDialog.vue::startDrag"
 ],
-"label": "Removes mousemove and mouseup listeners when the user releases the drag.",
+"label": "Removes document mousemove and mouseup listeners when the drag ends.",
 "label_source": "header"
 },
 {
@@ -27689,10 +26284,10 @@
 "name": "TagFinder",
 "qualname": "TagFinder",
 "sig": "",
-"hash": "425f6414c6",
+"hash": "04c7a8ae93",
 "calls": [],
-"label": "Resizable float from App tags action browsing columns and teleports TagDialog copies to body.",
-"label_source": "header"
+"label": "Floating resizable Tag Finder panel browsing doctype field columns and opening tag copy dialogs.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/TagFinder.vue::bringToFront",
@@ -27707,7 +26302,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::TagFinder"
 ],
-"label": "Increments float z-index on mousedown so Tag Finder stays above other floats.",
+"label": "Increments float z-index on mousedown so the finder stays above other overlays.",
 "label_source": "header"
 },
 {
@@ -27725,7 +26320,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::TagFinder"
 ],
-"label": "Moves the panel from header or footer drag after bringing the float to front.",
+"label": "Drags the float from header or footer using document-level move and up handlers.",
 "label_source": "header"
 },
 {
@@ -27742,7 +26337,7 @@
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::startDrag",
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::startDrag.onUp"
 ],
-"label": "Applies pointer delta to x and y with vertical position clamped at zero.",
+"label": "Sets float x and y from drag origin with y clamped at zero.",
 "label_source": "header"
 },
 {
@@ -27758,7 +26353,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::startDrag"
 ],
-"label": "Stops drag by removing document mouse listeners on mouseup.",
+"label": "Detaches document listeners when header or footer drag finishes.",
 "label_source": "header"
 },
 {
@@ -27776,7 +26371,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::TagFinder"
 ],
-"label": "Begins resize from the corner handle to set manual width and height with minimums.",
+"label": "Begins corner resize from handle mousedown and seeds width and height from the panel.",
 "label_source": "header"
 },
 {
@@ -27793,7 +26388,7 @@
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::startResize",
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::startResize.onUp"
 ],
-"label": "Updates manualW and manualH from pointer movement during resize.",
+"label": "Updates manual width and height with minimum 260 by 200 while resizing.",
 "label_source": "header"
 },
 {
@@ -27809,7 +26404,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::startResize"
 ],
-"label": "Ends resize tracking by removing document mouse listeners.",
+"label": "Stops resize tracking by removing document mouse listeners.",
 "label_source": "header"
 },
 {
@@ -27825,7 +26420,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::TagFinder"
 ],
-"label": "Drills into Link or Table field column via loadColumn and scrolls the column body horizontally.",
+"label": "Sets active field and loads the next TagColumn for Link or Table drill-down, then scrolls body.",
 "label_source": "header"
 },
 {
@@ -27841,7 +26436,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::TagFinder"
 ],
-"label": "Opens a TagDialog with buildTag output and path when a field tile is selected.",
+"label": "Builds base tag and path then pushes a TagDialog entry teleported to body.",
 "label_source": "header"
 },
 {
@@ -30124,11 +28719,11 @@
 "name": "useRelatedActions",
 "qualname": "useRelatedActions",
 "sig": "(props, { fetchRelatedForTab })",
-"hash": "b6a6dc99e1",
+"hash": "a6590d3bfc",
 "exported": true,
 "calls": [],
-"label": "Composable for PanelFormDialogRelatedTab portal actions, modal state, and outcome handling.",
-"label_source": "header"
+"label": "Portal-action modal and row-action execution for a related-doctype tab.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useRelatedActions.js::useRelatedActions.actionRunKey",
@@ -30176,14 +28771,14 @@
 "name": "handleExchangeActionResult",
 "qualname": "useRelatedActions.handleExchangeActionResult",
 "sig": "(result, enrollmentId, elapsedMs)",
-"hash": "1dca4aac74",
+"hash": "bdd0af2fd9",
 "exported": false,
 "calls": [
 "nce_events/public/js/panel_page_v2/composables/useRelatedActions.js::useRelatedActions.handleExchangeActionResult.e",
 "nce_events/public/js/panel_page_v2/composables/useRelatedActions.js::useRelatedActions.handleExchangeActionResult.money"
 ],
 "label": "Shows Event Switch Successful msgprint, removes old enrollment row, and closes the form dialog.",
-"label_source": "header"
+"label_source": "header-stale"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/composables/useRelatedActions.js::useRelatedActions.handleExchangeActionResult.e",
@@ -30853,10 +29448,10 @@
 "name": "CardForm",
 "qualname": "CardForm",
 "sig": "",
-"hash": "28ec022610",
+"hash": "d3fa3aec84",
 "calls": [],
-"label": "Card modal content loading a Card Definition record with tabs, grid widgets, and action bar for CardModal.",
-"label_source": "header"
+"label": "Card Definition form view with TabBar, WidgetGrid, ActionsPanel, and nested open-card drill-down.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/nce_cards/CardForm.vue::collectWidgets",
@@ -30871,7 +29466,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/nce_cards/CardForm.vue::CardForm"
 ],
-"label": "Assembles field and display widgets for the active tab from cardDef grid rows.",
+"label": "Maps active tab fields_list and displays rows into WidgetGrid widget configs with grid positions.",
 "label_source": "header"
 },
 {
@@ -30887,7 +29482,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/nce_cards/CardForm.vue::CardForm"
 ],
-"label": "Forwards WidgetGrid save-field payload to useCardForm saveField for the open record.",
+"label": "Forwards WidgetGrid save-field payloads to useCardForm saveField for the card record.",
 "label_source": "header"
 },
 {
@@ -30903,7 +29498,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/nce_cards/CardForm.vue::CardForm"
 ],
-"label": "Reloads card definition and record data through useCardForm refresh after actions refresh.",
+"label": "Reloads card data through useCardForm refresh after ActionsPanel refresh.",
 "label_source": "header"
 },
 {
@@ -30913,10 +29508,10 @@
 "name": "CardModal",
 "qualname": "CardModal",
 "sig": "",
-"hash": "85ad58ee75",
+"hash": "aa652e68d5",
 "calls": [],
-"label": "Teleports App card drill-down to body with backdrop click dismiss and nested CardForm.",
-"label_source": "header"
+"label": "Teleport card modal backdrop wrapping CardForm with pointer dismiss and Escape close.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/nce_cards/CardModal.vue::onKeyDown",
@@ -31169,7 +29764,7 @@
 "name": "buildRefundOutcomeHtml",
 "qualname": "buildRefundOutcomeHtml",
 "sig": "(result)",
-"hash": "e68db908d3",
+"hash": "27d00a9c1e",
 "exported": true,
 "calls": [
 "nce_events/public/js/panel_page_v2/utils/enrollmentWpActions.js::__",
@@ -31177,7 +29772,7 @@
 "nce_events/public/js/panel_page_v2/utils/enrollmentWpActions.js::money"
 ],
 "label": "Builds HTML tables for player, order, credit, fee order, and summary for refund confirmation.",
-"label_source": "header"
+"label_source": "header-stale"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/enrollmentWpActions.js::showRefundActionResult",
@@ -31186,14 +29781,14 @@
 "name": "showRefundActionResult",
 "qualname": "showRefundActionResult",
 "sig": "(result, enrollmentId, { elapsedMs } = {})",
-"hash": "a1c7e3cfed",
+"hash": "ff53cb0601",
 "exported": true,
 "calls": [
 "nce_events/public/js/panel_page_v2/utils/enrollmentWpActions.js::__",
 "nce_events/public/js/panel_page_v2/utils/enrollmentWpActions.js::buildRefundOutcomeHtml"
 ],
 "label": "Shows Registration Cancelled msgprint, removes the enrollment panel row, and closes the form dialog.",
-"label_source": "header"
+"label_source": "header-stale"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/enrollmentWpActions.js::runProductRefund",
@@ -32400,11 +30995,11 @@
 "name": "PANEL_CHROME_DEFAULTS",
 "qualname": "PANEL_CHROME_DEFAULTS",
 "sig": "",
-"hash": "a75ca255a1",
+"hash": "e969c4964f",
 "exported": true,
 "calls": [],
-"label": "Default theme-bg classes for each panel chrome surface when Page Panel fields are empty.",
-"label_source": "header"
+"label": "Fixed panel chrome class names (Frappe UI bridge colours via scoped CSS in consumers).",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::PANEL_BORDER_DEFAULTS",
@@ -32413,37 +31008,24 @@
 "name": "PANEL_BORDER_DEFAULTS",
 "qualname": "PANEL_BORDER_DEFAULTS",
 "sig": "",
-"hash": "7c5b0757bb",
+"hash": "4311a643fb",
 "exported": true,
 "calls": [],
-"label": "Default border width and colour class slots for Lines and borders on the Colours tab.",
-"label_source": "header"
+"label": "Legacy border slot keys — frame uses ppv2-chrome-border; dividers use CSS vars below.",
+"label_source": "docstring"
 },
 {
-"id": "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::BORDER_WIDTH_CSS_VARS",
+"id": "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::BORDER_WIDTH_PX",
 "file": "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js",
 "kind": "const",
-"name": "BORDER_WIDTH_CSS_VARS",
-"qualname": "BORDER_WIDTH_CSS_VARS",
+"name": "BORDER_WIDTH_PX",
+"qualname": "BORDER_WIDTH_PX",
 "sig": "",
-"hash": "31a07f6b48",
+"hash": "eb37b348f9",
 "exported": false,
 "calls": [],
-"label": "Maps theme-border width classes to --nce-border-width CSS custom property names.",
-"label_source": "header"
-},
-{
-"id": "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::PALETTE_ROLES",
-"file": "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js",
-"kind": "const",
-"name": "PALETTE_ROLES",
-"qualname": "PALETTE_ROLES",
-"sig": "",
-"hash": "01603a4793",
-"exported": false,
-"calls": [],
-"label": "Allowed palette role names when parsing theme bg, text, and border class strings.",
-"label_source": "header"
+"label": "",
+"label_source": "none"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::panelChromeBg",
@@ -32451,12 +31033,12 @@
 "kind": "function",
 "name": "panelChromeBg",
 "qualname": "panelChromeBg",
-"sig": "(config, field)",
-"hash": "b3a8208934",
+"sig": "(_config, field)",
+"hash": "97780ede45",
 "exported": true,
 "calls": [],
-"label": "Returns configured bg class for one chrome slot or the matching PANEL_CHROME_DEFAULTS entry.",
-"label_source": "header"
+"label": "Resolved bg class for one chrome slot (config ignored; fixed defaults).",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::panelChromeBorder",
@@ -32464,25 +31046,12 @@
 "kind": "function",
 "name": "panelChromeBorder",
 "qualname": "panelChromeBorder",
-"sig": "(config, field)",
-"hash": "f65b47cef7",
+"sig": "(_config, field)",
+"hash": "f9d8486e6a",
 "exported": true,
 "calls": [],
-"label": "Returns configured border class for one slot or PANEL_BORDER_DEFAULTS when the field is known.",
-"label_source": "header"
-},
-{
-"id": "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::BORDER_COLOR_FIELD_DEFAULTS",
-"file": "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js",
-"kind": "const",
-"name": "BORDER_COLOR_FIELD_DEFAULTS",
-"qualname": "BORDER_COLOR_FIELD_DEFAULTS",
-"sig": "",
-"hash": "073dc8d7dd",
-"exported": false,
-"calls": [],
-"label": "Fallback var() colours when a border colour class slot is left empty in config.",
-"label_source": "header"
+"label": "Resolved border class for one chrome slot (config ignored).",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::panelChromeBorderWidthVar",
@@ -32490,14 +31059,12 @@
 "kind": "function",
 "name": "panelChromeBorderWidthVar",
 "qualname": "panelChromeBorderWidthVar",
-"sig": "(config, field)",
-"hash": "d69db4f55c",
+"sig": "(_config, field)",
+"hash": "319d4de3fd",
 "exported": true,
-"calls": [
-"nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::panelChromeBorder"
-],
-"label": "Resolves which --nce-border-width var applies for a border field including table row and col dividers.",
-"label_source": "header"
+"calls": [],
+"label": "@deprecated Config ignored — returns 1px (2px for strong).",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::panelChromeBorderColorCss",
@@ -32505,12 +31072,12 @@
 "kind": "function",
 "name": "panelChromeBorderColorCss",
 "qualname": "panelChromeBorderColorCss",
-"sig": "(config, colorField)",
-"hash": "c2c8c731de",
+"sig": "(_config, _colorField)",
+"hash": "2162785740",
 "exported": true,
 "calls": [],
-"label": "Turns a theme border colour class into a CSS var or token when the slot is empty or invalid.",
-"label_source": "header"
+"label": "@deprecated Config ignored — returns var(--border-color).",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::panelChromeFrameBorderClasses",
@@ -32518,14 +31085,14 @@
 "kind": "function",
 "name": "panelChromeFrameBorderClasses",
 "qualname": "panelChromeFrameBorderClasses",
-"sig": "(config)",
-"hash": "78f393b685",
+"sig": "(_config)",
+"hash": "783527fc07",
 "exported": true,
 "calls": [
 "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::panelChromeBorder"
 ],
-"label": "Builds width plus optional colour classes for PanelFloat full-box frame borders.",
-"label_source": "header"
+"label": "Full-box frame border classes for PanelFloat.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::panelChromeTableBorderStyleVars",
@@ -32533,15 +31100,12 @@
 "kind": "function",
 "name": "panelChromeTableBorderStyleVars",
 "qualname": "panelChromeTableBorderStyleVars",
-"sig": "(config)",
-"hash": "6ae20e991e",
+"sig": "(_config)",
+"hash": "a003f0552e",
 "exported": true,
-"calls": [
-"nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::panelChromeBorderColorCss",
-"nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::panelChromeBorderWidthVar"
-],
-"label": "Supplies --ppv2-* custom properties for PanelTable column header, row, and column dividers.",
-"label_source": "header"
+"calls": [],
+"label": "CSS custom properties for PanelTable directional dividers.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::panelChromeFilterDividerStyleVars",
@@ -32549,15 +31113,12 @@
 "kind": "function",
 "name": "panelChromeFilterDividerStyleVars",
 "qualname": "panelChromeFilterDividerStyleVars",
-"sig": "(config)",
-"hash": "c6cbe89464",
+"sig": "(_config)",
+"hash": "a3e443bd01",
 "exported": true,
-"calls": [
-"nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::panelChromeBorderColorCss",
-"nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::panelChromeBorderWidthVar"
-],
-"label": "Supplies --ppv2-filter-divider width and colour vars for the filter bar bottom line.",
-"label_source": "header"
+"calls": [],
+"label": "CSS custom properties for filter bar bottom divider.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::panelChromeFgType",
@@ -32565,25 +31126,12 @@
 "kind": "function",
 "name": "panelChromeFgType",
 "qualname": "panelChromeFgType",
-"sig": "(config, bgField)",
-"hash": "909116f3cd",
+"sig": "(_config, _bgField)",
+"hash": "cedb31ad97",
 "exported": true,
 "calls": [],
-"label": "Reads saved mono or tonal foreground pairing mode for a chrome background field.",
-"label_source": "header"
-},
-{
-"id": "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::_fgClassFromBg",
-"file": "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js",
-"kind": "function",
-"name": "_fgClassFromBg",
-"qualname": "_fgClassFromBg",
-"sig": "(bgClass, variant)",
-"hash": "eb363cb2b6",
-"exported": false,
-"calls": [],
-"label": "Derives theme-text role fg or fg-tonal class from a theme-bg palette class string.",
-"label_source": "header"
+"label": "@deprecated Always mono; config ignored.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::themeBgToFgMonoClass",
@@ -32592,13 +31140,11 @@
 "name": "themeBgToFgMonoClass",
 "qualname": "themeBgToFgMonoClass",
 "sig": "(bgClass)",
-"hash": "aa7c9307de",
+"hash": "58218d6212",
 "exported": true,
-"calls": [
-"nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::_fgClassFromBg"
-],
-"label": "Maps a theme-bg class to the mono theme-text paired fg class for non-inheriting children.",
-"label_source": "header"
+"calls": [],
+"label": "@deprecated Config ignored — buttons on primary chrome use ppv2-chrome-fg-on-primary.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::themeBgToFgTextClass",
@@ -32606,14 +31152,12 @@
 "kind": "function",
 "name": "themeBgToFgTextClass",
 "qualname": "themeBgToFgTextClass",
-"sig": "(bgClass, fgType = \"mono\")",
-"hash": "d8a1ab682c",
+"sig": "(_bgClass, _fgType = \"mono\")",
+"hash": "3e402e1403",
 "exported": true,
-"calls": [
-"nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::_fgClassFromBg"
-],
-"label": "Returns tonal theme-text class from bg when fg type is tonal; empty for mono auto-pairing.",
-"label_source": "header"
+"calls": [],
+"label": "@deprecated Tonal fg removed; always empty.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::panelChromeExplicitFgClass",
@@ -32621,17 +31165,15 @@
 "kind": "function",
 "name": "panelChromeExplicitFgClass",
 "qualname": "panelChromeExplicitFgClass",
-"sig": "(config, bgField)",
-"hash": "527340dce6",
+"sig": "(_config, bgField)",
+"hash": "f0621ba624",
 "exported": true,
 "calls": [
 "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::panelChromeBg",
-"nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::panelChromeFgType",
-"nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::themeBgToFgMonoClass",
-"nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::themeBgToFgTextClass"
+"nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::themeBgToFgMonoClass"
 ],
-"label": "Explicit text class for Desk controls that ignore parent theme-bg colour on chrome slots.",
-"label_source": "header"
+"label": "Explicit fg for chrome children (e.g.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::panelChromeFgTextClass",
@@ -32639,16 +31181,12 @@
 "kind": "function",
 "name": "panelChromeFgTextClass",
 "qualname": "panelChromeFgTextClass",
-"sig": "(config, bgField)",
-"hash": "f8e90c71d2",
+"sig": "(_config, _bgField)",
+"hash": "5677461525",
 "exported": true,
-"calls": [
-"nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::panelChromeBg",
-"nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::panelChromeFgType",
-"nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::themeBgToFgTextClass"
-],
-"label": "Runtime text class for one chrome slot from resolved bg and fg type; used by PanelTable row styling.",
-"label_source": "header"
+"calls": [],
+"label": "Runtime text class for one chrome slot — empty (colour set on bg class).",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::themeBgToFgTonal",
@@ -32656,14 +31194,12 @@
 "kind": "function",
 "name": "themeBgToFgTonal",
 "qualname": "themeBgToFgTonal",
-"sig": "(bgClass)",
-"hash": "d747263aab",
+"sig": "(_bgClass)",
+"hash": "90872aa62a",
 "exported": true,
-"calls": [
-"nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js::themeBgToFgTextClass"
-],
-"label": "Deprecated alias for tonal fg from bg; kept until callers migrate to panelChromeFgTextClass.",
-"label_source": "header"
+"calls": [],
+"label": "@deprecated Use panelChromeFgTextClass.",
+"label_source": "docstring"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/panelFieldReadOnly.js::isFieldInPanelReadOnlyList",
@@ -33637,11 +32173,11 @@
 "name": "createSubmitPerfTrace",
 "qualname": "createSubmitPerfTrace",
 "sig": "({ liveDialog = false } = {})",
-"hash": "52679955b4",
+"hash": "d7820139eb",
 "exported": true,
 "calls": [],
 "label": "Builds a timed trace logger for PanelFormDialog onSubmit with console and optional live or post-submit popup.",
-"label_source": "header"
+"label_source": "header-stale"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/submitPerfTrace.js::createSubmitPerfTrace.updateLiveDialog",
@@ -33694,7 +32230,7 @@
 "name": "showCopyDialog",
 "qualname": "createSubmitPerfTrace.showCopyDialog",
 "sig": "()",
-"hash": "a50e559ab0",
+"hash": "ed62d4ca01",
 "exported": false,
 "calls": [
 "nce_events/public/js/panel_page_v2/utils/submitPerfTrace.js::createSubmitPerfTrace.shouldPopup"
@@ -33703,7 +32239,7 @@
 "nce_events/public/js/panel_page_v2/utils/submitPerfTrace.js::createSubmitPerfTrace"
 ],
 "label": "Stores trace on window, finishes live dialog title, or msgprints escaped timings when shouldPopup.",
-"label_source": "header"
+"label_source": "header-stale"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/utils/submitPerfTrace.js::createSubmitPerfTrace.join",
@@ -34147,6 +32683,31 @@
 "label_source": "header"
 },
 {
+"id": "nce_events/public/nce-themes/nce-theme-switcher.js::apply",
+"file": "nce_events/public/nce-themes/nce-theme-switcher.js",
+"kind": "function",
+"name": "apply",
+"qualname": "apply",
+"sig": "(slug)",
+"hash": "6428001ed3",
+"exported": false,
+"calls": [],
+"label": "",
+"label_source": "none"
+},
+{
+"id": "nce_events/public/nce-themes/nce-themes.css::all",
+"file": "nce_events/public/nce-themes/nce-themes.css",
+"kind": "css-section",
+"name": "all",
+"qualname": "all",
+"sig": "",
+"hash": "240b8e3d76",
+"calls": [],
+"label": "nce-themes.css (the whole file)",
+"label_source": "title"
+},
+{
 "id": "nce_events/utils/sql_table.py::physical_table_name",
 "file": "nce_events/utils/sql_table.py",
 "kind": "function",
@@ -34386,97 +32947,6 @@
 "hash": "25c7e6178f",
 "calls": [],
 "label": "Replaces generated date JSON lines with a placeholder so --check diffs ignore the stamp only.",
-"label_source": "header"
-},
-{
-"id": "scripts/style-audit.py::iter_typography_files",
-"file": "scripts/style-audit.py",
-"kind": "function",
-"name": "iter_typography_files",
-"qualname": "iter_typography_files",
-"sig": "() -> list[Path]",
-"hash": "1a322a725a",
-"calls": [],
-"label": "Lists Vue, CSS, and JS files under TYPOGRAPHY_SCOPE_DIRS for font and weight rule scans.",
-"label_source": "header"
-},
-{
-"id": "scripts/style-audit.py::iter_source_files",
-"file": "scripts/style-audit.py",
-"kind": "function",
-"name": "iter_source_files",
-"qualname": "iter_source_files",
-"sig": "() -> list[Path]",
-"hash": "7f59e3267e",
-"calls": [],
-"label": "Lists themed panel and evaluation sources plus SCOPE_FILES for color and var() contract checks.",
-"label_source": "header"
-},
-{
-"id": "scripts/style-audit.py::load_bridge_aliases",
-"file": "scripts/style-audit.py",
-"kind": "function",
-"name": "load_bridge_aliases",
-"qualname": "load_bridge_aliases",
-"sig": "() -> set[str]",
-"hash": "3489d10e3c",
-"calls": [],
-"label": "Reads theme_defaults.css and returns declared -- token names for alias validation.",
-"label_source": "header"
-},
-{
-"id": "scripts/style-audit.py::check_unknown_aliases",
-"file": "scripts/style-audit.py",
-"kind": "function",
-"name": "check_unknown_aliases",
-"qualname": "check_unknown_aliases",
-"sig": "(files: list[Path], bridge: set[str]) -> list[str]",
-"hash": "e231e2fd53",
-"calls": [],
-"label": "Flags var() names not in the bridge, nce-/tw- prefixes, or ALLOWED_CUSTOM_PROPERTIES.",
-"label_source": "header"
-},
-{
-"id": "scripts/style-audit.py::check_bare_hex",
-"file": "scripts/style-audit.py",
-"kind": "function",
-"name": "check_bare_hex",
-"qualname": "check_bare_hex",
-"sig": "(files: list[Path]) -> list[str]",
-"hash": "482a2fafd0",
-"calls": [],
-"label": "Reports lines with raw hex outside var fallbacks unless marked theme-exempt.",
-"label_source": "header"
-},
-{
-"id": "scripts/style-audit.py::check_pattern",
-"file": "scripts/style-audit.py",
-"kind": "function",
-"name": "check_pattern",
-"qualname": "check_pattern",
-"sig": "(files: list[Path], pattern: re.Pattern[str], label: str) -> list[str]",
-"hash": "a12011980c",
-"calls": [],
-"label": "Collects per-line matches for a regex across files, prefixed with a violation label when any hit.",
-"label_source": "header"
-},
-{
-"id": "scripts/style-audit.py::main",
-"file": "scripts/style-audit.py",
-"kind": "function",
-"name": "main",
-"qualname": "main",
-"sig": "() -> int",
-"hash": "89062ccb44",
-"calls": [
-"scripts/style-audit.py::check_bare_hex",
-"scripts/style-audit.py::check_pattern",
-"scripts/style-audit.py::check_unknown_aliases",
-"scripts/style-audit.py::iter_source_files",
-"scripts/style-audit.py::iter_typography_files",
-"scripts/style-audit.py::load_bridge_aliases"
-],
-"label": "Runs alias, hex, color, brand rgba, and typography checks; prints errors and exits 1 on failure.",
 "label_source": "header"
 }
 ]

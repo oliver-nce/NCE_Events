@@ -23,7 +23,7 @@ code-index:end
 	>
 		<div
 			ref="panelRef"
-			class="ppv2-people-map-panel theme-bg-surface"
+			class="ppv2-people-map-panel"
 			:style="panelStyle"
 			@click.stop
 		>
@@ -59,7 +59,7 @@ code-index:end
 			<div class="ppv2-people-map-footer">
 				<button
 					type="button"
-					class="ppv2-fd-tab-btn theme-bg-primary-100 theme-border"
+					class="ppv2-fd-tab-btn ppv2-people-map-close-btn"
 					@click="emit('close')"
 				>
 					Close
@@ -404,8 +404,8 @@ watch(
 	height: 656px;
 	max-width: 94vw;
 	max-height: 94vh;
-	background: var(--nce-color-surface);
-	border: var(--nce-border-width, 1px) solid var(--nce-color-border);
+	background: var(--fg-color, #fff);
+	border: 1px solid var(--border-color, #d1d8dd);
 	border-radius: var(--border-radius);
 	display: flex;
 	flex-direction: column;
@@ -415,7 +415,7 @@ watch(
 }
 .ppv2-people-map-header {
 	padding: 12px 16px;
-	border-bottom: var(--nce-border-width, 1px) solid var(--nce-color-border);
+	border-bottom: 1px solid var(--border-color, #d1d8dd);
 	flex-shrink: 0;
 	cursor: move;
 	user-select: none;
@@ -437,14 +437,14 @@ watch(
 	font-size: var(--font-size-base, 14px);
 }
 .ppv2-people-map-error {
-	color: var(--nce-color-danger, #c62828);
+	color: var(--red-500, #c62828);
 }
 .ppv2-people-map-canvas {
 	width: 100%;
 	min-width: 0;
 	flex: 1;
 	min-height: 0;
-	border: var(--nce-border-width, 1px) solid var(--nce-color-border);
+	border: 1px solid var(--border-color, #d1d8dd);
 	border-radius: var(--border-radius-sm, 4px);
 	box-sizing: border-box;
 }
@@ -455,18 +455,18 @@ watch(
 	width: 16px;
 	height: 16px;
 	cursor: nwse-resize;
-	background: linear-gradient(135deg, transparent 50%, var(--nce-color-border) 50%);
+	background: linear-gradient(135deg, transparent 50%, var(--border-color, #d1d8dd) 50%);
 	border-radius: 0 0 var(--border-radius) 0;
 	z-index: 5;
 }
 .ppv2-people-map-footnote {
 	margin: 10px 0 0;
 	font-size: var(--font-size-sm, 12px);
-	color: var(--nce-color-text-muted, #666);
+	color: var(--gray-600, #666);
 }
 .ppv2-people-map-footer {
 	padding: 10px 16px;
-	border-top: var(--nce-border-width, 1px) solid var(--nce-color-border);
+	border-top: 1px solid var(--border-color, #d1d8dd);
 	display: flex;
 	justify-content: flex-end;
 	flex-shrink: 0;
@@ -477,5 +477,9 @@ watch(
 	font-size: var(--font-size-base, 14px);
 	font-weight: var(--font-weight-bold, 600);
 	cursor: pointer;
+}
+.ppv2-people-map-close-btn {
+	background: var(--blue-100);
+	border: 1px solid var(--border-color, #d1d8dd);
 }
 </style>

@@ -18,11 +18,11 @@ code-index:end
 			v-for="page in pages"
 			:key="page.page_slug"
 			type="button"
-			class="ppv2-spa-nav-btn theme-border theme-rounded-sm"
+			class="ppv2-spa-nav-btn"
 			:class="
 				page.page_slug === currentSlug
-					? 'theme-bg-primary theme-border-primary'
-					: 'theme-bg-card theme-text-primary'
+					? 'ppv2-spa-nav-btn--active'
+					: 'ppv2-spa-nav-btn--idle'
 			"
 			:disabled="page.page_slug === currentSlug"
 			:title="navTitle(page)"
@@ -71,11 +71,24 @@ function navTitle(page) {
 	line-height: 1.3;
 	white-space: nowrap;
 	transition: background-color 0.15s ease, border-color 0.15s ease;
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius-sm, 4px);
+}
+
+.ppv2-spa-nav-btn--idle {
+	background: var(--fg-color, #fff);
+	color: var(--blue-500);
+}
+
+.ppv2-spa-nav-btn--active {
+	background: var(--blue-500);
+	border-color: var(--blue-500);
+	color: #fff;
 }
 
 .ppv2-spa-nav-btn:hover:not(:disabled) {
-	background-color: var(--nce-color-primary-100, #e3f0fc);
-	border-color: var(--nce-color-primary, #126bc4);
+	background-color: var(--blue-100);
+	border-color: var(--blue-500);
 }
 
 .ppv2-spa-nav-btn:disabled {

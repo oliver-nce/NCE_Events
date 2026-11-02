@@ -17,7 +17,7 @@ code-index:end
 		<div
 			v-if="headerMenuOpen && headerMenuCol"
 			ref="headerMenuRef"
-			class="ppv2-header-ctx-menu theme-border theme-rounded"
+			class="ppv2-header-ctx-menu"
 			:style="{ left: headerMenuX + 'px', top: headerMenuY + 'px' }"
 			@click.stop
 			@contextmenu.prevent
@@ -42,12 +42,12 @@ code-index:end
 			@show-filter="(v) => $emit('show-filter', v)"
 		/>
 
-		<div v-if="loading" class="ppv2-loading theme-text-primary">Loading…</div>
+		<div v-if="loading" class="ppv2-loading">Loading…</div>
 
-		<div v-else-if="error" class="ppv2-error theme-text-danger">{{ error }}</div>
+		<div v-else-if="error" class="ppv2-error">{{ error }}</div>
 
 		<div v-else-if="config" class="ppv2-body">
-			<table class="ppv2-table theme-table" lang="en" :style="tableMinWidthStyle">
+			<table class="ppv2-table" lang="en" :style="tableMinWidthStyle">
 				<thead>
 					<tr>
 						<th
@@ -124,7 +124,7 @@ code-index:end
 							>
 							<span
 								v-else-if="col.sync_error_drill && isNonSuccessSyncStatus(row, col)"
-								class="ppv2-sync-status-link theme-text-link"
+								class="ppv2-sync-status-link ppv2-text-link"
 								role="button"
 								tabindex="0"
 								@click.stop="$emit('sync-error-click', row)"
@@ -135,7 +135,7 @@ code-index:end
 						<td v-if="hasActionColumn" class="ppv2-action-td" :style="actionColumnStyle">
 							<button
 								v-if="hasEmailAction && rowHasEmail(row)"
-								class="ppv2-row-btn theme-border theme-rounded-sm"
+								class="ppv2-row-btn"
 								:class="{ 'ppv2-row-btn--hover': hoveredRowBtn === rowBtnKey(row, 'email') }"
 								title="Send email"
 								@mouseenter="hoveredRowBtn = rowBtnKey(row, 'email')"
@@ -146,7 +146,7 @@ code-index:end
 							</button>
 							<button
 								v-if="hasPhoneAction && rowHasPhone(row)"
-								class="ppv2-row-btn theme-border theme-rounded-sm"
+								class="ppv2-row-btn"
 								:class="{ 'ppv2-row-btn--hover': hoveredRowBtn === rowBtnKey(row, 'call') }"
 								title="Call"
 								@mouseenter="hoveredRowBtn = rowBtnKey(row, 'call')"
@@ -157,7 +157,7 @@ code-index:end
 							</button>
 							<button
 								v-if="hasPhoneAction && rowHasPhone(row)"
-								class="ppv2-row-btn theme-border theme-rounded-sm"
+								class="ppv2-row-btn"
 								:class="{ 'ppv2-row-btn--hover': hoveredRowBtn === rowBtnKey(row, 'sms') }"
 								title="Send SMS"
 								@mouseenter="hoveredRowBtn = rowBtnKey(row, 'sms')"
@@ -168,7 +168,7 @@ code-index:end
 							</button>
 							<button
 								v-if="hasWpSwitchAction && rowHasFamilyId(row)"
-								class="ppv2-row-btn theme-border theme-rounded-sm"
+								class="ppv2-row-btn"
 								:class="{ 'ppv2-row-btn--hover': hoveredRowBtn === rowBtnKey(row, 'switch') }"
 								title="View as on website"
 								@mouseenter="hoveredRowBtn = rowBtnKey(row, 'switch')"
@@ -201,7 +201,6 @@ import {
 } from "../utils/panelFormatRules.js";
 import {
 	panelChromeBg,
-	panelChromeFgTextClass,
 	panelChromeTableBorderStyleVars,
 } from "../utils/panelChromeClasses.js";
 
@@ -273,12 +272,9 @@ let _closeHeaderMenuHandler = null;
 const panelBorderStyleVars = computed(() =>
 	panelChromeTableBorderStyleVars(props.config)
 );
-const colHeaderCellClasses = computed(() => {
-	const raw = (props.config?.col_header_bg_class || "").trim();
-	if (!raw) return [];
-	const fg = panelChromeFgTextClass(props.config, "col_header_bg_class");
-	return fg ? [raw, fg] : [raw];
-});
+const colHeaderCellClasses = computed(() => [
+	panelChromeBg(props.config, "col_header_bg_class"),
+]);
 
 function rowTrClasses(ri, row) {
 	const selected = props.selectedName === row.name;
@@ -287,12 +283,7 @@ function rowTrClasses(ri, row) {
 	if (hovered) return { "ppv2-row-hovered": true };
 	const even = ri % 2 === 0;
 	const bgField = even ? "row_bg_class" : "row_alt_bg_class";
-	const raw = (props.config?.[bgField] || "").trim();
-	if (!raw) return {};
-	const fgClass = panelChromeFgTextClass(props.config, bgField);
-	const classes = { [raw]: true };
-	if (fgClass) classes[fgClass] = true;
-	return classes;
+	return { [panelChromeBg(props.config, bgField)]: true };
 }
 
 function linkKey(row, col) {
@@ -608,7 +599,7 @@ function activeFormatRuleForRow(row, col) {
 
 function cellStyle(row, col) {
 	const style = {
-		color: genderColor(row, col) || "var(--nce-color-text)",
+		color: genderColor(row, col) || "var(--text-color)",
 	};
 	if (isBoldColumn(col)) style.fontWeight = "700";
 
@@ -622,7 +613,7 @@ function cellStyle(row, col) {
 	return style;
 }
 
-/** Link cells need inline color when format/gender tint beats theme-text-link. */
+/** Link cells need inline color when format/gender tint beats default link styling. */
 function linkCellStyle(row, col) {
 	const rule = activeFormatRuleForRow(row, col);
 	const style = {};
@@ -641,8 +632,8 @@ function linkCellClasses(row, col, hoverKey) {
 	const hasColorOverride = !!(rule?.color || genderColor(row, col));
 	const classes = {};
 	if (!hasColorOverride) {
-		classes["theme-text-link"] = true;
-		if (hovered) classes["theme-text-primary"] = true;
+		classes["ppv2-text-link"] = true;
+		if (hovered) classes["ppv2-text-link--hover"] = true;
 	}
 	return classes;
 }
@@ -679,6 +670,12 @@ function startColResize(e, ci) {
 	text-align: center;
 	font-size: var(--font-size-base);
 }
+.ppv2-loading {
+	color: var(--blue-500);
+}
+.ppv2-error {
+	color: var(--red-500);
+}
 /* ── Table ── */
 
 .ppv2-body {
@@ -698,8 +695,6 @@ function startColResize(e, ci) {
 	position: sticky;
 	top: 0;
 	z-index: 2;
-	/* Background + text: theme-table thead th when col_header_bg_class is empty;
-	   otherwise per-panel theme-bg-* on the <th>. Do not set color here. */
 	font-weight: var(--font-weight-bold);
 	font-size: var(--font-size-sm);
 	padding: 6px 8px;
@@ -747,12 +742,22 @@ function startColResize(e, ci) {
 	cursor: pointer;
 }
 
-/* Row even/odd: theme-table when no per-panel override; ppv2-row-* for hover/selected. */
+.ppv2-chrome-col-header {
+	background: var(--gray-100);
+	color: var(--text-color);
+}
+.ppv2-chrome-row {
+	background: var(--fg-color, #fff);
+}
+.ppv2-chrome-row-alt {
+	background: var(--gray-50);
+}
+
 .ppv2-table tbody tr.ppv2-row-hovered {
-	background-color: var(--nce-color-primary-100, #e3f0fc);
+	background-color: var(--blue-100);
 }
 .ppv2-table tbody tr.ppv2-row-selected {
-	background-color: var(--nce-color-primary-200, #c7e0fa);
+	background-color: var(--blue-200);
 }
 
 .ppv2-link-val {
@@ -784,12 +789,13 @@ function startColResize(e, ci) {
 	cursor: pointer;
 	font-size: var(--font-size-base);
 	line-height: 1;
-	background-color: var(--nce-color-surface, #ffffff);
+	background-color: var(--fg-color, #ffffff);
+	border: 1px solid var(--border-color);
 	border-radius: var(--border-radius-sm, 4px);
 }
 .ppv2-row-btn--hover,
 .ppv2-row-btn:hover {
-	background-color: var(--nce-color-primary-50, #f1f7fe);
+	background-color: var(--blue-50);
 }
 .ppv2-row-btn i {
 	margin: 0;
@@ -807,7 +813,17 @@ function startColResize(e, ci) {
 	z-index: 2;
 }
 .ppv2-col-resize:hover {
-	background: color-mix(in srgb, var(--nce-color-primary, #126bc4) 30%, transparent);
+	background: color-mix(in srgb, var(--blue-500, #126bc4) 30%, transparent);
+}
+
+.ppv2-text-link {
+	color: var(--blue-500);
+	text-decoration: underline;
+	cursor: pointer;
+}
+.ppv2-text-link--hover,
+.ppv2-text-link:hover {
+	color: var(--blue-600);
 }
 
 :deep(.ppv2-find-row td) {
@@ -823,7 +839,6 @@ function startColResize(e, ci) {
 }
 </style>
 
-<!-- Teleported to <body>: use --nce-color-* from :root, not scoped bridge aliases -->
 <style>
 .ppv2-header-ctx-menu {
 	position: fixed;
@@ -831,10 +846,11 @@ function startColResize(e, ci) {
 	min-width: 180px;
 	padding: 4px 0;
 	margin: 0;
+	border: 1px solid var(--border-color);
 	border-radius: 4px;
 	box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
-	background-color: var(--nce-color-surface, #ffffff);
-	color: var(--nce-color-text, #252525);
+	background-color: var(--fg-color, #ffffff);
+	color: var(--text-color, #252525);
 }
 .ppv2-header-ctx-item {
 	display: block;
@@ -849,7 +865,7 @@ function startColResize(e, ci) {
 	font-family: inherit;
 }
 .ppv2-header-ctx-item:hover {
-	background-color: var(--nce-color-primary-100, #e3f0fc);
+	background-color: var(--blue-100);
 }
 
 .ppv2-sync-status-link {

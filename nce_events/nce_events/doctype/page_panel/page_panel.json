@@ -8,36 +8,6 @@
   "field_order": [
     "root_doctype",
     "header_text",
-    "theme",
-    "section_break_colours",
-    "frame_bg_class",
-    "frame_fg_type",
-    "header_bg_class",
-    "header_fg_type",
-    "header_toolbar_bg_class",
-    "header_toolbar_fg_type",
-    "footer_bg_class",
-    "footer_fg_type",
-    "col_header_bg_class",
-    "col_header_fg_type",
-    "filter_bar_bg_class",
-    "filter_bar_fg_type",
-    "row_bg_class",
-    "row_fg_type",
-    "row_alt_bg_class",
-    "row_alt_fg_type",
-    "dialog_header_bg_class",
-    "dialog_header_fg_type",
-    "frame_border_class",
-    "frame_border_color_class",
-    "filter_divider_class",
-    "filter_divider_color_class",
-    "col_header_line_class",
-    "col_header_line_color_class",
-    "row_divider_class",
-    "row_divider_color_class",
-    "col_divider_class",
-    "col_divider_color_class",
     "default_filters",
     "order_by",
     "section_break_computed",
@@ -83,224 +53,6 @@
       "fieldtype": "Data",
       "in_list_view": 1,
       "label": "Header Text"
-    },
-    {
-      "fieldname": "theme",
-      "fieldtype": "Link",
-      "label": "Theme",
-      "only_select": 1,
-      "options": "NCE Theme"
-    },
-    {
-      "fieldname": "section_break_colours",
-      "fieldtype": "Section Break",
-      "hidden": 1,
-      "label": "Panel Colours"
-    },
-    {
-      "description": "Float outer frame background (Colours tab). Empty uses theme-bg-surface.",
-      "fieldname": "frame_bg_class",
-      "fieldtype": "Data",
-      "hidden": 1,
-      "label": "Frame Background Class"
-    },
-    {
-      "default": "mono",
-      "fieldname": "frame_fg_type",
-      "fieldtype": "Select",
-      "hidden": 1,
-      "label": "Frame Foreground Type",
-      "options": "mono\ntonal"
-    },
-    {
-      "description": "Panel header title area (left). Empty uses theme-bg-primary-600.",
-      "fieldname": "header_bg_class",
-      "fieldtype": "Data",
-      "hidden": 1,
-      "label": "Header Title Background Class"
-    },
-    {
-      "default": "mono",
-      "fieldname": "header_fg_type",
-      "fieldtype": "Select",
-      "hidden": 1,
-      "label": "Header Title Foreground Type",
-      "options": "mono\ntonal"
-    },
-    {
-      "description": "Header toolbar with action icons (right). Empty uses theme-bg-primary-600.",
-      "fieldname": "header_toolbar_bg_class",
-      "fieldtype": "Data",
-      "hidden": 1,
-      "label": "Header Toolbar Background Class"
-    },
-    {
-      "default": "mono",
-      "fieldname": "header_toolbar_fg_type",
-      "fieldtype": "Select",
-      "hidden": 1,
-      "label": "Header Toolbar Foreground Type",
-      "options": "mono\ntonal"
-    },
-    {
-      "description": "Panel footer bar background. Empty uses theme-bg-primary.",
-      "fieldname": "footer_bg_class",
-      "fieldtype": "Data",
-      "hidden": 1,
-      "label": "Footer Background Class"
-    },
-    {
-      "default": "mono",
-      "fieldname": "footer_fg_type",
-      "fieldtype": "Select",
-      "hidden": 1,
-      "label": "Footer Foreground Type",
-      "options": "mono\ntonal"
-    },
-    {
-      "description": "Table column header cells. Empty uses theme-table header token (theme-bg-table-header).",
-      "fieldname": "col_header_bg_class",
-      "fieldtype": "Data",
-      "hidden": 1,
-      "label": "Column Header Background Class"
-    },
-    {
-      "default": "mono",
-      "fieldname": "col_header_fg_type",
-      "fieldtype": "Select",
-      "hidden": 1,
-      "label": "Column Header Foreground Type",
-      "options": "mono\ntonal"
-    },
-    {
-      "description": "Filter bar container. Empty uses theme-bg-primary-100.",
-      "fieldname": "filter_bar_bg_class",
-      "fieldtype": "Data",
-      "hidden": 1,
-      "label": "Filter Bar Background Class"
-    },
-    {
-      "default": "mono",
-      "fieldname": "filter_bar_fg_type",
-      "fieldtype": "Select",
-      "hidden": 1,
-      "label": "Filter Bar Foreground Type",
-      "options": "mono\ntonal"
-    },
-    {
-      "description": "Even table rows. Empty uses theme-table row token (theme-bg-row).",
-      "fieldname": "row_bg_class",
-      "fieldtype": "Data",
-      "hidden": 1,
-      "label": "Row Background Class"
-    },
-    {
-      "default": "mono",
-      "fieldname": "row_fg_type",
-      "fieldtype": "Select",
-      "hidden": 1,
-      "label": "Row Foreground Type",
-      "options": "mono\ntonal"
-    },
-    {
-      "description": "Odd (zebra) table rows. Empty uses theme-bg-row-alt.",
-      "fieldname": "row_alt_bg_class",
-      "fieldtype": "Data",
-      "hidden": 1,
-      "label": "Alternate Row Background Class"
-    },
-    {
-      "default": "mono",
-      "fieldname": "row_alt_fg_type",
-      "fieldtype": "Select",
-      "hidden": 1,
-      "label": "Alternate Row Foreground Type",
-      "options": "mono\ntonal"
-    },
-    {
-      "description": "Viewer Form Dialog header when opened from this panel. Empty uses theme-bg-primary.",
-      "fieldname": "dialog_header_bg_class",
-      "fieldtype": "Data",
-      "hidden": 1,
-      "label": "Dialog Header Background Class"
-    },
-    {
-      "default": "mono",
-      "fieldname": "dialog_header_fg_type",
-      "fieldtype": "Select",
-      "hidden": 1,
-      "label": "Dialog Header Foreground Type",
-      "options": "mono\ntonal"
-    },
-    {
-      "description": "Float outer frame border width (Colours tab). Empty uses theme-border.",
-      "fieldname": "frame_border_class",
-      "fieldtype": "Data",
-      "hidden": 1,
-      "label": "Frame Border Width Class"
-    },
-    {
-      "description": "Float frame border color (Colours tab). Empty uses site border color. Pick theme-border-{role}-{shade}.",
-      "fieldname": "frame_border_color_class",
-      "fieldtype": "Data",
-      "hidden": 1,
-      "label": "Frame Border Color Class"
-    },
-    {
-      "description": "Filter bar bottom divider width. Empty uses theme-border-thin.",
-      "fieldname": "filter_divider_class",
-      "fieldtype": "Data",
-      "hidden": 1,
-      "label": "Filter Divider Width Class"
-    },
-    {
-      "description": "Filter bar divider color. Empty uses site border color.",
-      "fieldname": "filter_divider_color_class",
-      "fieldtype": "Data",
-      "hidden": 1,
-      "label": "Filter Divider Color Class"
-    },
-    {
-      "description": "Table column header underline width. Empty uses theme-border-strong.",
-      "fieldname": "col_header_line_class",
-      "fieldtype": "Data",
-      "hidden": 1,
-      "label": "Column Header Line Width Class"
-    },
-    {
-      "description": "Column header underline color. Empty uses site border color.",
-      "fieldname": "col_header_line_color_class",
-      "fieldtype": "Data",
-      "hidden": 1,
-      "label": "Column Header Line Color Class"
-    },
-    {
-      "description": "Table row divider width. Empty uses theme-border-thin.",
-      "fieldname": "row_divider_class",
-      "fieldtype": "Data",
-      "hidden": 1,
-      "label": "Row Divider Width Class"
-    },
-    {
-      "description": "Table row divider color. Empty uses site border color.",
-      "fieldname": "row_divider_color_class",
-      "fieldtype": "Data",
-      "hidden": 1,
-      "label": "Row Divider Color Class"
-    },
-    {
-      "description": "Table column divider width (header vertical lines). Empty uses theme-border-thin.",
-      "fieldname": "col_divider_class",
-      "fieldtype": "Data",
-      "hidden": 1,
-      "label": "Column Divider Width Class"
-    },
-    {
-      "description": "Table column divider color. Empty uses site border color.",
-      "fieldname": "col_divider_color_class",
-      "fieldtype": "Data",
-      "hidden": 1,
-      "label": "Column Divider Color Class"
     },
     {
       "description": "Default filters pre-applied when the panel opens. Visible and editable in the filter widget.",
@@ -363,7 +115,7 @@
       "label": "Gender Color Fields"
     },
     {
-      "description": "Single root-table field used as the row title (Display tab — root fields only)",
+      "description": "Single root-table field used as the row title (Display tab \u2014 root fields only)",
       "fieldname": "title_field",
       "fieldtype": "Small Text",
       "hidden": 1,
@@ -482,7 +234,7 @@
       "label": "Open Card on Click"
     },
     {
-      "description": "Auto-generated SQL query used to fetch this panel's data. Rebuilt automatically on Save from Display settings, or click Refresh SQL on the Query tab. Read-only — for inspection and troubleshooting.",
+      "description": "Auto-generated SQL query used to fetch this panel's data. Rebuilt automatically on Save from Display settings, or click Refresh SQL on the Query tab. Read-only \u2014 for inspection and troubleshooting.",
       "fieldname": "panel_sql",
       "fieldtype": "Code",
       "label": "Panel SQL",

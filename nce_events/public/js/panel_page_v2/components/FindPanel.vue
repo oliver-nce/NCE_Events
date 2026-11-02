@@ -40,7 +40,7 @@ code-index:end
 			<div v-if="mode === 'find'" class="ppv2-find-actions" @mousedown.stop>
 				<button
 					type="button"
-					class="ppv2-find-tab-btn ppv2-find-tab-btn--active theme-border theme-rounded-sm"
+					class="ppv2-find-tab-btn ppv2-find-tab-btn--active"
 					@click="onPerformFind"
 				>
 					{{ label("Perform Find") }}
@@ -48,24 +48,24 @@ code-index:end
 				<button
 					v-if="findMatchActive"
 					type="button"
-					class="ppv2-find-tab-btn theme-border theme-rounded-sm"
+					class="ppv2-find-tab-btn"
 					@click="onPerformFindConstrain"
 				>
 					{{ label("Constrain Found Set") }}
 				</button>
-				<button type="button" class="ppv2-find-tab-btn theme-border theme-rounded-sm" @click="$emit('close')">
+				<button type="button" class="ppv2-find-tab-btn" @click="$emit('close')">
 					{{ label("Cancel Find") }}
 				</button>
 			</div>
 			<!-- Browse mode (post-find) -->
 			<div v-else class="ppv2-find-actions ppv2-find-actions--browse" @mousedown.stop>
-				<button type="button" class="ppv2-find-tab-btn theme-border theme-rounded-sm" @click="modifyFind">
+				<button type="button" class="ppv2-find-tab-btn" @click="modifyFind">
 					{{ label("Modify Find") }}
 				</button>
-				<button type="button" class="ppv2-find-tab-btn theme-border theme-rounded-sm" @click="enterConstrainMode">
+				<button type="button" class="ppv2-find-tab-btn" @click="enterConstrainMode">
 					{{ label("Constrain Found Set") }}
 				</button>
-				<button type="button" class="ppv2-find-tab-btn theme-border theme-rounded-sm" @click="showAll">
+				<button type="button" class="ppv2-find-tab-btn" @click="showAll">
 					{{ label("Show All") }}
 				</button>
 			</div>
@@ -86,7 +86,7 @@ code-index:end
 							<input
 								v-model="criteria[col.fieldname]"
 								type="text"
-								class="ppv2-find-input theme-border theme-rounded-sm"
+								class="ppv2-find-input"
 								:placeholder="col.label"
 								@keydown.enter.prevent="onPerformFind"
 							/>
@@ -95,7 +95,7 @@ code-index:end
 				</template>
 			</PanelTable>
 
-			<div v-if="mode === 'browse' && !rows.length" class="ppv2-find-empty theme-text-muted">
+			<div v-if="mode === 'browse' && !rows.length" class="ppv2-find-empty">
 				No records match your request.
 			</div>
 		</div>
@@ -179,32 +179,33 @@ function onPerformFindConstrain() {
 	flex-wrap: wrap;
 	gap: 6px;
 	padding: 8px 10px;
-	background: var(--nce-color-focus);
-	border-bottom: var(--nce-border-width) solid var(--nce-color-border);
+	background: var(--blue-50);
+	border-bottom: 1px solid var(--border-color);
 	flex-shrink: 0;
 }
 
 .ppv2-find-actions--browse {
-	border-bottom: var(--nce-border-width) dashed var(--nce-color-border);
+	border-bottom: 1px dashed var(--border-color);
 }
 
 .ppv2-find-tab-btn {
 	font-size: var(--font-size-sm);
 	padding: 6px 12px;
 	border-radius: var(--border-radius-sm);
-	background: var(--nce-color-surface);
+	background: var(--fg-color, #fff);
+	border: 1px solid var(--border-color);
 	cursor: pointer;
 	font-family: inherit;
 }
 
 .ppv2-find-tab-btn:hover {
-	background: var(--nce-color-surface);
+	background: var(--blue-50);
 }
 
 .ppv2-find-tab-btn--active {
-	background: var(--nce-color-primary);
-	color: var(--nce-color-primary-fg);
-	border-color: var(--nce-color-primary);
+	background: var(--blue-500);
+	color: #fff;
+	border-color: var(--blue-500);
 	font-weight: var(--font-weight-bold);
 }
 
@@ -227,7 +228,7 @@ function onPerformFindConstrain() {
 
 .ppv2-find-row td {
 	padding: 2px 4px;
-	border-bottom: var(--nce-border-width) solid var(--nce-color-border);
+	border-bottom: 1px solid var(--border-color);
 }
 
 .ppv2-find-input {
@@ -236,12 +237,14 @@ function onPerformFindConstrain() {
 	padding: 2px 4px;
 	font-size: calc(var(--font-size-base) + 1px);
 	border-radius: var(--border-radius-sm);
-	background: var(--nce-color-surface);
+	border: 1px solid var(--border-color);
+	background: var(--fg-color, #fff);
 }
 
 .ppv2-find-empty {
 	padding: 12px;
 	font-size: calc(var(--font-size-base) + 1px);
 	flex-shrink: 0;
+	color: var(--gray-500);
 }
 </style>

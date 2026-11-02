@@ -1,29 +1,12 @@
-/* ── Hierarchy Explorer (two-pane drill-down)
- * Loaded by: nce_events/nce_events/page/hierarchy_explorer/hierarchy_explorer.js
- * (page asset bundle — not in hooks.py::app_include_css).
- * Theme tokens: --nce-color-surface, --nce-color-primary, --nce-color-primary-100,
- * --nce-color-primary-200, --nce-color-primary-300, --nce-color-primary-500,
- * --nce-color-text, --nce-color-muted, --nce-color-border, --nce-color-row-alt,
- * --nce-color-primary-fg. Hex fallbacks when Themes is not loaded.
- *
- * code-index:begin
- * {
- *  "purpose": "Styles for the two-pane Hierarchy Explorer drill-down desk page.",
- *  "read_when": "Changing hierarchy explorer pane layout, dividers, or loading states.",
- *  "gotchas": [],
- *  "keywords": ["hierarchy-explorer", "two-pane", "drill-down", "pane", "CSS"],
- *  "format": 1
- * }
- * code-index:end
- */
+/* Frappe UI colour tokens (--blue-*, --gray-*, --border-color, --fg-color, --text-color). */
 
 .hierarchy-explorer {
 	display: flex;
 	flex-direction: row;
 	height: calc(100vh - 120px - 72pt);
 	overflow: hidden;
-	background: var(--nce-color-surface, #FAFAFA);
-	border: 1px solid var(--nce-color-border, #D7D9DB);
+	background: var(--fg-color, #fff);
+	border: 1px solid var(--border-color);
 	border-radius: 6px;
 }
 
@@ -35,15 +18,15 @@
 	flex: 1 1 0%;
 	min-width: 200px;
 	overflow: hidden;
-	background: var(--nce-color-surface, #FAFAFA);
+	background: var(--fg-color, #fff);
 }
 
 /* ── Pane Header ── */
 
 .hierarchy-pane-header {
 	padding: 8px 12px;
-	background: var(--nce-color-row-alt, #F4F5F5);
-	border-bottom: 1px solid var(--nce-color-border, #EAEBEC);
+	background: var(--gray-50);
+	border-bottom: 1px solid var(--border-color);
 	flex-shrink: 0;
 }
 
@@ -57,7 +40,7 @@
 .pane-label {
 	font-weight: 600;
 	font-size: 13px;
-	color: var(--nce-color-text, #464D53);
+	color: var(--text-color);
 	font-family: Arial, sans-serif;
 }
 
@@ -70,13 +53,13 @@
 
 .pane-hint {
 	font-size: 11px;
-	color: var(--nce-color-muted, #6D757E);
+	color: var(--gray-600);
 	font-family: Arial, sans-serif;
 }
 
 .pane-count {
 	font-size: 11px;
-	color: var(--nce-color-muted, #6D757E);
+	color: var(--gray-600);
 	font-family: Arial, sans-serif;
 }
 
@@ -94,14 +77,14 @@
 .pane-actions .btn {
 	font-size: 11px;
 	padding: 2px 8px;
-	background: var(--nce-color-primary-100, #E3F0FC);
-	color: var(--nce-color-primary, #126BC4);
-	border: 1px solid var(--nce-color-primary-200, #C7E0FA);
+	background: var(--blue-100);
+	color: var(--blue-500);
+	border: 1px solid var(--blue-200);
 	border-radius: 4px;
 }
 
 .pane-actions .btn:hover {
-	background: var(--nce-color-primary-200, #C7E0FA);
+	background: var(--blue-200);
 }
 
 .pane-actions .btn[disabled] {
@@ -129,14 +112,14 @@
 .hierarchy-table th {
 	position: sticky;
 	top: 0;
-	background: var(--nce-color-row-alt, #F4F5F5);
-	color: var(--nce-color-muted, #5A6168);
+	background: var(--gray-50);
+	color: var(--gray-600);
 	font-weight: 600;
 	font-size: 11px;
 	text-transform: uppercase;
 	letter-spacing: 0.3px;
 	padding: 6px 8px;
-	border-bottom: 1px solid var(--nce-color-border, #D7D9DB);
+	border-bottom: 1px solid var(--border-color);
 	text-align: left;
 	white-space: nowrap;
 	z-index: 1;
@@ -144,8 +127,8 @@
 
 .hierarchy-table td {
 	padding: 5px 8px;
-	border-bottom: 1px solid var(--nce-color-border, #EAEBEC);
-	color: var(--nce-color-text, #464D53);
+	border-bottom: 1px solid var(--border-color);
+	color: var(--text-color);
 	white-space: nowrap;
 	overflow: hidden;
 	text-overflow: ellipsis;
@@ -158,23 +141,23 @@
 }
 
 .hierarchy-row:hover {
-	background: var(--nce-color-primary-100, #F1F7FE);
+	background: var(--blue-100);
 }
 
 .hierarchy-row.alt {
-	background: var(--nce-color-surface, #FAFAFA);
+	background: var(--fg-color, #fff);
 }
 
 .hierarchy-row.alt:hover {
-	background: var(--nce-color-primary-100, #F1F7FE);
+	background: var(--blue-100);
 }
 
 .hierarchy-row.selected {
-	background: var(--nce-color-primary-100, #E3F0FC);
+	background: var(--blue-100);
 }
 
 .hierarchy-row.selected:hover {
-	background: var(--nce-color-primary-100, #E3F0FC);
+	background: var(--blue-100);
 }
 
 /* ── Load More ── */
@@ -186,9 +169,9 @@
 
 .load-more-btn {
 	font-size: 11px;
-	background: var(--nce-color-primary-100, #E3F0FC);
-	color: var(--nce-color-primary, #126BC4);
-	border: 1px solid var(--nce-color-primary-200, #C7E0FA);
+	background: var(--blue-100);
+	color: var(--blue-500);
+	border: 1px solid var(--blue-200);
 }
 
 /* ── Loading ── */
@@ -196,7 +179,7 @@
 .hierarchy-loading {
 	padding: 24px;
 	text-align: center;
-	color: var(--nce-color-muted, #8D949A);
+	color: var(--gray-600);
 	font-size: 13px;
 }
 
@@ -205,7 +188,7 @@
 .hierarchy-divider {
 	width: 5px;
 	flex-shrink: 0;
-	background: var(--nce-color-border, #D7D9DB);
+	background: var(--border-color);
 	cursor: col-resize;
 	transition: background-color 0.15s;
 	position: relative;
@@ -219,24 +202,24 @@
 	transform: translate(-50%, -50%);
 	width: 3px;
 	height: 24px;
-	border-left: 1px solid var(--nce-color-border, #B7BABE);
-	border-right: 1px solid var(--nce-color-border, #B7BABE);
+	border-left: 1px solid var(--border-color);
+	border-right: 1px solid var(--border-color);
 }
 
 .hierarchy-divider:hover {
-	background: var(--nce-color-primary-300, #73B3F2);
+	background: var(--blue-300);
 }
 
 .hierarchy-divider:hover::after {
-	border-color: var(--nce-color-primary-fg, #ffffff);
+	border-color: #fff;
 }
 
 .hierarchy-divider.active {
-	background: var(--nce-color-primary-500, #4198F0);
+	background: var(--blue-500);
 }
 
 .hierarchy-divider.active::after {
-	border-color: var(--nce-color-primary-fg, #ffffff);
+	border-color: #fff;
 }
 
 body.hierarchy-resizing {
