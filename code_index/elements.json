@@ -2,9 +2,9 @@
 "_meta": {
 "description": "The single authoritative code index of this project: every function, class, method, route, test, Vue component, CSS section and doc section with a label, plus each file's purpose. Query it with the shared code-index tool (find / show / callers); do not read this file whole. Generated: never edit by hand; hand-written notes live in code_index/project.json.",
 "generator": "_Project support files/code-index/codeindex.py",
-"count": 1975,
+"count": 1976,
 "project_sha256": "4149da0557eced977397fd926c9ce2ebca6a2b3cea453cc77dde71de6d1839c7",
-"headers_sha256": "d5e688af1596e2174c61773a5bb9f7373fe708876edef0478fcba6c42d2cf46e"
+"headers_sha256": "4c38ae8abde1e5f1bce481fe09a878201162f62c2de4a02b5b0fc1ee5377088b"
 },
 "files": {
 ".github/workflows/style-audit.yml": {
@@ -2627,6 +2627,21 @@
 "migration"
 ]
 },
+"nce_events/patches/v0_0_2/clear_panel_header_colours.py": {
+"purpose": "Empties header title/toolbar bg and fg overrides on all Page Panels so headers use the themed default.",
+"read_when": "Wondering why panel header colours were reset or how headers fall back to theme-bg-primary-600.",
+"gotchas": [
+"Runs once via patches.txt; re-picking a header colour on the Colours tab afterwards is kept."
+],
+"keywords": [
+"execute",
+"Page Panel",
+"header_bg_class",
+"header_toolbar_bg_class",
+"theme",
+"patch"
+]
+},
 "nce_events/patches/v0_0_2/create_event_explorer_page.py": {
 "purpose": "Seeds the event-explorer Panel Page with Events and Players SQL drill-down panels.",
 "read_when": "Understanding the Event Explorer proof-of-concept panel layout or SQL queries.",
@@ -3342,12 +3357,19 @@
 "Vue auto-unwraps reactive panel.rows ref when accessed on the panel object."
 ],
 "keywords": [
-"App.vue",
-"panel_page_v2",
+"openPanels",
 "PanelFloat",
-"find",
-"cascade",
-"form dialog"
+"openPanel",
+"TagFinder",
+"cascadeOpenPanels",
+"useFindPanel",
+"PanelFormDialog",
+"closeAllPanels",
+"WP Tables",
+"window._nce_open_tag_finder",
+"panelLiveRows",
+"export_panel_data",
+"dropStack"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/components/ActionsPanel.vue",
@@ -3682,19 +3704,22 @@
 ]
 },
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue": {
-"purpose": "Main form dialog shell with find, native form, related tabs, submit, and WP readback.",
-"read_when": "Changing form dialog save/submit flow, find layout, or dialog drag/resize.",
+"purpose": "Main panel form dialog shell: load, find criteria, native form, related tabs, submit, and WP readback.",
+"read_when": "Changing save or submit, find layout, drag or resize, Woo hooks, or Events map and custom buttons.",
 "gotchas": [
 "Widen dialog (never shrink) so footer buttons stay on one row.",
 "Do not emit saved when no Frappe form save; host must not run onFormDialogSaved refresh."
 ],
 "keywords": [
 "PanelFormDialog",
-"form dialog",
-"find",
-"submit",
-"WP readback",
-"related tab"
+"runSyncReadbackAfterSave",
+"findCriteria",
+"performFindLayout",
+"begin_dialog_edit",
+"PeopleMapDialog",
+"onSubmit",
+"wp readback",
+"usePanelFormDialog"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialogBody.vue",
@@ -3881,17 +3906,21 @@
 ]
 },
 "nce_events/public/js/panel_page_v2/components/PanelFormField.vue": {
-"purpose": "Renders individual form dialog fields including find-mode criteria controls.",
-"read_when": "Adding fieldtype support or changing find exact-match criteria on form fields.",
+"purpose": "Renders one panel form dialog field by Frappe fieldtype, including FileMaker-style find criteria inputs.",
+"read_when": "Adding fieldtype UI, find exact-match criteria, URL or Time display, or dirty styling on dialog fields.",
 "gotchas": [
 "HTML-label fields: always render value as HTML, never editable."
 ],
 "keywords": [
 "PanelFormField",
+"findCriteriaMode",
+"onExactCriteriaChange",
+"PanelFormLinkField",
+"normalizeTimeForInput",
 "fieldtype",
+"criteriaExactValue",
 "find mode",
-"Link field",
-"exact criteria"
+"ppv2-fd-field"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDateTimeField.vue",
@@ -3900,15 +3929,18 @@
 ]
 },
 "nce_events/public/js/panel_page_v2/components/PanelFormFindSearchHelpModal.vue": {
-"purpose": "Help modal explaining FileMaker-style find/search operators in form dialog find.",
-"read_when": "Updating find/search help text or modal layout for form dialog find mode.",
+"purpose": "Modal help table for FileMaker-style find operators used in panel form dialog find mode.",
+"read_when": "Updating find operator help copy, columns, or layout; keep rows aligned with search._parse_find_term.",
 "gotchas": [],
 "keywords": [
-"FindSearchHelpModal",
-"find help",
-"search operators",
-"form dialog",
-"modal"
+"PanelFormFindSearchHelpModal",
+"Search Help",
+"ppv2-find-help",
+"_parse_find_term",
+"find operators",
+"Teleport",
+"wildcard",
+"exact match"
 ]
 },
 "nce_events/public/js/panel_page_v2/components/PanelFormLinkField.vue": {
@@ -3952,10 +3984,14 @@
 "gotchas": [],
 "keywords": [
 "PanelHeaderToolbar",
-"toolbar",
-"panel header",
+"ppv2-header-right",
+"findHeaderMinimal",
+"activate-panel",
+"panelChromeClasses",
 "refresh",
-"find"
+"toggle-filter",
+"displayRowCount",
+"isFront"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/utils/panelChromeClasses.js"
@@ -4006,18 +4042,21 @@
 ]
 },
 "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue": {
-"purpose": "Modal map of enrolled people by family address for an Event record.",
-"read_when": "Changing event people map dialog, Google Maps load, or pin info windows.",
+"purpose": "Draggable modal Google Map of event enrollments by geocoded family address from get_event_people_map.",
+"read_when": "Changing event map loading, pins, info windows, or dialog drag and resize on Events records.",
 "gotchas": [
 "Google Maps script is loaded once per page via data-nce-google-maps marker.",
 "api_key is used only in the script URL, never shown in dialog text."
 ],
 "keywords": [
 "PeopleMapDialog",
-"event map",
-"Google Maps",
 "get_event_people_map",
-"pins"
+"data-nce-google-maps",
+"PIN_PATH",
+"geocode_failed",
+"skipped_no_address",
+"eventId",
+"Google Maps"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/composables/frozenFormSave.js",
@@ -4072,11 +4111,16 @@
 "read_when": "Changing floating SPA switcher placement or loadPages on mount.",
 "gotchas": [],
 "keywords": [
+"SpaPageSwitcherFloat",
 "PanelFloat",
 "SpaPageNavBar",
 "measureDeskTitleAnchor",
 "loadPages",
-"switchTo"
+"switchTo",
+"pageSlug",
+"useSpaPageNav",
+"headerLabel",
+"anchor"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/components/PanelFloat.vue",
@@ -4146,13 +4190,17 @@
 ],
 "keywords": [
 "TagDialog",
-"copy tag",
-"clipboard",
-"fallback",
 "applyFilters",
-"isHtml",
 "baseTag",
-"drag panel"
+"displayTag",
+"fallback",
+"isHtml",
+"Copy Tag to Clipboard",
+"navigator.clipboard",
+"fallbackCopy",
+"theme-bg-primary",
+"clipboard",
+"merge tag"
 ]
 },
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue": {
@@ -4166,7 +4214,11 @@
 "useTagFinder",
 "loadColumn",
 "buildTag",
-"resize handle",
+"tagDialogs",
+"Teleport",
+"tf-resize-handle",
+"onSelectField",
+"applyFilters",
 "float panel"
 ],
 "depends_on": [
@@ -4698,8 +4750,11 @@
 "TabBar",
 "ActionsPanel",
 "cardDefName",
+"collectWidgets",
+"activeWidgets",
 "save-field",
-"open-card"
+"open-card",
+"styles_json"
 ],
 "depends_on": [
 "nce_events/public/js/panel_page_v2/components/ActionsPanel.vue",
@@ -20075,6 +20130,18 @@
 "label_source": "header"
 },
 {
+"id": "nce_events/patches/v0_0_2/clear_panel_header_colours.py::execute",
+"file": "nce_events/patches/v0_0_2/clear_panel_header_colours.py",
+"kind": "function",
+"name": "execute",
+"qualname": "execute",
+"sig": "() -> None",
+"hash": "dede500cf5",
+"calls": [],
+"label": "Set the header colour fields to empty on every Page Panel.",
+"label_source": "docstring"
+},
+{
 "id": "nce_events/patches/v0_0_2/create_event_explorer_page.py::execute",
 "file": "nce_events/patches/v0_0_2/create_event_explorer_page.py",
 "kind": "function",
@@ -21944,8 +22011,8 @@
 "sig": "",
 "hash": "6eb7b95bb4",
 "calls": [],
-"label": "Root Vue app orchestrating panel floats, find, form dialogs, and SPA navigation.",
-"label_source": "docstring"
+"label": "Panel page v2 root mounted from main.js: WP Tables float, drilled panels, find, tags, cards, and form dialogs.",
+"label_source": "header"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/App.vue::ROOT_INSET",
@@ -21957,7 +22024,7 @@
 "hash": "8cde29d02f",
 "exported": false,
 "calls": [],
-"label": "Pixel margin from viewport edges for root WP Tables float inset and position cap.",
+"label": "Pixel inset for root PanelFloat placement capped from viewport edges.",
 "label_source": "header"
 },
 {
@@ -21970,7 +22037,7 @@
 "hash": "dde045c50b",
 "exported": false,
 "calls": [],
-"label": "Initial x for root PanelFloat aligned with ROOT_INSET.",
+"label": "Initial left coordinate for the root WP Tables PanelFloat.",
 "label_source": "header"
 },
 {
@@ -21983,7 +22050,7 @@
 "hash": "9e39da6c5b",
 "exported": false,
 "calls": [],
-"label": "Initial y for root PanelFloat aligned with ROOT_INSET.",
+"label": "Initial top coordinate for the root WP Tables PanelFloat.",
 "label_source": "header"
 },
 {
@@ -21996,7 +22063,7 @@
 "hash": "6a927b0c68",
 "exported": false,
 "calls": [],
-"label": "Reloads matching open panel when window._nce_refresh_panel receives a doctype.",
+"label": "Reloads the open panel whose doctype matches; wired to window._nce_refresh_panel and actions.",
 "label_source": "header"
 },
 {
@@ -22012,7 +22079,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Executes Card Definition page action chosen on ActionsPanel.",
+"label": "Executes a page action chosen from the top ActionsPanel bar.",
 "label_source": "header"
 },
 {
@@ -22031,7 +22098,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Opens WordPress view-as-user switch from row via wp_family_id_field and openWpUserSwitch.",
+"label": "Opens View as website via wp_user_switch using the row family id field from panel config.",
 "label_source": "header"
 },
 {
@@ -22047,7 +22114,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Splices dropped row out of root or child table and records undo on dropStack.",
+"label": "Removes a dropped row from root or panel rows and pushes undo state onto dropStack.",
 "label_source": "header"
 },
 {
@@ -22060,7 +22127,7 @@
 "hash": "aab044701c",
 "exported": false,
 "calls": [],
-"label": "Pops dropStack and reinserts row at prior index on root or panel.",
+"label": "Restores the last row removed by onRowDrop at its previous index.",
 "label_source": "header"
 },
 {
@@ -22078,7 +22145,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Intercepts Ctrl or Cmd+Z to undo last panel row drop.",
+"label": "Handles Ctrl or Cmd+Z to undo the most recent row drop when dropStack has entries.",
 "label_source": "header"
 },
 {
@@ -22091,7 +22158,7 @@
 "hash": "7ec547a5d6",
 "exported": false,
 "calls": [],
-"label": "Header title for child float with parent context and Find or Found suffix.",
+"label": "Builds drilled panel header text with parent context and Find or Found suffix.",
 "label_source": "header"
 },
 {
@@ -22104,7 +22171,7 @@
 "hash": "190243c988",
 "exported": false,
 "calls": [],
-"label": "Columns for find stack or normal browse from _findColumns or p.columns.",
+"label": "Supplies find column set during find mode otherwise normal panel columns.",
 "label_source": "header"
 },
 {
@@ -22121,7 +22188,7 @@
 "nce_events/public/js/panel_page_v2/App.vue::panelTableColumns",
 "nce_events/public/js/panel_page_v2/utils/panelTableColWidths.js::preparePanelTableLayout"
 ],
-"label": "Pre-mount float width and column widths via preparePanelLayout before _layoutReady.",
+"label": "Precomputes float width and initial column widths via preparePanelTableLayout before table render.",
 "label_source": "header"
 },
 {
@@ -22137,7 +22204,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Persists PanelTable measured min width on panel for float sizing.",
+"label": "Stores PanelTable reported minimum width on the panel object.",
 "label_source": "header"
 },
 {
@@ -22150,7 +22217,7 @@
 "hash": "9d3b5cbcad",
 "exported": false,
 "calls": [],
-"label": "PanelFloat init-w from _floatInitW or PANEL_FLOAT_DEFAULT_W.",
+"label": "Returns stored layout float width or PANEL_FLOAT_DEFAULT_W for PanelFloat init-w.",
 "label_source": "header"
 },
 {
@@ -22163,7 +22230,7 @@
 "hash": "25daf0ea4f",
 "exported": false,
 "calls": [],
-"label": "Current table rows from _panelRows ref or rows on reactive panel.",
+"label": "Returns the live row array from _panelRows ref or rows for table and export.",
 "label_source": "header"
 },
 {
@@ -22176,7 +22243,7 @@
 "hash": "1cc1d8e645",
 "exported": false,
 "calls": [],
-"label": "Removes row by name in place for window._nce_remove_panel_row.",
+"label": "Removes first row matching name from a list; used by window._nce_remove_panel_row.",
 "label_source": "header"
 },
 {
@@ -22191,7 +22258,7 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/App.vue::panelLiveRows"
 ],
-"label": "Table body rows; empty during find criteria mode else live rows.",
+"label": "Returns empty rows during find criteria editing else live panel rows.",
 "label_source": "header"
 },
 {
@@ -22204,7 +22271,7 @@
 "hash": "bae9ffe272",
 "exported": false,
 "calls": [],
-"label": "Pushes client find hits into panel via _panelApi setFoundSet callback.",
+"label": "Applies a found row set through the panel API setFoundSet hook.",
 "label_source": "header"
 },
 {
@@ -22217,7 +22284,7 @@
 "hash": "59f5c26c6d",
 "exported": false,
 "calls": [],
-"label": "Clears found set and _findColumns when exiting find browse.",
+"label": "Clears found set state and find columns on a panel.",
 "label_source": "header"
 },
 {
@@ -22230,7 +22297,7 @@
 "hash": "105a76bf54",
 "exported": false,
 "calls": [],
-"label": "Msgprint when find runs without Enter at least one search criterion.",
+"label": "Shows Enter at least one search criterion when a find action has no criteria.",
 "label_source": "header"
 },
 {
@@ -22249,7 +22316,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "PanelFindActionBar perform: run find and apply found set or warn.",
+"label": "Runs performFind on the panel find composable or shows no-criteria message.",
 "label_source": "header"
 },
 {
@@ -22268,7 +22335,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Narrows active found set via performFindConstrain.",
+"label": "Runs performFindConstrain and applies results to the found set.",
 "label_source": "header"
 },
 {
@@ -22287,7 +22354,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Widens found set via extendFind or shows no-criteria message.",
+"label": "Runs extendFind and applies extended results to the found set.",
 "label_source": "header"
 },
 {
@@ -22306,7 +22373,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Cancel find criteria through cancelFindCriteria and optional clear.",
+"label": "Cancels in-progress find criteria and restores browse or clears find.",
 "label_source": "header"
 },
 {
@@ -22324,7 +22391,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "New find session with buildFindColumns and filter hidden.",
+"label": "Builds find columns and starts a new find session hiding the filter bar.",
 "label_source": "header"
 },
 {
@@ -22342,7 +22409,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Leave find mode and clear found set on panel.",
+"label": "Exits find mode and clears find state on the panel.",
 "label_source": "header"
 },
 {
@@ -22360,7 +22427,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Re-enter criteria editing with buildFindColumns.",
+"label": "Rebuilds find columns and re-enters modify-find mode.",
 "label_source": "header"
 },
 {
@@ -22379,7 +22446,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Add OR criteria row via addOrRow or no-criteria msgprint.",
+"label": "Adds an OR criteria row or shows no-criteria message if none exist.",
 "label_source": "header"
 },
 {
@@ -22397,7 +22464,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Duplicate selected OR row or msgprint to click a find row first.",
+"label": "Duplicates the active OR row or prompts to select a find row first.",
 "label_source": "header"
 },
 {
@@ -22415,7 +22482,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Toolbar find: require form_dialog, activate useFindPanel on _allRows.",
+"label": "Activates in-panel find when a Form Dialog is linked otherwise shows configuration hint.",
 "label_source": "header"
 },
 {
@@ -22428,7 +22495,7 @@
 "hash": "f8761e9b4c",
 "exported": false,
 "calls": [],
-"label": "Spawn x/y offset from root or parent panel for openPanel.",
+"label": "Computes spawn position offset from root or parent panel for a new drill float.",
 "label_source": "header"
 },
 {
@@ -22441,7 +22508,7 @@
 "hash": "972dfa0243",
 "exported": false,
 "calls": [],
-"label": "Horizontal offset per cascade slot from root origin.",
+"label": "Horizontal pixel offset between cascaded drilled panel slots.",
 "label_source": "header"
 },
 {
@@ -22454,7 +22521,7 @@
 "hash": "f5c33ecf25",
 "exported": false,
 "calls": [],
-"label": "Vertical offset per cascade slot for cascadeOpenPanels.",
+"label": "Vertical pixel offset used only by cascade layout not drill spawn nextPos.",
 "label_source": "header"
 },
 {
@@ -22467,7 +22534,7 @@
 "hash": "60476db08f",
 "exported": false,
 "calls": [],
-"label": "Saves PanelFloat ref on panel for z-index and setPosition.",
+"label": "Saves PanelFloat component ref on a panel for z-index and position control.",
 "label_source": "header"
 },
 {
@@ -22480,7 +22547,7 @@
 "hash": "1b8dacf2e6",
 "exported": false,
 "calls": [],
-"label": "Forces isTablePanelFront to recompute after z-order changes.",
+"label": "Increments reactive tick so isTablePanelFront recomputes after bring-to-front.",
 "label_source": "header"
 },
 {
@@ -22499,7 +22566,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "On float raised, bump z tick and cascade panels without alert.",
+"label": "Updates z tick and silently cascades open panels when a float comes forward.",
 "label_source": "header"
 },
 {
@@ -22512,7 +22579,7 @@
 "hash": "9025d6a012",
 "exported": false,
 "calls": [],
-"label": "Max getZ among root PanelFloat and every open panel float.",
+"label": "Returns highest getZ among root and all open panel floats.",
 "label_source": "header"
 },
 {
@@ -22527,7 +22594,7 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/App.vue::maxTablePanelZ"
 ],
-"label": "Whether root or given panel float currently has highest table z.",
+"label": "True when the given panel or root float currently has the top table-zone z-index.",
 "label_source": "header"
 },
 {
@@ -22543,7 +22610,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "bringToFront on root or child float from header toolbar.",
+"label": "Brings the specified drilled panel or root float to the front.",
 "label_source": "header"
 },
 {
@@ -22556,7 +22623,7 @@
 "hash": "eb0db2fe3d",
 "exported": false,
 "calls": [],
-"label": "x/y for cascade slot from ROOT_INIT plus CASCADE steps.",
+"label": "Returns x and y for a cascade slot stepping from root init with CASCADE_STEP constants.",
 "label_source": "header"
 },
 {
@@ -22571,7 +22638,7 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/App.vue::cascadePositionForSlot"
 ],
-"label": "Reset root position and stagger open panels by z rank; optional alert.",
+"label": "Repositions root and drilled floats by z-order slots with optional success alert.",
 "label_source": "header"
 },
 {
@@ -22584,7 +22651,7 @@
 "hash": "6cc38483d4",
 "exported": false,
 "calls": [],
-"label": "After openPanel load, bring new float front on nextTick.",
+"label": "Brings a newly opened panel float to front after layout is ready.",
 "label_source": "header"
 },
 {
@@ -22600,7 +22667,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Show TagFinder at panel doctype and offset from panel x/y.",
+"label": "Shows TagFinder for the panel doctype near the panel position from table tags toolbar.",
 "label_source": "header"
 },
 {
@@ -22622,7 +22689,7 @@
 "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel",
 "nce_events/public/js/panel_page_v2/utils/findColumns.js::buildFindColumns"
 ],
-"label": "Open drilled float with usePanel, useFindPanel, layout; replace same doctype.",
+"label": "Opens or replaces a drilled panel with usePanel load, find state, and layout prep.",
 "label_source": "header"
 },
 {
@@ -22638,7 +22705,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Close child panels recursively then remove from openPanels.",
+"label": "Recursively closes child panels then removes the panel from openPanels.",
 "label_source": "header"
 },
 {
@@ -22653,7 +22720,7 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/App.vue::closePanel"
 ],
-"label": "Close dialogs, cards, tag finder, drilled panels; keep root WP Tables.",
+"label": "Closes overlays and all drilled panels while leaving the root WP Tables float open.",
 "label_source": "header"
 },
 {
@@ -22671,7 +22738,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Open doctype panel from root WP Tables frappe_doctype row click.",
+"label": "Opens a drilled panel for the row frappe_doctype from the root table click.",
 "label_source": "header"
 },
 {
@@ -22687,7 +22754,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Fill SyncErrorDialog from row last_sync fields.",
+"label": "Opens SyncErrorDialog populated from the row last sync status fields.",
 "label_source": "header"
 },
 {
@@ -22705,7 +22772,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Drill opens default Card modal or filtered child panel with title context.",
+"label": "Opens default card modal or drills a filtered child panel with optional parent context title.",
 "label_source": "header"
 },
 {
@@ -22721,7 +22788,7 @@
 "nce_events/public/js/panel_page_v2/App.vue::openPanel",
 "nce_events/public/js/panel_page_v2/App.vue::panelLiveRows"
 ],
-"label": "PanelFormDialog go-to: openPanel with parentFilter then reload child.",
+"label": "Opens a related child panel after Form Dialog Go To navigation with parent title context.",
 "label_source": "header"
 },
 {
@@ -22737,7 +22804,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Row opens form dialog or desk URL when open_card_on_click set.",
+"label": "Opens linked Form Dialog from row click or desk URL when open_card_on_click is set.",
 "label_source": "header"
 },
 {
@@ -22753,7 +22820,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "setFilters on root, found-set browse, or panel _setFilters.",
+"label": "Routes user filters to root panel, found-set browse, or per-panel setFilters.",
 "label_source": "header"
 },
 {
@@ -22769,7 +22836,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Reload root WP Tables via rootPanel.reload.",
+"label": "Reloads the root WP Tables panel data.",
 "label_source": "header"
 },
 {
@@ -22785,7 +22852,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "Invoke panel _reload for toolbar refresh.",
+"label": "Triggers _reload on a drilled panel when available.",
 "label_source": "header"
 },
 {
@@ -22801,7 +22868,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "openFormDialogForNewRecord or msgprint to link Form Dialog on Page Panel.",
+"label": "Opens new-record Form Dialog or warns when no Form Dialog is linked on the panel.",
 "label_source": "header"
 },
 {
@@ -22816,7 +22883,7 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/App.vue::panelLiveRows"
 ],
-"label": "Visible rows for export using panelLiveRows on payload.",
+"label": "Returns the same row list the visible panel table shows for export filtering.",
 "label_source": "header"
 },
 {
@@ -22831,7 +22898,7 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/App.vue::panelDisplayRowsForExport"
 ],
-"label": "API args for export_panel_data with filters and filtered row names.",
+"label": "Builds export_panel_data arguments with filters and visible row names JSON.",
 "label_source": "header"
 },
 {
@@ -22844,7 +22911,7 @@
 "hash": "7dcaa3a6fc",
 "exported": false,
 "calls": [],
-"label": "Same-origin fetch export URL and save CSV with frappe alert.",
+"label": "Fetches export URL as blob and saves CSV with a frappe success or error alert.",
 "label_source": "header"
 },
 {
@@ -22864,7 +22931,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "export_panel_data then triggerCsvBrowserDownload for panel view.",
+"label": "Calls panel export API and downloads CSV for the panel visible rows.",
 "label_source": "header"
 },
 {
@@ -22883,7 +22950,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/App.vue::App"
 ],
-"label": "export_panel_data and copy Google Sheets IMPORTDATA link to clipboard.",
+"label": "Exports panel data and copies a Google Sheets IMPORTDATA formula to the clipboard.",
 "label_source": "header"
 },
 {
@@ -23685,8 +23752,8 @@
 "sig": "",
 "hash": "3405aec9fa",
 "calls": [],
-"label": "Main form dialog shell with find, native form, related tabs, submit, and WP readback.",
-"label_source": "docstring"
+"label": "Root form dialog from App.vue: header, body, footer, find chrome, submit, and nested PeopleMapDialog.",
+"label_source": "header"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::escapeForPreHtml",
@@ -23698,7 +23765,7 @@
 "hash": "09ad957c90",
 "exported": false,
 "calls": [],
-"label": "Escapes ampersand and angle brackets for safe HTML inside pre blocks in msgprint.",
+"label": "Escapes text embedded in pre HTML blocks such as Woo publish preview JSON.",
 "label_source": "header"
 },
 {
@@ -23713,7 +23780,7 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::escapeForPreHtml"
 ],
-"label": "Escapes user text for Frappe msgprint via frappe.utils.escape_html or local fallback.",
+"label": "Escapes strings for frappe.msgprint using frappe.utils.escape_html when available.",
 "label_source": "header"
 },
 {
@@ -23726,7 +23793,7 @@
 "hash": "f684111c79",
 "exported": false,
 "calls": [],
-"label": "After Woo presubmit hook, shows field comparison table or green alert for product update.",
+"label": "After presubmit hook, msgprints sent versus saved Woo field rows or a green alert.",
 "label_source": "header"
 },
 {
@@ -23739,7 +23806,7 @@
 "hash": "162fb56a41",
 "exported": false,
 "calls": [],
-"label": "Resets drag translation and explicit size when the dialog opens again.",
+"label": "Clears drag offset and explicit width height when the dialog opens again.",
 "label_source": "header"
 },
 {
@@ -23752,7 +23819,7 @@
 "hash": "60025df3a8",
 "exported": false,
 "calls": [],
-"label": "Resolves PanelFormDialogFooter element for measuring footer button row width.",
+"label": "Returns PanelFormDialogFooter root element for footer width measurement.",
 "label_source": "header"
 },
 {
@@ -23767,7 +23834,7 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::getFooterRootEl"
 ],
-"label": "Increases dialog width only so footer buttons stay on one row.",
+"label": "Grow-only widens the dialog so footer custom and submit buttons stay on one row.",
 "label_source": "header"
 },
 {
@@ -23785,7 +23852,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::PanelFormDialog"
 ],
-"label": "Runs fitDialogWidthToFooter after footer layout changes via nextTick and animation frame.",
+"label": "Defers fitDialogWidthToFooter until after layout via nextTick and animation frame.",
 "label_source": "header"
 },
 {
@@ -23798,7 +23865,7 @@
 "hash": "af116bd348",
 "exported": false,
 "calls": [],
-"label": "Counts visual wrap lines in a related cell using getClientRects for width fitting.",
+"label": "Counts wrapped lines in a related table cell using getClientRects for fit-width.",
 "label_source": "header"
 },
 {
@@ -23813,7 +23880,7 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::_cellLineCount"
 ],
-"label": "Returns the highest line count among related or inline table cell text spans.",
+"label": "Finds the highest line count among related or inline table cell elements.",
 "label_source": "header"
 },
 {
@@ -23832,7 +23899,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::PanelFormDialog"
 ],
-"label": "Grow-only width search so related cells wrap at most two lines; wired to header fit-width.",
+"label": "Binary-searches dialog width so related cells wrap at most two lines.",
 "label_source": "header"
 },
 {
@@ -23845,7 +23912,7 @@
 "hash": "983935ae22",
 "exported": false,
 "calls": [],
-"label": "Sets dlgW and forces reflow before remeasuring related cell line counts.",
+"label": "Sets dlgW and forces reflow while probing table cell wrap during fit-width.",
 "label_source": "header"
 },
 {
@@ -23858,7 +23925,7 @@
 "hash": "e28c8b9973",
 "exported": false,
 "calls": [],
-"label": "Inserts full-screen overlay with move or resize cursor during dialog drag or resize.",
+"label": "Appends full-screen overlay during dialog drag or corner resize.",
 "label_source": "header"
 },
 {
@@ -23876,7 +23943,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::PanelFormDialog"
 ],
-"label": "Starts dialog drag from header handle, ignoring clicks on buttons and inputs.",
+"label": "Drags the dialog from the header handle unless the target is an interactive control.",
 "label_source": "header"
 },
 {
@@ -23893,7 +23960,7 @@
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::startDrag",
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::startDrag.onUp"
 ],
-"label": "Updates dialog transform while the user drags with the move overlay active.",
+"label": "Updates dialog transform during header drag before committing dx and dy.",
 "label_source": "header"
 },
 {
@@ -23909,7 +23976,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::startDrag"
 ],
-"label": "Persists dx and dy, removes overlay, and detaches drag pointer listeners.",
+"label": "Removes drag overlay and stores final dialog position offsets.",
 "label_source": "header"
 },
 {
@@ -23927,7 +23994,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::PanelFormDialog"
 ],
-"label": "Begins corner resize with outline preview and viewport min/max width and height.",
+"label": "Corner-resize with outline preview, clamped between min size and ninety-five viewport percent.",
 "label_source": "header"
 },
 {
@@ -23944,7 +24011,7 @@
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::startResize",
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::startResize.onUp"
 ],
-"label": "Resizes the preview outline while the user drags the resize handle.",
+"label": "Resizes the drag outline while the user pulls the dialog corner handle.",
 "label_source": "header"
 },
 {
@@ -23960,7 +24027,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::startResize"
 ],
-"label": "Commits dlgW and dlgH from resize and removes overlay and listeners.",
+"label": "Applies final dialog width and height after resize mouseup.",
 "label_source": "header"
 },
 {
@@ -23973,7 +24040,7 @@
 "hash": "95d3b3b305",
 "exported": false,
 "calls": [],
-"label": "Destroys native inline form host and clears bootstrap and dirty flags on close.",
+"label": "Destroys native Frappe inline form host state when closing or falling back.",
 "label_source": "header"
 },
 {
@@ -23988,7 +24055,7 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/utils/ppv2Debug.js::ppv2DebugWarn"
 ],
-"label": "Bootstraps Frappe native form for inline child tables when useNativeForm applies.",
+"label": "Bootstraps nativeFormHost for inline child tables when useNativeForm is true.",
 "label_source": "header"
 },
 {
@@ -24001,7 +24068,7 @@
 "hash": "5cc3b1d2da",
 "exported": false,
 "calls": [],
-"label": "Pulls native inline table values into form.formData before validate or save.",
+"label": "Pulls native inline grid values into form.formData before validate or save.",
 "label_source": "header"
 },
 {
@@ -24014,7 +24081,7 @@
 "hash": "ee50483c12",
 "exported": false,
 "calls": [],
-"label": "Tells PanelFormDialogBody whether a root field differs from loaded display baseline.",
+"label": "Exposes displayDirty fieldnames to PanelFormDialogBody for red dirty styling.",
 "label_source": "header"
 },
 {
@@ -24027,7 +24094,7 @@
 "hash": "18e0f41373",
 "exported": false,
 "calls": [],
-"label": "Deletes all keys in findCriteria when closing or before reseeding criteria.",
+"label": "Empties reactive findCriteria when leaving find mode or closing the dialog.",
 "label_source": "header"
 },
 {
@@ -24043,7 +24110,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::PanelFormDialog"
 ],
-"label": "Stores one find criterion value from body inputs during find criteria phase.",
+"label": "Stores one find field criterion from PanelFormDialogBody find-criteria-patch events.",
 "label_source": "header"
 },
 {
@@ -24060,7 +24127,7 @@
 "nce_events/public/js/panel_page_v2/utils/formDialogFindFields.js::firstNonRelatedTabIndex",
 "nce_events/public/js/panel_page_v2/utils/formDialogFindFields.js::isFindSearchableRootField"
 ],
-"label": "Builds findCriteria from seed and searchable fields; jumps to first non-related tab.",
+"label": "Seeds findCriteria from findSeedCriteria and searchable root fields on criteria phase.",
 "label_source": "header"
 },
 {
@@ -24076,7 +24143,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::PanelFormDialog"
 ],
-"label": "Emits find-criteria to host when footer Perform Find runs with non-empty values.",
+"label": "Emits find-criteria with non-empty criteria when footer Perform Find is clicked.",
 "label_source": "header"
 },
 {
@@ -24092,7 +24159,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::PanelFormDialog"
 ],
-"label": "Emits find-criteria-constrain to narrow search within the current found set.",
+"label": "Emits find-criteria-constrain to search within the current found set.",
 "label_source": "header"
 },
 {
@@ -24110,7 +24177,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::PanelFormDialog"
 ],
-"label": "Closes dialog or cancels find criteria after confirmDiscardIfDirty unless sync is waiting.",
+"label": "Find cancel or confirmDiscardIfDirty then revert related rows and close the dialog.",
 "label_source": "header"
 },
 {
@@ -24126,7 +24193,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::PanelFormDialog"
 ],
-"label": "Sets relatedDirty so footer treats related grid edits as unsaved changes.",
+"label": "Tracks related tab grid edits for footer dirty state and save paths.",
 "label_source": "header"
 },
 {
@@ -24141,7 +24208,7 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::bootstrapNativeForm"
 ],
-"label": "Reloads document, native form, and related tabs after submit-and-refresh completes.",
+"label": "Reloads root doc, native form, and related tabs after successful submit refresh.",
 "label_source": "header"
 },
 {
@@ -24159,7 +24226,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::PanelFormDialog"
 ],
-"label": "Prompts to discard root and related edits then revert, baseline refresh, and native rebootstrap.",
+"label": "Confirms discard then reverts form, related baseline, display dirty, and native form.",
 "label_source": "header"
 },
 {
@@ -24174,7 +24241,7 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::bootstrapNativeForm"
 ],
-"label": "Runs form.revert, clears related dirty, and refreshes display baseline after user confirms.",
+"label": "Runs revert, clears validation, resets related rows, and refreshes display baseline.",
 "label_source": "header"
 },
 {
@@ -24192,7 +24259,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::PanelFormDialog"
 ],
-"label": "Emits nav-prev to App after dirty confirm when criteria and sync allow prev row.",
+"label": "Confirms discard if dirty then emits nav-prev for panel row navigation.",
 "label_source": "header"
 },
 {
@@ -24210,7 +24277,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::PanelFormDialog"
 ],
-"label": "Emits nav-next to App after dirty confirm when criteria and sync allow next row.",
+"label": "Confirms discard if dirty then emits nav-next for panel row navigation.",
 "label_source": "header"
 },
 {
@@ -24226,7 +24293,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::PanelFormDialog"
 ],
-"label": "Updates formData and display-dirty tracking when a body field changes.",
+"label": "Writes field changes into formData and schedules display dirty recompute.",
 "label_source": "header"
 },
 {
@@ -24242,7 +24309,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::PanelFormDialog"
 ],
-"label": "Updates link field, runs fetch-from chain, and recomputes display dirty state.",
+"label": "Updates link values and runs handleFetchFrom for dependent field population.",
 "label_source": "header"
 },
 {
@@ -24258,7 +24325,7 @@
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::syncNativeFormToFormData",
 "nce_events/public/js/panel_page_v2/composables/frozenFormSave.js::extractServerMessage"
 ],
-"label": "Validates and saves root and related rows before go-to-panel; collects sync job ids.",
+"label": "Validates and saves root and related edits before Related tab go-to-panel navigation.",
 "label_source": "header"
 },
 {
@@ -24279,7 +24346,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::PanelFormDialog"
 ],
-"label": "Saves if dirty, polls sync jobs, builds related panel filter, navigates host, may emit saved and close.",
+"label": "Saves pending edits, polls sync jobs, builds parent filter, then navigates host panel.",
 "label_source": "header"
 },
 {
@@ -24298,7 +24365,7 @@
 "nce_events/public/js/panel_page_v2/utils/ppv2Debug.js::ppv2DebugLog",
 "nce_events/public/js/panel_page_v2/utils/ppv2Debug.js::ppv2DebugWarn"
 ],
-"label": "Polls save sync jobs, calls linked readback API, fetches fresh doc, emits readback-merged for panel row.",
+"label": "Polls sync jobs, triggers linked readback sync, fetches fresh doc, emits readback-merged.",
 "label_source": "header"
 },
 {
@@ -24319,7 +24386,7 @@
 "nce_events/public/js/panel_page_v2/utils/frappeCall.js::frappeCall",
 "nce_events/public/js/panel_page_v2/utils/wooPublishDocNormalize.js::normalizeDocForWooEventsPublish"
 ],
-"label": "Runs presubmit hook, save, related rows, always-readback, and refresh after duplicate finalize.",
+"label": "Full submit-and-refresh pipeline with optional presubmit hook after duplicate or force refresh.",
 "label_source": "header"
 },
 {
@@ -24337,7 +24404,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::PanelFormDialog"
 ],
-"label": "Footer Submit and Close entry point delegating to onSubmit with afterSave close.",
+"label": "Runs onSubmit with afterSave close for Submit and Close footer action.",
 "label_source": "header"
 },
 {
@@ -24355,7 +24422,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::PanelFormDialog"
 ],
-"label": "Footer Submit and Refresh entry point delegating to onSubmit with afterSave refresh.",
+"label": "Runs onSubmit with afterSave refresh to reload the form after save.",
 "label_source": "header"
 },
 {
@@ -24377,7 +24444,7 @@
 "nce_events/public/js/panel_page_v2/utils/submitPerfTrace.js::createSubmitPerfTrace",
 "nce_events/public/js/panel_page_v2/utils/wooPublishDocNormalize.js::normalizeDocForWooEventsPublish"
 ],
-"label": "Full submit: custom on_submit_method, edit lock, save, Woo hook, related save, readback, saved emit rules.",
+"label": "Standard or custom submit: edit lock, save, Woo hook, related rows, readback, close or refresh.",
 "label_source": "header"
 },
 {
@@ -24390,7 +24457,7 @@
 "hash": "cac356fa53",
 "exported": false,
 "calls": [],
-"label": "Logs sync and readback steps into submit performance trace from onSubmit.",
+"label": "Feeds createSubmitPerfTrace with step labels during onSubmit for debug copy dialog.",
 "label_source": "header"
 },
 {
@@ -24408,7 +24475,7 @@
 "nce_events/public/js/panel_page_v2/utils/enrollmentWpActions.js::runProductRefund",
 "nce_events/public/js/panel_page_v2/utils/enrollmentWpActions.js::showRefundActionResult"
 ],
-"label": "Enrollment custom button: cancellation fee prompt, product refund API, panel row removal.",
+"label": "Enrollment footer action: prompt fee, execute_product_refund, and show refund result.",
 "label_source": "header"
 },
 {
@@ -24421,7 +24488,7 @@
 "hash": "fa5b77a14a",
 "exported": false,
 "calls": [],
-"label": "Shows frappe.confirm for delete_event when enrollments must be canceled first.",
+"label": "Promise wrapper around frappe.confirm or window.confirm for delete_event preview.",
 "label_source": "header"
 },
 {
@@ -24448,7 +24515,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFormDialog.vue::PanelFormDialog"
 ],
-"label": "Dispatches Form Dialog footer custom scripts: refund, duplicate, delete, freeze sessions, Woo publish.",
+"label": "Routes Form Dialog Button scripts: refund, duplicate, delete, freeze, and Woo publish actions.",
 "label_source": "header"
 },
 {
@@ -26039,8 +26106,8 @@
 "sig": "",
 "hash": "c585aa990c",
 "calls": [],
-"label": "Renders individual form dialog fields including find-mode criteria controls.",
-"label_source": "docstring"
+"label": "Single field row in PanelFormDialogBody for data entry, layout markers, or find-mode criteria.",
+"label_source": "header"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormField.vue::normFieldtype",
@@ -26052,7 +26119,7 @@
 "hash": "564736a4fe",
 "exported": false,
 "calls": [],
-"label": "Returns trimmed fieldtype string shared by select, autocomplete-link, and URL field checks.",
+"label": "Normalizes field.fieldtype strings used by Select, Link, Autocomplete, and Data URL checks.",
 "label_source": "header"
 },
 {
@@ -26065,7 +26132,7 @@
 "hash": "386ab21721",
 "exported": false,
 "calls": [],
-"label": "Normalizes Data URL option values into an https href for read-only links and open button.",
+"label": "Turns stored Data URL values into safe absolute links for read-only and open buttons.",
 "label_source": "header"
 },
 {
@@ -26078,7 +26145,7 @@
 "hash": "fc669f79ec",
 "exported": false,
 "calls": [],
-"label": "Translates UI strings through window.__ when Frappe i18n is present.",
+"label": "Uses Frappe window.__ when present for short UI strings such as Open link.",
 "label_source": "header"
 },
 {
@@ -26091,7 +26158,7 @@
 "hash": "b6fa2f5377",
 "exported": false,
 "calls": [],
-"label": "Pads hour and strips fractions so Frappe Time values work in HTML5 time inputs.",
+"label": "Reformats Frappe Time values so HTML5 time inputs accept padded H:MM:SS.",
 "label_source": "header"
 },
 {
@@ -26107,7 +26174,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFormField.vue::PanelFormField"
 ],
-"label": "Emits change with fieldname and value for standard data entry controls.",
+"label": "Notifies PanelFormDialogBody to update formData when the user edits the field.",
 "label_source": "header"
 },
 {
@@ -26123,7 +26190,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFormField.vue::PanelFormField"
 ],
-"label": "Prefixes find criteria with equals for Link and Select so server strict match applies.",
+"label": "Writes find criteria with a leading equals prefix for strict server-side matching.",
 "label_source": "header"
 },
 {
@@ -26139,7 +26206,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelFormField.vue::PanelFormField"
 ],
-"label": "Re-emits link control change payload on change and link-change for parent handlers.",
+"label": "Relays Link control changes and fetch-from link-change payloads up to the dialog shell.",
 "label_source": "header"
 },
 {
@@ -26151,8 +26218,8 @@
 "sig": "",
 "hash": "89380885d4",
 "calls": [],
-"label": "Help modal explaining FileMaker-style find/search operators in form dialog find.",
-"label_source": "docstring"
+"label": "Body-teleported search help opened from PanelFormDialogBody during find criteria entry.",
+"label_source": "header"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelFormFindSearchHelpModal.vue::tr",
@@ -26164,7 +26231,7 @@
 "hash": "6ff4ce8a6b",
 "exported": false,
 "calls": [],
-"label": "Runs help copy through window.__ for Frappe translations on titles, columns, and row text.",
+"label": "Localizes modal title, column headers, operator text, and footnote via Frappe window.__.",
 "label_source": "header"
 },
 {
@@ -26242,8 +26309,8 @@
 "sig": "",
 "hash": "1a3a7d180f",
 "calls": [],
-"label": "Panel float header toolbar with refresh, find, filter, and action buttons.",
-"label_source": "docstring"
+"label": "Right header control strip in App panel floats: refresh, find, filter, export, count, close.",
+"label_source": "header"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PanelHeaderToolbar.vue::onToolbarMouseDown",
@@ -26258,7 +26325,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PanelHeaderToolbar.vue::PanelHeaderToolbar"
 ],
-"label": "Capture handler brings a back panel forward via activate-panel or stops propagation so drag still works.",
+"label": "Emits activate-panel when panel is in back stack; stops mousedown bubbling when front.",
 "label_source": "header"
 },
 {
@@ -26938,8 +27005,8 @@
 "sig": "",
 "hash": "b1b90f2eea",
 "calls": [],
-"label": "Modal map of enrolled people by family address for an Event record.",
-"label_source": "docstring"
+"label": "Map overlay from PanelFormDialog footer for the open Events record eventId.",
+"label_source": "header"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::PIN_PATH",
@@ -26951,7 +27018,7 @@
 "hash": "1e5eaa8631",
 "exported": false,
 "calls": [],
-"label": "SVG path used for red map marker icons.",
+"label": "SVG path constant for the red teardrop marker icon on the map.",
 "label_source": "header"
 },
 {
@@ -26964,7 +27031,7 @@
 "hash": "909a118172",
 "exported": false,
 "calls": [],
-"label": "Escapes pin field text before building info window HTML.",
+"label": "Escapes person and rating text before building marker info window HTML.",
 "label_source": "header"
 },
 {
@@ -26979,7 +27046,7 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::escapeHtml"
 ],
-"label": "Builds info window HTML for person name, position, and rating on hover.",
+"label": "Formats hover info window content with name, position, and rating for each pin.",
 "label_source": "header"
 },
 {
@@ -26992,7 +27059,7 @@
 "hash": "5059c5b9ab",
 "exported": false,
 "calls": [],
-"label": "Clears markers, info window, and map instance when closing or reloading.",
+"label": "Clears markers, info window, and map instance when the dialog closes or reloads.",
 "label_source": "header"
 },
 {
@@ -27005,7 +27072,7 @@
 "hash": "e2aa22def7",
 "exported": false,
 "calls": [],
-"label": "Returns scaled red pin icon anchored for Google Maps markers.",
+"label": "Returns scaled Google Maps symbol icon styling anchored on each address pin.",
 "label_source": "header"
 },
 {
@@ -27022,7 +27089,7 @@
 "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::initMap",
 "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::startResize.onUp"
 ],
-"label": "Resizes map view to lastBounds or centers single-pin zoom after layout changes.",
+"label": "Resizes the map and fits bounds or zooms when all pins share one location.",
 "label_source": "header"
 },
 {
@@ -27035,7 +27102,7 @@
 "hash": "242de371c2",
 "exported": false,
 "calls": [],
-"label": "Adds full-screen overlay with cursor during panel drag or resize.",
+"label": "Adds full-screen capture layer during panel drag or resize pointer moves.",
 "label_source": "header"
 },
 {
@@ -27053,7 +27120,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::PeopleMapDialog"
 ],
-"label": "Drags the map panel by header mousedown with move/up listeners.",
+"label": "Moves the map panel by header mousedown using temporary overlay tracking.",
 "label_source": "header"
 },
 {
@@ -27070,7 +27137,7 @@
 "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::startDrag",
 "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::startDrag.onUp"
 ],
-"label": "Updates panel transform while dragging.",
+"label": "Updates panel transform while the user drags the map dialog header.",
 "label_source": "header"
 },
 {
@@ -27086,7 +27153,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::startDrag"
 ],
-"label": "Commits drag offset and removes move listeners.",
+"label": "Commits drag offset and removes move listeners when the mouse releases.",
 "label_source": "header"
 },
 {
@@ -27104,7 +27171,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::PeopleMapDialog"
 ],
-"label": "Resizes panel from corner handle within min and max bounds.",
+"label": "Resizes the map panel from the corner handle within min and max viewport limits.",
 "label_source": "header"
 },
 {
@@ -27121,7 +27188,7 @@
 "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::startResize",
 "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::startResize.onUp"
 ],
-"label": "Updates dlgW and dlgH while resizing.",
+"label": "Adjusts dialog width and height while the resize handle is dragged.",
 "label_source": "header"
 },
 {
@@ -27137,7 +27204,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::startResize"
 ],
-"label": "Ends resize and refits map pins on next frame.",
+"label": "Finishes resize, removes overlay, and refits map bounds on the next frame.",
 "label_source": "header"
 },
 {
@@ -27152,7 +27219,7 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::teardownMap"
 ],
-"label": "Clears loading, errors, counts, and map when dialog closes or reloads.",
+"label": "Clears loading, error, skip counts, and map DOM before a fresh load.",
 "label_source": "header"
 },
 {
@@ -27167,7 +27234,7 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::waitForGoogleMaps.tick"
 ],
-"label": "Polls until google.maps.Map exists or times out.",
+"label": "Polls until google.maps.Map exists or times out waiting for the script.",
 "label_source": "header"
 },
 {
@@ -27180,7 +27247,7 @@
 "hash": "f0101e8240",
 "exported": false,
 "calls": [],
-"label": "Single poll step for Maps readiness.",
+"label": "Single poll step that resolves when Maps API is ready or schedules retry.",
 "label_source": "header"
 },
 {
@@ -27195,7 +27262,7 @@
 "calls": [
 "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::waitForGoogleMaps"
 ],
-"label": "Injects Maps JS once with api_key callback or waits on existing script tag.",
+"label": "Inserts or reuses one tagged Maps script using the server-provided api_key.",
 "label_source": "header"
 },
 {
@@ -27212,7 +27279,7 @@
 "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::pinInfoHtml",
 "nce_events/public/js/panel_page_v2/components/PeopleMapDialog.vue::smallPinIcon"
 ],
-"label": "Creates map, markers with hover info windows, and fits bounds to pins.",
+"label": "Creates the map, markers, bounds, and hover info windows for returned pins.",
 "label_source": "header"
 },
 {
@@ -27231,7 +27298,7 @@
 "nce_events/public/js/panel_page_v2/composables/frozenFormSave.js::extractServerMessage",
 "nce_events/public/js/panel_page_v2/utils/frappeCall.js::frappeCall"
 ],
-"label": "Fetches get_event_people_map for eventId, loads Maps, initMap, or shows empty and error states.",
+"label": "Calls get_event_people_map via frappeCall, loads Maps, then initMap when open.",
 "label_source": "header"
 },
 {
@@ -27369,8 +27436,8 @@
 "sig": "",
 "hash": "31192e8e4e",
 "calls": [],
-"label": "PanelFloat SPA page switcher anchored via measureDeskTitleAnchor near desk title.",
-"label_source": "docstring"
+"label": "Conditional PanelFloat showing SpaPageNavBar after pages load and anchor measurement on mount.",
+"label_source": "header"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/SpaPageSwitcherFloat.vue::tr",
@@ -27382,7 +27449,7 @@
 "hash": "6ff4ce8a6b",
 "exported": false,
 "calls": [],
-"label": "Translates UI strings through window.__ when Frappe i18n is present.",
+"label": "Returns Frappe-translated text via window.__ when present otherwise the raw message.",
 "label_source": "header"
 },
 {
@@ -27502,8 +27569,8 @@
 "sig": "",
 "hash": "78991d5648",
 "calls": [],
-"label": "Draggable Tag Finder dialog to copy merge tags with optional fallback value and HTML filter.",
-"label_source": "docstring"
+"label": "Small floating panel from TagFinder to copy a filtered Jinja merge tag with fallback and HTML checkbox.",
+"label_source": "header"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/TagDialog.vue::bringToFront",
@@ -27518,7 +27585,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/TagDialog.vue::TagDialog"
 ],
-"label": "Increments panel z-index on mousedown so overlapping tag dialogs stay on top.",
+"label": "Raises z-index when the dialog is clicked so stacked tag copy panels stay on top.",
 "label_source": "header"
 },
 {
@@ -27531,7 +27598,7 @@
 "hash": "6ecd4b3c30",
 "exported": false,
 "calls": [],
-"label": "Shows brief fixed theme-bg-primary message that the tag reached the clipboard.",
+"label": "Shows a fixed Tag is on the clipboard notice at dialog coordinates using theme-bg-primary only.",
 "label_source": "header"
 },
 {
@@ -27544,7 +27611,7 @@
 "hash": "d75bf93778",
 "exported": false,
 "calls": [],
-"label": "Copies tag string with a hidden textarea when async clipboard API fails or is missing.",
+"label": "Copies tag text through a hidden textarea when the Clipboard API is unavailable or fails.",
 "label_source": "header"
 },
 {
@@ -27563,7 +27630,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/TagDialog.vue::TagDialog"
 ],
-"label": "Closes dialog, writes computed displayTag to clipboard, and shows confirmation toast at panel position.",
+"label": "Closes the dialog, writes displayTag to the clipboard, then shows the confirmation toast.",
 "label_source": "header"
 },
 {
@@ -27579,7 +27646,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/TagDialog.vue::TagDialog"
 ],
-"label": "Begins header drag tracking to reposition the tag panel with document-level listeners.",
+"label": "Starts header drag by listening for document mousemove and mouseup to move the panel.",
 "label_source": "header"
 },
 {
@@ -27596,7 +27663,7 @@
 "nce_events/public/js/panel_page_v2/components/TagDialog.vue::startDrag",
 "nce_events/public/js/panel_page_v2/components/TagDialog.vue::startDrag.onUp"
 ],
-"label": "Updates panel top and left from pointer delta while clamping top to zero.",
+"label": "Updates top and left from the drag origin while keeping top at least zero.",
 "label_source": "header"
 },
 {
@@ -27612,7 +27679,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/TagDialog.vue::startDrag"
 ],
-"label": "Detaches mousemove and mouseup listeners when the user releases the drag.",
+"label": "Removes mousemove and mouseup listeners when the user releases the drag.",
 "label_source": "header"
 },
 {
@@ -27624,8 +27691,8 @@
 "sig": "",
 "hash": "425f6414c6",
 "calls": [],
-"label": "Floating resizable Tag Finder panel browsing doctype field columns and opening tag copy dialogs.",
-"label_source": "docstring"
+"label": "Resizable float from App tags action browsing columns and teleports TagDialog copies to body.",
+"label_source": "header"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/components/TagFinder.vue::bringToFront",
@@ -27640,7 +27707,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::TagFinder"
 ],
-"label": "Increments z-index on panel mousedown so the float stacks above neighbors.",
+"label": "Increments float z-index on mousedown so Tag Finder stays above other floats.",
 "label_source": "header"
 },
 {
@@ -27658,7 +27725,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::TagFinder"
 ],
-"label": "Starts moving the float from header or footer mousedown after bringing it forward.",
+"label": "Moves the panel from header or footer drag after bringing the float to front.",
 "label_source": "header"
 },
 {
@@ -27675,7 +27742,7 @@
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::startDrag",
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::startDrag.onUp"
 ],
-"label": "Applies pointer delta to float left and top while dragging.",
+"label": "Applies pointer delta to x and y with vertical position clamped at zero.",
 "label_source": "header"
 },
 {
@@ -27691,7 +27758,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::startDrag"
 ],
-"label": "Unregisters document mousemove and mouseup when a drag ends.",
+"label": "Stops drag by removing document mouse listeners on mouseup.",
 "label_source": "header"
 },
 {
@@ -27709,7 +27776,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::TagFinder"
 ],
-"label": "Captures panel size and pointer origin from the resize handle mousedown.",
+"label": "Begins resize from the corner handle to set manual width and height with minimums.",
 "label_source": "header"
 },
 {
@@ -27726,7 +27793,7 @@
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::startResize",
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::startResize.onUp"
 ],
-"label": "Updates manualW and manualH with 260px and 200px minimums during resize.",
+"label": "Updates manualW and manualH from pointer movement during resize.",
 "label_source": "header"
 },
 {
@@ -27742,7 +27809,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::startResize"
 ],
-"label": "Removes resize listeners when the user releases the mouse.",
+"label": "Ends resize tracking by removing document mouse listeners.",
 "label_source": "header"
 },
 {
@@ -27758,7 +27825,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::TagFinder"
 ],
-"label": "Drills into Link or Table fields via finder.loadColumn and scrolls the column body.",
+"label": "Drills into Link or Table field column via loadColumn and scrolls the column body horizontally.",
 "label_source": "header"
 },
 {
@@ -27774,7 +27841,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/components/TagFinder.vue::TagFinder"
 ],
-"label": "Opens a teleported TagDialog with merge tag, path, and filter options for the field.",
+"label": "Opens a TagDialog with buildTag output and path when a field tile is selected.",
 "label_source": "header"
 },
 {
@@ -30788,8 +30855,8 @@
 "sig": "",
 "hash": "28ec022610",
 "calls": [],
-"label": "Card Definition form view with TabBar, WidgetGrid, ActionsPanel, and nested open-card drill-down.",
-"label_source": "docstring"
+"label": "Card modal content loading a Card Definition record with tabs, grid widgets, and action bar for CardModal.",
+"label_source": "header"
 },
 {
 "id": "nce_events/public/js/panel_page_v2/nce_cards/CardForm.vue::collectWidgets",
@@ -30804,7 +30871,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/nce_cards/CardForm.vue::CardForm"
 ],
-"label": "Turns active tab fields_list and displays rows into WidgetGrid field and display entries.",
+"label": "Assembles field and display widgets for the active tab from cardDef grid rows.",
 "label_source": "header"
 },
 {
@@ -30820,7 +30887,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/nce_cards/CardForm.vue::CardForm"
 ],
-"label": "Forwards WidgetGrid save-field payloads to useCardForm saveField on the root record.",
+"label": "Forwards WidgetGrid save-field payload to useCardForm saveField for the open record.",
 "label_source": "header"
 },
 {
@@ -30836,7 +30903,7 @@
 "wired_by": [
 "nce_events/public/js/panel_page_v2/nce_cards/CardForm.vue::CardForm"
 ],
-"label": "Runs useCardForm refresh when ActionsPanel emits refresh after scripts or actions.",
+"label": "Reloads card definition and record data through useCardForm refresh after actions refresh.",
 "label_source": "header"
 },
 {
