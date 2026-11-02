@@ -3075,25 +3075,29 @@
    }
   },
   "nce_events/hooks.py": {
-   "body_hash": "278c22f42a887931f9a1f82b0a3d7115a308af6fee0e3f1194b7e3b68dd037a8",
+   "body_hash": "a9c70d7fc8c9502ddcede741f29af1d4571ece236b19e08c89de7a5da164781e",
    "header": {
     "format": 1,
     "gotchas": [
-     "Other apps register after_events_publish_to_woocommerce in their hooks.py; each callable receives doctype and name."
+     "Other apps register after_events_publish_to_woocommerce in their hooks.py; each callable receives doctype and name.",
+     "theme_defaults.css is temporarily commented out in app_include_css; uncomment and bench clear-cache to re-enable."
     ],
     "keywords": [
      "app_include_js",
      "app_include_css",
      "doctype_js",
      "add_to_apps_screen",
-     "after_events_publish_to_woocommerce",
+     "panel-page-mirrored",
      "required_apps",
      "nce_sync",
-     "panel-page-mirrored",
-     "nce_events"
+     "schema_explorer",
+     "spa_panel_page_register",
+     "after_events_publish_to_woocommerce",
+     "publish_events_to_website",
+     "font-awesome"
     ],
-    "purpose": "Registers NCE Events Frappe hooks: global assets, desk app entry, DocType JS, and WooCommerce publish extension docs.",
-    "read_when": "Adding JS/CSS bundles, desk app screen entry, or after_events_publish_to_woocommerce handlers."
+    "purpose": "Registers NCE Events Frappe app hooks for global assets, desk app entry, doctype JS, and WooCommerce publish extension points.",
+    "read_when": "Adding JS/CSS bundles, Apps screen route, doctype_js, or documenting after_events_publish_to_woocommerce for companion apps."
    }
   },
   "nce_events/nce_events/doctype/card_action/card_action.py": {
@@ -3885,15 +3889,16 @@
    }
   },
   "nce_events/nce_events/doctype/page_panel/page_panel.js": {
-   "body_hash": "0a32cae5d93fe03d22ca8fff9aa4fa489b6fc11f724797d48e79ae1dc23ab488",
+   "body_hash": "9aa56f6641ec95da037f4223078f8fec09a502d3a557b9c1d6858ec438161f25",
    "header": {
     "format": 1,
     "gotchas": [
      "Prune stale display keys whenever Display is built from current DocType meta.",
-     "Defer follow-up modals after frappe.confirm; opening Dialog in the same turn fails on many Desk builds.",
-     "Preview swatch tiles always use a theme-bg-* class like the ThemeSwatchPicker strip.",
-     "Rebind Dialogs tab click handlers on every render; bind-once freezes the first panel's frm.",
-     "Do not frm.save() after set_form_dialog_active; it deadlocks with the server dialog update."
+     "Defer follow-up modals after frappe.confirm; same-turn Dialog open fails on many Desk builds.",
+     "Preview colour tiles always use a theme-bg-* class matching the picker strip.",
+     "Sync format_rules via frm.add_child; hand-built child rows crash grid_row.refresh.",
+     "Do not frm.save() when toggling active Form Dialog; server updates form_dialog and saving deadlocks.",
+     "Rebind .ppFormDialogs each Dialogs render; a once-only bind keeps the wrong frm."
     ],
     "keywords": [
      "Page Panel",
@@ -3902,39 +3907,38 @@
      "column_order",
      "COLOUR_FIELDS",
      "format_rules",
-     "default_filters",
      "panel_sql",
-     "form_dialog",
      "capture wizard",
      "pp-matrix-wrap",
      "ThemeSwatchPicker",
+     "form_dialog",
      "get_doctype_fields",
-     "display matrix",
-     "portal float"
+     "default_filters",
+     "display matrix"
     ],
-    "purpose": "Frappe Desk client script for Page Panel: Config, Display, Colours, Query, and Dialogs tabs plus matrices and capture wizard.",
-    "read_when": "Changing Page Panel tab UI, display matrices, default filters, theme colours, panel SQL, or Form Dialog capture from Desk."
+    "purpose": "Frappe Desk form script for Page Panel: Config, Display, Query, Dialogs tabs, colours, matrices, and Form Dialog capture.",
+    "read_when": "Changing Page Panel tab UI, display matrices, format rules, theme colours, default filters, panel SQL, or capture wizard."
    },
    "labels": {
     "nce_events/nce_events/doctype/page_panel/page_panel.js::BACKGROUND_COLOUR_SLOTS": {
      "body_hash": "dfe0a46148",
-     "label": "Non-table surfaces edited with ThemeSwatchPicker and fg type pairing."
+     "label": "Non-table ThemeSwatchPicker background slots with fg type and fallback classes."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::BORDER_WIDTH_OPTIONS": {
      "body_hash": "749e4e2507",
-     "label": "Select options for theme-border-thin, normal, and strong line widths."
+     "label": "Thin, normal, and strong theme-border width choices for line preview selects."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::BREAK_FIELDS": {
      "body_hash": "db29b45906",
-     "label": "Section breaks skipped when showing Config tab field groups."
+     "label": "Section and column breaks skipped when showing fields on the Config tab."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::COLOUR_FIELDS": {
      "body_hash": "be45eecd73",
-     "label": "Lists all theme override fieldnames managed on the Colours tab."
+     "label": "All DocType colour and border fieldnames managed on the Colours tab."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::COLOUR_OVERRIDE_FIELDS": {
      "body_hash": "65428faef2",
-     "label": "Colour fields cleared by Revert to Theme Defaults while keeping theme link."
+     "label": "Colour override fields cleared by Revert to Theme Defaults while keeping theme link."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::DATE_FIELDTYPES": {
      "body_hash": "5347a29c6c",
@@ -3942,655 +3946,655 @@
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::FRAME_BORDER_LINE_SLOTS": {
      "body_hash": "14fed58ee8",
-     "label": "Frame chrome border slots with width, color fields, and theme fallbacks."
+     "label": "Frame chrome border width and color slot definitions for float frame and filter divider."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::MATRIX_FIELDS": {
      "body_hash": "182a4901c8",
-     "label": "DocType fields hidden on Config tab and owned by the Display matrix UI."
+     "label": "CSV matrix fieldnames toggled on Config tab and hidden when other tabs show."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::OPS_DATE": {
      "body_hash": "e1bbe1e1df",
-     "label": "Reduced operator set for date fields in the default filters widget."
+     "label": "Allowed operators for date and datetime default filter rows."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::OPS_DEFAULT": {
      "body_hash": "110eb2e519",
-     "label": "Default filter operators for non-date fields in the Config widget."
+     "label": "Default comparison operators for non-date default filter rows."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::PP_BORDER_WIDTH_PX": {
      "body_hash": "d7cc9a5ea1",
-     "label": "Literal border widths for preview when theme CSS vars are absent."
+     "label": "Literal border widths for line preview when theme CSS vars unavailable."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::PP_COLOUR_CLASS_RE": {
      "body_hash": "a6a150f1e8",
-     "label": "Regex matching curated ThemeSwatchPicker theme class strings."
+     "label": "Regex matching curated ThemeSwatchPicker theme-bg and border class tokens."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::PP_DISPLAY_COL_DEFAULTS": {
      "body_hash": "719c21963c",
-     "label": "Default pixel widths for Display matrix Field and Label columns."
+     "label": "Default pixel widths for Field and Label columns in display matrices."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::TABLE_BORDER_LINE_SLOTS": {
      "body_hash": "6bd005b665",
-     "label": "Table divider slots using NCE theme table width and color tokens."
+     "label": "Table line slots using theme-table tokens when width or color fields are empty."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::TABLE_COLOUR_SLOTS": {
      "body_hash": "7de60c2d9b",
-     "label": "Table row and header background slots with theme token fallbacks."
+     "label": "Table row and header background slots with theme token vars and hex keys."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::TAB_GROUPS": {
      "body_hash": "2d0a2d7e40",
-     "label": "Maps each custom tab id to DocType fieldnames shown when that tab is active."
+     "label": "Map each custom tab id to DocType fieldnames shown when that tab is active."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::TAB_LABELS": {
-     "body_hash": "db18c4a825",
-     "label": "Human labels for the Page Panel custom tab bar buttons."
+     "body_hash": "979408c312",
+     "label": "Human labels for Config, Display, Query, and Dialogs tab buttons."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::TAB_ORDER": {
-     "body_hash": "9a4a403ae4",
-     "label": "Defines left-to-right order of Config, Display, Colours, Query, and Dialogs tabs."
+     "body_hash": "8bce6da3bb",
+     "label": "Ordered top tab ids for the Page Panel custom tab bar buttons."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_allDiscoveryRelationshipRows": {
      "body_hash": "0ac8b0ba5b",
-     "label": "Flattens relationship arrays from all hop buckets for wizard indexing."
+     "label": "Flatten relationship arrays from all hop buckets for wizard indexing."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_colours_tab_pickers": {
      "body_hash": "f06e39b666",
-     "label": "Wires border width selects and ThemeSwatchPicker pick buttons on Colours tab."
+     "label": "Wire border width selects and ThemeSwatchPicker open buttons on Colours tab."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_colours_theme_dropdown": {
      "body_hash": "80257605f0",
-     "label": "Sets frm.theme on Colours tab theme select change and refreshes previews."
+     "label": "Set frm.theme on custom select change and refresh previews."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_copy_arrows": {
      "body_hash": "420990d85b",
-     "label": "Wires Copy From and Copy To colour bulk copy with confirm and save."
+     "label": "Wire Copy From and Copy To colour bulk actions with confirm dialogs."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_copy_arrows.run_copy": {
      "body_hash": "c2ab75ec86",
-     "label": "Calls copy_panel_colours after optional save when copying colours to targets."
+     "label": "Call copy_panel_colours API after optional save when panel dirty."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_dialogs_click_handlers": {
      "body_hash": "173ad5d59c",
-     "label": "Delegates Dialogs tab clicks to create, rebuild, active, portal, and delete actions."
+     "label": "Delegate Dialogs tab clicks and active checkbox to capture and portal APIs."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_dialogs_click_handlers.doDelete": {
      "body_hash": "014a6283a1",
-     "label": "Deletes Form Dialog via frappe.client.delete and refreshes tab."
+     "label": "Delete Form Dialog doc via frappe.client.delete after optional unlink save."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_bind_dialogs_click_handlers.openCaptureWizard": {
      "body_hash": "1999e65860",
-     "label": "Opens capture wizard after loading definition for rebuild or create flow."
+     "label": "Open capture wizard after create prompt with optional copy-from prefill."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_border_effective_width_class": {
      "body_hash": "344356c2c3",
-     "label": "Resolves width class from field, fallback, or theme table token."
+     "label": "Resolve width class from field, fallback, or theme table token."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_border_line_preview_html": {
      "body_hash": "4d45be22f5",
-     "label": "Small HTML line sample showing effective border width and color."
+     "label": "Small div preview of border width and color for one line slot."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_border_preview_color_css": {
      "body_hash": "351fe413f8",
-     "label": "CSS color for border preview from class, var, or hex."
+     "label": "CSS color for border preview from class, var, or theme hex."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_border_width_select_html": {
      "body_hash": "4689281929",
-     "label": "Select control for frame or table border width class field."
+     "label": "Select control HTML for frame or table border width field."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_colours_border_table_html": {
      "body_hash": "f2c6d5b2e3",
-     "label": "Border lines table with preview, width select, color class, and Color pick."
+     "label": "Lines table with preview, width select, color class, and Color button."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_colours_preview_table_html": {
      "body_hash": "683bf69e00",
-     "label": "Background surfaces table with preview, class, and Pick button."
+     "label": "Backgrounds table with preview, class column, and Pick buttons."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_colours_table_live_preview_html": {
      "body_hash": "b5465d6abd",
-     "label": "Sample theme-table with three rows using panel table colour fields."
+     "label": "Sample theme-table HTML illustrating header and striped rows."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_colours_tables_section_html": {
      "body_hash": "17294afad0",
-     "label": "Tables section combining slot pickers, live preview, and table borders."
+     "label": "Tables section copy plus table colour, live preview, and table borders."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_dialogs_tab_html": {
      "body_hash": "035e159f2c",
-     "label": "Builds dialogs table with active checkbox, related and inline tab preview buttons."
+     "label": "Render active checkbox list, related and inline tab preview buttons, and create row."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_display_tabs": {
      "body_hash": "1b6e4563e2",
-     "label": "Builds root, link, and Order sub-tabs, matrices, sync, and format rule hooks."
+     "label": "Assemble Display sub-tabs, matrices, Order tab, sync, and format rule hooks."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_display_tabs._enforceShowSearchExclusivity": {
      "body_hash": "e48ef1b0e0",
-     "label": "Clears Show or Search Only when the other role is checked on."
+     "label": "Clear Show or Search Only on same row when the other role is checked on."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_display_tabs._registerMetaReadOnly": {
      "body_hash": "5a2b606e46",
-     "label": "Records meta read-only and forced read-only keys for matrix cells."
+     "label": "Record meta read-only and forced read-only keys for matrix checkboxes."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_display_tabs._registerMetaReqd": {
      "body_hash": "5249a82e6a",
-     "label": "Records keys whose DocType meta is mandatory for Required tooltips."
+     "label": "Record keys whose DocType meta is mandatory for Required tooltips."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_display_tabs._show_sub": {
      "body_hash": "d2e5054d48",
-     "label": "Shows a Display sub-tab matrix, Order tab, or related DocType toolbar actions."
+     "label": "Show root, link, or Order sub-tab panel with toolbar and matrix content."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_display_tabs._sync_all": {
      "body_hash": "0101e08e18",
-     "label": "Writes matrix checkbox state to doc fields and format_rules child table."
+     "label": "Write matrix checkbox state into frm CSV fields and format_rules child table."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_build_field_matrix": {
      "body_hash": "39e651d95d",
-     "label": "Renders checkbox matrix for show, search, bold, required, gender, tint, and format."
+     "label": "Build HTML table of show, search, bold, required, gender, tint, and format columns."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_cint": {
      "body_hash": "406460b861",
-     "label": "Coerces a value to integer using Desk cint or frappe.utils.cint."
+     "label": "Coerce values to integer like Desk global cint when building panel UI."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_classifyRelatedRowBucket": {
      "body_hash": "bb7ce80902",
-     "label": "Assigns configured related row to self, 1_hop, 2_hop, or 3_hop bucket."
+     "label": "Choose self, 1_hop, 2_hop, or 3_hop bucket for configured related row."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_clear_doctype_field_cache": {
      "body_hash": "f2b5dfa3a1",
-     "label": "Clears in-memory get_doctype_fields cache for reload fields."
+     "label": "Drop cached get_doctype_fields results before Reload fields on Display."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_close_related_portal_float": {
      "body_hash": "7a51a41168",
-     "label": "Runs portal float cleanup and removes modal backdrop."
+     "label": "Run portal float cleanup and remove related or inline portal editor overlay."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_collect_valid_display_keys": {
      "body_hash": "06d96c07e6",
-     "label": "Builds set of field keys valid for current root, links, computed, and related rows."
+     "label": "Collect field keys valid for current root, link, computed, and related rows."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_colour_effective_class": {
      "body_hash": "bab23d6f99",
-     "label": "Uses field value or slot fallback class for colour preview."
+     "label": "Use saved class or slot fallback for colour preview display."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_colour_fg_type_field": {
      "body_hash": "9bdd989719",
-     "label": "Derives paired foreground type field name from a background class field."
+     "label": "Derive paired foreground type field name from a background class field."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_colour_fg_type_value": {
      "body_hash": "d4028d809e",
-     "label": "Reads mono or tonal fg type from the form for a background slot."
+     "label": "Read mono or tonal fg type from the form for a background slot."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_colour_overlay_fg_class": {
      "body_hash": "5711eb4683",
-     "label": "Builds mono or tonal theme-text overlay class on preview swatch."
+     "label": "Derive mono or tonal theme-text overlay class on background swatch."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_colour_preview_bg_class": {
      "body_hash": "a065895459",
-     "label": "Maps stored class to theme-bg-* for swatch preview tiles."
+     "label": "Map stored class to theme-bg-* preview class for swatch tiles."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_colour_preview_swatch_html": {
      "body_hash": "b6fbd9a831",
-     "label": "Swatch HTML using hex, token var, or theme classes with optional Text overlay."
+     "label": "Swatch span for background slot using class, token var, or hex."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_other_selected_names": {
      "body_hash": "98b2e60234",
-     "label": "Returns panel names selected in Other panels table for copy arrows."
+     "label": "List Page Panel names selected in other panels copy table."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_tab_styles_html": {
      "body_hash": "cf4530006c",
-     "label": "Inline CSS for Colours tab tables, arrows, and other panels layout."
+     "label": "Inject Colours tab layout and chrome table CSS once in shell."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_table_preview_th_class": {
      "body_hash": "3324ade80f",
-     "label": "Escaped col_header_bg_class for live table preview header."
+     "label": "Header row class attr for live table preview from col_header_bg_class."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_table_preview_tr_class": {
      "body_hash": "3eea138ff5",
-     "label": "Escaped row or alt row class for striped table preview body."
+     "label": "Alternating row class for live table preview from row bg fields."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_colours_update_arrow_buttons": {
      "body_hash": "224a43f6d4",
-     "label": "Enables Copy From or Copy To based on other panel selection count."
+     "label": "Enable Copy From or Copy To arrows based on other panel selection count."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_desk_discover_script_tool_groups": {
      "body_hash": "94d03bbb8b",
-     "label": "Runs client script refresh shims to discover add_custom_button tool groups."
+     "label": "Execute client scripts in shim form to discover add_custom_button tool groups."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_desk_discover_script_tool_groups.absorbProxy": {
      "body_hash": "2adf246790",
-     "label": "Returns no-op Proxy used to stub form.page during script discovery."
+     "label": "Return no-op Proxy for stub form page object during script discovery."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_desk_discover_script_tool_groups.assembleShim": {
      "body_hash": "2c8d2467b7",
-     "label": "Builds minimal frm-like object for capturing custom buttons from scripts."
+     "label": "Build minimal frappe form shim passed to discovered refresh handlers."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_desk_discover_script_tool_groups.makeFieldsDictProxy": {
      "body_hash": "0497354cf8",
-     "label": "Stub fields_dict entries for script discovery refresh handlers."
+     "label": "Stub fields_dict entries for compiled client script refresh handlers."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_display_has_orphan_keys": {
      "body_hash": "c645eab5be",
-     "label": "Detects saved Display keys that no longer match any matrix row."
+     "label": "Detect saved display keys pointing at removed root, link, or related fields."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_display_has_orphan_keys.listHasOrphan": {
      "body_hash": "89d556c041",
-     "label": "Returns true if any token in a CSV is not in valid keys."
+     "label": "Return whether any token in a CSV list is not in the valid key set."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_ensure_colours_tab_shell": {
      "body_hash": "e153c9c0aa",
-     "label": "Creates Colours tab DOM shell with theme field and copy-from-other-panels layout."
+     "label": "Create Colours shell with theme field, previews, arrows, and other panels."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_ensure_format_rule_mount": {
      "body_hash": "d697328c30",
-     "label": "Loads panel_page_v2 mount_format_rule_editor assets or shows load error."
+     "label": "Load panel_page_v2 mount_format_rule_editor assets then invoke callback."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_ensure_format_rule_mount.finish": {
      "body_hash": "77bd12c681",
-     "label": "Invokes mount callback when mountFormatRuleEditor is on window."
+     "label": "Call mountFormatRuleEditor module or show load failure msgprint."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_ensure_panel_id_controls": {
      "body_hash": "58817a3932",
-     "label": "Shows Panel ID bar with new-name input or rename for visible identity."
+     "label": "Show Panel ID bar with new-name input or rename prompt above the tab bar."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_ensure_query_refresh_button": {
      "body_hash": "52425109a7",
-     "label": "Adds Refresh SQL button row above panel_sql on Query tab."
+     "label": "Add Refresh SQL button and hint above panel_sql on the Query tab."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_ensure_tab_bar": {
-     "body_hash": "f1615bd190",
-     "label": "Injects custom tab bar and matrix, colours, and dialogs containers once per form."
+     "body_hash": "eb3b106b66",
+     "label": "Inject custom tab bar and wrapper divs once on Page Panel refresh."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_fetch_active_nce_themes_for_colours": {
      "body_hash": "b82324cfa8",
-     "label": "Lists Active NCE Theme docs for theme dropdown on Colours tab."
+     "label": "List Active NCE Theme docs for Colours tab theme dropdown."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_fill_colours_tab_previews": {
      "body_hash": "4bb80ac2c5",
-     "label": "Injects scoped preview HTML for backgrounds, tables, and frame lines."
+     "label": "Render scoped preview HTML for backgrounds, tables, and frame lines."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_filter_fields_from_columns": {
      "body_hash": "7fe2f2da28",
-     "label": "Builds filterable field list from column_order plus computed and related columns."
+     "label": "Limit default filter field pick list to visible column_order plus synthetic columns."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_format_rules_signature": {
      "body_hash": "8401a98856",
-     "label": "Canonical signature of format rule rows to avoid false dirty on sync."
+     "label": "Canonical signature of format rule rows to avoid dirtying form on unchanged sync."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_get_computed_fields": {
      "body_hash": "1618ec9a7c",
-     "label": "Maps unstored_calculation_fields child rows to synthetic matrix field rows."
+     "label": "Build synthetic field rows from unstored_calculation_fields child table."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_get_doctype_fields": {
      "body_hash": "33061524a0",
-     "label": "Fetches and caches DocType field meta via panel_api_pkg.discovery.get_doctype_fields."
+     "label": "Fetch and cache DocType field meta via panel discovery API for matrices and filters."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_get_related_fields": {
      "body_hash": "2abc5fd097",
-     "label": "Builds _related_* pseudo-fields from tokens in column_order."
+     "label": "Build _related_ column keys from column_order for related DocType counts."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_hide_colour_schema_fields": {
      "body_hash": "a0d6d284de",
-     "label": "Hides raw COLOUR_FIELDS on form so Colours tab custom UI replaces them."
+     "label": "Hide raw COLOUR_FIELDS from default layout; Colours tab uses custom UI."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_hide_format_rules_grid": {
      "body_hash": "35e871e36f",
-     "label": "Hides native format_rules child table grid in favor of matrix editor."
+     "label": "Hide native format_rules child table grid; editing uses matrix dialog instead."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_htmlEscAttr": {
      "body_hash": "af62078d12",
-     "label": "Escapes string for safe HTML attribute embedding."
+     "label": "Escape string for HTML attribute values in capture wizard markup."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_isDocfieldMetaReadOnly": {
      "body_hash": "8701128ab9",
-     "label": "True when DocType meta marks the field read-only for locked checkbox."
+     "label": "True when DocType meta marks field read_only for locked Read Only cells."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_isDocfieldMetaReqd": {
      "body_hash": "639eafe31d",
-     "label": "True when DocType meta marks the field mandatory for Required column tooltip."
+     "label": "True when DocType meta marks field mandatory for Required column tooltip."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_load_capture_wizard_sources": {
      "body_hash": "da4a0458ae",
-     "label": "Parallel fetch of multi-hop children, inline tables, and script preview."
+     "label": "Parallel fetch multi-hop, inline tables, and script preview for capture wizard."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_load_capture_wizard_sources.finishFail": {
      "body_hash": "4056ea9500",
-     "label": "Calls onFail once when any capture wizard source request errors."
+     "label": "Abort wizard load once on any capture source API failure."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_load_capture_wizard_sources.tick": {
      "body_hash": "8ed944a70b",
-     "label": "Decrements pending counter and calls onReady when all three loads finish."
+     "label": "Decrement pending counter and call onReady when all three sources loaded."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_load_display_col_widths": {
      "body_hash": "c7a5dbf5af",
-     "label": "Loads saved Field and Label column widths from localStorage."
+     "label": "Load persisted Field and Label column widths from localStorage for matrices."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_mergeConfiguredQbtlIntoBuckets": {
      "body_hash": "7e24f4fd97",
-     "label": "Adds configured QBTL tabs missing from discovery into Self bucket."
+     "label": "Add configured QBTL tabs missing from discovery into Self bucket for visibility."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_mergeConfiguredRelatedIntoBuckets": {
      "body_hash": "a30ebdace5",
-     "label": "Injects preselected related rows not returned by discovery into buckets."
+     "label": "Inject preselected related rows not returned by discovery into hop buckets."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_merge_column_order": {
      "body_hash": "61b1e15144",
-     "label": "Keeps prior column order for still-selected keys and appends new keys."
+     "label": "Preserve prior column order for still-selected keys and append new keys at end."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_mount_colours_theme_revert_btn": {
      "body_hash": "d8bbd0ddf5",
-     "label": "Appends Revert to Theme Defaults button on theme row."
+     "label": "Append Revert to Theme Defaults button on theme row once."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_mount_theme_field_on_colours_tab": {
      "body_hash": "7a69196175",
-     "label": "Builds theme select, Refresh, Edit, and revert controls in Colours shell."
+     "label": "Inject theme select, Refresh, Edit, and revert controls into Colours shell."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_mount_theme_field_on_colours_tab.sync_existing_row": {
      "body_hash": "3907733854",
-     "label": "Syncs theme select value and edit button when row already mounted."
+     "label": "Sync select value and edit button when theme row already mounted."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_move_root_field_first": {
      "body_hash": "d1a2601f65",
-     "label": "Moves DocType title field row to top of root display field list."
+     "label": "Move DocType title field row to top of root display matrix list."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_normalizeCaptureHopBuckets": {
      "body_hash": "d5d3706f68",
-     "label": "Normalizes get_multi_hop_children message into self and hop buckets."
+     "label": "Normalize get_multi_hop_children message into self and hop bucket shape."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_normalizeHopChainForPickerKey": {
      "body_hash": "f9f5c68255",
-     "label": "Normalizes hop_chain objects for stable related picker fingerprints."
+     "label": "Normalize hop_chain objects for stable related picker fingerprint JSON."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_format_rule_dialog": {
      "body_hash": "6f604de5c1",
-     "label": "Opens Dialog hosting Vue conditional formatting editor for one field key."
+     "label": "Open Dialog hosting Vue conditional formatting editor for one display field key."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_format_rule_dialog._teardown": {
      "body_hash": "b6a937608c",
-     "label": "Unmounts format rule editor app when dialog closes."
+     "label": "Unmount format rule Vue app when dialog closes."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_related_portal_float": {
      "body_hash": "36615119df",
-     "label": "Opens modal to edit related or inline portal columns and actions for a dialog tab."
+     "label": "Open modal to edit related or inline child portal columns, sort, and actions."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_related_portal_float.onKey": {
      "body_hash": "75457f3866",
-     "label": "Closes portal float on Escape key."
+     "label": "Close portal float on Escape keydown."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_related_portal_float.ppApplySortUI": {
      "body_hash": "3808310c58",
-     "label": "Updates sort rank label and asc or desc buttons for one portal row."
+     "label": "Refresh sort rank label and asc or desc buttons for one portal row."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_related_portal_float.ppMaxSortRank": {
      "body_hash": "a0d205e5b9",
-     "label": "Returns highest sort_rank among visible portal table rows."
+     "label": "Find highest sort_rank among visible portal column rows."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_related_portal_float.ppMountPortalEditor": {
      "body_hash": "4f7fa35262",
-     "label": "Mounts Columns and Buttons tabs after loading portal field rows."
+     "label": "Mount Columns and Buttons tabs after loading portal field editor payload."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_related_portal_float.ppRefreshAllSortUI": {
      "body_hash": "c22182f7b2",
-     "label": "Refreshes sort UI on every row in portal field tbody."
+     "label": "Apply sort UI refresh on every row in portal field tbody."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_open_related_portal_float.ppRenumberSortRanks": {
      "body_hash": "8a4ff8d6df",
-     "label": "Renumbers contiguous sort ranks for shown portal rows after changes."
+     "label": "Renumber contiguous sort ranks for shown portal columns after toggles."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_parse_csv": {
      "body_hash": "f350c54b4b",
-     "label": "Splits comma-separated doc field tokens into trimmed non-empty keys."
+     "label": "Split comma-separated panel field tokens used in column_order and matrix CSV fields."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_display_col_storage_key": {
      "body_hash": "d4bf19dec4",
-     "label": "Builds localStorage key for per-panel display column widths."
+     "label": "Build localStorage key for saved matrix column widths per panel name."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_fmt_button_html": {
      "body_hash": "55bc715773",
-     "label": "Returns Add or Edit button HTML with dot indicator for format rules."
+     "label": "Render Add or Edit button HTML with dot indicator for conditional formatting."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_fmt_has_rule": {
      "body_hash": "adff5af93d",
-     "label": "True when saved format_rules entry has non-empty condition_sql."
+     "label": "True when saved format_rules entry has non-empty condition_sql for a field key."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_portal_fieldnames_from_rows": {
      "body_hash": "16edbb21cb",
-     "label": "Collects fieldname list including name for portal param row source."
+     "label": "Collect name plus row fieldnames for portal action parameter row sources."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_portal_hide_if_options_html": {
      "body_hash": "e489dc7b83",
-     "label": "HTML options for portal button Hide if select."
+     "label": "Build Hide if select options for portal action form."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_render_portal_actions_tab": {
      "body_hash": "1a2999838a",
-     "label": "Renders portal action buttons tab inside related portal float editor."
+     "label": "Render portal Buttons tab list, forms, and save via portal_fields API."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_render_portal_actions_tab.collectFormAction": {
      "body_hash": "a92e03cb30",
-     "label": "Reads portal button form into action object for save."
+     "label": "Read portal action form into JSON record for list or API save."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_render_portal_actions_tab.methodSpecByKey": {
      "body_hash": "82d5011749",
-     "label": "Looks up portal method spec by registry key."
+     "label": "Look up registered portal action method spec by method key."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_render_portal_actions_tab.openForm": {
      "body_hash": "a2d86c2e86",
-     "label": "Shows inline form to add or edit one portal button definition."
+     "label": "Show add or edit portal action inline form with method and params."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_render_portal_actions_tab.renderList": {
      "body_hash": "e612a3d020",
-     "label": "Paints portal buttons list with add, edit, and delete controls."
+     "label": "Paint portal buttons table and Save buttons footer in float panel."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_pp_render_portal_actions_tab.renderParamGrid": {
      "body_hash": "ff45870804",
-     "label": "Builds parameter source grid for selected portal method."
+     "label": "Build parameter source grid for selected portal action method."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_prune_empty_format_rules": {
      "body_hash": "ceab90591f",
-     "label": "Removes blank format_rules child rows before validate to pass reqd checks."
+     "label": "Remove blank format_rules child rows before validate to pass reqd checks."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_prune_stale_display_keys": {
      "body_hash": "745001f31d",
-     "label": "Removes orphan keys from column_order and related Display CSV fields."
+     "label": "Remove orphan tokens from column_order and matrix CSV fields when meta changes."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_prune_stale_display_keys.keep": {
      "body_hash": "e221af79c3",
-     "label": "Filters one CSV field list to keys still present in valid set."
+     "label": "Filter one CSV field list to keys still present in valid display set."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_qbtlPickerFingerprint": {
      "body_hash": "697b9d5410",
-     "label": "Unique string key for query-based table link rows in wizard."
+     "label": "Fingerprint query-based table link row by name for wizard selection."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_refresh_colours_theme_css": {
      "body_hash": "c9693deefd",
-     "label": "Calls themes.api.regenerate_theme_css then reloads stylesheet and previews."
+     "label": "Call themes regenerate_theme_css then reload CSS and redraw previews."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_refresh_colours_theme_css.finish": {
      "body_hash": "7076fe0345",
-     "label": "Completes theme refresh UI after css_hash returned from regenerate."
+     "label": "Re-enable refresh button and redraw previews after CSS hash returned."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_refresh_fmt_buttons": {
      "body_hash": "87904b1d0d",
-     "label": "Updates format rule button labels across all display matrices."
+     "label": "Update all matrix format rule button labels after sync or dialog apply."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_refresh_query_tab": {
      "body_hash": "008fd852ef",
-     "label": "Calls build_panel_sql and writes generated SQL into panel_sql."
+     "label": "Rebuild panel_sql from Display settings via build_panel_sql API on Query tab."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_relatedPickerFingerprint": {
      "body_hash": "68ea50aeff",
-     "label": "Unique string key for a related table row in capture wizard."
+     "label": "Unique string key for related row or QBTL row in capture wizard picker."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_reload_nce_theme_stylesheet": {
      "body_hash": "ea57cfceca",
-     "label": "Cache-busts nce_theme.css link tags in Desk after theme republish."
+     "label": "Cache-bust nce_theme.css link href after theme regenerate."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_colours_tab": {
      "body_hash": "45d2ae94b2",
-     "label": "Ensures Colours shell, previews, and other panels table on Colours tab."
+     "label": "Ensure shell, redraw previews, and load other panels table on Colours tab."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_colours_tab_previews": {
      "body_hash": "a30b785339",
-     "label": "Resolves theme slug if needed then loads theme table tokens and fills previews."
+     "label": "Resolve theme slug if needed then load table tokens and fill previews."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters": {
      "body_hash": "37df169bda",
-     "label": "Schedules custom default_filters widget render after form layout."
+     "label": "Defer custom default_filters widget until form layout finishes rendering."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now": {
      "body_hash": "7f6c89d29e",
-     "label": "Replaces default_filters grid with pp-df-widget bound to column_order fields."
+     "label": "Replace default_filters grid with pp-df-widget bound to column_order fields."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build": {
      "body_hash": "ddf7e41190",
-     "label": "Constructs filter rows UI after loading root DocType field meta."
+     "label": "Construct filter widget after loading root DocType field meta."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build._bind_events": {
      "body_hash": "e49543c95c",
-     "label": "Wires add, remove, op, and value handlers on filter widget rows."
+     "label": "Wire field, operator, value, add, and remove handlers on filter widget."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build._esc": {
      "body_hash": "645cb00154",
-     "label": "Escapes HTML for filter widget value inputs."
+     "label": "Escape attribute text for filter widget value inputs."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build._field_options_html": {
      "body_hash": "2d2e00537f",
-     "label": "Builds select options for filter field picker from visible columns."
+     "label": "Build select options HTML for filter row field dropdown."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build._is_date_field": {
      "body_hash": "75c48b7a17",
-     "label": "Detects date-like fields by meta type or fieldname pattern."
+     "label": "Decide whether filter row uses SQL date and days-ago dual inputs."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build._ops_for_field": {
      "body_hash": "f5b897c59e",
-     "label": "Picks OPS_DATE or OPS_DEFAULT for a selected filter field."
+     "label": "Pick operator button set for selected field type or name pattern."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build._render_rows": {
      "body_hash": "185b953ade",
-     "label": "Paints filter rows from default_filters child table state."
+     "label": "Paint all default filter rows and Add Filter control from frm child table."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_default_filters_now._build._save_rows": {
      "body_hash": "4bcaefaaea",
-     "label": "Syncs widget DOM back into frm.doc.default_filters and marks dirty."
+     "label": "Rebuild frm.doc.default_filters from widget DOM state and mark dirty."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_dialogs_tab": {
      "body_hash": "5ff9f34693",
-     "label": "Loads Form Dialog list for root DocType into Dialogs tab wrap."
+     "label": "Load Form Dialog list for root DocType into Dialogs tab wrapper."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_display": {
      "body_hash": "7f7eedab1d",
-     "label": "Loads linked DocType meta and builds Display tab sub-tabs and matrices."
+     "label": "Load root and linked meta then build Display sub-tabs and field matrices."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_display._build_once_ready": {
      "body_hash": "f598fd1d6b",
-     "label": "Clears matrix wrap and calls _build_display_tabs when link fetches finish."
+     "label": "Empty matrix wrap and call _build_display_tabs when all link meta loaded."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_order_tab": {
      "body_hash": "86db892186",
-     "label": "Renders drag-reorder table of all Show-checked fields across sub-tabs."
+     "label": "Render drag-reorder table of all shown fields across Display sub-tabs."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_render_other_panels_table": {
      "body_hash": "9942a83f1f",
-     "label": "Lists other Page Panels for copying colour settings via panel_data API."
+     "label": "Load get_other_page_panels list with select-all for colour copy targets."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_resolve_nce_theme_slug_for_colours": {
      "body_hash": "8118981841",
-     "label": "Resolves theme link to CSS slug via get_theme_slug_for_link."
+     "label": "Resolve theme link to CSS slug via get_theme_slug_for_link for previews."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_revert_panel_colours_to_theme_defaults": {
      "body_hash": "1f8e975fc3",
-     "label": "Confirms then clears COLOUR_OVERRIDE_FIELDS and redraws Colours tab."
+     "label": "Confirm and clear COLOUR_OVERRIDE_FIELDS then redraw Colours tab."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_save_display_col_widths": {
      "body_hash": "4d406272f3",
-     "label": "Persists display matrix column widths to localStorage."
+     "label": "Persist matrix column widths to localStorage after column resize."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_show_capture_wizard_dialog": {
      "body_hash": "7bd3b65997",
-     "label": "Shows Configure Form Dialog capture dialog for related, inline, and Tools picks."
+     "label": "Show Configure Form Dialog capture dialog for related, inline, and Tools picks."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_show_capture_wizard_dialog._checkboxRows": {
      "body_hash": "0983bf0561",
-     "label": "Renders checkbox list for one related or QBTL column in wizard."
+     "label": "Render checkbox list HTML for one related or QBTL column in wizard."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_show_capture_wizard_dialog.colHtml": {
      "body_hash": "ee2fc5c1f3",
-     "label": "HTML column for Self or N-hop relationships and query links."
+     "label": "Build one hop column HTML with Relationships and Query based links sections."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_show_tab": {
      "body_hash": "4a9f6fb57c",
-     "label": "Hides all tab fields then shows the selected tab's fields and custom wraps."
+     "label": "Hide unrelated fields and toggle matrix, colours, and dialogs wrappers for active tab."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_table_theme_border_width_var": {
      "body_hash": "8eac3d7062",
-     "label": "CSS variable name for table row or column border width preview."
+     "label": "Pick CSS var name for table row versus column border width preview."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_theme_editor_url": {
      "body_hash": "7653f05004",
-     "label": "Full URL to theme-settings editor for assigned NCE Theme doc."
+     "label": "Build Themes app theme-settings URL for assigned panel theme doc."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_theme_select_options_html": {
      "body_hash": "040a469912",
-     "label": "Builds theme select including site default and current inactive link."
+     "label": "Build theme select including site default and current inactive link."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_theme_table_hex": {
      "body_hash": "4ded8159b8",
-     "label": "Reads hex colour from theme table tokens bundle by key."
+     "label": "Read hex colour from theme table token bundle by key."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_theme_table_width_class": {
      "body_hash": "c05bd0ec9c",
-     "label": "Reads theme default width class for a table border slot."
+     "label": "Read theme default border width class for a table line slot."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_title_case": {
      "body_hash": "f38a73ff30",
-     "label": "Turns snake_case fieldnames into Title Case labels for display."
+     "label": "Turn fieldname underscores into title-style labels for matrix rows."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_unpack_doctype_fields_message": {
      "body_hash": "5edff97879",
-     "label": "Normalizes discovery API payload into fields list and doctype_title_field."
+     "label": "Normalize discovery API message into fields list and doctype title field name."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_update_colours_theme_edit_btn": {
      "body_hash": "cad9dc59c1",
-     "label": "Enables Edit theme button label from NCE Theme theme_name."
+     "label": "Set Edit theme button label and enabled state from theme doc name."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_wire_display_matrix_col_resize": {
      "body_hash": "97dfda0413",
-     "label": "Attaches drag handles to resize Field and Label columns on matrices."
+     "label": "Attach drag handles to resize Field and Label columns on display and order tables."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_wire_display_matrix_col_resize._attachHandle": {
      "body_hash": "ac12de0c05",
-     "label": "Adds mousedown resize handle on a matrix header column."
+     "label": "Add mousedown resize handle on a matrix header column."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_wire_display_matrix_col_resize._attachHandle.onMove": {
      "body_hash": "9f7de5211e",
-     "label": "Updates column width while dragging the resize handle."
+     "label": "Update column width while dragging during matrix column resize."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::_wire_display_matrix_col_resize._attachHandle.onUp": {
      "body_hash": "61b0b36a5d",
-     "label": "Ends drag and saves column width to localStorage."
+     "label": "End drag, save widths, and remove body resizing class."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::form.on Page Panel.after_save": {
      "body_hash": "03418fb7bd",
-     "label": "Refreshes panel_sql read-only field after save when root_doctype set."
+     "label": "Refresh panel_sql field display after save when root DocType set."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::form.on Page Panel.before_save": {
      "body_hash": "2ef0430a60",
-     "label": "Runs display matrix sync and prunes format_rules child rows."
+     "label": "Sync display matrices to doc fields and prune format_rules child rows."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::form.on Page Panel.column_order": {
      "body_hash": "1226f3885f",
-     "label": "Re-renders default filters widget when visible columns change."
+     "label": "Re-render default filters widget when visible columns change."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::form.on Page Panel.refresh": {
-     "body_hash": "ab8fa96ac2",
-     "label": "Page Panel refresh handler: tab bar, panel ID, filters, hide native tabs, form_dialog query."
+     "body_hash": "2510b1d29a",
+     "label": "Runs on Page Panel refresh: tab bar, panel id, filters, hide native tabs and grids."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::form.on Page Panel.root_doctype": {
      "body_hash": "f99519c664",
-     "label": "Clears display CSV fields and cache; sets title_field; refreshes Display if open."
+     "label": "Clear display CSV fields, refetch title field, refresh filters and Display tab."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::form.on Page Panel.theme": {
      "body_hash": "92a4ced4e7",
-     "label": "Redraws Colours tab when theme changes while Colours tab is active."
+     "label": "Redraw Colours tab when theme changes while Colours tab active."
     },
     "nce_events/nce_events/doctype/page_panel/page_panel.js::form.on Page Panel.validate": {
      "body_hash": "8ec8a8aecd",
-     "label": "Syncs Panel ID input to __newname and prunes empty format_rules before save."
+     "label": "Sync new panel id input and prune empty format_rules before save validation."
     }
    }
   },
@@ -7554,7 +7558,7 @@
    }
   },
   "nce_events/public/js/panel_page_v2/components/PanelFloat.vue": {
-   "body_hash": "ee47307960e708918be7ae874c148698546604aa49f0c7a8e533226999ebf16f",
+   "body_hash": "cccaa6e3bf8570368a1b71b2802c5b80a3dd813171eee9fc7d0b6c10a89661e6",
    "header": {
     "format": 1,
     "gotchas": [
@@ -7568,56 +7572,59 @@
      "startDrag",
      "startResize",
      "translate3d",
+     "getNextZ",
      "chromeConfig",
-     "panelChromeBg"
+     "autoSize",
+     "panelChromeClasses",
+     "brought-to-front"
     ],
-    "purpose": "Draggable resizable floating panel shell with themed chrome, header slot, body, and optional footer.",
-    "read_when": "When changing panel float drag, resize, z-order, initW growth, or overlay behaviour during move."
+    "purpose": "Draggable, resizable floating panel shell with themed chrome, header/body slots, and GPU-friendly positioning for panel page v2.",
+    "read_when": "Changing float drag, resize, z-order, autoSize width, or overlay behavior during interaction."
    },
    "labels": {
     "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::PanelFloat": {
-     "body_hash": "da676a922d",
-     "label": "Vue shell App mounts for panel tables: themed frame, header and footer slots, drag, resize, z-index."
+     "body_hash": "5305841089",
+     "label": "Hosts panel page v2 content in a themed float with header, body, optional footer, and corner resize handle."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::_addOverlay": {
      "body_hash": "63ffede3f5",
-     "label": "Appends full-screen fixed overlay during drag or resize to block table hit-testing."
+     "label": "Adds fixed full-viewport capture layer with drag or resize cursor to avoid table pointer events."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::bringToFront": {
      "body_hash": "3b659ededf",
-     "label": "Raises this float z-index and emits brought-to-front for parent stacking coordination."
+     "label": "Assigns next z-index and emits brought-to-front so App.vue can track the active float."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::getNextZ": {
      "body_hash": "c18d592d3f",
-     "label": "Increments module-level z counter so each float stacks above prior panels when focused."
+     "label": "Increments shared z-index counter so each float stacks above prior ones when created or raised."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::setPosition": {
      "body_hash": "a5f36316d2",
-     "label": "Updates float x and y refs clamped to minY; exposed for programmatic repositioning."
+     "label": "Sets float x and y from parent input, clamping y to minY; exposed for programmatic placement."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::startDrag": {
      "body_hash": "4606d9fd6a",
-     "label": "Begins header or footer drag with GPU transform updates and click-to-front under ten pixels."
+     "label": "Starts header or footer drag, skipping buttons and controls, with overlay and direct DOM transforms."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::startDrag.onMove": {
      "body_hash": "0b9bc9fad1",
-     "label": "Moves float via direct DOM transform during drag without triggering Vue table re-render."
+     "label": "Moves the float via transform during drag without Vue ref updates to prevent table rerender."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::startDrag.onUp": {
      "body_hash": "9f4c35d8da",
-     "label": "Removes overlay, syncs position refs, brings to front on click, detaches move listeners."
+     "label": "Tears down drag listeners and overlay, syncs refs, and raises z-order on a near-click release."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::startResize": {
      "body_hash": "d79d6fb096",
-     "label": "Starts corner resize with outline preview, optional autoSize height fix, and bringToFront."
+     "label": "Starts corner resize with outline preview, optionally fixing height when leaving autoSize mode."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::startResize.onMove": {
      "body_hash": "8659857af8",
-     "label": "Updates lightweight outline dimensions during resize without Vue width height updates."
+     "label": "Updates resize outline dimensions during pointer move before committing width and height."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFloat.vue::startResize.onUp": {
      "body_hash": "f5526cd4a9",
-     "label": "Commits final width and height from outline, removes overlay and listeners."
+     "label": "Removes overlay and outline, writes final width and height to refs for one layout pass."
     }
    }
   },
@@ -8227,158 +8234,159 @@
    }
   },
   "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue": {
-   "body_hash": "12e71feb1a27511d74058fd4c1c8f8f38ee8dd8db42885192e93eeddfccb9422",
+   "body_hash": "0946de49ef6b091a43b3acfef654af7f68a51924692bdb4af57143aff4360e29",
    "header": {
     "format": 1,
     "gotchas": [
      "Refetch this grid whenever the host bumps reloadTick (e.g. after WP read-back)."
     ],
     "keywords": [
-     "PanelFormDialogRelatedTab",
      "relatedState",
+     "fetchRelatedForTab",
      "edit_allowed",
      "reloadTick",
      "go-to-panel",
-     "get_form_dialog_related_rows",
      "STAGED_NEW_ROW_PREFIX",
-     "format_rules",
-     "child_row_name"
+     "saveAllRelatedRows",
+     "get_form_dialog_related_rows",
+     "ppv2-fd-related",
+     "buildRelatedUpdates"
     ],
-    "purpose": "Related DocType tab with editable grid, format rules, portal actions, and Go to panel navigation.",
-    "read_when": "Changing related table editing, staged rows, fetch or save, edit_condition, or Go to panel."
+    "purpose": "Form dialog related DocType tab: editable portal grid, format rules, row add/delete, save sync, and Go to panel.",
+    "read_when": "Changing related row fetch, edit_condition locking, dirty tracking, staged adds, or related-tab save APIs."
    },
    "labels": {
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::NUMERIC_ACTION_PROMPT_TYPES": {
      "body_hash": "9147ff8678",
-     "label": "Fieldtypes treated as numeric inputs in the related portal action prompt modal."
+     "label": "Fieldtypes treated as number inputs in the related row action prompt modal."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::PanelFormDialogRelatedTab": {
-     "body_hash": "8dca6ff9f5",
-     "label": "Renders Form Dialog related DocType tab grid, metadata, actions modal, and exposes save and reload to the host."
+     "body_hash": "4ffbedfdf4",
+     "label": "Renders Form Dialog related tab grid, actions, Go to panel, and field metadata used by PanelFormDialogBody."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::STAGED_NEW_ROW_PREFIX": {
      "body_hash": "85bd457a4b",
-     "label": "Prefix for unsaved new related row names until submit persists them on the server."
+     "label": "Name prefix for unsaved related rows staged locally until saveAllRelatedRows posts adds."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::baselineRowForRelated": {
      "body_hash": "072e15788a",
-     "label": "Finds the server baseline row snapshot by name for dirty comparison."
+     "label": "Finds the server baseline row by name for dirty comparison after fetch."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::buildPendingAdds": {
      "body_hash": "6cc8858e5e",
-     "label": "Lists staged new rows to send on save."
+     "label": "Lists staged new rows to send as add_form_dialog_related_row on save."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::buildPendingDeletes": {
      "body_hash": "57284ab0c8",
-     "label": "Lists baseline row names removed from the grid pending save."
+     "label": "Lists baseline row names removed from the grid pending delete API on save."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::buildRelatedUpdates": {
      "body_hash": "835ed9d5a9",
-     "label": "Builds per-row value patches for existing names differing from baseline."
+     "label": "Builds per-row value patches for changed editable fields versus baseline for save API."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::cancelAddRelatedRow": {
      "body_hash": "1fb8113a08",
-     "label": "Closes add-row draft and clears draft field values."
+     "label": "Closes add draft and clears draft field values without touching saved rows."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::clearAllRelatedFetch": {
      "body_hash": "fd68f10981",
-     "label": "Clears cached relatedState and sequence counters when the tab definition changes."
+     "label": "Wipes cached relatedState and sequence keys when the tab definition changes."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::confirmAddRelatedRow": {
      "body_hash": "4b12d8575b",
-     "label": "Appends a staged new row from draft values and marks the tab dirty."
+     "label": "Appends staged new row to grid from draft values and marks related tab dirty."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::draftDatetimeValue": {
      "body_hash": "dc5d6dcb71",
-     "label": "Formats add-row draft datetime for datetime-local input."
+     "label": "Shows add-row draft datetime formatted for datetime-local input."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::draftTimeValue": {
      "body_hash": "e42a4b85d9",
-     "label": "Formats add-row draft time for the time input control."
+     "label": "Shows add-row draft time field formatted for time input."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::fetchRelatedForTab": {
      "body_hash": "e1d4ea8437",
-     "label": "Loads columns, rows, actions, and format rules via get_form_dialog_related_rows."
+     "label": "Loads columns, rows, actions, and format rules from get_form_dialog_related_rows for this tab."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::formatRelatedCellDisplay": {
      "body_hash": "13608caaf1",
-     "label": "Formats read-only cells, showing Yes or No for Check fields otherwise string display."
+     "label": "Shows read-only related cell text, including Yes/No for Check fields via format helpers."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::getDisplayRows": {
      "body_hash": "2d49b06aec",
-     "label": "Returns current related rows array for the active tab index from relatedState."
+     "label": "Returns current related rows array for the tab index for parent read access."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::hasRelatedDirtyAny": {
      "body_hash": "5f94928e98",
-     "label": "Returns whether any loaded related tab index has unsaved row changes."
+     "label": "Returns whether any loaded related tab index has pending adds, deletes, or edits."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::isActionPromptNumeric": {
      "body_hash": "aa78fe5580",
-     "label": "Chooses number versus text input for an action modal prompt argument by fieldtype."
+     "label": "Chooses number versus text input for a portal action prompt argument by fieldtype."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::isRelatedCellDirty": {
      "body_hash": "89293f2a09",
-     "label": "Marks editable cells changed from baseline or any field on staged new rows."
+     "label": "Marks editable cells changed from baseline or any staged new row as dirty."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::isRelatedCellEditable": {
      "body_hash": "ba21f041f4",
-     "label": "Combines portal column editability with server edit_allowed for the loaded tab."
+     "label": "Gates cell editors using portal column rules, permlevels, and server edit_allowed for the tab."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::isRelatedFormatActive": {
      "body_hash": "94bb25c4d3",
-     "label": "Reports whether a conditional format rule is active for a related table cell."
+     "label": "Reports whether a format rule flag column is active for styling and dirty highlighting."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::isStagedNewRow": {
      "body_hash": "8e1fbd9de8",
-     "label": "Detects locally added rows that are not yet saved under the staged name prefix."
+     "label": "Detects locally added related rows by staged name prefix for dirty state and delete messaging."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::onDeleteRelatedRow": {
      "body_hash": "ebbf545003",
-     "label": "Confirms removal of staged or existing row from grid without immediate server delete."
+     "label": "Confirms then removes row from grid; server delete happens only on saveAllRelatedRows."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::onDraftDatetimeInput": {
      "body_hash": "94b1d0c4f1",
-     "label": "Updates draft datetime on the add-row with Frappe spacing rules."
+     "label": "Updates add-row draft datetime from datetime-local input."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::onDraftTimeInput": {
      "body_hash": "518c3a9d18",
-     "label": "Updates draft time on the add-row with seconds normalization."
+     "label": "Updates add-row draft time with seconds normalization."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::onGoToPanel": {
      "body_hash": "944c140f34",
-     "label": "Emits go-to-panel with related doctype when buildRelatedTabPanelFilter succeeds for current rows."
+     "label": "Builds parent filter via go-to helper and emits go-to-panel for drill-down when rows exist."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::onRelatedCheckChange": {
      "body_hash": "e84ed27082",
-     "label": "Writes Check as one or zero and schedules dirty emit."
+     "label": "Stores Check as 1 or 0 on the row and schedules dirty notification."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::onRelatedDateInput": {
      "body_hash": "b53f0488a3",
-     "label": "Stores date string or null from date input and marks dirty."
+     "label": "Sets Date field from input or null when empty."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::onRelatedDatetimeInput": {
      "body_hash": "18bf59950e",
-     "label": "Stores Datetime with space separator and optional seconds padding."
+     "label": "Converts datetime-local input back to stored datetime string format."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::onRelatedNumberInput": {
      "body_hash": "22eb182939",
-     "label": "Stores parsed number or null from number input and marks dirty."
+     "label": "Parses number input into row field, using null when cleared."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::onRelatedSelectChange": {
      "body_hash": "617ef256e8",
-     "label": "Writes Select value on the row and schedules dirty emit."
+     "label": "Writes Select value on the row and schedules dirty notification to the dialog host."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::onRelatedTextInput": {
      "body_hash": "5efdfbae90",
-     "label": "Writes text or textarea value and schedules dirty emit."
+     "label": "Updates text or textarea related cell from input and schedules dirty emit."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::onRelatedTimeInput": {
      "body_hash": "8613781916",
-     "label": "Stores time with seconds padding when needed and marks dirty."
+     "label": "Normalizes time input to stored value including seconds when needed."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::pendingRootValuesForEditCondition": {
      "body_hash": "e6e21162bb",
-     "label": "Collects scalar root form fields overlaid on the doc for edit_condition API calls."
+     "label": "Collects scalar in-form root field values overlaid on the saved doc for edit_condition API calls."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::reevaluateEditAllowed": {
      "body_hash": "95b139cd84",
@@ -8386,63 +8394,63 @@
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::relatedCellFormatStyle": {
      "body_hash": "4280c8474e",
-     "label": "Applies panel format rule inline styles to a related grid cell for the tab."
+     "label": "Applies panel format rule inline styles to a related grid cell when rules are active."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::relatedDateInputValue": {
      "body_hash": "159a7b92bc",
-     "label": "Formats Date field value as yyyy-mm-dd for date input."
+     "label": "Truncates date field raw value to yyyy-mm-dd for date input."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::relatedDatetimeInputValue": {
      "body_hash": "3dce807b4a",
-     "label": "Formats Datetime for datetime-local input with T separator."
+     "label": "Formats datetime raw value for datetime-local input."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::relatedFetchKey": {
      "body_hash": "cfba8e90b8",
-     "label": "Builds a cache key from definition name, root doctype, and saved root document name."
+     "label": "Stable cache key from form definition, root doctype, and saved document name."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::relatedNumberInputValue": {
      "body_hash": "d069de9cc5",
-     "label": "Normalizes number input display from relatedCellRaw empty or numeric."
+     "label": "Formats numeric cell raw value for number input display."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::relatedRowsDirty": {
      "body_hash": "566d81e6ba",
-     "label": "Detects staged adds, deleted baseline names, or edited editable column values for one tab."
+     "label": "Detects staged rows, missing baseline names, or changed editable columns for one tab index."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::relatedTimeInputValue": {
      "body_hash": "e33cfe8290",
-     "label": "Formats Time value to hh:mm:ss slice for time input."
+     "label": "Truncates time raw value for time input control."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::reloadRelatedFromServer": {
      "body_hash": "d76f8f1b21",
-     "label": "Refetches related rows when host calls expose after save or external refresh."
+     "label": "Refetches related rows when host calls expose after external changes."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::resetRelatedToBaseline": {
      "body_hash": "13def36604",
-     "label": "Restores all tab rows from baseline snapshots and clears dirty state."
+     "label": "Restores all related tabs from baseline copies and clears dirty state for dialog cancel."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::rowValuesForAdd": {
      "body_hash": "463ee13de7",
-     "label": "Collects non-empty editable column values from a staged row for add API."
+     "label": "Builds field map from a staged row for editable columns only when adding on server."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::saveAllRelatedRows": {
      "body_hash": "894245a12f",
-     "label": "Persists deletes, adds, and updates via related_rows APIs then refetches the grid."
+     "label": "Posts deletes, adds, and updates via related_rows APIs then refetches and returns sync job ids."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::scheduleReevaluateEditAllowed": {
      "body_hash": "1f84afbdfc",
-     "label": "Debounces reevaluateEditAllowed when root formData changes after related rows loaded."
+     "label": "Debounces reevaluateEditAllowed while root formData changes and fetch is idle."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::scheduleRelatedDirtyEmit": {
      "body_hash": "793cd02363",
-     "label": "Emits related-dirty on next tick after cell or row mutations."
+     "label": "Coalesces related-dirty emit to next tick after grid edits."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::startAddRelatedRow": {
      "body_hash": "6ce1201f3f",
-     "label": "Opens add-row draft with defaults for editable columns when mutation allowed."
+     "label": "Opens add-row draft row with defaults for editable columns when mutation is allowed."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFormDialogRelatedTab.vue::valuesEqual": {
      "body_hash": "2e1c9d6564",
-     "label": "Compares cell values treating null, numeric zero, and boolean equivalents as equal."
+     "label": "Compares cell values with null-safe and check-like equivalence for dirty detection."
     }
    }
   },

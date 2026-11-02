@@ -2,7 +2,7 @@
 //
 // code-index:begin
 // {
-//  "purpose": "Desk form script for Page Panel: Display/Order/Query/Dialogs/Colours tabs and field matrices.",
+//  "purpose": "Desk form script for Page Panel: Config, Display, Query, and Dialogs tabs plus matrices and capture wizard.",
 //  "read_when": "Changing Page Panel tab UI, display matrices, format rules, colours theme pickers, or capture wizard.",
 //  "gotchas": [
 //   "Prune stale display keys whenever Display is built from current meta.",
@@ -124,11 +124,10 @@ const TAB_GROUPS = {
 	query: ["panel_sql"],
 	dialogs: [],
 };
-const TAB_ORDER = ["config", "display", "colours", "query", "dialogs"];
+const TAB_ORDER = ["config", "display", "query", "dialogs"];
 const TAB_LABELS = {
 	config: "Config",
 	display: "Display",
-	colours: "Colours",
 	query: "Query",
 	dialogs: "Dialogs",
 };
@@ -382,7 +381,6 @@ function _ensure_tab_bar(frm) {
 		const tab_id = $(this).data("tab");
 		_show_tab(frm, tab_id);
 		if (tab_id === "display") _render_display(frm);
-		if (tab_id === "colours") _render_colours_tab(frm);
 		if (tab_id === "dialogs") _render_dialogs_tab(frm);
 	});
 
@@ -5416,9 +5414,6 @@ frappe.ui.form.on("Page Panel", {
 			return { filters: { status: "Active" } };
 		});
 
-		if ($(frm.layout.wrapper).data("pp-active-tab") === "colours") {
-			_render_colours_tab(frm);
-		}
 	},
 
 	theme: function (frm) {

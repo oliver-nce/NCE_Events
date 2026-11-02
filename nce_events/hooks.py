@@ -31,7 +31,9 @@ app_include_js = [
 ]
 app_include_css = [
 	"/assets/nce_events/css/schema_explorer.css",
-	"/assets/nce_events/css/theme_defaults.css",
+	# TEMPORARILY DISABLED (2026-11-02): theme_defaults.css is NCE Events' own default CSS bridge.
+	# Re-enable by uncommenting the next line (then bench clear-cache / restart).
+	# "/assets/nce_events/css/theme_defaults.css",
 	# Frappe v16 desk no longer bundles Font Awesome. Panel buttons use fa classes.
 	"/assets/frappe/css/fonts/fontawesome/font-awesome.min.css",
 ]
