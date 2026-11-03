@@ -13,27 +13,24 @@ code-index:end
 -->
 
 <template>
-	<nav v-if="pages.length" class="ppv2-spa-nav" @mousedown.stop>
-		<button
+	<nav v-if="pages.length" class="ppv2-spa-nav theme-gap-sm" @mousedown.stop>
+		<PanelNavButton
 			v-for="page in pages"
 			:key="page.page_slug"
-			type="button"
-			class="ppv2-spa-nav-btn"
-			:class="
-				page.page_slug === currentSlug
-					? 'ppv2-spa-nav-btn--active'
-					: 'ppv2-spa-nav-btn--idle'
-			"
+			variant="page"
+			:instance-id="'page-' + page.page_slug"
+			:active="page.page_slug === currentSlug"
 			:disabled="page.page_slug === currentSlug"
 			:title="navTitle(page)"
+			:label="page.page_title"
 			@click="$emit('select', page)"
-		>
-			{{ page.page_title }}
-		</button>
+		/>
 	</nav>
 </template>
 
 <script setup>
+import PanelNavButton from "./PanelNavButton.vue";
+
 const props = defineProps({
 	pages: { type: Array, default: () => [] },
 	currentSlug: { type: String, default: "" },
@@ -52,46 +49,11 @@ function navTitle(page) {
 
 <style scoped>
 .ppv2-spa-nav {
-	padding: 2px var(--spacing-sm, 10px);
+	padding: 2px 10px;
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: var(--spacing-sm, 10px);
 	min-height: 100%;
 	box-sizing: border-box;
-}
-
-.ppv2-spa-nav-btn {
-	padding: 8px 12px;
-	font-size: var(--font-size-sm, 13px);
-	font-weight: var(--font-weight-bold, 600);
-	font-family: var(--font-family);
-	text-align: center;
-	cursor: pointer;
-	line-height: 1.3;
-	white-space: nowrap;
-	transition: background-color 0.15s ease, border-color 0.15s ease;
-	border: 1px solid var(--border-color);
-	border-radius: var(--border-radius-sm, 4px);
-}
-
-.ppv2-spa-nav-btn--idle {
-	background: var(--fg-color, #fff);
-	color: var(--blue-500);
-}
-
-.ppv2-spa-nav-btn--active {
-	background: var(--blue-500);
-	border-color: var(--blue-500);
-	color: #fff;
-}
-
-.ppv2-spa-nav-btn:hover:not(:disabled) {
-	background-color: var(--blue-100);
-	border-color: var(--blue-500);
-}
-
-.ppv2-spa-nav-btn:disabled {
-	cursor: default;
 }
 </style>
