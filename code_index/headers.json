@@ -7269,33 +7269,33 @@
    }
   },
   "nce_events/public/js/panel_page_v2/components/ActionsPanel.vue": {
-   "body_hash": "ecc4fb9de5bc2c3eb708e62a8e91496410d0ef8abd5c6d5918e840d22f4c047c",
+   "body_hash": "f6d6ddc7422e847a4c9e26a9a6bc5afb0bd55d1a79855776c9b359c3ed1ca472",
    "header": {
     "format": 1,
     "gotchas": [
-     "canGoWorkspace is display-only; Desk workspace routes stay role-protected server-side."
+     "Display gate only for workspace back (Desk routes are role-protected server-side): Administrator, Manager, System Manager."
     ],
     "keywords": [
      "ppv2-actions",
      "SpaPageNavBar",
      "useSpaPageNav",
-     "goWorkspace",
-     "canSeeWorkspace",
      "action_id",
-     "switchTo",
-     "loadPages"
+     "loadPages",
+     "canSeeWorkspace",
+     "goWorkspace",
+     "pageSlug"
     ],
-    "purpose": "Panel actions bar with workspace back link, SpaPageNavBar page switcher, and Panel Action buttons.",
-    "read_when": "Changing actions bar layout, SPA nav wiring, workspace back, or action select handling."
+    "purpose": "Vue actions bar combining SpaPageNavBar page switcher and Panel Action buttons.",
+    "read_when": "Changing actions bar layout, SPA nav integration, or action button clicks."
    },
    "labels": {
     "nce_events/public/js/panel_page_v2/components/ActionsPanel.vue::ActionsPanel": {
-     "body_hash": "31599ff9d3",
-     "label": "Hosts workspace back, SPA page tabs from useSpaPageNav, and emits select for panel actions."
+     "body_hash": "4e998aea2d",
+     "label": "Header actions strip in panel App and CardForm: workspace back, SPA pages, and configurable panel actions."
     },
     "nce_events/public/js/panel_page_v2/components/ActionsPanel.vue::goWorkspace": {
      "body_hash": "7158f4843f",
-     "label": "Routes Desk to Workspaces NCE Events when canGoWorkspace shows the back button."
+     "label": "Opens Desk route Workspaces, NCE Events when the back PanelNavButton is clicked."
     }
    }
   },
@@ -8743,6 +8743,38 @@
     }
    }
   },
+  "nce_events/public/js/panel_page_v2/components/PanelNavButton.vue": {
+   "body_hash": "8a0d967b7a10d9eee9942e8766538f748cc178b05222e3f490a21bdfaae30053",
+   "header": {
+    "format": 1,
+    "gotchas": [
+     "frappe-ui Button adds Tailwind utility class names that are mostly inert but can conflict with Desk/Bootstrap; theme- classes handle states.",
+     "Active page variant uses theme-bg-primary pairing; do not set hard-coded text colour on active state.",
+     "frappe-ui adds opacity-50 to disabled buttons, which washes out the selected page primary fill on ppv2-page-btn-current."
+    ],
+    "keywords": [
+     "ppv2-nav-btn",
+     "PanelNavButton",
+     "frappe-ui",
+     "appearance",
+     "theme-bg-primary",
+     "variant",
+     "ppv2-page-btn-current",
+     "instanceId",
+     "ppv2-workspace-btn",
+     "theme",
+     "panel nav"
+    ],
+    "purpose": "Shared themed frappe-ui button for SPA page tabs, panel actions, and workspace back link.",
+    "read_when": "Changing panel nav button styling, frappe-ui Button wrapper, or theme class recipe."
+   },
+   "labels": {
+    "nce_events/public/js/panel_page_v2/components/PanelNavButton.vue::PanelNavButton": {
+     "body_hash": "12aa31aaab",
+     "label": "Themed frappe-ui Button with back, page, and action variants used by SpaPageNavBar and ActionsPanel."
+    }
+   }
+  },
   "nce_events/public/js/panel_page_v2/components/PanelTable.vue": {
    "body_hash": "6bc8a7b6efa5274cefe13e960bfba7447f2b5232334900f81ae3469bb59ec8b7",
    "header": {
@@ -9131,35 +9163,35 @@
    }
   },
   "nce_events/public/js/panel_page_v2/components/SpaPageNavBar.vue": {
-   "body_hash": "e982932b869124b9e9f8d037195b99cf9769f7df5a03b9b21fbad670becff052",
+   "body_hash": "efe197959c29b75a0fafc8e66ad93d043c47e7d303d9191925f7113a5a22fc6e",
    "header": {
     "format": 1,
     "gotchas": [],
     "keywords": [
      "ppv2-spa-nav",
-     "PanelNavButton",
-     "page_slug",
+     "pages",
      "currentSlug",
+     "page_slug",
      "page_title",
+     "PanelNavButton",
      "select",
-     "SpaPageNavBar",
-     "nav switcher"
+     "nav"
     ],
-    "purpose": "ppv2-spa-nav button row for switching SPA pages by page_slug with active page disabled.",
-    "read_when": "Changing SPA nav button styling, select emit, or currentSlug active/disabled state."
+    "purpose": "ppv2-spa-nav button row for switching between SPA pages by page_slug.",
+    "read_when": "Changing SPA nav button styling or currentSlug disabled state."
    },
    "labels": {
     "nce_events/public/js/panel_page_v2/components/SpaPageNavBar.vue::SpaPageNavBar": {
-     "body_hash": "9150a30baf",
-     "label": "Renders PanelNavButton per SPA page and emits select with the chosen page object."
+     "body_hash": "cb6d9c464a",
+     "label": "Nav row of page-variant PanelNavButtons; emits select with the chosen SPA page for ActionsPanel and float switcher."
     },
     "nce_events/public/js/panel_page_v2/components/SpaPageNavBar.vue::navTitle": {
      "body_hash": "5a74932a72",
-     "label": "Sets button title to Current page on active slug otherwise page.page_title."
+     "label": "Tooltip for each page button: Current page when slug matches currentSlug, otherwise page_title."
     },
     "nce_events/public/js/panel_page_v2/components/SpaPageNavBar.vue::tr": {
      "body_hash": "6ff4ce8a6b",
-     "label": "Returns Frappe-translated msg via window.__ when present for nav tooltips."
+     "label": "Localizes strings through window.__ when Frappe translation is loaded."
     }
    }
   },
@@ -12771,28 +12803,26 @@
    }
   },
   "nce_events/public/nce-themes/nce-themes.css": {
-   "body_hash": "5326b32530f5d8bcc20ead5a1ccf75bb45eff28899ab0ca31e7871a2a7e4b050",
+   "body_hash": "4160a4a29c345d3fcac1a261ef930f4c400186ff6999032eccf65c46075bb026",
    "header": {
     "format": 1,
     "gotchas": [
-     "Generated by the Themes app — snapshot, re-export to update."
+     "Generated by the Themes app snapshot; re-export from Themes to update rather than hand-editing long term."
     ],
     "keywords": [
      "data-nce-theme",
      "nce-manager",
-     "Source Sans 3",
-     "Public Sans",
-     "nce-color-primary",
-     "theme-table",
-     "theme-bg-primary",
-     "data-nce-bridge",
      "NCE Manager",
-     "developer export",
-     "theme-text-heading",
-     "Frappe UI"
+     "theme-bg-primary",
+     "Source Sans 3",
+     "data-nce-bridge",
+     "theme-table",
+     "--nce-color-primary",
+     "Public Sans",
+     "theme-gap-sm"
     ],
-    "purpose": "Generated NCE Manager theme snapshot: CSS variables, theme-* utilities, fonts, tables, and Frappe gray bridge.",
-    "read_when": "Updating exported theme tokens, utility classes, or data-nce-bridge mappings after re-export from Themes app."
+    "purpose": "Themes app export of NCE Manager: CSS variables, theme-* utilities, fonts, tables, and Frappe UI bridge.",
+    "read_when": "Changing deployed NCE Manager colors, theme-* classes, or replacing after a Themes re-export."
    }
   },
   "nce_events/utils/__init__.py": {
