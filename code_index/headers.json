@@ -7269,33 +7269,40 @@
    }
   },
   "nce_events/public/js/panel_page_v2/components/ActionsPanel.vue": {
-   "body_hash": "f6d6ddc7422e847a4c9e26a9a6bc5afb0bd55d1a79855776c9b359c3ed1ca472",
+   "body_hash": "07779bda4e2aaed5bfa8e56fd292eec192aaddb257accc6549168c656c6240b7",
    "header": {
     "format": 1,
     "gotchas": [
-     "Display gate only for workspace back (Desk routes are role-protected server-side): Administrator, Manager, System Manager."
+     "canGoWorkspace is display-only; Desk workspace routes remain role-protected server-side."
     ],
     "keywords": [
-     "ppv2-actions",
+     "ppv2-actions-bar-inner",
      "SpaPageNavBar",
+     "PanelNavButton",
      "useSpaPageNav",
      "action_id",
      "loadPages",
      "canSeeWorkspace",
+     "pageSlug",
+     "logout",
      "goWorkspace",
-     "pageSlug"
+     "panel actions"
     ],
-    "purpose": "Vue actions bar combining SpaPageNavBar page switcher and Panel Action buttons.",
-    "read_when": "Changing actions bar layout, SPA nav integration, or action button clicks."
+    "purpose": "Vue actions bar combining SpaPageNavBar page switcher and panel action buttons for card and panel views.",
+    "read_when": "Changing actions bar layout, SPA page nav, workspace back link, logout, or action button clicks."
    },
    "labels": {
     "nce_events/public/js/panel_page_v2/components/ActionsPanel.vue::ActionsPanel": {
-     "body_hash": "4e998aea2d",
-     "label": "Header actions strip in panel App and CardForm: workspace back, SPA pages, and configurable panel actions."
+     "body_hash": "720d05038d",
+     "label": "Hosts workspace back, SPA page tabs, emitted panel actions, and logout in CardForm and App headers."
     },
     "nce_events/public/js/panel_page_v2/components/ActionsPanel.vue::goWorkspace": {
      "body_hash": "7158f4843f",
-     "label": "Opens Desk route Workspaces, NCE Events when the back PanelNavButton is clicked."
+     "label": "Routes Desk to Workspaces NCE Events when canSeeWorkspace allows the back link."
+    },
+    "nce_events/public/js/panel_page_v2/components/ActionsPanel.vue::logout": {
+     "body_hash": "0318ae7275",
+     "label": "Signs out via frappe.app.logout or logout RPC, redirecting to login when workspace link is hidden."
     }
    }
   },

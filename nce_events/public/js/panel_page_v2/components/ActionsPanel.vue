@@ -6,7 +6,7 @@ code-index:begin
  "purpose": "Vue actions bar combining SpaPageNavBar page switcher and Panel Action buttons.",
  "read_when": "Changing actions bar layout, SPA nav integration, or action button clicks.",
  "gotchas": [],
- "keywords": ["ppv2-actions", "SpaPageNavBar", "useSpaPageNav", "action_id", "loadPages"],
+ "keywords": ["ppv2-actions", "SpaPageNavBar", "useSpaPageNav", "action_id", "loadPages", "logout"],
  "format": 1
 }
 code-index:end
@@ -47,6 +47,15 @@ code-index:end
 				No actions
 			</div>
 		</div>
+		<PanelNavButton
+			v-if="!canGoWorkspace"
+			class="ppv2-actions-logout"
+			variant="action"
+			instance-id="logout"
+			label="Logout"
+			title="Log out"
+			@click="logout"
+		/>
 	</div>
 </template>
 
@@ -71,6 +80,24 @@ const canGoWorkspace = computed(() => canSeeWorkspace());
 function goWorkspace() {
 	window.frappe.set_route("Workspaces", "NCE Events");
 }
+
+function logout() {
+	if (
+		window.frappe &&
+		window.frappe.app &&
+		typeof window.frappe.app.logout === "function"
+	) {
+		window.frappe.app.logout();
+	} else {
+		window.frappe.call({
+			method: "logout",
+			callback(r) {
+				if (!r.exc) window.location.href = "/login";
+			},
+		});
+	}
+}
+
 const { pages, loadPages, switchTo } = useSpaPageNav();
 
 onMounted(() => {
@@ -119,5 +146,10 @@ onMounted(() => {
 .ppv2-actions-empty {
 	font-style: italic;
 	padding: 4px 0;
+}
+
+.ppv2-actions-logout {
+	margin-left: auto;
+	flex-shrink: 0;
 }
 </style>
