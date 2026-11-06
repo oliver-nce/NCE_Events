@@ -6886,299 +6886,295 @@
    "header": {
     "format": 1,
     "gotchas": [
-     "Closing all tables still leaves the root WP Tables float open while dialogs and drilled panels shut down.",
-     "Reactive panel objects auto-unwrap refs so use panelLiveRows and keep markRaw usePanel instances to avoid breaking syncFromPanel.",
-     "syncFromPanel expects raw refs from markRaw; storing a reactive copy makes .value reads undefined and clears columns and counts.",
-     "Drilling from a link prefers a default Card Definition modal when one exists before opening a child panel float.",
-     "Form dialog go-to navigation awaits child panel reload so records are ready before the dialog flow continues."
+     "closeAllPanels closes drilled overlays and dialogs but leaves the root WP Tables float open.",
+     "Vue unwraps refs on reactive panel objects, so copying usePanel loses .value and breaks syncFromPanel.",
+     "usePanel must stay markRaw on the panel; reactive wrapping its ref bag clears columns and counts."
     ],
     "keywords": [
+     "App.vue",
      "openPanel",
-     "usePanel",
      "markRaw",
      "syncFromPanel",
      "PanelFloat",
-     "virtualFindGroupsFromCriteria",
-     "cascadeOpenPanels",
-     "frappe_doctype",
+     "buildFindColumns",
+     "useFindPanel",
      "WP Tables",
      "export_panel_data",
-     "PanelFormDialog",
-     "buildFindColumns",
-     "panel_page_v2",
-     "floating panels"
+     "virtualFindGroupsFromCriteria",
+     "frappeCall",
+     "cascadeOpenPanels"
     ],
-    "purpose": "Root panel_page_v2 Vue app wiring floating WP Tables and drilled panels with find, virtual scroll, form dialogs, cards, export, and global window helpers.",
-    "read_when": "When changing how panels open, cascade, run Find, talk to usePanel, host form dialogs, export CSV, or expose window hooks."
+    "purpose": "Root Vue SPA orchestrating WP Tables root float, drilled panels, Find, form dialogs, cards, tag finder, exports, and window hooks.",
+    "read_when": "When changing how panel floats open, cascade, find, virtual scroll, dialogs, or CSV export behave."
    },
    "labels": {
     "nce_events/public/js/panel_page_v2/App.vue::App": {
      "body_hash": "3964ff3a61",
-     "label": "Hosts the SPA shell with root and drilled PanelFloat views, dialogs, cards, and shared panel behaviors."
+     "label": "Composes root tables area, stacked floats, dialogs, cards, and global window helpers for the SPA."
     },
     "nce_events/public/js/panel_page_v2/App.vue::CASCADE_STEP_X": {
      "body_hash": "972dfa0243",
-     "label": "Horizontal spacing between cascaded drilled panel slots."
+     "label": "Controls horizontal stagger between cascaded child floats for arrange actions."
     },
     "nce_events/public/js/panel_page_v2/App.vue::CASCADE_STEP_Y": {
      "body_hash": "f5c33ecf25",
-     "label": "Vertical spacing between cascaded drilled panel slots for the arrange action."
+     "label": "Controls vertical stagger between cascaded child floats for arrange actions."
     },
     "nce_events/public/js/panel_page_v2/App.vue::ROOT_INIT_X": {
      "body_hash": "dde045c50b",
-     "label": "Initial horizontal origin for the root PanelFloat matching the inset constant."
+     "label": "Sets the root float starting X coordinate using the shared inset constant."
     },
     "nce_events/public/js/panel_page_v2/App.vue::ROOT_INIT_Y": {
      "body_hash": "9e39da6c5b",
-     "label": "Initial vertical origin for the root PanelFloat matching the inset constant."
+     "label": "Sets the root float starting Y coordinate using the shared inset constant."
     },
     "nce_events/public/js/panel_page_v2/App.vue::ROOT_INSET": {
      "body_hash": "8cde29d02f",
-     "label": "Pixels padding the root float from viewport edges so the WP Tables panel clears chrome."
+     "label": "Defines the fixed pixel margin applied when positioning the root floating tables panel."
     },
     "nce_events/public/js/panel_page_v2/App.vue::activateTablePanel": {
      "body_hash": "910acb7f5e",
-     "label": "Brings the chosen root or child float to the front for explicit user activation."
+     "label": "Brings either a child panel float or the root WP Tables float to the front."
     },
     "nce_events/public/js/panel_page_v2/App.vue::applyPanelLayout": {
      "body_hash": "0f3afebd15",
-     "label": "Runs preparePanelTableLayout so floats size and columns match the current table contents."
+     "label": "Computes initial float width and column widths from layout preparation before paint."
     },
     "nce_events/public/js/panel_page_v2/App.vue::applyVirtualFindOnPanel": {
      "body_hash": "03b1c2a833",
-     "label": "Applies grouped virtual Find filters through the panel API, flips browse mode, and syncs state."
+     "label": "Applies virtual OR groups via applyVirtualFind, toggles browse mode, and syncs table state."
     },
     "nce_events/public/js/panel_page_v2/App.vue::bumpTablePanelZTick": {
      "body_hash": "1b8dacf2e6",
-     "label": "Touches a tick ref so front-panel detection recomputes after focus changes."
+     "label": "Ticks reactive state so front-panel detection recomputes after focus changes."
     },
     "nce_events/public/js/panel_page_v2/App.vue::cascadeOpenPanels": {
      "body_hash": "5569ab2325",
-     "label": "Sorts open floats by z and repositions them in a stepped diagonal without altering z values."
+     "label": "Sorts floats by z, repositions them in staggered slots, and optionally alerts outcomes."
     },
     "nce_events/public/js/panel_page_v2/App.vue::cascadePositionForSlot": {
      "body_hash": "eb0db2fe3d",
-     "label": "Maps stacked slot indexes to deterministic x and y offsets from the root inset."
+     "label": "Maps cascade slot indexes to stepped XY coordinates anchored at the root inset."
     },
     "nce_events/public/js/panel_page_v2/App.vue::closeAllPanels": {
      "body_hash": "6f64ce8164",
-     "label": "Shuts dialogs, cards, tag finder, and drilled panels while keeping the root WP Tables float."
+     "label": "Closes dialogs, cards, tag finder, send dialogs, and all drilled panels while keeping root."
     },
     "nce_events/public/js/panel_page_v2/App.vue::closePanel": {
      "body_hash": "e10a70e195",
-     "label": "Recursively closes child panels then removes one float by id from the open list."
+     "label": "Recursively closes child panels before removing one entry from the open list."
     },
     "nce_events/public/js/panel_page_v2/App.vue::filteredPanelExportArgs": {
      "body_hash": "6bb8af43fd",
-     "label": "Builds export payload JSON for current doctype, parent filters, and visible row names."
+     "label": "Builds server export arguments listing currently visible row names under parent filters."
     },
     "nce_events/public/js/panel_page_v2/App.vue::finalizeNewPanelOpen": {
      "body_hash": "6cc38483d4",
-     "label": "After mount, focuses a freshly opened panel so it appears above existing floats."
+     "label": "After DOM updates, brings a freshly opened float to the front smoothly."
     },
     "nce_events/public/js/panel_page_v2/App.vue::floatedPanelTitle": {
      "body_hash": "7ec547a5d6",
-     "label": "Builds human headers for child panels including parent context and Find or Found suffixes."
+     "label": "Builds child float titles with parent context plus Find or Found suffixes when active."
     },
     "nce_events/public/js/panel_page_v2/App.vue::isTablePanelFront": {
      "body_hash": "9cac3e8311",
-     "label": "Returns whether a given panel float currently matches the top z in the table zone."
+     "label": "Compares a float z-index with the max to drive active toolbar chrome highlighting."
     },
     "nce_events/public/js/panel_page_v2/App.vue::maxTablePanelZ": {
      "body_hash": "9025d6a012",
-     "label": "Finds the largest z-index among root and child panel floats for focus comparison."
+     "label": "Reads the highest z-index across the root float and all open child floats."
     },
     "nce_events/public/js/panel_page_v2/App.vue::nextPos": {
      "body_hash": "f8761e9b4c",
-     "label": "Computes staggered float coordinates for new panels relative to root or their parent."
+     "label": "Offsets each new floated panel from the root or its parent for predictable placement."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onDownloadCsv": {
      "body_hash": "5a4c7e9b4d",
-     "label": "Calls panel export_panel_data then drives a browser download with returned URL metadata."
+     "label": "Calls export_panel_data then saves the returned file through the browser helper."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onDrill": {
      "body_hash": "c27b72cbca",
-     "label": "Prefers opening a default card modal for linked records else opens a filtered child panel with parent title context."
+     "label": "Opens a default Card Definition modal or drills into a related doctype with parent context."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onDrilledRowClick": {
      "body_hash": "ffcbfc32f2",
-     "label": "Opens the configured form dialog when present else optionally launches Desk for link rows."
+     "label": "Opens an inline form dialog when linked or launches the Desk record in a new tab."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onFilterChange": {
      "body_hash": "a61d871988",
-     "label": "Routes filter updates to root usePanel, virtual setFilters, found-set refinements, or generic setters."
+     "label": "Routes filter updates to root, virtual server filters, found-set narrowing, or standard paths."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onFormDialogGoToNavigate": {
      "body_hash": "f03b81c0c9",
-     "label": "Opens a related panel from form navigation, inherits title context, and awaits child reload."
+     "label": "Opens a related panel after saving from the form dialog and reloads that child data."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onKeyDown": {
      "body_hash": "650925b8d8",
-     "label": "Listens for undo shortcuts to restore dropped rows when the stack has entries."
+     "label": "Handles Ctrl or Cmd Z to pop the drop stack and restore a removed row in place."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onNewRecord": {
      "body_hash": "a4339ce64a",
-     "label": "Attempts new-record dialog creation or explains missing form dialog linkage."
+     "label": "Opens create flows through the form dialog host or shows configuration guidance."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onPanelActionSelect": {
      "body_hash": "e4710f6dad",
-     "label": "Runs a configured panel page action from the Actions bar through usePanelActions."
+     "label": "Forwards toolbar-selected SPA panel actions into the shared panel actions executor."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onPanelFindCancelCriteria": {
      "body_hash": "85d88c5f57",
-     "label": "Steps virtual Find back toward browse or exits client Find, clearing criteria state as needed."
+     "label": "Steps back virtual find browsing or cancels client criteria while restoring prior rows."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onPanelFindConstrain": {
      "body_hash": "c7dbba0dba",
-     "label": "Narrows existing virtual Find groups or performs a constrained local Find for standard data."
+     "label": "Narrows existing virtual OR groups or runs constrain-style client find on current rows."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onPanelFindExit": {
      "body_hash": "819f2bc126",
-     "label": "Leaves Find, clears virtual groups when needed, and reloads ordinary virtual rows or local data."
+     "label": "Leaves find mode, clears virtual OR groups with a reload, or clears client find pinning."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onPanelFindExtend": {
      "body_hash": "8161cf868f",
-     "label": "Adds OR alternatives to virtual Find groups or extends local Find result sets appropriately."
+     "label": "Adds another OR branch for virtual queries or extends the client find result set."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onPanelFindModify": {
      "body_hash": "f2cd55a5f4",
-     "label": "Rebuilds find columns and enters modify mode for the active Find layout."
+     "label": "Rebuilds find columns and enters modify mode on the existing criteria layout."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onPanelFindNew": {
      "body_hash": "94616c78d0",
-     "label": "Builds find columns and starts a fresh Find session hiding the ordinary filter bar."
+     "label": "Rebuilds searchable columns and opens a fresh find session hiding filters while doing so."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onPanelFindOr": {
      "body_hash": "3ff02a4c28",
-     "label": "Adds another OR Find row when criteria already exist, messaging when none are filled."
+     "label": "Adds another OR criteria row when allowed or nudges users if prerequisites are missing."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onPanelFindOrDuplicate": {
      "body_hash": "0570c5dae2",
-     "label": "Duplicates the active criteria row when allowed or explains the required row focus."
+     "label": "Duplicates the active OR row when one is selected or explains how to pick a row first."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onPanelFindPerform": {
      "body_hash": "014c395a12",
-     "label": "Runs virtual Find via grouped criteria or local Find through useFindPanel for standard tables."
+     "label": "Runs virtual grouped find via criteria or client find into the found set as configured."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onPanelTableMinWidth": {
      "body_hash": "8a3285e6ae",
-     "label": "Records the measured grid minimum width so floats can respect growing tables."
+     "label": "Stores the measured grid minimum width on a panel for sizing clamps."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onPanelToolbarFind": {
      "body_hash": "12a6938e3c",
-     "label": "Validates form dialog linkage, rebuilds find columns, and activates Find instead of filters."
+     "label": "Guards find behind linked form dialogs, then activates find using prepared searchable columns."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onRefreshPanel": {
      "body_hash": "b38b1f4143",
-     "label": "Invokes a child panel reload hook when available."
+     "label": "Invokes each child panel reload hook when the user clicks refresh in its toolbar."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onRefreshRoot": {
      "body_hash": "d67cd1e32c",
-     "label": "Reloads the root WP Tables panel data through its composable."
+     "label": "Triggers a reload of the root WP Tables composable backing the main float."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onRootRowClick": {
      "body_hash": "f82a093dab",
-     "label": "Opens a new float for the selected WP Tables doctype using default root context."
+     "label": "Opens a drilled panel for the clicked WP Tables frappe_doctype or table name."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onRowDrop": {
      "body_hash": "e6ee544e89",
-     "label": "Removes a row from the active table into the undo stack for quick client-side deletions."
+     "label": "Removes a clicked row from the live table list and records it for keyboard undo restore."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onSheets": {
      "body_hash": "34cec297f9",
-     "label": "Exports panel rows and copies a Google Sheets IMPORTDATA formula when clipboard support exists."
+     "label": "Copies a spreadsheet IMPORTDATA formula pointing at the export URL when clipboard works."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onSwitchOne": {
      "body_hash": "8b7aa982a3",
-     "label": "Reads the configured family id field and opens the website user switch flow for that row."
+     "label": "Reads the configured family id field and launches the website View-as-user switcher flow."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onSyncErrorClick": {
      "body_hash": "9a4dde25bc",
-     "label": "Fills the sync error dialog with status fields from the clicked WP Tables row."
+     "label": "Shows detailed sync failure text for a WP Tables row in the sync error dialog."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onTablePanelBroughtToFront": {
      "body_hash": "a6c226d1e7",
-     "label": "Updates z tracking and runs a silent cascade arrange when a table float activates."
+     "label": "After a float focuses, bumps z tracking and re-cascades open panels quietly."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onVirtualNeedNext": {
      "body_hash": "812726bbb5",
-     "label": "Handles PanelTable next-page callbacks by appending a virtual chunk and reporting scroll results."
+     "label": "Asks the composable to append the next virtual chunk when the grid requests more rows."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onVirtualNeedPrev": {
      "body_hash": "3964030a3a",
-     "label": "Handles PanelTable previous-page callbacks by prepending a virtual chunk safely."
+     "label": "Asks the composable to prepend the prior virtual chunk when scrolling upward."
     },
     "nce_events/public/js/panel_page_v2/App.vue::onVirtualSortChange": {
      "body_hash": "13c4634dd3",
-     "label": "Updates virtual ordering through the panel API when server sort is enabled."
+     "label": "For virtual panels forwards header sort choices into composable ordering then syncs."
     },
     "nce_events/public/js/panel_page_v2/App.vue::openPanel": {
      "body_hash": "88eaae285f",
-     "label": "Creates a reactive panel shell, wires markRaw usePanel with find support, layout, and reload hooks."
+     "label": "Constructs a reactive panel with markRaw usePanel, find state, reload hooks, and layout."
     },
     "nce_events/public/js/panel_page_v2/App.vue::openTagFinder": {
      "body_hash": "8436eceb3f",
-     "label": "Anchors the Tag Finder float beside the requesting panel for field tag exploration."
+     "label": "Points the Tag Finder float at the panel doctype near its on-screen position."
     },
     "nce_events/public/js/panel_page_v2/App.vue::panelApplyFoundSet": {
      "body_hash": "bae9ffe272",
-     "label": "Delegates found rows into usePanel setFoundSet so Find results replace ordinary filters."
+     "label": "Delegates into the composable found-set setter when backend find results replace the grid."
     },
     "nce_events/public/js/panel_page_v2/App.vue::panelClearFind": {
      "body_hash": "59f5c26c6d",
-     "label": "Clears server-side found pinning via the panel API and drops cached Find column helpers."
+     "label": "Clears pinned found rows through the API and drops cached find column metadata."
     },
     "nce_events/public/js/panel_page_v2/App.vue::panelDisplayRowsForExport": {
      "body_hash": "5a6a1681af",
-     "label": "Selects the same row array the grid shows, including live virtual or found rows."
+     "label": "Chooses the same visible row list export uses, including live refs when present."
     },
     "nce_events/public/js/panel_page_v2/App.vue::panelFindMsgNoCriteria": {
      "body_hash": "105a76bf54",
-     "label": "Shows a Frappe message when Find runs without any filled criteria."
+     "label": "Warns users they must enter criteria before a find runs on empty input."
     },
     "nce_events/public/js/panel_page_v2/App.vue::panelFloatInitW": {
      "body_hash": "9d3b5cbcad",
-     "label": "Returns the computed initial width for a child float or the default panel float width."
+     "label": "Supplies PanelFloat width using prepared layout width or the default constant."
     },
     "nce_events/public/js/panel_page_v2/App.vue::panelLiveRows": {
      "body_hash": "25daf0ea4f",
-     "label": "Reads the live row ref or array backing the visible grid without breaking ref unwrapping."
+     "label": "Resolves whichever live row array the table should read without breaking ref unwrapping."
     },
     "nce_events/public/js/panel_page_v2/App.vue::panelTableColumns": {
      "body_hash": "190243c988",
-     "label": "Chooses between stored panel columns and Find-specific columns based on find mode."
+     "label": "Shows find-specific columns during find flows and normal columns otherwise."
     },
     "nce_events/public/js/panel_page_v2/App.vue::panelTableRows": {
      "body_hash": "68e42176eb",
-     "label": "Shows no rows during pure find entry while surfacing live rows in browse and normal modes."
+     "label": "Returns no rows during raw find entry while criteria show; otherwise returns live rows."
     },
     "nce_events/public/js/panel_page_v2/App.vue::refreshPanelByDoctype": {
      "body_hash": "6a927b0c68",
-     "label": "Finds an open panel by doctype and calls its reload hook so remote changes appear."
+     "label": "Locates an open panel by doctype and asks it to reload when actions request refresh."
     },
     "nce_events/public/js/panel_page_v2/App.vue::setPanelFloatRef": {
      "body_hash": "60476db08f",
-     "label": "Stores each panel float component instance for z-order and positioning helpers."
+     "label": "Remembers the PanelFloat instance on a panel for z-order and position control."
     },
     "nce_events/public/js/panel_page_v2/App.vue::splicePanelRowByName": {
      "body_hash": "1cc1d8e645",
-     "label": "Removes one named record from an array in place for integrations that edit open data."
+     "label": "Removes the first row with a matching name string from an array in place."
     },
     "nce_events/public/js/panel_page_v2/App.vue::syncFromPanel": {
      "body_hash": "fc16a9df84",
-     "label": "Copies markRaw usePanel ref values into reactive panel state after loads and virtual operations."
+     "label": "Copies values from the markRaw usePanel API object onto the reactive panel shell after calls."
     },
     "nce_events/public/js/panel_page_v2/App.vue::triggerCsvBrowserDownload": {
      "body_hash": "7dcaa3a6fc",
-     "label": "Fetches export CSV URLs as blobs, downloads them, and surfaces success or failure toasts."
+     "label": "Downloads export CSV blobs in-page and alerts success or hard failure."
     },
     "nce_events/public/js/panel_page_v2/App.vue::undoDrop": {
      "body_hash": "aab044701c",
-     "label": "Reinserts the most recently dropped row into its original panel list position."
+     "label": "Reinserts the last removed row at its prior index on the same panel or root list."
     },
     "nce_events/public/js/panel_page_v2/App.vue::virtualFindGroupFromActiveCriteria": {
      "body_hash": "8603dc212b",
-     "label": "Wraps the active criteria row through virtualFindGroupsFromCriteria for virtual constrain and extend."
+     "label": "Turns the active single-row criteria into one virtual OR group for constrain-style actions."
     }
    }
   },
@@ -10202,175 +10198,173 @@
    "header": {
     "format": 1,
     "gotchas": [
-     "When _foundSetPinned is true, rows stay on the Find found set and _applyFilters is skipped.",
-     "Virtual total updates from the server while fullTotal stays the baseline from panel open unless a user query is active.",
-     "Default filters from config seed the filter bar on open only and are not an automatic hidden backend filter.",
-     "_loadId increments each load so stale async panel fetches exit without overwriting newer results.",
-     "Virtual mode caches up to three consecutive server pages as a sliding scroll window.",
-     "Filter values interpret today, relative ago phrases, and SQL-style current_date interval text before requests."
+     "Increment a load id each load so stale async fetches for an older _loadId exit early.",
+     "When _foundSetPinned is true, rows skip _applyFilters so Find browse shows the pinned found set.",
+     "For virtual totals, fullTotal keeps the baseline count until a user filter value or Find OR group exists.",
+     "The virtual pager keeps at most three consecutive server page chunks merged for display.",
+     "User default_filters seed the filter bar widget on open; they are not an automatic hidden fallback."
     ],
     "keywords": [
      "usePanel",
      "virtual_page_read",
-     "get_panel_config",
      "get_panel_data",
+     "get_panel_config",
      "WP Tables",
-     "criteriaRows",
      "parentFilter",
-     "userFilters",
+     "_loadId",
+     "virtualFindGroupsFromCriteria",
+     "appendVirtualPage",
+     "prependVirtualPage",
      "frappeCall",
-     "applyVirtualFind",
-     "_foundSetPinned",
-     "virtual find groups",
-     "panel composable"
+     "is_virtual"
     ],
-    "purpose": "Vue composable that loads Page Panel config and rows through frappeCall, adds virtual doctype paging via nce_sync.api.virtual_page_read, and turns Find criteria into server filter payloads.",
-    "read_when": "When changing how panel floats load data, virtual scrolling chunks, Find filters for virtual tables, or client filter and found-set handling."
+    "purpose": "Vue composable loading panel config and rows through get_panel_data or virtual_page_read with Find OR groups, bar filters, relative dates, and a three-chunk virtual window.",
+    "read_when": "When fixing panel fetch, virtual scrolling, Find-to-backend filters, found-set pinning, or client-side filter matching for floats."
    },
    "labels": {
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::LAYOUT_FIELDTYPES": {
      "body_hash": "a4a75d5ade",
-     "label": "Records layout-only fieldtypes omitted when turning DocType meta into virtual panel columns."
+     "label": "Lists layout-only DocType fieldtypes excluded when deriving virtual grid columns from meta."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::andGroupFromCriteriaRow": {
      "body_hash": "46733fed37",
-     "label": "Collects all non-empty criteria on one Find row into a single AND filter group."
+     "label": "Builds one AND group of conditions from a single criteria object row."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::criterionTermToCondition": {
      "body_hash": "ccda58421f",
-     "label": "Maps one Find criterion string to a virtual_page_read condition covering emptiness, comparisons, and like-style searches."
+     "label": "Parses one Find criterion string into a virtual_page_read condition with operator and value."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::simpleTitleCase": {
      "body_hash": "b537081849",
-     "label": "Converts underscored names into readable title case labels for default column headings."
+     "label": "Turns underscore names into short Title Case strings for default column labels."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel": {
      "body_hash": "81c4b30fd9",
-     "label": "Owns reactive panel state, chooses virtual versus standard loading, exposes paging, filters, and Find hooks for App."
+     "label": "Exposes reactive panel state, loaders, and filter helpers for root and drilled floats."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel._applyFilters": {
      "body_hash": "5f98df60f7",
-     "label": "Applies bar filters to the loaded non-virtual dataset unless a Find found set pins rows."
+     "label": "Reapplies bar filters to _allRows whenever found results are not pinned."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel._applyUserFilters": {
      "body_hash": "67f7d511c8",
-     "label": "Filters in-memory rows using user ops including date, numeric, equality, and like semantics."
+     "label": "Filters in-memory rows by operators including ISO dates, numeric compares, like, and in."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel._buildVirtualColumns": {
      "body_hash": "f4009e2c3e",
-     "label": "Builds ordered column descriptors from meta and panel config while skipping pure layout fields."
+     "label": "Builds display columns from saved order or DocType meta minus layout-only fieldtypes."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel._buildVirtualColumns.makeCol": {
      "body_hash": "9dc9d0d508",
-     "label": "Creates one column object with label, type, and link metadata for the virtual grid."
+     "label": "Maps one fieldname and meta row into a column descriptor with Link metadata."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel._buildVirtualColumns.metaFields": {
      "body_hash": "4616ff12fe",
-     "label": "Selects data fields from DocType meta that participate in the virtual column list."
+     "label": "Collects data fields from DocType meta excluding layout fieldtypes."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel._buildVirtualFiltersPayload": {
      "body_hash": "7c426261c6",
-     "label": "Combines parent filters, bar filters, and Find OR groups into JSON for virtual_page_read."
+     "label": "Composes JSON AND from parent equals plus bar filters and optional Find OR groups."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel._fetchVirtualPage": {
      "body_hash": "d4af5a2ef0",
-     "label": "Refreshes meta-driven columns and reloads the active virtual window at limitStart."
+     "label": "Loads DocType meta, builds columns, fetches the first chunk, and publishes virtual rows."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel._fetchVirtualPageData": {
      "body_hash": "01ba3a2ee8",
-     "label": "Calls virtual_page_read for a given offset using current filters, order, and page length."
+     "label": "Calls nce_sync.api.virtual_page_read with filters, order, and limit paging."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel._flattenVirtualChunks": {
      "body_hash": "dad70e172c",
-     "label": "Concatenates cached virtual page chunks into one row array for display."
+     "label": "Concatenates stored virtual page chunk row arrays in window order."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel._hasUserQuery": {
      "body_hash": "babf7a2f88",
-     "label": "Reports whether user-entered filters or Find groups should affect total counting."
+     "label": "Returns true when any bar filter has a value or Find OR groups are active."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel._loadOrReload": {
      "body_hash": "6e59f90aa6",
-     "label": "Central loader picking virtual or standard paths while honoring load-generation cancellation."
+     "label": "Chooses virtual versus bulk panel load paths with stale-call guards."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel._lookupVirtualFromWpTables": {
      "body_hash": "76c976bb02",
-     "label": "Detects a Virtual WP Tables mapping row and reads its page_size hint when present."
+     "label": "Detects a Virtual WP Tables mapping row and reads its page_size when present."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel._noteVirtualTotal": {
      "body_hash": "34abde2364",
-     "label": "Writes the live virtual match count and preserves fullTotal when no biased query is active."
+     "label": "Updates total and tracks fullTotal baseline while no user query touches virtual counts."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel._publishVirtualRows": {
      "body_hash": "ddbc76af0d",
-     "label": "Rebuilds displayed rows and paging markers from the current chunk window."
+     "label": "Writes flattened chunks to visible rows and updates window start and counts."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel._refetchVirtual": {
      "body_hash": "fdaa29b2b2",
-     "label": "Re-runs the current virtual query after cancelable load bookkeeping and surface errors."
+     "label": "Runs a guarded virtual reload with loading flags and logs virtual fetch errors."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel._resolveFilterValue": {
      "body_hash": "d3ba9ecbc9",
-     "label": "Turns relative date phrases and SQL-style date expressions into concrete yyyy-mm-dd strings."
+     "label": "Turns today, ago phrases, and SQL interval shorthands into yyyy-mm-dd filter values."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel._resolveIsVirtual": {
      "body_hash": "fa3412b6e2",
-     "label": "Decides virtual mode from WP Tables or DocType meta and resets paging metadata when not virtual."
+     "label": "Sets virtual mode from WP Tables hit or DocType is_virtual meta and configures page length."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel.appendVirtualPage": {
      "body_hash": "9c794a00f0",
-     "label": "Loads the next server page forward, trimming the oldest chunk when three pages are cached."
+     "label": "Fetches the next window page, drops the oldest chunk after three, returns scroll hints."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel.applyVirtualFind": {
      "body_hash": "ccca1a24b9",
-     "label": "Stores Find OR groups, clears pinning, resets paging, and refetches virtual results for App Find."
+     "label": "Stores Find OR groups, clears pinning, resets paging, and refetches virtual data."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel.clearFoundSet": {
      "body_hash": "d67f2b37d9",
-     "label": "Releases found-set pinning and re-applies bar filters to the full loaded rows."
+     "label": "Clears pinning so normal filtering reapplies over the loaded full dataset."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel.fetchConfig": {
      "body_hash": "4e76d6b640",
-     "label": "Requests Page Panel definition for the doctype so layout, actions, and column order are available."
+     "label": "Loads Page Panel column and chrome configuration for the composable doctype."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel.fetchData": {
      "body_hash": "14db5570af",
-     "label": "Pulls non-virtual panel rows and columns from panel_data.get_panel_data with merged filters."
+     "label": "Loads full panel rows and columns JSON from get_panel_data with merged parent filters."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel.load": {
      "body_hash": "88d16c2001",
-     "label": "Public entry that triggers the shared load-or-reload pipeline for initial panel open."
+     "label": "Starts an initial or repeat load of panel configuration and rows."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel.prependVirtualPage": {
      "body_hash": "7a69967a89",
-     "label": "Loads the previous server page when not at offset zero and trims excess trailing chunks."
+     "label": "Fetches the previous window page, prepends it, and trims the tail beyond three chunks."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel.reload": {
      "body_hash": "cc2e285d4e",
-     "label": "Public entry that repeats load-or-reload to refresh config and rows after changes."
+     "label": "Repeats the same load path for explicit refresh after errors or external changes."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel.setFilters": {
      "body_hash": "8f16ff032b",
-     "label": "Stores bar filters, clears found pinning, and either reapplies client filters or refetches virtual data."
+     "label": "Stores bar filters, clears found pinning, and refetches virtual windows or reapplies client filters."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel.setFiltersOnFoundSet": {
      "body_hash": "fcd5c02c70",
-     "label": "Keeps Find browse pinning while narrowing an existing found row list with bar filters."
+     "label": "Applies bar filters over a supplied found-set row list while staying pinned."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel.setFoundSet": {
      "body_hash": "ebc5fafa82",
-     "label": "Pins displayed rows to a Find result and bypasses ordinary client filter recomputation."
+     "label": "Pins Find results into displayed rows and totals, skipping ordinary filtering."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel.setVirtualOrder": {
      "body_hash": "cb2e55350f",
-     "label": "Sets server order_by text, resets to the first page, and refetches virtual rows."
+     "label": "Sets server order_by, resets the window start, and refetches virtual pages."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::usePanel.setVirtualPage": {
      "body_hash": "3e4ede23a0",
-     "label": "Moves the virtual window start offset and refetches when non-negative."
+     "label": "Moves the virtual window offset then triggers a virtual refetch."
     },
     "nce_events/public/js/panel_page_v2/composables/usePanel.js::virtualFindGroupsFromCriteria": {
      "body_hash": "a788e6db64",
-     "label": "Builds OR groups of AND conditions from Find rows for App-driven virtual Find searches."
+     "label": "Builds OR-of-AND groups from Find criteria rows for App virtual find perform."
     }
    }
   },
@@ -12991,24 +12985,23 @@
    "header": {
     "format": 1,
     "gotchas": [
-     "File is generated snapshot content from the Themes app and should be re-exported instead of hand-edited long term."
+     "Developer export snapshot from the Themes app; re-export there to refresh this bundle."
     ],
     "keywords": [
+     "NCE Manager",
      "data-nce-theme",
      "nce-manager",
      "Source Sans 3",
      "Public Sans",
-     "nce-color-primary",
-     "theme-bg-primary",
      "data-nce-bridge",
      "theme-table",
+     "--nce-color-primary",
      "Frappe UI Espresso",
-     "variable fonts",
-     "NCE Themes export",
-     "semantic utilities"
+     "theme-bg-primary",
+     "@font-face"
     ],
-    "purpose": "Themes app export defining NCE Manager fonts, semantic color variables, role utilities, table styling, spacing and motion tokens, and a Frappe light-mode palette bridge.",
-    "read_when": "When tuning NCE visual tokens, regenerating theme snapshots, or aligning Frappe Espresso colors with NCE roles."
+    "purpose": "Exported NCE Manager theme CSS defining self-hosted fonts, design tokens, utilities, table styles, and a Frappe palette bridge for light Desk.",
+    "read_when": "When adjusting NCE Manager colors, typography, table chrome, or gray and blue Frappe variable mappings."
    }
   },
   "nce_events/utils/__init__.py": {

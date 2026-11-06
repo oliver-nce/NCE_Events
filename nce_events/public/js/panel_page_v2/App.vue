@@ -18,6 +18,19 @@ code-index:end
 
 <template>
 	<div class="ppv2-root">
+		<div v-if="panelOpening" class="ppv2-panel-opening" role="status" aria-label="Opening panel">
+			<div class="ppv2-soccer-spin">
+				<svg viewBox="0 0 64 64" aria-hidden="true">
+					<circle cx="32" cy="32" r="30" fill="#fff" stroke="#111" stroke-width="2" />
+					<polygon points="32.0,23.0 40.6,29.2 37.3,39.3 26.7,39.3 23.4,29.2" fill="#111" />
+					<polygon points="36.1,4.3 38.7,12.2 32.0,17.0 25.3,12.2 27.9,4.3" fill="#111" />
+					<polygon points="59.6,27.4 52.9,32.2 46.3,27.4 48.8,19.5 57.0,19.5" fill="#111" />
+					<polygon points="44.9,56.8 38.3,52.0 40.8,44.1 49.0,44.1 51.6,52.0" fill="#111" />
+					<polygon points="12.4,52.0 15.0,44.1 23.2,44.1 25.7,52.0 19.1,56.8" fill="#111" />
+					<polygon points="7.0,19.5 15.2,19.5 17.7,27.4 11.1,32.2 4.4,27.4" fill="#111" />
+				</svg>
+			</div>
+		</div>
 		<div class="ppv2-top-row">
 			<div class="ppv2-zone ppv2-zone-title">{{ pageTitle }}</div>
 			<SpaMagicSearch />
@@ -197,6 +210,7 @@ code-index:end
 							:criteria="row"
 							:active="p._find.activeRowIndex === ri"
 							:show-or-label="ri > 0"
+							:show-action-cell="actionColumnWidthFromConfig(p.config) > 0"
 							@activate-row="p._find.setActiveRowIndex(ri)"
 							@update-criterion="
 								(fn, val) => p._find.setCriterion(ri, fn, val)
@@ -452,6 +466,7 @@ import { buildFindColumns } from "./utils/findColumns.js";
 import {
 	PANEL_FLOAT_DEFAULT_W,
 	preparePanelTableLayout,
+	actionColumnWidthFromConfig,
 } from "./utils/panelTableColWidths.js";
 import { frappeCall } from "./utils/frappeCall.js";
 import { openWpUserSwitch, familyIdFromRow } from "./utils/wpUserSwitch.js";
@@ -497,6 +512,7 @@ const columns = computed(() =>
 );
 
 const openPanels = reactive([]);
+const panelOpening = computed(() => openPanels.some((p) => !p._layoutReady));
 let panelCounter = 0;
 const dropStack = reactive([]);
 const tagFinderDoctype = ref("");
@@ -1414,6 +1430,42 @@ async function onSheets(panelPayload) {
 	height: calc(100vh - 60px);
 	display: flex;
 	flex-direction: column;
+}
+
+.ppv2-panel-opening {
+	position: fixed;
+	inset: 0;
+	z-index: 100000;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	pointer-events: none;
+}
+
+.ppv2-soccer-spin {
+	width: 56px;
+	height: 56px;
+	border-radius: 50%;
+	overflow: hidden;
+	animation: ppv2-soccer-spin 0.8s linear infinite;
+}
+
+.ppv2-soccer-spin svg {
+	display: block;
+	width: 100%;
+	height: 100%;
+}
+
+@keyframes ppv2-soccer-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.ppv2-soccer-spin {
+		animation: none;
+	}
 }
 
 .ppv2-top-row {

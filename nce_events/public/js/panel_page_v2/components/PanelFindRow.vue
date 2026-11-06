@@ -29,6 +29,7 @@ code-index:end
 				@keydown.enter.prevent="$emit('find-perform')"
 			/>
 		</td>
+		<td v-if="showActionCell" class="ppv2-action-td"></td>
 	</tr>
 </template>
 
@@ -38,6 +39,7 @@ const props = defineProps({
 	criteria: { type: Object, required: true },
 	active: { type: Boolean, default: false },
 	showOrLabel: { type: Boolean, default: false },
+	showActionCell: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(["update-criterion", "activate-row", "find-perform"]);

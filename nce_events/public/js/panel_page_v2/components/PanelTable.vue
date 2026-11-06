@@ -934,10 +934,29 @@ function startColResize(e, ci) {
 	border-right: none;
 }
 
-.ppv2-action-th {
+.ppv2-table th.ppv2-action-th {
+	position: sticky;
+	top: 0;
+	right: 0;
+	z-index: 4;
 	padding-left: 4px;
 	padding-right: 4px;
 	overflow: visible;
+	border-left: 1px solid var(--ppv2-col-divider-c, var(--border-color));
+	box-shadow: inset 1px 0 0 var(--ppv2-col-divider-c, var(--border-color));
+}
+
+.ppv2-table th.ppv2-action-th::before,
+.ppv2-table td.ppv2-action-td::before,
+:deep(.ppv2-action-td)::before {
+	content: "";
+	position: absolute;
+	left: 0;
+	top: 0;
+	bottom: 0;
+	width: 1px;
+	background: var(--ppv2-col-divider-c, var(--border-color));
+	pointer-events: none;
 }
 
 .ppv2-table td {
@@ -986,12 +1005,27 @@ function startColResize(e, ci) {
 
 /* ── Row action buttons ── */
 
-.ppv2-action-td {
+.ppv2-table td.ppv2-action-td,
+:deep(.ppv2-action-td) {
+	position: sticky;
+	right: 0;
+	z-index: 1;
+	background: inherit;
 	white-space: nowrap;
 	text-align: center;
 	overflow: visible;
 	padding-left: 4px;
 	padding-right: 4px;
+	border-left: 1px solid var(--ppv2-col-divider-c, var(--border-color));
+	box-shadow: inset 1px 0 0 var(--ppv2-col-divider-c, var(--border-color));
+}
+
+:deep(.ppv2-find-row .ppv2-action-td) {
+	background: var(--fg-color, #fff);
+}
+
+:deep(.ppv2-find-row--active .ppv2-action-td) {
+	background: var(--blue-100);
 }
 
 .ppv2-row-btn {
