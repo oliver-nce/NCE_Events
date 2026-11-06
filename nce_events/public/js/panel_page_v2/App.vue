@@ -7,7 +7,8 @@ code-index:begin
  "read_when": "Changing panel open/close, cascade, find, drill-down, or export behavior.",
  "gotchas": [
   "Close drilled panels and overlay dialogs; root WP Tables panel stays open.",
-  "Vue auto-unwraps reactive panel.rows ref when accessed on the panel object."
+  "Vue auto-unwraps reactive panel.rows ref when accessed on the panel object.",
+  "usePanel() is markRaw on the panel. A reactive copy unwraps its refs, and syncFromPanel then reads .value as undefined, which clears columns and the record total."
  ],
  "keywords": ["App.vue", "panel_page_v2", "PanelFloat", "find", "cascade", "form dialog"],
  "format": 1
@@ -110,7 +111,7 @@ code-index:end
 						!!p.config?.form_dialog &&
 						!p._find?.mode
 					"
-					:show-find="!!p.config?.form_dialog && !p._find?.mode"
+					:show-find="(!!p.virtual || !!p.config?.form_dialog) && !p._find?.mode"
 					show-close
 					@activate-panel="activateTablePanel(p)"
 					@refresh="onRefreshPanel(p)"
@@ -156,6 +157,19 @@ code-index:end
 					:show-sms="!!p.config?.sms_field && p._find?.mode === 'browse'"
 					:show-filter="p._showFilter && p._find?.mode !== 'find'"
 					:search-only-columns="[]"
+					:server-sort="!!p.virtual"
+					:server-scroll="!!p.virtual"
+					:page-size="p.pageLength || 1000"
+					:can-load-next="
+						!!p.virtual &&
+						p._find?.mode !== 'find' &&
+						(p.pageStart || 0) + panelLiveRows(p).length < (p.total || 0)
+					"
+					:can-load-prev="
+						!!p.virtual && p._find?.mode !== 'find' && (p.pageStart || 0) > 0
+					"
+					:loaded-page-count="p.loadedPageCount || 0"
+					:window-generation="p.windowGeneration || 0"
 					@close="closePanel(p.id)"
 					@row-click="(row) => onDrilledRowClick(p, row)"
 					@drill="(ev) => onDrill(ev, p)"
@@ -171,6 +185,9 @@ code-index:end
 					@switch-one="(row) => onSwitchOne(p, row)"
 					@row-drop="(row) => onRowDrop(p, row)"
 					@show-filter="p._showFilter = true"
+					@sort-change="(ev) => onVirtualSortChange(p, ev)"
+					@need-next-page="(payload) => onVirtualNeedNext(p, payload)"
+					@need-prev-page="(payload) => onVirtualNeedPrev(p, payload)"
 				>
 					<template v-if="p._find.mode === 'find'" #tbody-prefix>
 						<PanelFindRow
@@ -205,6 +222,16 @@ code-index:end
 				:show-sms="!!p.config?.sms_field"
 				:show-filter="p._showFilter"
 				:search-only-columns="p.config?.search_only_columns || []"
+				:server-sort="!!p.virtual"
+				:server-scroll="!!p.virtual"
+				:page-size="p.pageLength || 1000"
+				:can-load-next="
+					!!p.virtual &&
+					(p.pageStart || 0) + panelLiveRows(p).length < (p.total || 0)
+				"
+				:can-load-prev="!!p.virtual && (p.pageStart || 0) > 0"
+				:loaded-page-count="p.loadedPageCount || 0"
+				:window-generation="p.windowGeneration || 0"
 				@close="closePanel(p.id)"
 				@row-click="(row) => onDrilledRowClick(p, row)"
 				@drill="(ev) => onDrill(ev, p)"
@@ -220,6 +247,9 @@ code-index:end
 				@switch-one="(row) => onSwitchOne(p, row)"
 				@row-drop="(row) => onRowDrop(p, row)"
 				@show-filter="p._showFilter = true"
+				@sort-change="(ev) => onVirtualSortChange(p, ev)"
+				@need-next-page="(payload) => onVirtualNeedNext(p, payload)"
+				@need-prev-page="(payload) => onVirtualNeedPrev(p, payload)"
 			/>
 			<template #footer>{{ floatedPanelTitle(p) }}</template>
 		</PanelFloat>
@@ -399,11 +429,11 @@ code-index:end
 
 <script setup>
 // v2026-05-30
-import { ref, reactive, computed, onMounted, onUnmounted, inject, unref, nextTick } from "vue";
+import { ref, reactive, computed, onMounted, onUnmounted, inject, unref, nextTick, markRaw } from "vue";
 import { useNceCardStack, parseOpenCardOpts } from "./composables/useNceCardStack.js";
 import { usePanelFormDialogHost } from "./composables/usePanelFormDialogHost.js";
 import { usePanelActions } from "./composables/usePanelActions.js";
-import { usePanel } from "./composables/usePanel.js";
+import { usePanel, virtualFindGroupsFromCriteria } from "./composables/usePanel.js";
 import { useSendDialogs } from "./composables/useSendDialogs.js";
 import PanelFloat from "./components/PanelFloat.vue";
 import PanelTable from "./components/PanelTable.vue";
@@ -436,7 +466,12 @@ const tablePanelZTick = ref(0);
 const panelMode = inject("panelMode", null);
 const panelLabel = inject("panelLabel", "NCE Tables");
 const pageTitle = inject("pageTitle", "");
-const rootFilter = panelMode ? { doctype_source: panelMode } : {};
+const rootFilter =
+	panelMode === "Mirror"
+		? { doctype_source: ["in", ["Mirror", "Virtual"]] }
+		: panelMode
+			? { doctype_source: panelMode }
+			: {};
 
 const rootPanel = usePanel("WP Tables", rootFilter);
 const {
@@ -683,6 +718,22 @@ function panelLiveRows(p) {
 	return Array.isArray(p.rows) ? p.rows : [];
 }
 
+function syncFromPanel(p) {
+	const api = p._panelApi;
+	if (!api) return;
+	p.config = api.config.value;
+	p.columns = api.columns.value;
+	p.rows = api.rows.value;
+	p.total = api.total.value;
+	p.fullTotal = api.fullTotal.value;
+	p.error = api.error.value;
+	p.virtual = api.isVirtual.value;
+	p.pageStart = api.limitStart.value;
+	p.pageLength = api.pageLength.value;
+	p.loadedPageCount = api.loadedPageCount.value;
+	p.windowGeneration = api.windowGeneration.value;
+}
+
 function splicePanelRowByName(list, nameStr) {
 	if (!Array.isArray(list)) return false;
 	const idx = list.findIndex((r) => r && String(r.name) === nameStr);
@@ -713,25 +764,131 @@ function panelFindMsgNoCriteria() {
 	if (typeof frappe !== "undefined" && frappe.msgprint) frappe.msgprint(msg);
 }
 
+function virtualFindGroupFromActiveCriteria(p) {
+	const row = p._find?.criteria;
+	if (!row) return null;
+	const groups = virtualFindGroupsFromCriteria([row]);
+	return groups[0] || null;
+}
+
+async function applyVirtualFindOnPanel(p, groups) {
+	p._virtualFindGroups = groups && groups.length ? groups : null;
+	p._find.foundSetActive = true;
+	p._find.mode = "browse";
+	p._find.lastCriteriaRows = p._find.criteriaRows.map((r) => ({ ...r }));
+	p.loading = true;
+	try {
+		await p._panelApi.applyVirtualFind(p._virtualFindGroups);
+		syncFromPanel(p);
+	} finally {
+		p.loading = false;
+	}
+}
+
+async function onVirtualNeedNext(p, payload) {
+	const done = payload && payload.done;
+	try {
+		if (!p.virtual || !p._panelApi) {
+			if (done) done({ droppedStart: false, added: false });
+			return;
+		}
+		const result = await p._panelApi.appendVirtualPage();
+		syncFromPanel(p);
+		if (done) done(result || { droppedStart: false, added: false });
+	} catch (e) {
+		if (done) done({ droppedStart: false, added: false });
+	}
+}
+
+async function onVirtualNeedPrev(p, payload) {
+	const done = payload && payload.done;
+	try {
+		if (!p.virtual || !p._panelApi) {
+			if (done) done({ prepended: false });
+			return;
+		}
+		const result = await p._panelApi.prependVirtualPage();
+		syncFromPanel(p);
+		if (done) done(result || { prepended: false });
+	} catch (e) {
+		if (done) done({ prepended: false });
+	}
+}
+
+async function onVirtualSortChange(p, { fieldname, dir }) {
+	if (!p.virtual || !p._panelApi || !fieldname || !dir) return;
+	p.loading = true;
+	try {
+		await p._panelApi.setVirtualOrder(fieldname, dir);
+		syncFromPanel(p);
+	} finally {
+		p.loading = false;
+	}
+}
+
 function onPanelFindPerform(p) {
+	if (p.virtual) {
+		const groups = virtualFindGroupsFromCriteria(p._find.criteriaRows);
+		if (!groups.length) {
+			panelFindMsgNoCriteria();
+			return;
+		}
+		applyVirtualFindOnPanel(p, groups);
+		return;
+	}
 	if (!p._find?.performFind((rows) => panelApplyFoundSet(p, rows))) {
 		panelFindMsgNoCriteria();
 	}
 }
 
 function onPanelFindConstrain(p) {
+	if (p.virtual) {
+		const newGroup = virtualFindGroupFromActiveCriteria(p);
+		if (!newGroup) {
+			panelFindMsgNoCriteria();
+			return;
+		}
+		let groups;
+		if (p._virtualFindGroups?.length) {
+			groups = p._virtualFindGroups.map((g) => [...g, ...newGroup]);
+		} else {
+			groups = [newGroup];
+		}
+		applyVirtualFindOnPanel(p, groups);
+		return;
+	}
 	if (!p._find?.performFindConstrain((rows) => panelApplyFoundSet(p, rows))) {
 		panelFindMsgNoCriteria();
 	}
 }
 
 function onPanelFindExtend(p) {
+	if (p.virtual) {
+		const newGroup = virtualFindGroupFromActiveCriteria(p);
+		if (!newGroup) {
+			panelFindMsgNoCriteria();
+			return;
+		}
+		const groups = p._virtualFindGroups?.length
+			? [...p._virtualFindGroups, newGroup]
+			: [newGroup];
+		applyVirtualFindOnPanel(p, groups);
+		return;
+	}
 	if (!p._find?.extendFind((rows) => panelApplyFoundSet(p, rows))) {
 		panelFindMsgNoCriteria();
 	}
 }
 
 function onPanelFindCancelCriteria(p) {
+	if (p.virtual) {
+		if (p._virtualFindGroups?.length) {
+			p._find.mode = "browse";
+			return;
+		}
+		onPanelFindExit(p);
+		return;
+	}
 	p._find.cancelFindCriteria(
 		(rows) => panelApplyFoundSet(p, rows),
 		() => panelClearFind(p)
@@ -744,7 +901,19 @@ function onPanelFindNew(p) {
 	p._showFilter = false;
 }
 
-function onPanelFindExit(p) {
+async function onPanelFindExit(p) {
+	if (p.virtual) {
+		p._find.exitFind(() => {});
+		p._virtualFindGroups = null;
+		p.loading = true;
+		try {
+			await p._panelApi.applyVirtualFind(null);
+			syncFromPanel(p);
+		} finally {
+			p.loading = false;
+		}
+		return;
+	}
 	p._find.exitFind(() => panelClearFind(p));
 }
 
@@ -772,7 +941,7 @@ function onPanelFindOrDuplicate(p) {
 }
 
 function onPanelToolbarFind(p) {
-	if (!p?.config?.form_dialog) {
+	if (!p?.virtual && !p?.config?.form_dialog) {
 		if (typeof frappe !== "undefined" && frappe.msgprint) {
 			frappe.msgprint({
 				title: __("Find"),
@@ -930,12 +1099,18 @@ async function openPanel(doctype, parentFilter = {}, parentId = null, parentCont
 		_floatInitW: 0,
 		_initialColWidths: null,
 		_layoutReady: false,
+		virtual: false,
+		pageStart: 0,
+		pageLength: 1000,
+		_virtualFindGroups: null,
 	});
 	openPanels.push(p);
 
 	try {
 		const panel = usePanel(doctype, parentFilter);
-		p._panelApi = panel;
+		// markRaw: this object is a bag of refs. Putting it on the reactive panel
+		// unwraps them, and syncFromPanel's .value reads then come back undefined.
+		p._panelApi = markRaw(panel);
 		await panel.load();
 		p.config = panel.config.value;
 		p.columns = panel.columns.value;
@@ -944,6 +1119,11 @@ async function openPanel(doctype, parentFilter = {}, parentId = null, parentCont
 		p.rows = panel.rows.value;
 		p.total = panel.total.value;
 		p.fullTotal = panel.fullTotal.value;
+		p.virtual = panel.isVirtual.value;
+		p.pageStart = panel.limitStart.value;
+		p.pageLength = panel.pageLength.value;
+		p.loadedPageCount = panel.loadedPageCount.value;
+		p.windowGeneration = panel.windowGeneration.value;
 		p._allRows = panel.allRows; // live ref — full unfiltered row set, used by client-side Find
 		applyPanelLayout(p);
 		p._setFilters = (uf) => {
@@ -953,12 +1133,9 @@ async function openPanel(doctype, parentFilter = {}, parentId = null, parentCont
 			p.loading = true;
 			try {
 				await panel.reload();
-				p.config = panel.config.value;
-				p.columns = panel.columns.value;
+				syncFromPanel(p);
 				p.rows = panel.rows.value;
-				p.total = panel.total.value;
-				p.fullTotal = panel.fullTotal.value;
-				if (p._find?.mode === "browse" && p._find.foundSetActive) {
+				if (p._find?.mode === "browse" && p._find.foundSetActive && !p.virtual) {
 					p._findColumns = buildFindColumns(p);
 					p._find.reapplyLastFind(
 						(rows) => panelApplyFoundSet(p, rows),
@@ -1092,9 +1269,17 @@ async function onDrilledRowClick(p, row) {
 	window.open(url, "_blank");
 }
 
-function onFilterChange(panel, userFilters) {
+async function onFilterChange(panel, userFilters) {
 	if (!panel) {
 		rootPanel.setFilters(userFilters);
+	} else if (panel.virtual && panel._panelApi) {
+		panel.loading = true;
+		try {
+			await panel._panelApi.setFilters(userFilters);
+			syncFromPanel(panel);
+		} finally {
+			panel.loading = false;
+		}
 	} else if (panel._find?.mode === "browse" && panel._panelApi && panel._find.foundRows) {
 		const source = panel._find.foundRows;
 		const rows = Array.isArray(source) ? source : source.value || [];

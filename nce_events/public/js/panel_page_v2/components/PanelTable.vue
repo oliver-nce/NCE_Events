@@ -46,7 +46,7 @@ code-index:end
 
 		<div v-else-if="error" class="ppv2-error">{{ error }}</div>
 
-		<div v-else-if="config" class="ppv2-body">
+		<div v-else-if="config" ref="bodyRef" class="ppv2-body">
 			<table class="ppv2-table" lang="en" :style="tableMinWidthStyle">
 				<thead>
 					<tr>
@@ -235,6 +235,14 @@ const props = defineProps({
 	embedded: { type: Boolean, default: false },
 	/** Pre-computed column widths from App.vue before first paint. */
 	initialColWidths: { type: Array, default: null },
+	/** When true, sort is server-side; header emits sort-change instead of sorting rows. */
+	serverSort: { type: Boolean, default: false },
+	serverScroll: { type: Boolean, default: false },
+	pageSize: { type: Number, default: 1000 },
+	canLoadNext: { type: Boolean, default: false },
+	canLoadPrev: { type: Boolean, default: false },
+	loadedPageCount: { type: Number, default: 0 },
+	windowGeneration: { type: Number, default: 0 },
 });
 
 const emit = defineEmits([
@@ -254,10 +262,141 @@ const emit = defineEmits([
 	"sync-error-click",
 	/** Sum of data column widths + action column reserve (px). Used to size PanelFloat on open. */
 	"table-min-width",
+	"sort-change",
+	"need-next-page",
+	"need-prev-page",
 ]);
 
 const colWidths = reactive({});
 const panelRef = ref(null);
+const bodyRef = ref(null);
+
+/** Virtual panel infinite scroll (only when serverScroll). */
+let scrollEl = null;
+let scrollHandler = null;
+const scrollBusy = ref(false);
+let ignoreScroll = false;
+
+function findScrollElement(start) {
+	let el = start;
+	while (el) {
+		const oy = getComputedStyle(el).overflowY;
+		if (
+			(oy === "auto" || oy === "scroll") &&
+			el.scrollHeight > el.clientHeight + 1
+		) {
+			return el;
+		}
+		if (el.classList?.contains("ppv2-float")) break;
+		el = el.parentElement;
+	}
+	return start;
+}
+
+function getDataRowElements() {
+	const body = bodyRef.value;
+	if (!body) return [];
+	const all = body.querySelectorAll("tbody > tr");
+	const n = displayRows.value.length;
+	if (n <= 0) return [];
+	return Array.from(all).slice(-n);
+}
+
+function sumFirstPageDataRowHeights() {
+	const rows = getDataRowElements();
+	const count = Math.min(props.pageSize, rows.length);
+	let h = 0;
+	for (let i = 0; i < count; i++) h += rows[i].offsetHeight;
+	return h;
+}
+
+function detachScrollListener() {
+	if (scrollEl && scrollHandler) {
+		scrollEl.removeEventListener("scroll", scrollHandler, { passive: true });
+	}
+	scrollEl = null;
+	scrollHandler = null;
+}
+
+function attachScrollListener() {
+	detachScrollListener();
+	if (!props.serverScroll) return;
+	const body = bodyRef.value;
+	if (!body) return;
+	scrollEl = findScrollElement(body);
+	scrollHandler = onServerScroll;
+	scrollEl.addEventListener("scroll", scrollHandler, { passive: true });
+	if (
+		!scrollBusy.value &&
+		props.canLoadNext &&
+		props.loadedPageCount < 3 &&
+		scrollEl.scrollHeight <= scrollEl.clientHeight + 1
+	) {
+		tryLoadNearBottom(scrollEl);
+	}
+}
+
+function tryLoadNearBottom(scroller) {
+	if (!props.canLoadNext || scrollBusy.value) return;
+	if (scroller.scrollTop + scroller.clientHeight < scroller.scrollHeight - 160) {
+		return;
+	}
+	scrollBusy.value = true;
+	let droppedMeasure = 0;
+	if (props.loadedPageCount >= 3) {
+		droppedMeasure = sumFirstPageDataRowHeights();
+	}
+	emit("need-next-page", {
+		done: async (result) => {
+			await nextTick();
+			const r = result || {};
+			ignoreScroll = true;
+			if (r.droppedStart) {
+				scroller.scrollTop = Math.max(0, scroller.scrollTop - droppedMeasure);
+			}
+			scrollBusy.value = false;
+			requestAnimationFrame(() => {
+				ignoreScroll = false;
+			});
+			if (
+				r.added &&
+				props.loadedPageCount < 3 &&
+				scroller.scrollHeight <= scroller.clientHeight + 1 &&
+				props.canLoadNext
+			) {
+				tryLoadNearBottom(scroller);
+			}
+		},
+	});
+}
+
+function tryLoadNearTop(scroller) {
+	if (!props.canLoadPrev || scrollBusy.value) return;
+	if (scroller.scrollTop > 48) return;
+	scrollBusy.value = true;
+	emit("need-prev-page", {
+		done: async (result) => {
+			await nextTick();
+			const r = result || {};
+			ignoreScroll = true;
+			if (r.prepended) {
+				scroller.scrollTop += sumFirstPageDataRowHeights();
+			}
+			scrollBusy.value = false;
+			requestAnimationFrame(() => {
+				ignoreScroll = false;
+			});
+		},
+	});
+}
+
+function onServerScroll() {
+	if (!props.serverScroll || scrollBusy.value || ignoreScroll) return;
+	const scroller = scrollEl;
+	if (!scroller) return;
+	tryLoadNearBottom(scroller);
+	tryLoadNearTop(scroller);
+}
 
 /** Client-side sort (current row set only). */
 const sortFieldname = ref(null);
@@ -341,6 +480,9 @@ function applyHeaderSort(dir) {
 	if (col?.fieldname) {
 		sortFieldname.value = col.fieldname;
 		sortDir.value = dir;
+		if (props.serverSort) {
+			emit("sort-change", { fieldname: col.fieldname, dir });
+		}
 	}
 	closeHeaderMenu();
 }
@@ -384,6 +526,7 @@ function compareRowsForSort(ra, rb, fieldname, dir) {
 
 const displayRows = computed(() => {
 	const list = props.rows || [];
+	if (props.serverSort) return list;
 	const fn = sortFieldname.value;
 	const dir = sortDir.value;
 	if (!fn || !dir) return list;
@@ -407,8 +550,25 @@ watch(
 	}
 );
 
+watch(
+	() => props.windowGeneration,
+	() => {
+		nextTick(() => {
+			if (scrollEl) scrollEl.scrollTop = 0;
+		});
+	}
+);
+
+watch(
+	() => [props.serverScroll, bodyRef.value, props.rows?.length],
+	() => {
+		nextTick(() => attachScrollListener());
+	}
+);
+
 onUnmounted(() => {
 	closeHeaderMenu();
+	detachScrollListener();
 });
 
 function onRowClick(event, row) {
@@ -502,13 +662,15 @@ watch(
 
 let _colWidthResizeObs = null;
 onMounted(() => {
-	if (typeof ResizeObserver === "undefined") return;
-	_colWidthResizeObs = new ResizeObserver(() => {
-		syncColumnWidths();
-	});
-	nextTick(() => {
-		if (panelRef.value) _colWidthResizeObs.observe(panelRef.value);
-	});
+	if (typeof ResizeObserver !== "undefined") {
+		_colWidthResizeObs = new ResizeObserver(() => {
+			syncColumnWidths();
+		});
+		nextTick(() => {
+			if (panelRef.value) _colWidthResizeObs.observe(panelRef.value);
+		});
+	}
+	nextTick(() => attachScrollListener());
 });
 onUnmounted(() => {
 	_colWidthResizeObs?.disconnect();

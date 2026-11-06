@@ -192,6 +192,16 @@ function toggleFilter() {
 	// This function is kept for backwards compatibility but does nothing
 }
 
+// Opening the funnel on an empty bar used to show only "Add Filter", so it
+// looked like the button did nothing. Put one equals-row up immediately.
+watch(
+	() => props.showFilter,
+	(show) => {
+		if (!show || filters.length) return;
+		filters.push({ field: "", op: "=", value: "", _sqlDate: "", _daysAgo: "" });
+	}
+);
+
 // When defaultFilters change (i.e. panel first loads with config), pre-populate
 // the filter widget and open it — only if the user hasn't already entered filters.
 watch(
