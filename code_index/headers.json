@@ -7598,35 +7598,39 @@
    }
   },
   "nce_events/public/js/panel_page_v2/components/PanelFindRow.vue": {
-   "body_hash": "5c357c086a579a91f8a4647c93c8f36c9c43d9d4c6702476c10297c820ef03ca",
+   "body_hash": "3aee9326063b5edbd26509b6193a691de79d852dbd384308848b21861c830a02",
    "header": {
     "format": 1,
     "gotchas": [],
     "keywords": [
      "ppv2-find-row",
-     "update-criterion",
-     "activate-row",
      "find-perform",
-     "showOrLabel",
-     "columns",
+     "activate-row",
+     "update-criterion",
+     "criterion inputs",
+     "ppv2-find-input",
      "criteria",
-     "fieldname"
+     "columns",
+     "placeholder",
+     "OR",
+     "panel find",
+     "floating find"
     ],
-    "purpose": "Single ppv2-find-row criterion inputs with optional OR label and find-perform on Enter.",
-    "read_when": "Changing find criterion row inputs, active row styling, or activate-row and update-criterion emits."
+    "purpose": "Renders one ppv2 find criterion row with OR label, bound inputs, and Enter to emit find-perform for App find mode.",
+    "read_when": "Open when changing find row inputs, active row highlighting, OR labels, activate-row, update-criterion, or Enter find-perform."
    },
    "labels": {
     "nce_events/public/js/panel_page_v2/components/PanelFindRow.vue::PanelFindRow": {
-     "body_hash": "a87d9573d5",
-     "label": "Table row of text inputs bound to criteria columns with optional leading OR label."
+     "body_hash": "b9e899b0c2",
+     "label": "Hosts one find criteria table row for App find mode with OR label, inputs, and Enter find-perform."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFindRow.vue::onInput": {
      "body_hash": "fe80cdb43b",
-     "label": "Emits update-criterion with fieldname and input value as the user types."
+     "label": "Passes fieldname and input text to App so the active row criterion updates live."
     },
     "nce_events/public/js/panel_page_v2/components/PanelFindRow.vue::onRowActivate": {
      "body_hash": "b5037c8ea2",
-     "label": "Emits activate-row on row mousedown or input focus so parent tracks the active criterion row."
+     "label": "Notifies App to mark this criteria row active on mousedown, focus, or stop-propagated mousedown."
     }
    }
   },

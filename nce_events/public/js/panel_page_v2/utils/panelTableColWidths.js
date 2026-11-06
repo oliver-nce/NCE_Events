@@ -4,12 +4,13 @@
  * Width per column: max of (a) longest whitespace-separated word in the header
  * label and (b) the longest of the first 20 non-empty cell values, capped at 40
  * characters, plus one character so proportional type fits. Blank cells, cells
- * that are only spaces, and numeric zero are not part of that sample. No
- * shrink-to-fit and no slack distribution.
+ * that are only spaces, and numeric zero are not part of that sample. Columns
+ * never shrink below that width. When the panel is wider, data columns grow in
+ * proportion to those widths so the row fills the panel.
  *
  * code-index:begin
  * {
- *  "purpose": "Panel table column widths from longest title word plus the first 20 non-empty values per column (cap 40 chars, plus 1); float width; no shrink-to-fit.",
+ *  "purpose": "Panel table column widths from longest title word plus the first 20 non-empty values per column (cap 40 chars, plus 1). Data columns grow in proportion to fill a wider panel and never shrink below that floor.",
  *  "read_when": "When changing column width rules, PANEL_FLOAT_DEFAULT_W, or preparePanelTableLayout first paint.",
  *  "gotchas": [],
  *  "keywords": ["panelTableColWidths", "columnMetrics", "calcColWidths", "PANEL_FLOAT_DEFAULT_W", "panelFloatWidthFromTableMin", "preparePanelTableLayout", "no shrink-to-fit"],
@@ -121,27 +122,50 @@ export function isTitleFieldColumn(col, titleField) {
 }
 
 /**
- * @param {number} _containerWidth - ignored; kept for callers passing panel width
+ * Grow widths in proportion so they sum to available. Never called when available is smaller.
+ * Remainder pixels go to the columns with the largest discarded fractions.
+ */
+function expandProportionally(widths, available) {
+	const sum = widths.reduce((a, b) => a + b, 0);
+	if (sum <= 0 || available <= sum) return widths.slice();
+	const scale = available / sum;
+	const out = widths.map((w) => Math.floor(w * scale));
+	let rem = available - out.reduce((a, b) => a + b, 0);
+	const order = widths
+		.map((w, i) => ({ i, frac: w * scale - out[i] }))
+		.sort((a, b) => b.frac - a.frac || a.i - b.i);
+	for (let k = 0; k < rem; k++) out[order[k % order.length].i] += 1;
+	return out;
+}
+
+/**
+ * @param {number} containerWidth - panel body width in px; 0 keeps the content floor only
  * @param {string} [_titleField] - ignored; kept for callers passing Page Panel title_field
  */
 export function calcColWidths(
 	columns,
 	rows,
-	_containerWidth,
+	containerWidth,
 	actionColWidth = 0,
 	_titleField = ""
 ) {
-	const reserved = Math.max(0, actionColWidth) + TABLE_RESERVE_PX;
+	const actionW = Math.max(0, actionColWidth);
+	const reserved = actionW + TABLE_RESERVE_PX;
 	if (!columns?.length) {
 		return { widths: [], tableMinWidth: reserved };
 	}
 	const metrics = columnMetrics(columns, rows || []);
-	const widths = metrics.map((m) => {
+	const natural = metrics.map((m) => {
 		const titleW = px(m.longestWordChars);
 		const sampleW = m.maxLen > 0 ? px(Math.min(m.maxLen, 40) + 1) : 0;
 		return Math.max(titleW, sampleW);
 	});
-	const tableMinWidth = widths.reduce((a, b) => a + b, 0) + reserved;
+	const naturalSum = natural.reduce((a, b) => a + b, 0);
+	const tableMinWidth = naturalSum + reserved;
+	const container = Number(containerWidth) > 0 ? Number(containerWidth) : 0;
+	const dataBudget = container > reserved ? container - reserved : 0;
+	const widths =
+		dataBudget > naturalSum ? expandProportionally(natural, dataBudget) : natural;
 	return { widths, tableMinWidth };
 }
 
@@ -159,7 +183,9 @@ export function preparePanelTableLayout(columns, rows, config = {}) {
 	}
 	const list = rows || [];
 	const titleField = String(config.title_field || "").trim();
-	const { widths, tableMinWidth } = calcColWidths(columns, list, 0, actionW, titleField);
-	const floatInitW = panelFloatWidthFromTableMin(tableMinWidth);
-	return { floatInitW, initialColWidths: widths, tableMinWidth };
+	const natural = calcColWidths(columns, list, 0, actionW, titleField);
+	const floatInitW = panelFloatWidthFromTableMin(natural.tableMinWidth);
+	const innerW = Math.max(0, floatInitW - PANEL_FLOAT_CHROME_PX);
+	const { widths } = calcColWidths(columns, list, innerW, actionW, titleField);
+	return { floatInitW, initialColWidths: widths, tableMinWidth: natural.tableMinWidth };
 }

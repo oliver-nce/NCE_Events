@@ -632,7 +632,7 @@ function applyInitialColWidths() {
 function syncColumnWidths() {
 	if (!props.columns?.length) return;
 	const el = panelRef.value;
-	const cw = el?.offsetWidth ?? el?.clientWidth ?? 0;
+	const cw = el?.clientWidth || el?.offsetWidth || 0;
 	const { widths, tableMinWidth } = calcColWidths(
 		props.columns,
 		props.rows || [],
