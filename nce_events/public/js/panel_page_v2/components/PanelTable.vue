@@ -55,10 +55,14 @@ code-index:end
 							:key="col.fieldname"
 							class="col-header"
 							:class="colHeaderCellClasses"
-							:style="{
-								width: colWidths[ci] ? colWidths[ci] + 'px' : 'auto',
-								minWidth: '40px',
-							}"
+							:style="
+								colWidths[ci]
+									? {
+											width: colWidths[ci] + 'px',
+											minWidth: colWidths[ci] + 'px',
+										}
+									: { width: 'auto' }
+							"
 							@contextmenu.prevent="openHeaderContextMenu($event, col)"
 						>
 							<span class="ppv2-col-header-label">{{ headerTitleCase(col.label) }}</span>
@@ -454,7 +458,7 @@ const tableMinWidthStyle = computed(() => {
 	if (!props.columns?.length) return undefined;
 	const dataSum = props.columns.reduce((s, _c, i) => s + (colWidths[i] || 0), 0);
 	const minW = dataSum + actionColumnWidth.value;
-	return minW > 0 ? { minWidth: `${minW}px` } : undefined;
+	return minW > 0 ? { width: `${minW}px`, minWidth: `${minW}px` } : undefined;
 });
 
 function applyInitialColWidths() {
@@ -701,18 +705,16 @@ function startColResize(e, ci) {
 	border-bottom: var(--ppv2-col-header-line-w) solid var(--ppv2-col-header-line-c);
 	text-align: left;
 	vertical-align: bottom;
-	overflow: hidden;
+	overflow: visible;
 	border-right: var(--ppv2-col-divider-w) solid var(--ppv2-col-divider-c);
 }
 .ppv2-col-header-label {
-	display: -webkit-box;
-	-webkit-line-clamp: 2;
-	line-clamp: 2;
-	-webkit-box-orient: vertical;
-	overflow: hidden;
-	overflow-wrap: break-word;
-	hyphens: auto;
-	-webkit-hyphens: auto;
+	display: block;
+	white-space: normal;
+	overflow-wrap: normal;
+	word-break: normal;
+	hyphens: none;
+	-webkit-hyphens: none;
 	line-height: 1.2;
 	padding-right: 4px;
 }
