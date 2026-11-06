@@ -684,7 +684,57 @@ function startColResize(e, ci) {
 
 .ppv2-body {
 	flex: 1;
+	min-height: 0;
 	overflow: auto;
+	/* auto (not a color) lets the WebKit thumb paint. Desk sets a color pair on every element. */
+	scrollbar-width: auto !important;
+	scrollbar-color: auto !important;
+}
+.ppv2-body::-webkit-scrollbar {
+	-webkit-appearance: none !important;
+	width: 16px !important;
+	height: 16px !important;
+}
+.ppv2-body::-webkit-scrollbar-thumb {
+	background-color: #c4c4c4 !important;
+	border: 3px solid #f4f4f4;
+	border-radius: 8px;
+	min-height: 32px;
+	min-width: 32px;
+}
+.ppv2-body::-webkit-scrollbar-thumb:hover {
+	background-color: #a3a3a3;
+}
+.ppv2-body::-webkit-scrollbar-track,
+.ppv2-body::-webkit-scrollbar-corner {
+	background: #f4f4f4;
+}
+.ppv2-body::-webkit-scrollbar-button:single-button {
+	display: block !important;
+	background-color: #f7f7f7;
+	background-repeat: no-repeat;
+	background-position: center;
+	background-size: 16px 16px;
+}
+.ppv2-body::-webkit-scrollbar-button:single-button:vertical:decrement {
+	height: 16px !important;
+	border-bottom: 1px solid #e4e4e4;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M4 10l4-4 4 4' fill='none' stroke='%23666' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+.ppv2-body::-webkit-scrollbar-button:single-button:vertical:increment {
+	height: 16px !important;
+	border-top: 1px solid #e4e4e4;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4' fill='none' stroke='%23666' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+.ppv2-body::-webkit-scrollbar-button:single-button:horizontal:decrement {
+	width: 16px !important;
+	border-right: 1px solid #e4e4e4;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M10 4l-4 4 4 4' fill='none' stroke='%23666' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+.ppv2-body::-webkit-scrollbar-button:single-button:horizontal:increment {
+	width: 16px !important;
+	border-left: 1px solid #e4e4e4;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M6 4l4 4-4 4' fill='none' stroke='%23666' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
 
 .ppv2-table {
